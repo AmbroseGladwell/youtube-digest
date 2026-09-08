@@ -1,0 +1,46 @@
+/* Design tokens lifted from the prototype page.
+   The contrast values were checked by hand: --faint and --accent were both
+   darkened from an earlier pass to clear 4.5:1 for small text, and --edge
+   exists so interactive borders clear 3:1 against every surface they sit on
+   (WCAG 1.4.11). Keep that intent if the palette changes. */
+
+/* light */
+:root {
+    /* Soft warm off-white, not a cool grey - chosen to sit comfortably next
+       to the rust accent rather than fight it. */
+    --ground: #FAF6F1;
+    --surface: #FFFFFF;
+    --sunk: #F1EAE1;
+    --ink: #2A2521;
+    --muted: #6E6459;
+    --faint: #72675A;        /* darkened from the original pass - the old value read under 4.5:1 for small mono text */
+    --line: #E6DCCF;         /* soft dividers only - not held to component contrast */
+    --edge: #9F7D52;         /* interactive borders and label-pill outlines: >=3:1 against surface, ground and sunk, WCAG 1.4.11 */
+    --accent: #975531;       /* darkened rust - the lighter version fell short of 4.5:1 as button/pill text */
+    --accent-soft: #F2E1D2;
+    --novel: #806624;
+    --novel-soft: #F1E9D2;
+    --recycled: #6C5C4A;
+    --recycled-soft: #EEE6DA;
+    --dubious: #A23F35;
+    --dubious-soft: #F3DEDA;
+    --shadow: 0 1px 2px rgba(40,30,20,.04), 0 10px 28px rgba(40,30,20,.08);
+    --shadow-lg: 0 4px 10px rgba(40,30,20,.06), 0 20px 48px rgba(40,30,20,.12);
+    --measure: 40rem;
+    --radius-badge: 999px;   /* every non-interactive label: verdict, topic, flag, tag */
+    --radius-btn: 999px;     /* every clickable control: chip, mark, listen, transport - fully rounded ends */
+    --radius-panel: 10px;    /* card and popover surfaces */
+    --ra-size: 1.05rem;      /* reading-pane text size, user-adjustable */
+  }
+
+/* dark, explicit */
+:root[data-theme="dark"] {
+    --ground: #1E1E1E; --surface: #282828; --sunk: #242424;
+    --ink: #F1F1EF; --muted: #A8A8A5; --faint: #8F8F8B;
+    --line: #3D3D3B; --edge: #757570; --accent: #D98F62; --accent-soft: #3C2C1E;
+    --novel: #D6BB6E; --novel-soft: #392F17;
+    --recycled: #B7AC9C; --recycled-soft: #302C26;
+    --dubious: #E0897D; --dubious-soft: #3A211D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    --shadow-lg: 0 6px 16px rgba(0,0,0,.35), 0 24px 56px rgba(0,0,0,.5);
+  }
