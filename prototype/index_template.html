@@ -1,0 +1,1701 @@
+
+<title>YouTube Digest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+
+<style>
+  :root {
+    /* Soft warm off-white, not a cool grey - chosen to sit comfortably next
+       to the rust accent rather than fight it. */
+    --ground: #FAF6F1;
+    --surface: #FFFFFF;
+    --sunk: #F1EAE1;
+    --ink: #2A2521;
+    --muted: #6E6459;
+    --faint: #72675A;        /* darkened from the original pass - the old value read under 4.5:1 for small mono text */
+    --line: #E6DCCF;         /* soft dividers only - not held to component contrast */
+    --edge: #9F7D52;         /* interactive borders and label-pill outlines: >=3:1 against surface, ground and sunk, WCAG 1.4.11 */
+    --accent: #975531;       /* darkened rust - the lighter version fell short of 4.5:1 as button/pill text */
+    --accent-soft: #F2E1D2;
+    --novel: #806624;
+    --novel-soft: #F1E9D2;
+    --recycled: #6C5C4A;
+    --recycled-soft: #EEE6DA;
+    --dubious: #A23F35;
+    --dubious-soft: #F3DEDA;
+    --shadow: 0 1px 2px rgba(40,30,20,.04), 0 10px 28px rgba(40,30,20,.08);
+    --shadow-lg: 0 4px 10px rgba(40,30,20,.06), 0 20px 48px rgba(40,30,20,.12);
+    --measure: 40rem;
+    --radius-badge: 999px;   /* every non-interactive label: verdict, topic, flag, tag */
+    --radius-btn: 999px;     /* every clickable control: chip, mark, listen, transport - fully rounded ends */
+    --radius-panel: 10px;    /* card and popover surfaces */
+    --ra-size: 1.05rem;      /* reading-pane text size, user-adjustable */
+  }
+
+  /* Off-black, neutral charcoal grey (no warm/brown cast) so off-white text
+     sits on it with plenty of contrast without ever reading as pure #000. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="sepia"]) {
+      --ground: #1E1E1E; --surface: #282828; --sunk: #242424;
+      --ink: #F1F1EF; --muted: #A8A8A5; --faint: #8F8F8B;
+      --line: #3D3D3B; --edge: #757570; --accent: #D98F62; --accent-soft: #3C2C1E;
+      --novel: #D6BB6E; --novel-soft: #392F17;
+      --recycled: #B7AC9C; --recycled-soft: #302C26;
+      --dubious: #E0897D; --dubious-soft: #3A211D;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,.35), 0 24px 56px rgba(0,0,0,.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #1E1E1E; --surface: #282828; --sunk: #242424;
+    --ink: #F1F1EF; --muted: #A8A8A5; --faint: #8F8F8B;
+    --line: #3D3D3B; --edge: #757570; --accent: #D98F62; --accent-soft: #3C2C1E;
+    --novel: #D6BB6E; --novel-soft: #392F17;
+    --recycled: #B7AC9C; --recycled-soft: #302C26;
+    --dubious: #E0897D; --dubious-soft: #3A211D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    --shadow-lg: 0 6px 16px rgba(0,0,0,.35), 0 24px 56px rgba(0,0,0,.5);
+  }
+
+  /* Warm-paper reading theme: picked explicitly, not tied to the system
+     setting, so it stays put regardless of device dark/light mode. */
+  :root[data-theme="sepia"] {
+    --ground: #F4ECD8; --surface: #FBF4E4; --sunk: #ECE1C4;
+    --ink: #3A2E1C; --muted: #6B5A3E; --faint: #716347;
+    --line: #DECBA0; --edge: #977934; --accent: #915129; --accent-soft: #EADDBA;
+    --novel: #816019; --novel-soft: #F0E3BE;
+    --recycled: #6C5C42; --recycled-soft: #E9DFC7;
+    --dubious: #97231D; --dubious-soft: #F3DAD3;
+    --shadow: 0 1px 2px rgba(58,46,28,.05), 0 10px 26px rgba(58,46,28,.10);
+    --shadow-lg: 0 4px 10px rgba(58,46,28,.07), 0 20px 44px rgba(58,46,28,.14);
+  }
+
+  :root[data-rasize="s"] { --ra-size: .9rem; }
+  :root[data-rasize="m"] { --ra-size: 1.05rem; }
+  :root[data-rasize="l"] { --ra-size: 1.25rem; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  /* One shared, quiet transition for every interactive control and surface,
+     so switching a reading theme, or hovering or pressing anything, is a
+     soft fade rather than a hard cut - kept off entirely when the reader
+     has asked the OS to reduce motion. */
+  .card, .stat, .filterpanel, .speechbar, .foldbtn-inline,
+  .chip, .mark, .listen, .watch-link, .pbtn, .filterbtn, .afchip, .foldbtn,
+  .verdict, .topic, .flag, .foot .t, #q, .audiorow select {
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease,
+                box-shadow .18s ease, transform .1s ease, opacity .14s ease;
+  }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 1.6rem 1rem 4rem; }
+
+  /* ---- desktop: sidebar + scrollable reading panel ----
+     Below the breakpoint .sidebar and .main are just two stacked blocks and
+     the page scrolls as one column, identical to the original layout. Above
+     it they become independently-scrolling panes so opening a digest never
+     scrolls the search and filters out of reach. */
+  @media (min-width: 980px) {
+    .wrap {
+      max-width: none; margin: 0; padding: 0;
+      display: grid; grid-template-columns: minmax(300px, 380px) 1fr;
+      align-items: stretch; height: 100vh;
+    }
+    .sidebar {
+      height: 100vh; overflow-y: auto;
+      padding: 2rem 1.5rem 2rem 2rem;
+      border-right: 1px solid var(--line);
+    }
+    .main { height: 100vh; overflow-y: auto; padding: 2rem 2rem 4rem; }
+    .list { max-width: 46rem; }
+    .empty, footer.page { max-width: 46rem; }
+
+    /* Reading, not scanning: the open digest grows to use the pane instead
+       of sitting card-sized in a long list. */
+    .card.expanded {
+      display: flex; flex-direction: column;
+      min-height: calc(100vh - 4rem);
+    }
+    .card.expanded .body { flex: 1 1 auto; overflow-y: auto; }
+  }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1.1rem; }
+
+  h1 {
+    font-family: "Archivo", Helvetica, Arial, sans-serif;
+    font-weight: 700; font-size: 1.9rem; letter-spacing: -.02em;
+    margin: 0; line-height: 1.05;
+  }
+
+  .standfirst { margin: 0; color: var(--muted); font-size: .97rem; }
+
+  .srcline {
+    margin: 0; font-family: "IBM Plex Mono", monospace;
+    font-size: .66rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--faint);
+  }
+  .srcline.live { color: var(--accent); }
+
+  /* A read note stays legible but recedes, so the unread ones lead the eye. */
+  .card.isread .title, .card.isread .claim { opacity: .55; }
+  .card.isread .verdict { opacity: .6; }
+
+  .flag.read { background: none; border: 1px solid var(--edge); color: var(--faint); }
+
+  /* Both toggles are the same control with a different word, so they share
+     one rule rather than each carrying its own near-copy. */
+  .mark {
+    border: 1px solid var(--edge); background: none;
+    color: var(--muted); font: inherit; font-size: .72rem;
+    min-height: 2.15rem; padding: .32rem .85rem; border-radius: var(--radius-btn); cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; letter-spacing: .04em;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .mark:hover { border-color: var(--accent); color: var(--accent); }
+  .mark:active { transform: translateY(1px); }
+  .mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mark[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .mark[hidden] { display: none; }
+  .mark.export[hidden] { display: none; }
+  .mark.export.busy { opacity: .6; pointer-events: none; }
+
+  /* Favourite: an icon-only heart rather than a text pill. The accessible
+     name and the tooltip carry the word "Favourite"/"Favourited" that used
+     to be the button's visible label, so nothing is lost for someone using
+     a screen reader - it just isn't printed on screen for everyone else. */
+  .mark.fav {
+    margin-left: auto; border: 0; background: none;
+    width: 2.4rem; height: 2.4rem; min-height: 0; padding: 0;
+    border-radius: 999px; color: var(--muted);
+  }
+  .mark.fav svg { width: 19px; height: 19px; }
+  .mark.fav path {
+    fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linejoin: round; stroke-linecap: round;
+    transition: fill .15s ease;
+  }
+  .mark.fav:hover { background: var(--sunk); border-color: transparent; color: var(--accent); }
+  .mark.fav[aria-pressed="true"] { border-color: transparent; background: none; color: var(--accent); }
+  .mark.fav[aria-pressed="true"] path { fill: var(--accent); }
+  .mark.fav[aria-pressed="true"]:hover { background: var(--accent-soft); }
+
+  .flag.favourite { background: none; border: 1px solid var(--edge); color: var(--faint); }
+  /* A favourite you have read still deserves to stay legible. */
+  .card.isfav.isread .title, .card.isfav.isread .claim { opacity: .8; }
+
+  .stats { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .2rem; }
+
+  .stat {
+    background: var(--surface); border: 1px solid var(--edge);
+    border-radius: var(--radius-panel); padding: .4rem .6rem;
+    display: flex; align-items: baseline; gap: .35rem;
+  }
+
+  .stat b {
+    font-family: "IBM Plex Mono", monospace; font-size: .95rem;
+    font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+
+  .stat span {
+    font-family: "IBM Plex Mono", monospace; font-size: .66rem;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--faint);
+  }
+
+  /* ---- controls ---- */
+  .controls {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--ground);
+    padding: .6rem 0 .7rem;
+    display: flex; flex-direction: column; gap: .5rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: .9rem;
+  }
+
+  #q {
+    width: 100%; font: inherit; font-size: .95rem;
+    min-height: 2.3rem; padding: .38rem .85rem;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--edge); border-radius: var(--radius-btn);
+  }
+  #q::placeholder { color: var(--faint); }
+  #q:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+  /* barrow, not the individual button, is the dropdown's containing block -
+     a panel anchored to a narrow button can overflow past the edge of the
+     screen; anchored to the full row, it never has anywhere to overflow to. */
+  .barrow { display: flex; gap: .4rem; align-items: stretch; flex-wrap: wrap; position: relative; }
+  .barrow #q { flex: 1 1 auto; min-width: 8rem; }
+
+  .filterwrap { position: static; flex: none; }
+
+  .filterbtn {
+    height: 100%; min-height: 2.3rem; display: flex; align-items: center; gap: .35rem;
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem;
+    letter-spacing: .04em; white-space: nowrap;
+    padding: .38rem .9rem; border-radius: var(--radius-btn); cursor: pointer;
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--edge);
+  }
+  .filterbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .filterbtn:active { transform: translateY(1px); }
+  .filterbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .filterbtn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  /* The count is the whole point of collapsing the rows: it says how much is
+     hidden without making the reader open the panel to find out. */
+  .fcount {
+    background: var(--accent); color: var(--ground);
+    border-radius: 999px; min-width: 1.15em; text-align: center;
+    padding: 0 .35em; font-variant-numeric: tabular-nums;
+  }
+
+  .filterpanel {
+    position: absolute; left: 0; right: 0; top: calc(100% + .5rem); z-index: 20;
+    max-width: 22rem;
+    max-height: min(60vh, 30rem); overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--edge);
+    border-radius: var(--radius-panel); box-shadow: var(--shadow);
+    padding: .7rem .75rem; display: flex; flex-direction: column; gap: .7rem;
+    /* Kept in the render tree and just faded/slid out of the way, rather
+       than toggled with [hidden], so opening one is a soft animation
+       instead of a hard cut. */
+    opacity: 0; transform: translateY(-4px) scale(.98); pointer-events: none;
+    transition: opacity .14s ease, transform .14s ease, background-color .16s ease,
+                border-color .16s ease, box-shadow .18s ease;
+  }
+  .filterpanel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+  .fgroup { display: flex; flex-direction: column; gap: .35rem; }
+  .fgroup[hidden] { display: none; }
+
+  .flabel {
+    margin: 0; font-family: "IBM Plex Mono", monospace;
+    font-size: .64rem; font-weight: 500; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--faint);
+  }
+
+  .activefilters { display: flex; gap: .3rem; flex-wrap: wrap; align-items: center; }
+  .activefilters[hidden] { display: none; }
+
+  .afchip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem;
+    letter-spacing: .04em; min-height: 1.95rem; padding: .2rem .35rem .2rem .7rem;
+    border-radius: var(--radius-btn); cursor: pointer;
+    background: var(--accent); border: 1px solid var(--accent); color: var(--ground);
+  }
+  .afchip:hover { filter: brightness(.92); }
+  .afchip:active { transform: translateY(1px); }
+  .afchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .afchip b { font-weight: 500; opacity: .7; }
+  .afchip i { font-style: normal; font-size: .9em; opacity: .8; }
+
+  .clearall {
+    font-family: "IBM Plex Mono", monospace; font-size: .68rem;
+    letter-spacing: .05em; text-transform: uppercase;
+    background: none; border: 0; padding: .25rem .3rem;
+    color: var(--faint); cursor: pointer; text-decoration: underline;
+  }
+  .clearall:hover { color: var(--accent); }
+  .clearall:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chips { display: flex; gap: .3rem; overflow-x: auto; padding-bottom: .15rem; scrollbar-width: thin; }
+  /* Inside the panel there is no horizontal room to scroll into, so wrap. */
+  .filterpanel .chips { flex-wrap: wrap; overflow: visible; padding-bottom: 0; }
+
+  .chip {
+    flex: none; cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem;
+    letter-spacing: .02em; min-height: 1.95rem;
+    padding: .28rem .7rem; border-radius: var(--radius-btn);
+    border: 1px solid var(--edge); background: var(--surface); color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip:active { transform: translateY(1px); }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .chip[aria-pressed="true"]:hover { filter: brightness(.92); color: var(--ground); }
+  .chip i { font-style: normal; opacity: .65; font-variant-numeric: tabular-nums; }
+
+  /* ---- cards ---- */
+  .list { display: flex; flex-direction: column; gap: .55rem; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }
+  /* The open digest lifts on a soft shadow rather than taking a bright
+     border - the border would compete with the words for attention. */
+  .card.expanded { box-shadow: var(--shadow-lg); }
+
+  .head {
+    width: 100%; text-align: left; cursor: pointer;
+    background: none; border: 0; font: inherit; color: inherit;
+    padding: .8rem .85rem;
+    display: flex; flex-direction: column; gap: .45rem;
+  }
+  .head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .meta { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+
+  /* One shape for every label in the meta row - verdict, topic and flags
+     all read as the same kind of thing, distinguished only by colour. */
+  .verdict, .topic, .flag {
+    font-family: "IBM Plex Mono", monospace; font-size: .63rem;
+    letter-spacing: .06em;
+    padding: .22rem .55rem; border-radius: var(--radius-badge);
+    line-height: 1.4;
+  }
+
+  .verdict {
+    text-transform: uppercase;
+    background: var(--sunk); color: var(--muted);
+  }
+  .verdict.v-novel { background: var(--novel-soft); color: var(--novel); }
+  .verdict.v-recycled, .verdict.v-thin { background: var(--recycled-soft); color: var(--recycled); }
+  .verdict.v-dubious { background: var(--dubious-soft); color: var(--dubious); }
+
+  .topic {
+    border: 1px solid var(--edge); color: var(--faint);
+  }
+
+  .flag {
+    border: 1px solid var(--edge); color: var(--faint);
+  }
+  .flag.watch { color: var(--accent); border-color: var(--accent); }
+  .flag.clean { color: var(--novel); border-color: var(--novel); }
+
+  .savedas {
+    margin: 0; font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem; color: var(--faint); letter-spacing: .01em;
+    overflow-wrap: anywhere;
+  }
+
+  .title {
+    font-family: "Archivo", Helvetica, Arial, sans-serif;
+    font-size: 1rem; font-weight: 600; line-height: 1.25; margin: 0;
+    text-wrap: balance;
+  }
+
+  .claim { margin: 0; color: var(--muted); font-size: .92rem; }
+
+  .times {
+    margin: 0; font-family: "IBM Plex Mono", monospace;
+    font-size: .68rem; letter-spacing: .04em; color: var(--faint);
+    display: flex; gap: .5rem; flex-wrap: wrap;
+  }
+  .times b { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .body { padding: 0 .85rem .9rem; display: flex; flex-direction: column; gap: .85rem; }
+  .body[hidden] { display: none; }
+
+  .sec { display: flex; flex-direction: column; gap: .3rem; }
+
+  .sec h3 {
+    font-family: "IBM Plex Mono", monospace; font-size: .64rem;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--faint); margin: 0; font-weight: 500;
+  }
+
+  .sec p, .sec li { margin: 0; font-size: .92rem; }
+  .sec ul { margin: 0; padding-left: 1.05rem; display: flex; flex-direction: column; gap: .3rem; }
+  .sec pre {
+    margin: 0; font: inherit; font-size: .92rem;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+
+  .foot {
+    border-top: 1px solid var(--line); padding-top: .6rem;
+    display: flex; flex-wrap: wrap; gap: .3rem .5rem; align-items: baseline;
+  }
+  .foot a { color: var(--accent); font-size: .8rem; }
+  .foot .t {
+    font-family: "IBM Plex Mono", monospace; font-size: .63rem;
+    letter-spacing: .06em;
+    color: var(--faint); background: var(--sunk);
+    border-radius: var(--radius-badge); padding: .22rem .55rem;
+  }
+
+  /* ---- speech ---- */
+  .listen {
+    align-self: flex-start; cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem;
+    letter-spacing: .04em; min-height: 2.3rem;
+    padding: .38rem .9rem; border-radius: var(--radius-btn);
+    border: 1px solid var(--accent); background: none; color: var(--accent);
+    display: inline-flex; align-items: center; gap: .3rem;
+  }
+  .listen:hover { background: var(--accent-soft); }
+  .listen:active { transform: translateY(1px); }
+  .listen:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .listen[data-playing="true"] { background: var(--accent); color: var(--ground); }
+
+  .speechbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: .6rem .8rem calc(.6rem + env(safe-area-inset-bottom));
+  }
+  .speechbar[hidden] { display: none !important; }
+  .speechbar .inner {
+    max-width: var(--measure); margin: 0 auto;
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  }
+  .speechbar .now {
+    flex: 1 1 100%; min-width: 0;
+    display: flex; flex-direction: column; gap: .1rem;
+  }
+  .speechbar .now b {
+    font-family: "Archivo", Helvetica, Arial, sans-serif; font-weight: 600;
+    font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .speechbar .now span {
+    font-family: "IBM Plex Mono", monospace; font-size: .64rem;
+    color: var(--faint); letter-spacing: .04em;
+  }
+  .pbtn {
+    flex: 1 1 0; cursor: pointer; font: inherit;
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem;
+    min-height: 2.3rem; padding: .38rem .6rem; border-radius: var(--radius-btn);
+    border: 1px solid var(--edge); background: var(--sunk); color: var(--ink);
+  }
+  .pbtn.primary { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .pbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  /* A solid, filled button (primary, or paused/pressed) dims on hover
+     instead of restyling its text - restyling text on top of a background
+     that is already that same colour is how the label disappears. */
+  .pbtn.primary:hover, .pbtn[aria-pressed="true"]:hover { filter: brightness(.92); color: var(--ground); }
+  .pbtn:not(.primary):not([aria-pressed="true"]):hover { border-color: var(--accent); color: var(--accent); }
+  .pbtn:active { transform: translateY(1px); }
+  .pbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pbtn:disabled { opacity: .4; cursor: default; transform: none; }
+
+  .audiorow {
+    display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+  }
+  .audiorow select {
+    font: inherit; font-family: "IBM Plex Mono", monospace; font-size: .7rem;
+    min-height: 2.15rem; padding: .3rem .5rem; border-radius: var(--radius-btn); max-width: 11rem;
+    border: 1px solid var(--edge); background: var(--surface); color: var(--ink);
+  }
+  .audiorow select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint {
+    font-family: "IBM Plex Mono", monospace; font-size: .63rem;
+    color: var(--faint); letter-spacing: .02em; margin: 0;
+  }
+  #audioControls[hidden] { display: none !important; }
+
+  .rowactions { padding: 0 .85rem .75rem; display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+
+  .watch-link {
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem;
+    letter-spacing: .04em; text-decoration: none; min-height: 2.3rem;
+    padding: .38rem .9rem; border-radius: var(--radius-btn);
+    border: 1px solid var(--edge); color: var(--muted);
+    display: inline-flex; align-items: center;
+  }
+  .watch-link:hover { border-color: var(--muted); color: var(--ink); background: var(--sunk); }
+  .watch-link:active { transform: translateY(1px); }
+  .watch-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  body.speaking .wrap { padding-bottom: 7.5rem; }
+  @media (min-width: 980px) { body.speaking .main { padding-bottom: 7.5rem; } }
+
+  /* ---- floating collapse control ----
+     Shown only while a digest is open, so it is always reachable without
+     scrolling back to the top - the same control whether that digest sits
+     half-read on a phone or filling the reading pane on desktop. */
+  .foldbtn {
+    position: fixed; right: 1.1rem; bottom: 1.25rem; z-index: 21;
+    width: 2.9rem; height: 2.9rem; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: var(--ground); border: 1px solid var(--accent);
+    cursor: pointer;
+  }
+  .foldbtn:hover { filter: brightness(.92); }
+  .foldbtn:active { transform: translateY(1px); }
+  .foldbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .foldbtn[hidden] { display: none !important; }
+  body.speaking .foldbtn { bottom: 5.75rem; }
+  @media (min-width: 980px) { .foldbtn { display: none !important; } }
+
+  .foldbtn-inline {
+    align-self: center; margin: .3rem 0 0; cursor: pointer;
+    width: 2.75rem; height: 2.75rem; border-radius: var(--radius-btn);
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--edge); background: var(--sunk); color: var(--muted);
+  }
+  .foldbtn-inline:hover { border-color: var(--accent); color: var(--accent); }
+  .foldbtn-inline:active { transform: translateY(1px); }
+  .foldbtn-inline:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- read along ---- */
+  .readalong {
+    padding: .1rem .85rem .95rem;
+    font-size: var(--ra-size); line-height: 1.7;
+    border-top: 1px solid var(--line);
+    margin: 0 0 .1rem;
+  }
+  .readalong[hidden] { display: none; }
+
+  .ra-h {
+    font-family: "IBM Plex Mono", monospace; font-size: var(--ra-size);
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--faint); font-weight: 700;
+    margin: 1.1rem 0 .4rem;
+  }
+  .readalong > .ra-h:first-child { margin-top: .3rem; }
+
+  .ra-p { margin: 0 0 .45rem; }
+  .ra-p:last-child { margin-bottom: 0; }
+
+  .ra-item { padding-left: .9rem; position: relative; }
+  .ra-item::before {
+    content: ""; position: absolute; left: .1rem; top: .68em;
+    width: .28rem; height: .28rem; border-radius: 50%;
+    background: var(--line);
+  }
+
+  .ra-h .ch { color: inherit; }
+  .ra-h .ch.active { background: var(--accent-soft); color: var(--accent); }
+  .ra-h .w.active { background: var(--accent); color: var(--ground); }
+
+  .ch {
+    color: var(--faint); transition: color .12s linear;
+    cursor: pointer; border-radius: 3px;
+  }
+  .ch:hover { color: var(--ink); background: var(--sunk); }
+  .ch:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .ra-h .ch:hover { background: var(--sunk); }
+  .ch.active {
+    color: var(--ink);
+    background: var(--accent-soft);
+    border-radius: 3px;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+    padding: .08em .12em; margin: 0 -.12em;
+  }
+  .ch.done { color: var(--muted); }
+
+  .w.active {
+    background: var(--accent); color: var(--ground);
+    border-radius: 2px; padding: .04em .1em; margin: 0 -.1em;
+  }
+
+  @media (prefers-reduced-motion: reduce) { .ch { transition: none; } }
+  #speechOff .rowactions .listen, .no-speech .rowactions .listen { display: none; }
+
+  .empty { text-align: center; color: var(--faint); padding: 2.5rem 1rem; font-size: .95rem; }
+  .empty[hidden] { display: none; }
+
+  footer.page {
+    margin-top: 1.6rem; padding-top: .9rem; border-top: 1px solid var(--line);
+    color: var(--faint); font-size: .8rem;
+  }
+
+  /* ---- mobile reading mode ----
+     Below the sidebar breakpoint there is only one column, so opening a
+     digest shrinks the masthead and search instead of moving them aside,
+     which is what the desktop two-pane layout already does for free. */
+  @media (max-width: 979.98px) {
+    body.reading .standfirst,
+    body.reading .stats,
+    body.reading .srcline,
+    body.reading .activefilters,
+    body.reading .audiorow,
+    body.reading .hint { display: none; }
+    body.reading .masthead { gap: .2rem; margin-bottom: .6rem; }
+    body.reading h1 { font-size: 1.2rem; }
+    body.reading .controls { padding: .4rem 0; margin-bottom: .6rem; gap: .4rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+
+ <div class="sidebar">
+  <header class="masthead">
+    <h1>YouTube Digest</h1>
+    <p class="standfirst">Everything saved, read so you do not have to. Verdicts are deliberately blunt.</p>
+    <div class="stats" id="stats"></div>
+    <p class="srcline" id="srcline">Saved snapshot</p>
+  </header>
+
+  <div class="controls">
+    <div class="barrow">
+      <input id="q" type="search" placeholder="Search claims, channels, tags, actions" autocomplete="off" aria-label="Search notes">
+      <div class="filterwrap">
+        <button class="filterbtn" type="button" id="filterBtn" aria-expanded="false" aria-controls="filterPanel">
+          Filters<span class="fcount" id="fcount" hidden></span>
+        </button>
+        <div class="filterpanel" id="filterPanel" aria-hidden="true">
+          <div class="fgroup">
+            <h2 class="flabel">Topic</h2>
+            <div class="chips" id="topicChips" role="group" aria-label="Filter by topic"></div>
+          </div>
+          <div class="fgroup">
+            <h2 class="flabel">Verdict</h2>
+            <div class="chips" id="verdictChips" role="group" aria-label="Filter by verdict"></div>
+          </div>
+          <div class="fgroup" id="statusGroup">
+            <h2 class="flabel">Status</h2>
+            <div class="chips" id="statusChips" role="group" aria-label="Filter by read status"></div>
+          </div>
+        </div>
+      </div>
+      <div class="filterwrap">
+        <button class="filterbtn" type="button" id="readBtn" aria-expanded="false" aria-controls="readPanel" aria-label="Reading settings">Aa</button>
+        <div class="filterpanel" id="readPanel" aria-hidden="true">
+          <div class="fgroup">
+            <h2 class="flabel">Theme</h2>
+            <div class="chips" id="themeChips" role="group" aria-label="Reading theme"></div>
+          </div>
+          <div class="fgroup">
+            <h2 class="flabel">Text size</h2>
+            <div class="chips" id="sizeChips" role="group" aria-label="Reading text size"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="activefilters" id="activeFilters" hidden></div>
+    <div class="audiorow" id="audioControls" hidden>
+      <button class="pbtn primary" type="button" id="playAll">Play all</button>
+      <select id="voiceSel" aria-label="Voice"></select>
+      <select id="rateSel" aria-label="Speed">
+        <option value="0.9">0.9x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.15">1.15x</option>
+        <option value="1.3">1.3x</option>
+        <option value="1.5">1.5x</option>
+      </select>
+    </div>
+    <p class="hint" id="audioHint" hidden>Tap any line to play from there. Keep the page open: iOS stops speech when the screen locks.</p>
+  </div>
+ </div>
+
+ <div class="main">
+  <div class="list" id="list"></div>
+  <p class="empty" id="empty" hidden>Nothing matches that.</p>
+
+  <footer class="page" id="pageFoot"></footer>
+ </div>
+</div>
+
+<button class="foldbtn" id="foldBtn" type="button" hidden aria-label="Collapse digest">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<div class="speechbar" id="speechbar" hidden>
+  <div class="inner">
+    <div class="now">
+      <b id="nowTitle">&nbsp;</b>
+      <span id="nowPos">&nbsp;</span>
+    </div>
+    <button class="pbtn" type="button" id="backBtn" aria-label="Back 10 seconds">&minus;10s</button>
+    <button class="pbtn" type="button" id="fwdBtn" aria-label="Forward 10 seconds">+10s</button>
+    <button class="pbtn" type="button" id="pauseBtn" aria-label="Pause">Pause</button>
+    <button class="pbtn" type="button" id="skipBtn" aria-label="Next note">Next</button>
+    <button class="pbtn primary" type="button" id="stopBtn">Stop</button>
+  </div>
+</div>
+
+<script>/*__JSPDF__*/</script>
+<script>
+  let NOTES = /*__DATA__*/;
+
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const vClass = v => "v-" + String(v).toLowerCase().split(" ")[0];
+
+  let topic = "all", verdict = "all", status = "all", query = "";
+
+  /* The one digest currently expanded, by note id. Accordion by design: a
+     digest that grows to fill the reading pane only makes sense one at a
+     time, and it is the single source of truth card() reads from, so a
+     re-render (search, filter, marking read) can never lose the open one. */
+  let openId = null;
+
+  /* ---- reader marks: read, and favourite ----
+     Both are the same thing: a flag the reader sets on a note, kept in its
+     own database collection, with absence meaning off. So a note added
+     tomorrow is unread and unfavourited without anything being written for
+     it, and the daily task, which replaces whole note documents, can never
+     disturb either.
+
+     The sets stay empty and the controls stay hidden until the database
+     answers, so a page running on the baked snapshot never offers a toggle
+     that cannot save. */
+  let markDb = null;
+  let saver = null;          // the downloads capability, once it answers
+  const KINDS = {
+    read: { set: new Set(), coll: "reads",      body: { read: true },
+            on: "Read",      off: "Mark read", flag: "read",      cls: "isread" },
+    fav:  { set: new Set(), coll: "favourites", body: { fav: true },
+            on: "Favourited", off: "Favourite", flag: "favourite", cls: "isfav", icon: true }
+  };
+  const noteId = n => n.file.replace(/\.md$/, "").replace(/\//g, "__");
+  const has = (kind, n) => KINDS[kind].set.has(noteId(n));
+  const isRead = n => has("read", n);
+
+  function setMark(kind, n, want) {
+    const k = KINDS[kind], id = noteId(n);
+    if (!markDb || k.set.has(id) === want) return;
+    want ? k.set.add(id) : k.set.delete(id);   // optimistic: the UI moves now
+    paintMarks(n);
+    const ref = markDb.doc(k.coll + "/" + id);
+    const call = want
+      ? ref.set(Object.assign({ at: new Date().toISOString() }, k.body))
+      : ref.delete();
+    Promise.resolve(call).catch(() => {
+      want ? k.set.delete(id) : k.set.add(id); // put it back: nothing was saved
+      paintMarks(n);
+      const line = document.getElementById("srcline");
+      if (line) line.textContent = "could not save " + (kind === "fav" ? "favourite" : "read status");
+    });
+  }
+
+  const setRead = (n, want) => setMark("read", n, want);
+
+  /* Update one card in place. Re-rendering the list would collapse whatever
+     the reader has open and interrupt playback. */
+  function paintMarks(n) {
+    const el = document.querySelector('[data-note="' + cssEsc(noteId(n)) + '"]');
+    if (!el) return;
+    const meta = el.querySelector(".meta");
+
+    Object.keys(KINDS).forEach(kind => {
+      const k = KINDS[kind], on = has(kind, n);
+      el.classList.toggle(k.cls, on);
+      const btn = el.querySelector(".mark[data-kind='" + kind + "']");
+      if (btn) {
+        btn.setAttribute("aria-pressed", String(on));
+        const label = on ? k.on : k.off;
+        // An icon-only control (the heart) keeps its label out of view -
+        // in the accessible name and the tooltip - rather than as text.
+        if (k.icon) {
+          btn.setAttribute("aria-label", label);
+          btn.setAttribute("title", label);
+        } else {
+          btn.textContent = label;
+        }
+      }
+      const flag = meta && meta.querySelector(".flag." + k.flag);
+      if (on && meta && !flag) {
+        meta.insertAdjacentHTML("beforeend",
+          '<span class="flag ' + k.flag + '">' + k.flag + '</span>');
+      } else if (!on && flag) {
+        flag.remove();
+      }
+    });
+
+    /* If the card no longer matches the current filter it should go, but not
+       while it is the one being listened to. */
+    if (!visibleFilter(n)) {
+      if (!session || session.queue[session.i].file !== n.file) return render();
+      pendingFilter = true;
+    }
+    renderStats(NOTES.filter(visibleFilter));
+    renderChips();
+  }
+
+  let pendingFilter = false;
+  const cssEsc = s => (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/["\\]/g, "\\$&");
+
+  /* ---- summary stats ---- */
+  /* Stats describe what is on screen, so filtering to unread answers
+     "how long to catch up" rather than restating the whole library. */
+  function renderStats(shown) {
+    const sells = shown.filter(n => n.sells).length;
+    const novel = shown.filter(n => n.verdict === "NOVEL").length;
+    const total = shown.reduce((t, n) => t + listenSecs(n), 0);
+    const unread = NOTES.filter(n => !isRead(n)).length;
+    const cells = [
+      [shown.length, shown.length === NOTES.length ? "notes" : "of " + NOTES.length],
+      [fmtDur(total), "to listen"]
+    ];
+    if (markDb) cells.push([unread, "unread"]);
+    cells.push([novel, "novel"], [sells + "/" + shown.length, "selling"]);
+    document.getElementById("stats").innerHTML = cells
+      .map(([b, sp]) => `<div class="stat"><b>${esc(b)}</b><span>${esc(sp)}</span></div>`).join("");
+  }
+
+  /* ---- filter chips ---- */
+  const counts = key => NOTES.reduce((m, n) => (m[n[key]] = (m[n[key]] || 0) + 1, m), {});
+
+  function buildChips(el, items, current, onPick) {
+    el.innerHTML = items.map(([val, label, n]) =>
+      `<button class="chip" type="button" data-val="${esc(val)}" aria-pressed="${val === current}">${esc(label)}${n != null ? ` <i>${n}</i>` : ""}</button>`
+    ).join("");
+    el.querySelectorAll(".chip").forEach(b =>
+      b.addEventListener("click", () => onPick(b.dataset.val)));
+  }
+
+  const VORDER = ["NOVEL", "SOLID BUT FAMILIAR", "RECYCLED", "THIN", "DUBIOUS"];
+  const vLabel = v => v === "SOLID BUT FAMILIAR" ? "Solid" : v[0] + v.slice(1).toLowerCase();
+  const STATUS_LABEL = { unread: "Unread", read: "Read", fav: "Favourites" };
+
+  function renderChips() {
+    const topicCounts = counts("topic");
+    const verdictCounts = counts("verdict");
+    buildChips(document.getElementById("topicChips"),
+      [["all", "All", NOTES.length]].concat(
+        Object.keys(topicCounts).sort().map(t => [t, t, topicCounts[t]])),
+      topic, v => { topic = v; render(); });
+
+    buildChips(document.getElementById("verdictChips"),
+      [["all", "Any verdict", null]].concat(
+        VORDER.filter(v => verdictCounts[v]).map(v => [v, vLabel(v), verdictCounts[v]])),
+      verdict, v => { verdict = v; render(); });
+
+    const box = document.getElementById("statusChips");
+    document.getElementById("statusGroup").hidden = !markDb;
+    if (!markDb) return;
+    const unread = NOTES.filter(n => !isRead(n)).length;
+    buildChips(box, [
+      ["all", "All", NOTES.length],
+      ["unread", "Unread", unread],
+      ["read", "Read", NOTES.length - unread],
+      ["fav", "Favourites", NOTES.filter(n => has("fav", n)).length]
+    ], status, v => { status = v; render(); });
+  }
+
+  /* ---- what is currently applied ----
+     Collapsing the groups into a panel would otherwise hide the filter state
+     behind a closed menu, so every applied filter stays on screen as its own
+     chip, and clicking one removes it. */
+  function activeList() {
+    const out = [];
+    if (topic !== "all") out.push(["topic", "Topic", topic]);
+    if (verdict !== "all") out.push(["verdict", "Verdict", vLabel(verdict)]);
+    if (status !== "all") out.push(["status", "Status", STATUS_LABEL[status] || status]);
+    return out;
+  }
+
+  function renderActive() {
+    const active = activeList();
+    const box = document.getElementById("activeFilters");
+    const count = document.getElementById("fcount");
+
+    count.hidden = !active.length;
+    count.textContent = active.length;
+
+    box.hidden = !active.length;
+    if (!active.length) { box.innerHTML = ""; return; }
+
+    box.innerHTML = active.map(([key, label, val]) =>
+      `<button class="afchip" type="button" data-clear="${esc(key)}" aria-label="Remove ${esc(label)} filter ${esc(val)}">` +
+      `<b>${esc(label)}</b>${esc(val)}<i aria-hidden="true">\u00d7</i></button>`
+    ).join("") + (active.length > 1
+      ? '<button class="clearall" type="button" data-clear="all">Clear all</button>' : "");
+
+    box.querySelectorAll("[data-clear]").forEach(b =>
+      b.addEventListener("click", () => {
+        const k = b.dataset.clear;
+        if (k === "all" || k === "topic") topic = "all";
+        if (k === "all" || k === "verdict") verdict = "all";
+        if (k === "all" || k === "status") status = "all";
+        render();
+      }));
+  }
+
+  /* ---- export one note as a PDF ----
+     Drawn as text, not captured as a picture, so the result is selectable and
+     readable by a screen reader. Colours and hierarchy follow the card; the
+     faces are jsPDF's built-ins, because the page's web fonts cannot be pulled
+     into the document under the sandbox's network rules. */
+  const INK = [42, 37, 33], MUTED = [110, 100, 89], FAINT = [114, 103, 90],
+        LINE = [230, 220, 207], ACCENT = [151, 85, 49];
+  const VCOLOUR = {
+    "NOVEL":              { fg: [128, 102, 36], bg: [241, 233, 210] },
+    "SOLID BUT FAMILIAR": { fg: [110, 100, 89], bg: [241, 234, 225] },
+    "RECYCLED":           { fg: [108, 92, 74],  bg: [238, 230, 218] },
+    "THIN":               { fg: [110, 100, 89], bg: [241, 234, 225] },
+    "DUBIOUS":            { fg: [162, 63, 53],  bg: [243, 222, 218] }
+  };
+
+  function buildPdf(n) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const M = 18, W = 210, RIGHT = W - M, COL = W - M * 2;
+    const BOTTOM = 297 - M - 8;
+    let y = M;
+
+    const need = h => {
+      if (y + h <= BOTTOM) return;
+      doc.addPage();
+      y = M;
+    };
+    const rgb = (fn, c) => doc[fn](c[0], c[1], c[2]);
+
+    /* running head, so a printed page is identifiable on its own */
+    doc.setFont("courier", "normal"); doc.setFontSize(7.5);
+    rgb("setTextColor", FAINT);
+    doc.text("VIDEO DIGEST", M, y);
+    if (n.saved) doc.text(String(n.saved).toUpperCase(), RIGHT, y, { align: "right" });
+    y += 3;
+    rgb("setDrawColor", LINE); doc.setLineWidth(0.2);
+    doc.line(M, y, RIGHT, y);
+    y += 7;
+
+    /* verdict pill and topic */
+    const v = VCOLOUR[n.verdict] || VCOLOUR["THIN"];
+    doc.setFont("courier", "bold"); doc.setFontSize(7.5);
+    const label = String(n.verdict || "UNKNOWN");
+    const pw = doc.getTextWidth(label) + 5;
+    rgb("setFillColor", v.bg);
+    doc.roundedRect(M, y - 3.4, pw, 5.2, 1.2, 1.2, "F");
+    rgb("setTextColor", v.fg);
+    doc.text(label, M + 2.5, y);
+    rgb("setTextColor", FAINT);
+    doc.setFont("courier", "normal");
+    doc.text(String(n.topic || "").toUpperCase(), M + pw + 3, y);
+    y += 8;
+
+    /* title */
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+    rgb("setTextColor", INK);
+    const title = doc.splitTextToSize(String(n.title || "Untitled"), COL);
+    need(title.length * 7);
+    doc.text(title, M, y);
+    y += title.length * 7 + 1;
+
+    /* channel and the time it takes */
+    const bits = [];
+    if (n.channel) bits.push(n.channel);
+    if (n.words) bits.push(Math.max(1, Math.round(n.words / 220)) + " min read");
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
+    rgb("setTextColor", FAINT);
+    if (bits.length) { doc.text(bits.join("   \u00b7   "), M, y); y += 6; }
+
+    /* synopsis, set larger than the body: it is the line you scan */
+    if (n.synopsis) {
+      doc.setFont("times", "normal"); doc.setFontSize(11.5);
+      rgb("setTextColor", MUTED);
+      const syn = doc.splitTextToSize(n.synopsis, COL);
+      need(syn.length * 5.2 + 4);
+      doc.text(syn, M, y);
+      y += syn.length * 5.2 + 4;
+    }
+
+    const section = (heading, lines, opts) => {
+      const list = (lines || []).filter(x => x && String(x).trim());
+      if (!list.length) return;
+      need(14);
+      y += 2;
+      doc.setFont("courier", "bold"); doc.setFontSize(7.5);
+      rgb("setTextColor", FAINT);
+      doc.text(heading.toUpperCase(), M, y);
+      y += 4.5;
+      doc.setFont("times", "normal"); doc.setFontSize(10.5);
+      rgb("setTextColor", INK);
+      list.forEach((item, i) => {
+        const marker = opts && opts.numbered ? (i + 1) + ".  "
+                     : opts && opts.bullet   ? "\u2022   " : "";
+        const indent = marker ? 6 : 0;
+        const wrapped = doc.splitTextToSize(String(item).trim(), COL - indent);
+        need(wrapped.length * 4.9 + 2);
+        if (marker) {
+          rgb("setTextColor", FAINT);
+          doc.text(marker.trim(), M, y);
+          rgb("setTextColor", INK);
+        }
+        doc.text(wrapped, M + indent, y);
+        y += wrapped.length * 4.9 + 1.6;
+      });
+      y += 2;
+    };
+
+    section("Verdict", [String(n.reasoning || "").trim()]);
+    section("Core claim", [n.claim]);
+    section("Key points", n.points, { bullet: true });
+
+    /* Actions come through either numbered or dash-prefixed depending on how
+       the note was written, so accept both and render them as a real list. */
+    const raw = String(n.try || "").trim();
+    let numbered = false, tryItems = [];
+    if (raw) {
+      if (/(?:^|\n)\s*\d+[.)]\s/.test(raw)) {
+        numbered = true;
+        tryItems = raw.split(/(?:^|\s)(?=\d+[.)]\s)/);
+      } else if (/(?:^|\n)\s*[-*\u2022]\s/.test(raw)) {
+        tryItems = raw.split(/\n(?=\s*[-*\u2022]\s)/);
+      } else {
+        tryItems = [raw];
+      }
+      tryItems = tryItems
+        .map(x => x.replace(/^\s*(?:\d+[.)]|[-*\u2022])\s*/, "").replace(/\s*\n\s*/g, " ").trim())
+        .filter(Boolean);
+    }
+    section("Try this", tryItems, tryItems.length > 1 ? { numbered, bullet: !numbered } : {});
+
+    section("Watch it anyway?", [n.watch]);
+    if (n.sells) section("Selling", [n.selling]);
+
+    /* source, on every page footer so a loose page still traces back */
+    const pages = doc.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      rgb("setDrawColor", LINE); doc.setLineWidth(0.2);
+      doc.line(M, 297 - M - 4, RIGHT, 297 - M - 4);
+      doc.setFont("courier", "normal"); doc.setFontSize(7);
+      rgb("setTextColor", FAINT);
+      const src = String(n.source || "");
+      if (src) {
+        rgb("setTextColor", ACCENT);
+        doc.textWithLink(src.length > 70 ? src.slice(0, 69) + "\u2026" : src, M, 297 - M, { url: src });
+        rgb("setTextColor", FAINT);
+      }
+      if (pages > 1) doc.text(i + " / " + pages, RIGHT, 297 - M, { align: "right" });
+    }
+
+    return doc.output("blob");
+  }
+
+  async function exportNote(n, btn) {
+    if (!saver) return;
+    const original = btn.textContent;
+    btn.classList.add("busy"); btn.textContent = "Making\u2026";
+    const done = (msg) => {
+      btn.classList.remove("busy");
+      btn.textContent = msg || original;
+      if (msg) setTimeout(() => { btn.textContent = original; }, 2600);
+    };
+    try {
+      const blob = buildPdf(n);
+      const name = n.file.replace(/^.*\//, "").replace(/\.md$/, "") + ".pdf";
+      await saver.save({ filename: name, data: blob });
+      done();
+    } catch (e) {
+      /* Declining the prompt is a normal answer, not a failure to report. */
+      done(e && e.code === "declined" ? null : "Failed");
+    }
+  }
+
+  /* ---- cards ---- */
+  function haystack(n) {
+    return [n.title, n.channel, n.synopsis, n.claim, n.reasoning, n.try, n.selling, n.myNote,
+            n.points.join(" "), n.tags.join(" "), n.topic, n.verdict].join(" ").toLowerCase();
+  }
+
+  function card(n, i) {
+    const myNote = (n.myNote && n.myNote.toLowerCase() !== "none")
+      ? `<p class="savedas">saved as &ldquo;${esc(n.myNote)}&rdquo;</p>` : "";
+    const open = openId === noteId(n);
+    return `
+      <article class="card${isRead(n) ? " isread" : ""}${has("fav", n) ? " isfav" : ""}${open ? " expanded" : ""}" data-note="${esc(noteId(n))}">
+        <button class="head" type="button" aria-expanded="${open}" aria-controls="b${i}">
+          <div class="meta">
+            <span class="verdict ${vClass(n.verdict)}">${esc(n.verdict)}</span>
+            <span class="topic">${esc(n.topic)}</span>
+            ${n.sells ? "" : '<span class="flag clean">sells nothing</span>'}
+            ${n.watchFlag === "Yes" ? '<span class="flag watch">worth watching</span>' : ""}
+            ${isRead(n) ? '<span class="flag read">read</span>' : ""}
+            ${has("fav", n) ? '<span class="flag favourite">favourite</span>' : ""}
+          </div>
+          <h2 class="title">${esc(n.title)}</h2>
+          ${myNote}
+          <p class="claim">${esc(n.synopsis || n.claim)}</p>
+          <p class="times"><span><b>${esc(fmtDur(readSecs(n)))}</b> read</span><span><b>${esc(fmtDur(listenSecs(n)))}</b> listen</span></p>
+        </button>
+        <div class="rowactions"><button class="listen" type="button" data-file="${esc(n.file)}">Listen</button><a class="watch-link" href="${esc(n.source)}" target="_blank" rel="noopener">Watch on YouTube</a><button class="mark export" type="button" data-file="${esc(n.file)}"${saver ? "" : " hidden"}>PDF</button><button class="mark fav" type="button" data-kind="fav" data-file="${esc(n.file)}" aria-pressed="${has("fav", n)}" aria-label="${has("fav", n) ? "Favourited" : "Favourite"}" title="${has("fav", n) ? "Favourited" : "Favourite"}"${markDb ? "" : " hidden"}><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button><button class="mark markread" type="button" data-kind="read" data-file="${esc(n.file)}" aria-pressed="${isRead(n)}"${markDb ? "" : " hidden"}>${isRead(n) ? "Read" : "Mark read"}</button></div>
+        <div class="body" id="b${i}"${open ? "" : " hidden"}>
+          <div class="readalong" data-ra="${esc(n.file)}">${transcriptHTML(n)}</div>
+          <div class="foot">
+            ${n.tags.map(t => `<span class="t">${esc(t)}</span>`).join("")}
+            <span class="t">${esc(n.channel)}</span>
+            <span class="t">saved ${esc(n.saved)}</span>
+          </div>
+          <button class="foldbtn-inline" type="button" data-collapse aria-label="Collapse this digest">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M18 15l-6-6-6 6" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>`;
+  }
+
+  function visibleFilter(n) {
+    const q = query.trim().toLowerCase();
+    return (topic === "all" || n.topic === topic) &&
+           (verdict === "all" || n.verdict === verdict) &&
+           (status === "all" ||
+            (status === "fav" ? has("fav", n) : (status === "read") === isRead(n))) &&
+           (!q || haystack(n).includes(q));
+  }
+
+  /* Open/close is one piece of state (openId), so every entry point -
+     tapping the head, the inline fold button, the floating one, or a
+     digest starting to play - goes through these two functions rather
+     than toggling the DOM directly. */
+  function openCard(id) {
+    if (openId === id) return;
+    openId = id;
+    document.body.classList.add("reading");
+    render();
+    const el = document.querySelector('[data-note="' + cssEsc(id) + '"]');
+    if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  function collapseCurrent() {
+    if (openId == null) return;
+    openId = null;
+    document.body.classList.remove("reading");
+    render();
+  }
+
+  function render() {
+    pendingFilter = false;
+    const shown = NOTES.filter(visibleFilter);
+    renderStats(shown);
+    renderChips();
+    renderActive();
+
+    document.getElementById("list").innerHTML = shown.map(card).join("");
+    document.getElementById("empty").hidden = shown.length > 0;
+    document.getElementById("pageFoot").textContent =
+      `Showing ${shown.length} of ${NOTES.length}. Notes live in Google Drive under VideoDigest/notes.`;
+    const fold = document.getElementById("foldBtn");
+    if (fold) fold.hidden = openId == null;
+
+    document.querySelectorAll(".mark[data-kind]").forEach(b =>
+      b.addEventListener("click", () => {
+        const n = NOTES.find(x => x.file === b.dataset.file);
+        const kind = b.dataset.kind;
+        if (n) setMark(kind, n, !has(kind, n));
+      }));
+
+    document.querySelectorAll(".mark.export").forEach(b =>
+      b.addEventListener("click", () => {
+        const n = NOTES.find(x => x.file === b.dataset.file);
+        if (n) exportNote(n, b);
+      }));
+
+    document.querySelectorAll(".head").forEach(h =>
+      h.addEventListener("click", () => {
+        const id = h.closest(".card").dataset.note;
+        if (openId === id) collapseCurrent(); else openCard(id);
+      }));
+
+    if (typeof markButtons === "function") markButtons();
+    if (session && session.queue[session.i]) {
+      // A re-render mid-playback (search, filter, marking read) rebuilds the
+      // transcript from scratch, so the current position is restored rather
+      // than left dark.
+      highlight(session.queue[session.i].file, session.chunk, -1);
+    }
+  }
+
+  document.getElementById("q").addEventListener("input", e => { query = e.target.value; render(); });
+
+  /* ---------- speech ---------- */
+  const synth = window.speechSynthesis;
+  const canSpeak = !!(synth && window.SpeechSynthesisUtterance);
+  const bar = document.getElementById("speechbar");
+  const nowTitle = document.getElementById("nowTitle");
+  const nowPos = document.getElementById("nowPos");
+  const voiceSel = document.getElementById("voiceSel");
+  const rateSel = document.getElementById("rateSel");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const skipBtn = document.getElementById("skipBtn");
+
+  const store = {
+    get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  if (!canSpeak) {
+    document.body.classList.add("no-speech");
+  } else {
+    document.getElementById("audioControls").hidden = false;
+    document.getElementById("audioHint").hidden = false;
+  }
+
+  let voices = [];
+  function loadVoices() {
+    if (!canSpeak) return;
+    voices = (synth.getVoices() || []).filter(v => /^en/i.test(v.lang));
+    voiceSel.hidden = voices.length === 0;
+    if (!voices.length) return;
+    voices.sort((a, b) => (a.lang === "en-GB" ? -1 : b.lang === "en-GB" ? 1 : 0) || a.name.localeCompare(b.name));
+    const saved = store.get("vd.voice", "");
+    voiceSel.innerHTML = voices.map(v =>
+      `<option value="${esc(v.name)}"${v.name === saved ? " selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("");
+  }
+  if (canSpeak) {
+    loadVoices();
+    synth.addEventListener("voiceschanged", loadVoices);
+    voiceSel.addEventListener("change", () => store.set("vd.voice", voiceSel.value));
+    rateSel.value = store.get("vd.rate", "1");
+    rateSel.addEventListener("change", () => {
+      store.set("vd.rate", rateSel.value);
+      render();               // listening estimates are rate-dependent
+    });
+  }
+
+  let session = null;
+
+  function markButtons() {
+    const current = session && session.queue[session.i] ? session.queue[session.i].file : null;
+    const paused = !!(session && session.paused);
+    document.querySelectorAll(".listen").forEach(b => {
+      const on = b.dataset.file === current;
+      b.dataset.playing = String(on);
+      b.textContent = on ? (paused ? "Paused" : "Playing") : "Listen";
+    });
+    if (pauseBtn) {
+      pauseBtn.textContent = paused ? "Play" : "Pause";
+      pauseBtn.setAttribute("aria-label", paused ? "Resume" : "Pause");
+      pauseBtn.setAttribute("aria-pressed", String(paused));
+      pauseBtn.disabled = !session;
+    }
+    if (skipBtn) skipBtn.disabled = !session || session.i + 1 >= session.queue.length;
+  }
+
+  /* Wrap a chunk's words in spans so a boundary event can light one up.
+     Safari reports charIndex but not charLength, so we work out the word
+     ourselves from the offsets. */
+  function tokenise(text) {
+    const out = [];
+    const re = /\S+/g;
+    let m;
+    while ((m = re.exec(text)) !== null) out.push({ start: m.index, end: m.index + m[0].length });
+    return out;
+  }
+
+  function transcriptHTML(note) {
+    const wordSpans = (text) => {
+      const toks = tokenise(text);
+      let inner = "", cursor = 0;
+      toks.forEach((t, wi) => {
+        inner += esc(text.slice(cursor, t.start));
+        inner += `<span class="w" data-w="${wi}">${esc(text.slice(t.start, t.end))}</span>`;
+        cursor = t.end;
+      });
+      return inner + esc(text.slice(cursor));
+    };
+
+    let html = "", lastSec = null, lastItem = null, open = false;
+    note.speech.forEach((c, ci) => {
+      const span = `<span class="ch" data-ch="${ci}" role="button" tabindex="0">${wordSpans(c.t)}</span>`;
+      if (c.h) {
+        if (open) { html += "</p>"; open = false; }
+        html += `<h4 class="ra-h">${span}</h4>`;
+        lastSec = c.s; lastItem = null;
+        return;
+      }
+      if (c.s !== lastSec) {
+        if (open) { html += "</p>"; open = false; }
+        lastSec = c.s; lastItem = null;
+      }
+      if (c.i !== lastItem) {
+        if (open) html += "</p>";
+        const bullet = c.s === "Key points" || c.s === "Try this";
+        html += `<p class="ra-p${bullet ? " ra-item" : ""}">`;
+        open = true; lastItem = c.i;
+      }
+      html += span + " ";
+    });
+    if (open) html += "</p>";
+    return html;
+  }
+
+  function raFor(file) {
+    return document.querySelector(`.readalong[data-ra="${CSS.escape(file)}"]`);
+  }
+
+  function clearReadAlong() {
+    document.querySelectorAll(".readalong .ch").forEach(c => c.classList.remove("active", "done"));
+    document.querySelectorAll(".readalong .w").forEach(w => w.classList.remove("active"));
+  }
+
+  function highlight(file, ci, wi) {
+    const el = raFor(file);
+    if (!el) return;
+    el.querySelectorAll(".ch").forEach(c => {
+      const i = +c.dataset.ch;
+      c.classList.toggle("active", i === ci);
+      c.classList.toggle("done", i < ci);
+      if (i !== ci) c.querySelectorAll(".w.active").forEach(w => w.classList.remove("active"));
+    });
+    const chunk = el.querySelector(`.ch[data-ch="${ci}"]`);
+    if (!chunk) return;
+    chunk.querySelectorAll(".w").forEach(w => w.classList.toggle("active", +w.dataset.w === wi));
+    return chunk;
+  }
+
+  function stopSpeech() {
+    session = null;
+    try { synth.cancel(); } catch (e) {}
+    bar.hidden = true;
+    document.body.classList.remove("speaking");
+    clearReadAlong();
+    markButtons();
+  }
+
+  function togglePause() {
+    if (!session) return;
+    if (session.paused) {
+      try { synth.resume(); } catch (e) {}
+      if (session.pausedAt) session.chunkStart += Date.now() - session.pausedAt;
+      session.paused = false;
+      session.pausedAt = null;
+    } else {
+      try { synth.pause(); } catch (e) {}
+      session.paused = true;
+      session.pausedAt = Date.now();
+    }
+    markButtons();
+  }
+
+  /* Listening estimates need a chars-per-second figure. 14 is a sane default
+     for a UK voice at 1x, but the real rate varies by voice and device, so the
+     page measures it while you listen and keeps a rolling average. */
+  const DEFAULT_CPS = 14;
+  const READ_WPM = 220;
+
+  function storedCps() {
+    const v = parseFloat(store.get("vd.cps", ""));
+    return (isFinite(v) && v >= 8 && v <= 30) ? v : DEFAULT_CPS;
+  }
+  let CHARS_PER_SEC = storedCps();
+
+  function recordCps(chars, seconds, rate) {
+    if (!(seconds > 0.6) || chars < 40) return;      // too short to be reliable
+    const observed = chars / (seconds * rate);
+    if (!(observed >= 8 && observed <= 30)) return;   // pause, stall or nonsense
+    const next = CHARS_PER_SEC * 0.8 + observed * 0.2;
+    CHARS_PER_SEC = next;
+    store.set("vd.cps", next.toFixed(2));
+  }
+
+  const currentRate = () => parseFloat(rateSel && rateSel.value) || 1;
+  const listenSecs = n => n.chars / (CHARS_PER_SEC * currentRate());
+  const readSecs = n => (n.words / READ_WPM) * 60;
+
+  function fmtDur(sec) {
+    if (sec < 60) return Math.max(1, Math.round(sec)) + "s";
+    if (sec < 3600) return Math.round(sec / 60) + " min";
+    const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  function expandCardFor(file) {
+    const n = NOTES.find(x => x.file === file);
+    if (n) openCard(noteId(n));
+  }
+
+  function speakCurrent(fromChunk) {
+    if (!session) return;
+    const note = session.queue[session.i];
+    if (!note) return stopSpeech();
+
+    const start = Math.max(0, Math.min(fromChunk || 0, note.speech.length - 1));
+    session.chunk = start;
+
+    bar.hidden = false;
+    document.body.classList.add("speaking");
+    nowTitle.textContent = note.title;
+    markButtons();
+
+    clearReadAlong();
+    expandCardFor(note.file);
+
+    session.tokens = (note.speech || []).map(c => tokenise(c.t));
+    const file = note.file;
+    const voice = voices.find(v => v.name === voiceSel.value) || null;
+    const rate = parseFloat(rateSel.value) || 1;
+    const chunks = note.speech || [];
+    const token = session.token;
+
+    chunks.forEach((chunk, idx) => {
+      if (idx < start) return;
+      const u = new SpeechSynthesisUtterance(chunk.t);
+      if (voice) u.voice = voice;
+      u.rate = rate;
+      u.lang = voice ? voice.lang : "en-GB";
+
+      u.onstart = () => {
+        if (!session || session.token !== token) return;
+        const now = Date.now();
+        // only measure on an uninterrupted chunk-to-chunk transition
+        if (session.chunk === idx - 1 && session.chunkStart) {
+          recordCps(chunks[idx - 1].t.length, (now - session.chunkStart) / 1000, rate);
+        }
+        session.chunk = idx;
+        session.chunkStart = now;
+        let left = 0;
+        for (let k = idx; k < chunks.length; k++) left += chunks[k].t.length + 1;
+        nowPos.textContent =
+          `${session.i + 1} of ${session.queue.length}  ·  ${fmtDur(left / (CHARS_PER_SEC * rate))} left`;
+        const cur = highlight(file, idx, -1);
+        if (cur) cur.scrollIntoView({ block: "center", behavior: "smooth" });
+      };
+
+      /* Word-level highlighting. Chrome on Android never fires this, and we
+         keep sentence highlighting there rather than faking timings. */
+      u.onboundary = ev => {
+        if (!session || session.token !== token) return;
+        if (ev.name && ev.name !== "word") return;
+        const toks = (session.tokens && session.tokens[idx]) || [];
+        const ci = ev.charIndex;
+        let wi = -1;
+        for (let k = 0; k < toks.length; k++) {
+          if (ci >= toks[k].start && ci < toks[k].end) { wi = k; break; }
+          if (toks[k].start > ci) { wi = Math.max(0, k - 1); break; }
+          wi = k;
+        }
+        highlight(file, idx, wi);
+      };
+
+      if (idx === chunks.length - 1) {
+        u.onend = () => {
+          if (!session || session.token !== token) return;
+          setRead(session.queue[session.i], true);
+          // Finishing a digest stops there by default. Only an explicit
+          // "Play all" queue is allowed to carry on to the next one.
+          if (!session.auto) return stopSpeech();
+          session.i += 1;
+          if (session.i >= session.queue.length) return stopSpeech();
+          speakCurrent(0);
+        };
+      }
+      synth.speak(u);
+    });
+  }
+
+  /* Web Speech gives no playback position, so we estimate from elapsed time
+     and characters, then jump to the chunk that estimate lands in. */
+  function nudge(seconds) {
+    if (!session) return;
+    const note = session.queue[session.i];
+    const chunks = note.speech || [];
+    const rate = parseFloat(rateSel.value) || 1;
+    const cps = CHARS_PER_SEC * rate;
+
+    let pos = 0;
+    for (let k = 0; k < session.chunk; k++) pos += chunks[k].t.length + 1;
+    const elapsed = (Date.now() - (session.chunkStart || Date.now())) / 1000;
+    pos += Math.min(elapsed * cps, chunks[session.chunk].t.length);
+
+    let target = pos + seconds * cps;
+    if (target < 0) target = 0;
+
+    let acc = 0, idx = 0;
+    for (idx = 0; idx < chunks.length; idx++) {
+      const len = chunks[idx].t.length + 1;
+      if (target < acc + len) break;
+      acc += len;
+    }
+    /* A long sentence can swallow the whole jump, which feels like the button
+       did nothing. Always move at least one step. */
+    if (idx === session.chunk) {
+      if (seconds > 0) idx = session.chunk + 1;
+      else if (elapsed < 2) idx = Math.max(0, session.chunk - 1);
+    }
+    if (idx >= chunks.length) {
+      setRead(session.queue[session.i], true);
+      if (session.i + 1 >= session.queue.length) return stopSpeech();
+      return play(session.queue, session.i + 1, 0, session.auto);
+    }
+    play(session.queue, session.i, idx, session.auto);
+  }
+
+  const _stopSpeech = stopSpeech;
+  stopSpeech = function () {
+    _stopSpeech.apply(this, arguments);
+    if (pendingFilter) render();
+  };
+
+  function play(queue, startIndex, startChunk, auto) {
+    if (!canSpeak || !queue.length) return;
+    try { synth.cancel(); } catch (e) {}
+    session = { queue, i: startIndex || 0, chunk: 0, chunkStart: Date.now(), token: Date.now(), auto: !!auto, paused: false };
+    speakCurrent(startChunk || 0);
+  }
+
+  /* Listening to one digest - the Listen button, or tapping into its
+     transcript - only ever plays that digest. Auto-advancing through the
+     rest of the library is reserved for the explicit Play All queue. */
+  function playFrom(file, chunkIndex) {
+    const n = NOTES.find(x => x.file === file);
+    if (!n) return;
+    play([n], 0, chunkIndex, false);
+  }
+
+  /* ---- dropdown panels: filters, and reading settings ----
+     Same behaviour, two instances, so the open/close and outside-click
+     logic is written once. */
+  function wireDropdown(btnId, panelId) {
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    const isOpen = () => panel.classList.contains("open");
+    const setOpen = open => {
+      btn.setAttribute("aria-expanded", String(open));
+      panel.classList.toggle("open", open);
+      panel.setAttribute("aria-hidden", String(!open));
+    };
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filterpanel.open").forEach(p => { if (p !== panel) p.classList.remove("open"); });
+      document.querySelectorAll(".filterbtn[aria-expanded='true']").forEach(b => { if (b !== btn) b.setAttribute("aria-expanded", "false"); });
+      setOpen(!isOpen());
+    });
+    document.addEventListener("pointerdown", e => {
+      if (isOpen() && !e.target.closest(".filterwrap")) setOpen(false);
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && isOpen()) { setOpen(false); btn.focus(); }
+    });
+  }
+  wireDropdown("filterBtn", "filterPanel");
+  wireDropdown("readBtn", "readPanel");
+
+  /* ---- reading settings: theme and text size ----
+     Both are plain attributes on the root element, driven by chips built
+     the same way the topic/verdict/status filters are, and persisted so a
+     returning reader keeps their choice. */
+  const THEMES = [["system", "System"], ["light", "Light"], ["sepia", "Sepia"], ["dark", "Dark"]];
+  const SIZES = [["s", "Small"], ["m", "Medium"], ["l", "Large"]];
+
+  function applyTheme(v) {
+    if (v === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", v);
+    store.set("vd.theme", v);
+  }
+  function applySize(v) {
+    document.documentElement.setAttribute("data-rasize", v);
+    store.set("vd.rasize", v);
+  }
+
+  function renderReadingChips() {
+    const theme = store.get("vd.theme", "system");
+    const size = store.get("vd.rasize", "m");
+    buildChips(document.getElementById("themeChips"), THEMES, theme, v => { applyTheme(v); renderReadingChips(); });
+    buildChips(document.getElementById("sizeChips"), SIZES, size, v => { applySize(v); renderReadingChips(); });
+  }
+  applyTheme(store.get("vd.theme", "system"));
+  applySize(store.get("vd.rasize", "m"));
+  renderReadingChips();
+
+  /* One definition of "what is on screen", shared by the list and by
+     Play All, so a filter can never mean two different things. */
+  function visibleNotes() { return NOTES.filter(visibleFilter); }
+
+  if (canSpeak) {
+    document.getElementById("playAll").addEventListener("click", () => play(visibleNotes(), 0, 0, true));
+    document.getElementById("stopBtn").addEventListener("click", stopSpeech);
+    pauseBtn.addEventListener("click", togglePause);
+    skipBtn.addEventListener("click", () => {
+      if (!session) return;
+      const next = session.i + 1;
+      if (next >= session.queue.length) return stopSpeech();
+      play(session.queue, next, 0, session.auto);
+    });
+    document.addEventListener("click", e => {
+      const b = e.target.closest(".listen");
+      if (b) {
+        if (session && session.queue[session.i] && session.queue[session.i].file === b.dataset.file) return stopSpeech();
+        const n = NOTES.find(x => x.file === b.dataset.file);
+        return n && play([n], 0, 0, false);
+      }
+      // tap any line of transcript, or a section heading, to play from there
+      const ch = e.target.closest(".ch");
+      if (!ch) return;
+      const ra = ch.closest(".readalong");
+      if (!ra) return;
+      playFrom(ra.dataset.ra, +ch.dataset.ch);
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const ch = e.target.closest && e.target.closest(".ch");
+      if (!ch) return;
+      e.preventDefault();
+      const ra = ch.closest(".readalong");
+      if (ra) playFrom(ra.dataset.ra, +ch.dataset.ch);
+    });
+
+    document.getElementById("backBtn").addEventListener("click", () => nudge(-10));
+    document.getElementById("fwdBtn").addEventListener("click", () => nudge(10));
+  }
+
+  /* Expand/collapse works with or without speech support, so it is wired
+     unconditionally rather than living inside the canSpeak branch above. */
+  document.getElementById("foldBtn").addEventListener("click", collapseCurrent);
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-collapse]")) collapseCurrent();
+  });
+
+  render();
+
+  /* ---------- live library ----------
+     The page ships with a snapshot of the notes baked in, so it renders
+     immediately and still works when the database is unreachable. The daily
+     task writes one document per note instead of republishing this page, so
+     the database is the current set and the snapshot is only a fallback. */
+  (async () => {
+    const line = document.getElementById("srcline");
+    const snapshotLabel = () => {
+      line.textContent = NOTES.length + " notes \u00b7 saved snapshot";
+      line.classList.remove("live");
+    };
+
+    let db = null;
+    try {
+      if (window.claude && typeof window.claude.use === "function") {
+        db = await window.claude.use("db");
+        /* Independent of the database: a page falling back to its baked
+           snapshot can still export what it is showing. */
+        try { saver = await window.claude.use("downloads"); } catch (e) { saver = null; }
+        if (saver) document.querySelectorAll(".mark.export").forEach(b => { b.hidden = false; });
+      }
+    } catch (e) { db = null; }
+    if (!db) return snapshotLabel();
+
+    try {
+      const snap = await db.collection("notes").limit(1000).get();
+      const live = (snap && snap.docs ? snap.docs : [])
+        .map(d => d.data())
+        .filter(n => n && n.file && Array.isArray(n.speech) && n.speech.length);
+
+      if (!live.length) return snapshotLabel();
+
+      /* Marks live in their own collections so that the daily task, which
+         replaces whole note documents, can never wipe them. Both are loaded
+         together: if either read fails, neither toggle is offered, because a
+         half-loaded set would show notes as unmarked and invite the reader to
+         re-mark things that were already marked. */
+      try {
+        const [reads, favs] = await Promise.all([
+          db.collection("reads").limit(1000).get(),
+          db.collection("favourites").limit(1000).get()
+        ]);
+        (reads && reads.docs ? reads.docs : []).forEach(d => KINDS.read.set.add(d.id));
+        (favs && favs.docs ? favs.docs : []).forEach(d => KINDS.fav.set.add(d.id));
+        markDb = db;
+      } catch (e) { markDb = null; }
+
+      live.sort((a, b) =>
+        (VORDER.indexOf(a.verdict) + 1 || 99) - (VORDER.indexOf(b.verdict) + 1 || 99) ||
+        String(a.title).toLowerCase().localeCompare(String(b.title).toLowerCase()));
+
+      NOTES = live;
+      line.textContent = NOTES.length + " notes \u00b7 live";
+      line.classList.add("live");
+      render();
+    } catch (e) {
+      snapshotLabel();
+    }
+  })();
+</script>
