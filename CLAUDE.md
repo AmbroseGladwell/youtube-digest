@@ -8,6 +8,7 @@ A **prototype's evidence**, not a codebase. The working version was built inside
 
 ```
 README.md                    the concept, the note format, the design principles
+docs/architecture-options.md explored architecture options for a real build of the planned idea.
 docs/decisions.md            why things are the way they are. The most valuable file here.
 docs/constraints.md          environment limits hit, and what a real build replaces
 docs/open-questions.md       what is unresolved, with evidence
