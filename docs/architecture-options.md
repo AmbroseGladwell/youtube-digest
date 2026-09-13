@@ -319,3 +319,24 @@ interface Settings      { getKeys(); setKeys(); getPrefs(); setPrefs(); }
 8. Auth: magic-link vs OAuth provider(s).
 9. Is verdict personalisation kept in a future managed tier (revives the cost
    tension), or does managed mode fall back to shared non-personalised notes?
+
+
+## 12. Ideas
+
+1. This should be a bring your own model app, we could provide calls to a couple different providers e.g. claude, chat gpt, deepseek and users can provide their api key and they can select their model to use to run the summarisation. This means we'd somehow have to get a list of models to select from for the provider they choose. Maybe they'd have to login through our app or something?
+2. We store transcripts separately from user summaries. Transcripts should be stored as their own resource which we could use again if another user requests the same video, this way we can same calls to the service which grabs transcripts, we'll need to save the transcript with a date, youtube video id etc.
+3. We should allow users to see the full transcript in the youtube digest UI as a separate tab or something.
+4. We should provide an mcp connection so users can pull their youtube digests into their preferred chatbot easily to continue using them as a resource.
+5. Paid youtube digest accounts can get, TTS, higher limit on youtube transcripts potentially, MCP connection, cloud storage so they can access across devices, and no adverts. Free accounts are local everything but we store the transcripts still on our server. So they still need to create an account.
+6. Monetise free accounts by showing small adverts sections on the web app and chrome extension.
+7. Price should be low e.g. £2.99 per month or something but we'll have to run numbers and would still be limits on numbers of digests etc.
+8. Users should be able to create their own category folders and we put the summaries in the correct one or unknown, users can move them if they want.
+9. Value proposition is to reduce the amount you watch but increase the amount you learn. Understand if a video is worth the watch, get key take aways, information validation, ways you can use the information and more.
+10. Users mcp calls can access their summaries and the full transcripts only they have requested to ask further questions etc.
+11. Users should be able to add a link to a video in the app itself and we kick off the digest job.
+12. Other than running our digest summary we could allow users to tailor what they want from the digest, but this can't be a open text field, we should provide a couple of radio options users could select from to change what extra content is included, which we will have pre-built to extend the prompt. Some ideas could be 
+13. We'd want to handle different video types e.g. for recipe videos you might want a ingrediants list and steps. For a process you might want step by step instructions. For political commentary you could have a subjectivity rating /bullshit indicator.
+14. For the videos it suggests you to watch, we could recommend timestamps for the ranges that contain the specific parts that need watching to understand the ideas that can't effectively translate into text.
+15. Need to come up with a new name because youtube digest has been taken.
+16. I like the UI and UI organisation from this repo https://github.com/zarazhangrui/youtube-digest, in the chrome extension on the transcript page they allow the ability to follow playback which is cool, they also inject a digest button into the youtube page which we should do. Our chrome extension peice should also be opened to the right.
+17. when the chrome extension is open it automatically grabs the transcript when a youtube video is opened, look at how the other digest does this.
