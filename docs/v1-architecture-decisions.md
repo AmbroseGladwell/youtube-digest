@@ -38,10 +38,35 @@ tier ever offers managed generation (no key required), that tension becomes real
 the hybrid the doc floats — cache the objective analysis once, personalise only the
 actions/topic cheaply per user — stops being optional.
 
-**Transcript retrieval stays client-fetched, contributed to the shared cache.**
-Server-side retrieval (with its accompanying YouTube-ToS exposure) is a deliberate
-v1 deferral, not a rejection — it's the natural next step once the shared-cache path
-is proven, not a day-one requirement.
+**Transcript retrieval stays client-fetched, contributed to the shared cache, via
+Supadata, BYO-key.** Server-side retrieval (with its accompanying YouTube-ToS
+exposure) is a deliberate v1 deferral, not a rejection — it's the natural next step
+once the shared-cache path is proven, not a day-one requirement. Supadata specifically,
+not left generic, because its `mode=native` call is YouTube's own caption-track
+transcript at a flat 1 credit/video regardless of length — the prototype's actual
+usage (~30 videos) would sit comfortably inside its free 100-credits/month tier — and,
+critically, that native transcript arrives with per-segment start/duration timing
+already attached (it's YouTube's own caption timing, not something Supadata
+computes). Its ASR fallback (`mode=generate`, used only when a video has no captions
+at all) is priced per minute instead, 2 credits/minute — the number that would matter
+if audio-transcription coverage (README's "obvious next capability") is ever built on
+top of the same provider, not the flat native rate.
+
+This directly resolves `docs/open-questions.md` #3, not just narrows it: that question
+concluded video runtime was unrecoverable server-side because "the transcript source
+exposes no duration and its timestamps are client-side only" — true of whatever
+source the prototype had access to, not a property of transcript sources in general.
+With Supadata's native timing, runtime is the actual video duration, not a
+word-count estimate with the doc's own ±25% caveat. One thing this doesn't retroactively
+fix: existing prototype notes have no such timing and can't get it without a
+Supadata re-fetch of their source video, per the same doc's own note that "existing
+notes cannot be backfilled without re-fetching every transcript."
+
+It also changes what a partial "Watch it anyway?" can carry — see
+`docs/note-generation-decisions.md`'s Watch-it-anyway section — from a purely
+qualitative pointer ("the fractal-folding section") to an actual `{start_ms, end_ms}`
+range, which is closer to the "suggested timestamp ranges" idea deferred below than
+that deferral assumed when it was written.
 
 ## v1 feature scope
 
@@ -54,7 +79,9 @@ panel to the side.
 **Deferred, not abandoned:** MCP server access to summaries and transcripts;
 per-video-type content templates (recipe steps, process instructions, a
 subjectivity/bullshit rating for commentary); suggested timestamp ranges for a
-partial "watch it anyway"; ads on any surface.
+partial "watch it anyway" — deferred as a UX decision (see
+`docs/note-generation-decisions.md`), not because the timing data is unavailable,
+now that transcript source is pinned to Supadata; ads on any surface.
 
 ## Answers to architecture-options.md §11
 
@@ -63,7 +90,7 @@ partial "watch it anyway"; ads on any surface.
 | 1 | Confirm v1 = Model D | Yes, in the free/paid split described above — Model D's server shape is what the paid tier is. |
 | 2 | Keys per-device or synced | Per-device. Generate on the device with a key, listen anywhere. We never hold a provider secret. |
 | 3 | Store audio server-side or regenerate | Store it, keyed by a hash of the spoken script — Kokoro now runs server-side (see below), so regenerating per-play would mean re-running CPU synthesis on every listen for content that never changes. |
-| 4 | Transcript source | Client-fetched, contributed to the shared cache (see above). |
+| 4 | Transcript source | Supadata, BYO-key, client-fetched, contributed to the shared cache (see above). |
 | 5 | TTS provider | Self-hosted Kokoro, per `docs/tts-pre-rendered-speech.md` — see Technology stack. |
 | 6 | Headless queue draining | Not required for v1. The capture queue drains next time a keyed device opens; no background worker needed. |
 | 7 | Browser support | Chrome/Edge only for v1. |
