@@ -1,7 +1,7 @@
 {
   "name": "@digest/types",
   "version": "0.0.0",
-  "description": "Shared Note schema and supporting types. @digest is a placeholder scope — product naming is parked (docs/v1-architecture-decisions.md).",
+  "description": "Shared Note schema and supporting types. @digest is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

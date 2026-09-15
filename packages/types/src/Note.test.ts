@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Note } from "./note.js";
+import { Note } from "./Note.js";
 
 const baseVideo = {
   url: "https://www.youtube.com/watch?v=example",

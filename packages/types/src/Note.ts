@@ -1,12 +1,13 @@
 import { z } from "zod";
-import { VideoSource, CoreFields } from "./core.js";
-import { Filing } from "./filing.js";
-import { Verdict } from "./verdict.js";
-import { Selling } from "./selling.js";
-import { HowToApply } from "./how-to-apply.js";
-import { WatchAnyway } from "./watch-anyway.js";
+import { VideoSource } from "./VideoSource.js";
+import { CoreFields } from "./CoreFields.js";
+import { Filing } from "./Filing.js";
+import { Verdict } from "./Verdict.js";
+import { Selling } from "./Selling.js";
+import { HowToApply } from "./HowToApply.js";
+import { WatchAnyway } from "./WatchAnyway.js";
 
-// Read/favourite state is intentionally absent — docs/decisions.md: it lives in its
+// Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives in its
 // own table, keyed by note id, because this record can be replaced wholesale on a
 // re-run.
 export const Note = z
