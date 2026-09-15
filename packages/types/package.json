@@ -1,0 +1,24 @@
+{
+  "name": "@digest/types",
+  "version": "0.0.0",
+  "description": "Shared Note schema and supporting types. @digest is a placeholder scope — product naming is parked (docs/v1-architecture-decisions.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
