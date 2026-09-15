@@ -8,11 +8,11 @@ A **prototype's evidence**, not a codebase. The working version was built inside
 
 ```
 README.md                    the concept, the note format, the design principles
-docs/architecture-options.md explored architecture options for a real build of the planned idea.
-docs/decisions.md            why things are the way they are. The most valuable file here.
-docs/constraints.md          environment limits hit, and what a real build replaces
-docs/open-questions.md       what is unresolved, with evidence
-docs/tts-pre-rendered-speech.md  a designed, measured, not-yet-built feature
+docs/prototype/               retrospective evidence from the original build
+docs/architecture/            the real build's system-level architecture
+docs/conventions/              how code gets written, day to day
+docs/features/                 feature-specific design, one file per feature
+docs/reference/                external background material — not all of it applies here
 prototype/summary-prompt.md  the note template. This IS the product logic.
 prototype/digest_note.py     markdown note -> the record the UI renders and speaks
 prototype/build_index.py     the prototype's build step
@@ -22,9 +22,12 @@ samples/notes/*.md           five real notes, unedited
 samples/records/*.json       the same notes parsed into records
 ```
 
+`docs/README.md` is the full index of every doc, folder by folder — read it for what's
+in each one.
+
 ## How to treat each part
 
-**`prototype/summary-prompt.md` is the product.** Everything else is delivery. It defines what a note contains, how blunt the verdict has to be, and the rule that "watch it anyway" defaults to no. It is plain text with no dependencies and should survive the rewrite essentially intact. If you change it, change it deliberately, and read `docs/decisions.md` first: most of its oddities are the result of something going wrong.
+**`prototype/summary-prompt.md` is the product.** Everything else is delivery. It defines what a note contains, how blunt the verdict has to be, and the rule that "watch it anyway" defaults to no. It is plain text with no dependencies and should survive the rewrite essentially intact. If you change it, change it deliberately, and read `docs/prototype/decisions.md` first: most of its oddities are the result of something going wrong.
 
 **`prototype/index_template.html` is the design reference.** The visual language, the card, the read-along, the filter panel and the palette are all worth keeping. The implementation is a single file of vanilla JS with the data injected at build time, which is a scaffold, not an architecture. Take the design, rebuild the code.
 
@@ -44,36 +47,28 @@ samples/records/*.json       the same notes parsed into records
 | Audio and files as base64 in documents | no object storage | object storage |
 | Read and favourite in separate collections | the note document is replaced wholesale on every update, which would wipe flags stored on it | user state in its own table regardless |
 
-The last row is a real design lesson rather than a workaround, and is explained in `docs/decisions.md`.
+The last row is a real design lesson rather than a workaround, and is explained in `docs/prototype/decisions.md`.
 
 ## Working style that suited this project
 
 Three habits earned their keep and are worth continuing:
 
 1. **Verify before reporting.** The prototype once logged a successful publish it had never checked, and the library silently sat eleven notes behind for days. Anything that claims success should have looked.
-2. **Never let a model count, measure or time anything.** See `docs/constraints.md`. This produced the single worst bug of the project.
+2. **Never let a model count, measure or time anything.** See `docs/prototype/constraints.md`. This produced the single worst bug of the project.
 3. **Degrade visibly.** Every feature that depends on something optional hides itself when that thing is missing, rather than presenting a control that cannot work.
 
-## Code style: near-zero comments
+## Code conventions
 
-Code, tests, and specific documentation files carry meaning here — not inline
-comments. Before writing one, do one of these instead:
+- `docs/conventions/commenting.md` — near-zero comments. Code, tests, and specific
+  docs carry meaning here, not inline comments.
+- `docs/conventions/naming-conventions.md` — a file is named after its primary
+  export, in that export's own casing.
+- `docs/conventions/frontend-architecture-guide.md` and
+  `docs/conventions/frontend-testing-guide.md` — the frontend's actual conventions,
+  written for this project's real stack.
 
-- **Name it so the comment is unnecessary.** A variable, function, or type name
-  that states the "what" removes the need to restate it next to it.
-- **Encode the "why" in a test.** A test that fails when an invariant breaks is
-  stronger than a comment asserting the invariant holds — the comment can go
-  stale silently, the test can't.
-- **Put the reasoning in a doc, and reference it by name.** Design decisions
-  belong in a file like `docs/note-generation-decisions.md`, not restated
-  across every function that implements them. A short pointer is the outer
-  limit, not a paragraph.
-
-A comment is the last resort, for the rare case where none of the above can
-carry the information — typically a genuinely surprising workaround (a browser
-bug, a spec quirk) with no other home. If you're about to write more than one
-line explaining *why*, that reasoning belongs in a doc instead.
+Read all four before adding a new file, folder, or pattern anywhere in the monorepo.
 
 ## Immediate suggestion
 
-Do not start by porting code. Start by reading `README.md`, `docs/decisions.md` and `prototype/summary-prompt.md`, then propose an architecture and argue with the open questions in `docs/open-questions.md`. The verdict scale in particular is not settled, and 77% of the existing library falls into a single bucket.
+Do not start by porting code. Start by reading `README.md`, `docs/prototype/decisions.md` and `prototype/summary-prompt.md`, then propose an architecture and argue with the open questions in `docs/prototype/open-questions.md`. The verdict scale in particular is not settled, and 77% of the existing library falls into a single bucket.

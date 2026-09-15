@@ -1,7 +1,7 @@
 # Frontend Testing Guide: Test Types, Harnesses, and Conventions
 
-Adopted for `packages/app-core` (see `docs/frontend-architecture-guide.md` and
-`docs/v1-architecture-decisions.md`). Its assumed stack — Vitest, Playwright Component
+Adopted for `packages/app-core` (see `docs/conventions/frontend-architecture-guide.md` and
+`docs/architecture/v1-architecture-decisions.md`). Its assumed stack — Vitest, Playwright Component
 Testing, Testing Library, axe-core — sits on this project's actual Vite + React +
 React Router + TanStack Query core with no adaptation needed. Two changes from the
 source doc, both applied throughout below: `TestContext` is typed generically over
@@ -787,7 +787,7 @@ the entire harness, and duplicating the config guarantees the two drift.
 
 This guide assumes one app. This project has one shared `packages/app-core` plus two
 thin shells (the Chrome extension, the web app) — see
-`docs/v1-architecture-decisions.md`. That changes where the tiers above actually apply:
+`docs/architecture/v1-architecture-decisions.md`. That changes where the tiers above actually apply:
 
 - **IWFT scope is `app-core` only.** Mount it once, simulate the Fastify API, and get
   full route/render/interaction coverage there — not duplicated per shell. Since both
@@ -806,7 +806,7 @@ thin shells (the Chrome extension, the web app) — see
 - **Backend testing is entirely out of scope for this guide.** It's frontend-only, by
   its own stated stack. Testing conventions for the Fastify API and the Python TTS
   service are a separate, parked decision — alongside product naming, see
-  `docs/v1-architecture-decisions.md`.
+  `docs/architecture/v1-architecture-decisions.md`.
 
 ## Notes on what I'd change rather than copy wholesale
 

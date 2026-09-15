@@ -3,7 +3,7 @@
 Status: **resolved for v1.** This file is kept as the historical record of what was
 considered — the six models below and the Ideas list are unchanged — but §11's open
 decisions have since been made, and the Ideas list reconciled with them. See
-`docs/v1-architecture-decisions.md` for the outcome and the reasoning behind it.
+`docs/architecture/v1-architecture-decisions.md` for the outcome and the reasoning behind it.
 Written while studying `zarazhangrui/youtube-digest` as a reference implementation.
 
 > Lives on the `taste` branch for now. Cherry-pick or merge to `main` when it

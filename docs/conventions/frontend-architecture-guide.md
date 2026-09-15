@@ -2,7 +2,7 @@
 
 Adopted for this project's shared `packages/app-core` — the single Vite + React +
 React Router app mounted verbatim by both the Chrome extension and the web app (see
-`docs/v1-architecture-decisions.md`). It was written against a different codebase and
+`docs/architecture/v1-architecture-decisions.md`). It was written against a different codebase and
 handed over with its project-specific bits (design-system paths, route names, domain
 types) stripped to placeholders; the stack it assumes — React 19, TypeScript, React
 Router, TanStack Query v5, SCSS Modules — matches this project's actual choices
@@ -345,7 +345,7 @@ complex — and add it later, as a small PR, rather than up front.
 
 This is the app's sole data layer — not paired with any framework-level data fetching
 (there's no server-rendering framework here to pair it with; see
-`docs/v1-architecture-decisions.md` on dropping Next.js).
+`docs/architecture/v1-architecture-decisions.md` on dropping Next.js).
 
 ### 3.2 Keep the client config tiny
 

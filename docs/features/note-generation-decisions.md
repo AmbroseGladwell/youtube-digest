@@ -1,7 +1,7 @@
 # Note generation decisions, and what produced them
 
 Recorded from a design conversation about the generation step for the real build, in
-the same spirit as `docs/decisions.md` and `docs/v1-architecture-decisions.md`: a
+the same spirit as `docs/prototype/decisions.md` and `docs/architecture/v1-architecture-decisions.md`: a
 decision, stated plainly, with the reasoning that produced it, not a spec.
 
 ## The composable prompt
@@ -20,11 +20,11 @@ exactly the four things README's own "Design principles" section calls out — a
 the four made toggleable, each defaulting on to match current behaviour.
 
 **A toggle removes the field from the request, it doesn't ask the model to skip it.**
-Since generation is moving to structured output (`docs/v1-architecture-decisions.md`
+Since generation is moving to structured output (`docs/architecture/v1-architecture-decisions.md`
 already decided this, to fix the markdown-parsing fragility `samples/` exposes),
 "toggle off Verdict" has to mean the schema sent to the model has no verdict field
 that call — not a prompt instruction the model could ignore. The alternative is a
-control that looks off but isn't, which `docs/decisions.md` already rules out for
+control that looks off but isn't, which `docs/prototype/decisions.md` already rules out for
 read/favourite/export ("a control that cannot work is worse than no control" — the
 same is true in reverse of one that silently keeps working).
 
@@ -36,7 +36,7 @@ would be the same lie-about-what-the-toggle-does problem. The Selling toggle's U
 copy should say plainly that switching it off also weakens Verdict's
 conflict-of-interest catch.
 
-**This split is the same seam the cost problem in `docs/open-questions.md` #2
+**This split is the same seam the cost problem in `docs/prototype/open-questions.md` #2
 needs.** The unresolved hybrid there is "cache the objective analysis once,
 personalise only actions/topic per user." Core/Key points is exactly the structural,
 non-personal, cacheable half; Verdict/Selling/How-to-apply/Watch-anyway is exactly the
@@ -99,7 +99,7 @@ for them.
 
 **The mechanism behind `dubious` matters, and it's weaker than the word implies.**
 Nothing in the v1 architecture wires a search or retrieval tool into generation — it's
-Claude-only, one shot per video (`docs/v1-architecture-decisions.md`). So "contradicts
+Claude-only, one shot per video (`docs/architecture/v1-architecture-decisions.md`). So "contradicts
 mainstream evidence" is never a live check against anything current. It's the model
 pattern-matching a claim against what it absorbed as "settled" during training, which
 cannot distinguish three different situations: a claim that genuinely conflicts with
@@ -152,7 +152,7 @@ the (presumably common) case where the reader does want to see it anyway.
 scoped to "the next 7 days," reads naturally for a habit-change suggestion (its
 original use case: parenting, fitness, personal-growth content) but sits oddly against
 a recipe, a technique, or a decision framework — content the deferred per-video-type
-templates in `docs/v1-architecture-decisions.md` (recipe steps, process instructions)
+templates in `docs/architecture/v1-architecture-decisions.md` (recipe steps, process instructions)
 already anticipate wanting to handle differently one day. "How to apply" is the
 umbrella term that holds up across all of those without needing the templates built
 first: it's neutral about what kind of action is involved, so it doesn't fight that
@@ -190,7 +190,7 @@ sentence each; even a few hundred notes is a few thousand tokens, trivial next t
 ~30k-token generation cost already paid per video. Comparing a new claim against a
 few hundred known strings is a well-grounded version of the same semantic-similarity
 judgment the model already makes against the entire genre from training data — not
-the class of unreliable operation `docs/constraints.md` warns about (that rule is
+the class of unreliable operation `docs/prototype/constraints.md` warns about (that rule is
 about a model fabricating a count or measurement, not about it making a judgment call
 it's actually suited to).
 
@@ -203,7 +203,7 @@ README already wants.
 
 **Left deliberately open: at what library size does a flat claim list stop being
 cheap enough to paste into every call, and does topic-scoped filtering become
-necessary then.** Not answered by guessing — `docs/constraints.md`'s rule that no
+necessary then.** Not answered by guessing — `docs/prototype/constraints.md`'s rule that no
 figure shown to a user (or relied on for a capacity decision) should be a model's
 estimate applies here too. Ship the flat-list version, measure real token cost
 against the real library size once one exists, decide then.
@@ -285,7 +285,7 @@ returning a set brings it into line rather than introducing a second inconsisten
 **Flagged, not solved: renaming or merging topics later touches every note that
 includes it.** This has to be a targeted update to the topic reference on existing
 note records, not a note regeneration — consistent with the existing lesson in
-`docs/decisions.md` that user-facing state should be updatable without the generation
+`docs/prototype/decisions.md` that user-facing state should be updatable without the generation
 pipeline rewriting the note wholesale. Multi-select doesn't change this, it just means
 the update touches a set membership instead of a single field.
 
@@ -324,11 +324,11 @@ on another in a way a click-to-filter facet couldn't.
 boolean by checking whether the text starts with the literal string "nothing
 detected" — a generation that phrases the none-case any other way ("None found," "No
 pitches detected") would silently flip it wrong. Same class of bug
-`docs/constraints.md` already names for Verdict's label-parsing, same fix: a
+`docs/prototype/constraints.md` already names for Verdict's label-parsing, same fix: a
 structured field, not a string sniffed from prose.
 
 **The deeper problem: Selling's stated purpose is cross-note pattern-detection, and a
-free-text block can't be aggregated.** `docs/decisions.md`: "the value is the pattern
+free-text block can't be aggregated.** `docs/prototype/decisions.md`: "the value is the pattern
 across many notes, not the individual flag." The five samples show genuinely
 different patterns sitting undifferentiated in one prose field — a free personality
 quiz (business), four paid programmes plus an app (fitness), a disclosed sponsor
@@ -381,16 +381,16 @@ only for one section... The rest of the video, including the billion heartbeats
 result itself, reads perfectly well here." Forced into strict Yes/No, that answer
 collapses to a bare Yes, which tells the reader to watch the whole video — the exact
 "a soft yes costs the reader ten minutes" failure the feature exists to prevent. This
-isn't a new idea — `docs/v1-architecture-decisions.md` already lists "suggested
+isn't a new idea — `docs/architecture/v1-architecture-decisions.md` already lists "suggested
 timestamp ranges for a partial watch-it-anyway" as deferred (Idea 14) — but this
 sample is evidence the need shows up today, in the only real Yes in the set, not only as future polish.
 
 **Decided: add `partial` now.** `answer: yes | no | partial`, with an optional
 `range: {start_ms, end_ms}` when partial. This is affordable specifically because
-transcript source is pinned to Supadata (`docs/v1-architecture-decisions.md`), whose
+transcript source is pinned to Supadata (`docs/architecture/v1-architecture-decisions.md`), whose
 native mode carries YouTube's own per-segment start/duration timing — the model reads
 an offset already present in its input rather than measuring or estimating one
-itself, so this doesn't trip the `docs/constraints.md` rule against a model
+itself, so this doesn't trip the `docs/prototype/constraints.md` rule against a model
 counting/timing something. Reason text still does the descriptive work ("the
 fractal-folding section"), the range just makes that description seekable. Chosen
 over waiting for a timestamp-seeking UI to exist first: the range is cheap to capture
@@ -404,9 +404,9 @@ fixes where a real Yes or partial-Yes can point to.
 **In one line's "roughly how long" clause has been dead instruction from the start.**
 The prompt asks for three things — who's talking, roughly how long, and what
 territory it covers — and zero of five samples state a duration, not even
-approximately. That's not the model skipping the instruction; `docs/open-questions.md`
+approximately. That's not the model skipping the instruction; `docs/prototype/open-questions.md`
 #3 already established the prototype's transcript source exposed no duration at all,
-so there was never a real number to report, and `docs/constraints.md`'s rule against
+so there was never a real number to report, and `docs/prototype/constraints.md`'s rule against
 fabricating a measurement means the model correctly never guessed one instead. This is
 the third thing the Supadata pin fixes for free, alongside video runtime and
 Watch-it-anyway's range: once real segment timing exists, this clause finally has
