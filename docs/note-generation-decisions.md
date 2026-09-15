@@ -436,6 +436,64 @@ that already-made choice, alongside the parsing-fragility one earlier in this do
 doesn't just stop misreading what the model said, it stops the model quietly
 exceeding its own stated bounds.
 
+## Stress-testing against genres outside the samples
+
+None of the five real samples are a narrative interview, an instructional video, a
+lecture, or opinion/news commentary. Working through six hypothetical examples of
+those genres against the design above found three real gaps, none of which need a
+schema change — all three are generation-instruction fixes, to make when the actual
+prompt fragments get written.
+
+**Core Claim assumes video content is argument-shaped, and a lot of it isn't.** A
+music-producer interview (narrative), a cooking video (procedural), and a news
+explainer covering several possible outcomes (multi-threaded) all have real
+substance without having one thesis to extract. `thin` was built as the escape
+hatch for "asserts nothing," but none of these are vibes-empty — forcing them
+through the current instruction risks either an invented thesis or a wrongful
+`thin`. **Decision: broaden Core Claim's own instruction, not the schema.** The
+field is still one string either way: "the single most important thing to take
+from this video — the claim, if it's arguing one; the substance, plainly described,
+if it's showing or explaining something instead; say so if it's neither." `thin`
+stays reserved for the third case only, exactly as it is today.
+
+**`dubious` needs a rule for contested and not-yet-resolved claims, not just novel
+ones.** A named commentator's stated policy viewpoint, and a prediction about how a
+new political leader might govern, both stress the same mechanism weakness already
+recorded above (`dubious` is pattern-matching against training-time "settled"
+knowledge, with no live check) in two new ways: economics and policy are contested
+domains without a clean consensus to contradict, and a prediction about the future
+can't be checked against anything yet — there's no fact of the matter to conflict
+with. **Decision: `dubious` should fire on a mismatch between how much certainty a
+claim is presented with and how much it has actually earned, never on a topic being
+contested or an outcome being unresolved.** An explicitly-framed opinion or
+prediction, argued as one person's view, isn't dubious for being uncertain — stating
+a genuinely contested question as settled fact would be. This sharpens the existing
+"don't confuse unverified with dubious" guardrail; it doesn't replace it.
+
+**Novelty answers a different question for advice than it does for reference
+content, using the same label.** For advice, "familiar" means "you can probably
+skip this." For an MIT lecture correctly teaching standard material, `competent_not_new`
+is accurate but isn't a reason to skip anything — the value of the lecture is in the
+teaching, not the novelty of the theorem. **Left as an interpretive fix, not a
+structural one, for now:** the reasoning text already carries this distinction (as
+it already does for the overreach cases folded into prose elsewhere in this doc),
+and the topic a note is filed under does real disambiguating work for free — a
+reader browsing a "maths" topic already expects familiarity to mean "correct and
+standard," not "not worth your time." No evidence yet that this needs its own field
+rather than the right framing in prose.
+
+Two smaller things resolved in passing, not dug into further:
+
+- **Watch-it-anyway's criteria are worded visual-only.** Cooking, product demos, and
+  the producer interview all surface a real audio-equivalent case (hearing a mix
+  decision, a sound a description can't substitute for). Add "or a sound that
+  carries information the words do not" alongside the existing visual clause — a
+  one-line wording fix, not a schema change.
+- **The cold-start topic list has no "politics" or "news," and that's fine.** Both
+  the policy-commentary and news-explainer examples would rely entirely on the
+  suggested-new-topic mechanic rather than a starter match — which is that mechanic
+  working as designed, not a gap to patch.
+
 ## Open, still to decide
 
 - The library-size threshold for personal-claim retrieval and topic-list retrieval to
