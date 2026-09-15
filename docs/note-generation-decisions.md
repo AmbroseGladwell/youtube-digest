@@ -63,18 +63,17 @@ sound: the model has somewhere to put "this is dubious" today, it's just called
 `SOLID BUT FAMILIAR`. `THIN`'s zero count is more likely genuine (survivorship — a
 video already chosen for saving is unlikely to assert literally nothing).
 
-**Decision: split into a novelty label (primary) and a soundness flag (secondary),
-plus a pre-check gate.**
+**Decision: split into a novelty label (primary) and a single binary flag,
+`dubious` (secondary), plus a pre-check gate.**
 
 - Novelty (always shown, one of): `NOVEL` / `COMPETENT, NOT NEW` / `RECYCLED`.
   `COMPETENT, NOT NEW` replaces `SOLID BUT FAMILIAR` — the stated dislike was the old
   phrase specifically, and this reorders the emphasis (quality judgment first,
   familiarity flag second) rather than just re-wording the same two clauses.
-- Soundness (shown only when it fires, attached to any novelty label): `⚠
-  overreaching`, `⚠ unverified`, or `⚠ dubious` — see the next section for why
-  soundness ended up three-valued rather than two. This is the fix either way —
-  soundness stops competing with novelty for the same label slot and becomes an
-  independent signal that can attach to any of the three.
+- Soundness collapses to one visible bit: `dubious`, present or absent, nothing
+  else — see the next section for why a three-value version was considered and
+  dropped. This matches the app's own existing badge vocabulary (`sells nothing`,
+  `worth watching`): binary, rare, consistent, rather than a graded warning scale.
 - `THIN` is not a fourth label. It's a pre-check gate: if Core Claim comes back
   empty/"pure vibes" (which the prompt's existing Core Claim instructions already
   detect), Verdict doesn't run at all and the note says so. This wires an existing
@@ -84,13 +83,19 @@ Re-scored, the five samples become:
 
 | Note | Old label | New label |
 |---|---|---|
-| business/adaptability | SOLID BUT FAMILIAR | COMPETENT, NOT NEW ⚠ overreaching |
+| business/adaptability | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
 | finance/gap | RECYCLED | RECYCLED |
-| fitness/arms | SOLID BUT FAMILIAR | COMPETENT, NOT NEW ⚠ overreaching |
+| fitness/arms | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
 | interesting/heartbeats | NOVEL | NOVEL |
 | parenting/multiplication | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
 
-## `dubious` split from `unverified`, and what each does to How to apply
+None of the five cross the `dubious` bar — it's meant to be rare. The overreach
+complaints in the business and fitness notes ("no counter-case offered," "the
+forearm anecdote... is a joke, not evidence") still show up, just in the reasoning
+prose rather than as a badge — see the next section for why that's the right home
+for them.
+
+## Soundness collapses to one bit: `dubious`, and why the other two never surface
 
 **The mechanism behind `dubious` matters, and it's weaker than the word implies.**
 Nothing in the v1 architecture wires a search or retrieval tool into generation — it's
@@ -105,33 +110,41 @@ enough that the model has no reference point either way — not contradicted, ju
 uncompared. `dubious` is an accusation (evidence says this is wrong), and only the
 first of those three situations actually earns it.
 
-**Decision: split into `dubious` and `unverified`.** `dubious` stays, narrowed to what
-the model can honestly assess from training knowledge alone: an active conflict with
-something it has high confidence is settled, or the disclosed conflict-of-interest
-case (the advice conveniently requires something being sold — a transcript-reading
-question, not an evidence one). `unverified` is new: the claim isn't contradicted by
-anything, there's just nothing to corroborate it against either. `overreaching` is
-unchanged and stays independent of both — it's about argument quality (weak reasoning,
-anecdote-as-evidence), not corroboration status, so a claim can be overreaching and
-well-established at once, or rigorously argued and still unverified.
+**`dubious` still has to stay conceptually distinct from mere unfamiliarity, even
+though neither `overreaching` nor "unverified" gets its own field.** The model has
+to be able to tell "this conflicts with something I'm confident is settled, or is a
+disclosed conflict of interest" apart from "this is just new, niche, or recent
+enough that I have nothing to compare it against" — otherwise `dubious` would fire on
+ordinary novel content, which is the opposite of rare. That distinction, and the
+argument-quality read ("overreaching" — weak reasoning, anecdote-as-evidence,
+independent of whether the claim is otherwise sound), stay real, both because they
+shape what the model writes into `reasoning`, and because getting `dubious` right
+depends on not confusing it with either. They just never become their own schema
+field or badge.
 
-**This is also why `unverified` must never suppress How to apply, only `dubious`
-does.** `unverified` will correlate heavily with `NOVEL` — new, original claims are
-unverified *because* they're new, not because anything's wrong with them. Suppressing
-actionability there would penalise exactly the content the scale is supposed to
-reward most. `dubious`, once narrowed this way, is genuinely rare and genuinely a
-red flag, so it's the only one worth treating differently.
+**Decision: only `dubious` reaches the schema or the UI — checked against the app's
+own badge vocabulary, not chosen in the abstract.** The prototype's existing badges
+(`sells nothing`, `worth watching`, `read`, `favourite`) are all binary, rare, and
+consistent — that's the vocabulary this product already trusts, and a three-value
+soundness flag doesn't fit it. `overreaching` alone shows up in two of the five real
+samples — a ~40% hit rate — which would make it an always-on badge, not a rare one,
+rebuilding the exact failure this whole redesign escaped (`SOLID BUT FAMILIAR` at
+77%). `dubious`, kept to the narrow "active conflict or disclosed conflict of
+interest" bar, stays rare enough to still mean something when it fires. This also
+dissolves the earlier open question of whether `overreaching` and "unverified" could
+co-occur: with neither exposed as data, there's nothing left to combine — the
+model just has to avoid mislabelling ordinary novel content as `dubious`, which is a
+generation-prompt instruction, not a schema concern.
 
 **Decision: `dubious` doesn't suppress generation, it hides the result.** How to apply
-is generated every time regardless of the soundness flag — the schema doesn't
-conditionally drop the field based on a value computed in the same call. When
-`dubious` fires, the UI hides it behind a reveal by default (the same collapsed shape
-Watch-it-anyway's yes/no already uses), rather than the note silently contradicting
-itself by showing suggested actions right next to a claim it just flagged as dubious.
-Chosen over not generating it at all: `dubious` is rare enough post-split that the
-token cost of always generating it is small, and it avoids a second on-demand
-generation round-trip for the (presumably common) case where the reader does want to
-see it anyway.
+is generated every time regardless of `dubious` — the schema doesn't conditionally
+drop the field based on a value computed in the same call. When `dubious` fires, the
+UI hides it behind a reveal by default (the same collapsed shape Watch-it-anyway's
+yes/no already uses), rather than the note silently contradicting itself by showing
+suggested actions right next to a claim it just flagged as dubious. Chosen over not
+generating it at all: `dubious` is rare enough that the token cost of always
+generating it is small, and it avoids a second on-demand generation round-trip for
+the (presumably common) case where the reader does want to see it anyway.
 
 ## "Try this" renamed to "How to apply"
 

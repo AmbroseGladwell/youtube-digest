@@ -54,6 +54,26 @@ Three habits earned their keep and are worth continuing:
 2. **Never let a model count, measure or time anything.** See `docs/constraints.md`. This produced the single worst bug of the project.
 3. **Degrade visibly.** Every feature that depends on something optional hides itself when that thing is missing, rather than presenting a control that cannot work.
 
+## Code style: near-zero comments
+
+Code, tests, and specific documentation files carry meaning here — not inline
+comments. Before writing one, do one of these instead:
+
+- **Name it so the comment is unnecessary.** A variable, function, or type name
+  that states the "what" removes the need to restate it next to it.
+- **Encode the "why" in a test.** A test that fails when an invariant breaks is
+  stronger than a comment asserting the invariant holds — the comment can go
+  stale silently, the test can't.
+- **Put the reasoning in a doc, and reference it by name.** Design decisions
+  belong in a file like `docs/note-generation-decisions.md`, not restated
+  across every function that implements them. A short pointer is the outer
+  limit, not a paragraph.
+
+A comment is the last resort, for the rare case where none of the above can
+carry the information — typically a genuinely surprising workaround (a browser
+bug, a spec quirk) with no other home. If you're about to write more than one
+line explaining *why*, that reasoning belongs in a doc instead.
+
 ## Immediate suggestion
 
 Do not start by porting code. Start by reading `README.md`, `docs/decisions.md` and `prototype/summary-prompt.md`, then propose an architecture and argue with the open questions in `docs/open-questions.md`. The verdict scale in particular is not settled, and 77% of the existing library falls into a single bucket.
