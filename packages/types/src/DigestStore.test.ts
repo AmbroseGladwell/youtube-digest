@@ -58,7 +58,10 @@ class InMemoryDigestStore implements DigestStore {
     return this.#states.get(noteId) ?? { noteId, ...DEFAULT_NOTE_STATE };
   }
 
-  async setNoteState(noteId: string, patch: Partial<Pick<NoteState, "read" | "favourite">>) {
+  async setNoteState(
+    noteId: string,
+    patch: Partial<Pick<NoteState, "read" | "favourite" | "userTags">>,
+  ) {
     const current = await this.getNoteState(noteId);
     this.#states.set(noteId, { ...current, ...patch });
   }
@@ -113,10 +116,26 @@ test("saveNote replaces the note wholesale but never touches its read/favourite 
   assert.equal(state.favourite, true);
 });
 
-test("getNoteState defaults to unread and unfavourited for a note nobody has touched", async () => {
+test("a user-added tag survives regeneration, because it never lived on the note", async () => {
+  const store = new InMemoryDigestStore();
+  await store.saveNote(exampleNote);
+  await store.setNoteState("n1", { userTags: ["re-watch"] });
+
+  await store.saveNote({ ...exampleNote, tags: ["fresh-tag", "another-tag", "third-tag"] });
+
+  const state = await store.getNoteState("n1");
+  assert.deepEqual(state.userTags, ["re-watch"]);
+});
+
+test("getNoteState defaults to unread, unfavourited, and no user tags for a note nobody has touched", async () => {
   const store = new InMemoryDigestStore();
   const state = await store.getNoteState("never-seen");
-  assert.deepEqual(state, { noteId: "never-seen", read: false, favourite: false });
+  assert.deepEqual(state, {
+    noteId: "never-seen",
+    read: false,
+    favourite: false,
+    userTags: [],
+  });
 });
 
 test("saving a note with an unfamiliar topicId does not create that topic", async () => {

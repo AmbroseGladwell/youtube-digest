@@ -318,6 +318,20 @@ actually do. This also means Tags don't need the consistency/dedup retrieval bui
 for Topics — a scanning aid tolerates "ai" on one note and "artificial-intelligence"
 on another in a way a click-to-filter facet couldn't.
 
+**Decision: users can add their own tags, stored apart from the note, not merged
+into `Note.tags`.** The reason to allow this isn't fixing bad auto-tags — it's that
+a user might want to record something the model has no way to know, like "re-watch"
+or "disagree with this," their own relationship to the note rather than a
+description of its content. Putting a user-added tag into `Note.tags` would repeat
+the exact bug `docs/prototype/decisions.md` already names for read/favourite: the
+note gets replaced wholesale on regeneration, so anything stored on it is silently
+wiped the next time the model runs. `NoteState` — the same per-note, keyed-apart
+store already holding `read`/`favourite` — gains a `userTags` field instead, updated
+through the same `setNoteState`, so a user-added tag survives a regeneration that
+produces an entirely fresh set of model tags. Displayed as the union of `Note.tags`
+and `NoteState.userTags`, same non-interactive badge treatment either way — the
+split is about where it's stored, not how it looks.
+
 ## Selling: one card label, richer data underneath
 
 **Same prose-parsing fragility as Verdict had.** `digest_note.py` derives its `sells`

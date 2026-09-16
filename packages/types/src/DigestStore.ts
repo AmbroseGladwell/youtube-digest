@@ -27,6 +27,6 @@ export interface DigestStore {
   getNoteState(noteId: string): Promise<NoteState>;
   setNoteState(
     noteId: string,
-    patch: Partial<Pick<NoteState, "read" | "favourite">>,
+    patch: Partial<Pick<NoteState, "read" | "favourite" | "userTags">>,
   ): Promise<void>;
 }
