@@ -13,6 +13,7 @@ const baseVideo = {
   channel: "Example Channel",
   description: null,
   durationMs: null,
+  thumbnailUrl: null,
 };
 
 const baseOverview = {

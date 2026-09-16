@@ -1,0 +1,42 @@
+.root {
+  margin-bottom: 1.25rem;
+}
+
+.searchInput {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  background: var(--surface);
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.searchInput:focus-visible {
+  outline: 2px solid var(--edge);
+  outline-offset: 1px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chipActive {
+  border-color: var(--edge);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}

@@ -17,6 +17,7 @@ const baseInput: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: 600000,
+    thumbnailUrl: null,
   },
   transcript: [
     { text: "Hello and welcome.", startMs: 0, endMs: 2000 },

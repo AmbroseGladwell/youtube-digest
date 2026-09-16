@@ -13,6 +13,7 @@ const input: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: null,
+    thumbnailUrl: null,
   },
   transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
   savedNote: null,

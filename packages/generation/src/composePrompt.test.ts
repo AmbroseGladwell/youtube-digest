@@ -12,6 +12,7 @@ const baseInput: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: null,
+    thumbnailUrl: null,
   },
   transcript: [
     { text: "Hello and welcome.", startMs: 0, endMs: 2000 },
@@ -33,6 +34,14 @@ test("structural fields are always in the schema, regardless of toggles", () => 
   for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "matchedTopicNames", "tags"]) {
     assert.ok(keys.includes(structural), `expected ${structural} in schema`);
   }
+});
+
+test("the em dash ban is always in the prompt, regardless of which sections are toggled", () => {
+  const { systemPrompt } = composePrompt({
+    ...baseInput,
+    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+  });
+  assert.ok(systemPrompt.includes("Never use an em dash"));
 });
 
 test("a disabled section removes its field from the schema entirely, not just from the prompt", () => {

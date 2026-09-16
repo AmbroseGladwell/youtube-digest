@@ -12,7 +12,14 @@ const baseMetadata: Metadata = {
   description: "The hidden math that governs life.",
   author: { username: "veritasium", displayName: "Veritasium", avatarUrl: "", verified: true },
   stats: { views: 1, likes: 1, comments: 1, shares: null },
-  media: { type: "video", url: "", duration: 2127.2, width: 1920, height: 1080, thumbnailUrl: "" },
+  media: {
+    type: "video",
+    url: "",
+    duration: 2127.2,
+    width: 1920,
+    height: 1080,
+    thumbnailUrl: "https://i.ytimg.com/vi/tL9Lw250spc/hqdefault.jpg",
+  },
   tags: [],
   createdAt: "2026-01-01T00:00:00.000Z",
   additionalData: {},
@@ -22,6 +29,22 @@ test("channel comes from author.displayName, duration is converted from seconds 
   const video = mapMetadataToVideoSource(baseMetadata, baseMetadata.url);
   assert.equal(video.channel, "Veritasium");
   assert.equal(video.durationMs, 2127200);
+});
+
+test("thumbnailUrl comes straight from the video media's own thumbnailUrl", () => {
+  const video = mapMetadataToVideoSource(baseMetadata, baseMetadata.url);
+  assert.equal(video.thumbnailUrl, "https://i.ytimg.com/vi/tL9Lw250spc/hqdefault.jpg");
+});
+
+test("an empty thumbnailUrl degrades to null rather than failing VideoSource's url validation", () => {
+  const video = mapMetadataToVideoSource(
+    {
+      ...baseMetadata,
+      media: { type: "video", url: "", duration: 2127.2, width: 1920, height: 1080, thumbnailUrl: "" },
+    },
+    baseMetadata.url,
+  );
+  assert.equal(video.thumbnailUrl, null);
 });
 
 test("a null title or description degrades to the documented fallback, not a crash", () => {
@@ -36,10 +59,11 @@ test("description is trimmed to VideoSource's 400-character cap", () => {
   assert.equal(video.description?.length, 400);
 });
 
-test("non-video media (an image or carousel post) has no duration to report", () => {
+test("non-video media (an image or carousel post) has no duration or thumbnail to report", () => {
   const video = mapMetadataToVideoSource(
     { ...baseMetadata, media: { type: "image", url: "", width: 1, height: 1 } },
     baseMetadata.url,
   );
   assert.equal(video.durationMs, null);
+  assert.equal(video.thumbnailUrl, null);
 });

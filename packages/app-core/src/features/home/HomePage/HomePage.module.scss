@@ -1,0 +1,40 @@
+.root {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.error {
+  border: 1px solid var(--dubious);
+  background: var(--dubious-soft);
+  color: var(--dubious);
+  border-radius: var(--radius-panel);
+  padding: 0.75rem 1rem;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeletonBar {
+  height: 1rem;
+  border-radius: 6px;
+  background: var(--sunk);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeletonBar {
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

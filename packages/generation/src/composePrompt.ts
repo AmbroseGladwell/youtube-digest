@@ -39,7 +39,8 @@ export function composePrompt(input: GenerationInput): ComposedPrompt {
 
   return {
     systemPrompt:
-      "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly." +
+      "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. " +
+      "Never use an em dash (—) anywhere in your output; use a period, comma, or colon instead." +
       instructions,
     userMessage: contextBlock(input),
     schema: z.object(shape),

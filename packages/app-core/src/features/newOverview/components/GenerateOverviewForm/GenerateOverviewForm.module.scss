@@ -1,0 +1,88 @@
+.root {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.compact {
+  max-width: none;
+  margin: 0 0 1.5rem;
+}
+
+.form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.urlInput {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  font-size: 0.95rem;
+}
+
+.urlInput:focus-visible {
+  outline: 2px solid var(--edge);
+  outline-offset: 1px;
+}
+
+.generateButton {
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-btn);
+  background: var(--accent);
+  color: var(--surface);
+  padding: 0.6rem 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.generateButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.keysRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.keysStatus {
+  color: var(--faint);
+  font-size: 0.82rem;
+}
+
+.editKeysButton {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0;
+}
+
+.validationError {
+  color: var(--dubious);
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+.progress {
+  color: var(--faint);
+  font-size: 0.9rem;
+  margin: 0.75rem 0;
+}
+
+.generationError {
+  border: 1px solid var(--dubious);
+  background: var(--dubious-soft);
+  color: var(--dubious);
+  border-radius: var(--radius-panel);
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+}
