@@ -592,7 +592,7 @@ Note for this project specifically: the **free tier's local storage** (no server
 BYO key) is closer to this excluded category than to the REST-backed model the rest
 of this guide assumes. The guide's routing and animation conventions (Parts 1–2)
 still apply everywhere. Its server-state conventions (Part 3) apply as written to the
-**paid path**, talking to the Fastify API; the free path's local `DigestStore`
+**paid path**, talking to the Fastify API; the free path's local `OverviewStore`
 implementation should be designed on its own terms rather than forced through
 TanStack Query against nothing.
 

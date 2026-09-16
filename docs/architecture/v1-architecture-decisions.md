@@ -9,7 +9,7 @@ reasoning that produced it, not a spec.
 ## The model
 
 **One codebase, not two products, for free and paid.** They differ only in which
-backend a shared `DigestStore`/`AudioStore`-style interface talks to
+backend a shared `OverviewStore`/`AudioStore`-style interface talks to
 (architecture-options.md §10). This was chosen over building free and paid as
 separate builds because upgrading a user from free to paid should be a data
 migration, not a different app.
@@ -63,7 +63,7 @@ Supadata re-fetch of their source video, per the same doc's own note that "exist
 notes cannot be backfilled without re-fetching every transcript."
 
 It also changes what a partial "Watch it anyway?" can carry — see
-`docs/features/note-generation-decisions.md`'s Watch-it-anyway section — from a purely
+`docs/features/overview-generation-decisions.md`'s Watch-it-anyway section — from a purely
 qualitative pointer ("the fractal-folding section") to an actual `{start_ms, end_ms}`
 range, which is closer to the "suggested timestamp ranges" idea deferred below than
 that deferral assumed when it was written.
@@ -80,7 +80,7 @@ panel to the side.
 per-video-type content templates (recipe steps, process instructions, a
 subjectivity/bullshit rating for commentary); suggested timestamp ranges for a
 partial "watch it anyway" — deferred as a UX decision (see
-`docs/features/note-generation-decisions.md`), not because the timing data is unavailable,
+`docs/features/overview-generation-decisions.md`), not because the timing data is unavailable,
 now that transcript source is pinned to Supadata; ads on any surface.
 
 ## Answers to architecture-options.md §11
@@ -161,7 +161,7 @@ spinners), and client-state tiers — are recorded in
 `docs/conventions/frontend-architecture-guide.md`. The testing conventions built on top of that
 stack are recorded in `docs/conventions/frontend-testing-guide.md`.
 
-**API: Fastify (Node/TypeScript).** Handles auth, `/digests`, `/captures`, `/audio` —
+**API: Fastify (Node/TypeScript).** Handles auth, `/overviews`, `/captures`, `/audio` —
 the thin sync server from Model D. It also serves the built SPA's static assets
 directly (`@fastify/static`) for everything outside `/api/*`, so the SPA and the API
 share one origin. This was chosen specifically to avoid CORS and cross-site-cookie
@@ -186,15 +186,15 @@ packages/app-core/    shared Vite/React/React-Router app: routes, components,
                        queries, mutations, SCSS
 apps/extension/       thin MV3 shell, mounts app-core in the side panel / full page
 apps/web/             thin static-SPA shell, mounts app-core
-apps/api/             Fastify — auth, digests, captures, audio, serves apps/web's build
+apps/api/             Fastify — auth, overviews, captures, audio, serves apps/web's build
 services/tts/         Python, kokoro-onnx, private
-packages/types/       shared DigestStore/AudioStore interfaces, note schema
+packages/types/       shared OverviewStore/AudioStore interfaces, overview schema
 ```
 
 **Data**: Postgres via **Neon** — serverless, scales to zero between requests, and
 its free tier (0.5GB storage, 100 CU-hours, 5GB egress) is likely to cover this
 project's actual v1 usage on its own, since Postgres here only ever holds metadata
-and digests, never large blobs. Object storage for audio via **Cloudflare R2** —
+and overviews, never large blobs. Object storage for audio via **Cloudflare R2** —
 S3-compatible, and critically zero egress fees, which matters because audio is
 fetched repeatedly on playback rather than written once.
 
@@ -224,27 +224,62 @@ pricing page during this session, not a predicted number — consistent with
 `docs/prototype/constraints.md`'s rule that no figure shown to a user should be a model's
 estimate dressed up as a measurement.
 
-## DigestStore and Settings (packages/types)
+## Naming: the product, and why the domain type is `Overview`
 
-**One `DigestStore` interface, backed by two collections, not one.** Notes and
-per-note read/favourite state are exposed through the same interface but never
-share a method: `saveNote` takes a full `Note` (no read/favourite fields exist on
-that type at all) and replaces it wholesale; `setNoteState` only ever touches
-`{ read, favourite }`. The wholesale-replace-without-wiping-flags rule from
-`docs/prototype/decisions.md` is enforced by the method signatures themselves, not restated
-as a comment on either one.
+**The product's working name is "The Overview" — provisional ("for now"), reached
+after checking about a dozen candidates against real, live competitors.** Every
+synonym for "a short version" — digest, gist, rundown, brief (six separate products
+found using it), nutshell, videoDigest — turned out to already be a live product
+doing roughly this exact thing, because that's the obvious word to reach for and a
+lot of people have built roughly this tool. Judgment-flavoured words (Verdict, Judge,
+Watchwise) came back clean instead, and eventually "Video Overview" → "The Overview"
+— the definite-article technique for turning a generic phrase into a brand (The
+Browser Company, The Hustle) — won on being both understandable and unclaimed.
+
+**The domain type is `Overview` too, and that was a deliberate call made with a real
+tension known, not an accident.** Three things were weighed:
+
+- *Brand-coupling risk*: tying a domain type to a still-provisional brand name repeats
+  the exact mistake `DigestStore` made — it was inherited unchanged from an early
+  "Video Digest"-era interface sketch in `docs/architecture/architecture-options.md`
+  §10 and never reconsidered once the naming moved past that word. Decided not to
+  repeat this by choosing the domain name deliberately rather than defaulting to it.
+- *Semantic clash*: "overview" is a condensed-description word, the same family as
+  digest/gist/summary/brief, which sits against `docs/prototype/decisions.md`'s first
+  stated principle — "a note is a judgment, not a summary." Accepted as a conscious
+  trade-off, not resolved away.
+- *Future collision*: a later iteration may want a literal video-overview/chapters
+  feature — a structural breakdown for navigating the video itself, genuinely the
+  accurate use of the word. That feature will need its own, different name when it's
+  built; "Overview" is spent on the judgment record instead.
+
+**"Note" was freed up on purpose: a future iteration is expected to let users take
+their own notes on a video** (likely timestamped, similar to the reference repo's
+floating note-taking panel) — genuinely different from the AI-generated record, and
+worth not colliding with. `Overview.savedNote` (the free-text note captured once, at
+save time) already sits on the right side of that split by coincidence and needed no
+change.
+
+**One `OverviewStore` interface, backed by two collections, not one.** Overviews and
+per-overview read/favourite state are exposed through the same interface but never
+share a method: `saveOverview` takes a full `Overview` (no read/favourite fields
+exist on that type at all) and replaces it wholesale; `setOverviewState` only ever
+touches `{ read, favourite }`. The wholesale-replace-without-wiping-flags rule from
+`docs/prototype/decisions.md` is enforced by the method signatures themselves, not
+restated as a comment on either one.
 
 **Topic creation is gated by which method exists, not by an instruction.** The
 generation pipeline only ever needs `listTopics` (to build the match list for a
-call) and `saveNote` (to file the result) — it has no reason to ever hold a
+call) and `saveOverview` (to file the result) — it has no reason to ever hold a
 reference to `createTopic`. Only UI code, after a suggestion is accepted, calls it.
 "The model suggests, never creates" holds at the interface boundary, independent of
 whatever the prompt itself says.
 
-**`listClaims` returns a lightweight projection, not full notes.** `{ noteId, title,
-claim }` is enough for the personal-library novelty retrieval in
-`docs/features/note-generation-decisions.md`, and keeps that decision's "flat list for now,
-revisit with real evidence" stance consistent — a cheap projection is cheaper still.
+**`listClaims` returns a lightweight projection, not full overviews.** `{ overviewId,
+title, claim }` is enough for the personal-library novelty retrieval in
+`docs/features/overview-generation-decisions.md`, and keeps that decision's "flat
+list for now, revisit with real evidence" stance consistent — a cheap projection is
+cheaper still.
 
 **`Settings` holds sync-eligible preferences only — the section toggles and the
 reader-context personalisation text. API keys are deliberately not part of it, not
@@ -254,6 +289,16 @@ paid, authenticated user, while `Settings` exists specifically to be the thing t
 *does* sync across a user's devices. Shaping keys like just another setting would
 make that boundary something every future call site has to remember, instead of
 something the type can't represent.
+
+**Every id is a branded UUID (`OverviewId`, `TopicId`), not a bare `string`.** Both
+are `z.uuid().brand(...)`, in a shared `Brands.ts` — real, native support in Zod v4,
+not a hand-rolled convention. The point isn't the UUID format, it's that `OverviewId`
+and `TopicId` can't be swapped for each other or for a bare string, even though both
+are UUIDs underneath — the compiler catches `getOverviewState(someTopicId)` the same
+way it catches passing a number where a string was expected, rather than that mistake
+surfacing at runtime as a query that silently returns nothing. `Brands.test.ts`
+encodes this as a permanent check (`@ts-expect-error` on the two cases that must not
+compile) rather than something that only held the day it was written.
 
 ## Explicitly out of scope for v1
 

@@ -9,7 +9,7 @@ comments. Before writing one, do one of these instead:
   stronger than a comment asserting the invariant holds — the comment can go
   stale silently, the test can't.
 - **Put the reasoning in a doc, and reference it by name.** Design decisions
-  belong in a file like `docs/features/note-generation-decisions.md`, not
+  belong in a file like `docs/features/overview-generation-decisions.md`, not
   restated across every function that implements them. A short pointer is the
   outer limit, not a paragraph.
 

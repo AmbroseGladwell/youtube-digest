@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OverviewId } from "./Brands.js";
 import { VideoSource } from "./VideoSource.js";
 import { CoreFields } from "./CoreFields.js";
 import { Filing } from "./Filing.js";
@@ -7,12 +8,12 @@ import { Selling } from "./Selling.js";
 import { HowToApply } from "./HowToApply.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 
-// Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives in its
-// own table, keyed by note id, because this record can be replaced wholesale on a
-// re-run.
-export const Note = z
+// Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
+// in its own table, keyed by overview id, because this record can be replaced
+// wholesale on a re-run.
+export const Overview = z
   .object({
-    id: z.string(),
+    id: OverviewId,
     video: VideoSource,
     savedAt: z.iso.datetime(),
     savedNote: z.string().nullable(),
@@ -25,13 +26,13 @@ export const Note = z
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
   })
-  .superRefine((note, ctx) => {
-    if (note.thin && note.verdict !== null) {
+  .superRefine((overview, ctx) => {
+    if (overview.thin && overview.verdict !== null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["verdict"],
-        message: "thin notes never carry a verdict",
+        message: "thin overviews never carry a verdict",
       });
     }
   });
-export type Note = z.infer<typeof Note>;
+export type Overview = z.infer<typeof Overview>;

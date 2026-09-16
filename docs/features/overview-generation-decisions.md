@@ -1,4 +1,4 @@
-# Note generation decisions, and what produced them
+# Overview generation decisions, and what produced them
 
 Recorded from a design conversation about the generation step for the real build, in
 the same spirit as `docs/prototype/decisions.md` and `docs/architecture/v1-architecture-decisions.md`: a
@@ -13,7 +13,7 @@ sections are enabled, in a fixed canonical order, into one prompt and one schema
 call.
 
 **Structural vs. optional is a real split, not an arbitrary line.** Video info / In
-one line / Core claim / Key points / Topic / Tags are the skeleton — there is no note
+one line / Core claim / Key points / Topic / Tags are the skeleton — there is no overview
 and nothing to file without them, so they always run. Verdict, Selling, How to apply
 (renamed from Try this — see below), and Watch-it-anyway are the opinionated layer —
 exactly the four things README's own "Design principles" section calls out — and are
@@ -76,7 +76,7 @@ video already chosen for saving is unlikely to assert literally nothing).
   `worth watching`): binary, rare, consistent, rather than a graded warning scale.
 - `THIN` is not a fourth label. It's a pre-check gate: if Core Claim comes back
   empty/"pure vibes" (which the prompt's existing Core Claim instructions already
-  detect), Verdict doesn't run at all and the note says so. This wires an existing
+  detect), Verdict doesn't run at all and the overview says so. This wires an existing
   signal through rather than asking the model to separately remember a THIN verdict.
 
 Re-scored, the five samples become:
@@ -140,7 +140,7 @@ generation-prompt instruction, not a schema concern.
 is generated every time regardless of `dubious` — the schema doesn't conditionally
 drop the field based on a value computed in the same call. When `dubious` fires, the
 UI hides it behind a reveal by default (the same collapsed shape Watch-it-anyway's
-yes/no already uses), rather than the note silently contradicting itself by showing
+yes/no already uses), rather than the overview silently contradicting itself by showing
 suggested actions right next to a claim it just flagged as dubious. Chosen over not
 generating it at all: `dubious` is rare enough that the token cost of always
 generating it is small, and it avoids a second on-demand generation round-trip for
@@ -170,7 +170,7 @@ your cooking."
 the model's general sense of the genre, not a comparison against anything this
 specific user has saved.** `summary-prompt.md` gives the model, per call, only the
 video's own URL/title/channel/description and the user's save-time note — no prior
-notes, no library, no persisted user memory. The one apparent exception —
+overviews, no library, no persisted user memory. The one apparent exception —
 parenting/multiplication naming a specific other saved video by ID as making "the
 same core claim" — isn't a designed feature. Nothing in the prompt or pipeline asks
 for cross-referencing; the only explanation that fits is that both videos landed in
@@ -180,13 +180,13 @@ pipeline.
 
 **Decision: add real personal-library retrieval, gated on the Verdict toggle.**
 Before generating Verdict, read the user's own past `claim` fields (already stored
-per note, confirmed in `samples/records/*.json`) and pass them into the same call, so
+per overview, confirmed in `samples/records/*.json`) and pass them into the same call, so
 "recycled" can mean "you already saved this," not only "this genre repeats itself."
 If Verdict is off, this doesn't run either — no reason to spend the tokens fetching
 and injecting past claims for a field that isn't being generated.
 
 **No embeddings, no vector index, for v1.** A personal library's claims are one
-sentence each; even a few hundred notes is a few thousand tokens, trivial next to the
+sentence each; even a few hundred overviews is a few thousand tokens, trivial next to the
 ~30k-token generation cost already paid per video. Comparing a new claim against a
 few hundred known strings is a well-grounded version of the same semantic-similarity
 judgment the model already makes against the entire genre from training data — not
@@ -194,10 +194,10 @@ the class of unreliable operation `docs/prototype/constraints.md` warns about (t
 about a model fabricating a count or measurement, not about it making a judgment call
 it's actually suited to).
 
-**New structured field: `similar_to: [{ note_id, title }]`, empty when nothing
+**New structured field: `similar_to: [{ overview_id, title }]`, empty when nothing
 matches.** The parenting-note cross-reference currently only exists as a sentence
 buried in Verdict's reasoning prose — easy to miss. As a structured field, the
-library UI can render an actual "You already have a note like this →" chip, turning
+library UI can render an actual "You already have an overview like this →" chip, turning
 an accidental one-off into the "surface the pattern, not just the item" feature
 README already wants.
 
@@ -258,15 +258,15 @@ where the match set comes back empty — no separate flag needed to represent it
   scalar the mechanism actually produces — it's binary. Whenever a video's match set
   is empty, or doesn't fully cover what the video is about, the model can additionally
   propose a label as a suggestion chip. Accepting it creates the topic and adds it to
-  the note's set; dismissing just means the note doesn't gain that topic — it may
+  the overview's set; dismissing just means the overview doesn't gain that topic — it may
   still be filed under others, so declining a suggestion no longer means "stays
   unsorted" the way it did under single-select. Same "degrade visibly" shape as the
   rest of the UI either way: don't silently auto-create a topic, and don't leave the
   user with an unhelped gap either.
 - *Pattern-level, from the unsorted pile*: periodically look across just the
-  `unsorted` notes' claims for a cluster and propose "N of your unsorted videos look
+  `unsorted` overviews' claims for a cluster and propose "N of your unsorted videos look
   like they're about X — create this topic and file them?" This runs against
-  already-stored notes as a library-level operation, not inside the generation
+  already-stored overviews as a library-level operation, not inside the generation
   pipeline, and is the "surface the pattern, not just the item" principle turned into
   an actual affordance instead of a phrase in README.
 
@@ -282,16 +282,16 @@ one new item against a small user-owned list and return whatever matches, which 
 be none. `similar_to` was already designed as a list from the start; topic-matching
 returning a set brings it into line rather than introducing a second inconsistency.
 
-**Flagged, not solved: renaming or merging topics later touches every note that
+**Flagged, not solved: renaming or merging topics later touches every overview that
 includes it.** This has to be a targeted update to the topic reference on existing
-note records, not a note regeneration — consistent with the existing lesson in
+overview records, not an overview regeneration — consistent with the existing lesson in
 `docs/prototype/decisions.md` that user-facing state should be updatable without the generation
-pipeline rewriting the note wholesale. Multi-select doesn't change this, it just means
+pipeline rewriting the overview wholesale. Multi-select doesn't change this, it just means
 the update touches a set membership instead of a single field.
 
 **Resolved: Topics and Tags stay separate, on different grounds than either of us
 first assumed.** Multi-select made them look structurally identical — both are now
-sets of labels on a note — but `prototype/index_template.html` already draws the real
+sets of labels on an overview — but `prototype/index_template.html` already draws the real
 line, and it isn't about structure, it's about interaction: Topics render in the
 clickable header meta area, Tags render as plain, non-interactive spans in the
 footer (the CSS tokens even group tags with the other non-interactive badges).
@@ -302,11 +302,11 @@ That check also found the prompt's actual stated reason for Tags doesn't hold up
 "3 to 6 lowercase tags for search" implies they add search coverage, but the
 prototype's own `haystack()` function already concatenates title, channel, synopsis,
 claim, reasoning, try, selling, myNote, points, topic, and verdict — essentially the
-whole note — into the searchable text. Checked against all five samples, every tag's
-concept already appears as plain text somewhere else in the same note, including the
+whole overview — into the searchable text. Checked against all five samples, every tag's
+concept already appears as plain text somewhere else in the same overview, including the
 one that looked like a real counter-example: the parenting note's `mtc` tag is already
 spelled out verbatim in its How-to-apply section ("Year 4 Multiplication Tables
-Check... MTC age"). Tags add no search recall the rest of the note doesn't already
+Check... MTC age"). Tags add no search recall the rest of the overview doesn't already
 provide.
 
 **Decision: keep Tags as-is, as a scanning aid, not a search mechanism.** The visible,
@@ -315,21 +315,21 @@ merits — that doesn't need "for search" to be true to justify keeping them. No
 about the generation prompt or the schema needs to change; what should change is the
 prompt's own stated rationale, since it currently describes a job the tags don't
 actually do. This also means Tags don't need the consistency/dedup retrieval built
-for Topics — a scanning aid tolerates "ai" on one note and "artificial-intelligence"
+for Topics — a scanning aid tolerates "ai" on one overview and "artificial-intelligence"
 on another in a way a click-to-filter facet couldn't.
 
-**Decision: users can add their own tags, stored apart from the note, not merged
-into `Note.tags`.** The reason to allow this isn't fixing bad auto-tags — it's that
+**Decision: users can add their own tags, stored apart from the overview, not merged
+into `Overview.tags`.** The reason to allow this isn't fixing bad auto-tags — it's that
 a user might want to record something the model has no way to know, like "re-watch"
-or "disagree with this," their own relationship to the note rather than a
-description of its content. Putting a user-added tag into `Note.tags` would repeat
+or "disagree with this," their own relationship to the overview rather than a
+description of its content. Putting a user-added tag into `Overview.tags` would repeat
 the exact bug `docs/prototype/decisions.md` already names for read/favourite: the
-note gets replaced wholesale on regeneration, so anything stored on it is silently
-wiped the next time the model runs. `NoteState` — the same per-note, keyed-apart
+overview gets replaced wholesale on regeneration, so anything stored on it is silently
+wiped the next time the model runs. `OverviewState` — the same per-overview, keyed-apart
 store already holding `read`/`favourite` — gains a `userTags` field instead, updated
-through the same `setNoteState`, so a user-added tag survives a regeneration that
-produces an entirely fresh set of model tags. Displayed as the union of `Note.tags`
-and `NoteState.userTags`, same non-interactive badge treatment either way — the
+through the same `setOverviewState`, so a user-added tag survives a regeneration that
+produces an entirely fresh set of model tags. Displayed as the union of `Overview.tags`
+and `OverviewState.userTags`, same non-interactive badge treatment either way — the
 split is about where it's stored, not how it looks.
 
 ## Selling: one card label, richer data underneath
@@ -341,7 +341,7 @@ pitches detected") would silently flip it wrong. Same class of bug
 `docs/prototype/constraints.md` already names for Verdict's label-parsing, same fix: a
 structured field, not a string sniffed from prose.
 
-**The deeper problem: Selling's stated purpose is cross-note pattern-detection, and a
+**The deeper problem: Selling's stated purpose is cross-overview pattern-detection, and a
 free-text block can't be aggregated.** `docs/prototype/decisions.md`: "the value is the pattern
 across many notes, not the individual flag." The five samples show genuinely
 different patterns sitting undifferentiated in one prose field — a free personality
@@ -361,10 +361,10 @@ is deliberately not all shown at once, or shown per-card:
   or absent, the same shape every time — no per-category badges, no severity marker.
   This is the direct answer to not wanting cards to accumulate labels, and it matches
   a real usage signal: Selling prose was the section most often skipped on a
-  per-note basis, which fits — a single data point in isolation is low-value, the
+  per-overview basis, which fits — a single data point in isolation is low-value, the
   pattern across many is the point, and a card is read one at a time.
 - **The category still exists, just not as card real estate.** It lives in the
-  expanded note (one structured sentence instead of today's paragraph) and in a
+  expanded overview (one structured sentence instead of today's paragraph) and in a
   stats/pattern view — "12 of your fitness saves push a paid programme," "you keep
   hitting the free-lesson-sells-the-execution pattern" — which is where the
   aggregate signal actually earns its keep. This is the same shape as the existing
@@ -429,7 +429,7 @@ something to point at.
 **Decided: the creator's name lives only in `Channel`, never repeated in `In one
 line`.** The samples were inconsistent — "Ryan Humiston," "Veritasium" named outright,
 but "a finance YouTuber," "a presenter" elsewhere — even though there's already a
-dedicated field for it. One place, consistently, rather than per-note judgment calls.
+dedicated field for it. One place, consistently, rather than per-overview judgment calls.
 
 **Decided: Core claim gets an explicit word cap — 60 words, maximum.** Measured
 against the samples (34, 36, 40, 40, 55 words, all uncapped, against `In one line`'s
@@ -491,7 +491,7 @@ is accurate but isn't a reason to skip anything — the value of the lecture is 
 teaching, not the novelty of the theorem. **Left as an interpretive fix, not a
 structural one, for now:** the reasoning text already carries this distinction (as
 it already does for the overreach cases folded into prose elsewhere in this doc),
-and the topic a note is filed under does real disambiguating work for free — a
+and the topic an overview is filed under does real disambiguating work for free — a
 reader browsing a "maths" topic already expects familiarity to mean "correct and
 standard," not "not worth your time." No evidence yet that this needs its own field
 rather than the right framing in prose.

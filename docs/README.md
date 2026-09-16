@@ -22,7 +22,7 @@ Five folders, five different questions.
 
 ## `features/` — feature-specific design, one file per feature
 
-- `note-generation-decisions.md` — the note format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
+- `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `tts-pre-rendered-speech.md` — a designed and measured feature that was not built.
 
 ## `reference/` — external background material, not all of it specific to this repo
