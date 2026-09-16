@@ -153,7 +153,7 @@ test("the business/adaptability sample's real content, filed under two topics, v
       topicIds: [BUSINESS_TOPIC_ID, FINANCE_TOPIC_ID],
       tags: ["careers", "ai", "adaptability", "ray-dalio", "debt-cycles", "uk-economy"],
       verdict: {
-        novelty: "competent_not_new",
+        novelty: "established",
         dubious: false,
         reasoning:
           "The career advice is honest, but the macro half is delivered as diagnosis with no counter-case offered.",

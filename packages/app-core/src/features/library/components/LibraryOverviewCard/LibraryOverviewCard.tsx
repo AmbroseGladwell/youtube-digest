@@ -16,7 +16,7 @@ export interface LibraryOverviewCardProps {
 
 const MINI_BADGE_CLASS: Record<Novelty, string | undefined> = {
   novel: styles.miniBadgeNovel,
-  competent_not_new: undefined,
+  established: undefined,
   recycled: styles.miniBadgeRecycled,
 };
 

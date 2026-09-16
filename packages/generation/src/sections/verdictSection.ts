@@ -15,7 +15,7 @@ export const verdictSection: PromptSection = {
         : input.pastClaims.map((claim, i) => `${i}. ${claim.title}: ${claim.claim}`).join("\n");
     return `
 ## Verdict
-Novelty — one of NOVEL / COMPETENT, NOT NEW / RECYCLED — plus a
+Novelty — one of NOVEL / ESTABLISHED / RECYCLED — plus a
 dubious flag and one or two sentences of reasoning. Be blunt. Most
 short-form content is a repackaging of standard advice, and saying so is
 the most useful thing you can tell me.

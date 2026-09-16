@@ -11,7 +11,7 @@ export interface OverviewResultCardProps {
 
 const NOVELTY_BADGE_CLASS: Record<string, string | undefined> = {
   novel: styles.badgeNovel,
-  competent_not_new: styles.badgeCompetent,
+  established: styles.badgeEstablished,
   recycled: styles.badgeRecycled,
 };
 
@@ -43,7 +43,7 @@ export function OverviewResultCard({ overview }: OverviewResultCardProps) {
         <div className={styles.badgeRow}>
           {overview.selling && overview.selling.type !== "none" && (
             <span
-              className={`${styles.badge} ${styles.badgeCompetent}`}
+              className={`${styles.badge} ${styles.badgeEstablished}`}
               data-testid={overviewResultCardTestIds.sellingChip}
             >
               {SELLING_LABEL[overview.selling.type]}
@@ -51,7 +51,7 @@ export function OverviewResultCard({ overview }: OverviewResultCardProps) {
           )}
           {overview.watchAnyway && (
             <span
-              className={`${styles.badge} ${styles.badgeCompetent}`}
+              className={`${styles.badge} ${styles.badgeEstablished}`}
               data-testid={overviewResultCardTestIds.watchAnywayBadge}
             >
               {WATCH_LABEL[overview.watchAnyway.answer]}
