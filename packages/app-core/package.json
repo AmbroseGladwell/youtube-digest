@@ -1,0 +1,42 @@
+{
+  "name": "@overview/app-core",
+  "version": "0.0.0",
+  "description": "The shared Vite/React/React-Router app: routes, shell, components, queries, mutations, SCSS. Mounted verbatim by apps/web and (later) apps/extension. @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@overview/types": "*",
+    "@overview/transcripts": "*",
+    "@overview/generation": "*",
+    "@anthropic-ai/sdk": "^0.126.0",
+    "@supadata/js": "^1.4.0",
+    "@tanstack/react-query": "^5.103.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^26.1.0",
+    "sass": "^1.104.1",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

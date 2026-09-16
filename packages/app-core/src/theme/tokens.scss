@@ -1,0 +1,52 @@
+// Ported verbatim from prototype/tokens.css (docs/README.md: prototype/index_template.html
+// is the design reference, tokens.css is "the design tokens, extracted"). Contrast values
+// were already checked by hand there — --faint and --accent darkened to clear 4.5:1 for
+// small text, --edge kept >=3:1 against every surface it sits on (WCAG 1.4.11). Preserve
+// that intent if the palette changes.
+
+:root {
+  --ground: #faf6f1;
+  --surface: #ffffff;
+  --sunk: #f1eae1;
+  --ink: #2a2521;
+  --muted: #6e6459;
+  --faint: #72675a;
+  --line: #e6dccf;
+  --edge: #9f7d52;
+  --accent: #975531;
+  --accent-soft: #f2e1d2;
+  --novel: #806624;
+  --novel-soft: #f1e9d2;
+  --recycled: #6c5c4a;
+  --recycled-soft: #eee6da;
+  --dubious: #a23f35;
+  --dubious-soft: #f3deda;
+  --shadow: 0 1px 2px rgba(40, 30, 20, 0.04), 0 10px 28px rgba(40, 30, 20, 0.08);
+  --shadow-lg: 0 4px 10px rgba(40, 30, 20, 0.06), 0 20px 48px rgba(40, 30, 20, 0.12);
+  --measure: 40rem;
+  --radius-badge: 999px;
+  --radius-btn: 999px;
+  --radius-panel: 10px;
+  --ra-size: 1.05rem;
+}
+
+:root[data-theme="dark"] {
+  --ground: #1e1e1e;
+  --surface: #282828;
+  --sunk: #242424;
+  --ink: #f1f1ef;
+  --muted: #a8a8a5;
+  --faint: #8f8f8b;
+  --line: #3d3d3b;
+  --edge: #757570;
+  --accent: #d98f62;
+  --accent-soft: #3c2c1e;
+  --novel: #d6bb6e;
+  --novel-soft: #392f17;
+  --recycled: #b7ac9c;
+  --recycled-soft: #302c26;
+  --dubious: #e0897d;
+  --dubious-soft: #3a211d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 6px 16px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.5);
+}

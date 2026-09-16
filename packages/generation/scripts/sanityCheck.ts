@@ -28,6 +28,7 @@ const input: GenerationInput = {
     channel: "Veritasium",
     description: rawDescription.slice(0, 400),
     durationMs: transcript.at(-1)?.endMs ?? null,
+    thumbnailUrl: null,
   },
   transcript,
   savedNote: "Why do mammals get 1 billion heart beats?",

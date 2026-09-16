@@ -1,0 +1,144 @@
+.root {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.4rem 1.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--faint);
+}
+
+.title {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-badge);
+  border: 1px solid transparent;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badgeNovel {
+  background: var(--novel-soft);
+  color: var(--novel);
+}
+
+.badgeCompetent {
+  background: var(--sunk);
+  color: var(--muted);
+}
+
+.badgeRecycled {
+  background: var(--recycled-soft);
+  color: var(--recycled);
+}
+
+.badgeDubious {
+  background: var(--dubious-soft);
+  color: var(--dubious);
+}
+
+.verdictBlock {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 8px;
+  background: var(--ground);
+}
+
+.verdictBlockDubious {
+  border-left-color: var(--dubious);
+}
+
+.verdictHeadRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.dubiousFlag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--dubious);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.section {
+  margin-top: 1rem;
+}
+
+.sectionHeading {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--faint);
+}
+
+.coreClaim {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.keyPoints {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.keyPoints li {
+  margin-bottom: 0.3rem;
+}
+
+.reasoning {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.tag {
+  border-radius: var(--radius-badge);
+  background: var(--sunk);
+  color: var(--faint);
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.watchLink {
+  font-size: 0.85rem;
+}
+
+.rangeLink {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

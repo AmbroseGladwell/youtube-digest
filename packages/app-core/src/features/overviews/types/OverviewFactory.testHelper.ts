@@ -1,0 +1,41 @@
+import { DEFAULT_OVERVIEW_STATE, OverviewId, type Overview, type OverviewState } from "@overview/types";
+import type { OverviewWithState } from "./OverviewWithState.js";
+
+export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
+  id: OverviewId.parse(crypto.randomUUID()),
+  video: {
+    url: "https://www.youtube.com/watch?v=example",
+    title: "Example",
+    channel: "Example Channel",
+    description: null,
+    durationMs: null,
+    thumbnailUrl: null,
+  },
+  savedAt: new Date().toISOString(),
+  savedNote: null,
+  inOneLine: "A short description of the video.",
+  coreClaim: "The single assertion this video makes.",
+  thin: false,
+  keyPoints: ["one", "two", "three"],
+  topicIds: [],
+  tags: ["one-tag", "two-tag", "three-tag"],
+  verdict: null,
+  selling: null,
+  howToApply: null,
+  watchAnyway: null,
+  ...overrides,
+});
+
+export const makeOverviewState = (overviewId: string, overrides: Partial<OverviewState> = {}): OverviewState => ({
+  overviewId: OverviewId.parse(overviewId),
+  ...DEFAULT_OVERVIEW_STATE,
+  ...overrides,
+});
+
+export const makeOverviewWithState = (
+  overviewOverrides: Partial<Overview> = {},
+  stateOverrides: Partial<OverviewState> = {},
+): OverviewWithState => {
+  const overview = makeOverview(overviewOverrides);
+  return { overview, state: makeOverviewState(overview.id, stateOverrides) };
+};

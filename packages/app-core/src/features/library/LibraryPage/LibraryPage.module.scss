@@ -1,0 +1,16 @@
+.root {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty {
+  text-align: center;
+  color: var(--faint);
+  padding: 2.5rem 1rem;
+  font-size: 0.95rem;
+}

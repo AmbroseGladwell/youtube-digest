@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Deviates from the base's NodeNext resolution: app-core is Vite-bundled, never run
+    // directly by node, so bundler resolution (extensionless relative imports) is used
+    // instead of forcing every .tsx import to spell a .js output extension it doesn't have.
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "rootDir": "src",
+    "noEmit": false
+  },
+  "include": ["src"]
+}
