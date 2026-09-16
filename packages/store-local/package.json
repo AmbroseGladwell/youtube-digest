@@ -1,0 +1,28 @@
+{
+  "name": "@overview/store-local",
+  "version": "0.0.0",
+  "description": "The free tier's OverviewStore/SettingsStore: IndexedDB-backed, no server, no account (docs/architecture/v1-architecture-decisions.md: 'free tier is fully local'). @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test dist/"
+  },
+  "dependencies": {
+    "@overview/types": "*"
+  },
+  "devDependencies": {
+    "@overview/store-conformance": "*",
+    "@types/node": "^22.7.5",
+    "fake-indexeddb": "^6.0.0",
+    "typescript": "^5.6.3"
+  }
+}

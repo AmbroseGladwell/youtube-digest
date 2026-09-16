@@ -1,0 +1,40 @@
+import {
+  DATABASE_NAME,
+  DATABASE_VERSION,
+  OVERVIEWS_STORE,
+  OVERVIEW_STATES_STORE,
+  SETTINGS_STORE,
+  TOPICS_STORE,
+} from "./localDatabaseSchema.js";
+
+export interface OpenLocalDatabaseOptions {
+  name?: string;
+  indexedDB?: IDBFactory;
+}
+
+export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> {
+  const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB } = options;
+
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(name, DATABASE_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(OVERVIEWS_STORE)) {
+        db.createObjectStore(OVERVIEWS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(TOPICS_STORE)) {
+        db.createObjectStore(TOPICS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(OVERVIEW_STATES_STORE)) {
+        db.createObjectStore(OVERVIEW_STATES_STORE, { keyPath: "overviewId" });
+      }
+      if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+        db.createObjectStore(SETTINGS_STORE);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
