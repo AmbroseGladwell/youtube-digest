@@ -2,7 +2,7 @@ import type { Novelty } from "@overview/types";
 
 export const NOVELTY_LABEL: Record<Novelty, string> = {
   novel: "Novel",
-  competent_not_new: "Competent, not new",
+  competent_not_new: "Established",
   recycled: "Recycled",
 };
 
