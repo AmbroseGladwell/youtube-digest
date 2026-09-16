@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const VideoSource = z.object({
-  url: z.string().url(),
+  url: z.url(),
   title: z.string(),
   channel: z.string(),
   description: z.string().max(400).nullable(),

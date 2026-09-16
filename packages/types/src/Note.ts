@@ -14,11 +14,11 @@ export const Note = z
   .object({
     id: z.string(),
     video: VideoSource,
-    savedAt: z.string().datetime(),
+    savedAt: z.iso.datetime(),
     savedNote: z.string().nullable(),
   })
-  .merge(CoreFields)
-  .merge(Filing)
+  .extend(CoreFields.shape)
+  .extend(Filing.shape)
   .extend({
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
