@@ -70,7 +70,12 @@ video already chosen for saving is unlikely to assert literally nothing).
   `ESTABLISHED` replaces `SOLID BUT FAMILIAR` — the stated dislike was the old
   phrase specifically, and one word that says the material is settled carries the
   quality judgment without the two-clause hedge. It was `COMPETENT, NOT NEW` first,
-  which reordered the two clauses rather than losing them.
+  which reordered the two clauses rather than losing them. Local stores written
+  before the rename hold the old value, and library reads aren't re-validated
+  against the schema, so the local database version was bumped to drop stored
+  overviews and their read/favourite state on next open rather than migrate them —
+  topics and settings (the API key) survive. See
+  `packages/store-local/src/openLocalDatabase.test.ts`.
 - Soundness collapses to one visible bit: `dubious`, present or absent, nothing
   else — see the next section for why a three-value version was considered and
   dropped. This matches the app's own existing badge vocabulary (`sells nothing`,
