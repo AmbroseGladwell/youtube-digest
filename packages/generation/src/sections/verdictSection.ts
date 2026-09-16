@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Verdict } from "@digest/types";
+import { Verdict } from "@overview/types";
 import type { PromptSection } from "../PromptSection.js";
 
 export const verdictSection: PromptSection = {

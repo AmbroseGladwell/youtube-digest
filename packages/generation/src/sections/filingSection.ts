@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Filing } from "@digest/types";
+import { Filing } from "@overview/types";
 import type { PromptSection } from "../PromptSection.js";
 
 export const SuggestedTopicShape = z.object({

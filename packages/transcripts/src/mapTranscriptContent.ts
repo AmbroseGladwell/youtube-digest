@@ -1,5 +1,5 @@
 import type { Transcript } from "@supadata/js";
-import { TranscriptSegment } from "@digest/types";
+import { TranscriptSegment } from "@overview/types";
 import { TranscriptFetchError } from "./TranscriptFetchError.js";
 
 export function mapTranscriptContent(content: Transcript["content"]): TranscriptSegment[] {

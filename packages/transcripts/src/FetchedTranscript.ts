@@ -1,4 +1,4 @@
-import type { TranscriptSegment, VideoSource } from "@digest/types";
+import type { TranscriptSegment, VideoSource } from "@overview/types";
 
 export interface FetchedTranscript {
   video: VideoSource;

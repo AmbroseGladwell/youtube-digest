@@ -1,4 +1,4 @@
-import { HowToApply } from "@digest/types";
+import { HowToApply } from "@overview/types";
 import type { PromptSection } from "../PromptSection.js";
 
 export const howToApplySection: PromptSection = {

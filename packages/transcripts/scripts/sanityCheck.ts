@@ -1,5 +1,5 @@
 import { Supadata } from "@supadata/js";
-import { fetchTranscript } from "@digest/transcripts";
+import { fetchTranscript } from "@overview/transcripts";
 
 const url = process.argv[2];
 if (!url) {

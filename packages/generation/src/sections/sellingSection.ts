@@ -1,4 +1,4 @@
-import { Selling } from "@digest/types";
+import { Selling } from "@overview/types";
 import type { PromptSection } from "../PromptSection.js";
 
 export const sellingSection: PromptSection = {

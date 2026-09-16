@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { SectionsEnabled } from "@digest/types";
+import type { SectionsEnabled } from "@overview/types";
 import type { GenerationInput } from "./GenerationInput.js";
 
 export interface PromptSection {

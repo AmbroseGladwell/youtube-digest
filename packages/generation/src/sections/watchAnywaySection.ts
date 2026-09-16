@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { WatchAnyway } from "@digest/types";
+import { WatchAnyway } from "@overview/types";
 import type { PromptSection } from "../PromptSection.js";
 
 export const SegmentRangeShape = z.object({

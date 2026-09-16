@@ -1,4 +1,4 @@
-import type { OverviewId } from "@digest/types";
+import type { OverviewId } from "@overview/types";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";

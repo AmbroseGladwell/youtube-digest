@@ -1,5 +1,5 @@
 import type { Metadata } from "@supadata/js";
-import { VideoSource } from "@digest/types";
+import { VideoSource } from "@overview/types";
 
 export function mapMetadataToVideoSource(metadata: Metadata, url: string): VideoSource {
   return VideoSource.parse({

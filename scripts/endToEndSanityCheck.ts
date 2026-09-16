@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { Supadata } from "@supadata/js";
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@digest/types";
-import { fetchTranscript } from "@digest/transcripts";
-import { generateOverview, createAnthropicGenerationClient } from "@digest/generation";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
+import { fetchTranscript } from "@overview/transcripts";
+import { generateOverview, createAnthropicGenerationClient } from "@overview/generation";
 
 const url = process.argv[2];
 if (!url) {

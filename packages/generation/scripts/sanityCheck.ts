@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@digest/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
 import {
   generateOverview,
   createAnthropicGenerationClient,
   type GenerationInput,
   type TranscriptSegment,
-} from "@digest/generation";
+} from "@overview/generation";
 import { randomUUID } from "node:crypto";
 
 const transcriptPath = process.argv[2];
