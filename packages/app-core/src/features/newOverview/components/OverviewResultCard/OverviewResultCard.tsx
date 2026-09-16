@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Overview } from "@overview/types";
 import styles from "./OverviewResultCard.module.scss";
 import { overviewResultCardTestIds } from "./OverviewResultCardTestIds.js";
@@ -8,12 +9,6 @@ import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
 export interface OverviewResultCardProps {
   overview: Overview;
 }
-
-const NOVELTY_BADGE_CLASS: Record<string, string | undefined> = {
-  novel: styles.badgeNovel,
-  established: styles.badgeEstablished,
-  recycled: styles.badgeRecycled,
-};
 
 const SELLING_LABEL: Record<string, string> = {
   own_paid_product: "Sells their own paid product",
@@ -31,96 +26,76 @@ const WATCH_LABEL: Record<string, string> = {
 export function OverviewResultCard({ overview }: OverviewResultCardProps) {
   return (
     <article className={styles.root} data-testid={overviewResultCardTestIds.root}>
-      <p className={styles.eyebrow}>{overview.video.channel}</p>
-      <h2 className={styles.title} data-testid={overviewResultCardTestIds.title}>
-        {overview.video.title}
-      </h2>
-      <a className={styles.watchLink} href={overview.video.url} target="_blank" rel="noopener">
-        Watch on YouTube
-      </a>
-
-      {((overview.selling && overview.selling.type !== "none") || overview.watchAnyway) && (
-        <div className={styles.badgeRow}>
-          {overview.selling && overview.selling.type !== "none" && (
+      <header className={styles.head}>
+        <p className={styles.kickerRow}>
+          <span className={styles.channel}>{overview.video.channel}</span>
+          {overview.verdict && (
             <span
-              className={`${styles.badge} ${styles.badgeEstablished}`}
-              data-testid={overviewResultCardTestIds.sellingChip}
+              className={`${styles.verdict} ${overview.verdict.novelty === "novel" ? styles.verdictNovel : ""}`}
+              data-testid={overviewResultCardTestIds.verdictBadge}
             >
-              {SELLING_LABEL[overview.selling.type]}
+              {NOVELTY_LABEL[overview.verdict.novelty]}
             </span>
           )}
-          {overview.watchAnyway && (
-            <span
-              className={`${styles.badge} ${styles.badgeEstablished}`}
-              data-testid={overviewResultCardTestIds.watchAnywayBadge}
-            >
-              {WATCH_LABEL[overview.watchAnyway.answer]}
+          {overview.verdict?.dubious && (
+            <span className={styles.dubious} data-testid={overviewResultCardTestIds.dubiousFlag}>
+              ⚠ Dubious claim
             </span>
           )}
-        </div>
-      )}
+        </p>
+        <h2 className={styles.title} data-testid={overviewResultCardTestIds.title}>
+          {overview.video.title}
+        </h2>
+        <a className={styles.watchLink} href={overview.video.url} target="_blank" rel="noopener">
+          Watch on YouTube
+        </a>
+      </header>
 
-      <div className={styles.section}>
-        <p className={styles.sectionHeading}>In one line</p>
-        <p className={styles.coreClaim}>{overview.inOneLine}</p>
-      </div>
+      <Section label="In one line">
+        <p className={styles.prose}>{overview.inOneLine}</p>
+      </Section>
 
-      <div className={styles.section}>
-        <p className={styles.sectionHeading}>{overview.thin ? "No clear claim" : "Core claim"}</p>
-        <p className={styles.coreClaim}>{overview.coreClaim}</p>
-      </div>
+      <Section label={overview.thin ? "No clear claim" : "Core claim"}>
+        <p className={styles.prose}>{overview.coreClaim}</p>
+      </Section>
 
       {overview.verdict && (
-        <div className={styles.section}>
-          <p className={styles.sectionHeading}>Verdict</p>
-          <div
-            className={`${styles.verdictBlock} ${overview.verdict.dubious ? styles.verdictBlockDubious : ""}`}
-          >
-            <div className={styles.verdictHeadRow}>
-              <span
-                className={`${styles.badge} ${NOVELTY_BADGE_CLASS[overview.verdict.novelty]}`}
-                data-testid={overviewResultCardTestIds.verdictBadge}
-              >
-                {NOVELTY_LABEL[overview.verdict.novelty]}
-              </span>
-              {overview.verdict.dubious && (
-                <span
-                  className={styles.dubiousFlag}
-                  data-testid={overviewResultCardTestIds.dubiousFlag}
-                >
-                  ⚠ Dubious claim
-                </span>
-              )}
-            </div>
-            <p className={styles.reasoning}>{overview.verdict.reasoning}</p>
-          </div>
-        </div>
+        <Section label="Verdict">
+          <p className={styles.prose}>{overview.verdict.reasoning}</p>
+        </Section>
       )}
 
-      <div className={styles.section}>
-        <p className={styles.sectionHeading}>Key points</p>
-        <ul className={styles.keyPoints}>
+      <Section label="Key points">
+        <ul className={styles.points}>
           {overview.keyPoints.map((point) => (
             <li key={point}>{point}</li>
           ))}
         </ul>
-      </div>
+      </Section>
 
       {overview.howToApply && overview.howToApply.items.length > 0 && (
-        <div className={styles.section}>
-          <p className={styles.sectionHeading}>How to apply</p>
-          <ul className={styles.keyPoints}>
+        <Section label="How to apply">
+          <ul className={styles.points}>
             {overview.howToApply.items.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-        </div>
+        </Section>
+      )}
+
+      {overview.selling && overview.selling.type !== "none" && (
+        <Section label="What it sells">
+          <p className={styles.prose} data-testid={overviewResultCardTestIds.sellingChip}>
+            {SELLING_LABEL[overview.selling.type]}
+          </p>
+        </Section>
       )}
 
       {overview.watchAnyway && (
-        <div className={styles.section}>
-          <p className={styles.sectionHeading}>Watch it anyway?</p>
-          <p className={styles.reasoning}>{overview.watchAnyway.reason}</p>
+        <Section label="Watch it anyway?">
+          <p className={styles.prose} data-testid={overviewResultCardTestIds.watchAnywayBadge}>
+            {WATCH_LABEL[overview.watchAnyway.answer]}. {overview.watchAnyway.reason}
+          </p>
           {overview.watchAnyway.range && (
             <a
               className={styles.rangeLink}
@@ -133,7 +108,7 @@ export function OverviewResultCard({ overview }: OverviewResultCardProps) {
               {formatTimeRange(overview.watchAnyway.range.startMs, overview.watchAnyway.range.endMs)}
             </a>
           )}
-        </div>
+        </Section>
       )}
 
       <div className={styles.tagRow}>
@@ -144,5 +119,14 @@ export function OverviewResultCard({ overview }: OverviewResultCardProps) {
         ))}
       </div>
     </article>
+  );
+}
+
+function Section({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <section className={styles.section}>
+      <p className={styles.sectionLabel}>{label}</p>
+      {children}
+    </section>
   );
 }

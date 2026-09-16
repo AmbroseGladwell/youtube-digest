@@ -39,13 +39,24 @@ export function HomePage() {
   if (overviewsQuery.data.length === 0) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <GenerateOverviewForm variant="hero" onGenerated={handleGenerated} />
+        <div className={styles.hero}>
+          <h2 className={styles.heroTitle}>
+            Watch Less,
+            <br />
+            with <em className={styles.heroEm}>The Overview</em>
+          </h2>
+          <p className={styles.heroStandfirst}>
+            Paste a YouTube URL. Get a succinct overview, with the main premise, key
+            points, actionable steps and a verdict on if it's worth your time.
+          </p>
+          <GenerateOverviewForm variant="hero" onGenerated={handleGenerated} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.root} data-testid={homePageTestIds.root}>
+    <div className={styles.wide} data-testid={homePageTestIds.root}>
       <LibraryPage
         overviewsWithState={overviewsQuery.data}
         justGeneratedId={justGeneratedId}

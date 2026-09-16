@@ -58,7 +58,9 @@ export function GenerateOverviewForm({ variant = "hero", onGenerated }: Generate
       data-testid={generateOverviewFormTestIds.root}
     >
       {showKeysPanel || !keysReady ? (
-        <ApiKeysPanel apiKeys={apiKeys} onSave={handleSaveKeys} />
+        <div className={styles.keysPanelSlot}>
+          <ApiKeysPanel apiKeys={apiKeys} onSave={handleSaveKeys} />
+        </div>
       ) : (
         <div className={styles.keysRow}>
           <span className={styles.keysStatus}>Using your saved API keys</span>

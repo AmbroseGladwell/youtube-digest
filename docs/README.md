@@ -23,6 +23,7 @@ Five folders, five different questions.
 ## `features/` — feature-specific design, one file per feature
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
+- `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
 - `tts-pre-rendered-speech.md` — a designed and measured feature that was not built.
 
 ## `reference/` — external background material, not all of it specific to this repo

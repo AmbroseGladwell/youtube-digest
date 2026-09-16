@@ -4,4 +4,6 @@ export const filterPanelTestIds = {
   topicChip: (topicId: string) => `FilterPanel.topicChip.${topicId}`,
   noveltyChip: (novelty: string) => `FilterPanel.noveltyChip.${novelty}`,
   statusChip: (status: string) => `FilterPanel.statusChip.${status}`,
+  favouriteChip: "FilterPanel.favouriteChip",
+  dubiousChip: "FilterPanel.dubiousChip",
 };

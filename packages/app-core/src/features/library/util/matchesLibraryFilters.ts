@@ -9,6 +9,8 @@ export function matchesLibraryFilters(entry: OverviewWithState, filters: Library
   if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) return false;
   if (filters.status === "read" && !state.read) return false;
   if (filters.status === "unread" && state.read) return false;
+  if (filters.favourite && !state.favourite) return false;
+  if (filters.dubious && !overview.verdict?.dubious) return false;
 
   const query = filters.query.trim().toLowerCase();
   if (query && !buildSearchHaystack(overview).includes(query)) return false;
