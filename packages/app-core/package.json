@@ -14,7 +14,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "typecheck:iwft": "tsc -p playwright/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:iwft": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
     "@overview/types": "*",
@@ -29,6 +31,8 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/experimental-ct-react": "1.62.1",
+    "@playwright/test": "1.62.1",
     "@types/node": "^22.7.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
