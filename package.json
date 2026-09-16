@@ -1,6 +1,7 @@
 {
   "name": "video-digest",
   "private": true,
+  "type": "module",
   "description": "Monorepo root. Product name is parked (docs/architecture/v1-architecture-decisions.md) — this is a placeholder, not a decision.",
   "workspaces": [
     "packages/*",
