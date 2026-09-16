@@ -1,5 +1,4 @@
-import type { ClaimSummary, SectionsEnabled, Topic, VideoSource } from "@digest/types";
-import type { TranscriptSegment } from "./TranscriptSegment.js";
+import type { ClaimSummary, SectionsEnabled, Topic, TranscriptSegment, VideoSource } from "@digest/types";
 
 export interface GenerationInput {
   video: VideoSource;

@@ -1,0 +1,27 @@
+{
+  "name": "@digest/transcripts",
+  "version": "0.0.0",
+  "description": "Real transcript retrieval: Supadata, BYO-key, client-fetched. @digest is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test dist/"
+  },
+  "dependencies": {
+    "@digest/types": "*",
+    "@supadata/js": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  }
+}
