@@ -39,7 +39,7 @@ search.`;
   schemaShape: (input) => ({
     matchedTopicNames:
       input.existingTopics.length === 0
-        ? z.array(z.never()).max(0)
+        ? z.array(z.string()).max(0)
         : z.array(z.enum(input.existingTopics.map((topic) => topic.name) as [string, ...string[]])),
     suggestedTopic: SuggestedTopicShape.nullable(),
     tags: Filing.shape.tags,

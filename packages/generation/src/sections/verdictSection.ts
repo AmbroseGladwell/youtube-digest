@@ -38,7 +38,7 @@ List the indices (if any) whose claim this video recycles, as similarToIndices.`
     reasoning: Verdict.shape.reasoning,
     similarToIndices:
       input.pastClaims.length === 0
-        ? z.array(z.never()).max(0)
+        ? z.array(z.int()).max(0)
         : z.array(z.int().min(0).max(input.pastClaims.length - 1)),
   }),
 };

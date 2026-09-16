@@ -46,3 +46,50 @@ test("a response that doesn't match the composed schema is a GenerationError, no
 
   await assert.rejects(() => generateOverview(client, input, meta), GenerationError);
 });
+
+test("a first attempt that violates a refinement (not just the JSON shape) gets one retry naming the violation", async () => {
+  let calls = 0;
+  const client: GenerationClient = async ({ userMessage }) => {
+    calls++;
+    if (calls === 1) {
+      assert.ok(!userMessage.includes("Your previous attempt violated"));
+      return {
+        inOneLine: Array(30).fill("word").join(" "),
+        coreClaim: "The core claim.",
+        thin: false,
+        keyPoints: ["one", "two", "three"],
+        matchedTopicNames: [],
+        suggestedTopic: null,
+        tags: ["one-tag", "two-tag", "three-tag"],
+        howToApply: { items: [] },
+      };
+    }
+    assert.ok(userMessage.includes("Your previous attempt violated"));
+    assert.ok(userMessage.includes("inOneLine"));
+    return {
+      inOneLine: "A short description.",
+      coreClaim: "The core claim.",
+      thin: false,
+      keyPoints: ["one", "two", "three"],
+      matchedTopicNames: [],
+      suggestedTopic: null,
+      tags: ["one-tag", "two-tag", "three-tag"],
+      howToApply: { items: [] },
+    };
+  };
+
+  const { overview } = await generateOverview(client, input, meta);
+  assert.equal(calls, 2);
+  assert.equal(overview.inOneLine, "A short description.");
+});
+
+test("two consecutive schema failures surface as one GenerationError, not an infinite retry", async () => {
+  let calls = 0;
+  const client: GenerationClient = async () => {
+    calls++;
+    return { nonsense: true };
+  };
+
+  await assert.rejects(() => generateOverview(client, input, meta), GenerationError);
+  assert.equal(calls, 2);
+});

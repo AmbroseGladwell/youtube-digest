@@ -18,12 +18,31 @@ export async function generateOverview(
   meta: { id: OverviewId; savedAt: string },
 ): Promise<AssembledOverview> {
   const { systemPrompt, userMessage, schema } = composePrompt(input);
-  const raw = await client({ systemPrompt, userMessage, schema });
 
-  const parsed = schema.safeParse(raw);
-  if (!parsed.success) {
-    throw new GenerationError(`generated output failed its own schema: ${parsed.error.message}`);
+  const attempt = async (retryNote?: string) => {
+    const raw = await client({
+      systemPrompt,
+      userMessage: retryNote ? `${userMessage}\n\n${retryNote}` : userMessage,
+      schema,
+    });
+    return schema.safeParse(raw);
+  };
+
+  let result = await attempt();
+  if (!result.success) {
+    const violations = result.error.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+      .join("; ");
+    result = await attempt(
+      `Your previous attempt violated: ${violations}. Send a corrected response that fixes only that.`,
+    );
   }
 
-  return assembleOverview(input, parsed.data as unknown as GeneratedOutput, meta);
+  if (!result.success) {
+    throw new GenerationError(
+      `generated output still failed its own schema after a retry: ${result.error.message}`,
+    );
+  }
+
+  return assembleOverview(input, result.data as unknown as GeneratedOutput, meta);
 }

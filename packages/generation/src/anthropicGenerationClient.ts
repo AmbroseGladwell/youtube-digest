@@ -10,16 +10,20 @@ export function createAnthropicGenerationClient(
   model: string = DEFAULT_MODEL,
 ): GenerationClient {
   return async ({ systemPrompt, userMessage, schema }) => {
-    const response = await client.messages.parse({
+    const response = await client.messages.create({
       model,
       max_tokens: 16000,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
       output_config: { format: zodOutputFormat(schema) },
     });
-    if (response.parsed_output === null) {
-      throw new GenerationError("Claude's response did not parse against the generation schema");
+    const textBlock = response.content.find((block) => block.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      throw new GenerationError("Claude's response had no text content to parse");
     }
-    return response.parsed_output;
+    // messages.parse() throws and discards the response on a zod .refine() failure
+    // (e.g. a word-count cap) — those aren't representable in the JSON Schema the
+    // model saw, so generateOverview's own schema.safeParse checks them and retries.
+    return JSON.parse(textBlock.text);
   };
 }
