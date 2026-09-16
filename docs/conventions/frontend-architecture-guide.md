@@ -2,7 +2,7 @@
 
 Adopted for this project's shared `packages/app-core` — the single Vite + React +
 React Router app mounted verbatim by both the Chrome extension and the web app (see
-`docs/v1-architecture-decisions.md`). It was written against a different codebase and
+`docs/architecture/v1-architecture-decisions.md`). It was written against a different codebase and
 handed over with its project-specific bits (design-system paths, route names, domain
 types) stripped to placeholders; the stack it assumes — React 19, TypeScript, React
 Router, TanStack Query v5, SCSS Modules — matches this project's actual choices
@@ -150,9 +150,10 @@ export const useShouldAnimateNavigation = (): boolean => {
 - Three checks, always: **feature detection**, **`prefers-reduced-motion`**, and a
   **viewport check**. Full-screen push transitions on a phone usually read as jank,
   not polish — gate them to desktop/landscape unless you have designed the mobile case.
-- The JS breakpoint duplicates a SCSS breakpoint. **Leave a comment naming the SCSS
-  source** so the two stay in sync. This is the known weak point of the approach —
-  see "Known trade-offs" at the end of this doc.
+- **Export the breakpoint from one shared constants module, consumed by both the JS
+  and the SCSS**, rather than duplicating the number in each. See "Known trade-offs"
+  at the end of this doc for why a reference implementation carries the duplicated
+  version instead, and why this project doesn't inherit it.
 - Unit-test this module: it is small, pure, and the thing most likely to silently
   disable every animation in the app.
 
@@ -264,9 +265,10 @@ $leave-easing: ease-in;
 - **Enter and leave get different durations and curves.** Leave should be faster
   (~200ms, ease-in); enter slower with a decelerating curve (~300ms). Symmetric
   timings feel sluggish.
-- Every rule that isn't obvious gets a one-line comment explaining *why* — the four
-  above are all workarounds for genuinely surprising spec behaviour, and a reader
-  will otherwise delete them.
+- The reasoning for every non-obvious rule above is written out here, in this
+  section, not restated as a code comment (`CLAUDE.md`'s near-zero-comments policy).
+  Where a reader could otherwise mistake one of these four for dead code and delete
+  it, point back at this section in a single line rather than re-explaining it.
 - Test with a translucent header. Most snapshot-stacking bugs only appear there.
 
 ### 2.5 Animate list reorders with view-transition types
@@ -343,7 +345,7 @@ complex — and add it later, as a small PR, rather than up front.
 
 This is the app's sole data layer — not paired with any framework-level data fetching
 (there's no server-rendering framework here to pair it with; see
-`docs/v1-architecture-decisions.md` on dropping Next.js).
+`docs/architecture/v1-architecture-decisions.md` on dropping Next.js).
 
 ### 3.2 Keep the client config tiny
 
@@ -491,7 +493,9 @@ export const usePatchItemMutation = (api: ItemApi = itemApi) => {
 **Rules**
 - Extract a **pure `apply<Verb>Request(entity, request)` function**. It is shared by
   the optimistic path and its unit tests, and it is the one place that must mirror
-  backend write semantics. Comment any rule that mirrors the backend.
+  backend write semantics. Give any rule that mirrors the backend a shared contract
+  test that fails the moment the two drift — a comment here only documents the hope
+  that they stay in sync, and can't catch it when they don't.
 - **Patch every cache the entity appears in** — all matching lists (`setQueriesData`
   on the `lists` prefix), the detail entry, and any *derived* list in another feature
   (e.g. a "today" view that filters on a field this mutation changes; re-run the
@@ -588,7 +592,7 @@ Note for this project specifically: the **free tier's local storage** (no server
 BYO key) is closer to this excluded category than to the REST-backed model the rest
 of this guide assumes. The guide's routing and animation conventions (Parts 1–2)
 still apply everywhere. Its server-state conventions (Part 3) apply as written to the
-**paid path**, talking to the Fastify API; the free path's local `DigestStore`
+**paid path**, talking to the Fastify API; the free path's local `OverviewStore`
 implementation should be designed on its own terms rather than forced through
 TanStack Query against nothing.
 
@@ -596,12 +600,13 @@ TanStack Query against nothing.
 
 ## Known trade-offs, carried over deliberately
 
-- **The duplicated breakpoint** (the JS media query in §2.2 mirroring a SCSS
-  breakpoint) is a real weakness kept rather than papered over — §2.2 calls it out so
-  a comment naming the SCSS source stays attached to it. Exporting the breakpoint from
-  one shared constants module consumed by both the JS and the SCSS would remove the
-  duplication; that's worth doing here from the start rather than inheriting the
-  workaround, since this project has no legacy SCSS setup forcing the split.
+- **The duplicated breakpoint** (a JS media query mirroring a SCSS breakpoint) is a
+  known weak point in the reference pattern §2.2 is based on, held together there by
+  a comment tying the two together rather than removed. This project doesn't inherit
+  that: §2.2 requires exporting the breakpoint from one shared constants module
+  consumed by both the JS and the SCSS instead, which removes the duplication rather
+  than documenting it — there's no legacy SCSS setup here forcing the split, so
+  there's no reason to start from the version that needs a comment to hold together.
 - **§2.5's `flushSync` pattern has a shelf life.** React 19's `<ViewTransition>`
   component supersedes it. It's kept because it's what works today and is portable,
   not because it's the long-term answer — expect to replace it once `<ViewTransition>`
