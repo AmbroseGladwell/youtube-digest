@@ -3,7 +3,6 @@ import type { VideoSource } from "@overview/types";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { transcriptBlocks } from "../../../transcripts/util/transcriptBlocks.js";
 import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
-import { youtubeTimestampUrl } from "../../../overviews/util/youtubeTimestampUrl.js";
 import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
@@ -65,14 +64,7 @@ function transcriptBody(video: VideoSource, { blocks, isPending, error }: Transc
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
   return blocks.map((block, index) => (
-    <a
-      key={`${index}-${block.startMs}`}
-      className={styles.row}
-      href={youtubeTimestampUrl(video.url, block.startMs)}
-      target="_blank"
-      rel="noreferrer"
-      data-testid={transcriptPanelTestIds.row}
-    >
+    <div key={`${index}-${block.startMs}`} className={styles.row} data-testid={transcriptPanelTestIds.row}>
       <span className={styles.time} data-testid={transcriptPanelTestIds.rowTime}>
         {formatTimestamp(block.startMs)}
       </span>
@@ -84,7 +76,7 @@ function transcriptBody(video: VideoSource, { blocks, isPending, error }: Transc
         )}
         <span data-testid={transcriptPanelTestIds.rowText}>{block.text}</span>
       </span>
-    </a>
+    </div>
   ));
 }
 

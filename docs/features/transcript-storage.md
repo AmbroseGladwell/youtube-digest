@@ -141,15 +141,19 @@ video's own words, which is not a trade worth making.
 
 ## What the tab does with the timing
 
-A block prints the start of the caption its first words came from, and links out to the
-video at that second. Never a position interpolated inside that caption, which is what the
-reference does: `formatTimestamp` floors rather than rounds precisely so a link lands just
-before the words rather than just after them, and an interpolated offset is as likely to
-overshoot as to undershoot. It would also sit in the same slot as the measured ones with
-nothing to tell them apart, where today every number in that column is Supadata's own
-caption offset — the rule in `docs/prototype/constraints.md` about never letting anything
-fabricate a measurement. `formatTimeRange` (the "Jump to 3:20–5:10" pointer in the reader's
-rail) is built from the same function so the two can't drift apart.
+A block prints the start of the caption its first words came from. Never a position
+interpolated inside that caption, which is what the reference does: `formatTimestamp` floors
+rather than rounds precisely so a time lands just before its words rather than just after
+them, and an interpolated offset is as likely to overshoot as to undershoot. It would also
+sit in the same column as the measured ones with nothing to tell them apart, where today
+every number there is Supadata's own caption offset — the rule in
+`docs/prototype/constraints.md` about never letting anything fabricate a measurement.
+`formatTimeRange` (the "Jump to 3:20–5:10" pointer in the reader's rail) is built from the
+same function so the two can't drift apart.
+
+The time is printed, not linked: a block is a paragraph you read, not a control. Jumping to
+a moment from the transcript is a real thing to want and is deliberately parked rather than
+half-built — see below.
 
 The cost of that choice: when one caption contains a whole short block, the next block
 starts inside the same caption and the two print the same second. That is true rather than
@@ -172,6 +176,10 @@ single transcript.
 
 - **Chapters.** Still placeholder, and still blocked on generation work rather than on
   data: titling each stretch of a video is a new prompt section, not a UI change.
+- **Jumping to the video from a block.** The rows were links to `youtubeTimestampUrl` for
+  one commit and are plain text again: leaving the whole question of what a block does when
+  you click it — open YouTube, move the read-along, follow playback — to be settled at once
+  rather than piecemeal. Nothing about the data is missing for it; `startMs` is right there.
 - **Following playback.** The transcript does not move with the read-along, and the
   read-along still paces the *note*, not the video. That belongs with the extension's
   playback-following work (`docs/architecture/v1-architecture-decisions.md`, v1 feature scope).

@@ -69,20 +69,6 @@ test("the transcript tab merges the captions into blocks, each against the time 
   await reader.verifyTranscriptBlockTimesRead(BLOCK_TIMES);
 });
 
-test("a block opens the video at the moment its first words were said", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
-
-  const library = await launcher.launchExpectingLibrary();
-  const reader = await library.nthCard(0).openReader();
-  await reader.clickTab("Transcript");
-
-  await reader.verifyTranscriptBlockOpensVideoAt("This is the part worth watching", `${VIDEO_URL}&t=65`);
-});
-
 test("each turn of an interview is its own block, marked as a new speaker", async ({
   launcher,
   backendSimulator,

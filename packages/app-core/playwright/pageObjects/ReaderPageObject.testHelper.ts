@@ -135,11 +135,6 @@ export class ReaderPageObject extends PageObject {
       this.expectToHaveCount(transcriptPanelTestIds.speakerMark, count),
     );
 
-  verifyTranscriptBlockOpensVideoAt = (block: string, href: string) =>
-    this.step(`verifyTranscriptBlockOpensVideoAt ${block}`, () =>
-      expect(this.get(transcriptPanelTestIds.row).filter({ hasText: block })).toHaveAttribute("href", href),
-    );
-
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
   verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
   verifyShowsMachineTranscribedNote = () => this.expectToBeVisible(transcriptPanelTestIds.sourceNote);
