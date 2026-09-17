@@ -76,8 +76,13 @@ function transcriptBody(video: VideoSource, { blocks, isPending, error }: Transc
       <span className={styles.time} data-testid={transcriptPanelTestIds.rowTime}>
         {formatTimestamp(block.startMs)}
       </span>
-      <span className={styles.text} data-testid={transcriptPanelTestIds.rowText}>
-        {block.text}
+      <span className={styles.text}>
+        {block.speakerChange && (
+          <span className={styles.speakerMark} data-testid={transcriptPanelTestIds.speakerMark}>
+            —
+          </span>
+        )}
+        <span data-testid={transcriptPanelTestIds.rowText}>{block.text}</span>
       </span>
     </a>
   ));

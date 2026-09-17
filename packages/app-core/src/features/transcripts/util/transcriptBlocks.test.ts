@@ -133,6 +133,41 @@ describe("transcriptBlocks", () => {
     expect(blocks[1]?.text).toBe("But I disagree with that.");
   });
 
+  it("records which blocks a new speaker opened, since the marker itself is stripped", () => {
+    const blocks = transcriptBlocks(captionRun(["I think that is right.", ">> But I disagree with that."]));
+
+    expect(blocks.map((block) => block.speakerChange)).toEqual([false, true]);
+  });
+
+  it("gives each turn of an interview its own block, however short the turn is", () => {
+    const interview = [
+      { text: ">> [music] Today we're speaking with Professor Tracy K. Smith,", startMs: 0, endMs: 5000 },
+      { text: "Pulitzer Prizewinning poet, former US poet laurate, and", startMs: 5000, endMs: 8000 },
+      { text: "professor of English at Harvard University.", startMs: 8000, endMs: 11_000 },
+      { text: ">> Thank you so much for being here, Professor Smith.", startMs: 11_000, endMs: 14_000 },
+      { text: ">> Thank you.", startMs: 14_000, endMs: 15_000 },
+      { text: ">> I came into your class after hearing you speak at the", startMs: 15_000, endMs: 18_000 },
+      { text: "Harvard bookstore about your latest book, Fearless.", startMs: 18_000, endMs: 21_000 },
+    ].map((cue) => makeTranscriptSegment(cue));
+
+    expect(transcriptBlocks(interview).map((block) => block.text)).toEqual([
+      "[music] Today we're speaking with Professor Tracy K. Smith, Pulitzer Prizewinning poet, former US poet laurate, and professor of English at Harvard University.",
+      "Thank you so much for being here, Professor Smith.",
+      "Thank you.",
+      "I came into your class after hearing you speak at the Harvard bookstore about your latest book, Fearless.",
+    ]);
+  });
+
+  it("would otherwise run two speakers' words together in one block", () => {
+    const unmarked = [
+      { text: "Thank you so much for being here, Professor Smith.", startMs: 11_000, endMs: 14_000 },
+      { text: "Thank you.", startMs: 14_000, endMs: 15_000 },
+      { text: "I came into your class after hearing you speak.", startMs: 15_000, endMs: 18_000 },
+    ].map((cue) => makeTranscriptSegment(cue));
+
+    expect(transcriptBlocks(unmarked)).toHaveLength(1);
+  });
+
   it("splits a caption too long to be one block at a clause rather than mid-word", () => {
     const words = Array.from({ length: 80 }, (_, index) => `word${index}`);
     const withAComma = [...words.slice(0, 40), "clause,", ...words.slice(40)].join(" ");

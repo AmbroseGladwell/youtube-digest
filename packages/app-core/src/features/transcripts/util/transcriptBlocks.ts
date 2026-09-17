@@ -41,8 +41,18 @@ export function transcriptBlocks(segments: TranscriptSegment[]): TranscriptBlock
     }
     open =
       open === null
-        ? { text: piece.text, startMs: piece.startMs, endMs: piece.endMs }
-        : { text: `${open.text} ${piece.text}`, startMs: open.startMs, endMs: piece.endMs };
+        ? {
+            text: piece.text,
+            startMs: piece.startMs,
+            endMs: piece.endMs,
+            speakerChange: piece.speakerChange,
+          }
+        : {
+            text: `${open.text} ${piece.text}`,
+            startMs: open.startMs,
+            endMs: piece.endMs,
+            speakerChange: open.speakerChange,
+          };
 
     if (endsBlock(open, piece)) {
       blocks.push(open);

@@ -83,6 +83,48 @@ test("a block opens the video at the moment its first words were said", async ({
   await reader.verifyTranscriptBlockOpensVideoAt("This is the part worth watching", `${VIDEO_URL}&t=65`);
 });
 
+test("each turn of an interview is its own block, marked as a new speaker", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({
+      videoId: VIDEO_ID,
+      segments: [
+        makeTranscriptSegment({ text: ">> Thank you so much for being here.", startMs: 11_000, endMs: 14_000 }),
+        makeTranscriptSegment({ text: ">> Thank you.", startMs: 14_000, endMs: 15_000 }),
+        makeTranscriptSegment({ text: ">> I came into your class last term.", startMs: 15_000, endMs: 18_000 }),
+      ],
+    }),
+  );
+
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyTranscriptBlocksRead([
+    "Thank you so much for being here.",
+    "Thank you.",
+    "I came into your class last term.",
+  ]);
+  await reader.verifyTranscriptSpeakerMarkCountIs(3);
+});
+
+test("a transcript with one speaker throughout carries no speaker marks", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyTranscriptSpeakerMarkCountIs(0);
+});
+
 test("a note saved before transcripts were stored says so rather than showing an empty tab", async ({
   launcher,
   backendSimulator,

@@ -7,4 +7,5 @@ export const transcriptPanelTestIds = {
   row: "TranscriptPanel.row",
   rowTime: "TranscriptPanel.rowTime",
   rowText: "TranscriptPanel.rowText",
+  speakerMark: "TranscriptPanel.speakerMark",
 };

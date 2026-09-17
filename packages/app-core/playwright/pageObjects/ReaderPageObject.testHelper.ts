@@ -130,6 +130,11 @@ export class ReaderPageObject extends PageObject {
       this.expectToHaveCount(transcriptPanelTestIds.row, count),
     );
 
+  verifyTranscriptSpeakerMarkCountIs = (count: number) =>
+    this.step(`verifyTranscriptSpeakerMarkCountIs ${count}`, () =>
+      this.expectToHaveCount(transcriptPanelTestIds.speakerMark, count),
+    );
+
   verifyTranscriptBlockOpensVideoAt = (block: string, href: string) =>
     this.step(`verifyTranscriptBlockOpensVideoAt ${block}`, () =>
       expect(this.get(transcriptPanelTestIds.row).filter({ hasText: block })).toHaveAttribute("href", href),

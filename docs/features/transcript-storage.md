@@ -90,12 +90,21 @@ two cues an hour apart become one block spanning an hour, labelled `0:00` — wh
 what this project's own IWFT fixture contains. Checking first is what makes a block's
 `startMs` and `endMs` actually bound its words.
 
-Two additions the reference does not have: `silenceMs`, which extends that same reasoning to
-ordinary pauses, and a block break before any cue that opens with `>>`, because a speaker
-change is the strongest paragraph boundary there is. The markers themselves are stripped at
-display rather than at fetch — `mapTranscriptContent` stays 1:1 with Supadata because that
-stored text is what the model is given, and stripping at display also fixes every transcript
-stored before this. A `>>` in the middle of a cue is left alone.
+Two additions the reference does not have. `silenceMs`, which extends that same reasoning to
+ordinary pauses. And a block break before any cue that opens with `>>`, YouTube's own
+speaker-change marker, because a change of speaker is the strongest paragraph boundary there
+is — in an interview it is what gives a two-word answer its own block instead of burying it
+in the middle of the interviewer's next question.
+
+That break is only half of it: a block that opens a new turn is printed with an em dash, so
+the reader can see why a line as short as "Thank you." stands alone. The reference strips the
+markers and keeps neither the break nor the mark. We keep both — the dash *is* the `>>`,
+in the punctuation a reader already knows for dialogue.
+
+The markers are stripped from the text at display rather than at fetch, because
+`mapTranscriptContent` stays 1:1 with Supadata — that stored text is what the model is given
+— and stripping at display also fixes every transcript stored before this. A `>>` in the
+middle of a cue is left alone.
 
 Dropped: the reference's CJK whitespace-joining rules, which exist because that extension is
 bilingual by design and ours is not. Its CJK sentence and clause punctuation stays in the
