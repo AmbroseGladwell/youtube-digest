@@ -48,7 +48,10 @@ applied-filter chips and their ☰ button are a phone-only row: on desktop the r
 already on screen, so a second row restating the same filters is noise.
 
 **The generate form lives in the masthead**, one instance for the whole app rather than a
-copy per page, and the id of what it just generated reaches the library through the
+copy per page. There is no room for a paste field in a phone-width bar, so under 992px it
+sits behind the design's `+ New` button and the bar keeps the brand, the nav and that one
+control — the same instance either way, revealed rather than duplicated
+(`newOverviewOnMobile.iwft.ts`). It The id of what it just generated reaches the library through the
 router's outlet context. That put the keys in two places at once — the masthead form and
 the settings page — so `useApiKeys` now reads a single shared snapshot through
 `useSyncExternalStore` instead of each caller holding its own `useState` copy. Without

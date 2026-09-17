@@ -9,6 +9,12 @@ export class GenerateOverviewFormPageObject extends PageObject {
       return this;
     });
 
+  verifyIsHidden = () =>
+    this.step("verifyIsHidden", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeHidden());
+
+  verifyUrlInputVisible = () =>
+    this.step("verifyUrlInputVisible", () => this.expectToBeVisible(generateOverviewFormTestIds.urlInput));
+
   fillUrl = (url: string) =>
     this.step(`fillUrl ${url}`, () => this.get(generateOverviewFormTestIds.urlInput).fill(url));
 

@@ -1,5 +1,7 @@
 .root {
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   background: var(--ground);
 }
 
@@ -40,6 +42,21 @@
   max-width: 28.75rem;
 }
 
+.newOverviewButton {
+  display: none;
+  flex: none;
+  margin-left: auto;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: transparent;
+  color: var(--accent-strong);
+  padding: 0.3rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .nav {
   flex: none;
   margin-left: auto;
@@ -61,8 +78,13 @@
   border-bottom-color: var(--accent);
 }
 
+// The pane stretches so the library's rail border runs to the bottom of the window
+// rather than stopping where the list stops.
 .pane {
-  padding: 0 0 4rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 61.9375rem) {
@@ -76,9 +98,22 @@
     font-size: 1.25rem;
   }
 
+  .newOverviewButton {
+    display: inline-flex;
+  }
+
+  .nav {
+    margin-left: 0;
+  }
+
   .generateSlot {
     order: 3;
     flex: 0 0 100%;
     max-width: none;
+    display: none;
+  }
+
+  .generateSlotOpen {
+    display: block;
   }
 }

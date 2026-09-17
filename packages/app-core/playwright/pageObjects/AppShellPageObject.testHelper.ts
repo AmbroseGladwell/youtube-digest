@@ -8,6 +8,9 @@ export class AppShellPageObject extends PageObject {
     return new GenerateOverviewFormPageObject(this.testContext);
   }
 
+  clickNewOverview = () =>
+    this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
+
   openSettings = (): Promise<SettingsPageObject> =>
     this.step("openSettings", async () => {
       await this.click(appShellTestIds.settingsLink);

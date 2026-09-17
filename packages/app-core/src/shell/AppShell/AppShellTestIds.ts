@@ -3,4 +3,5 @@ export const appShellTestIds = {
   masthead: "AppShell.masthead",
   pane: "AppShell.pane",
   settingsLink: "AppShell.settingsLink",
+  newOverviewButton: "AppShell.newOverviewButton",
 };

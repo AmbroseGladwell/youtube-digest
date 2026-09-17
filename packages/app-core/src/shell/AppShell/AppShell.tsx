@@ -13,10 +13,19 @@ export interface ShellOutletContext {
   justGeneratedId: OverviewId | null;
 }
 
+const GENERATE_SLOT_ID = "app-shell-generate";
+
 export function AppShell() {
   const [justGeneratedId, setJustGeneratedId] = useState<OverviewId | null>(null);
+  // On a phone the bar has no room for the paste field, so it sits behind "+ New" the way
+  // the design's mobile header does. On desktop the field is always there and this flag
+  // does nothing.
+  const [newOverviewOpen, setNewOverviewOpen] = useState(false);
 
-  const handleGenerated = (overview: Overview) => setJustGeneratedId(overview.id);
+  const handleGenerated = (overview: Overview) => {
+    setJustGeneratedId(overview.id);
+    setNewOverviewOpen(false);
+  };
 
   return (
     <div className={styles.root} data-testid={appShellTestIds.root}>
@@ -29,7 +38,21 @@ export function AppShell() {
           <h1 className={styles.title}>The Overview</h1>
         </Link>
 
-        <div className={styles.generateSlot}>
+        <button
+          type="button"
+          className={styles.newOverviewButton}
+          onClick={() => setNewOverviewOpen((open) => !open)}
+          aria-expanded={newOverviewOpen}
+          aria-controls={GENERATE_SLOT_ID}
+          data-testid={appShellTestIds.newOverviewButton}
+        >
+          {newOverviewOpen ? "Close" : "+ New"}
+        </button>
+
+        <div
+          id={GENERATE_SLOT_ID}
+          className={`${styles.generateSlot} ${newOverviewOpen ? styles.generateSlotOpen : ""}`}
+        >
           <GenerateOverviewForm onGenerated={handleGenerated} />
         </div>
 
