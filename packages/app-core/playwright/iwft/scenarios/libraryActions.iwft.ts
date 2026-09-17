@@ -62,6 +62,40 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
   }
 });
 
+// The row and the note are one claim about the same overview, so they must not be able to
+// disagree — both read overviewMetaParts rather than estimating separately.
+test("a row prints its read, listen and video times, and the note it opens says the same", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = makeOverview();
+  backendSimulator.overviews.seed({
+    ...overview,
+    video: { ...overview.video, durationMs: 698_000 },
+  });
+
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen · 11:38 video");
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyMetaReads("1 min read · 1 min listen · 11:38 video");
+});
+
+test("a row drops the video term when the source recorded no duration, rather than guessing", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = makeOverview();
+  backendSimulator.overviews.seed({
+    ...overview,
+    video: { ...overview.video, durationMs: null },
+  });
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen");
+});
+
 test("a row carries no chrome until you point at it, and its text doesn't move when it does", async ({
   launcher,
   backendSimulator,

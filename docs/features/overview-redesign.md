@@ -38,6 +38,7 @@ Concretely:
 | Keys, and the bar's `Settings` nav item | `SettingsPage` at `/settings`, with `ApiKeysPanel` |
 | 2c library mobile, filter sheet | `LibraryPage` — one `FilterPanel`, styled as a column on desktop and a slide-over under 992px |
 | 2c/3a reader, mobile and desktop | `ReaderPage` at `/overviews/:overviewId`, with `ReaderMasthead`, `ReaderTabs`, `ReadAlongNote`, `ReaderRail` and `ReaderPlayerBar` |
+| 2a/2c row meta, `4 min read · 6 min listen · 11:38 video` | `overviewMetaParts`, shared by the row and the reader |
 | 2e dark mode | `theme/tokens.scss` |
 | 2f favicon | `apps/web/index.html` |
 | 4a modal → bottom sheet | `NewOverviewDialog`, with `GenerateOverviewForm` as its idle body |
@@ -247,6 +248,13 @@ anything). So:
 The spoken rate is not decoration: it is also what paces the reading mark, so the clock in
 the player bar and the "6 min listen" claim are the same number by construction rather than
 two estimates that can drift apart.
+
+**A library row prints the same line, under its text**, which is where design 2a and 2c put
+it. Both callers go through `overviewMetaParts`, so a row and the note it opens cannot give
+different answers about the same overview — `libraryActions.iwft.ts` opens one from the
+other and compares. It sits outside the row's title link rather than inside it, so it stays
+out of that link's accessible name, and it drops the video term on an overview with no
+stored duration exactly as the reader does.
 
 ### The player bar without audio
 

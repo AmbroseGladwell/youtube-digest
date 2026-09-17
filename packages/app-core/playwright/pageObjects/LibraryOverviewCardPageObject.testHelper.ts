@@ -127,6 +127,11 @@ export class LibraryOverviewCardPageObject extends PageObject {
   // Against the row rather than a hardcoded width: what matters is that the title has the
   // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
   // would also move every time the row's own padding or border did.
+  verifyMetaReads = (meta: string) =>
+    this.step(`verifyMetaReads ${meta}`, () =>
+      expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta),
+    );
+
   verifyTitleSpansTheRow = () =>
     this.step("verifyTitleSpansTheRow", async () => {
       const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;

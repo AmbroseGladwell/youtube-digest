@@ -72,7 +72,8 @@
   animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.42s both;
 }
 
-.entering .meta {
+.entering .meta,
+.entering .timing {
   animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.5s both;
 }
 
@@ -199,6 +200,16 @@
 
 .channel {
   color: var(--ink);
+}
+
+// The same three numbers the reader prints, in the same treatment, so a row and the note it
+// opens read as one thing (design 2a/2c's row, under the text).
+.timing {
+  margin: 0.125rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .actions {

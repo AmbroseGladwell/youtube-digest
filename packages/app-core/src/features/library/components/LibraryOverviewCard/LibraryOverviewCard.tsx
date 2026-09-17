@@ -5,6 +5,7 @@ import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
+import { overviewMetaParts } from "../../../overviews/util/overviewMetaParts.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
@@ -43,6 +44,7 @@ export function LibraryOverviewCard({
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
+  const metaParts = overviewMetaParts(overview);
 
   return (
     <article
@@ -80,6 +82,10 @@ export function LibraryOverviewCard({
               <span className={styles.channel}>{overview.video.channel}</span> · {overview.inOneLine}
             </span>
           </Link>
+
+          <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
+            {metaParts.join(" · ")}
+          </p>
         </div>
 
         <div className={styles.actions}>
