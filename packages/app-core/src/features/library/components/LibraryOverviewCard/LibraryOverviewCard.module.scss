@@ -1,14 +1,53 @@
 @use "../../../../theme/controls.scss" as controls;
 
+// At rest a row carries no chrome at all — not even a rule. The tile exists only under the
+// pointer, on keyboard focus and under a press, so the list stays quiet to read and becomes
+// a set of targets when you go hunting.
+//
+// The inline padding is given straight back as a negative margin, so the tile bleeds out
+// past the text rather than the text moving in: at rest the row sits exactly where it did,
+// which is the whole point of chrome that isn't there yet.
 .root {
-  border-top: 1px solid var(--divider);
-  padding: 1.25rem 0;
+  border: 1px solid transparent;
+  margin-inline: -1rem;
+  padding: 1.25rem 1rem;
+  transition:
+    background var(--motion-tile) ease-out,
+    border-color var(--motion-tile) ease-out,
+    box-shadow var(--motion-tile) ease-out;
 }
 
-// Design 7a, "rule first": the hairline draws left to right in the accent, then fades off
-// the row's own divider, and the kicker, title and meta fade up behind it in turn. The
-// global prefers-reduced-motion rule in theme/global.scss collapses all four to their end
-// state (docs/features/overview-redesign.md, "How a new row arrives").
+// --shadow-sm is the system's smallest step and nothing custom: at 1px down and 2px blur
+// it reads as a contact edge, a card resting on paper rather than floating over it. The row
+// never translates — the shadow alone implies the lift, which is why it can stay this
+// shallow. The frame the list sits in carries --shadow, so a row never competes with it.
+@mixin tile {
+  border-color: var(--line);
+  background: var(--ground);
+  box-shadow: var(--shadow-sm);
+}
+
+// Hover is gated behind a real pointer, or a tap would leave the last row you touched lit
+// until you touched another. Touch is served by :has(:active) instead — the press lands on
+// one of the row's own controls, which is the element a touch reliably gives :active to.
+// Keyboard focus goes through :has() for the same reason: the focus is on a control inside
+// the row, never on the row itself.
+@media (hover: hover) {
+  .root:hover {
+    @include tile;
+  }
+}
+
+.root:has(:focus-visible),
+.root:has(:active) {
+  @include tile;
+}
+
+// Design 7a, "rule first": the hairline draws left to right in the accent and fades out,
+// and the kicker, title and meta fade up behind it in turn. It spans the text rather than
+// the tile's full bleed, since the text is what it is introducing. The global
+// prefers-reduced-motion rule in theme/global.scss collapses all four to their end state
+// (docs/features/overview-redesign.md, "How a new row arrives").
 .entering {
   position: relative;
 }
@@ -222,6 +261,13 @@
 
 // The phone row: one column, no thumbnail, and the three actions under the text.
 @media (max-width: 47.9375rem) {
+  // A narrower bleed: the list's own padding is 1.25rem here, and a 1rem tile would leave
+  // 4px of ground between its edge and the screen's.
+  .root {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+  }
+
   // A phone row drops the thumbnail. At the width a phone can spare it is too small to
   // tell one video from another, and it costs the title the column it needs. The title is
   // the same way in to the reader, with the same words, so nothing is lost with it.

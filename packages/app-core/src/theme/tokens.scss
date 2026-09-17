@@ -39,11 +39,17 @@
   --font-heading: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --font-body: "Lora", Georgia, "Times New Roman", serif;
 
+  // The design system's own three steps. --shadow-sm is a contact edge rather than a lift:
+  // 1px down, 2px blur, no spread, and warm grey rather than black so it doesn't go cold
+  // against the ground. --shadow is the system's --shadow-md, three times the offset, so
+  // a row carrying the small one never competes with the frame it sits in.
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
   --shadow: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
 
   --motion-press: 80ms;
   --motion-state: 120ms;
+  --motion-tile: 140ms;
   --motion-ink: 160ms;
   --motion-travel: 260ms;
   --motion-arrive: 300ms;
@@ -81,6 +87,7 @@
   --ink-wash: color-mix(in srgb, #f3f2f2 8%, transparent);
   --ink-wash-press: color-mix(in srgb, #f3f2f2 14%, transparent);
 
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }

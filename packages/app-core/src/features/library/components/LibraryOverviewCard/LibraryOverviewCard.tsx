@@ -50,7 +50,7 @@ export function LibraryOverviewCard({
       data-entering={entering || undefined}
       data-testid={libraryOverviewCardTestIds.root}
     >
-      <div className={styles.row}>
+      <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
         <OverviewThumbnail video={overview.video} to={readerPath} className={styles.thumbnail} />
         <div className={styles.body}>
           <p className={styles.kickerRow}>

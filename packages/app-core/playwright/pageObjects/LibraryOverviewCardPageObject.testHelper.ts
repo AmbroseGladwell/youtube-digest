@@ -84,10 +84,54 @@ export class LibraryOverviewCardPageObject extends PageObject {
       }
     });
 
-  verifyTitleTakesTheFullWidth = (expected: number) =>
-    this.step(`verifyTitleTakesTheFullWidth ${expected}`, async () => {
+  // A row's chrome is its whole resting appearance, so it is read off the laid-out element
+  // rather than asserted as a class: the point is that nothing is painted, not that a
+  // particular rule is absent from a stylesheet.
+  private chrome = () =>
+    this.card.evaluate((row) => {
+      const style = getComputedStyle(row);
+      return { shadow: style.boxShadow, border: style.borderTopColor };
+    });
+
+  private static readonly TRANSPARENT = "rgba(0, 0, 0, 0)";
+
+  verifyHasNoChrome = () =>
+    this.step("verifyHasNoChrome", () =>
+      expect(async () => {
+        const { shadow, border } = await this.chrome();
+        expect(shadow).toBe("none");
+        expect(border).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyShowsItsTile = () =>
+    this.step("verifyShowsItsTile", () =>
+      expect(async () => {
+        const { shadow, border } = await this.chrome();
+        expect(shadow).not.toBe("none");
+        expect(border).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  hoverTitle = () =>
+    this.step("hoverTitle", () => this.get(libraryOverviewCardTestIds.titleLink).hover());
+
+  focusFirstControl = () =>
+    this.step("focusFirstControl", () =>
+      this.get(libraryOverviewCardTestIds.favouriteButton).focus(),
+    );
+
+  titleLeftEdge = async () =>
+    Math.round((await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!.x);
+
+  // Against the row rather than a hardcoded width: what matters is that the title has the
+  // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
+  // would also move every time the row's own padding or border did.
+  verifyTitleSpansTheRow = () =>
+    this.step("verifyTitleSpansTheRow", async () => {
       const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
-      expect(Math.round(title.width)).toBe(expected);
+      const row = (await this.get(libraryOverviewCardTestIds.row).boundingBox())!;
+      expect(Math.round(title.width)).toBe(Math.round(row.width));
     });
 
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);

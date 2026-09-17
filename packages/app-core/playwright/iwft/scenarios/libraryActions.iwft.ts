@@ -56,10 +56,51 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
 
   for (const index of [0, 1]) {
     await library.nthCard(index).verifyHasNoThumbnail();
-    await library.nthCard(index).verifyTitleTakesTheFullWidth(335);
+    await library.nthCard(index).verifyTitleSpansTheRow();
     await library.nthCard(index).verifyActionsAreTouchSized();
     await library.nthCard(index).verifyActionsLineUpWithTheTitle();
   }
+});
+
+test("a row carries no chrome until you point at it, and its text doesn't move when it does", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.overviews.seed(makeOverview());
+  backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }));
+
+  const library = await launcher.launchExpectingLibrary();
+  const row = library.nthCard(0);
+
+  await row.verifyHasNoChrome();
+  const atRest = await row.titleLeftEdge();
+
+  await row.hoverTitle();
+  await row.verifyShowsItsTile();
+  await library.nthCard(1).verifyHasNoChrome();
+
+  // The tile bleeds outwards rather than pushing the text in, so nothing reflows under the
+  // pointer — which is the whole reason the inline padding is given back as a margin.
+  expect(await row.titleLeftEdge()).toBe(atRest);
+
+  await page.mouse.move(0, 0);
+  await row.verifyHasNoChrome();
+});
+
+test("the tile follows keyboard focus, so a row hunted by tab looks the same as one pointed at", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(makeOverview());
+  backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }));
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.nthCard(1).focusFirstControl();
+
+  await library.nthCard(1).verifyShowsItsTile();
+  await library.nthCard(0).verifyHasNoChrome();
 });
 
 test("the row's title is the same way in to the reader as its Read along action", async ({

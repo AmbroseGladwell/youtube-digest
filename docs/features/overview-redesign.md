@@ -366,6 +366,41 @@ The labels cross-fade their ink over 160ms, and the panel below inks in over 180
 panel element is what re-runs that: a tab change swaps the panel's contents, not the
 element.
 
+### A row's chrome, and when it exists
+
+**At rest a library row carries no chrome at all — not even a rule.** The tile exists only
+under the pointer, on keyboard focus and under a press, so the list stays quiet to read and
+becomes a set of targets when you go hunting. Three things arrive together on 140ms
+ease-out: a transparent 1px border becomes `--line`, the background paints `--ground` over
+the list, and `--shadow-sm` appears.
+
+`--shadow-sm` is the design system's own smallest step — `0 1px 2px` of the system ink
+(`#2d2b2b`) at 14%, no spread — and nothing custom. At that offset it reads as a *contact
+edge*, a card resting on paper rather than floating over it, and the warm grey keeps it
+from going cold against the `#f3f2f2` ground. **The row never translates**; the shadow
+alone implies the lift, which is why it can stay this shallow. The frame the list sits in
+carries `--shadow` (the system's `--shadow-md`, three times the offset), so a row never
+competes with its container.
+
+Two things about the implementation are worth knowing before touching it:
+
+- **The inline padding is given straight back as a negative margin.** A bordered tile whose
+  edge sits on the text would be unreadable, but indenting the text at rest would mean the
+  resting layout changes — and the point is chrome that isn't there yet. So the tile bleeds
+  outwards into the list's own padding and the text never moves. `libraryActions.iwft.ts`
+  measures the title's left edge before and after the tile appears.
+- **Hover is gated behind `@media (hover: hover)`**, or a tap would leave the last row you
+  touched lit until you touched another. Touch is served by `:has(:active)` instead: the
+  press lands on one of the row's own controls, which is the element a touch reliably gives
+  `:active` to. Keyboard focus goes through `:has(:focus-visible)` for the same structural
+  reason — focus is always on a control *inside* the row, never on the row itself, so
+  `:focus-visible` on the row would never match.
+
+`--ground` is the faithful mapping of the design system's `--color-bg`, and on today's list
+that paint is invisible: the list sits on `--ground` too. It is there so the row is its own
+opaque surface rather than a hole onto whatever is behind it. If the tile should actually
+lighten against the page, `--surface` is the one-token change.
+
 ### 9c — list → overview → back
 
 This is the one piece of motion the architecture guide has a prescribed answer for, and
