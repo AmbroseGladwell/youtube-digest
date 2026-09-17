@@ -144,7 +144,7 @@
 }
 
 .verdict {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .verdictNovel {
@@ -159,7 +159,7 @@
 }
 
 .selling {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .titleLink {
@@ -191,7 +191,7 @@
 .meta {
   font-size: 0.84rem;
   line-height: 1.6;
-  color: var(--faint);
+  color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;

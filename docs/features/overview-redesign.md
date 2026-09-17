@@ -478,6 +478,29 @@ string, and `noteTiming` counting "•" as a word would put the bullet into "4 m
 So it is a separate `aria-hidden` element, and the line's own words carry their own test
 id — which is why `verifyActiveLineReads` asserts on that rather than on the button.
 
+## Two weights of secondary text
+
+Design 12d draws a line on a library row that the app's palette did not have: the summary
+and the verdict at `#bab6b6`, the durations at `#9b9797`. One token, `--faint`, was doing
+both jobs — and 57 others besides.
+
+The split is **what the text is for, not how important it is**. `--muted` is prose you
+read: a description, a verdict, a hint, a standfirst, the title of the video currently
+generating. `--faint` is what you scan past: labels, counts, clocks, kickers, placeholders
+and quiet controls. Fourteen call sites moved; the other forty-five stayed.
+
+**No fourth token was added.** `--muted` already was the app's secondary-text step, and its
+dark value is now 12d's `#bab6b6` rather than `#d7d3d3` — which turned out to fix an
+asymmetry rather than introduce one. Measured against the ground each sits on, `--ink` and
+`--faint` land within 1.2 and 0.2 contrast points of their light counterparts; `--muted` sat
+**2.67 points brighter**, so the dark body read heavier than the light body it mirrors. At
+`#bab6b6` that gap closes to 0.39 and the ramp is even.
+
+This does reach past the library row, because `--muted` is also the read-along body, the
+transcript, and the ink of neutral outlined controls. Those all dim by the same step in
+dark, from 11.71:1 to 8.65:1 — still comfortably above AA, and closer to what the light
+theme has always done. The light theme is untouched throughout.
+
 ## Where the implementation departs from the file
 
 - **Verdict labels.** The design shows the prototype's old scale (`Solid but familiar`).

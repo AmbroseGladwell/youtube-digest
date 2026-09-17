@@ -18,6 +18,14 @@
   --ground: #f3f2f2;
   --surface: #f8f4f4;
   --sunk: #eae7e7;
+  // Three weights of text, and the line between the last two is what each is for rather
+  // than how important it is: --muted is prose you read — a description, a verdict, a hint
+  // — and --faint is what you scan past, being labels, counts, clocks and placeholders.
+  // Design 12d draws that line on a library row, summary and verdict against durations.
+  //
+  // The dark --muted is 12d's #bab6b6 rather than a mirror of #444141. Every other step
+  // lands within 1.2 contrast points of its light counterpart; at #d7d3d3 this one sat 2.67
+  // brighter, so the dark body read heavier than the light one it was supposed to match.
   --ink: #201f1d;
   --muted: #444141;
   --faint: #605d5d;
@@ -77,7 +85,7 @@
   --surface: #201f1d;
   --sunk: #2a2827;
   --ink: #f8f4f4;
-  --muted: #d7d3d3;
+  --muted: #bab6b6;
   --faint: #9b9797;
   --line: #3a3836;
   --divider: color-mix(in srgb, #f3f2f2 18%, transparent);
