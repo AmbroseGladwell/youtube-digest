@@ -10,7 +10,8 @@ export interface SetOverviewStateVariables {
 }
 
 interface SetOverviewStateContext {
-  previous: OverviewWithState[] | undefined;
+  previousList: OverviewWithState[] | undefined;
+  previousDetail: OverviewWithState | null | undefined;
 }
 
 export function useSetOverviewStateMutation() {
@@ -22,25 +23,38 @@ export function useSetOverviewStateMutation() {
     mutationFn: ({ overviewId, patch }) => overviewStore.setOverviewState(overviewId, patch),
 
     onMutate: async ({ overviewId, patch }) => {
-      await queryClient.cancelQueries({ queryKey: overviewKeys.list() });
-      const previous = queryClient.getQueryData<OverviewWithState[]>(overviewKeys.list());
+      await queryClient.cancelQueries({ queryKey: overviewKeys.all });
+
+      const previousList = queryClient.getQueryData<OverviewWithState[]>(overviewKeys.list());
+      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
+        overviewKeys.detail(overviewId),
+      );
+
       queryClient.setQueryData<OverviewWithState[]>(overviewKeys.list(), (current) =>
         current?.map((entry) =>
           entry.overview.id === overviewId ? { ...entry, state: { ...entry.state, ...patch } } : entry,
         ),
       );
-      return { previous };
+      queryClient.setQueryData<OverviewWithState | null>(overviewKeys.detail(overviewId), (current) =>
+        current ? { ...current, state: { ...current.state, ...patch } } : current,
+      );
+
+      return { previousList, previousDetail };
     },
 
-    onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(overviewKeys.list(), context.previous);
+    onError: (_error, { overviewId }, context) => {
+      if (!context) {
+        return;
+      }
+      queryClient.setQueryData(overviewKeys.list(), context.previousList);
+      if (context.previousDetail !== undefined) {
+        queryClient.setQueryData(overviewKeys.detail(overviewId), context.previousDetail);
       }
     },
 
     onSettled: () => {
       if (queryClient.isMutating({ mutationKey: overviewKeys.all }) === 1) {
-        void queryClient.invalidateQueries({ queryKey: overviewKeys.list() });
+        void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       }
     },
   });

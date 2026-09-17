@@ -1,35 +1,37 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
-import type { Overview, OverviewId } from "@overview/types";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
+import type { Overview } from "@overview/types";
 import { Routes } from "../../app/Routes.js";
 import { GenerateOverviewForm } from "../../features/newOverview/components/GenerateOverviewForm/GenerateOverviewForm.js";
 import styles from "./AppShell.module.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
+import { useMastheadHeight } from "./useMastheadHeight.js";
 
 // The generate form lives in the masthead, so the pages below it don't each own a copy.
-// The id of whatever it just generated travels down through the outlet context, which is
-// how the library knows which card to open (docs/features/overview-redesign.md).
-export interface ShellOutletContext {
-  justGeneratedId: OverviewId | null;
-}
-
+// What it generates opens straight in the reader, which is where the design sends you
+// after a capture (docs/features/overview-redesign.md).
 const GENERATE_SLOT_ID = "app-shell-generate";
 
 export function AppShell() {
-  const [justGeneratedId, setJustGeneratedId] = useState<OverviewId | null>(null);
-  // On a phone the bar has no room for the paste field, so it sits behind "+ New" the way
-  // the design's mobile header does. On desktop the field is always there and this flag
-  // does nothing.
+  const navigate = useNavigate();
+  const mastheadHeight = useMastheadHeight();
+  // The paste field stays behind "+ New" at every width, not just on a phone: a bar
+  // carrying the field and its button at all times is more furniture than the one control
+  // is worth (docs/features/overview-redesign.md).
   const [newOverviewOpen, setNewOverviewOpen] = useState(false);
 
   const handleGenerated = (overview: Overview) => {
-    setJustGeneratedId(overview.id);
     setNewOverviewOpen(false);
+    void navigate(Routes.overview(overview.id));
   };
 
   return (
-    <div className={styles.root} data-testid={appShellTestIds.root}>
-      <header className={styles.masthead} data-testid={appShellTestIds.masthead}>
+    <div className={styles.root} ref={mastheadHeight.root} data-testid={appShellTestIds.root}>
+      <header
+        className={styles.masthead}
+        ref={mastheadHeight.masthead}
+        data-testid={appShellTestIds.masthead}
+      >
         <Link className={styles.brand} to={Routes.home()}>
           <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true" className={styles.mark}>
             <circle cx="16" cy="14.5" r="7.5" fill="none" stroke="currentColor" strokeWidth="3" />
@@ -53,7 +55,9 @@ export function AppShell() {
           id={GENERATE_SLOT_ID}
           className={`${styles.generateSlot} ${newOverviewOpen ? styles.generateSlotOpen : ""}`}
         >
-          <GenerateOverviewForm onGenerated={handleGenerated} />
+          <div className={styles.generateInner}>
+            <GenerateOverviewForm onGenerated={handleGenerated} />
+          </div>
         </div>
 
         <nav className={styles.nav} aria-label="Sections">
@@ -74,7 +78,7 @@ export function AppShell() {
         </nav>
       </header>
       <div className={styles.pane} data-testid={appShellTestIds.pane}>
-        <Outlet context={{ justGeneratedId } satisfies ShellOutletContext} />
+        <Outlet />
       </div>
     </div>
   );

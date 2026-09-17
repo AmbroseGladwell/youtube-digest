@@ -1,16 +1,27 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-test("expanding a card reveals the full overview detail, collapsing hides it again", async ({
+test("a row's Read along opens that note in the reader, and the back link returns to the library", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "A Saved Video" } }));
+  const library = await launcher.launchExpectingLibrary();
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyTitle("A Saved Video");
+
+  await reader.clickBackToLibrary();
+});
+
+test("the row's title is the same way in to the reader as its Read along action", async ({
   launcher,
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary();
 
-  const card = library.nthCard(0);
-  await card.clickToExpand();
-  await card.clickToCollapse();
+  await library.nthCard(0).openReaderFromTitle();
 });
 
 test("favouriting a card is reflected immediately and actually written to the store", async ({
@@ -49,6 +60,21 @@ test("marking a card read is reflected immediately and actually written to the s
     const state = await backendSimulator.overviewStore.getOverviewState(overview.id);
     expect(state.read).toBe(true);
   }).toPass();
+});
+
+test("clicking a row's thumbnail opens the same reader its title does", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = makeOverview();
+  backendSimulator.overviews.seed({
+    ...overview,
+    video: { ...overview.video, thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg" },
+  });
+
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReaderFromThumbnail();
+  await reader.verifyTitle(overview.video.title);
 });
 
 test("a card shows its thumbnail when the overview has one", async ({ launcher, backendSimulator }) => {

@@ -1,23 +1,31 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
+import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
 export class LibraryOverviewCardPageObject extends PageObject {
   verifyTitle = (title: string) =>
     this.step(`verifyTitle ${title}`, () =>
-      expect(this.get(libraryOverviewCardTestIds.expandToggle)).toContainText(title),
+      expect(this.get(libraryOverviewCardTestIds.titleLink)).toContainText(title),
     );
 
-  clickToExpand = () =>
-    this.step("clickToExpand", async () => {
-      await this.click(libraryOverviewCardTestIds.expandToggle);
-      await this.expectToBeVisible(libraryOverviewCardTestIds.body);
+  openReader = (): Promise<ReaderPageObject> =>
+    this.step("openReader", async () => {
+      await this.click(libraryOverviewCardTestIds.listenLink);
+      return new ReaderPageObject(this.testContext).verifyIsShown();
     });
 
-  clickToCollapse = () =>
-    this.step("clickToCollapse", async () => {
-      await this.click(libraryOverviewCardTestIds.expandToggle);
-      await this.expectNotToBeVisible(libraryOverviewCardTestIds.body);
+  openReaderFromTitle = (): Promise<ReaderPageObject> =>
+    this.step("openReaderFromTitle", async () => {
+      await this.click(libraryOverviewCardTestIds.titleLink);
+      return new ReaderPageObject(this.testContext).verifyIsShown();
+    });
+
+  openReaderFromThumbnail = (): Promise<ReaderPageObject> =>
+    this.step("openReaderFromThumbnail", async () => {
+      await this.click(overviewThumbnailTestIds.link);
+      return new ReaderPageObject(this.testContext).verifyIsShown();
     });
 
   clickFavourite = () => this.step("clickFavourite", () => this.click(libraryOverviewCardTestIds.favouriteButton));
@@ -36,7 +44,6 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  verifyHasThumbnail = () => this.expectToBeVisible(libraryOverviewCardTestIds.thumbnail);
-  verifyHasNoThumbnail = () => this.expectNotToBeVisible(libraryOverviewCardTestIds.thumbnail);
-  verifyIsExpanded = () => this.expectToBeVisible(libraryOverviewCardTestIds.body);
+  verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
+  verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
 }

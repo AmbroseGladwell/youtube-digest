@@ -1,6 +1,5 @@
 import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
-import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 
 export class HomePageObject extends PageObject {
@@ -10,12 +9,10 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
-  verifyShowsFirstRunHero = (): Promise<GenerateOverviewFormPageObject> =>
+  verifyShowsFirstRunHero = (): Promise<HomePageObject> =>
     this.step("verifyShowsFirstRunHero", async () => {
       await this.expectToBeVisible(homePageTestIds.hero);
-      const form = new GenerateOverviewFormPageObject(this.testContext);
-      await form.verifyIsShown();
-      return form;
+      return this;
     });
 
   verifyShowsLibrary = (): Promise<LibraryPageObject> =>

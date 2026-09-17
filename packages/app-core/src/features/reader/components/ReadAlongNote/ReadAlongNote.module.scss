@@ -1,0 +1,61 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: var(--measure);
+}
+
+.line {
+  // The masthead and the tab strip stick to the head and the player bar to the foot, so a
+  // line scrolled to by the pacer has to clear all three or the mark lands under one.
+  scroll-margin-top: calc(var(--masthead-height) + 3rem);
+  scroll-margin-bottom: 6rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
+  padding-left: 0.625rem;
+  font-family: inherit;
+  text-align: left;
+  line-height: 1.65;
+  cursor: pointer;
+}
+
+.headingLine {
+  padding-top: 1.25rem;
+  padding-bottom: 0.375rem;
+  font-size: 0.69rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.bodyLine {
+  padding-top: 0.1875rem;
+  padding-bottom: 0.1875rem;
+  margin-bottom: 0.125rem;
+  font-size: 1.0625rem;
+  color: var(--muted);
+}
+
+// The reading mark is the design's only moving accent: a rule down the left and a wash
+// behind the line being read (docs/features/overview-redesign.md).
+.lineActive {
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+
+@media (max-width: 61.9375rem) {
+  .line {
+    scroll-margin-bottom: 11rem;
+  }
+
+  .headingLine {
+    padding-top: 1rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .bodyLine {
+    font-size: 0.97rem;
+  }
+}
