@@ -1,7 +1,9 @@
 import { Link } from "react-router";
 import type { Overview } from "@overview/types";
 import { Routes } from "../../../../app/Routes.js";
+import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
+import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
 import type { OverviewNeighbours } from "../../util/overviewNeighbours.js";
 import styles from "./ReaderMasthead.module.scss";
@@ -31,10 +33,17 @@ export function ReaderMasthead({
   onToggleRead,
   onTogglePlaying,
 }: ReaderMastheadProps) {
+  const animateNavigation = useShouldAnimateNavigation();
+
   return (
     <header className={styles.root} data-testid={readerMastheadTestIds.root}>
       <nav className={styles.topBar} aria-label="Overview navigation">
-        <Link className={styles.backLink} to={Routes.home()} data-testid={readerMastheadTestIds.backLink}>
+        <Link
+          className={styles.backLink}
+          to={Routes.home()}
+          viewTransition={animateNavigation}
+          data-testid={readerMastheadTestIds.backLink}
+        >
           ← All overviews
         </Link>
         <span className={styles.breadcrumb} data-testid={readerMastheadTestIds.breadcrumb}>
@@ -46,6 +55,7 @@ export function ReaderMasthead({
             <Link
               className={styles.stepLink}
               to={Routes.overview(neighbours.previousId)}
+              viewTransition={animateNavigation}
               data-testid={readerMastheadTestIds.previousLink}
             >
               ↑ Previous
@@ -55,6 +65,7 @@ export function ReaderMasthead({
             <Link
               className={styles.stepLink}
               to={Routes.overview(neighbours.nextId)}
+              viewTransition={animateNavigation}
               data-testid={readerMastheadTestIds.nextLink}
             >
               Next ↓
@@ -121,7 +132,7 @@ export function ReaderMasthead({
             aria-pressed={playing}
             data-testid={readerMastheadTestIds.readAloudButton}
           >
-            {playing ? "❚❚" : "▶"} Read aloud
+            <PlayPauseIcon playing={playing} /> Read aloud
           </button>
         </div>
       </div>

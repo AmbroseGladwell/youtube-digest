@@ -37,6 +37,18 @@ test("tapping a line moves the reading mark to it and renames what is being read
   await reader.verifyNowReading("Key points");
 });
 
+test("the key points are the one section the note sets as a list, and carry its bullets", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  const library = await launcher.launchExpectingLibrary();
+
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.verifyBulletedLinesRead(NOTE.keyPoints);
+});
+
 test("the transport steps the reading mark forward and back a line at a time", async ({
   launcher,
   backendSimulator,
@@ -152,6 +164,23 @@ test("the transcript and chapters tabs say on screen that their content is place
 
   await reader.clickTab("Overview");
   await reader.verifyShowsOverviewPanel();
+});
+
+test("one indicator travels to the tab you chose, rather than three switching on", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  const library = await launcher.launchExpectingLibrary();
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyTabIndicatorSitsUnder("Overview");
+
+  await reader.clickTab("Chapters");
+  await reader.verifyTabIndicatorSitsUnder("Chapters");
+
+  await reader.clickTab("Transcript");
+  await reader.verifyTabIndicatorSitsUnder("Transcript");
 });
 
 test("the meta line names the video's length only when the source recorded one", async ({

@@ -16,6 +16,22 @@
   min-width: 0;
 }
 
+// Design 9b: the panel inks in after a 60ms hold and does not travel, because the tab
+// strip's own indicator has already said where you are. The key on the element is what
+// re-runs it — a tab change swaps the panel's contents, not the element.
+.panel {
+  animation: panelInk 180ms ease-out 60ms both;
+}
+
+@keyframes panelInk {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .tagRow {
   display: flex;
   flex-wrap: wrap;

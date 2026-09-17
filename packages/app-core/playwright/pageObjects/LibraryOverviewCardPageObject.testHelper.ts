@@ -57,6 +57,39 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
+  // On a phone the actions sit under the text rather than beside it, so their left edge
+  // has to be the title's. It is a grid column rather than a padding, and the widths that
+  // have to add up — the thumbnail column, its gap, and three touch-sized pills — are set
+  // in three different places, so nothing else would notice them drifting apart.
+  verifyActionsLineUpWithTheTitle = () =>
+    this.step("verifyActionsLineUpWithTheTitle", async () => {
+      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+      const favourite = (await this.get(libraryOverviewCardTestIds.favouriteButton).boundingBox())!;
+      const listen = (await this.get(libraryOverviewCardTestIds.listenLink).boundingBox())!;
+
+      expect(Math.round(favourite.x)).toBe(Math.round(title.x));
+      expect(favourite.y).toBeGreaterThan(title.y);
+      expect(Math.round(listen.y)).toBe(Math.round(favourite.y));
+    });
+
+  verifyActionsAreTouchSized = () =>
+    this.step("verifyActionsAreTouchSized", async () => {
+      for (const testId of [
+        libraryOverviewCardTestIds.favouriteButton,
+        libraryOverviewCardTestIds.readButton,
+        libraryOverviewCardTestIds.listenLink,
+      ]) {
+        const box = (await this.get(testId).boundingBox())!;
+        expect(Math.round(box.height)).toBe(38);
+      }
+    });
+
+  verifyTitleTakesTheFullWidth = (expected: number) =>
+    this.step(`verifyTitleTakesTheFullWidth ${expected}`, async () => {
+      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+      expect(Math.round(title.width)).toBe(expected);
+    });
+
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
   verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
 }

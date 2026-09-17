@@ -106,7 +106,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={setTab} ref={tabsHeight.measured} />
 
       <div className={styles.grid}>
-        <div className={styles.main} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
+        <div
+          key={tab}
+          className={`${styles.main} ${styles.panel}`}
+          role="tabpanel"
+          id={panelId(tab)}
+          aria-labelledby={tabId(tab)}
+        >
           {tab === "Overview" && (
             <div data-testid={readerPageTestIds.overviewPanel}>
               <ReadAlongNote

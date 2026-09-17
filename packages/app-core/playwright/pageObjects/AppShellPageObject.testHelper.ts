@@ -1,3 +1,5 @@
+import { expect } from "@playwright/experimental-ct-react";
+import type { NavigationDirection } from "../../src/util/viewTransitions.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
@@ -17,6 +19,13 @@ export class AppShellPageObject extends PageObject {
   get generationStatusStrip(): GenerationStatusStripPageObject {
     return new GenerationStatusStripPageObject(this.testContext);
   }
+
+  // paneTransitions.scss is a stylesheet and can't be asserted on, but it keys every rule
+  // off this one attribute, so this is where the way in and the way back are actually held.
+  verifyNavigationDirection = (direction: NavigationDirection) =>
+    this.step(`verifyNavigationDirection ${direction}`, () =>
+      expect(this.page.locator("html")).toHaveAttribute("data-nav-direction", direction),
+    );
 
   clickNewOverview = () =>
     this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));

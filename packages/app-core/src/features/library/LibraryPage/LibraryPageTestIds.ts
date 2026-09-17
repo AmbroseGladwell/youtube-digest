@@ -1,6 +1,7 @@
 export const libraryPageTestIds = {
   root: "LibraryPage.root",
   list: "LibraryPage.list",
+  listCount: "LibraryPage.listCount",
   empty: "LibraryPage.empty",
   rail: "LibraryPage.rail",
   railBody: "LibraryPage.railBody",

@@ -43,6 +43,11 @@
   text-align: left;
   color: var(--faint);
   cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+.section:hover {
+  background: var(--ink-wash);
 }
 
 .sectionCurrent {

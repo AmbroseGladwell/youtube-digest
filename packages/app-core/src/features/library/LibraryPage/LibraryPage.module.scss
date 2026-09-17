@@ -1,3 +1,5 @@
+@use "../../../theme/controls.scss" as controls;
+
 .root {
   position: relative;
   overflow-x: clip;
@@ -102,6 +104,8 @@
   background: transparent;
   color: var(--faint);
   cursor: pointer;
+
+  @include controls.icon-control;
 }
 
 .filterButtonActive {
@@ -135,6 +139,8 @@
   font-size: 0.75rem;
   white-space: nowrap;
   cursor: pointer;
+
+  @include controls.outlined-control;
 }
 
 .scrim {
@@ -175,6 +181,11 @@
   color: var(--accent-strong);
   border-bottom: 1px solid var(--accent);
   cursor: pointer;
+  transition: color var(--motion-state) ease-out;
+}
+
+.sheetDone:hover {
+  color: var(--accent-deep);
 }
 
 .sheetBody {
@@ -200,6 +211,8 @@
   font-size: 0.82rem;
   color: var(--faint);
   cursor: pointer;
+
+  @include controls.quiet-control;
 }
 
 .sheetCount {

@@ -1,4 +1,5 @@
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
+import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import styles from "./ReaderPlayerBar.module.scss";
 import { readerPlayerBarTestIds } from "./ReaderPlayerBarTestIds.js";
 
@@ -80,7 +81,7 @@ export function ReaderPlayerBar({
           aria-label={playing ? "Pause" : "Play"}
           data-testid={readerPlayerBarTestIds.playButton}
         >
-          {playing ? "❚❚" : "▶"}
+          <PlayPauseIcon playing={playing} />
         </button>
         <button
           type="button"

@@ -111,8 +111,8 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
 
         <main className={styles.main}>
           <div className={styles.listHead}>
-            <p className={styles.listCount}>
-              {counts.total} {counts.total === 1 ? "note" : "notes"} · {counts.unread} unread
+            <p className={styles.listCount} data-testid={libraryPageTestIds.listCount}>
+              {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
             </p>
             <p className={styles.listOrder}>Newest saved first</p>
           </div>

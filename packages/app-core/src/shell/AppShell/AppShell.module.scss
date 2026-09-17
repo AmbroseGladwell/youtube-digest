@@ -1,3 +1,5 @@
+@use "../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -11,11 +13,16 @@ $rule: 2px;
 
 // The whole sticky band, which is what anything sticking beneath it has to clear: the
 // generation status strip belongs inside it, under the bar's rule.
+//
+// The two view-transition names in this file are the app's whole set: the region that
+// swaps, and the chrome that paints above it (frontend-architecture-guide.md 2.3, which
+// budgets under ten for an app). paneTransitions.scss is what they're for.
 .masthead {
   position: sticky;
   top: 0;
   z-index: 3;
   background: var(--ground);
+  view-transition-name: masthead;
 }
 
 .bar {
@@ -34,6 +41,11 @@ $rule: 2px;
   flex: none;
   color: var(--accent-strong);
   text-decoration: none;
+  transition: color var(--motion-state) ease-out;
+}
+
+.brand:hover {
+  color: var(--accent-deep);
 }
 
 .mark {
@@ -67,6 +79,8 @@ $rule: 2px;
   font-size: 0.78rem;
   white-space: nowrap;
   cursor: pointer;
+
+  @include controls.tinted-control;
 }
 
 .nav {
@@ -79,15 +93,25 @@ $rule: 2px;
 
 // The active underline hangs below the text. Without matching space above it the link's
 // box is lopsided, and centring that box in the masthead lifts the text off the line the
-// brand and the buttons sit on.
+// brand and the buttons sit on. That 2px geometry is why the hover is written out here
+// rather than taken from controls.quiet-control, whose own 1px rule would replace it.
 .navLink {
   color: var(--faint);
   text-decoration: none;
   border-block: 2px solid transparent;
   padding-block: 2px;
+  transition:
+    color var(--motion-state) ease-out,
+    border-bottom-color var(--motion-state) ease-out;
 }
 
-.navLinkActive {
+.navLink:hover {
+  color: var(--ink);
+  border-bottom-color: var(--edge);
+}
+
+.navLinkActive,
+.navLinkActive:hover {
   color: var(--ink);
   border-bottom-color: var(--accent);
 }
@@ -99,6 +123,7 @@ $rule: 2px;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  view-transition-name: pane;
 }
 
 @media (max-width: 61.9375rem) {

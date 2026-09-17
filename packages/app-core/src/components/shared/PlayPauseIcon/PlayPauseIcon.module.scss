@@ -1,0 +1,16 @@
+.icon {
+  display: block;
+  width: 1.15em;
+  height: 1.15em;
+}
+
+// Design 9d: a cross-fade, no morph and no rotation. This control gets pressed constantly
+// and any flourish becomes a tic.
+.glyph {
+  opacity: 0;
+  transition: opacity var(--motion-state) ease-out;
+}
+
+.glyphShown {
+  opacity: 1;
+}

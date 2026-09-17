@@ -12,6 +12,23 @@ test("a seeded library renders one card per overview", async ({ launcher, backen
   await library.expectCardCountToBe(2);
 });
 
+test("the list head counts what the library holds: overviews", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview());
+  backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }));
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.verifyCountReads("2 overviews · 2 unread");
+});
+
+test("the list head drops to the singular on a library of one", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview());
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.verifyCountReads("1 overview · 1 unread");
+});
+
 test("the novelty filter narrows the visible cards", async ({ launcher, backendSimulator }) => {
   const novel = makeOverview({
     video: { ...makeOverview().video, title: "Novel video" },

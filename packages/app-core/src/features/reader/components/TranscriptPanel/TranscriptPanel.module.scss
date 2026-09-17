@@ -33,6 +33,11 @@
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+.row:hover:not(.rowActive) {
+  background: var(--ink-wash);
 }
 
 .rowActive {

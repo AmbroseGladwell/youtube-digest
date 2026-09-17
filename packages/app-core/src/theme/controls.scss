@@ -1,0 +1,89 @@
+// The four control treatments the app already paints, given the states design turn 9a
+// asks for. Each mixin carries only motion and state — the base paint stays at the call
+// site, because treatment is what varies between a primary and a secondary pill and the
+// mixins would otherwise have to know about all of it
+// (docs/features/overview-redesign.md, "The small movements").
+
+@mixin control-motion {
+  transition:
+    background var(--motion-state) var(--motion-ease),
+    border-color var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease),
+    transform var(--motion-press) ease-out;
+}
+
+@mixin control-disabled {
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transition: none;
+    transform: none;
+  }
+}
+
+@mixin tinted-control {
+  @include control-motion;
+  @include control-disabled;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-tint-hover);
+    border-color: var(--accent-strong);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--accent-tint-press);
+    transform: translateY(1px);
+  }
+}
+
+// Hover moves the ground under the control and nothing else: an outlined pill's border
+// and ink are how it reports being on (Read, Favourited, an applied filter), so a hover
+// that recoloured them would read as the state it is offering to set.
+@mixin outlined-control {
+  @include control-motion;
+  @include control-disabled;
+
+  &:hover:not(:disabled) {
+    background: var(--ink-wash);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--ink-wash-press);
+    transform: translateY(1px);
+  }
+}
+
+@mixin quiet-control {
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--motion-state) ease-out,
+    border-bottom-color var(--motion-state) ease-out;
+
+  @include control-disabled;
+
+  &:hover:not(:disabled) {
+    color: var(--accent-strong);
+    border-bottom-color: var(--accent);
+  }
+
+  &:active:not(:disabled) {
+    color: var(--accent-deep);
+  }
+}
+
+// Round targets scale rather than shifting down — a 1px nudge on a circle reads as a
+// wobble. The wash is currentColor so one mixin serves a neutral circle on the ground and
+// an accent one inside the player bar.
+@mixin icon-control {
+  @include control-motion;
+  @include control-disabled;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  &:active:not(:disabled) {
+    background: color-mix(in srgb, currentColor 18%, transparent);
+    transform: scale(0.94);
+  }
+}

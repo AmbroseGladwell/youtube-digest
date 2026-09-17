@@ -52,6 +52,11 @@ export class LibraryPageObject extends PageObject {
   expectCardCountToBe = (count: number) =>
     this.step(`expectCardCountToBe ${count}`, () => this.expectToHaveCount(libraryOverviewCardTestIds.root, count));
 
+  verifyCountReads = (count: string) =>
+    this.step(`verifyCountReads ${count}`, () =>
+      expect(this.get(libraryPageTestIds.listCount)).toHaveText(count),
+    );
+
   nthCard = (index: number): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).nth(index));
 
