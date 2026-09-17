@@ -7,6 +7,7 @@ import { IwftAppRoot } from "./IwftAppRoot.testHelper.js";
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
+import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -32,11 +33,15 @@ export class Launcher {
       return new HomePageObject(this.testContext).verifyIsShown();
     });
 
-  launchExpectingEmptyStateForm = (options: LaunchOptions = {}): Promise<GenerateOverviewFormPageObject> =>
-    test.step("Launcher.launchExpectingEmptyStateForm", async () => {
+  launchExpectingFirstRun = (options: LaunchOptions = {}): Promise<GenerateOverviewFormPageObject> =>
+    test.step("Launcher.launchExpectingFirstRun", async () => {
       const home = await this.launch(options);
-      return home.verifyShowsEmptyStateForm();
+      return home.verifyShowsFirstRunHero();
     });
+
+  get appShell(): AppShellPageObject {
+    return new AppShellPageObject(this.testContext);
+  }
 
   launchExpectingLibrary = (options: LaunchOptions = {}): Promise<LibraryPageObject> =>
     test.step("Launcher.launchExpectingLibrary", async () => {

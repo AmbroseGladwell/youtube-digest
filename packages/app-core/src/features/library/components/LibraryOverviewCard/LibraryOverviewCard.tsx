@@ -49,10 +49,7 @@ export function LibraryOverviewCard({
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
 
   return (
-    <article
-      className={`${styles.root} ${state.read ? styles.isRead : ""}`}
-      data-testid={libraryOverviewCardTestIds.root}
-    >
+    <article className={styles.root} data-testid={libraryOverviewCardTestIds.root}>
       <div className={styles.row}>
         {showThumbnail && (
           <img
@@ -93,37 +90,37 @@ export function LibraryOverviewCard({
               <span className={styles.channel}>{overview.video.channel}</span> · {overview.inOneLine}
             </span>
           </button>
+        </div>
 
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.openAction}
-              onClick={onToggleExpanded}
-              aria-expanded={expanded}
-            >
-              {expanded ? "Close overview" : "Read overview"}
-            </button>
-            <button
-              type="button"
-              className={styles.action}
-              onClick={onToggleRead}
-              aria-pressed={state.read}
-              data-testid={libraryOverviewCardTestIds.readButton}
-            >
-              {state.read ? "Read" : "Mark read"}
-            </button>
-            <button
-              type="button"
-              className={`${styles.action} ${state.favourite ? styles.actionActive : ""}`}
-              onClick={onToggleFavourite}
-              aria-pressed={state.favourite}
-              aria-label={state.favourite ? "Favourited" : "Favourite"}
-              title={state.favourite ? "Favourited" : "Favourite"}
-              data-testid={libraryOverviewCardTestIds.favouriteButton}
-            >
-              {state.favourite ? "♥" : "♡"}
-            </button>
-          </div>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.action} ${styles.favouriteAction} ${state.favourite ? styles.actionActive : ""}`}
+            onClick={onToggleFavourite}
+            aria-pressed={state.favourite}
+            aria-label={state.favourite ? "Favourited" : "Favourite"}
+            title={state.favourite ? "Favourited" : "Favourite"}
+            data-testid={libraryOverviewCardTestIds.favouriteButton}
+          >
+            {state.favourite ? "♥" : "♡"}
+          </button>
+          <button
+            type="button"
+            className={`${styles.action} ${state.read ? styles.actionActive : ""}`}
+            onClick={onToggleRead}
+            aria-pressed={state.read}
+            data-testid={libraryOverviewCardTestIds.readButton}
+          >
+            {state.read ? "Read" : "Mark read"}
+          </button>
+          <button
+            type="button"
+            className={styles.primaryAction}
+            onClick={onToggleExpanded}
+            aria-expanded={expanded}
+          >
+            {expanded ? "Close" : "Read overview"}
+          </button>
         </div>
       </div>
 

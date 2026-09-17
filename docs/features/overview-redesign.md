@@ -32,9 +32,10 @@ Concretely:
 
 | Design screen | Where it landed |
 |---|---|
-| 2a library desktop, top bar | `AppShell` (brand bar) + `GenerateOverviewForm` compact variant |
+| 2a library desktop, top bar | `AppShell` — brand, the generate form, and the nav in one bar |
 | 2a rail: search, Show, Topic, Verdict | `FilterPanel` |
-| 2b first run, mobile and desktop | `HomePage` hero + `ApiKeysPanel` |
+| 2b first run, mobile and desktop | `HomePage` hero |
+| Keys, and the bar's `Settings` nav item | `SettingsPage` at `/settings`, with `ApiKeysPanel` |
 | 2c library mobile, filter sheet | `LibraryPage` — one `FilterPanel`, styled as a column on desktop and a slide-over under 992px |
 | 2c/3a reader body | `OverviewResultCard` |
 | 2e dark mode | `theme/tokens.scss` |
@@ -42,7 +43,23 @@ Concretely:
 
 The rail and the mobile sheet are deliberately **one** `FilterPanel` instance rather than
 two, repositioned by CSS. Two instances would mean two copies of every control in the DOM
-at once — ambiguous for tests, and worse for screen readers.
+at once — ambiguous for tests, and worse for screen readers. For the same reason the
+applied-filter chips and their ☰ button are a phone-only row: on desktop the rail is
+already on screen, so a second row restating the same filters is noise.
+
+**The generate form lives in the masthead**, one instance for the whole app rather than a
+copy per page, and the id of what it just generated reaches the library through the
+router's outlet context. That put the keys in two places at once — the masthead form and
+the settings page — so `useApiKeys` now reads a single shared snapshot through
+`useSyncExternalStore` instead of each caller holding its own `useState` copy. Without
+that, saving keys on `/settings` left the masthead's form disabled until a reload;
+`settingsKeys.iwft.ts` is the test that holds it.
+
+**Two button treatments, both from the design.** The masthead's `Generate overview` is
+*outlined* — accent border and accent text on the bare ground. The row's primary action
+(`Read overview`, the design's `Listen`) is the *soft tint* — the same accent border over a
+16% wash. Secondary row actions are neutral outlined pills, and `♡` is a 30px circle of
+the same. The design's own exports are the reference for which treatment goes where.
 
 Two filters in the design's rail did not exist in the app and were added with it:
 `favourite` (Only favourites) and `dubious` (⚠ Dubious only), both carried in the URL
@@ -74,8 +91,10 @@ Each of these needs data or a surface the app doesn't have. None is a styling ga
   and the app's labels won. The design's *treatment* of them is what was taken.
 - **The `Listen` action** on a library row is `Read overview`, which expands the note in
   place — the existing behaviour, since there is no audio to start.
-- **The `Settings` nav item** is not rendered. There is no settings route; keys are edited
-  from the generate form. A visible control that goes nowhere is the thing `CLAUDE.md`'s
-  "degrade visibly" habit exists to prevent.
+- **The nav reads `Overviews`, not `Library`**, and has no `Listen` item. The design file's
+  own bar says `Overviews`; a later export says `Library · Listen · Settings`, and `Listen`
+  would be a control with nothing behind it until the player exists.
+- **Read rows are not dimmed.** The design carries read state in the row's `Read` button,
+  not by fading the title, so nothing fades the title here either.
 - **Topic pills** render only for topics an overview actually belongs to, and `+ New topic`
   is absent — topic creation has no UI yet.

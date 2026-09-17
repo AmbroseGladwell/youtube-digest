@@ -3,20 +3,16 @@
   padding: 1.25rem 0;
 }
 
-.isRead .title,
-.isRead .kickerRow {
-  opacity: 0.62;
-}
-
 .row {
   display: grid;
-  grid-template-columns: 9.25rem 1fr;
+  grid-template-columns: 9.25rem 1fr auto;
   gap: 1.25rem;
   align-items: start;
 }
 
-.row:has(.body:only-child) {
-  grid-template-columns: 1fr;
+// No thumbnail saved: the body is the first cell, and the text takes its column.
+.row:has(> .body:first-child) {
+  grid-template-columns: 1fr auto;
 }
 
 .thumbnail {
@@ -111,47 +107,96 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding-top: 0.25rem;
-}
-
-.openAction {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  color: var(--accent-strong);
-  border-bottom: 1px solid var(--accent);
-  cursor: pointer;
+  gap: 0.375rem;
 }
 
 .action {
-  border: 0;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-badge);
   background: transparent;
-  padding: 0;
+  color: var(--muted);
+  padding: 0.3rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 0.78rem;
-  color: var(--faint);
+  font-size: 0.75rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
+.favouriteAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
 .actionActive {
+  border-color: var(--accent);
   color: var(--accent-strong);
+}
+
+.primaryAction {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .expanded {
   padding-top: 1.25rem;
 }
 
+// On a phone the actions drop under the text as plain type — a row of pills would take
+// the whole width from the note itself (design 2c).
 @media (max-width: 47.9375rem) {
   .row {
     grid-template-columns: 6rem 1fr;
     gap: 0.875rem;
   }
 
+  .row:has(> .body:first-child) {
+    grid-template-columns: 1fr;
+  }
+
   .title {
     font-size: 1.125rem;
+  }
+
+  .actions {
+    grid-column: 2;
+    gap: 0.9rem;
+    padding-top: 0.125rem;
+  }
+
+  .row:has(> .body:first-child) .actions {
+    grid-column: 1;
+  }
+
+  .action,
+  .primaryAction,
+  .favouriteAction {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    width: auto;
+    height: auto;
+    font-size: 0.75rem;
+  }
+
+  .primaryAction {
+    color: var(--accent-strong);
+    border-bottom: 1px solid var(--accent);
+  }
+
+  .actionActive {
+    color: var(--accent-strong);
   }
 }

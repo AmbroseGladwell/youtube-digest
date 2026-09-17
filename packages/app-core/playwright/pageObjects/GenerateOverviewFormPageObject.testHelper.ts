@@ -1,13 +1,8 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { generateOverviewFormTestIds } from "../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
-import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 
 export class GenerateOverviewFormPageObject extends PageObject {
-  get apiKeysPanel(): ApiKeysPanelPageObject {
-    return new ApiKeysPanelPageObject(this.testContext, this.locator);
-  }
-
   verifyIsShown = (): Promise<GenerateOverviewFormPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(generateOverviewFormTestIds.root);
@@ -50,4 +45,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
 
   verifyUrlInputDisabled = () =>
     this.step("verifyUrlInputDisabled", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeDisabled());
+
+  clickSettingsLink = () =>
+    this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.settingsLink));
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import type { Overview, OverviewId } from "@overview/types";
-import { GenerateOverviewForm } from "../../newOverview/components/GenerateOverviewForm/GenerateOverviewForm.js";
+import type { OverviewId } from "@overview/types";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
@@ -18,10 +17,9 @@ import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 export interface LibraryPageProps {
   overviewsWithState: OverviewWithState[];
   justGeneratedId: OverviewId | null;
-  onGenerated: (overview: Overview) => void;
 }
 
-export function LibraryPage({ overviewsWithState, justGeneratedId, onGenerated }: LibraryPageProps) {
+export function LibraryPage({ overviewsWithState, justGeneratedId }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
@@ -46,8 +44,6 @@ export function LibraryPage({ overviewsWithState, justGeneratedId, onGenerated }
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
-      <GenerateOverviewForm variant="compact" onGenerated={onGenerated} />
-
       <div className={styles.filterBar}>
         <button
           type="button"

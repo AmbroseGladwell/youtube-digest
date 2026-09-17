@@ -63,10 +63,10 @@
   color: var(--faint);
 }
 
-// The filter bar is the mobile control; on desktop the rail carries the same filters
-// and the bar collapses to the applied chips alone.
+// The filter bar belongs to the phone layout alone: on desktop the rail is already on
+// screen, so a second row restating the same filters is noise.
 .filterBar {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 0.6rem;
   padding: 0.6rem 2rem;
@@ -226,6 +226,10 @@
 
   .sheetHead,
   .sheetFoot {
+    display: flex;
+  }
+
+  .filterBar {
     display: flex;
   }
 
