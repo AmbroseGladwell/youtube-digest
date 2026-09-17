@@ -480,17 +480,18 @@ id — which is why `verifyActiveLineReads` asserts on that rather than on the b
 
 ## A row is a strip, not a block
 
-Design 12d's row geometry, and the reason it is worth having: **the thumbnail column is
-132px, not the 264px the app had drifted to.** That is not really a change to the image. The
-thumbnail was what set the row's height, so halving it hands that job to the text and the
-row goes from **149px to 86px** — 42% shorter, nearly twice as many overviews on a screen.
-For a tool whose whole point is triage, the row wants to be a strip you scan rather than a
-block you read. The title gets ~130px back with it.
+**The thumbnail column is `11.25rem`, not the `16.5rem` the app had drifted to.** That is
+not really a change to the image. The thumbnail is what sets the row's height, so taking it
+down carries the whole row with it: **149px to 101px**, a third shorter, half as many again
+on a screen, and the title gets ~84px back. For a tool whose whole point is triage, a row
+wants to be a strip you scan rather than a block you read.
 
-Two consequences worth knowing. The row's thumbnail is now *smaller* than the reader's
-148px, inverting what it was — which is the right way round, since a row is an index and the
-reader is the thing itself. And 132px is exactly half of the `16.5rem` both rails use, so
-the arithmetic stays tidy.
+Design 12d asks for 132px, which is further than this. At that width the text becomes the
+taller half of the row and the height settles at 86px — the strip at its most compact. The
+`11.25rem` here is a deliberate step back from it: the image stays the taller half, so the
+row still reads as a video rather than as a line of type with a stamp beside it. Somewhere
+between those two is a judgement about how much the thumbnail is worth, not a number the
+design can settle on its own.
 
 **The favourite is 30px, on `--edge`.** Both halves of that fix a drift rather than
 following a spec for its own sake. The circle was 32px next to a `Mark read` pill that is
