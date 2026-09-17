@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import type { VideoSource } from "@overview/types";
+import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./OverviewThumbnail.module.scss";
 import { overviewThumbnailTestIds } from "./OverviewThumbnailTestIds.js";
 
@@ -18,6 +19,7 @@ export interface OverviewThumbnailProps {
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
 export function OverviewThumbnail({ video, className, to }: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
+  const animateNavigation = useShouldAnimateNavigation();
 
   if (!Boolean(video.thumbnailUrl) || failed) {
     return null;
@@ -45,6 +47,7 @@ export function OverviewThumbnail({ video, className, to }: OverviewThumbnailPro
     <Link
       className={`${styles.thumbnail} ${styles.link} ${className ?? ""}`}
       to={to}
+      viewTransition={animateNavigation}
       aria-hidden="true"
       tabIndex={-1}
       data-testid={overviewThumbnailTestIds.link}

@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -52,13 +54,15 @@
   font-family: var(--font-body);
   font-size: 0.82rem;
   cursor: pointer;
+
+  @include controls.outlined-control;
 }
 
 .note {
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.6;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .error {
@@ -87,6 +91,8 @@
   border: 1px solid var(--edge);
   background: transparent;
   color: var(--faint);
+
+  @include controls.outlined-control;
 }
 
 // The soft tint marks the one action that takes you somewhere, as it does on a library
@@ -96,11 +102,8 @@
   background: var(--accent-tint);
   color: var(--accent-deep);
   padding-inline: 1.25rem;
-}
 
-.generateButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  @include controls.tinted-control;
 }
 
 // On a phone the pair stacks full-width at the sheet's foot, on the design's 44px target.

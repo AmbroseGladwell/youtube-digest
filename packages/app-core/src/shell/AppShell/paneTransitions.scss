@@ -1,0 +1,112 @@
+// Design 9c, choreographed the way docs/conventions/frontend-architecture-guide.md 2.4
+// asks for: one stylesheet beside the swapping region, and the reasoning for each
+// non-obvious rule kept in that section rather than repeated here.
+//
+// Forward the pane arrives from 10px right over 300ms; back the library returns from 6px
+// left over 260ms. Leaves are shorter and ease in, which is 2.4's asymmetry. The direction
+// is published on the root by AppShell from navigationDirection().
+
+:root {
+  view-transition-name: none;
+}
+
+// 2.4 rule 2: the masthead is identical before and after and paints above the pane, so it
+// is captured and only the new snapshot is painted, held steady.
+::view-transition-group(masthead),
+::view-transition-new(masthead) {
+  animation: none;
+  opacity: 1;
+}
+
+::view-transition-old(masthead) {
+  animation: none;
+  opacity: 0;
+}
+
+// 2.4 rule 3: re-assert the real z-order, which snapshot paint order otherwise loses.
+::view-transition-group(pane) {
+  z-index: 1;
+  animation-duration: var(--motion-arrive);
+  animation-timing-function: var(--motion-ease);
+}
+
+::view-transition-group(masthead) {
+  z-index: 2;
+}
+
+// The default cross-fade blends the two snapshots additively, which washes out everything
+// they overlap on once the opacity below is ours rather than the browser's.
+::view-transition-old(pane),
+::view-transition-new(pane) {
+  mix-blend-mode: normal;
+}
+
+@keyframes paneEnterForward {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes paneLeaveForward {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+@keyframes paneEnterBack {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes paneLeaveBack {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+:root[data-nav-direction="forward"]::view-transition-new(pane) {
+  animation: paneEnterForward var(--motion-arrive) var(--motion-ease) both;
+}
+
+:root[data-nav-direction="forward"]::view-transition-old(pane) {
+  animation: paneLeaveForward 180ms ease-in both;
+}
+
+:root[data-nav-direction="back"]::view-transition-new(pane) {
+  animation: paneEnterBack var(--motion-travel) var(--motion-ease) both;
+}
+
+:root[data-nav-direction="back"]::view-transition-old(pane) {
+  animation: paneLeaveBack 160ms ease-in both;
+}
+
+// shouldAnimateNavigation() already refuses to start one of these, so this is the belt to
+// its braces: a transition begun any other way still comes out at its end state.
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

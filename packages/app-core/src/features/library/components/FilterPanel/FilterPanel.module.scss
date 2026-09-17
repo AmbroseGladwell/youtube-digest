@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -51,12 +53,18 @@
   font-family: var(--font-body);
   font-size: 0.78rem;
   cursor: pointer;
+
+  @include controls.outlined-control;
 }
 
+// An active toggle is the one outlined pill that paints its own ground, so it takes the
+// tinted treatment: the neutral wash would replace its accent rather than deepen it.
 .toggleActive {
   border-color: var(--accent);
   background: var(--accent-tint);
   color: var(--accent-deep);
+
+  @include controls.tinted-control;
 }
 
 .list {
@@ -79,6 +87,13 @@
   color: var(--faint);
   text-align: left;
   cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+// A list row, not a pill: the ground moves under it and its ink is left alone, which is
+// what keeps an active option's accent visible while the pointer is on it.
+.option:hover {
+  background: var(--ink-wash);
 }
 
 .optionActive {

@@ -1,18 +1,41 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router";
+import { useLayoutEffect, useRef } from "react";
+import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/types";
 import { Routes } from "../../app/Routes.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
+import {
+  navigationDirection,
+  shouldAnimateNavigation,
+  useShouldAnimateNavigation,
+} from "../../util/viewTransitions.js";
 import styles from "./AppShell.module.scss";
+import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 
 export function AppShell() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
+  const animateNavigation = useShouldAnimateNavigation();
+
+  // paneTransitions.scss keys the way in and the way back off this, and it has to be on
+  // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
+  // layout effect lands it inside the router's own DOM update, which is the moment the
+  // browser takes the "after" snapshot.
+  const previousPathname = useRef(pathname);
+  useLayoutEffect(() => {
+    document.documentElement.dataset.navDirection = navigationDirection(
+      previousPathname.current,
+      pathname,
+    );
+    previousPathname.current = pathname;
+  }, [pathname]);
+
   // The shell is the one component that survives every navigation, so the run it owns can
   // outlive both the dialog it was started from and the page it was started on
   // (docs/features/overview-redesign.md, "Generating in the background").
@@ -20,7 +43,7 @@ export function AppShell() {
 
   const readOverview = (overview: Overview) => {
     newOverview.dismiss();
-    void navigate(Routes.overview(overview.id));
+    void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
   };
 
   return (
@@ -54,6 +77,7 @@ export function AppShell() {
             <NavLink
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
               to={Routes.home()}
+              viewTransition={animateNavigation}
               end
             >
               Overviews
@@ -61,6 +85,7 @@ export function AppShell() {
             <NavLink
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
               to={Routes.settings()}
+              viewTransition={animateNavigation}
               data-testid={appShellTestIds.settingsLink}
             >
               Settings
@@ -81,6 +106,8 @@ export function AppShell() {
       <div className={styles.pane} data-testid={appShellTestIds.pane}>
         <Outlet />
       </div>
+
+      <ScrollRestoration />
 
       <NewOverviewDialog
         open={newOverview.dialogOpen}

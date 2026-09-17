@@ -26,13 +26,22 @@ export function ReadAlongNote({ lines, activeIndex, onSelectLine }: ReadAlongNot
             type="button"
             ref={active ? activeLine : null}
             className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
-              active ? styles.lineActive : ""
-            }`}
+              line.bullet ? styles.bulletLine : ""
+            } ${active ? styles.lineActive : ""}`}
             aria-current={active}
             onClick={() => onSelectLine(index)}
             data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
           >
-            {line.text}
+            {line.bullet && (
+              <span
+                className={styles.bullet}
+                aria-hidden="true"
+                data-testid={readAlongNoteTestIds.bullet}
+              >
+                •
+              </span>
+            )}
+            <span data-testid={readAlongNoteTestIds.lineText}>{line.text}</span>
           </button>
         );
       })}

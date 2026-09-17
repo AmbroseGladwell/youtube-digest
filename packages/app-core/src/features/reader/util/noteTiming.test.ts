@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { NoteLine } from "../types/NoteLine.js";
 import { elapsedSecondsBefore, noteTiming } from "./noteTiming.js";
 
-const body = (text: string): NoteLine => ({ section: "Summary", heading: false, text });
+const body = (text: string): NoteLine => ({
+  section: "Summary",
+  heading: false,
+  bullet: false,
+  text,
+});
 
 const wordsLine = (count: number) => body(Array.from({ length: count }, () => "word").join(" "));
 

@@ -43,6 +43,11 @@
   text-align: left;
   color: var(--faint);
   cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+.section:hover {
+  background: var(--ink-wash);
 }
 
 .sectionCurrent {
@@ -57,7 +62,7 @@
   margin: 0.625rem 0 0;
   font-size: 0.78rem;
   line-height: 1.6;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .jumpLink {

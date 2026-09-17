@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -17,6 +19,11 @@
   text-decoration: none;
   border-bottom: 1px solid var(--accent);
   padding-bottom: 1px;
+  transition: color var(--motion-state) ease-out;
+}
+
+.backLink:hover {
+  color: var(--accent-deep);
 }
 
 .breadcrumb {
@@ -45,6 +52,9 @@
 .stepLink {
   color: var(--faint);
   text-decoration: none;
+  padding-bottom: 1px;
+
+  @include controls.quiet-control;
 }
 
 .position {
@@ -150,6 +160,8 @@
   border: 1px solid var(--edge);
   background: transparent;
   color: var(--muted);
+
+  @include controls.outlined-control;
 }
 
 .actionActive {
@@ -161,6 +173,8 @@
   border: 1px solid var(--accent);
   background: var(--accent-tint);
   color: var(--accent-deep);
+
+  @include controls.tinted-control;
 }
 
 // The phone reader keeps the back link and drops the breadcrumb and the stepper: design

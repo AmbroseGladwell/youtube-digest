@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 // The accent field is spent on the player alone — everything else in the reader is type
 // on the bare ground (docs/features/overview-redesign.md).
 .root {
@@ -46,16 +48,26 @@
   gap: var(--gap-control);
 }
 
+// The wash a press needs somewhere to land, so the two glyphs take a real target and an
+// equal negative margin gives the space straight back: the bar's laid-out rhythm is the
+// design's, and only the hit area grows.
 .step {
   border: 0;
+  border-radius: var(--radius-btn);
   background: transparent;
-  padding: 0;
+  padding: 0.25rem 0.4rem;
+  margin: -0.25rem -0.4rem;
   font-size: 0.94rem;
   color: inherit;
   cursor: pointer;
+
+  @include controls.icon-control;
 }
 
 .play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
   border: 1.5px solid currentColor;
@@ -64,6 +76,8 @@
   color: inherit;
   font-size: 0.94rem;
   cursor: pointer;
+
+  @include controls.icon-control;
 }
 
 .nowReading {
@@ -87,6 +101,19 @@
   color: inherit;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+
+  @include controls.control-motion;
+}
+
+// Inside the accent field the neutral ink wash would read as grey on orange, so the two
+// pills here take the same currentColor wash the round controls do.
+.rate:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.rate:active {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  transform: translateY(1px);
 }
 
 .favourite {
@@ -95,15 +122,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;
+  height: 1.875rem;
   border: 1.5px solid currentColor;
   border-radius: var(--radius-btn);
   background: transparent;
   color: inherit;
   font-size: 0.82rem;
   cursor: pointer;
+
+  @include controls.icon-control;
 }
+
+// Follows the library row's circle, so the control keeps its shape between a row and the
+// note that row opens. Its border stays currentColor rather than taking the row's --edge:
+// inside the accent field a neutral grey edge would be the one cold line on it.
 
 // Design 2c's phone player: progress across the top, then rate, transport and ♡ on one
 // row, with what's being read underneath.

@@ -5,17 +5,18 @@ import { WATCH_ANYWAY_LABEL } from "../../overviews/watchAnywayLabel.js";
 import type { NoteLine } from "../types/NoteLine.js";
 
 export const SUMMARY_SECTION = "Summary";
+export const KEY_POINTS_SECTION = "Key points";
 
 export function overviewNoteLines(overview: Overview): NoteLine[] {
   const lines: NoteLine[] = [];
 
-  const section = (name: string, heading: string, bodies: string[]) => {
+  const section = (name: string, heading: string, bodies: string[], bullet = false) => {
     if (bodies.length === 0) {
       return;
     }
-    lines.push({ section: name, heading: true, text: heading });
+    lines.push({ section: name, heading: true, bullet: false, text: heading });
     for (const text of bodies) {
-      lines.push({ section: name, heading: false, text });
+      lines.push({ section: name, heading: false, bullet, text });
     }
   };
 
@@ -29,7 +30,7 @@ export function overviewNoteLines(overview: Overview): NoteLine[] {
     ]);
   }
 
-  section("Key points", "Key points", overview.keyPoints);
+  section(KEY_POINTS_SECTION, KEY_POINTS_SECTION, overview.keyPoints, true);
   section("How to apply", "How to apply", overview.howToApply?.items ?? []);
 
   if (overview.selling && overview.selling.type !== "none") {

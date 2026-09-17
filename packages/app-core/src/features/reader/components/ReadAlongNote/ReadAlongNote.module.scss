@@ -18,6 +18,11 @@
   text-align: left;
   line-height: 1.65;
   cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+.line:hover:not(.lineActive) {
+  background: var(--ink-wash);
 }
 
 .headingLine {
@@ -35,6 +40,20 @@
   margin-bottom: 0.125rem;
   font-size: 1.0625rem;
   color: var(--muted);
+}
+
+// Key points are the one section the note format sets as a list, so its lines carry the
+// design's accent bullet. It is decorative and aria-hidden: the line is read aloud and
+// counted from `text`, which never holds the mark.
+.bulletLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+}
+
+.bullet {
+  flex: none;
+  color: var(--accent);
 }
 
 // The reading mark is the design's only moving accent: a rule down the left and a wash

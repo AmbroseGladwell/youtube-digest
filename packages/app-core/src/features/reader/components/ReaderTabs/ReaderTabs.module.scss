@@ -20,11 +20,33 @@
   color: var(--faint);
   border-bottom: 2px solid transparent;
   cursor: pointer;
+  transition: color var(--motion-ink) ease-out;
 }
 
-.tabActive {
+.tab:hover {
+  color: var(--ink);
+}
+
+.tabActive,
+.tabActive:hover {
   color: var(--accent-strong);
-  border-bottom-color: var(--accent);
+}
+
+// Design 9b: one rule that travels between the labels, so the eye follows it to the new
+// tab rather than losing it and finding it again. The duration is fixed regardless of
+// distance — skipping two tabs takes the same 260ms, which keeps the far tab feeling
+// quick rather than laboured. Position and width come from useTabIndicator.
+.indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: var(--tab-width);
+  background: var(--accent);
+  transform: translateX(var(--tab-offset));
+  transition:
+    transform var(--motion-travel) var(--motion-ease),
+    width var(--motion-travel) var(--motion-ease);
 }
 
 @media (max-width: 61.9375rem) {

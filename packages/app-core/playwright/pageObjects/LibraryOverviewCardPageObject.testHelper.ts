@@ -57,6 +57,117 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
+  // On a phone the actions sit under the text rather than beside it, so their left edge
+  // has to be the title's. It is a grid column rather than a padding, and the widths that
+  // have to add up — the thumbnail column, its gap, and three touch-sized pills — are set
+  // in three different places, so nothing else would notice them drifting apart.
+  verifyActionsLineUpWithTheTitle = () =>
+    this.step("verifyActionsLineUpWithTheTitle", async () => {
+      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+      const favourite = (await this.get(libraryOverviewCardTestIds.favouriteButton).boundingBox())!;
+      const listen = (await this.get(libraryOverviewCardTestIds.listenLink).boundingBox())!;
+
+      expect(Math.round(favourite.x)).toBe(Math.round(title.x));
+      expect(favourite.y).toBeGreaterThan(title.y);
+      expect(Math.round(listen.y)).toBe(Math.round(favourite.y));
+    });
+
+  verifyActionsAreTouchSized = () =>
+    this.step("verifyActionsAreTouchSized", async () => {
+      for (const testId of [
+        libraryOverviewCardTestIds.favouriteButton,
+        libraryOverviewCardTestIds.readButton,
+        libraryOverviewCardTestIds.listenLink,
+      ]) {
+        const box = (await this.get(testId).boundingBox())!;
+        expect(Math.round(box.height)).toBe(38);
+      }
+    });
+
+  // A row's chrome is its whole resting appearance, so it is read off the laid-out element
+  // rather than asserted as a class: the point is that nothing is painted, not that a
+  // particular rule is absent from a stylesheet.
+  private chrome = () =>
+    this.card.evaluate((row) => {
+      const style = getComputedStyle(row);
+      return {
+        shadow: style.boxShadow,
+        border: style.borderTopColor,
+        background: style.backgroundColor,
+        transform: style.transform,
+      };
+    });
+
+  private static readonly TRANSPARENT = "rgba(0, 0, 0, 0)";
+
+  verifyHasNoChrome = () =>
+    this.step("verifyHasNoChrome", () =>
+      expect(async () => {
+        const { shadow, border, background } = await this.chrome();
+        expect(shadow).toBe("none");
+        expect(border).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(background).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  // The surface is asserted alongside the border and the shadow because it is what does the
+  // lifting: a dark row's shadow at half opacity over near-black is nearly invisible, so a
+  // tile that painted the ground back onto itself would look like no tile at all. The
+  // transform is asserted as absent because the lift is a surface, never a move.
+  verifyShowsItsTile = () =>
+    this.step("verifyShowsItsTile", () =>
+      expect(async () => {
+        const { shadow, border, background, transform } = await this.chrome();
+        expect(shadow).not.toBe("none");
+        expect(border).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(background).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(transform).toBe("none");
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  hoverTitle = () =>
+    this.step("hoverTitle", () => this.get(libraryOverviewCardTestIds.titleLink).hover());
+
+  focusFirstControl = () =>
+    this.step("focusFirstControl", () =>
+      this.get(libraryOverviewCardTestIds.favouriteButton).focus(),
+    );
+
+  titleLeftEdge = async () =>
+    Math.round((await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!.x);
+
+  // Against the row rather than a hardcoded width: what matters is that the title has the
+  // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
+  // would also move every time the row's own padding or border did.
+  verifyMetaReads = (meta: string) =>
+    this.step(`verifyMetaReads ${meta}`, () =>
+      expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta),
+    );
+
+  // The circle and the pill beside it are one row of controls, so they have to agree on a
+  // height and an edge. They got there separately — one sized to the reader's player bar,
+  // one to its own type — and the heart's outline was derived from its ink, so it drifted
+  // every time that ink was retuned.
+  verifyActionsAgreeOnHeightAndEdge = () =>
+    this.step("verifyActionsAgreeOnHeightAndEdge", async () => {
+      const read = this.get(libraryOverviewCardTestIds.readButton);
+      const favourite = this.get(libraryOverviewCardTestIds.favouriteButton);
+
+      const [readBox, favouriteBox] = [await read.boundingBox(), await favourite.boundingBox()];
+      expect(Math.round(favouriteBox!.height)).toBe(Math.round(readBox!.height));
+
+      const edge = (locator: typeof read) =>
+        locator.evaluate((el) => getComputedStyle(el).borderTopColor);
+      expect(await edge(favourite)).toBe(await edge(read));
+    });
+
+  verifyTitleSpansTheRow = () =>
+    this.step("verifyTitleSpansTheRow", async () => {
+      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+      const row = (await this.get(libraryOverviewCardTestIds.row).boundingBox())!;
+      expect(Math.round(title.width)).toBe(Math.round(row.width));
+    });
+
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
   verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
 }

@@ -1,5 +1,6 @@
-import type { Ref } from "react";
+import type { CSSProperties, Ref } from "react";
 import { READER_TABS, type ReaderTab } from "../../types/ReaderTab.js";
+import { useTabIndicator } from "./useTabIndicator.js";
 import styles from "./ReaderTabs.module.scss";
 import { readerTabsTestIds } from "./ReaderTabsTestIds.js";
 
@@ -12,6 +13,8 @@ export interface ReaderTabsProps {
 }
 
 export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabsProps) {
+  const indicator = useTabIndicator(active);
+
   return (
     <div
       className={styles.root}
@@ -26,6 +29,7 @@ export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabs
           type="button"
           role="tab"
           id={tabId(tab)}
+          ref={indicator.tabRef[tab]}
           aria-selected={tab === active}
           aria-controls={panelId(tab)}
           className={`${styles.tab} ${tab === active ? styles.tabActive : ""}`}
@@ -35,6 +39,17 @@ export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabs
           {tab}
         </button>
       ))}
+      <span
+        className={styles.indicator}
+        aria-hidden="true"
+        style={
+          {
+            "--tab-offset": `${indicator.offset}px`,
+            "--tab-width": `${indicator.width}px`,
+          } as CSSProperties
+        }
+        data-testid={readerTabsTestIds.indicator}
+      />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { Link } from "react-router";
 import type { Novelty } from "@overview/types";
+import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
+import { overviewMetaParts } from "../../../overviews/util/overviewMetaParts.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
@@ -38,9 +40,11 @@ export function LibraryOverviewCard({
   onToggleFavourite,
   onToggleRead,
 }: LibraryOverviewCardProps) {
+  const animateNavigation = useShouldAnimateNavigation();
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
+  const metaParts = overviewMetaParts(overview);
 
   return (
     <article
@@ -48,8 +52,8 @@ export function LibraryOverviewCard({
       data-entering={entering || undefined}
       data-testid={libraryOverviewCardTestIds.root}
     >
-      <div className={styles.row}>
-        <OverviewThumbnail video={overview.video} to={readerPath} />
+      <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
+        <OverviewThumbnail video={overview.video} to={readerPath} className={styles.thumbnail} />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
             {topicNames.map((name) => (
@@ -67,12 +71,21 @@ export function LibraryOverviewCard({
             {selling && <span className={styles.selling}>{selling}</span>}
           </p>
 
-          <Link className={styles.titleLink} to={readerPath} data-testid={libraryOverviewCardTestIds.titleLink}>
+          <Link
+            className={styles.titleLink}
+            to={readerPath}
+            viewTransition={animateNavigation}
+            data-testid={libraryOverviewCardTestIds.titleLink}
+          >
             <span className={styles.title}>{overview.video.title}</span>
             <span className={styles.meta}>
               <span className={styles.channel}>{overview.video.channel}</span> · {overview.inOneLine}
             </span>
           </Link>
+
+          <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
+            {metaParts.join(" · ")}
+          </p>
         </div>
 
         <div className={styles.actions}>
@@ -99,6 +112,7 @@ export function LibraryOverviewCard({
           <Link
             className={styles.primaryAction}
             to={readerPath}
+            viewTransition={animateNavigation}
             data-testid={libraryOverviewCardTestIds.listenLink}
           >
             Listen

@@ -6,12 +6,26 @@
 // Contrast, checked against the ground each colour sits on: --faint (#605d5d on #f3f2f2)
 // is 6.1:1, --accent-strong (#b03c12) 5.6:1, and --accent-deep (#8f3210) 7:1 on the
 // accent tint, which is why the tint carries its own ink token rather than reusing
-// --accent-strong. Preserve that if the palette moves.
+// --accent-strong. Preserve that if the palette moves. The deeper hover and press tints
+// keep --accent-deep at 5.2:1 and 4.7:1 on the same measurement, so a pill stays readable
+// while it is being pressed.
+//
+// The motion values are design turn 9's one rule: state changes in 80–160ms, arrivals in
+// 240–300ms, all on --motion-ease unless the animation is noted otherwise
+// (docs/features/overview-redesign.md, "The small movements").
 
 :root {
   --ground: #f3f2f2;
   --surface: #f8f4f4;
   --sunk: #eae7e7;
+  // Three weights of text, and the line between the last two is what each is for rather
+  // than how important it is: --muted is prose you read — a description, a verdict, a hint
+  // — and --faint is what you scan past, being labels, counts, clocks and placeholders.
+  // Design 12d draws that line on a library row, summary and verdict against durations.
+  //
+  // The dark --muted is 12d's #bab6b6 rather than a mirror of #444141. Every other step
+  // lands within 1.2 contrast points of its light counterpart; at #d7d3d3 this one sat 2.67
+  // brighter, so the dark body read heavier than the light one it was supposed to match.
   --ink: #201f1d;
   --muted: #444141;
   --faint: #605d5d;
@@ -19,17 +33,42 @@
   --divider: color-mix(in srgb, #201f1d 16%, transparent);
   --edge: #bab6b6;
 
+  // The surface a library row raises to under the pointer. On the light ground it is the
+  // ground: the border and --shadow-sm carry the tile on their own, and a lighter fill
+  // would read as a second paper stock. On the dark one a shadow at half opacity over
+  // near-black is nearly invisible, so the lift has to be the surface itself — one step up
+  // from --ground, which is what actually reads as raised there.
+  --raised: #f3f2f2;
+
   --accent: #e2511e;
   --accent-strong: #b03c12;
   --accent-deep: #8f3210;
   --accent-tint: color-mix(in srgb, #e2511e 16%, #f3f2f2);
+  --accent-tint-hover: color-mix(in srgb, #e2511e 26%, #f3f2f2);
+  --accent-tint-press: color-mix(in srgb, #e2511e 34%, #f3f2f2);
   --accent-wash: color-mix(in srgb, #e2511e 9%, transparent);
+
+  --ink-wash: color-mix(in srgb, var(--ink) 6%, transparent);
+  --ink-wash-press: color-mix(in srgb, var(--ink) 12%, transparent);
 
   --font-heading: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --font-body: "Lora", Georgia, "Times New Roman", serif;
 
+  // The design system's own three steps. --shadow-sm is a contact edge rather than a lift:
+  // 1px down, 2px blur, no spread, and warm grey rather than black so it doesn't go cold
+  // against the ground. --shadow is the system's --shadow-md, three times the offset, so
+  // a row carrying the small one never competes with the frame it sits in.
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
   --shadow: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+
+  --motion-press: 80ms;
+  --motion-state: 120ms;
+  --motion-tile: 140ms;
+  --motion-ink: 160ms;
+  --motion-travel: 260ms;
+  --motion-arrive: 300ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   --measure: 46rem;
   --masthead-height: 3.5rem;
@@ -44,20 +83,28 @@
 @mixin dark-tokens {
   --ground: #1b1a19;
   --surface: #201f1d;
-  --sunk: #2d2b2b;
-  --ink: #f3f2f2;
-  --muted: #d7d3d3;
+  --sunk: #2a2827;
+  --ink: #f8f4f4;
+  --muted: #bab6b6;
   --faint: #9b9797;
   --line: #3a3836;
   --divider: color-mix(in srgb, #f3f2f2 18%, transparent);
   --edge: #605d5d;
 
+  --raised: #232120;
+
   --accent: #f0794a;
   --accent-strong: #f0794a;
   --accent-deep: #ffc9ad;
   --accent-tint: color-mix(in srgb, #e2511e 26%, #1b1a19);
+  --accent-tint-hover: color-mix(in srgb, #e2511e 36%, #1b1a19);
+  --accent-tint-press: color-mix(in srgb, #e2511e 44%, #1b1a19);
   --accent-wash: color-mix(in srgb, #e2511e 22%, transparent);
 
+  --ink-wash: color-mix(in srgb, var(--ink) 8%, transparent);
+  --ink-wash-press: color-mix(in srgb, var(--ink) 14%, transparent);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }

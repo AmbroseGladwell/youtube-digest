@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 // Design 4a/5a: a centred dialog on a desktop, the same panel as a bottom sheet on a
 // phone. The <dialog> element itself is the positioner, so it carries no paint — and it is
 // what the entrance animates, so that the sheet's travel is a percentage of its own height.
@@ -100,11 +102,15 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .close {
   border: 0;
+  border-radius: var(--radius-btn);
   background: transparent;
-  padding: 0;
+  padding: 0.25rem 0.4rem;
+  margin: -0.25rem -0.4rem;
   font-size: 1rem;
   color: var(--faint);
   cursor: pointer;
+
+  @include controls.icon-control;
 }
 
 .source {
@@ -268,7 +274,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 .footNote {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .secondaryAction,
@@ -285,6 +291,8 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   border: 1px solid var(--edge);
   background: transparent;
   color: var(--faint);
+
+  @include controls.outlined-control;
 }
 
 .primaryAction {
@@ -292,6 +300,8 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   background: var(--accent-tint);
   color: var(--accent-deep);
   padding-inline: 1.25rem;
+
+  @include controls.tinted-control;
 }
 
 .quietAction {
@@ -302,6 +312,8 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   font-size: 0.78rem;
   color: var(--faint);
   cursor: pointer;
+
+  @include controls.quiet-control;
 }
 
 @keyframes sweep {

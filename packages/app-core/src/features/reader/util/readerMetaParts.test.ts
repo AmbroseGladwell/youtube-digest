@@ -3,7 +3,12 @@ import { noteTiming } from "./noteTiming.js";
 import { readerMetaParts } from "./readerMetaParts.js";
 
 const timing = noteTiming([
-  { section: "Summary", heading: false, text: Array.from({ length: 660 }, () => "word").join(" ") },
+  {
+    section: "Summary",
+    heading: false,
+    bullet: false,
+    text: Array.from({ length: 660 }, () => "word").join(" "),
+  },
 ]);
 
 describe("readerMetaParts", () => {

@@ -19,8 +19,7 @@ import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.j
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { noteSectionNames, overviewNoteLines } from "../util/overviewNoteLines.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
-import { noteTiming } from "../util/noteTiming.js";
-import { readerMetaParts } from "../util/readerMetaParts.js";
+import { overviewMetaParts } from "../../overviews/util/overviewMetaParts.js";
 import { useReadAlong } from "./useReadAlong.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import styles from "./ReaderPage.module.scss";
@@ -85,7 +84,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     .filter((name): name is string => name !== undefined);
 
   const neighbours = overviewNeighbours(orderOverviewsBySavedAt(libraryQuery.data ?? []), overviewId);
-  const metaParts = readerMetaParts(noteTiming(lines), overview.video.durationMs);
+  const metaParts = overviewMetaParts(overview);
   const range = overview.watchAnyway?.range ?? null;
 
   return (
@@ -106,7 +105,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={setTab} ref={tabsHeight.measured} />
 
       <div className={styles.grid}>
-        <div className={styles.main} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
+        <div
+          key={tab}
+          className={`${styles.main} ${styles.panel}`}
+          role="tabpanel"
+          id={panelId(tab)}
+          aria-labelledby={tabId(tab)}
+        >
           {tab === "Overview" && (
             <div data-testid={readerPageTestIds.overviewPanel}>
               <ReadAlongNote
