@@ -96,6 +96,19 @@ test("a row drops the video term when the source recorded no duration, rather th
   await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen");
 });
 
+test("a row's favourite and Read line up, and the note's favourite keeps the row's shape", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(makeOverview());
+
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).verifyActionsAgreeOnHeightAndEdge();
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyFavouriteMatchesTheRow(30);
+});
+
 test("a row carries no chrome until you point at it, and its text doesn't move when it does", async ({
   launcher,
   backendSimulator,

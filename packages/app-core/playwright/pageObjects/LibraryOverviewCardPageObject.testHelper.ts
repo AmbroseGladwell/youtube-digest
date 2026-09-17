@@ -144,6 +144,23 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta),
     );
 
+  // The circle and the pill beside it are one row of controls, so they have to agree on a
+  // height and an edge. They got there separately — one sized to the reader's player bar,
+  // one to its own type — and the heart's outline was derived from its ink, so it drifted
+  // every time that ink was retuned.
+  verifyActionsAgreeOnHeightAndEdge = () =>
+    this.step("verifyActionsAgreeOnHeightAndEdge", async () => {
+      const read = this.get(libraryOverviewCardTestIds.readButton);
+      const favourite = this.get(libraryOverviewCardTestIds.favouriteButton);
+
+      const [readBox, favouriteBox] = [await read.boundingBox(), await favourite.boundingBox()];
+      expect(Math.round(favouriteBox!.height)).toBe(Math.round(readBox!.height));
+
+      const edge = (locator: typeof read) =>
+        locator.evaluate((el) => getComputedStyle(el).borderTopColor);
+      expect(await edge(favourite)).toBe(await edge(read));
+    });
+
   verifyTitleSpansTheRow = () =>
     this.step("verifyTitleSpansTheRow", async () => {
       const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;

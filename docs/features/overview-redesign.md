@@ -478,6 +478,33 @@ string, and `noteTiming` counting "•" as a word would put the bullet into "4 m
 So it is a separate `aria-hidden` element, and the line's own words carry their own test
 id — which is why `verifyActiveLineReads` asserts on that rather than on the button.
 
+## A row is a strip, not a block
+
+Design 12d's row geometry, and the reason it is worth having: **the thumbnail column is
+132px, not the 264px the app had drifted to.** That is not really a change to the image. The
+thumbnail was what set the row's height, so halving it hands that job to the text and the
+row goes from **149px to 86px** — 42% shorter, nearly twice as many overviews on a screen.
+For a tool whose whole point is triage, the row wants to be a strip you scan rather than a
+block you read. The title gets ~130px back with it.
+
+Two consequences worth knowing. The row's thumbnail is now *smaller* than the reader's
+148px, inverting what it was — which is the right way round, since a row is an index and the
+reader is the thing itself. And 132px is exactly half of the `16.5rem` both rails use, so
+the arithmetic stays tidy.
+
+**The favourite is 30px, on `--edge`.** Both halves of that fix a drift rather than
+following a spec for its own sake. The circle was 32px next to a `Mark read` pill that is
+30px, so the two controls in one row of actions disagreed by 2px; and its outline was
+`currentColor`, derived from its own ink, so it moved every time that ink was retuned —
+most recently landing on `#bab6b6` while the pill beside it stayed `#605d5d`. What the two
+share is an edge, not an ink, so the heart now takes `--edge` as the pill does.
+
+The reader's player-bar heart follows to 30px, because the row's circle and the note's are
+deliberately one number — the control keeps its shape between a row and the note that row
+opens. Its *border* does not follow: inside the accent field a neutral grey edge would be
+the one cold line on it, so it stays `currentColor`. `libraryActions.iwft.ts` holds both the
+row's agreement and the reader's match.
+
 ## Two weights of secondary text
 
 Design 12d draws a line on a library row that the app's palette did not have: the summary

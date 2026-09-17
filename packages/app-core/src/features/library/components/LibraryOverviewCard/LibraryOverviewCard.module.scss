@@ -106,7 +106,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 16.5rem 1fr auto;
+  grid-template-columns: 8.25rem 1fr auto;
   gap: 1.25rem;
   align-items: start;
 }
@@ -234,15 +234,20 @@
 }
 
 // The same circle the reader's player bar draws, so the control doesn't change shape
-// between the row and the note it opens.
+// between the row and the note it opens. 1.875rem is the height of the Read pill beside
+// it, which is the thing it has to line up with here.
+//
+// Its outline is --edge rather than currentColor, which is what Read's is: derived from the
+// ink, it followed --muted around and ended up a different weight from the pill it sits
+// next to. What the two share is an edge, not an ink.
 .favouriteAction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;
+  height: 1.875rem;
   border-width: 1.5px;
-  border-color: currentColor;
+  border-color: var(--edge);
   padding: 0;
   font-size: 0.82rem;
 

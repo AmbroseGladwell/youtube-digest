@@ -122,8 +122,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;
+  height: 1.875rem;
   border: 1.5px solid currentColor;
   border-radius: var(--radius-btn);
   background: transparent;
@@ -133,6 +133,10 @@
 
   @include controls.icon-control;
 }
+
+// Follows the library row's circle, so the control keeps its shape between a row and the
+// note that row opens. Its border stays currentColor rather than taking the row's --edge:
+// inside the accent field a neutral grey edge would be the one cold line on it.
 
 // Design 2c's phone player: progress across the top, then rate, transport and ♡ on one
 // row, with what's being read underneath.

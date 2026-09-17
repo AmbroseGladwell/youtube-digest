@@ -60,6 +60,15 @@ export class ReaderPageObject extends PageObject {
     this.step("clickPreviousLine", () => this.click(readerPlayerBarTestIds.previousButton));
   clickRate = () => this.step("clickRate", () => this.click(readerPlayerBarTestIds.rateButton));
   clickFavourite = () => this.step("clickFavourite", () => this.click(readerPlayerBarTestIds.favouriteButton));
+
+  // The player bar's circle is the row's circle: the control keeps its shape between a row
+  // and the note that row opens, which is the whole reason the two sizes are one number.
+  verifyFavouriteMatchesTheRow = (size: number) =>
+    this.step(`verifyFavouriteMatchesTheRow ${size}`, async () => {
+      const box = (await this.get(readerPlayerBarTestIds.favouriteButton).boundingBox())!;
+      expect(Math.round(box.width)).toBe(size);
+      expect(Math.round(box.height)).toBe(size);
+    });
   clickMarkRead = () => this.step("clickMarkRead", () => this.click(readerMastheadTestIds.readButton));
 
   clickSection = (section: string) =>
