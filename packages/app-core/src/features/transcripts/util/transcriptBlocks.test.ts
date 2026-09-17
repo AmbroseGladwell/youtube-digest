@@ -120,6 +120,30 @@ describe("transcriptBlocks", () => {
     expect(blocks[0]?.text).toBe("So this is spaced out, badly.");
   });
 
+  it("drops the non-speech annotations YouTube writes in square brackets", () => {
+    const blocks = transcriptBlocks(
+      captionRun(["[Applause] That is the whole idea.", "[MUSIC PLAYING] And here is the next one."]),
+    );
+
+    expect(blocks[0]?.text).toBe("That is the whole idea. And here is the next one.");
+  });
+
+  it("keeps a bracketed speaker name, which is an annotation of who is talking, not of noise", () => {
+    const blocks = transcriptBlocks(captionRun(["[Alice] I think that is right."]));
+
+    expect(blocks[0]?.text).toBe("[Alice] I think that is right.");
+  });
+
+  it("skips a caption that is nothing but an annotation", () => {
+    const blocks = transcriptBlocks([
+      makeTranscriptSegment({ text: "[Music]", startMs: 0, endMs: 3000 }),
+      makeTranscriptSegment({ text: "Real words here.", startMs: 3000, endMs: 6000 }),
+    ]);
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]?.startMs).toBe(3000);
+  });
+
   it("strips the speaker markers YouTube puts in its captions", () => {
     const blocks = transcriptBlocks(captionRun([">> And then she said"]));
 
@@ -151,7 +175,7 @@ describe("transcriptBlocks", () => {
     ].map((cue) => makeTranscriptSegment(cue));
 
     expect(transcriptBlocks(interview).map((block) => block.text)).toEqual([
-      "[music] Today we're speaking with Professor Tracy K. Smith, Pulitzer Prizewinning poet, former US poet laurate, and professor of English at Harvard University.",
+      "Today we're speaking with Professor Tracy K. Smith, Pulitzer Prizewinning poet, former US poet laurate, and professor of English at Harvard University.",
       "Thank you so much for being here, Professor Smith.",
       "Thank you.",
       "I came into your class after hearing you speak at the Harvard bookstore about your latest book, Fearless.",

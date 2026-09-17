@@ -106,6 +106,26 @@ The markers are stripped from the text at display rather than at fetch, because
 — and stripping at display also fixes every transcript stored before this. A `>>` in the
 middle of a cue is left alone.
 
+What a `>>` does *not* carry is who is talking. The convention is a bare "someone else now";
+a captioner may write `>> ALICE:` instead, and where they have, the name is part of the
+caption text and is displayed as they wrote it. Machine-heard captions carry no markers at
+all, so a transcript with no dashes anywhere is the normal case rather than a failure.
+
+## Noise in brackets is dropped; names in brackets are not
+
+`[Music]`, `[Applause]`, `[MUSIC PLAYING]`, `[laughter]` and the rest are annotations of the
+soundtrack, not of anything anyone said, and they read as litter in the middle of a
+paragraph. They are dropped at display, alongside the speaker markers and for the same
+reasons.
+
+Only bracketed text that actually names a non-speech sound is dropped, never every bracket,
+because the other thing a captioner puts in brackets is a speaker's name — `[Alice]` is the
+alternative to `>> ALICE:`, and deleting it would take away the very thing the em dash exists
+to supply. `[inaudible]` survives for the same reason: it marks something a reader should
+know is missing. A caption that is nothing but an annotation drops out entirely, which leaves
+a gap in the timings — and a long enough musical interlude then breaks the block on
+`silenceMs`, which is the right thing for it to do.
+
 Dropped: the reference's CJK whitespace-joining rules, which exist because that extension is
 bilingual by design and ours is not. Its CJK sentence and clause punctuation stays in the
 character classes, because without it a Chinese transcript would never find a boundary.
@@ -158,8 +178,8 @@ single transcript.
 - **Highlighting the "watch it anyway" range** inside the transcript. Closer than it was:
   a block carries `endMs` as well as `startMs`, so the range and a block are now in the same
   units and comparable directly.
-- **Restoring sentences in a machine-heard transcript**, and **filtering `[Music]` or
-  `[Applause]` cues**. Both would put something between the reader and the video's own words.
+- **Restoring sentences in a machine-heard transcript.** It would put a model between the
+  reader and the video's own words, and cost a call per transcript to do it.
 - **Reading the cache before fetching.** The pipeline writes the store and never reads it,
   so a second note on the same video still spends a credit. Skipping that fetch needs the
   video id *before* the transcript call, which means resolving metadata first and

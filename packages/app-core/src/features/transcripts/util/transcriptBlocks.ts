@@ -15,6 +15,9 @@ const LIMITS = {
 } as const;
 
 const SPEAKER_MARKER = /^\s*>>+\s*/;
+// Only the bracketed words that are never speech: a captioner may also bracket a speaker's
+// name (docs/features/transcript-storage.md), and that is theirs to keep.
+const NON_SPEECH = /\[[^\]]*\b(?:music|applause|applaud\w*|laugh\w*|cheer\w*)\b[^\]]*\]/gi;
 const CLOSERS = `["'’”»)\\]）】」』]*`;
 const SENTENCE_END = new RegExp(`[.!?。！？]${CLOSERS}$`);
 const CLAUSE_END = new RegExp(`[;:,；：，]${CLOSERS}$`);
@@ -117,6 +120,7 @@ function captionPieces(segments: TranscriptSegment[]): CaptionPiece[] {
 function normaliseCaption(text: string): string {
   return text
     .replace(SPEAKER_MARKER, "")
+    .replace(NON_SPEECH, "")
     .replace(/\s+/g, " ")
     .replace(/\s+([,.;:!?，。；：！？])/g, "$1")
     .trim();
