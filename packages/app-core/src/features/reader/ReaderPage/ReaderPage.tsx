@@ -128,7 +128,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               </div>
             </div>
           )}
-          {tab === "Transcript" && <TranscriptPanel />}
+          {tab === "Transcript" && <TranscriptPanel video={overview.video} />}
           {tab === "Chapters" && <ChaptersPanel />}
         </div>
 

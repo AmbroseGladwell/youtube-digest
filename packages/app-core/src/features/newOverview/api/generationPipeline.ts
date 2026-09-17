@@ -3,6 +3,7 @@ import {
   OverviewId,
   type Overview,
   type OverviewStore,
+  type TranscriptStore,
   type VideoSource,
 } from "@overview/types";
 import { generateOverview, type GenerationClient } from "@overview/generation";
@@ -21,6 +22,7 @@ export interface GenerationPipelineDeps {
   transcriptClient: TranscriptSourceClient;
   generationClient: GenerationClient;
   overviewStore: OverviewStore;
+  transcriptStore: TranscriptStore;
 }
 
 export interface RunOverviewGenerationOptions {
@@ -41,6 +43,16 @@ export async function runOverviewGeneration(
 
   const fetched = await fetchTranscript(deps.transcriptClient, url);
   const transcriptWords = fetched.transcript.reduce((total, segment) => total + countWords(segment.text), 0);
+
+  // Stored before generation runs, not after it (docs/features/transcript-storage.md).
+  if (fetched.video.id !== null) {
+    await deps.transcriptStore.saveTranscript({
+      videoId: fetched.video.id,
+      segments: fetched.transcript,
+      generated: fetched.generated,
+      fetchedAt: new Date().toISOString(),
+    });
+  }
 
   stopIfCancelled();
   options.onProgress?.({ video: fetched.video, transcriptWords });

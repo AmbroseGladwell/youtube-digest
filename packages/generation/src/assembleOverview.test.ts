@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, TopicId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, TopicId, VideoId } from "@overview/types";
 import { assembleOverview } from "./assembleOverview.js";
 import { GenerationError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
@@ -12,6 +12,7 @@ const financeId = TopicId.parse(randomUUID());
 
 const baseInput: GenerationInput = {
   video: {
+    id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
     channel: "Example Channel",

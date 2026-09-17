@@ -1,4 +1,4 @@
-import type { Overview, OverviewState, Topic } from "@overview/types";
+import type { Overview, OverviewState, StoredTranscript, Topic } from "@overview/types";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 
 // Playwright Component Testing serializes props/hooksConfig across the Node<->browser
@@ -11,5 +11,6 @@ export interface IwftHooksConfig {
   seedOverviews?: Overview[];
   seedStates?: OverviewState[];
   seedTopics?: Topic[];
+  seedTranscripts?: StoredTranscript[];
   apiKeys?: ApiKeys;
 }

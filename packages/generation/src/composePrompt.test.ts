@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, TopicId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/types";
 import { composePrompt } from "./composePrompt.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
 const baseInput: GenerationInput = {
   video: {
+    id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
     channel: "Example Channel",

@@ -4,6 +4,7 @@ import { App } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
+  IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
 
@@ -14,10 +15,11 @@ async function main() {
   const db = await openLocalDatabase();
   const overviewStore = new IndexedDbOverviewStore(db);
   const settingsStore = new IndexedDbSettingsStore(db);
+  const transcriptStore = new IndexedDbTranscriptStore(db);
 
   createRoot(container).render(
     <StrictMode>
-      <App stores={{ overviewStore, settingsStore }} />
+      <App stores={{ overviewStore, settingsStore, transcriptStore }} />
     </StrictMode>,
   );
 }

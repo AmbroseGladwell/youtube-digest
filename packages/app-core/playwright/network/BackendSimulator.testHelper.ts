@@ -1,5 +1,5 @@
 import type { Page, Route } from "@playwright/test";
-import type { Overview, OverviewId, OverviewState, Topic } from "@overview/types";
+import type { Overview, OverviewId, OverviewState, StoredTranscript, Topic, VideoId } from "@overview/types";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import { makeAnthropicMessageResponse, makeGeneratedOutputFixture } from "./fixtures/anthropicFixtures.js";
@@ -11,6 +11,7 @@ export class BackendSimulator {
   #seedOverviews: Overview[] = [];
   #seedStates: OverviewState[] = [];
   #seedTopics: Topic[] = [];
+  #seedTranscripts: StoredTranscript[] = [];
 
   #behaviours = new Map<EndpointKey, EndpointBehaviour>(
     Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
@@ -58,6 +59,7 @@ export class BackendSimulator {
     seedOverviews: this.#seedOverviews,
     seedStates: this.#seedStates,
     seedTopics: this.#seedTopics,
+    seedTranscripts: this.#seedTranscripts,
   });
 
   handleNetworking = async (): Promise<void> => {
@@ -130,6 +132,17 @@ export class BackendSimulator {
     },
     get: (id: OverviewId) =>
       this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId), id),
+  };
+
+  transcripts = {
+    seed: (transcript: StoredTranscript): void => {
+      this.#seedTranscripts.push(transcript);
+    },
+  };
+
+  transcriptStore = {
+    getTranscript: (videoId: VideoId) =>
+      this.#page.evaluate((id) => window.__iwftStores__.transcriptStore.getTranscript(id), videoId),
   };
 
   overviewStore = {

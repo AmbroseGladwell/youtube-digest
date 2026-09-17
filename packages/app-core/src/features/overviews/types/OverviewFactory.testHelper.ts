@@ -1,9 +1,16 @@
-import { DEFAULT_OVERVIEW_STATE, OverviewId, type Overview, type OverviewState } from "@overview/types";
+import {
+  DEFAULT_OVERVIEW_STATE,
+  OverviewId,
+  VideoId,
+  type Overview,
+  type OverviewState,
+} from "@overview/types";
 import type { OverviewWithState } from "./OverviewWithState.js";
 
 export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   id: OverviewId.parse(crypto.randomUUID()),
   video: {
+    id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
     channel: "Example Channel",

@@ -1,6 +1,10 @@
 import { z } from "zod";
+import { VideoId } from "./Brands.js";
 
 export const VideoSource = z.object({
+  // null only for notes generated before transcripts were stored against a video id
+  // (docs/features/transcript-storage.md).
+  id: VideoId.nullable(),
   url: z.url(),
   title: z.string(),
   channel: z.string(),

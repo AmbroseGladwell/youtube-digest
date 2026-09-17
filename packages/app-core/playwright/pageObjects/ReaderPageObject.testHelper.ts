@@ -115,8 +115,25 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  verifyShowsTranscriptPlaceholder = () =>
-    this.expectToBeVisible(transcriptPanelTestIds.placeholderNote);
+  verifyTranscriptLinesRead = (lines: string[]) =>
+    this.step(`verifyTranscriptLinesRead ${lines.join(", ")}`, () =>
+      expect(this.get(transcriptPanelTestIds.rowText)).toHaveText(lines),
+    );
+
+  verifyTranscriptTimesRead = (times: string[]) =>
+    this.step(`verifyTranscriptTimesRead ${times.join(", ")}`, () =>
+      expect(this.get(transcriptPanelTestIds.rowTime)).toHaveText(times),
+    );
+
+  verifyTranscriptLineLinksToVideoAt = (line: string, href: string) =>
+    this.step(`verifyTranscriptLineLinksToVideoAt ${line}`, () =>
+      expect(this.get(transcriptPanelTestIds.row).filter({ hasText: line })).toHaveAttribute("href", href),
+    );
+
+  verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
+  verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
+  verifyShowsMachineTranscribedNote = () => this.expectToBeVisible(transcriptPanelTestIds.sourceNote);
+  verifyShowsNoMachineTranscribedNote = () => this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPlaceholder = () => this.expectToBeVisible(chaptersPanelTestIds.placeholderNote);
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 

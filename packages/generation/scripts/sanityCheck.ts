@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/types";
 import {
   generateOverview,
   createAnthropicGenerationClient,
@@ -23,6 +23,7 @@ const rawDescription =
 
 const input: GenerationInput = {
   video: {
+    id: VideoId.parse("tL9Lw250spc"),
     url: "https://youtube.com/watch?v=tL9Lw250spc",
     title: "Why does every mammal get 1 billion heartbeats in their life?",
     channel: "Veritasium",

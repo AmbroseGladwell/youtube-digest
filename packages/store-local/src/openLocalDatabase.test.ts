@@ -8,6 +8,7 @@ import {
   SETTINGS_KEY,
   SETTINGS_STORE,
   TOPICS_STORE,
+  TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";
 import { promisifyRequest } from "./promisifyRequest.js";
@@ -15,6 +16,21 @@ import { promisifyRequest } from "./promisifyRequest.js";
 function openVersionOneDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      db.createObjectStore(OVERVIEWS_STORE, { keyPath: "id" });
+      db.createObjectStore(TOPICS_STORE, { keyPath: "id" });
+      db.createObjectStore(OVERVIEW_STATES_STORE, { keyPath: "overviewId" });
+      db.createObjectStore(SETTINGS_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openVersionTwoDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore(OVERVIEWS_STORE, { keyPath: "id" });
@@ -68,4 +84,18 @@ test("the reset keeps topics and settings", async () => {
     ),
     { anthropicApiKey: "sk-test" },
   );
+});
+
+test("adding the transcripts store keeps the overviews a reader already has", async () => {
+  const indexedDB = new IDBFactory();
+  const before = await openVersionTwoDatabase(indexedDB);
+  await put(before, OVERVIEWS_STORE, { id: "overview-1", coreClaim: "A claim worth keeping." });
+  await put(before, OVERVIEW_STATES_STORE, { overviewId: "overview-1", read: true, favourite: true });
+  before.close();
+
+  const after = await openLocalDatabase({ indexedDB });
+
+  assert.equal((await getAll(after, OVERVIEWS_STORE)).length, 1);
+  assert.equal((await getAll(after, OVERVIEW_STATES_STORE)).length, 1);
+  assert.deepEqual(await getAll(after, TRANSCRIPTS_STORE), []);
 });

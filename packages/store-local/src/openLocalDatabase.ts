@@ -5,6 +5,7 @@ import {
   OVERVIEW_STATES_STORE,
   SETTINGS_STORE,
   TOPICS_STORE,
+  TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
 
 export interface OpenLocalDatabaseOptions {
@@ -40,6 +41,9 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
       if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
         db.createObjectStore(SETTINGS_STORE);
+      }
+      if (!db.objectStoreNames.contains(TRANSCRIPTS_STORE)) {
+        db.createObjectStore(TRANSCRIPTS_STORE, { keyPath: "videoId" });
       }
     };
 

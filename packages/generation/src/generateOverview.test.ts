@@ -1,13 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/types";
 import { generateOverview, type GenerationClient } from "./generateOverview.js";
 import { GenerationError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
 const input: GenerationInput = {
   video: {
+    id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
     channel: "Example Channel",
