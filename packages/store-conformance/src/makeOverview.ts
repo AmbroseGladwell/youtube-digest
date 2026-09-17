@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { OverviewId, type Overview } from "@overview/types";
+import { OverviewId, VideoId, type Overview } from "@overview/types";
 
 export function makeOverview(overrides: Partial<Overview> = {}): Overview {
   return {
     id: OverviewId.parse(randomUUID()),
     video: {
+      id: VideoId.parse("example"),
       url: "https://www.youtube.com/watch?v=example",
       title: "Example",
       channel: "Example Channel",

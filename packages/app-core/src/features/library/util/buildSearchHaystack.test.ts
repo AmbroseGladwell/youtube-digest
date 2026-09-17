@@ -1,3 +1,4 @@
+import { VideoId } from "@overview/types";
 import { describe, expect, it } from "vitest";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { buildSearchHaystack } from "./buildSearchHaystack.js";
@@ -6,6 +7,7 @@ describe("buildSearchHaystack", () => {
   it("includes title, channel, claim, key points and tags, lowercased", () => {
     const overview = makeOverview({
       video: {
+        id: VideoId.parse("x"),
         url: "https://www.youtube.com/watch?v=x",
         title: "The Platysma Trick",
         channel: "SOLOMA",

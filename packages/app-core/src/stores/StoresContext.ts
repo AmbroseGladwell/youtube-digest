@@ -1,9 +1,10 @@
 import { createContext, useContext } from "react";
-import type { OverviewStore, SettingsStore } from "@overview/types";
+import type { OverviewStore, SettingsStore, TranscriptStore } from "@overview/types";
 
 export interface Stores {
   overviewStore: OverviewStore;
   settingsStore: SettingsStore;
+  transcriptStore: TranscriptStore;
 }
 
 // No default: which backend answers OverviewStore/SettingsStore (local IndexedDB today,

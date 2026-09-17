@@ -1,0 +1,13 @@
+import { VideoId, type StoredTranscript } from "@overview/types";
+
+export const makeStoredTranscript = (overrides: Partial<StoredTranscript> = {}): StoredTranscript => ({
+  videoId: VideoId.parse("example"),
+  segments: [
+    { text: "Hello and welcome to the video.", startMs: 0, endMs: 3000 },
+    { text: "Here is the one claim this video makes.", startMs: 3000, endMs: 7000 },
+    { text: "And here is how you could apply it.", startMs: 7000, endMs: 10_000 },
+  ],
+  generated: false,
+  fetchedAt: "2026-09-16T00:00:00.000Z",
+  ...overrides,
+});

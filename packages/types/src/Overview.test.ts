@@ -8,6 +8,7 @@ const BUSINESS_TOPIC_ID = randomUUID();
 const FINANCE_TOPIC_ID = randomUUID();
 
 const baseVideo = {
+  id: "example",
   url: "https://www.youtube.com/watch?v=example",
   title: "Example",
   channel: "Example Channel",

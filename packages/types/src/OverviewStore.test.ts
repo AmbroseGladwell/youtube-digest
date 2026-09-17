@@ -5,7 +5,7 @@ import type { OverviewStore, OverviewQuery, ClaimSummary } from "./OverviewStore
 import type { Overview } from "./Overview.js";
 import type { Topic } from "./Topic.js";
 import { DEFAULT_OVERVIEW_STATE, type OverviewState } from "./OverviewState.js";
-import { OverviewId, TopicId } from "./Brands.js";
+import { OverviewId, TopicId, VideoId } from "./Brands.js";
 
 // Test-only reference implementation, not exported - real stores live elsewhere.
 class InMemoryOverviewStore implements OverviewStore {
@@ -77,6 +77,7 @@ const UNKNOWN_TOPIC_ID = TopicId.parse(randomUUID());
 const exampleOverview: Overview = {
   id: OVERVIEW_ID,
   video: {
+    id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
     channel: "Example Channel",

@@ -148,7 +148,7 @@ test("Previous and Next walk the library in saved order, and the position says w
   await reader.verifyPosition("2 of 3");
 });
 
-test("the transcript and chapters tabs say on screen that their content is placeholder", async ({
+test("the chapters tab says on screen that its content is placeholder", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -156,9 +156,6 @@ test("the transcript and chapters tabs say on screen that their content is place
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
-  await reader.clickTab("Transcript");
-  await reader.verifyShowsTranscriptPlaceholder();
-
   await reader.clickTab("Chapters");
   await reader.verifyShowsChaptersPlaceholder();
 

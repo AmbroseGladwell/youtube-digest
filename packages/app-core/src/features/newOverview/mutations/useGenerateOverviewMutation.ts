@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_ANTHROPIC_MODEL, type Overview } from "@overview/types";
 import { useStores } from "../../../stores/StoresContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
+import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
 import { createGenerationClient, createTranscriptClient } from "../api/generationClients.js";
@@ -15,7 +16,7 @@ export interface GenerateOverviewVariables extends RunOverviewGenerationOptions 
 }
 
 export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
-  const { overviewStore } = useStores();
+  const { overviewStore, transcriptStore } = useStores();
   const queryClient = useQueryClient();
   const settingsQuery = useSettingsQuery();
 
@@ -34,12 +35,14 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
             settingsQuery.data?.model ?? DEFAULT_ANTHROPIC_MODEL,
           ),
           overviewStore,
+          transcriptStore,
         },
         { onProgress, isCancelled },
       );
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
+      void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
     },
   });
 }

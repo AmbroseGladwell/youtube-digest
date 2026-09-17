@@ -115,8 +115,30 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  verifyShowsTranscriptPlaceholder = () =>
-    this.expectToBeVisible(transcriptPanelTestIds.placeholderNote);
+  verifyTranscriptBlocksRead = (blocks: string[]) =>
+    this.step(`verifyTranscriptBlocksRead ${blocks.join(" / ")}`, () =>
+      expect(this.get(transcriptPanelTestIds.rowText)).toHaveText(blocks),
+    );
+
+  verifyTranscriptBlockTimesRead = (times: string[]) =>
+    this.step(`verifyTranscriptBlockTimesRead ${times.join(", ")}`, () =>
+      expect(this.get(transcriptPanelTestIds.rowTime)).toHaveText(times),
+    );
+
+  verifyTranscriptBlockCountIs = (count: number) =>
+    this.step(`verifyTranscriptBlockCountIs ${count}`, () =>
+      this.expectToHaveCount(transcriptPanelTestIds.row, count),
+    );
+
+  verifyTranscriptSpeakerMarkCountIs = (count: number) =>
+    this.step(`verifyTranscriptSpeakerMarkCountIs ${count}`, () =>
+      this.expectToHaveCount(transcriptPanelTestIds.speakerMark, count),
+    );
+
+  verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
+  verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
+  verifyShowsMachineTranscribedNote = () => this.expectToBeVisible(transcriptPanelTestIds.sourceNote);
+  verifyShowsNoMachineTranscribedNote = () => this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPlaceholder = () => this.expectToBeVisible(chaptersPanelTestIds.placeholderNote);
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 

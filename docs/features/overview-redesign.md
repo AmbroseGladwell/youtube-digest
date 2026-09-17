@@ -136,13 +136,14 @@ model count anything applies just as much to a number rendered in a filter list.
 
 Each of these needs data or a surface the app doesn't have. None is a styling gap.
 
-- **Real transcript and chapter content.** The two tabs are built to the design, but
-  nothing stores a transcript against an overview and chapters are not generated at all
-  (titled summaries of each stretch of audio would be new work in `packages/generation`).
-  Both panels render `PLACEHOLDER_TRANSCRIPT` / `PLACEHOLDER_CHAPTERS` and say so on
-  screen, in the design's own accent slot beside the section kicker, so the rows are never
-  mistaken for the real thing. Replacing those two constants with stored data is the whole
-  of the remaining work on those tabs.
+- **Real transcript and chapter content.** Both tabs were built to the design against
+  `PLACEHOLDER_TRANSCRIPT` / `PLACEHOLDER_CHAPTERS`, each saying so on screen in the
+  design's own accent slot beside the section kicker, so the rows were never mistaken for
+  the real thing. The transcript half has since been built — see
+  `docs/features/transcript-storage.md` — and that placeholder is gone. Chapters are still
+  not generated at all: titled summaries of each stretch of audio are new work in
+  `packages/generation`, not a UI change, so that panel still renders its placeholder and
+  still says so.
 - **Narrated audio.** `docs/features/tts-pre-rendered-speech.md` is the designed-and-measured
   version and was not built. The player bar is therefore a *reading pacer*, not an audio
   transport — see "The player bar without audio" below, and 5a's missing third step under

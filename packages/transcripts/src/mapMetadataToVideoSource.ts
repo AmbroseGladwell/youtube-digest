@@ -3,6 +3,7 @@ import { VideoSource } from "@overview/types";
 
 export function mapMetadataToVideoSource(metadata: Metadata, url: string): VideoSource {
   return VideoSource.parse({
+    id: metadata.id,
     url,
     title: metadata.title ?? "unavailable",
     channel: metadata.author.displayName,

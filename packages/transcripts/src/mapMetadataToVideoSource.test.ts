@@ -67,3 +67,8 @@ test("non-video media (an image or carousel post) has no duration or thumbnail t
   assert.equal(video.durationMs, null);
   assert.equal(video.thumbnailUrl, null);
 });
+
+test("the platform's own video id is kept, because it is what a stored transcript is keyed by", () => {
+  const video = mapMetadataToVideoSource(baseMetadata, baseMetadata.url);
+  assert.equal(video.id, "tL9Lw250spc");
+});
