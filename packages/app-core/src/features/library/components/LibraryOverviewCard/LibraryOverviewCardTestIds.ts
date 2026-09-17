@@ -1,8 +1,7 @@
 export const libraryOverviewCardTestIds = {
   root: "LibraryOverviewCard.root",
-  expandToggle: "LibraryOverviewCard.expandToggle",
+  titleLink: "LibraryOverviewCard.titleLink",
+  listenLink: "LibraryOverviewCard.listenLink",
   favouriteButton: "LibraryOverviewCard.favouriteButton",
   readButton: "LibraryOverviewCard.readButton",
-  body: "LibraryOverviewCard.body",
-  thumbnail: "LibraryOverviewCard.thumbnail",
 };

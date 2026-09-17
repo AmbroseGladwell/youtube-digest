@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router";
-import type { OverviewId } from "@overview/types";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
+import { orderOverviewsBySavedAt } from "../../overviews/util/orderOverviewsBySavedAt.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
@@ -16,19 +16,13 @@ import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 
 export interface LibraryPageProps {
   overviewsWithState: OverviewWithState[];
-  justGeneratedId: OverviewId | null;
 }
 
-export function LibraryPage({ overviewsWithState, justGeneratedId }: LibraryPageProps) {
+export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
-  const [expandedId, setExpandedId] = useState<OverviewId | null>(justGeneratedId);
   const [filtersOpen, setFiltersOpen] = useState(false);
-
-  useEffect(() => {
-    if (justGeneratedId) setExpandedId(justGeneratedId);
-  }, [justGeneratedId]);
 
   const filters = parseLibraryFilters(searchParams);
   const topics = topicsQuery.data ?? [];
@@ -38,9 +32,9 @@ export function LibraryPage({ overviewsWithState, justGeneratedId }: LibraryPage
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1]) =>
     setSearchParams(applyLibraryFilterPatch(searchParams, patch), { replace: true });
 
-  const visible = overviewsWithState
-    .filter((entry) => matchesLibraryFilters(entry, filters))
-    .sort((a, b) => b.overview.savedAt.localeCompare(a.overview.savedAt));
+  const visible = orderOverviewsBySavedAt(
+    overviewsWithState.filter((entry) => matchesLibraryFilters(entry, filters)),
+  );
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
@@ -133,10 +127,6 @@ export function LibraryPage({ overviewsWithState, justGeneratedId }: LibraryPage
                   topicNames={entry.overview.topicIds
                     .map((topicId) => topicNameById.get(topicId))
                     .filter((name): name is string => name !== undefined)}
-                  expanded={expandedId === entry.overview.id}
-                  onToggleExpanded={() =>
-                    setExpandedId((current) => (current === entry.overview.id ? null : entry.overview.id))
-                  }
                   onToggleFavourite={() =>
                     setOverviewState.mutate({
                       overviewId: entry.overview.id,

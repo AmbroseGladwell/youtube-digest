@@ -2,8 +2,8 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 
 test("an empty library shows the first-run hero, not the filter/library chrome", async ({ launcher }) => {
-  const form = await launcher.launchExpectingFirstRun();
-  await form.verifyIsShown();
+  const home = await launcher.launch();
+  await home.verifyShowsFirstRunHero();
 });
 
 test("with no keys saved, the url input stays disabled behind the keys panel", async ({ launcher }) => {
