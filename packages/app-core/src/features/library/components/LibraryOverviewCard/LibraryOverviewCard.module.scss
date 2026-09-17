@@ -3,6 +3,64 @@
   padding: 1.25rem 0;
 }
 
+// Design 7a, "rule first": the hairline draws left to right in the accent, then fades off
+// the row's own divider, and the kicker, title and meta fade up behind it in turn. The
+// global prefers-reduced-motion rule in theme/global.scss collapses all four to their end
+// state (docs/features/overview-redesign.md, "How a new row arrives").
+.entering {
+  position: relative;
+}
+
+.entering::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--accent);
+  transform-origin: left;
+  animation: ruleDraw 0.9s cubic-bezier(0.33, 0, 0.15, 1) both;
+}
+
+.entering .kickerRow {
+  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.34s both;
+}
+
+.entering .title {
+  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.42s both;
+}
+
+.entering .meta {
+  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.5s both;
+}
+
+@keyframes ruleDraw {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes lineInk {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .row {
   display: grid;
   grid-template-columns: 16.5rem 1fr auto;

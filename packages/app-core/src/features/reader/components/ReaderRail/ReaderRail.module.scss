@@ -1,10 +1,26 @@
 .root {
   border-left: 1px solid var(--divider);
-  padding: 1.5rem 1.25rem 2rem;
   min-width: 0;
+}
+
+.sticky {
+  padding: 1.5rem 1.25rem 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.625rem;
+}
+
+// Same rule as the library's rail, one line of chrome lower: the reader's tab strip is
+// sticky too, so the rail comes to rest under both it and the masthead. Its own content is
+// bounded — at most one section per part of a note — so the max-height is a guard rather
+// than an expected scroll (docs/features/overview-redesign.md, "Chrome that stays put").
+@media (min-width: 62rem) {
+  .sticky {
+    position: sticky;
+    top: calc(var(--masthead-height) + var(--reader-tabs-height));
+    max-height: calc(100dvh - var(--masthead-height) - var(--reader-tabs-height));
+    overflow-y: auto;
+  }
 }
 
 .label {
@@ -56,6 +72,9 @@
   .root {
     border-left: 0;
     border-top: 1px solid var(--divider);
+  }
+
+  .sticky {
     padding: 1.25rem 1.25rem 1.5rem;
   }
 }

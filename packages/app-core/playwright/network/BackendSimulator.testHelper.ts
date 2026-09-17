@@ -16,6 +16,7 @@ export class BackendSimulator {
     Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
   );
   #callCounts = new Map<EndpointKey, number>();
+  #stalled: Array<{ endpoint: EndpointKey; route: Route; onDefault: () => { status: number; body: unknown } }> = [];
   #generatedOutputOverrides: Record<string, unknown> = {};
 
   constructor(page: Page) {
@@ -32,6 +33,19 @@ export class BackendSimulator {
     this.#behaviours.set(endpoint, EndpointBehaviour.STALL);
   };
   getCallCount = (endpoint: EndpointKey): number => this.#callCounts.get(endpoint) ?? 0;
+
+  // Lets a test hold a request open, act on the loading state it produces, and then let it
+  // through — which is the only way to drive a multi-step pipeline one step at a time
+  // without racing it (frontend-testing-guide.md 4.4).
+  releaseEndpoint = async (endpoint: EndpointKey): Promise<void> => {
+    const held = this.#stalled.filter((entry) => entry.endpoint === endpoint);
+    this.#stalled = this.#stalled.filter((entry) => entry.endpoint !== endpoint);
+    this.simulateEndpointDefault(endpoint);
+    for (const { route, onDefault } of held) {
+      const { status, body } = onDefault();
+      await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    }
+  };
 
   setGeneratedOutputOverrides = (overrides: Record<string, unknown>): void => {
     this.#generatedOutputOverrides = overrides;
@@ -92,7 +106,9 @@ export class BackendSimulator {
     const behaviour = this.#behaviours.get(endpoint) ?? EndpointBehaviour.DEFAULT;
 
     if (behaviour === EndpointBehaviour.STALL) {
-      return; // never fulfill or abort — the request just hangs, for loading-state tests.
+      // Held, not fulfilled or aborted: the request hangs until releaseEndpoint() lets it go.
+      this.#stalled.push({ endpoint, route, onDefault: handlers.onDefault });
+      return;
     }
 
     const { status, body } = behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();

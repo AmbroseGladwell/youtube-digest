@@ -1,4 +1,6 @@
+import { expect } from "@playwright/experimental-ct-react";
 import { libraryPageTestIds } from "../../src/features/library/LibraryPage/LibraryPageTestIds.js";
+import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
@@ -18,6 +20,31 @@ export class LibraryPageObject extends PageObject {
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(libraryPageTestIds.root);
       return this;
+    });
+
+  scrollTheList = () =>
+    this.step("scrollTheList", async () => {
+      await this.page.mouse.wheel(0, 900);
+      await expect(async () => {
+        expect(await this.page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+      }).toPass({ timeout: 2_000 });
+    });
+
+  // The rail is chrome: it comes to rest on the masthead's lower edge and stays there while
+  // the list scrolls past it (docs/features/overview-redesign.md, "Chrome that stays put").
+  verifyRailRestsOnTheMasthead = () =>
+    this.step("verifyRailRestsOnTheMasthead", () =>
+      expect(async () => {
+        const masthead = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
+        const rail = (await this.get(libraryPageTestIds.railBody).boundingBox())!;
+        expect(Math.round(rail.y)).toBe(Math.round(masthead.y + masthead.height));
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyRailDividerRunsToTheFoot = () =>
+    this.step("verifyRailDividerRunsToTheFoot", async () => {
+      const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
+      expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
   verifyEmptyState = () => this.step("verifyEmptyState", () => this.expectToBeVisible(libraryPageTestIds.empty));

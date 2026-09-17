@@ -11,6 +11,7 @@ import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
 import { applyLibraryFilterPatch, parseLibraryFilters } from "../util/libraryFilterParams.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 
@@ -23,6 +24,8 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const entering = useEnteringOverviewIds(overviewsWithState.map((entry) => entry.overview.id));
 
   const filters = parseLibraryFilters(searchParams);
   const topics = topicsQuery.data ?? [];
@@ -88,7 +91,7 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
               Done
             </button>
           </div>
-          <div className={styles.railBody}>
+          <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
             <FilterPanel filters={filters} topics={topics} counts={counts} onChange={changeFilters} />
           </div>
           <div className={styles.sheetFoot}>
@@ -124,6 +127,7 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
                 <LibraryOverviewCard
                   key={entry.overview.id}
                   overviewWithState={entry}
+                  entering={entering.has(entry.overview.id)}
                   topicNames={entry.overview.topicIds
                     .map((topicId) => topicNameById.get(topicId))
                     .filter((name): name is string => name !== undefined)}

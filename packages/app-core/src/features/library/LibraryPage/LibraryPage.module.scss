@@ -23,6 +23,18 @@
   padding: 1.5rem 1.5rem 2rem;
 }
 
+// The rail is chrome, not content: it holds still while the list scrolls past it. Only its
+// body sticks — the column itself keeps stretching, so its divider still runs to the foot
+// of the window (docs/features/overview-redesign.md, "Chrome that stays put").
+@media (min-width: 62rem) {
+  .railBody {
+    position: sticky;
+    top: var(--masthead-height);
+    max-height: calc(100dvh - var(--masthead-height));
+    overflow-y: auto;
+  }
+}
+
 // Head and foot belong to the mobile sheet; on desktop the rail is a plain column.
 .sheetHead,
 .sheetFoot {

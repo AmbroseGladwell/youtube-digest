@@ -1,24 +1,30 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.875rem;
 }
 
-.form {
+.field {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 
 .urlInput {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   border: 0;
-  border-bottom: 1px solid var(--edge);
+  border-bottom: 1px solid var(--ink);
   border-radius: 0;
   background: transparent;
-  padding: 0.4rem 0.125rem;
-  font-size: 0.85rem;
+  padding: 0.5rem 0.0625rem;
+  font-size: 0.95rem;
   color: var(--ink);
 }
 
@@ -31,17 +37,65 @@
   border-bottom-color: var(--accent);
 }
 
-.generateButton {
-  flex: none;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-panel);
+.urlInput:disabled {
+  border-bottom-color: var(--edge);
+  color: var(--faint);
+}
+
+.pasteButton {
+  align-self: flex-start;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-badge);
   background: transparent;
-  color: var(--accent-strong);
-  padding: 0.4rem 0.9rem;
+  color: var(--muted);
+  padding: 0.35rem 0.85rem;
   font-family: var(--font-body);
   font-size: 0.82rem;
   cursor: pointer;
-  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--accent-strong);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-control);
+  padding-top: 0.125rem;
+}
+
+.cancelButton,
+.generateButton {
+  border-radius: var(--radius-badge);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--faint);
+}
+
+// The soft tint marks the one action that takes you somewhere, as it does on a library
+// row's Listen (docs/features/overview-redesign.md).
+.generateButton {
+  border: 1px solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding-inline: 1.25rem;
 }
 
 .generateButton:disabled {
@@ -49,21 +103,19 @@
   cursor: not-allowed;
 }
 
-.settingsLink {
-  font-size: 0.75rem;
-}
+// On a phone the pair stacks full-width at the sheet's foot, on the design's 44px target.
+@media (max-width: 47.9375rem) {
+  .pasteButton {
+    align-self: stretch;
+    min-height: 2.75rem;
+  }
 
-.validationError,
-.generationError {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--accent-strong);
-}
+  .actions {
+    flex-direction: column-reverse;
+  }
 
-.progress {
-  margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--faint);
+  .cancelButton,
+  .generateButton {
+    min-height: 2.75rem;
+  }
 }

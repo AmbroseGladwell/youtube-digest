@@ -9,6 +9,7 @@ import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewF
 import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
 import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
+import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper.js";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -38,7 +39,8 @@ export class Launcher {
     test.step("Launcher.launchExpectingFirstRun", async () => {
       const home = await this.launch(options);
       await home.verifyShowsFirstRunHero();
-      return this.appShell.openNewOverview();
+      const dialog = await this.appShell.openNewOverview();
+      return dialog.form;
     });
 
   get appShell(): AppShellPageObject {
@@ -47,6 +49,10 @@ export class Launcher {
 
   get readerPage(): ReaderPageObject {
     return new ReaderPageObject(this.testContext);
+  }
+
+  get settingsPage(): SettingsPageObject {
+    return new SettingsPageObject(this.testContext);
   }
 
   launchExpectingLibrary = (options: LaunchOptions = {}): Promise<LibraryPageObject> =>

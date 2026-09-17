@@ -20,6 +20,11 @@ export class GenerateOverviewFormPageObject extends PageObject {
 
   clickGenerate = () => this.step("clickGenerate", () => this.click(generateOverviewFormTestIds.generateButton));
 
+  verifyUrlInputHolds = (url: string) =>
+    this.step(`verifyUrlInputHolds ${url}`, () =>
+      expect(this.get(generateOverviewFormTestIds.urlInput)).toHaveValue(url),
+    );
+
   submitUrl = (url: string) =>
     this.step(`submitUrl ${url}`, async () => {
       await this.fillUrl(url);
@@ -36,10 +41,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
       expect(this.get(generateOverviewFormTestIds.generationError)).toHaveText(message),
     );
 
-  verifyProgressShows = (message: string) =>
-    this.step(`verifyProgressShows ${message}`, () =>
-      expect(this.get(generateOverviewFormTestIds.progress)).toHaveText(message),
-    );
+  clickCancel = () => this.step("clickCancel", () => this.click(generateOverviewFormTestIds.cancelButton));
 
   verifyGenerationErrorIsVisible = () =>
     this.step("verifyGenerationErrorIsVisible", () => this.expectToBeVisible(generateOverviewFormTestIds.generationError));

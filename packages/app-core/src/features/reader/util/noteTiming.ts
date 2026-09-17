@@ -1,3 +1,4 @@
+import { countWords } from "../../../util/countWords.js";
 import type { NoteLine } from "../types/NoteLine.js";
 
 // The two rates the reader's "4 min read · 6 min listen" line and its pacer are built
@@ -12,10 +13,6 @@ export interface NoteTiming {
   totalSeconds: number;
   readMinutes: number;
   listenMinutes: number;
-}
-
-export function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 export function noteTiming(lines: NoteLine[]): NoteTiming {
