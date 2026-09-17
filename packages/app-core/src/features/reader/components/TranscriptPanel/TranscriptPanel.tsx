@@ -1,12 +1,14 @@
-import type { ReactNode } from "react";
-import type { StoredTranscript, VideoSource } from "@overview/types";
+import { useMemo, type ReactNode } from "react";
+import type { VideoSource } from "@overview/types";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
+import { transcriptBlocks } from "../../../transcripts/util/transcriptBlocks.js";
+import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { youtubeTimestampUrl } from "../../../overviews/util/youtubeTimestampUrl.js";
 import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
 
-const SKELETON_ROWS = 6;
+const SKELETON_ROWS = 4;
 
 export interface TranscriptPanelProps {
   video: VideoSource;
@@ -15,6 +17,10 @@ export interface TranscriptPanelProps {
 export function TranscriptPanel({ video }: TranscriptPanelProps) {
   const transcriptQuery = useTranscriptQuery(video.id);
   const transcript = transcriptQuery.data ?? null;
+  const blocks = useMemo(
+    () => (transcript === null ? [] : transcriptBlocks(transcript.segments)),
+    [transcript],
+  );
 
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
@@ -27,7 +33,7 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
         )}
       </p>
       {transcriptBody(video, {
-        transcript,
+        blocks,
         isPending: transcriptQuery.isPending,
         error: transcriptQuery.isError ? transcriptQuery.error : null,
       })}
@@ -36,12 +42,12 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
 }
 
 interface TranscriptState {
-  transcript: StoredTranscript | null;
+  blocks: TranscriptBlock[];
   isPending: boolean;
   error: Error | null;
 }
 
-function transcriptBody(video: VideoSource, { transcript, isPending, error }: TranscriptState): ReactNode {
+function transcriptBody(video: VideoSource, { blocks, isPending, error }: TranscriptState): ReactNode {
   if (video.id === null) {
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
@@ -55,23 +61,23 @@ function transcriptBody(video: VideoSource, { transcript, isPending, error }: Tr
   if (isPending) {
     return <TranscriptSkeleton />;
   }
-  if (transcript === null || transcript.segments.length === 0) {
+  if (blocks.length === 0) {
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
-  return transcript.segments.map((segment) => (
+  return blocks.map((block, index) => (
     <a
-      key={segment.startMs}
+      key={`${index}-${block.startMs}`}
       className={styles.row}
-      href={youtubeTimestampUrl(video.url, segment.startMs)}
+      href={youtubeTimestampUrl(video.url, block.startMs)}
       target="_blank"
       rel="noreferrer"
       data-testid={transcriptPanelTestIds.row}
     >
       <span className={styles.time} data-testid={transcriptPanelTestIds.rowTime}>
-        {formatTimestamp(segment.startMs)}
+        {formatTimestamp(block.startMs)}
       </span>
       <span className={styles.text} data-testid={transcriptPanelTestIds.rowText}>
-        {segment.text}
+        {block.text}
       </span>
     </a>
   ));
@@ -93,7 +99,11 @@ function TranscriptSkeleton() {
       {Array.from({ length: SKELETON_ROWS }, (_, index) => (
         <div key={index} className={styles.skeletonRow}>
           <span className={styles.skeletonBar} />
-          <span className={styles.skeletonBar} />
+          <span className={styles.skeletonLines}>
+            <span className={styles.skeletonBar} />
+            <span className={styles.skeletonBar} />
+            <span className={styles.skeletonBar} style={{ width: "60%" }} />
+          </span>
         </div>
       ))}
     </div>

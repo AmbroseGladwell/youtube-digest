@@ -115,19 +115,24 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  verifyTranscriptLinesRead = (lines: string[]) =>
-    this.step(`verifyTranscriptLinesRead ${lines.join(", ")}`, () =>
-      expect(this.get(transcriptPanelTestIds.rowText)).toHaveText(lines),
+  verifyTranscriptBlocksRead = (blocks: string[]) =>
+    this.step(`verifyTranscriptBlocksRead ${blocks.join(" / ")}`, () =>
+      expect(this.get(transcriptPanelTestIds.rowText)).toHaveText(blocks),
     );
 
-  verifyTranscriptTimesRead = (times: string[]) =>
-    this.step(`verifyTranscriptTimesRead ${times.join(", ")}`, () =>
+  verifyTranscriptBlockTimesRead = (times: string[]) =>
+    this.step(`verifyTranscriptBlockTimesRead ${times.join(", ")}`, () =>
       expect(this.get(transcriptPanelTestIds.rowTime)).toHaveText(times),
     );
 
-  verifyTranscriptLineLinksToVideoAt = (line: string, href: string) =>
-    this.step(`verifyTranscriptLineLinksToVideoAt ${line}`, () =>
-      expect(this.get(transcriptPanelTestIds.row).filter({ hasText: line })).toHaveAttribute("href", href),
+  verifyTranscriptBlockCountIs = (count: number) =>
+    this.step(`verifyTranscriptBlockCountIs ${count}`, () =>
+      this.expectToHaveCount(transcriptPanelTestIds.row, count),
+    );
+
+  verifyTranscriptBlockOpensVideoAt = (block: string, href: string) =>
+    this.step(`verifyTranscriptBlockOpensVideoAt ${block}`, () =>
+      expect(this.get(transcriptPanelTestIds.row).filter({ hasText: block })).toHaveAttribute("href", href),
     );
 
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);

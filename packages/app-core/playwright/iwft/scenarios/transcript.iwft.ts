@@ -1,27 +1,59 @@
-import type { StoredTranscript } from "@overview/types";
+import type { StoredTranscript, TranscriptSegment } from "@overview/types";
 import { VideoId } from "@overview/types";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
+import { makeTranscriptSegment } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-const SEGMENTS = [
-  { text: "The claim starts here.", startMs: 0, endMs: 4000 },
-  { text: "This is the part worth watching.", startMs: 65_000, endMs: 71_000 },
-  { text: "And this is where it ends.", startMs: 3_661_000, endMs: 3_665_000 },
+const captionRun = (texts: string[], startMs: number, cueMs: number): TranscriptSegment[] =>
+  texts.map((text, index) =>
+    makeTranscriptSegment({
+      text,
+      startMs: startMs + index * cueMs,
+      endMs: startMs + (index + 1) * cueMs,
+    }),
+  );
+
+// Nine captions, in three runs of the length YouTube actually emits — which the reader
+// merges into the three blocks below (docs/features/transcript-storage.md).
+const SEGMENTS: TranscriptSegment[] = [
+  ...captionRun(
+    [
+      "The claim starts here,",
+      "and the whole of it takes four captions",
+      "before it finally reaches",
+      "its first full stop.",
+    ],
+    0,
+    3500,
+  ),
+  ...captionRun(
+    ["This is the part worth watching,", "and this is the reason you might", "want to see it for yourself."],
+    65_000,
+    4000,
+  ),
+  ...captionRun(["And this is where it ends.", "Thanks for watching."], 3_661_000, 3000),
 ];
+
+const BLOCKS = [
+  "The claim starts here, and the whole of it takes four captions before it finally reaches its first full stop.",
+  "This is the part worth watching, and this is the reason you might want to see it for yourself.",
+  "And this is where it ends. Thanks for watching.",
+];
+const BLOCK_TIMES = ["0:00", "1:05", "1:01:01"];
 
 const noteOn = (videoId: VideoId | null, url: string = VIDEO_URL) => {
   const overview = makeOverview();
   return makeOverview({ video: { ...overview.video, id: videoId, url } });
 };
 
-test("the transcript tab lists the stored captions against the time each one starts", async ({
+test("the transcript tab merges the captions into blocks, each against the time its first words were said", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -32,11 +64,15 @@ test("the transcript tab lists the stored captions against the time each one sta
   const reader = await library.nthCard(0).openReader();
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptLinesRead(SEGMENTS.map((segment) => segment.text));
-  await reader.verifyTranscriptTimesRead(["0:00", "1:05", "1:01:01"]);
+  await reader.verifyTranscriptBlockCountIs(3);
+  await reader.verifyTranscriptBlocksRead(BLOCKS);
+  await reader.verifyTranscriptBlockTimesRead(BLOCK_TIMES);
 });
 
-test("a caption line opens the video at the moment it was said", async ({ launcher, backendSimulator }) => {
+test("a block opens the video at the moment its first words were said", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 
@@ -44,7 +80,7 @@ test("a caption line opens the video at the moment it was said", async ({ launch
   const reader = await library.nthCard(0).openReader();
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptLineLinksToVideoAt("This is the part worth watching.", `${VIDEO_URL}&t=65`);
+  await reader.verifyTranscriptBlockOpensVideoAt("This is the part worth watching", `${VIDEO_URL}&t=65`);
 });
 
 test("a note saved before transcripts were stored says so rather than showing an empty tab", async ({
@@ -96,7 +132,7 @@ test("machine-heard captions are labelled as such, and a video's own captions ar
   const back = await machineHeard.clickBackToLibrary();
   const captioned = await back.nthCard(1).openReader();
   await captioned.clickTab("Transcript");
-  await captioned.verifyTranscriptLinesRead(SEGMENTS.map((segment) => segment.text));
+  await captioned.verifyTranscriptBlocksRead(BLOCKS);
   await captioned.verifyShowsNoMachineTranscribedNote();
 });
 
@@ -122,7 +158,7 @@ test("a transcript still being read shows the tab's skeleton rather than its emp
   await reader.verifyShowsTranscriptSkeleton();
 });
 
-test("generating a note keeps the transcript it fetched, and the tab reads it back", async ({
+test("generating a note keeps the captions it fetched, and the tab reads them back as blocks", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -136,13 +172,13 @@ test("generating a note keeps the transcript it fetched, and the tab reads it ba
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptLinesRead([
-    "Hello and welcome to the simulated video.",
-    "Here is the one claim this video makes.",
-    "And here is how you could apply it.",
+  await reader.verifyTranscriptBlocksRead([
+    "Hello and welcome to the simulated video. Here is the one claim this video makes. And here is how you could apply it.",
   ]);
-  await reader.verifyTranscriptTimesRead(["0:00", "0:03", "0:07"]);
+  await reader.verifyTranscriptBlockTimesRead(["0:00"]);
 
+  // Three captions stored, one block shown: the merging is display-only, and the store
+  // keeps what the model was given (docs/features/transcript-storage.md).
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
   expect(stored?.segments).toHaveLength(3);
   expect(stored?.generated).toBe(false);
