@@ -9,21 +9,22 @@
 // which is the whole point of chrome that isn't there yet.
 .root {
   border: 1px solid transparent;
-  margin-inline: -1rem;
-  padding: 1.25rem 1rem;
+  border-radius: var(--radius-panel);
+  margin-inline: -0.875rem;
+  padding: 1rem 0.875rem;
   transition:
     background var(--motion-tile) ease-out,
     border-color var(--motion-tile) ease-out,
     box-shadow var(--motion-tile) ease-out;
 }
 
-// --shadow-sm is the system's smallest step and nothing custom: at 1px down and 2px blur
-// it reads as a contact edge, a card resting on paper rather than floating over it. The row
-// never translates — the shadow alone implies the lift, which is why it can stay this
-// shallow. The frame the list sits in carries --shadow, so a row never competes with it.
+// The row never translates. What reads as raised is the one-step surface lift to --raised;
+// --shadow-sm is the system's smallest step and is only there to soften the corners, at 1px
+// down and 2px blur. The frame the list sits in carries --shadow, three times the offset,
+// so a row never competes with its container.
 @mixin tile {
   border-color: var(--line);
-  background: var(--ground);
+  background: var(--raised);
   box-shadow: var(--shadow-sm);
 }
 
@@ -272,13 +273,6 @@
 
 // The phone row: one column, no thumbnail, and the three actions under the text.
 @media (max-width: 47.9375rem) {
-  // A narrower bleed: the list's own padding is 1.25rem here, and a 1rem tile would leave
-  // 4px of ground between its edge and the screen's.
-  .root {
-    margin-inline: -0.75rem;
-    padding-inline: 0.75rem;
-  }
-
   // A phone row drops the thumbnail. At the width a phone can spare it is too small to
   // tell one video from another, and it costs the title the column it needs. The title is
   // the same way in to the reader, with the same words, so nothing is lost with it.

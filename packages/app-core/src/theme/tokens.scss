@@ -25,6 +25,13 @@
   --divider: color-mix(in srgb, #201f1d 16%, transparent);
   --edge: #bab6b6;
 
+  // The surface a library row raises to under the pointer. On the light ground it is the
+  // ground: the border and --shadow-sm carry the tile on their own, and a lighter fill
+  // would read as a second paper stock. On the dark one a shadow at half opacity over
+  // near-black is nearly invisible, so the lift has to be the surface itself — one step up
+  // from --ground, which is what actually reads as raised there.
+  --raised: #f3f2f2;
+
   --accent: #e2511e;
   --accent-strong: #b03c12;
   --accent-deep: #8f3210;
@@ -76,6 +83,8 @@
   --divider: color-mix(in srgb, #f3f2f2 18%, transparent);
   --edge: #605d5d;
 
+  --raised: #232120;
+
   --accent: #f0794a;
   --accent-strong: #f0794a;
   --accent-deep: #ffc9ad;
@@ -87,7 +96,7 @@
   --ink-wash: color-mix(in srgb, #f3f2f2 8%, transparent);
   --ink-wash-press: color-mix(in srgb, #f3f2f2 14%, transparent);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }

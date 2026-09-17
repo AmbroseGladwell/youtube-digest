@@ -382,17 +382,26 @@ becomes a set of targets when you go hunting. Three things arrive together on 14
 ease-out: a transparent 1px border becomes `--line`, the background paints `--ground` over
 the list, and `--shadow-sm` appears.
 
-`--shadow-sm` is the design system's own smallest step — `0 1px 2px` of the system ink
-(`#2d2b2b`) at 14%, no spread — and nothing custom. At that offset it reads as a *contact
-edge*, a card resting on paper rather than floating over it, and the warm grey keeps it
-from going cold against the `#f3f2f2` ground. **The row never translates**; the shadow
-alone implies the lift, which is why it can stay this shallow. The frame the list sits in
-carries `--shadow` (the system's `--shadow-md`, three times the offset), so a row never
-competes with its container.
+`--shadow-sm` is the design system's own smallest step — `0 1px 2px`, no spread — and
+nothing custom: the system ink (`#2d2b2b`) at 14% on the light ground, where the warm grey
+keeps it from going cold against `#f3f2f2`, and black at 50% on the dark one. **The row
+never translates.** The frame the list sits in carries `--shadow` (the system's
+`--shadow-md`, three times the offset), so a row never competes with its container.
+
+**What reads as raised is `--raised`, not the shadow**, and the two themes need different
+amounts of it. On the light ground `--raised` *is* the ground: the border and the shadow
+carry the tile between them, and a lighter fill would read as a second paper stock. On the
+dark one a shadow at half opacity over near-black is nearly invisible, so the lift has to
+be the surface itself — `#232120`, one step up from `#1b1a19`. The shadow is then only
+there to soften the corners. That is why the tile's test asserts the background alongside
+the border and the shadow: a dark row that painted the ground back onto itself would pass a
+border-and-shadow check and still look like no tile at all.
 
 Two things about the implementation are worth knowing before touching it:
 
-- **The inline padding is given straight back as a negative margin.** A bordered tile whose
+- **The inline padding is given straight back as a negative margin.** The tile is
+  `1rem 0.875rem` on a `--radius-panel` corner, and the inline half of that is returned as
+  `margin-inline`. A bordered tile whose
   edge sits on the text would be unreadable, but indenting the text at rest would mean the
   resting layout changes — and the point is chrome that isn't there yet. So the tile bleeds
   outwards into the list's own padding and the text never moves. `libraryActions.iwft.ts`

@@ -90,7 +90,12 @@ export class LibraryOverviewCardPageObject extends PageObject {
   private chrome = () =>
     this.card.evaluate((row) => {
       const style = getComputedStyle(row);
-      return { shadow: style.boxShadow, border: style.borderTopColor };
+      return {
+        shadow: style.boxShadow,
+        border: style.borderTopColor,
+        background: style.backgroundColor,
+        transform: style.transform,
+      };
     });
 
   private static readonly TRANSPARENT = "rgba(0, 0, 0, 0)";
@@ -98,18 +103,25 @@ export class LibraryOverviewCardPageObject extends PageObject {
   verifyHasNoChrome = () =>
     this.step("verifyHasNoChrome", () =>
       expect(async () => {
-        const { shadow, border } = await this.chrome();
+        const { shadow, border, background } = await this.chrome();
         expect(shadow).toBe("none");
         expect(border).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(background).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
       }).toPass({ timeout: 2_000 }),
     );
 
+  // The surface is asserted alongside the border and the shadow because it is what does the
+  // lifting: a dark row's shadow at half opacity over near-black is nearly invisible, so a
+  // tile that painted the ground back onto itself would look like no tile at all. The
+  // transform is asserted as absent because the lift is a surface, never a move.
   verifyShowsItsTile = () =>
     this.step("verifyShowsItsTile", () =>
       expect(async () => {
-        const { shadow, border } = await this.chrome();
+        const { shadow, border, background, transform } = await this.chrome();
         expect(shadow).not.toBe("none");
         expect(border).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(background).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(transform).toBe("none");
       }).toPass({ timeout: 2_000 }),
     );
 
