@@ -1,8 +1,21 @@
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, type Overview, type OverviewStore } from "@overview/types";
+import {
+  DEFAULT_SECTIONS_ENABLED,
+  OverviewId,
+  type Overview,
+  type OverviewStore,
+  type VideoSource,
+} from "@overview/types";
 import { generateOverview, type GenerationClient } from "@overview/generation";
 import { fetchTranscript, type TranscriptSourceClient } from "@overview/transcripts";
+import { countWords } from "../../../util/countWords.js";
+import { GenerationCancelledError } from "./GenerationCancelledError.js";
 
-export type GenerationPhase = "fetching-transcript" | "generating" | "saving";
+// What the run has produced so far, so the progress list can report a receipt rather than
+// that it is thinking (docs/features/overview-redesign.md, "The receipts").
+export interface GenerationProgress {
+  video: VideoSource;
+  transcriptWords: number;
+}
 
 export interface GenerationPipelineDeps {
   transcriptClient: TranscriptSourceClient;
@@ -10,15 +23,27 @@ export interface GenerationPipelineDeps {
   overviewStore: OverviewStore;
 }
 
+export interface RunOverviewGenerationOptions {
+  onProgress?: ((progress: GenerationProgress) => void) | undefined;
+  isCancelled?: (() => boolean) | undefined;
+}
+
 export async function runOverviewGeneration(
   url: string,
   deps: GenerationPipelineDeps,
-  onPhaseChange?: (phase: GenerationPhase) => void,
+  options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
-  onPhaseChange?.("fetching-transcript");
-  const fetched = await fetchTranscript(deps.transcriptClient, url);
+  const stopIfCancelled = () => {
+    if (options.isCancelled?.()) {
+      throw new GenerationCancelledError();
+    }
+  };
 
-  onPhaseChange?.("generating");
+  const fetched = await fetchTranscript(deps.transcriptClient, url);
+  const transcriptWords = fetched.transcript.reduce((total, segment) => total + countWords(segment.text), 0);
+
+  stopIfCancelled();
+  options.onProgress?.({ video: fetched.video, transcriptWords });
   const [existingTopics, pastClaims] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
@@ -37,7 +62,7 @@ export async function runOverviewGeneration(
     { id: OverviewId.parse(crypto.randomUUID()), savedAt: new Date().toISOString() },
   );
 
-  onPhaseChange?.("saving");
+  stopIfCancelled();
   await deps.overviewStore.saveOverview(overview);
 
   return overview;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { NoteLine } from "../types/NoteLine.js";
-import { formatClock } from "../util/formatClock.js";
+import { formatClock } from "../../../util/formatClock.js";
 import { elapsedSecondsBefore, noteTiming } from "../util/noteTiming.js";
 
 const RATES = [1, 1.25, 1.5, 2];

@@ -1,4 +1,6 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const NOTE = makeOverview({
@@ -170,13 +172,20 @@ test("the tabs come to rest on the masthead's lower edge, and follow it when it 
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(NOTE);
-  const library = await launcher.launchExpectingLibrary();
+  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
+  const library = await launcher.launchExpectingLibrary({
+    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
+  });
 
   const reader = await library.nthCard(0).openReader();
   await reader.scrollDown(500);
   await reader.verifyTabsRestOnTheMasthead();
 
-  await launcher.appShell.clickNewOverview();
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
+  await dialog.clickRunInBackground();
+  await launcher.appShell.generationStatusStrip.verifyIsShown();
+
   await reader.verifyTabsRestOnTheMasthead();
 });
 

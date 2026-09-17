@@ -20,51 +20,53 @@ export function ReaderRail({
 }: ReaderRailProps) {
   return (
     <aside className={styles.root} data-testid={readerRailTestIds.root}>
-      {sections.length > 0 && (
-        <nav aria-label="Sections" data-testid={readerRailTestIds.sections}>
-          <p className={styles.label}>Sections</p>
-          {sections.map((section) => (
-            <button
-              key={section}
-              type="button"
-              className={`${styles.section} ${section === currentSection ? styles.sectionCurrent : ""}`}
-              aria-current={section === currentSection}
-              onClick={() => onSelectSection(section)}
-              data-testid={readerRailTestIds.section(section)}
-            >
-              {section}
-            </button>
-          ))}
-        </nav>
-      )}
-
-      <div>
-        <p className={styles.label}>Source</p>
-        <a
-          className={styles.watchLink}
-          href={videoUrl}
-          target="_blank"
-          rel="noopener"
-          data-testid={readerRailTestIds.watchLink}
-        >
-          Watch on YouTube
-        </a>
-        {sourceNote && (
-          <p className={styles.sourceNote} data-testid={readerRailTestIds.sourceNote}>
-            {sourceNote}
-          </p>
+      <div className={styles.sticky} data-testid={readerRailTestIds.sticky}>
+        {sections.length > 0 && (
+          <nav aria-label="Sections" data-testid={readerRailTestIds.sections}>
+            <p className={styles.label}>Sections</p>
+            {sections.map((section) => (
+              <button
+                key={section}
+                type="button"
+                className={`${styles.section} ${section === currentSection ? styles.sectionCurrent : ""}`}
+                aria-current={section === currentSection}
+                onClick={() => onSelectSection(section)}
+                data-testid={readerRailTestIds.section(section)}
+              >
+                {section}
+              </button>
+            ))}
+          </nav>
         )}
-        {jump && (
+
+        <div>
+          <p className={styles.label}>Source</p>
           <a
-            className={styles.jumpLink}
-            href={jump.href}
+            className={styles.watchLink}
+            href={videoUrl}
             target="_blank"
             rel="noopener"
-            data-testid={readerRailTestIds.jumpLink}
+            data-testid={readerRailTestIds.watchLink}
           >
-            {jump.label}
+            Watch on YouTube
           </a>
-        )}
+          {sourceNote && (
+            <p className={styles.sourceNote} data-testid={readerRailTestIds.sourceNote}>
+              {sourceNote}
+            </p>
+          )}
+          {jump && (
+            <a
+              className={styles.jumpLink}
+              href={jump.href}
+              target="_blank"
+              rel="noopener"
+              data-testid={readerRailTestIds.jumpLink}
+            >
+              {jump.label}
+            </a>
+          )}
+        </div>
       </div>
     </aside>
   );

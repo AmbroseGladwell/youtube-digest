@@ -5,14 +5,15 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-test("a successful generation opens what it just wrote in the reader, and the library has it too", async ({
+test("a successful generation ends up in the library, and opens in the reader when asked", async ({
   launcher,
 }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();
-  const form = await launcher.appShell.openNewOverview();
-  await form.submitUrl(VALID_URL);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
 
+  await dialog.clickReadOverview();
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle("The Simulated Video");
 
@@ -34,15 +35,20 @@ test("the transcript-fetch phase surfaces its error, and generation never reache
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
-test("a stalled transcript fetch shows the fetching-transcript progress message and stays there", async ({
+test("a stalled transcript fetch holds the first step there, with nothing claimed about the second", async ({
   launcher,
   backendSimulator,
 }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.SUPADATA_METADATA);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+  const dialog = launcher.appShell.newOverviewDialog;
 
   await form.submitUrl(VALID_URL);
-  await form.verifyProgressShows("Fetching the transcript…");
+
+  await dialog.verifyStepState("01", "running");
+  await dialog.verifyStepDetail("01", "Reading captions from YouTube");
+  await dialog.verifyStepState("02", "waiting");
+  await dialog.verifyStepDetail("02", "Queued");
 });
 
 test("a failed generation call surfaces its error without saving anything to the library", async ({

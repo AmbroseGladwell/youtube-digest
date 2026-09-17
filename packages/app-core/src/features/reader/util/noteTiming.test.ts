@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { NoteLine } from "../types/NoteLine.js";
-import { countWords, elapsedSecondsBefore, noteTiming } from "./noteTiming.js";
+import { elapsedSecondsBefore, noteTiming } from "./noteTiming.js";
 
 const body = (text: string): NoteLine => ({ section: "Summary", heading: false, text });
 
 const wordsLine = (count: number) => body(Array.from({ length: count }, () => "word").join(" "));
-
-describe("countWords", () => {
-  it("counts words across any run of whitespace, and nothing in an empty string", () => {
-    expect(countWords("  one   two\nthree ")).toBe(3);
-    expect(countWords("   ")).toBe(0);
-  });
-});
 
 describe("noteTiming", () => {
   it("derives both times from the note's own words, never from a guess", () => {

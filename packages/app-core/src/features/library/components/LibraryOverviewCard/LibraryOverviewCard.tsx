@@ -10,6 +10,7 @@ import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
 
 export interface LibraryOverviewCardProps {
   overviewWithState: OverviewWithState;
+  entering?: boolean;
   topicNames: string[];
   onToggleFavourite: () => void;
   onToggleRead: () => void;
@@ -32,6 +33,7 @@ const SELLING_LABEL: Record<string, string> = {
 
 export function LibraryOverviewCard({
   overviewWithState,
+  entering = false,
   topicNames,
   onToggleFavourite,
   onToggleRead,
@@ -41,7 +43,11 @@ export function LibraryOverviewCard({
   const readerPath = Routes.overview(overview.id);
 
   return (
-    <article className={styles.root} data-testid={libraryOverviewCardTestIds.root}>
+    <article
+      className={`${styles.root} ${entering ? styles.entering : ""}`}
+      data-entering={entering || undefined}
+      data-testid={libraryOverviewCardTestIds.root}
+    >
       <div className={styles.row}>
         <OverviewThumbnail video={overview.video} to={readerPath} />
         <div className={styles.body}>

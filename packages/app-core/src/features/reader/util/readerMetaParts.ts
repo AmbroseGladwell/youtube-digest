@@ -1,4 +1,4 @@
-import { formatClock } from "./formatClock.js";
+import { formatClock } from "../../../util/formatClock.js";
 import type { NoteTiming } from "./noteTiming.js";
 
 // The design's "4 min read · 6 min listen · 11:38 video". The video term is dropped

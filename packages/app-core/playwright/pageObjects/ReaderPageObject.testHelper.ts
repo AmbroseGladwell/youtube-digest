@@ -101,6 +101,32 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
+  scrollTheNote = () =>
+    this.step("scrollTheNote", async () => {
+      await this.page.mouse.wheel(0, 900);
+      await expect(async () => {
+        expect(await this.page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+      }).toPass({ timeout: 2_000 });
+    });
+
+  verifyRailRestsUnderTheTabs = () =>
+    this.step("verifyRailRestsUnderTheTabs", () =>
+      expect(async () => {
+        const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
+        const rail = (await this.get(readerRailTestIds.sticky).boundingBox())!;
+        expect(Math.round(rail.y)).toBe(Math.round(tabs.y + tabs.height));
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  // The reader's foot is the player bar, not the window, so that is what the rail's divider
+  // has to reach rather than the viewport edge.
+  verifyRailDividerMeetsThePlayerBar = () =>
+    this.step("verifyRailDividerMeetsThePlayerBar", async () => {
+      const rail = (await this.get(readerRailTestIds.root).boundingBox())!;
+      const player = (await this.get(readerPlayerBarTestIds.root).boundingBox())!;
+      expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(Math.round(player.y));
+    });
+
   verifyPageDoesNotScrollSideways = () =>
     this.step("verifyPageDoesNotScrollSideways", async () => {
       const overflow = await this.page.evaluate(

@@ -22,8 +22,11 @@ import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { noteTiming } from "../util/noteTiming.js";
 import { readerMetaParts } from "../util/readerMetaParts.js";
 import { useReadAlong } from "./useReadAlong.js";
+import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
+
+const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
@@ -44,6 +47,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const topicsQuery = useTopicsQuery();
   const setOverviewState = useSetOverviewStateMutation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
+  const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
 
   const overview = overviewQuery.data?.overview ?? null;
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
@@ -85,7 +89,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const range = overview.watchAnyway?.range ?? null;
 
   return (
-    <article className={styles.root} data-testid={readerPageTestIds.root}>
+    <article className={styles.root} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
       <ReaderMasthead
         overview={overview}
         topicNames={topicNames}
@@ -99,7 +103,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         onTogglePlaying={readAlong.togglePlaying}
       />
 
-      <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={setTab} />
+      <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={setTab} ref={tabsHeight.measured} />
 
       <div className={styles.grid}>
         <div className={styles.main} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>

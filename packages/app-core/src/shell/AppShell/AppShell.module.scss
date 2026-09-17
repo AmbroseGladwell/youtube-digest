@@ -9,11 +9,16 @@
 // its width: with equal padding the content reads high against the line below it.
 $rule: 2px;
 
+// The whole sticky band, which is what anything sticking beneath it has to clear: the
+// generation status strip belongs inside it, under the bar's rule.
 .masthead {
   position: sticky;
   top: 0;
   z-index: 3;
   background: var(--ground);
+}
+
+.bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -45,26 +50,12 @@ $rule: 2px;
   color: var(--ink);
 }
 
-// The slot takes a whole flex line, so revealing it drops a row under the bar rather than
-// squeezing the nav. Capping the slot itself would stop the line ever breaking — flex
-// line-breaking measures the clamped size — so the width cap lives on the inner wrapper.
-.generateSlot {
-  order: 3;
-  flex: 0 0 100%;
-  min-width: 0;
-  display: none;
-}
-
-.generateSlotOpen {
-  display: block;
-}
-
-.generateInner {
-  max-width: 28.75rem;
-}
-
+// align-items matters here rather than being a default: the phone's 44px target is a
+// min-height, and a stretched anonymous text item would sit at the top of the pill.
 .newOverviewButton {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   margin-left: auto;
   border: 1px solid var(--accent);
@@ -111,7 +102,7 @@ $rule: 2px;
 }
 
 @media (max-width: 61.9375rem) {
-  .masthead {
+  .bar {
     padding: calc(0.85rem + #{$rule}) 1.25rem 0.85rem;
   }
 
@@ -119,7 +110,8 @@ $rule: 2px;
     font-size: 1.25rem;
   }
 
-  .generateInner {
-    max-width: none;
+  .newOverviewButton {
+    min-height: 2.75rem;
+    padding-inline: 1rem;
   }
 }

@@ -1,0 +1,377 @@
+// Design 4a/5a: a centred dialog on a desktop, the same panel as a bottom sheet on a
+// phone. The <dialog> element itself is the positioner, so it carries no paint — and it is
+// what the entrance animates, so that the sheet's travel is a percentage of its own height.
+$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
+
+.dialog {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, #201f1d 44%, transparent);
+}
+
+// The scrim fades first and the panel arrives behind it, 80ms in, so the dim reads as the
+// cause and the dialog as the consequence. The opening is the only animated half: closing
+// is immediate, which is the asymmetry frontend-architecture-guide.md 2.4 asks for taken
+// to its end. Reduced motion drops both through theme/global.scss's blanket rule, leaving
+// the dialog in its end state.
+.dialog[open] {
+  animation: dialogFadeUp 480ms $enter-easing 80ms both;
+}
+
+.dialog[open]::backdrop {
+  animation: scrimFade 260ms ease both;
+}
+
+@keyframes scrimFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Desktop travel is 10px and mostly a fade: the dialog is not coming from anywhere.
+@keyframes dialogFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// The sheet is coming from somewhere — the bottom edge — so it travels its own full height
+// and does not fade at all.
+@keyframes sheetTravel {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.panel {
+  width: min(31.25rem, calc(100vw - 2.5rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  background: var(--ground);
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem 1.625rem 1.375rem;
+}
+
+// The sheet's grab handle: the design draws it only on the phone panel.
+.handle {
+  display: none;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-badge);
+  background: var(--edge);
+  align-self: center;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.625rem;
+  line-height: 1;
+}
+
+.close {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 1rem;
+  color: var(--faint);
+  cursor: pointer;
+}
+
+.source {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.875rem;
+  align-items: start;
+}
+
+.source:has(> .sourceText:first-child) {
+  grid-template-columns: 1fr;
+}
+
+.sourceText {
+  min-width: 0;
+}
+
+.sourceTitle {
+  margin: 0 0 0.1875rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.22;
+}
+
+.sourceMeta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--faint);
+  overflow-wrap: anywhere;
+}
+
+.rule {
+  display: block;
+  height: 1px;
+  background: var(--ink);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 1.125rem 1fr 1rem;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.step[data-state="waiting"] {
+  opacity: 0.55;
+}
+
+.stepNumber {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+
+.stepBody {
+  min-width: 0;
+}
+
+.stepLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--faint);
+}
+
+.step[data-state="running"] .stepLabel {
+  color: var(--accent-deep);
+}
+
+.step[data-state="done"] .stepLabel {
+  color: var(--ink);
+}
+
+.stepDetail {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.stepMark {
+  font-size: 0.75rem;
+  text-align: right;
+  color: var(--accent);
+}
+
+.step[data-state="done"] .stepMark {
+  color: var(--accent-strong);
+}
+
+.step[data-state="running"] .stepMark {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.barTrack {
+  display: block;
+  height: 2px;
+  margin-top: 0.44rem;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  overflow: hidden;
+}
+
+.step[data-state="waiting"] .barTrack {
+  background: transparent;
+}
+
+.barFill {
+  display: block;
+  height: 2px;
+  width: 0;
+  background: var(--accent);
+}
+
+.step[data-state="done"] .barFill {
+  width: 100%;
+}
+
+// A sweep rather than a percentage: nothing here knows how far through a step it is, and
+// a bar that claimed to would be inventing the number (docs/prototype/constraints.md).
+.step[data-state="running"] .barFill {
+  width: 40%;
+  animation: sweep 1.5s linear infinite;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.elapsed {
+  font-size: 0.72rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.footActions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-control);
+}
+
+.footNote {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+
+.secondaryAction,
+.primaryAction {
+  border-radius: var(--radius-badge);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.secondaryAction {
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--faint);
+}
+
+.primaryAction {
+  border: 1px solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding-inline: 1.25rem;
+}
+
+.quietAction {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--faint);
+  cursor: pointer;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .dialog {
+    margin: auto 0 0;
+    width: 100%;
+  }
+
+  .dialog[open] {
+    animation-name: sheetTravel;
+  }
+
+  .panel {
+    width: 100%;
+    border: 0;
+    border-top: 2px solid var(--ink);
+    padding: 0.875rem 1.25rem 1.25rem;
+  }
+
+  .handle {
+    display: block;
+  }
+
+  .heading {
+    font-size: 1.5rem;
+  }
+
+  .source {
+    grid-template-columns: 5.75rem 1fr;
+  }
+
+  .footRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  // The phone stacks the pair with the action you are most likely to want on top, which
+  // reverses the desktop row's secondary-then-primary reading order.
+  .footActions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .elapsed,
+  .footNote {
+    text-align: center;
+  }
+
+  .secondaryAction,
+  .primaryAction {
+    min-height: 2.75rem;
+  }
+}
