@@ -9,7 +9,7 @@
 .grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 15rem 1fr;
+  grid-template-columns: 16.5rem 1fr;
 }
 
 .rail {
@@ -34,12 +34,13 @@
   min-width: 0;
 }
 
+// Sized so the list starts level with the foot of the rail's search field.
 .listHead {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.8rem;
 }
 
 .listCount {

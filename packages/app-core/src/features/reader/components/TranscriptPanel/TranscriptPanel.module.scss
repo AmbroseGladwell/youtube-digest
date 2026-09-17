@@ -1,0 +1,73 @@
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  margin: 0 0 0.625rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.69rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.placeholderNote {
+  color: var(--accent-strong);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1.125rem;
+  align-items: baseline;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--divider);
+  border-left: 2px solid transparent;
+  background: transparent;
+  padding: 0.625rem 0 0.625rem 0.625rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowActive {
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.time {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+
+.rowActive .time {
+  color: var(--accent-strong);
+}
+
+.text {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.rowActive .text {
+  color: var(--ink);
+}
+
+@media (max-width: 61.9375rem) {
+  .row {
+    grid-template-columns: 3rem 1fr;
+    gap: 0.75rem;
+  }
+
+  .text {
+    font-size: 0.84rem;
+  }
+}

@@ -5,12 +5,21 @@
   background: var(--ground);
 }
 
+// The rule at the foot is part of the band the text sits in, so the top padding carries
+// its width: with equal padding the content reads high against the line below it.
+$rule: 2px;
+
 .masthead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ground);
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.85rem 2rem;
-  border-bottom: 2px solid var(--ink);
+  flex-wrap: wrap;
+  gap: 0.75rem var(--gap-group);
+  padding: calc(0.85rem + #{$rule}) 2rem 0.85rem;
+  border-bottom: $rule solid var(--ink);
 }
 
 .brand {
@@ -36,20 +45,32 @@
   color: var(--ink);
 }
 
+// The slot takes a whole flex line, so revealing it drops a row under the bar rather than
+// squeezing the nav. Capping the slot itself would stop the line ever breaking — flex
+// line-breaking measures the clamped size — so the width cap lives on the inner wrapper.
 .generateSlot {
-  flex: 1;
+  order: 3;
+  flex: 0 0 100%;
   min-width: 0;
+  display: none;
+}
+
+.generateSlotOpen {
+  display: block;
+}
+
+.generateInner {
   max-width: 28.75rem;
 }
 
 .newOverviewButton {
-  display: none;
+  display: inline-flex;
   flex: none;
   margin-left: auto;
   border: 1px solid var(--accent);
   border-radius: var(--radius-badge);
-  background: transparent;
-  color: var(--accent-strong);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
   padding: 0.3rem 0.85rem;
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -59,18 +80,20 @@
 
 .nav {
   flex: none;
-  margin-left: auto;
   display: flex;
-  gap: 1.25rem;
+  gap: var(--gap-group);
   font-size: 0.82rem;
   letter-spacing: 0.04em;
 }
 
+// The active underline hangs below the text. Without matching space above it the link's
+// box is lopsided, and centring that box in the masthead lifts the text off the line the
+// brand and the buttons sit on.
 .navLink {
   color: var(--faint);
   text-decoration: none;
-  border-bottom: 2px solid transparent;
-  padding-bottom: 2px;
+  border-block: 2px solid transparent;
+  padding-block: 2px;
 }
 
 .navLinkActive {
@@ -89,31 +112,14 @@
 
 @media (max-width: 61.9375rem) {
   .masthead {
-    flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
-    padding: 0.85rem 1.25rem;
+    padding: calc(0.85rem + #{$rule}) 1.25rem 0.85rem;
   }
 
   .title {
     font-size: 1.25rem;
   }
 
-  .newOverviewButton {
-    display: inline-flex;
-  }
-
-  .nav {
-    margin-left: 0;
-  }
-
-  .generateSlot {
-    order: 3;
-    flex: 0 0 100%;
+  .generateInner {
     max-width: none;
-    display: none;
-  }
-
-  .generateSlotOpen {
-    display: block;
   }
 }

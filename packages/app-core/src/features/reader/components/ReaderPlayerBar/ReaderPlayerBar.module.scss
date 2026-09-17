@@ -1,0 +1,152 @@
+// The accent field is spent on the player alone — everything else in the reader is type
+// on the bare ground (docs/features/overview-redesign.md).
+.root {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 2px solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.75rem 2.5rem 0.875rem;
+}
+
+.progress {
+  order: 2;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.clock {
+  font-size: 0.69rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  flex: 1;
+  height: 2px;
+  background: color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.trackFill {
+  height: 2px;
+  background: currentColor;
+}
+
+.transport {
+  order: 1;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-control);
+}
+
+.step {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.94rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+.play {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: inherit;
+  font-size: 0.94rem;
+  cursor: pointer;
+}
+
+.nowReading {
+  order: 3;
+  margin: 0;
+  flex: none;
+  font-size: 0.69rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rate {
+  order: 4;
+  flex: none;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  padding: 0.3rem 0.7rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.favourite {
+  order: 5;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+// Design 2c's phone player: progress across the top, then rate, transport and ♡ on one
+// row, with what's being read underneath.
+@media (max-width: 61.9375rem) {
+  .root {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "progress progress progress"
+      "rate transport favourite"
+      "now now now";
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem 1.125rem;
+  }
+
+  .progress {
+    grid-area: progress;
+  }
+
+  .rate {
+    grid-area: rate;
+    justify-self: start;
+  }
+
+  .transport {
+    grid-area: transport;
+    justify-content: center;
+    gap: 1.125rem;
+  }
+
+  .play {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.125rem;
+  }
+
+  .favourite {
+    grid-area: favourite;
+    justify-self: end;
+  }
+
+  .nowReading {
+    grid-area: now;
+  }
+}

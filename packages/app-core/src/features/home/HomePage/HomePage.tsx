@@ -1,16 +1,14 @@
-import { Link, useOutletContext } from "react-router";
+import { Link } from "react-router";
 import { Routes } from "../../../app/Routes.js";
 import { hasRequiredApiKeys } from "../../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
-import type { ShellOutletContext } from "../../../shell/AppShell/AppShell.js";
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 
 export function HomePage() {
   const overviewsQuery = useOverviewsWithStateQuery();
-  const { justGeneratedId } = useOutletContext<ShellOutletContext>();
   const { apiKeys } = useApiKeys();
 
   if (overviewsQuery.isPending) {
@@ -45,8 +43,9 @@ export function HomePage() {
             with <em className={styles.heroEm}>The Overview</em>
           </h2>
           <p className={styles.heroStandfirst}>
-            Paste a YouTube URL in the bar above. Get a succinct overview, with the main
-            premise, key points, actionable steps and a verdict on if it's worth your time.
+            Hit <em className={styles.heroEm}>+ New</em> in the bar above and paste a YouTube
+            URL. Get a succinct overview, with the main premise, key points, actionable steps
+            and a verdict on if it's worth your time.
           </p>
           {!hasRequiredApiKeys(apiKeys) && (
             <p className={styles.heroKeys}>
@@ -63,7 +62,7 @@ export function HomePage() {
 
   return (
     <div className={styles.wide} data-testid={homePageTestIds.root}>
-      <LibraryPage overviewsWithState={overviewsQuery.data} justGeneratedId={justGeneratedId} />
+      <LibraryPage overviewsWithState={overviewsQuery.data} />
     </div>
   );
 }

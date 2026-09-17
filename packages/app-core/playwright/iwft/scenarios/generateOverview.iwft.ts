@@ -5,17 +5,20 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-test("a successful generation transitions the home page from the first-run hero to the library, with the new card expanded", async ({
+test("a successful generation opens what it just wrote in the reader, and the library has it too", async ({
   launcher,
 }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
-  const form = await home.verifyShowsFirstRunHero();
+  await home.verifyShowsFirstRunHero();
+  const form = await launcher.appShell.openNewOverview();
   await form.submitUrl(VALID_URL);
 
-  const library = await home.verifyShowsLibrary();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle("The Simulated Video");
+
+  const library = await reader.clickBackToLibrary();
   await library.expectCardCountToBe(1);
-  const card = library.cardWithTitle("The Simulated Video");
-  await card.verifyIsExpanded();
+  await library.cardWithTitle("The Simulated Video").verifyTitle("The Simulated Video");
 });
 
 test("the transcript-fetch phase surfaces its error, and generation never reaches Anthropic", async ({
