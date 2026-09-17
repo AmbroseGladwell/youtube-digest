@@ -1,4 +1,4 @@
-import { apiKeysPanelTestIds } from "../../src/features/newOverview/components/ApiKeysPanel/ApiKeysPanelTestIds.js";
+import { apiKeysPanelTestIds } from "../../src/features/settings/components/ApiKeysPanel/ApiKeysPanelTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class ApiKeysPanelPageObject extends PageObject {

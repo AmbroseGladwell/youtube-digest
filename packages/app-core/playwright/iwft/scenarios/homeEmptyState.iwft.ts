@@ -1,18 +1,18 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 
-test("an empty library shows the plain generate form, not the filter/library chrome", async ({ launcher }) => {
-  const form = await launcher.launchExpectingEmptyStateForm();
-  await form.apiKeysPanel.verifyIsShown();
+test("an empty library shows the first-run hero, not the filter/library chrome", async ({ launcher }) => {
+  const form = await launcher.launchExpectingFirstRun();
+  await form.verifyIsShown();
 });
 
 test("with no keys saved, the url input stays disabled behind the keys panel", async ({ launcher }) => {
-  const form = await launcher.launchExpectingEmptyStateForm();
+  const form = await launcher.launchExpectingFirstRun();
   await form.verifyUrlInputDisabled();
 });
 
 test("with keys already saved, the generate form is usable immediately, no keys panel", async ({ launcher }) => {
-  const form = await launcher.launchExpectingEmptyStateForm({
+  const form = await launcher.launchExpectingFirstRun({
     apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
   });
   await form.verifyIsShown();
@@ -23,7 +23,7 @@ test("submitting a non-YouTube URL shows a validation error and makes no network
   launcher,
   backendSimulator,
 }) => {
-  const form = await launcher.launchExpectingEmptyStateForm({
+  const form = await launcher.launchExpectingFirstRun({
     apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
   });
 

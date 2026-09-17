@@ -1,15 +1,15 @@
 import { useState, type FormEvent } from "react";
+import { Link, useLocation } from "react-router";
 import type { Overview } from "@overview/types";
+import { Routes } from "../../../../app/Routes.js";
 import { hasRequiredApiKeys } from "../../../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
-import { ApiKeysPanel } from "../ApiKeysPanel/ApiKeysPanel.js";
 import { useGenerateOverviewMutation } from "../../mutations/useGenerateOverviewMutation.js";
 import { isYouTubeUrl } from "../../util/parseYouTubeUrl.js";
 import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
 
 export interface GenerateOverviewFormProps {
-  variant?: "hero" | "compact";
   onGenerated?: (overview: Overview) => void;
 }
 
@@ -19,18 +19,13 @@ const PHASE_LABEL: Record<string, string> = {
   saving: "Saving…",
 };
 
-export function GenerateOverviewForm({ variant = "hero", onGenerated }: GenerateOverviewFormProps) {
-  const { apiKeys, setApiKeys } = useApiKeys();
-  const [showKeysPanel, setShowKeysPanel] = useState(!hasRequiredApiKeys(apiKeys));
+export function GenerateOverviewForm({ onGenerated }: GenerateOverviewFormProps) {
+  const { apiKeys } = useApiKeys();
+  const { pathname } = useLocation();
   const [url, setUrl] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const generateOverview = useGenerateOverviewMutation(apiKeys);
-
-  const handleSaveKeys = (patch: Parameters<typeof setApiKeys>[0]) => {
-    setApiKeys(patch);
-    setShowKeysPanel(false);
-  };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -53,34 +48,16 @@ export function GenerateOverviewForm({ variant = "hero", onGenerated }: Generate
   const keysReady = hasRequiredApiKeys(apiKeys);
 
   return (
-    <div
-      className={`${styles.root} ${variant === "compact" ? styles.compact : ""}`}
-      data-testid={generateOverviewFormTestIds.root}
-    >
-      {showKeysPanel || !keysReady ? (
-        <ApiKeysPanel apiKeys={apiKeys} onSave={handleSaveKeys} />
-      ) : (
-        <div className={styles.keysRow}>
-          <span className={styles.keysStatus}>Using your saved API keys</span>
-          <button
-            type="button"
-            className={styles.editKeysButton}
-            onClick={() => setShowKeysPanel(true)}
-            data-testid={generateOverviewFormTestIds.editKeysButton}
-          >
-            Change keys
-          </button>
-        </div>
-      )}
-
+    <div className={styles.root} data-testid={generateOverviewFormTestIds.root}>
       <form className={styles.form} onSubmit={handleSubmit}>
         <input
           type="url"
           className={styles.urlInput}
-          placeholder="https://www.youtube.com/watch?v=…"
+          placeholder="Paste a YouTube link"
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           disabled={!keysReady || generateOverview.isPending}
+          aria-label="YouTube URL"
           data-testid={generateOverviewFormTestIds.urlInput}
         />
         <button
@@ -92,6 +69,16 @@ export function GenerateOverviewForm({ variant = "hero", onGenerated }: Generate
           {generateOverview.isPending ? "Generating…" : "Generate overview"}
         </button>
       </form>
+
+      {!keysReady && pathname !== Routes.settings() && (
+        <Link
+          className={styles.settingsLink}
+          to={Routes.settings()}
+          data-testid={generateOverviewFormTestIds.settingsLink}
+        >
+          Add your Anthropic and Supadata keys →
+        </Link>
+      )}
 
       {validationError && (
         <p className={styles.validationError} data-testid={generateOverviewFormTestIds.validationError}>

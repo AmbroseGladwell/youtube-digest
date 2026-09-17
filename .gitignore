@@ -3,7 +3,8 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .env
+.idea/
 test-results/
 playwright-report/
-playwright/.cache/
+**/playwright/.cache/
 blob-report/

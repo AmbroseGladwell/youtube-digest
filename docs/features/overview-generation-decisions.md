@@ -66,10 +66,16 @@ video already chosen for saving is unlikely to assert literally nothing).
 **Decision: split into a novelty label (primary) and a single binary flag,
 `dubious` (secondary), plus a pre-check gate.**
 
-- Novelty (always shown, one of): `NOVEL` / `COMPETENT, NOT NEW` / `RECYCLED`.
-  `COMPETENT, NOT NEW` replaces `SOLID BUT FAMILIAR` — the stated dislike was the old
-  phrase specifically, and this reorders the emphasis (quality judgment first,
-  familiarity flag second) rather than just re-wording the same two clauses.
+- Novelty (always shown, one of): `NOVEL` / `ESTABLISHED` / `RECYCLED`.
+  `ESTABLISHED` replaces `SOLID BUT FAMILIAR` — the stated dislike was the old
+  phrase specifically, and one word that says the material is settled carries the
+  quality judgment without the two-clause hedge. It was `COMPETENT, NOT NEW` first,
+  which reordered the two clauses rather than losing them. Local stores written
+  before the rename hold the old value, and library reads aren't re-validated
+  against the schema, so the local database version was bumped to drop stored
+  overviews and their read/favourite state on next open rather than migrate them —
+  topics and settings (the API key) survive. See
+  `packages/store-local/src/openLocalDatabase.test.ts`.
 - Soundness collapses to one visible bit: `dubious`, present or absent, nothing
   else — see the next section for why a three-value version was considered and
   dropped. This matches the app's own existing badge vocabulary (`sells nothing`,
@@ -83,11 +89,11 @@ Re-scored, the five samples become:
 
 | Note | Old label | New label |
 |---|---|---|
-| business/adaptability | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
+| business/adaptability | SOLID BUT FAMILIAR | ESTABLISHED |
 | finance/gap | RECYCLED | RECYCLED |
-| fitness/arms | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
+| fitness/arms | SOLID BUT FAMILIAR | ESTABLISHED |
 | interesting/heartbeats | NOVEL | NOVEL |
-| parenting/multiplication | SOLID BUT FAMILIAR | COMPETENT, NOT NEW |
+| parenting/multiplication | SOLID BUT FAMILIAR | ESTABLISHED |
 
 None of the five cross the `dubious` bar — it's meant to be rare. The overreach
 complaints in the business and fitness notes ("no counter-case offered," "the
@@ -486,7 +492,7 @@ a genuinely contested question as settled fact would be. This sharpens the exist
 
 **Novelty answers a different question for advice than it does for reference
 content, using the same label.** For advice, "familiar" means "you can probably
-skip this." For an MIT lecture correctly teaching standard material, `competent_not_new`
+skip this." For an MIT lecture correctly teaching standard material, `established`
 is accurate but isn't a reason to skip anything — the value of the lecture is in the
 teaching, not the novelty of the theorem. **Left as an interpretive fix, not a
 structural one, for now:** the reasoning text already carries this distinction (as

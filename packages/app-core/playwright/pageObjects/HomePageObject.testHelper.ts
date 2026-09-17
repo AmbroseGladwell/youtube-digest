@@ -10,8 +10,9 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
-  verifyShowsEmptyStateForm = (): Promise<GenerateOverviewFormPageObject> =>
-    this.step("verifyShowsEmptyStateForm", async () => {
+  verifyShowsFirstRunHero = (): Promise<GenerateOverviewFormPageObject> =>
+    this.step("verifyShowsFirstRunHero", async () => {
+      await this.expectToBeVisible(homePageTestIds.hero);
       const form = new GenerateOverviewFormPageObject(this.testContext);
       await form.verifyIsShown();
       return form;

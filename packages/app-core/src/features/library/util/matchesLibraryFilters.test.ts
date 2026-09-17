@@ -29,6 +29,22 @@ describe("matchesLibraryFilters", () => {
     expect(matchesLibraryFilters(thin, { ...DEFAULT_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
   });
 
+  it("filters by favourite, and by the dubious flag on the verdict", () => {
+    const favourite = makeOverviewWithState({}, { favourite: true });
+    const plain = makeOverviewWithState({}, { favourite: false });
+    const dubious = makeOverviewWithState({
+      verdict: { novelty: "recycled", dubious: true, reasoning: "x", similarTo: [] },
+    });
+    const sound = makeOverviewWithState({
+      verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
+    });
+
+    expect(matchesLibraryFilters(favourite, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(true);
+    expect(matchesLibraryFilters(plain, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(false);
+    expect(matchesLibraryFilters(dubious, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(true);
+    expect(matchesLibraryFilters(sound, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(false);
+  });
+
   it("filters by read status", () => {
     const unread = makeOverviewWithState({}, { read: false });
     const read = makeOverviewWithState({}, { read: true });

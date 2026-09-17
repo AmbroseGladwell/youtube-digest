@@ -16,6 +16,8 @@ describe("parseLibraryFilters", () => {
       topicId: TOPIC,
       novelty: "novel",
       status: "read",
+      favourite: false,
+      dubious: false,
       query: "botox",
     });
   });
@@ -24,9 +26,27 @@ describe("parseLibraryFilters", () => {
     const params = new URLSearchParams({ topic: "not-a-uuid", verdict: "made-up" });
     expect(parseLibraryFilters(params)).toEqual(DEFAULT_LIBRARY_FILTERS);
   });
+
+  it("reads the favourite and dubious flags only from their exact param value", () => {
+    expect(parseLibraryFilters(new URLSearchParams({ fav: "1", dubious: "1" }))).toMatchObject({
+      favourite: true,
+      dubious: true,
+    });
+    expect(parseLibraryFilters(new URLSearchParams({ fav: "true", dubious: "yes" }))).toMatchObject({
+      favourite: false,
+      dubious: false,
+    });
+  });
 });
 
 describe("applyLibraryFilterPatch", () => {
+  it("drops the flag params when patched off, rather than writing a falsy value", () => {
+    const withFlags = new URLSearchParams({ fav: "1", dubious: "1" });
+    const next = applyLibraryFilterPatch(withFlags, { favourite: false, dubious: false });
+    expect(next.has("fav")).toBe(false);
+    expect(next.has("dubious")).toBe(false);
+  });
+
   it("sets a param for a real value", () => {
     const next = applyLibraryFilterPatch(new URLSearchParams(), { novelty: "recycled" });
     expect(next.get("verdict")).toBe("recycled");

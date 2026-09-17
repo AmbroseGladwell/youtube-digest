@@ -1,0 +1,71 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: 1px solid var(--divider);
+  padding-top: 1.1rem;
+  max-width: 35rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--edge);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.45rem 0.125rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.modelDescription {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--faint);
+}
+
+.saveButton {
+  align-self: flex-start;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-btn);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.4rem 1.1rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+}

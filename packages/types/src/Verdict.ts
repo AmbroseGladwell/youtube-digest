@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 
-export const Novelty = z.enum(["novel", "competent_not_new", "recycled"]);
+export const Novelty = z.enum(["novel", "established", "recycled"]);
 export type Novelty = z.infer<typeof Novelty>;
 
 export const SimilarOverview = z.object({

@@ -12,14 +12,23 @@ export interface OpenLocalDatabaseOptions {
   indexedDB?: IDBFactory;
 }
 
+const NOVELTY_RENAME_RESET_VERSION = 2;
+
 export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> {
   const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB } = options;
 
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(name, DATABASE_VERSION);
 
-    request.onupgradeneeded = () => {
+    request.onupgradeneeded = (event) => {
       const db = request.result;
+      const upgradingFromBeforeNoveltyRename =
+        event.oldVersion > 0 && event.oldVersion < NOVELTY_RENAME_RESET_VERSION;
+      if (upgradingFromBeforeNoveltyRename) {
+        for (const store of [OVERVIEWS_STORE, OVERVIEW_STATES_STORE]) {
+          if (db.objectStoreNames.contains(store)) db.deleteObjectStore(store);
+        }
+      }
       if (!db.objectStoreNames.contains(OVERVIEWS_STORE)) {
         db.createObjectStore(OVERVIEWS_STORE, { keyPath: "id" });
       }

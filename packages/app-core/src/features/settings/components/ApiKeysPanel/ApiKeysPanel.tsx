@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ANTHROPIC_MODEL_OPTIONS, DEFAULT_ANTHROPIC_MODEL, type AnthropicModel } from "@overview/types";
 import type { ApiKeys } from "../../../apiKeys/ApiKeys.js";
-import { useUpdateSettingsMutation } from "../../../settings/mutations/useUpdateSettingsMutation.js";
-import { useSettingsQuery } from "../../../settings/queries/settingsQuery.js";
+import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
+import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
 
@@ -52,10 +52,6 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
   return (
     <form className={styles.root} onSubmit={handleSubmit} data-testid={apiKeysPanelTestIds.root}>
       <p className={styles.heading}>Connect your keys</p>
-      <p className={styles.hint}>
-        Generation is bring-your-own-key: your keys stay on this device and are sent
-        straight to Anthropic and Supadata, never through our servers.
-      </p>
       <div className={styles.field}>
         <label className={styles.label} htmlFor="anthropic-api-key">
           Anthropic API key

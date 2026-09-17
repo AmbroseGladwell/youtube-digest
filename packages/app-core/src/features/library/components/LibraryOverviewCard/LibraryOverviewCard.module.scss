@@ -1,96 +1,98 @@
 .root {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  margin-bottom: 0.75rem;
-  overflow: hidden;
+  border-top: 1px solid var(--divider);
+  padding: 1.25rem 0;
 }
 
-.root.isRead {
-  opacity: 0.7;
+.row {
+  display: grid;
+  grid-template-columns: 9.25rem 1fr auto;
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.header {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
+// No thumbnail saved: the body is the first cell, and the text takes its column.
+.row:has(> .body:first-child) {
+  grid-template-columns: 1fr auto;
 }
 
 .thumbnail {
-  flex: none;
-  width: 7.5rem;
-  height: auto;
-  align-self: center;
-  margin-left: 1rem;
-  border-radius: 8px;
-  object-fit: cover;
+  width: 100%;
   aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid var(--line);
   background: var(--sunk);
 }
 
-@media (max-width: 30rem) {
-  .thumbnail {
-    width: 5rem;
-    margin-left: 0.6rem;
-  }
-}
-
-.expandToggle {
-  flex: 1;
-  text-align: left;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0.9rem 1rem;
-  color: inherit;
-  font: inherit;
-}
-
-.badgeRow {
+.body {
+  min-width: 0;
   display: flex;
-  gap: 0.35rem;
-  margin-bottom: 0.3rem;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
-.miniBadge {
-  display: inline-flex;
+.kickerRow {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.topicPill {
+  border: 1px solid var(--edge);
   border-radius: var(--radius-badge);
-  padding: 0.1rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  background: var(--sunk);
-  color: var(--muted);
+  padding: 1px 0.45rem;
+  letter-spacing: 0.1em;
+  color: var(--ink);
 }
 
-.miniBadgeNovel {
-  background: var(--novel-soft);
-  color: var(--novel);
+.verdict {
+  color: var(--faint);
 }
 
-.miniBadgeRecycled {
-  background: var(--recycled-soft);
-  color: var(--recycled);
+.verdictNovel {
+  color: var(--ink);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 2px;
 }
 
-.miniDubious {
-  display: inline-flex;
-  align-items: center;
-  color: var(--dubious);
-  font-size: 0.72rem;
-  font-weight: 600;
+.dubious {
+  color: var(--accent-strong);
+  letter-spacing: 0.12em;
+}
+
+.selling {
+  color: var(--faint);
+}
+
+.titleButton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
 }
 
 .title {
-  margin: 0 0 0.2rem;
-  font-size: 1rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  color: var(--ink);
 }
 
 .meta {
-  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
   color: var(--faint);
-  font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -98,43 +100,103 @@
   -webkit-box-orient: vertical;
 }
 
+.channel {
+  color: var(--ink);
+}
+
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.9rem 1rem 0.9rem 0;
+  gap: 0.375rem;
 }
 
-.actionButton {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-btn);
-  background: var(--ground);
+.action {
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-badge);
+  background: transparent;
   color: var(--muted);
-  padding: 0.3rem 0.6rem;
-  font-size: 0.78rem;
-  cursor: pointer;
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.actionButtonActive {
-  border-color: var(--edge);
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.favouriteButton {
+.favouriteAction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;
+  height: 1.875rem;
   padding: 0;
-  font-size: 1.1rem;
-  line-height: 1;
+  font-size: 0.8rem;
 }
 
-.body {
-  border-top: 1px solid var(--line);
-  padding: 1rem;
-  background: var(--ground);
+.actionActive {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.primaryAction {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.expanded {
+  padding-top: 1.25rem;
+}
+
+// On a phone the actions drop under the text as plain type — a row of pills would take
+// the whole width from the note itself (design 2c).
+@media (max-width: 47.9375rem) {
+  .row {
+    grid-template-columns: 6rem 1fr;
+    gap: 0.875rem;
+  }
+
+  .row:has(> .body:first-child) {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 1.125rem;
+  }
+
+  .actions {
+    grid-column: 2;
+    gap: 0.9rem;
+    padding-top: 0.125rem;
+  }
+
+  .row:has(> .body:first-child) .actions {
+    grid-column: 1;
+  }
+
+  .action,
+  .primaryAction,
+  .favouriteAction {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    width: auto;
+    height: auto;
+    font-size: 0.75rem;
+  }
+
+  .primaryAction {
+    color: var(--accent-strong);
+    border-bottom: 1px solid var(--accent);
+  }
+
+  .actionActive {
+    color: var(--accent-strong);
+  }
 }

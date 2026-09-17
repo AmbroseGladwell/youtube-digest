@@ -1,31 +1,119 @@
 .root {
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   background: var(--ground);
 }
 
 .masthead {
-  padding: 2rem 1.25rem 1.25rem;
-  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 2rem;
+  border-bottom: 2px solid var(--ink);
 }
 
-.mastheadInner {
-  max-width: var(--measure);
-  margin: 0 auto;
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.56rem;
+  flex: none;
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.mark {
+  display: block;
+  flex: none;
 }
 
 .title {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1;
   color: var(--ink);
 }
 
-.standfirst {
-  margin: 0.35rem 0 0;
-  color: var(--muted);
-  font-size: 0.95rem;
+.generateSlot {
+  flex: 1;
+  min-width: 0;
+  max-width: 28.75rem;
 }
 
+.newOverviewButton {
+  display: none;
+  flex: none;
+  margin-left: auto;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: transparent;
+  color: var(--accent-strong);
+  padding: 0.3rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nav {
+  flex: none;
+  margin-left: auto;
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.navLink {
+  color: var(--faint);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+}
+
+.navLinkActive {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+// The pane stretches so the library's rail border runs to the bottom of the window
+// rather than stopping where the list stops.
 .pane {
-  padding: 1.5rem 1.25rem 3rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 61.9375rem) {
+  .masthead {
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding: 0.85rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .newOverviewButton {
+    display: inline-flex;
+  }
+
+  .nav {
+    margin-left: 0;
+  }
+
+  .generateSlot {
+    order: 3;
+    flex: 0 0 100%;
+    max-width: none;
+    display: none;
+  }
+
+  .generateSlotOpen {
+    display: block;
+  }
 }

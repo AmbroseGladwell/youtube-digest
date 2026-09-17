@@ -1,5 +1,5 @@
 export const DATABASE_NAME = "overview-local-store";
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 export const OVERVIEWS_STORE = "overviews";
 export const TOPICS_STORE = "topics";

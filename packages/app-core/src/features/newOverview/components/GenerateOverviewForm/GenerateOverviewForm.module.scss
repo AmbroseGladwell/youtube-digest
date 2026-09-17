@@ -1,88 +1,69 @@
 .root {
-  max-width: var(--measure);
-  margin: 0 auto;
-}
-
-.compact {
-  max-width: none;
-  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .form {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  align-items: center;
 }
 
 .urlInput {
   flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.6rem 0.8rem;
-  background: var(--surface);
-  font-size: 0.95rem;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--edge);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.4rem 0.125rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.urlInput::placeholder {
+  color: var(--faint);
 }
 
 .urlInput:focus-visible {
-  outline: 2px solid var(--edge);
-  outline-offset: 1px;
+  outline: none;
+  border-bottom-color: var(--accent);
 }
 
 .generateButton {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-btn);
-  background: var(--accent);
-  color: var(--surface);
-  padding: 0.6rem 1.3rem;
-  font-weight: 600;
+  flex: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-panel);
+  background: transparent;
+  color: var(--accent-strong);
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .generateButton:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.keysRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.settingsLink {
+  font-size: 0.75rem;
 }
 
-.keysStatus {
-  color: var(--faint);
-  font-size: 0.82rem;
-}
-
-.editKeysButton {
-  border: none;
-  background: none;
-  color: var(--accent);
-  cursor: pointer;
-  font-size: 0.82rem;
-  padding: 0;
-}
-
-.validationError {
-  color: var(--dubious);
-  font-size: 0.85rem;
-  margin: 0 0 0.75rem;
+.validationError,
+.generationError {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--accent-strong);
 }
 
 .progress {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--faint);
-  font-size: 0.9rem;
-  margin: 0.75rem 0;
-}
-
-.generationError {
-  border: 1px solid var(--dubious);
-  background: var(--dubious-soft);
-  color: var(--dubious);
-  border-radius: var(--radius-panel);
-  padding: 0.75rem 1rem;
-  margin: 0.75rem 0;
-  font-size: 0.9rem;
 }
