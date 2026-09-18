@@ -1,5 +1,6 @@
 import { test, type ComponentFixtures } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
+import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
@@ -13,6 +14,7 @@ import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
+  surface?: Surface;
 }
 
 export class Launcher {
@@ -30,7 +32,11 @@ export class Launcher {
     test.step("Launcher.launch", async () => {
       await this.backendSimulator.handleNetworking();
       await this.mount(<IwftAppRoot />, {
-        hooksConfig: { ...this.backendSimulator.buildHooksConfig(), apiKeys: options.apiKeys },
+        hooksConfig: {
+          ...this.backendSimulator.buildHooksConfig(),
+          apiKeys: options.apiKeys,
+          surface: options.surface,
+        },
       });
       return new HomePageObject(this.testContext).verifyIsShown();
     });

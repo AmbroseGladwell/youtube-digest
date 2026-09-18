@@ -26,9 +26,24 @@ contributing to the shared transcript cache, syncing a digest, or queuing a phon
 capture needs to be an attributable identity so we can rate-limit and clean up after
 abuse. It has nothing to do with whether they're paying. What *is* paid-gated is the
 infrastructure itself: cross-device sync, the shared transcript cache, phone capture
-via the share-sheet PWA queue, TTS, and the extension UX-parity features. Anything
-that inherently needs a server is naturally paid-only, because free users never talk
-to one.
+via the share-sheet PWA queue, and TTS. Anything that inherently needs a server is
+naturally paid-only, because free users never talk to one.
+
+**The extension is not one of those things, and this line originally said it was.** It
+listed "the extension UX-parity features" among the paid-gated infrastructure, which was
+wrong by the paragraph's own test: a BYO-key extension contacts no server of ours, so
+there is nothing for an account to gate. Corrected on 2026-09-18, when `apps/extension`
+was built: the extension is free-tier, BYO-key, and its library is local to the
+extension origin.
+
+**Two local libraries is the free tier's honest shape, not a gap to be closed.** Browser
+storage is partitioned by origin, so `chrome-extension://<id>` and the web app's origin
+cannot open the same IndexedDB — `docs/architecture/architecture-options.md` §5 has the
+mechanics. A free user with both surfaces has two libraries. The `externally_connectable`
+bridge that would merge them (§5 row 2) was considered and rejected: it makes the web app
+inert in any browser without the extension installed, which is a worse story than telling
+the user plainly that these are two libraries until an account syncs them. Both surfaces
+say so on screen — the Settings page and the empty-library hero.
 
 **Generation stays BYO-key at every tier, for now.** We never hold an LLM provider
 key or run generation ourselves, at either tier. This is an explicit, revisitable
@@ -136,6 +151,18 @@ deferred), it will need an OAuth 2.1 authorization layer on top — that's the s
 access model MCP clients expect for a chat app to connect to a user's account — but
 that composes cleanly on top of magic-link accounts as an additive layer, so nothing
 about today's auth choice needs to be reworked when that day comes.
+
+**API keys stay in `localStorage` until the first content script exists.**
+`architecture-options.md` §6 puts provider keys in `chrome.storage.local` with
+`setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" })`, and the reason it gives is keeping
+them out of a content script. `apps/extension`'s first slice declares none, so as of
+2026-09-18 that rule defends against nothing while costing a real rework: `chrome.storage`
+is async and `useApiKeys` reads its snapshot synchronously through `useSyncExternalStore`.
+`localStorage` on the extension origin is already per-device and never syncs, which is the
+property the key actually needs. The trigger for migrating is named rather than left to
+memory: the slice that declares the first content script, or the first time a key is read
+outside a document. `readApiKeys(storage: Storage = globalThis.localStorage)` already takes
+the storage as an argument, so the shell is where that change lands.
 
 **Naming is parked.** "YouTube Digest" is taken (Idea 15); no replacement chosen yet.
 

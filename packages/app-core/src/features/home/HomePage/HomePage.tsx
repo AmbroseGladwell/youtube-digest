@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Routes } from "../../../app/Routes.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
 import { hasRequiredApiKeys } from "../../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
@@ -10,6 +11,7 @@ import { homePageTestIds } from "./HomePageTestIds.js";
 export function HomePage() {
   const overviewsQuery = useOverviewsWithStateQuery();
   const { apiKeys } = useApiKeys();
+  const surface = useSurface();
 
   if (overviewsQuery.isPending) {
     return (
@@ -47,6 +49,12 @@ export function HomePage() {
             URL. Get a succinct overview, with the main premise, key points, actionable steps
             and a verdict on if it's worth your time.
           </p>
+          {surface === "extension" && (
+            <p className={styles.heroKeys} data-testid={homePageTestIds.separateLibraryNote}>
+              This is the extension's own library, kept separate from the web app's by the
+              browser itself.
+            </p>
+          )}
           {!hasRequiredApiKeys(apiKeys) && (
             <p className={styles.heroKeys}>
               Generation is bring-your-own-key, and both keys stay on this device.{" "}

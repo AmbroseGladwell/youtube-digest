@@ -2,6 +2,7 @@ export const newOverviewDialogTestIds = {
   root: "NewOverviewDialog.root",
   closeButton: "NewOverviewDialog.closeButton",
   sourceTitle: "NewOverviewDialog.sourceTitle",
+  footNote: "NewOverviewDialog.footNote",
   steps: "NewOverviewDialog.steps",
   step: (number: string) => `NewOverviewDialog.step.${number}`,
   stepDetail: (number: string) => `NewOverviewDialog.stepDetail.${number}`,

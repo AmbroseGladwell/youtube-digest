@@ -4,4 +4,5 @@ export const homePageTestIds = {
   error: "HomePage.error",
   hero: "HomePage.hero",
   settingsLink: "HomePage.settingsLink",
+  separateLibraryNote: "HomePage.separateLibraryNote",
 };

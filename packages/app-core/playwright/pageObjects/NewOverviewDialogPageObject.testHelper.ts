@@ -42,6 +42,11 @@ export class NewOverviewDialogPageObject extends PageObject {
       expect(this.get(newOverviewDialogTestIds.step(stepNumber))).toHaveAttribute("data-state", state),
     );
 
+  verifyFootNote = (pattern: RegExp) =>
+    this.step(`verifyFootNote ${pattern.source}`, () =>
+      expect(this.get(newOverviewDialogTestIds.footNote)).toHaveText(pattern),
+    );
+
   verifyElapsedIsShown = () =>
     this.step("verifyElapsedIsShown", () =>
       expect(this.get(newOverviewDialogTestIds.elapsed)).toHaveText(/^\d+:\d\d elapsed$/),

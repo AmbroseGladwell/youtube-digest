@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter } from "react-router";
+import { createHashRouter } from "react-router";
 import { App, createAppRouter } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
@@ -9,9 +9,11 @@ import {
   openLocalDatabase,
 } from "@overview/store-local";
 
-async function main() {
+// A hash router, not a browser one: an extension document is a packaged file, so a pushed
+// path like /overviews/<id> resolves to nothing and the panel 404s on reload.
+export async function mountApp(): Promise<void> {
   const container = document.getElementById("root");
-  if (!container) throw new Error("index.html is missing its #root element");
+  if (!container) throw new Error("the extension document is missing its #root element");
 
   const db = await openLocalDatabase();
   const overviewStore = new IndexedDbOverviewStore(db);
@@ -22,11 +24,9 @@ async function main() {
     <StrictMode>
       <App
         stores={{ overviewStore, settingsStore, transcriptStore }}
-        router={createAppRouter(createBrowserRouter)}
-        surface="web"
+        router={createAppRouter(createHashRouter)}
+        surface="extension"
       />
     </StrictMode>,
   );
 }
-
-main();
