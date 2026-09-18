@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Overview } from "@overview/types";
+import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
@@ -129,6 +130,7 @@ interface RunProgressProps {
 }
 
 function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: RunProgressProps) {
+  const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const steps = generationRunSteps(run);
   const isDone = run.overview !== null;
@@ -189,7 +191,12 @@ function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: Run
       </ol>
 
       <div className={styles.foot}>
-        {!isDone && <p className={styles.footNote}>You can close this — it keeps going.</p>}
+        {!isDone && (
+          <p className={styles.footNote} data-testid={newOverviewDialogTestIds.footNote}>
+            You can close this — it keeps going.
+            {surface === "extension" && " Closing the side panel does stop it."}
+          </p>
+        )}
         <div className={styles.footRow}>
           <span className={styles.elapsed} data-testid={newOverviewDialogTestIds.elapsed}>
             {formatClock(elapsedSeconds)} elapsed

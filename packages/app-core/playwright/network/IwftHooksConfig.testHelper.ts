@@ -1,4 +1,5 @@
 import type { Overview, OverviewState, StoredTranscript, Topic } from "@overview/types";
+import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 
 // Playwright Component Testing serializes props/hooksConfig across the Node<->browser
@@ -13,4 +14,5 @@ export interface IwftHooksConfig {
   seedTopics?: Topic[];
   seedTranscripts?: StoredTranscript[];
   apiKeys?: ApiKeys;
+  surface?: Surface;
 }

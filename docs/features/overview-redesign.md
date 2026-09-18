@@ -151,7 +151,9 @@ Each of these needs data or a surface the app doesn't have. None is a styling ga
 - **Depth: Standard / Deep.** 4a's desktop panel offers it; nothing in
   `packages/generation` has a depth to set, so the row is left out rather than shipped as a
   control with one working value.
-- **The extension side panel and capture toast.** There is no extension.
+- **The capture toast.** The extension side panel now exists and mounts the same app-core
+  (`apps/extension`), but it has no content script, so there is nothing on a YouTube page to
+  raise a toast from.
 
 ## Generating: the dialog, the steps and the strip
 

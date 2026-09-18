@@ -16,6 +16,16 @@ export class SettingsPageObject extends PageObject {
   verifySavedConfirmation = () =>
     this.step("verifySavedConfirmation", () => this.expectToBeVisible(settingsPageTestIds.savedConfirmation));
 
+  verifySeparateLibraryNote = () =>
+    this.step("verifySeparateLibraryNote", () =>
+      this.expectToBeVisible(settingsPageTestIds.separateLibraryNote),
+    );
+
+  verifyHasNoSeparateLibraryNote = () =>
+    this.step("verifyHasNoSeparateLibraryNote", () =>
+      this.expectNotToBeVisible(settingsPageTestIds.separateLibraryNote),
+    );
+
   clickBackToOverviews = () =>
     this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.backLink));
 }

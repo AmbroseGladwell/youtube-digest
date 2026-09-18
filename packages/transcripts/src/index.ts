@@ -4,4 +4,7 @@ export * from "./FetchedTranscript.js";
 export * from "./mapMetadataToVideoSource.js";
 export * from "./mapTranscriptContent.js";
 export * from "./pollTranscriptJob.js";
+export * from "./withSingleRetry.js";
+export * from "./fetchVideoSource.js";
+export * from "./fetchTranscriptContent.js";
 export * from "./fetchTranscript.js";

@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "The Overview",
+  "version": "0.0.0",
+  "description": "Turns the videos you save and never watch into a blunt, structured note you can read in ninety seconds.",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "sidePanel",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://api.supadata.ai/*"
+  ],
+  "action": {
+    "default_title": "The Overview"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_ui": {
+    "page": "app.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "serviceWorker.js",
+    "type": "module"
+  }
+}

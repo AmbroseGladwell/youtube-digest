@@ -225,4 +225,31 @@ test("a generation that fails still leaves the transcript stored, so a retry doe
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
   expect(stored?.segments).toHaveLength(3);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+
+  backendSimulator.simulateEndpointDefault(EndpointKey.ANTHROPIC_MESSAGES);
+  await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+});
+
+test("a second note on a video already in the library reads the stored captions rather than buying them again", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({
+      videoId: VideoId.parse(IWFT_VIDEO_ID),
+      segments: captionRun(["Captions already held.", "Bought once, read twice."], 0, 2000),
+    }),
+  );
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+
+  await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });

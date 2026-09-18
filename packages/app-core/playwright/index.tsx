@@ -19,4 +19,5 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
 
   window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore };
+  window.__iwftSurface__ = hooksConfig?.surface ?? "web";
 });

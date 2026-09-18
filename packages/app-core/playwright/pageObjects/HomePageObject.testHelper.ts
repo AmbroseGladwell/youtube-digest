@@ -15,6 +15,18 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
+  verifyShowsSeparateLibraryNote = (): Promise<HomePageObject> =>
+    this.step("verifyShowsSeparateLibraryNote", async () => {
+      await this.expectToBeVisible(homePageTestIds.separateLibraryNote);
+      return this;
+    });
+
+  verifyHasNoSeparateLibraryNote = (): Promise<HomePageObject> =>
+    this.step("verifyHasNoSeparateLibraryNote", async () => {
+      await this.expectNotToBeVisible(homePageTestIds.separateLibraryNote);
+      return this;
+    });
+
   verifyShowsLibrary = (): Promise<LibraryPageObject> =>
     this.step("verifyShowsLibrary", async () => {
       const library = new LibraryPageObject(this.testContext);
