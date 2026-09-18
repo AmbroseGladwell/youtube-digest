@@ -3,11 +3,16 @@ import {
   OverviewId,
   type Overview,
   type OverviewStore,
+  type TranscriptSegment,
   type TranscriptStore,
   type VideoSource,
 } from "@overview/types";
 import { generateOverview, type GenerationClient } from "@overview/generation";
-import { fetchTranscript, type TranscriptSourceClient } from "@overview/transcripts";
+import {
+  fetchTranscriptContent,
+  fetchVideoSource,
+  type TranscriptSourceClient,
+} from "@overview/transcripts";
 import { countWords } from "../../../util/countWords.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 
@@ -41,21 +46,13 @@ export async function runOverviewGeneration(
     }
   };
 
-  const fetched = await fetchTranscript(deps.transcriptClient, url);
-  const transcriptWords = fetched.transcript.reduce((total, segment) => total + countWords(segment.text), 0);
-
-  // Stored before generation runs, not after it (docs/features/transcript-storage.md).
-  if (fetched.video.id !== null) {
-    await deps.transcriptStore.saveTranscript({
-      videoId: fetched.video.id,
-      segments: fetched.transcript,
-      generated: fetched.generated,
-      fetchedAt: new Date().toISOString(),
-    });
-  }
+  const video = await fetchVideoSource(deps.transcriptClient, url);
+  stopIfCancelled();
+  const transcript = await resolveTranscript(video, url, deps);
+  const transcriptWords = transcript.reduce((total, segment) => total + countWords(segment.text), 0);
 
   stopIfCancelled();
-  options.onProgress?.({ video: fetched.video, transcriptWords });
+  options.onProgress?.({ video, transcriptWords });
   const [existingTopics, pastClaims] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
@@ -63,8 +60,8 @@ export async function runOverviewGeneration(
   const overview = await generateOverview(
     deps.generationClient,
     {
-      video: fetched.video,
-      transcript: fetched.transcript,
+      video,
+      transcript,
       savedNote: null,
       readerContext: null,
       sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
@@ -78,4 +75,30 @@ export async function runOverviewGeneration(
   await deps.overviewStore.saveOverview(overview);
 
   return overview;
+}
+
+// Read before fetching, then stored before generation runs — the captions call is the one
+// that spends a credit (docs/features/transcript-storage.md).
+async function resolveTranscript(
+  video: VideoSource,
+  url: string,
+  deps: GenerationPipelineDeps,
+): Promise<TranscriptSegment[]> {
+  if (video.id !== null) {
+    const stored = await deps.transcriptStore.getTranscript(video.id);
+    if (stored) return stored.segments;
+  }
+
+  const fetched = await fetchTranscriptContent(deps.transcriptClient, url);
+
+  if (video.id !== null) {
+    await deps.transcriptStore.saveTranscript({
+      videoId: video.id,
+      segments: fetched.transcript,
+      generated: fetched.generated,
+      fetchedAt: new Date().toISOString(),
+    });
+  }
+
+  return fetched.transcript;
 }

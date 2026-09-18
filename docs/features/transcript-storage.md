@@ -37,13 +37,31 @@ tab says so rather than showing an empty list — the degrade-visibly rule in `C
 Nothing backfills them: as `docs/prototype/open-questions.md` #3 already notes about timing,
 an existing note cannot be given one without re-fetching its video.
 
-## Stored before generation, not after
+## Stored before generation, and read before fetching
 
 `runOverviewGeneration` saves the transcript immediately after the fetch, before the model
-is called. The Supadata credit has already been spent by that point, so a generation that
-fails, errors, or is cancelled should not make the next attempt pay for the same captions
-again. The IWFT `a generation that fails still leaves the transcript stored` is what holds
-that ordering in place.
+is called, so a generation that fails, errors, or is cancelled still leaves the captions
+behind. That ordering only saves money if something reads them back, and originally nothing
+did — the pipeline wrote the store and never queried it, so a retry, and a second note on
+the same video, each bought the same captions again.
+
+The obstacle was that the video id arrives from Supadata's metadata call while the credit is
+spent by the separate transcript call, and `fetchTranscript` did both in one step with no gap
+between them to ask a question in. So it is now three pieces rather than one:
+`fetchVideoSource` (metadata, no credit for captions), `fetchTranscriptContent` (the call
+that spends one), and `fetchTranscript` composing the two for callers that hold no store —
+`scripts/endToEndSanityCheck.ts` is the one that does.
+
+`runOverviewGeneration` uses the two halves directly, and asks `transcriptStore` between
+them. Metadata is still resolved on every run: the overview needs the title, channel,
+duration and thumbnail, and `StoredTranscript` holds none of those — it is captions keyed by
+video, not a copy of the video.
+
+Two IWFT scenarios hold this in place, and both assert the Supadata transcript endpoint's
+call count rather than only the stored record, because the call count is the thing that costs
+money: `a generation that fails still leaves the transcript stored` now retries to completion
+and expects that count still at one, and `a second note on a video already in the library`
+expects zero.
 
 ## Captions are merged into blocks before they are shown
 
@@ -188,7 +206,3 @@ single transcript.
   units and comparable directly.
 - **Restoring sentences in a machine-heard transcript.** It would put a model between the
   reader and the video's own words, and cost a call per transcript to do it.
-- **Reading the cache before fetching.** The pipeline writes the store and never reads it,
-  so a second note on the same video still spends a credit. Skipping that fetch needs the
-  video id *before* the transcript call, which means resolving metadata first and
-  restructuring `fetchTranscript` around it.
