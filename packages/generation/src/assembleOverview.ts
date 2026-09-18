@@ -1,19 +1,13 @@
 import { HowToApply, Overview, Selling, Verdict, WatchAnyway, type OverviewId } from "@overview/types";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
-import type { SuggestedTopicShape } from "./sections/filingSection.js";
 import { GenerationError } from "./GenerationError.js";
-
-export interface AssembledOverview {
-  overview: Overview;
-  suggestedTopic: SuggestedTopicShape | null;
-}
 
 export function assembleOverview(
   input: GenerationInput,
   output: GeneratedOutput,
   meta: { id: OverviewId; savedAt: string },
-): AssembledOverview {
+): Overview {
   const topicIds = input.existingTopics
     .filter((topic) => output.matchedTopicNames.includes(topic.name))
     .map((topic) => topic.id);
@@ -43,7 +37,7 @@ export function assembleOverview(
       })
     : null;
 
-  const overview = Overview.parse({
+  return Overview.parse({
     id: meta.id,
     video: input.video,
     savedAt: meta.savedAt,
@@ -59,8 +53,6 @@ export function assembleOverview(
     howToApply,
     watchAnyway,
   });
-
-  return { overview, suggestedTopic: output.suggestedTopic };
 }
 
 function resolveRange(

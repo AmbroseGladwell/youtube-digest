@@ -24,6 +24,8 @@ Five folders, five different questions.
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
+- `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the
+  single overview's topic editor.
 - `transcript-storage.md` — why a transcript is keyed by video rather than by note, how its
   captions are merged into readable blocks, and what the reader's tab does with the timings.
 - `tts-pre-rendered-speech.md` — a designed and measured feature that was not built.

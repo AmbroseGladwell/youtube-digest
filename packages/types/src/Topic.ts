@@ -8,3 +8,6 @@ export const Topic = z.object({
   createdAt: z.iso.datetime(),
 });
 export type Topic = z.infer<typeof Topic>;
+
+export const sameTopicName = (left: string, right: string): boolean =>
+  left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase();

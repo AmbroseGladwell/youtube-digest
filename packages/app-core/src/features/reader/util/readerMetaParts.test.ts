@@ -19,4 +19,9 @@ describe("readerMetaParts", () => {
   it("drops the video term rather than inventing one when no duration was stored", () => {
     expect(readerMetaParts(timing, null)).toEqual(["3 min read", "4 min listen"]);
   });
+
+  // An overview saved before durationMs existed has no such key: undefined, not null.
+  it("drops it for an absent duration too, rather than printing NaN:NaN video", () => {
+    expect(readerMetaParts(timing, undefined)).toEqual(["3 min read", "4 min listen"]);
+  });
 });

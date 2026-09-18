@@ -29,6 +29,7 @@ const input: GenerationInput = {
     channel: "Veritasium",
     description: rawDescription.slice(0, 400),
     durationMs: transcript.at(-1)?.endMs ?? null,
+    publishedAt: null,
     thumbnailUrl: null,
   },
   transcript,
@@ -41,9 +42,9 @@ const input: GenerationInput = {
 
 const client = createAnthropicGenerationClient(new Anthropic());
 
-const { overview, suggestedTopic } = await generateOverview(client, input, {
+const overview = await generateOverview(client, input, {
   id: OverviewId.parse(randomUUID()),
   savedAt: new Date().toISOString(),
 });
 
-console.log(JSON.stringify({ overview, suggestedTopic }, null, 2));
+console.log(JSON.stringify(overview, null, 2));

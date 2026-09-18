@@ -1,7 +1,9 @@
+import { useState } from "react";
 import type { Novelty, Topic } from "@overview/types";
 import { NOVELTY_LABEL, NOVELTY_ORDER } from "../../../overviews/noveltyLabel.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
 import type { LibraryFilters } from "../../types/LibraryFilters.js";
+import { cappedTopics } from "../../util/cappedTopics.js";
 import styles from "./FilterPanel.module.scss";
 import { filterPanelTestIds } from "./FilterPanelTestIds.js";
 
@@ -10,9 +12,14 @@ export interface FilterPanelProps {
   topics: Topic[];
   counts: LibraryFilterCounts;
   onChange: (patch: Partial<LibraryFilters>) => void;
+  onNewTopic: () => void;
 }
 
-export function FilterPanel({ filters, topics, counts, onChange }: FilterPanelProps) {
+export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: FilterPanelProps) {
+  const [allTopicsShown, setAllTopicsShown] = useState(false);
+  const capped = cappedTopics(topics, filters.topicId);
+  const shownTopics = allTopicsShown ? topics : capped.shown;
+
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
       <input
@@ -45,32 +52,50 @@ export function FilterPanel({ filters, topics, counts, onChange }: FilterPanelPr
         </Toggle>
       </div>
 
+      <p className={styles.kicker}>Topic</p>
       {topics.length > 0 && (
-        <>
-          <p className={styles.kicker}>Topic</p>
-          <div className={styles.list} role="group" aria-label="Filter by topic">
+        <div className={styles.list} role="group" aria-label="Filter by topic">
+          <ListOption
+            active={filters.topicId === "all"}
+            count={counts.total}
+            onClick={() => onChange({ topicId: "all" })}
+            testId={filterPanelTestIds.topicChip("all")}
+          >
+            All topics
+          </ListOption>
+          {shownTopics.map((topic) => (
             <ListOption
-              active={filters.topicId === "all"}
-              count={counts.total}
-              onClick={() => onChange({ topicId: "all" })}
-              testId={filterPanelTestIds.topicChip("all")}
+              key={topic.id}
+              active={filters.topicId === topic.id}
+              count={counts.byTopic[topic.id] ?? 0}
+              onClick={() => onChange({ topicId: topic.id })}
+              testId={filterPanelTestIds.topicChip(topic.id)}
             >
-              All topics
+              {topic.name}
             </ListOption>
-            {topics.map((topic) => (
-              <ListOption
-                key={topic.id}
-                active={filters.topicId === topic.id}
-                count={counts.byTopic[topic.id] ?? 0}
-                onClick={() => onChange({ topicId: topic.id })}
-                testId={filterPanelTestIds.topicChip(topic.id)}
-              >
-                {topic.name}
-              </ListOption>
-            ))}
-          </div>
-        </>
+          ))}
+        </div>
       )}
+      {capped.hiddenCount > 0 && (
+        <button
+          type="button"
+          className={styles.moreTopics}
+          onClick={() => setAllTopicsShown(!allTopicsShown)}
+          aria-expanded={allTopicsShown}
+          data-testid={filterPanelTestIds.showAllTopicsButton}
+        >
+          {allTopicsShown ? "Show fewer" : `Show all ${topics.length} topics`}
+        </button>
+      )}
+
+      <button
+        type="button"
+        className={styles.newTopic}
+        onClick={onNewTopic}
+        data-testid={filterPanelTestIds.newTopicButton}
+      >
+        + New topic
+      </button>
 
       <p className={styles.kicker}>Verdict</p>
       <div className={styles.list} role="group" aria-label="Filter by verdict">

@@ -1,9 +1,9 @@
-import type { OverviewId } from "@overview/types";
+import type { Overview, OverviewId } from "@overview/types";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
 import { composePrompt } from "./composePrompt.js";
-import { assembleOverview, type AssembledOverview } from "./assembleOverview.js";
+import { assembleOverview } from "./assembleOverview.js";
 import { GenerationError } from "./GenerationError.js";
 
 export type GenerationClient = (request: {
@@ -16,7 +16,7 @@ export async function generateOverview(
   client: GenerationClient,
   input: GenerationInput,
   meta: { id: OverviewId; savedAt: string },
-): Promise<AssembledOverview> {
+): Promise<Overview> {
   const { systemPrompt, userMessage, schema } = composePrompt(input);
 
   const attempt = async (retryNote?: string) => {

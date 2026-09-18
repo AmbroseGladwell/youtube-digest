@@ -13,6 +13,7 @@ const baseInput: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: null,
+    publishedAt: null,
     thumbnailUrl: null,
   },
   transcript: [

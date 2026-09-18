@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
-import { KEY_POINTS_SECTION, noteSectionNames, overviewNoteLines } from "./overviewNoteLines.js";
+import { HOW_TO_APPLY_SECTION, KEY_POINTS_SECTION, noteSectionNames, overviewNoteLines } from "./overviewNoteLines.js";
 
 describe("overviewNoteLines", () => {
   it("opens with the note's own order: in one line, then the core claim", () => {
@@ -54,11 +54,12 @@ describe("overviewNoteLines", () => {
     expect(lines.filter((line) => line.section === "How to apply" && !line.heading)).toHaveLength(2);
   });
 
-  it("bullets the key points and nothing else, leaving the mark out of the text", () => {
+  // The note's two list-shaped sections, and only those: the prose sections stay prose.
+  it("bullets the key points and the actions, leaving the mark out of the text", () => {
     const lines = overviewNoteLines(
       makeOverview({
         keyPoints: ["Growth beat expectations.", "two", "three"],
-        howToApply: { items: ["do this"] },
+        howToApply: { items: ["do this", "and this"] },
       }),
     );
 
@@ -66,7 +67,15 @@ describe("overviewNoteLines", () => {
       { section: KEY_POINTS_SECTION, heading: false, bullet: true, text: "Growth beat expectations." },
       { section: KEY_POINTS_SECTION, heading: false, bullet: true, text: "two" },
       { section: KEY_POINTS_SECTION, heading: false, bullet: true, text: "three" },
+      { section: HOW_TO_APPLY_SECTION, heading: false, bullet: true, text: "do this" },
+      { section: HOW_TO_APPLY_SECTION, heading: false, bullet: true, text: "and this" },
     ]);
+  });
+
+  it("leaves a heading unbulleted, even the one over a bulleted list", () => {
+    const lines = overviewNoteLines(makeOverview({ howToApply: { items: ["do this"] } }));
+
+    expect(lines.filter((line) => line.heading).every((line) => !line.bullet)).toBe(true);
   });
 
   it("leaves out the sections the overview has no content for", () => {

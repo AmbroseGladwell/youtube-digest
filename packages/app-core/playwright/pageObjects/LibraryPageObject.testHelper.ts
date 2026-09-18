@@ -6,11 +6,22 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
+import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
   get filterPanel(): FilterPanelPageObject {
     return new FilterPanelPageObject(this.testContext);
   }
+
+  get newTopicDialog(): NewTopicDialogPageObject {
+    return new NewTopicDialogPageObject(this.testContext);
+  }
+
+  openNewTopic = (): Promise<NewTopicDialogPageObject> =>
+    this.step("openNewTopic", async () => {
+      await this.filterPanel.clickNewTopic();
+      return this.newTopicDialog.verifyIsShown();
+    });
 
   get generateForm(): GenerateOverviewFormPageObject {
     return new GenerateOverviewFormPageObject(this.testContext);

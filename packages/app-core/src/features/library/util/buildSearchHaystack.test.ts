@@ -13,6 +13,7 @@ describe("buildSearchHaystack", () => {
         channel: "SOLOMA",
         description: null,
         durationMs: null,
+    publishedAt: null,
         thumbnailUrl: null,
       },
       keyPoints: ["Jaw strain warning"],

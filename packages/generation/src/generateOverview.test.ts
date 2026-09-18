@@ -14,6 +14,7 @@ const input: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: null,
+    publishedAt: null,
     thumbnailUrl: null,
   },
   transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
@@ -38,7 +39,7 @@ test("a well-formed response from the client assembles into a valid Overview", a
     howToApply: { items: ["do this"] },
   });
 
-  const { overview } = await generateOverview(client, input, meta);
+  const overview = await generateOverview(client, input, meta);
   assert.equal(overview.id, meta.id);
   assert.equal(overview.howToApply?.items[0], "do this");
 });
@@ -80,7 +81,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
     };
   };
 
-  const { overview } = await generateOverview(client, input, meta);
+  const overview = await generateOverview(client, input, meta);
   assert.equal(calls, 2);
   assert.equal(overview.inOneLine, "A short description.");
 });

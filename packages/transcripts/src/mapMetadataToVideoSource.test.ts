@@ -72,3 +72,16 @@ test("the platform's own video id is kept, because it is what a stored transcrip
   const video = mapMetadataToVideoSource(baseMetadata, baseMetadata.url);
   assert.equal(video.id, "tL9Lw250spc");
 });
+
+test("publishedAt comes from the metadata's createdAt, normalised to an ISO instant", () => {
+  const video = mapMetadataToVideoSource(baseMetadata, baseMetadata.url);
+  assert.equal(video.publishedAt, "2026-01-01T00:00:00.000Z");
+});
+
+test("a createdAt the source sent as something other than a date degrades to null", () => {
+  const video = mapMetadataToVideoSource(
+    { ...baseMetadata, createdAt: "not a date" },
+    baseMetadata.url,
+  );
+  assert.equal(video.publishedAt, null);
+});

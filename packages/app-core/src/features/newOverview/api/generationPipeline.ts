@@ -60,7 +60,7 @@ export async function runOverviewGeneration(
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
   ]);
-  const { overview } = await generateOverview(
+  const overview = await generateOverview(
     deps.generationClient,
     {
       video: fetched.video,

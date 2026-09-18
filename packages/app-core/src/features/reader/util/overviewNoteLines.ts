@@ -6,6 +6,7 @@ import type { NoteLine } from "../types/NoteLine.js";
 
 export const SUMMARY_SECTION = "Summary";
 export const KEY_POINTS_SECTION = "Key points";
+export const HOW_TO_APPLY_SECTION = "How to apply";
 
 export function overviewNoteLines(overview: Overview): NoteLine[] {
   const lines: NoteLine[] = [];
@@ -31,7 +32,7 @@ export function overviewNoteLines(overview: Overview): NoteLine[] {
   }
 
   section(KEY_POINTS_SECTION, KEY_POINTS_SECTION, overview.keyPoints, true);
-  section("How to apply", "How to apply", overview.howToApply?.items ?? []);
+  section(HOW_TO_APPLY_SECTION, HOW_TO_APPLY_SECTION, overview.howToApply?.items ?? [], true);
 
   if (overview.selling && overview.selling.type !== "none") {
     section("What it sells", "What it sells", [

@@ -7,6 +7,7 @@ const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
   keyPoints: ["Growth beat expectations.", "Productivity is moving.", "Hiring intent has turned."],
+  howToApply: { items: ["Re-run the hiring forecast.", "Ask what the growth figure excludes."] },
   verdict: { novelty: "recycled", dubious: false, reasoning: "Standard synthesis.", similarTo: [] },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
@@ -37,7 +38,7 @@ test("tapping a line moves the reading mark to it and renames what is being read
   await reader.verifyNowReading("Key points");
 });
 
-test("the key points are the one section the note sets as a list, and carry its bullets", async ({
+test("the note's two lists carry bullets, and the prose sections do not", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -46,7 +47,7 @@ test("the key points are the one section the note sets as a list, and carry its 
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyBulletedLinesRead(NOTE.keyPoints);
+  await reader.verifyBulletedLinesRead([...NOTE.keyPoints, ...NOTE.howToApply!.items]);
 });
 
 test("the transport steps the reading mark forward and back a line at a time", async ({
