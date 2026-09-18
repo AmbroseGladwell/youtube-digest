@@ -1,0 +1,73 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-badge);
+  padding: 1px 0.56rem;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+
+.removeChip {
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: transparent;
+  padding: 0;
+  color: var(--faint);
+  font-size: 0.8125rem;
+  line-height: 1;
+  cursor: pointer;
+
+  @include controls.icon-control;
+}
+
+.add {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 2px 0.625rem;
+  font-family: var(--font-body);
+  font-size: inherit;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  @include controls.tinted-control;
+}
+
+// The scrim belongs to the sheet, so it is drawn only where the picker becomes one.
+.scrim {
+  display: none;
+}
+
+@media (max-width: 47.9375rem) {
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    background: color-mix(in srgb, #201f1d 32%, transparent);
+    animation: scrimIn var(--motion-state) ease both;
+  }
+
+  @keyframes scrimIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

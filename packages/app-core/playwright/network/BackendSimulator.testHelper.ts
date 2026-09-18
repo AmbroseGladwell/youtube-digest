@@ -147,6 +147,7 @@ export class BackendSimulator {
 
   overviewStore = {
     listOverviews: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listOverviews()),
+    listTopics: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listTopics()),
     getOverviewState: (id: OverviewId) =>
       this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
   };

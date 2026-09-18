@@ -5,5 +5,7 @@ export const filterPanelTestIds = {
   noveltyChip: (novelty: string) => `FilterPanel.noveltyChip.${novelty}`,
   statusChip: (status: string) => `FilterPanel.statusChip.${status}`,
   favouriteChip: "FilterPanel.favouriteChip",
+  newTopicButton: "FilterPanel.newTopicButton",
+  showAllTopicsButton: "FilterPanel.showAllTopicsButton",
   dubiousChip: "FilterPanel.dubiousChip",
 };

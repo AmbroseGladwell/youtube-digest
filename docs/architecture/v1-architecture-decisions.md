@@ -300,6 +300,27 @@ surfacing at runtime as a query that silently returns nothing. `Brands.test.ts`
 encodes this as a permanent check (`@ts-expect-error` on the two cases that must not
 compile) rather than something that only held the day it was written.
 
+**Stored records are read back unvalidated, and a versioned migration is the accepted
+way out — not yet built.** A record written by an older schema comes back exactly as it
+was written, so a field added since has no key at all: `undefined`, not `null`. Every
+reader of a progressively-added field therefore has to guard on truthiness rather than on
+the one absent value the current schema can express — `OverviewThumbnail` carries the long
+form of this note, and `readerMetaParts` and the reader's published date both follow it.
+
+This is tolerable only because nothing is released and the records are all our own. It has
+already cost two bugs, and the two failure modes are different enough to be worth naming:
+`thumbnailUrl` and `durationMs` degrade quietly (a missing image, `NaN:NaN video`), while
+`publishedAt` reached `Intl.DateTimeFormat`, which throws `RangeError` on an invalid date
+and took the whole page to the error boundary. A guard that is remembered is not a
+guarantee, and the next added field inherits the trap.
+
+The intended replacement is a schema version on the record with migrations between them —
+v1 to v2 and so on — where each new field is either given a default as it is migrated, or
+explicitly declared as one the readers may find absent. That puts the decision in one place
+per field, made once, rather than at every call site forever. It is not worth building
+against a handful of local dev records; it becomes worth building at the point either real
+users or a synced paid tier exist, whichever is first.
+
 ## Explicitly out of scope for v1
 
 - Multi-LLM-provider BYO (Idea 1) — Claude-only behind an interface, see above.

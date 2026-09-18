@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
+import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
 import { orderOverviewsBySavedAt } from "../../overviews/util/orderOverviewsBySavedAt.js";
+import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
+import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
@@ -23,7 +26,9 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
+  const createTopic = useCreateTopicMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [newTopicOpen, setNewTopicOpen] = useState(false);
 
   const entering = useEnteringOverviewIds(overviewsWithState.map((entry) => entry.overview.id));
 
@@ -92,7 +97,16 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
             </button>
           </div>
           <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
-            <FilterPanel filters={filters} topics={topics} counts={counts} onChange={changeFilters} />
+            <FilterPanel
+              filters={filters}
+              topics={topics}
+              counts={counts}
+              onChange={changeFilters}
+              onNewTopic={() => {
+                setFiltersOpen(false);
+                setNewTopicOpen(true);
+              }}
+            />
           </div>
           <div className={styles.sheetFoot}>
             <button
@@ -154,6 +168,16 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
         className={`${styles.scrim} ${filtersOpen ? styles.scrimOpen : ""}`}
         onClick={() => setFiltersOpen(false)}
         aria-hidden="true"
+      />
+
+      <NewTopicDialog
+        open={newTopicOpen}
+        unsorted={unsortedOverviews(overviewsWithState.map((entry) => entry.overview))}
+        busy={createTopic.isPending}
+        onCreate={(input) => {
+          createTopic.mutate(input, { onSuccess: () => setNewTopicOpen(false) });
+        }}
+        onClose={() => setNewTopicOpen(false)}
       />
     </div>
   );

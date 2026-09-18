@@ -46,6 +46,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const topicsQuery = useTopicsQuery();
   const setOverviewState = useSetOverviewStateMutation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
+  const [editingTopics, setEditingTopics] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
 
   const overview = overviewQuery.data?.overview ?? null;
@@ -96,10 +97,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         neighbours={neighbours}
         read={state.read}
         playing={readAlong.playing}
+        editingTopics={editingTopics}
         onToggleRead={() =>
           setOverviewState.mutate({ overviewId, patch: { read: !state.read } })
         }
         onTogglePlaying={readAlong.togglePlaying}
+        onEditingTopicsChange={setEditingTopics}
       />
 
       <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={setTab} ref={tabsHeight.measured} />

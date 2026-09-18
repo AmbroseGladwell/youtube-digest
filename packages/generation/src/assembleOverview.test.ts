@@ -18,6 +18,7 @@ const baseInput: GenerationInput = {
     channel: "Example Channel",
     description: null,
     durationMs: 600000,
+    publishedAt: null,
     thumbnailUrl: null,
   },
   transcript: [
@@ -50,7 +51,7 @@ const baseOutput: GeneratedOutput = {
 const meta = { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOString() };
 
 test("matched topic names map to the corresponding topic ids, unmatched names are ignored", () => {
-  const { overview } = assembleOverview(
+  const overview = assembleOverview(
     baseInput,
     { ...baseOutput, matchedTopicNames: ["fitness", "some-made-up-name"] },
     meta,
@@ -59,12 +60,12 @@ test("matched topic names map to the corresponding topic ids, unmatched names ar
 });
 
 test("no matches means unsorted, not an error", () => {
-  const { overview } = assembleOverview(baseInput, { ...baseOutput, matchedTopicNames: [] }, meta);
+  const overview = assembleOverview(baseInput, { ...baseOutput, matchedTopicNames: [] }, meta);
   assert.deepEqual(overview.topicIds, []);
 });
 
 test("a thin overview never carries a verdict, even if the model produced one", () => {
-  const { overview } = assembleOverview(
+  const overview = assembleOverview(
     baseInput,
     {
       ...baseOutput,
@@ -77,7 +78,7 @@ test("a thin overview never carries a verdict, even if the model produced one", 
 });
 
 test("similarToIndices resolve to the matching past claim, out-of-range indices are dropped", () => {
-  const { overview } = assembleOverview(
+  const overview = assembleOverview(
     baseInput,
     {
       ...baseOutput,
@@ -90,7 +91,7 @@ test("similarToIndices resolve to the matching past claim, out-of-range indices 
 });
 
 test("selling and how-to-apply pass through untouched when present", () => {
-  const { overview } = assembleOverview(
+  const overview = assembleOverview(
     baseInput,
     {
       ...baseOutput,
@@ -104,13 +105,13 @@ test("selling and how-to-apply pass through untouched when present", () => {
 });
 
 test("selling and how-to-apply are null, not absent, when their section didn't run", () => {
-  const { overview } = assembleOverview(baseInput, baseOutput, meta);
+  const overview = assembleOverview(baseInput, baseOutput, meta);
   assert.equal(overview.selling, null);
   assert.equal(overview.howToApply, null);
 });
 
 test("a partial watch-it-anyway resolves segment indices to the transcript's real timestamps", () => {
-  const { overview } = assembleOverview(
+  const overview = assembleOverview(
     baseInput,
     {
       ...baseOutput,
@@ -144,12 +145,11 @@ test("a watch-it-anyway range pointing past the transcript is a generation error
   );
 });
 
-test("a suggested topic is surfaced alongside the overview, never written into topicIds", () => {
-  const { overview, suggestedTopic } = assembleOverview(
+test("a topic the model suggested is not filed under, and does not reach the record", () => {
+  const overview = assembleOverview(
     baseInput,
     { ...baseOutput, matchedTopicNames: [], suggestedTopic: { name: "cooking", description: null } },
     meta,
   );
   assert.deepEqual(overview.topicIds, []);
-  assert.deepEqual(suggestedTopic, { name: "cooking", description: null });
 });

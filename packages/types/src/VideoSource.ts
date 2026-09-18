@@ -11,6 +11,9 @@ export const VideoSource = z.object({
   description: z.string().max(400).nullable(),
   // null only for notes generated before docs/architecture/v1-architecture-decisions.md's Supadata pin.
   durationMs: z.number().int().positive().nullable(),
+  // When the video went up, from Supadata's Metadata.createdAt. Null for notes generated
+  // before this field existed, and for a value the source sent that isn't a real date.
+  publishedAt: z.iso.datetime().nullable(),
   // Supadata's own resolved thumbnail (Metadata.media.thumbnailUrl for media.type "video"),
   // never derived by guessing YouTube's img.youtube.com URL pattern. Null for non-video
   // media and for notes generated before this field existed.

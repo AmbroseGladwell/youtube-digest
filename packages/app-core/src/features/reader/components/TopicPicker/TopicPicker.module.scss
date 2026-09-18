@@ -1,0 +1,259 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 14b/14c: one control, two presentations — a popover hung under the topic line on
+// a desktop, the same list as a bottom sheet on a phone. It sits inside the topic line's
+// uppercase kicker row, so it has to put type back to normal rather than inherit it.
+.root {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 3;
+  width: min(20rem, calc(100vw - 2.5rem));
+  display: flex;
+  flex-direction: column;
+  background: var(--ground);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-lg);
+  padding: 0.875rem 1rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.845rem;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
+  animation: pickerRise var(--motion-arrive) var(--motion-ease) both;
+}
+
+@keyframes pickerRise {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pickerSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.handle,
+.sheetHead,
+.sheetChips,
+.listKicker {
+  display: none;
+}
+
+.searchRow {
+  padding-top: 0.125rem;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  padding: 0.4375rem 0;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.search::placeholder {
+  color: var(--faint);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.25rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.createOption,
+.option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.625rem;
+  border: 0;
+  border-bottom: 1px solid var(--divider);
+  background: transparent;
+  padding: 0.625rem 0;
+  font-family: var(--font-body);
+  font-size: 0.845rem;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+
+  @include controls.quiet-control;
+}
+
+.createOption {
+  color: var(--accent-deep);
+  align-items: center;
+}
+
+.optionName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tick {
+  color: var(--accent-deep);
+  padding-right: 0.375rem;
+}
+
+.newMark,
+.count {
+  flex: none;
+  font-size: 0.6875rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.newMark {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.empty,
+.note {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--faint);
+}
+
+.empty {
+  margin: 0.625rem 0;
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: 70vh;
+    border: 0;
+    border-top: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 0.5rem 1.125rem 1rem;
+    animation-name: pickerSheet;
+  }
+
+  .handle {
+    display: block;
+    width: 2.5rem;
+    height: 0.1875rem;
+    border-radius: var(--radius-badge);
+    background: var(--edge);
+    align-self: center;
+    margin: 0.25rem 0 0.125rem;
+  }
+
+  .sheetHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0 0.75rem;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .sheetTitle {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.1875rem;
+  }
+
+  .done {
+    border: 0;
+    border-bottom: 1px solid var(--accent);
+    background: transparent;
+    padding: 0;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--accent-deep);
+    cursor: pointer;
+
+    @include controls.quiet-control;
+  }
+
+  .sheetChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4375rem;
+    padding: 0.75rem 0 0;
+  }
+
+  .sheetChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-badge);
+    background: var(--accent-tint);
+    color: var(--accent-deep);
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .removeChip {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: 0.875rem;
+    line-height: 1;
+    cursor: pointer;
+
+    @include controls.icon-control;
+  }
+
+  .searchRow {
+    padding-top: 0.75rem;
+  }
+
+  .search {
+    padding: 0.625rem 0;
+    font-size: 0.9375rem;
+  }
+
+  .list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    padding: 0.25rem 0 0;
+  }
+
+  .listKicker {
+    display: block;
+    margin: 1.125rem 0 0.25rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  // Touch targets, per the phone column of the design and docs/reference/accessibility-checklist.md.
+  .createOption,
+  .option {
+    min-height: 3rem;
+    padding: 0.875rem 0;
+    font-size: 0.9375rem;
+  }
+
+  .note {
+    display: none;
+  }
+}

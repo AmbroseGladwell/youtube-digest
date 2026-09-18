@@ -1,10 +1,13 @@
 import { Link } from "react-router";
 import type { Overview } from "@overview/types";
 import { Routes } from "../../../../app/Routes.js";
+import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
+import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
+import { TopicLine } from "../TopicLine/TopicLine.js";
 import type { OverviewNeighbours } from "../../util/overviewNeighbours.js";
 import styles from "./ReaderMasthead.module.scss";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
@@ -16,10 +19,15 @@ export interface ReaderMastheadProps {
   neighbours: OverviewNeighbours;
   read: boolean;
   playing: boolean;
+  editingTopics: boolean;
   onToggleRead: () => void;
   onTogglePlaying: () => void;
+  onEditingTopicsChange: (editing: boolean) => void;
 }
 
+// Boolean(...), not !== null: an overview saved before publishedAt existed has no such
+// key at all (see OverviewThumbnail, and v1-architecture-decisions.md's swappable-store
+// model, which reads back whatever was written).
 const savedOn = (savedAt: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
@@ -30,8 +38,10 @@ export function ReaderMasthead({
   neighbours,
   read,
   playing,
+  editingTopics,
   onToggleRead,
   onTogglePlaying,
+  onEditingTopicsChange,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
 
@@ -84,13 +94,21 @@ export function ReaderMasthead({
 
         <div className={styles.titleBlock}>
           <p className={styles.kickerRow}>
-            {topicNames.map((name) => (
-              <span key={name} className={styles.topicPill}>
-                {name}
-              </span>
-            ))}
+            <TopicLine
+              overview={overview}
+              editing={editingTopics}
+              onEditingChange={onEditingTopicsChange}
+            />
             <span className={styles.byline}>
-              {overview.video.channel} · saved {savedOn(overview.savedAt)}
+              {overview.video.channel}
+              {Boolean(overview.video.publishedAt) && (
+                <span data-testid={readerMastheadTestIds.published}>
+                  {" · published "}
+                  {formatPublishedDate(overview.video.publishedAt!)}
+                </span>
+              )}
+              {" · saved "}
+              {savedOn(overview.savedAt)}
               {overview.verdict && (
                 <>
                   {" · "}
@@ -134,6 +152,10 @@ export function ReaderMasthead({
           >
             <PlayPauseIcon playing={playing} /> Read aloud
           </button>
+          <OverviewActionsMenu
+            topicCount={overview.topicIds.length}
+            onEditTopics={() => onEditingTopicsChange(true)}
+          />
         </div>
       </div>
     </header>

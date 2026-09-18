@@ -6,6 +6,9 @@ import { readerPlayerBarTestIds } from "../../src/features/reader/components/Rea
 import { readerRailTestIds } from "../../src/features/reader/components/ReaderRail/ReaderRailTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { chaptersPanelTestIds } from "../../src/features/reader/components/ChaptersPanel/ChaptersPanelTestIds.js";
+import { topicLineTestIds } from "../../src/features/reader/components/TopicLine/TopicLineTestIds.js";
+import { overviewActionsMenuTestIds } from "../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
+import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -23,6 +26,16 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.title)).toHaveText(title),
     );
 
+  verifyPublishedReads = (published: string) =>
+    this.step(`verifyPublishedReads ${published}`, () =>
+      expect(this.get(readerMastheadTestIds.published)).toHaveText(published),
+    );
+
+  verifyShowsNoPublished = () =>
+    this.step("verifyShowsNoPublished", () =>
+      this.expectNotToBeVisible(readerMastheadTestIds.published),
+    );
+
   verifyMetaReads = (meta: string) =>
     this.step(`verifyMetaReads ${meta}`, () => expect(this.get(readerMastheadTestIds.meta)).toHaveText(meta));
 
@@ -32,6 +45,50 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyNotFound = () => this.expectToBeVisible(readerPageTestIds.notFound);
+
+  get topicPicker(): TopicPickerPageObject {
+    return new TopicPickerPageObject(this.testContext);
+  }
+
+  verifyFiledUnder = (topicNames: string[]) =>
+    this.step(`verifyFiledUnder ${topicNames.join(", ")}`, () =>
+      expect(this.get(topicLineTestIds.chip)).toHaveText(topicNames.map((name) => new RegExp(name))),
+    );
+
+  verifyIsFiledNowhere = () =>
+    this.step("verifyIsFiledNowhere", () => this.expectToHaveCount(topicLineTestIds.chip, 0));
+
+  openActionsMenu = () =>
+    this.step("openActionsMenu", () => this.click(overviewActionsMenuTestIds.trigger));
+
+  verifyEditTopicsCountReads = (count: string) =>
+    this.step(`verifyEditTopicsCountReads ${count}`, () =>
+      expect(this.get(overviewActionsMenuTestIds.topicCount)).toHaveText(count),
+    );
+
+  clickEditTopics = (): Promise<TopicPickerPageObject> =>
+    this.step("clickEditTopics", async () => {
+      await this.click(overviewActionsMenuTestIds.editTopicsItem);
+      return this.topicPicker.verifyIsShown();
+    });
+
+  editTopics = (): Promise<TopicPickerPageObject> =>
+    this.step("editTopics", async () => {
+      await this.openActionsMenu();
+      return this.clickEditTopics();
+    });
+
+  removeTopic = (name: string) =>
+    this.step(`removeTopic ${name}`, () => this.click(topicLineTestIds.removeChip(name)));
+
+  clickAddTopic = () => this.step("clickAddTopic", () => this.click(topicLineTestIds.addButton));
+
+  verifyTopicsAreEditable = (editable: boolean) =>
+    this.step(`verifyTopicsAreEditable ${editable}`, () =>
+      editable
+        ? this.expectToBeVisible(topicLineTestIds.addButton)
+        : this.expectNotToBeVisible(topicLineTestIds.addButton),
+    );
 
   verifyActiveLineReads = (text: string) =>
     this.step(`verifyActiveLineReads ${text}`, () =>

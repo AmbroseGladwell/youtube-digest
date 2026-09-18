@@ -11,6 +11,7 @@ export function makeOverview(overrides: Partial<Overview> = {}): Overview {
       channel: "Example Channel",
       description: null,
       durationMs: null,
+      publishedAt: null,
       thumbnailUrl: null,
     },
     savedAt: new Date().toISOString(),
