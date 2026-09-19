@@ -36,6 +36,10 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         return;
       }
       if (!hasRequiredApiKeys(apiKeys)) {
+        // Said out loud, because the press is the only thing the page can see: a panel
+        // that was already open changes no run, so nothing else would tell the button
+        // that what it asked for is not happening.
+        bridge.report(null);
         void navigate(Routes.settings());
         return;
       }

@@ -54,6 +54,10 @@ test("without keys the press goes to Settings rather than starting a run that ca
   await launcher.settingsPage.verifyIsShown();
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+
+  // The page has to be told, or the button it drew on the press keeps claiming a run
+  // that was never started.
+  expect(await launcher.readRunReports()).toEqual([null, null]);
 });
 
 test("the web app, which has no page to be pressed from, reports nothing to anyone", async ({

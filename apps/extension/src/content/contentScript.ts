@@ -10,27 +10,28 @@ import { OVERVIEW_BUTTON_ID } from "./overviewButtonStyles.js";
 
 const RECONCILE_DELAY_MS = 80;
 const RESIZE_DELAY_MS = 120;
+// Long enough that a slow panel is not cut off, short enough that a press nothing
+// answered does not sit there claiming to be working.
+const CONFIRM_WITHIN_MS = 10_000;
 
 let button: OverviewButton | null = null;
 let watchedVideoId: string | null = null;
 let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
+let confirmTimer: ReturnType<typeof setTimeout> | null = null;
 
 const currentVideoId = (): string | null =>
   window.location.pathname === "/watch"
     ? new URL(window.location.href).searchParams.get("v")
     : null;
 
-function press(): void {
-  if (button === null) {
-    return;
+// Every state the button is told about arrives here, which is also where waiting for a
+// press to be answered stops.
+function applyState(state: ButtonState): void {
+  if (confirmTimer !== null) {
+    clearTimeout(confirmTimer);
+    confirmTimer = null;
   }
-  // Said here rather than waited for: the run is about to exist, and a button that sat
-  // still until the worker answered would read as a press that missed
-  // (docs/features/injected-button.md).
-  button.setState({ kind: "generating", startedAt: Date.now(), progressFraction: 0 });
-  void chrome.runtime
-    .sendMessage({ type: BridgeMessage.REQUEST_OVERVIEW, videoUrl: window.location.href })
-    .catch(() => button?.setState(IDLE_BUTTON_STATE));
+  button?.setState(state);
 }
 
 async function readState(videoId: string): Promise<void> {
@@ -40,12 +41,37 @@ async function readState(videoId: string): Promise<void> {
       videoId,
     })) as ButtonState | undefined;
     if (state && videoId === watchedVideoId) {
-      button?.setState(state);
+      applyState(state);
     }
   } catch {
     // The worker is asleep or the extension was reloaded under us. Idle is the honest
     // answer: it offers the run rather than claiming anything about one.
+    applyState(IDLE_BUTTON_STATE);
   }
+}
+
+function press(): void {
+  if (button === null) {
+    return;
+  }
+
+  // Shown at once so the press does not read as a miss, but with no startedAt: nothing
+  // has started yet, and a clock ticking on a press that was declined — no keys, say —
+  // would be timing a run that does not exist. The clock begins when the panel reports
+  // the run's own startedAt (docs/features/injected-button.md).
+  button.setState({ kind: "generating", startedAt: null, progressFraction: 0 });
+
+  const videoId = watchedVideoId;
+  confirmTimer = setTimeout(() => {
+    confirmTimer = null;
+    if (videoId !== null && videoId === watchedVideoId) {
+      void readState(videoId);
+    }
+  }, CONFIRM_WITHIN_MS);
+
+  void chrome.runtime
+    .sendMessage({ type: BridgeMessage.REQUEST_OVERVIEW, videoUrl: window.location.href })
+    .catch(() => applyState(IDLE_BUTTON_STATE));
 }
 
 function reconcile(): void {
@@ -75,7 +101,7 @@ function reconcile(): void {
 
   if (videoId !== watchedVideoId) {
     watchedVideoId = videoId;
-    button.setState(IDLE_BUTTON_STATE);
+    applyState(IDLE_BUTTON_STATE);
     void readState(videoId);
   }
 }
@@ -108,7 +134,7 @@ chrome.runtime.onMessage.addListener((message) => {
     return;
   }
   if (message.videoId === null || message.videoId === watchedVideoId) {
-    button.setState(message.state);
+    applyState(message.state);
   }
 });
 

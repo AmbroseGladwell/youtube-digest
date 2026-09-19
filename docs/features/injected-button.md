@@ -56,6 +56,14 @@ counting up from the moment the button happened to hear about it. A panel opened
 through a run therefore shows how long it has really been going
 (`docs/prototype/constraints.md`).
 
+It follows that **the press itself starts no clock.** A press shows the spinner at once,
+so it does not read as a miss, but with no time against it: nothing has started yet, and
+a press can be declined — no keys — or answered by nothing at all. A button counting up
+in either case is timing a run that does not exist. Three things end that wait: the
+first report, which brings the real `startedAt`; an explicit "no run" from a panel that
+declined; and, if neither arrives within ten seconds, the button asking the worker what
+is actually true.
+
 **Ready is also what the library knows, not only what a run just did.** 18c draws ready
 as the end of a generation, and that alone would leave the button saying `Overview` on a
 video already written up — making it a one-press way to buy the same video twice, which
@@ -92,6 +100,17 @@ The request survives in `chrome.storage.session`, not in a worker variable. It i
 before there is a panel to read it, and a worker that is killed in between must not lose
 it. A press while the panel is *already* open opens nothing, so the worker also says so
 out loud rather than leaving the request until the panel's next mount.
+
+**Opening the panel happens before any of that is awaited.** `chrome.sidePanel.open()`
+is only allowed inside the user gesture that produced the message, and the first `await`
+in the handler spends it — so the open is started synchronously and the request is
+written behind it. That inverts the obvious order, and the nudge above is what covers
+the panel mounting before the write lands.
+
+A panel that declines the request reports no run, rather than simply not starting one.
+Nothing else would tell the page: the panel may already have been open, in which case no
+run changed and no report would otherwise be sent, and the button would keep showing the
+press.
 
 ## What the page gets told, and what it does not
 
@@ -161,5 +180,8 @@ depend on which of the extension's listeners happen to be alive.
   extension's `chrome.*` surface outside the IWFT harness and that harness still does not
   exist. What is testable is tested: the state mapping and the clock are unit tests, and
   the whole `app-core` half of the bridge — the press starting a run, the keyless press
-  landing on Settings, the reports going back — is an IWFT driven through a simulated
-  bridge. The DOM placement and the worker's relaying are held up by reading alone.
+  landing on Settings and reporting no run, the reports going back — is an IWFT driven
+  through a simulated bridge. The DOM placement, the worker's relaying and the
+  gesture-sensitive `sidePanel.open()` are held up by reading alone; the last of those in
+  particular has a history of Chrome-version-dependent behaviour and is the first thing
+  to check by hand.

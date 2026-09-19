@@ -63,14 +63,22 @@ async function broadcast(report: RunReport | null): Promise<void> {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isRequestOverview(message)) {
     const windowId = sender.tab?.windowId;
+
+    // Called before anything is awaited, because opening the panel is only allowed
+    // inside the user gesture that produced this message and the first await spends it.
+    // The request is written after, and the nudge below is what covers a panel that
+    // mounts before the write lands (docs/features/injected-button.md).
+    const opening =
+      windowId === undefined
+        ? Promise.resolve()
+        : chrome.sidePanel.open({ windowId }).catch(() => undefined);
+
     void (async () => {
       await chrome.storage.session.set({ [PENDING_REQUEST]: message.videoUrl });
-      if (windowId !== undefined) {
-        await chrome.sidePanel.open({ windowId }).catch(() => undefined);
-      }
       // A panel that was already open is not opened again and would otherwise wait until
       // its next mount to notice the request.
       void chrome.runtime.sendMessage(message).catch(() => undefined);
+      await opening;
       sendResponse({ opened: windowId !== undefined });
     })();
     return true;
