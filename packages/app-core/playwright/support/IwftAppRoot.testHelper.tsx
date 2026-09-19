@@ -20,6 +20,7 @@ export function IwftAppRoot() {
       layout={window.__iwftLayout__}
       activeVideo={window.__iwftActiveVideo__}
       playback={window.__iwftPlayback__}
+      runBridge={window.__iwftRunBridge__}
     />
   );
 }

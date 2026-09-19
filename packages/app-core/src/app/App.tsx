@@ -5,6 +5,7 @@ import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
 import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
 import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
+import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
 import { SurfaceProvider, type Surface } from "./SurfaceContext.js";
 import type { AppRouter } from "./createAppRouter.js";
 import "../theme/global.scss";
@@ -16,6 +17,7 @@ export interface AppProps {
   layout?: AppLayout;
   activeVideo?: ActiveVideoSource | null;
   playback?: PlaybackSource | null;
+  runBridge?: RunBridge | null;
 }
 
 export function App({
@@ -25,19 +27,22 @@ export function App({
   layout = "full",
   activeVideo = null,
   playback = null,
+  runBridge = null,
 }: AppProps) {
   return (
     <ActiveVideoProvider value={activeVideo}>
       <PlaybackProvider value={playback}>
-        <LayoutProvider value={layout}>
-          <SurfaceProvider value={surface}>
-            <StoresProvider value={stores}>
-              <QueryClientProvider client={queryClient}>
-                <RouterProvider router={router} />
-              </QueryClientProvider>
-            </StoresProvider>
-          </SurfaceProvider>
-        </LayoutProvider>
+        <RunBridgeProvider value={runBridge}>
+          <LayoutProvider value={layout}>
+            <SurfaceProvider value={surface}>
+              <StoresProvider value={stores}>
+                <QueryClientProvider client={queryClient}>
+                  <RouterProvider router={router} />
+                </QueryClientProvider>
+              </StoresProvider>
+            </SurfaceProvider>
+          </LayoutProvider>
+        </RunBridgeProvider>
       </PlaybackProvider>
     </ActiveVideoProvider>
   );

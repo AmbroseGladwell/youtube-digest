@@ -4,6 +4,7 @@ import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
+import { IwftRunBridge } from "./network/IwftRunBridge.testHelper.js";
 import { InMemoryOverviewStore } from "./network/InMemoryOverviewStore.testHelper.js";
 import { InMemorySettingsStore } from "./network/InMemorySettingsStore.testHelper.js";
 import { InMemoryTranscriptStore } from "./network/InMemoryTranscriptStore.testHelper.js";
@@ -31,4 +32,5 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
       : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
   window.__iwftPlayback__ =
     hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
+  window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;
 });

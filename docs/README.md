@@ -29,6 +29,9 @@ Five folders, five different questions.
 - `following-playback.md` — how the transcript follows the video, what now touches the
   YouTube page and how little, and why the follow scroll is the one movement that isn't
   eased.
+- `injected-button.md` — the Overview button in YouTube's own action row: why it wears
+  their pill, where each of its four states gets its facts, and the three-document
+  conversation behind it.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
 - `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the

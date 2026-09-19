@@ -62,6 +62,9 @@ the meta line, `Listen`, `⋯`, the three tabs and the tags at the foot.
 There is no fourth screen, and in particular there is no list. The way back out of the
 reader is the mark in the masthead, which is a link home in every layout already.
 
+The panel is not the only way in. The button injected into YouTube's action row opens it
+already running, which is design 17d — `docs/features/injected-button.md`.
+
 ## The run still belongs to the shell
 
 `useNewOverviewRun` did not move. The `AppShell` is still the one component that survives

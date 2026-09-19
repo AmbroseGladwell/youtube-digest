@@ -7,6 +7,7 @@ import { GenerationStatusStrip } from "../../features/newOverview/components/Gen
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
+import { useRunBridgeExchange } from "../../features/newOverview/useRunBridgeExchange.js";
 import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import {
@@ -44,6 +45,10 @@ export function AppShell() {
   // outlive both the dialog it was started from and the page it was started on
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
+
+  // The injected YouTube button's end of that same run
+  // (docs/features/injected-button.md).
+  useRunBridgeExchange(newOverview);
 
   // Held here rather than in the dialog so the captions are already in hand by the time
   // the dialog is opened at all (docs/features/watching-detection.md).

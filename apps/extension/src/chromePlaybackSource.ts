@@ -9,6 +9,8 @@ let position: PlaybackPosition | null = null;
 const listeners = new Set<() => void>();
 
 const REPORT_EVERY_MS = 400;
+// Roughly two seconds of timeupdates with nobody answering.
+const GIVE_UP_AFTER_MISSES = 5;
 
 function publish(next: PlaybackPosition | null): void {
   position = next;
@@ -17,7 +19,7 @@ function publish(next: PlaybackPosition | null): void {
 
 // Serialized and run in the tab, so it closes over nothing and reads its own constants
 // from the arguments (docs/features/following-playback.md).
-function reportPlayback(reportType: string, everyMs: number): void {
+function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number): void {
   interface Reporting {
     __overviewPlaybackStop__?: () => void;
   }
@@ -31,6 +33,7 @@ function reportPlayback(reportType: string, everyMs: number): void {
     document.querySelector("video");
 
   let lastSentAt = 0;
+  let unacknowledged = 0;
   const send = (force: boolean) => {
     const video = mainVideo();
     const videoId = new URL(window.location.href).searchParams.get("v");
@@ -49,10 +52,22 @@ function reportPlayback(reportType: string, everyMs: number): void {
         positionMs: Math.floor(video.currentTime * 1000),
         playing: !video.paused,
       })
-      // Nothing is listening any more: the panel closed, or left the transcript. The
-      // reporter takes itself down rather than posting to no one for the life of the
-      // page, and a later injection puts it back.
-      .catch(() => page.__overviewPlaybackStop__?.());
+      // Counted rather than inferred from the send failing: the extension has other
+      // runtime listeners, and whether an unanswered message rejects or resolves depends
+      // on which of them happen to be alive. An explicit acknowledgement from the reader
+      // is the only reliable sign anyone is still listening
+      // (docs/features/following-playback.md).
+      .then((acknowledged) => {
+        unacknowledged = acknowledged === true ? 0 : unacknowledged + 1;
+      })
+      .catch(() => {
+        unacknowledged += 1;
+      })
+      .finally(() => {
+        if (unacknowledged >= giveUpAfter) {
+          page.__overviewPlaybackStop__?.();
+        }
+      });
   };
 
   // Always, even when the listeners are already attached: a paused video emits no
@@ -89,7 +104,7 @@ async function injectIntoActiveTab(): Promise<void> {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: reportPlayback,
-      args: [PLAYBACK_REPORT, REPORT_EVERY_MS],
+      args: [PLAYBACK_REPORT, REPORT_EVERY_MS, GIVE_UP_AFTER_MISSES],
     });
   } catch {
     // No host permission for this page, or it went away mid-injection. Reporting
@@ -98,12 +113,17 @@ async function injectIntoActiveTab(): Promise<void> {
   }
 }
 
-const onMessage = (message: unknown) => {
+const onMessage = (
+  message: unknown,
+  _sender: chrome.runtime.MessageSender,
+  respond: (ack: boolean) => void,
+) => {
   if (!isPlaybackReport(message)) {
     return;
   }
   const { videoId, positionMs, playing } = message;
   publish({ videoId, positionMs, playing });
+  respond(true);
 };
 
 const onActivated = () => {

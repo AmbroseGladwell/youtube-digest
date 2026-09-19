@@ -71,10 +71,17 @@ it had already instrumented — would show nothing at all until somebody pressed
 `window` flag that stops a second injection stacking a second set of listeners guards
 only the listeners, never that first report.
 
-**The reporter takes itself down** when a message finds no receiver, which is what
+**The reporter takes itself down** when nobody is listening any more, which is what
 happens when the panel closes or leaves the Transcript tab. Without that it would post
 into nothing every 400ms for the remaining life of the page. A later injection puts it
 back, which is why the flag it clears is the teardown function itself.
+
+That it has stopped being listened to is *counted*, not inferred from the send failing.
+Whether an unanswered `sendMessage` rejects or resolves depends on which of the
+extension's listeners happen to be alive, and the worker grew one when the injected
+button arrived (`docs/features/injected-button.md`) — which would have silently kept the
+reporter running forever. The reader acknowledges each report explicitly instead, and
+five unanswered sends in a row, about two seconds, is the reporter's cue to stop.
 
 A declared content script was the alternative and was rejected on build shape as much as
 on permissions: MV3 content scripts are classic scripts, the rest of this extension is

@@ -7,6 +7,7 @@ import {
   type ActiveVideoSource,
   type AppLayout,
   type PlaybackSource,
+  type RunBridge,
 } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
@@ -19,6 +20,7 @@ export interface MountOptions {
   layout?: AppLayout;
   activeVideo?: ActiveVideoSource | null;
   playback?: PlaybackSource | null;
+  runBridge?: RunBridge | null;
 }
 
 // A hash router, not a browser one: an extension document is a packaged file, so a pushed
@@ -27,6 +29,7 @@ export async function mountApp({
   layout = "full",
   activeVideo = null,
   playback = null,
+  runBridge = null,
 }: MountOptions = {}): Promise<void> {
   const container = document.getElementById("root");
   if (!container) throw new Error("the extension document is missing its #root element");
@@ -45,6 +48,7 @@ export async function mountApp({
         layout={layout}
         activeVideo={activeVideo}
         playback={playback}
+        runBridge={runBridge}
       />
     </StrictMode>,
   );

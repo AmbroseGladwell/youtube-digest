@@ -8,6 +8,7 @@
     "sidePanel",
     "tabs",
     "scripting",
+    "storage",
     "unlimitedStorage"
   ],
   "host_permissions": [
@@ -39,5 +40,16 @@
   "background": {
     "service_worker": "serviceWorker.js",
     "type": "module"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "contentScript.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }

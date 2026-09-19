@@ -23,6 +23,7 @@ export interface LaunchOptions {
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
   plan?: Plan;
+  runBridge?: boolean;
 }
 
 export class Launcher {
@@ -61,6 +62,7 @@ export class Launcher {
         layout: options.layout,
         activeVideoUrl: options.activeVideoUrl,
         playback: options.playback,
+        runBridge: options.runBridge,
       },
     });
   };
@@ -85,6 +87,21 @@ export class Launcher {
   movePlaybackTo = (position: PlaybackPosition | null): Promise<void> =>
     test.step(`Launcher.movePlaybackTo ${position?.positionMs ?? "nothing"}`, () =>
       this.page.evaluate((next) => window.__iwftPlayback__?.moveTo(next), position));
+
+  // Pressing the button injected into the YouTube page, from app-core's side of the
+  // seam (docs/features/injected-button.md).
+  pressInjectedButton = (videoUrl: string): Promise<void> =>
+    test.step(`Launcher.pressInjectedButton ${videoUrl}`, () =>
+      this.page.evaluate((url) => window.__iwftRunBridge__?.requestOverview(url), videoUrl));
+
+  readRunReports = (): Promise<Array<{ status: string; videoUrl: string } | null>> =>
+    test.step("Launcher.readRunReports", () =>
+      this.page.evaluate(
+        () =>
+          window.__iwftRunBridge__?.reports.map((report) =>
+            report === null ? null : { status: report.status, videoUrl: report.videoUrl },
+          ) ?? [],
+      ));
 
   get capturePage(): CapturePageObject {
     return new CapturePageObject(this.testContext);

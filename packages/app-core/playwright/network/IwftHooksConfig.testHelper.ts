@@ -24,4 +24,7 @@ export interface IwftHooksConfig {
   // Absent is a shell that can't see the player; null is one that can, with nothing to
   // report yet (docs/features/following-playback.md).
   playback?: PlaybackPosition | null;
+  // Whether this shell has a page with an injected button on it
+  // (docs/features/injected-button.md).
+  runBridge?: boolean;
 }
