@@ -24,6 +24,11 @@ So a transcript gets its own interface (`packages/types/src/TranscriptStore.ts`)
 IndexedDB object store, and its own conformance suite — a third store alongside
 `OverviewStore` and `SettingsStore` rather than a few more methods on either.
 
+The record later grew the `VideoSource` the captions were fetched with, so the metadata
+call is cached by the same key rather than paid for twice — see
+`docs/features/watching-detection.md`, "Both halves of the purchase are cached, in one
+record".
+
 ## Where the video id comes from
 
 `VideoSource` gained an `id`, taken straight from Supadata's `Metadata.id` — the

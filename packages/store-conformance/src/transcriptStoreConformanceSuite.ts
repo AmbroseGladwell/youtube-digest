@@ -52,6 +52,21 @@ export function defineTranscriptStoreConformanceSuite(
     assert.equal((await store.getTranscript(transcript.videoId))?.generated, true);
   });
 
+  test(behaviour("the metadata the captions were fetched with is stored beside them"), async () => {
+    const store = await createStore();
+    const transcript = makeStoredTranscript();
+    await store.saveTranscript(transcript);
+    assert.deepEqual((await store.getTranscript(transcript.videoId))?.video, transcript.video);
+  });
+
+  test(behaviour("a record stored before metadata was kept round-trips without one being invented"), async () => {
+    const store = await createStore();
+    const { video, ...withoutVideo } = makeStoredTranscript();
+    assert.ok(video);
+    await store.saveTranscript(withoutVideo);
+    assert.equal((await store.getTranscript(withoutVideo.videoId))?.video, undefined);
+  });
+
   test(behaviour("deleteTranscript removes it"), async () => {
     const store = await createStore();
     const transcript = makeStoredTranscript();

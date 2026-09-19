@@ -251,5 +251,6 @@ test("a second note on a video already in the library reads the stored captions 
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
 
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });

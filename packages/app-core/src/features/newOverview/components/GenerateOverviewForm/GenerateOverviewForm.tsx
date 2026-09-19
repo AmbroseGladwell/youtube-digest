@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
+import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { hasRequiredApiKeys } from "../../../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
+import { useWatchedTranscriptQuery } from "../../../transcripts/queries/watchedTranscriptQuery.js";
 import { isYouTubeUrl } from "../../util/parseYouTubeUrl.js";
 import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
@@ -25,6 +27,8 @@ export function GenerateOverviewForm({
   generationError = null,
 }: GenerateOverviewFormProps) {
   const { apiKeys } = useApiKeys();
+  const activeVideoUrl = useActiveVideoUrl();
+  const watchedTranscript = useWatchedTranscriptQuery();
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent) => {
@@ -38,6 +42,9 @@ export function GenerateOverviewForm({
   };
 
   const keysReady = hasRequiredApiKeys(apiKeys);
+  const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
+  const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
+  const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
     <form className={styles.root} onSubmit={handleSubmit} data-testid={generateOverviewFormTestIds.root}>
@@ -54,6 +61,26 @@ export function GenerateOverviewForm({
           data-testid={generateOverviewFormTestIds.urlInput}
         />
       </label>
+
+      {isWatchedVideo && (
+        <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>
+          The video you're watching, already filled in.
+          {watchedTranscript.isFetching && " Fetching its captions now."}
+          {watchedCaptionsHeld && " Its captions are already here, so generating won't buy them again."}
+        </p>
+      )}
+
+      {offersWatchedVideo && (
+        <button
+          type="button"
+          className={styles.watchingButton}
+          onClick={() => onUrlChange(activeVideoUrl)}
+          disabled={!keysReady}
+          data-testid={generateOverviewFormTestIds.watchingButton}
+        >
+          Use the video you're watching
+        </button>
+      )}
 
       {canReadClipboard() && (
         <button

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Overview } from "@overview/types";
+import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { formatClock } from "../../../../util/formatClock.js";
@@ -32,6 +33,7 @@ export function NewOverviewDialog({
   onReadOverview,
 }: NewOverviewDialogProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
+  const activeVideoUrl = useActiveVideoUrl();
   const [url, setUrl] = useState("");
 
   // Native <dialog> rather than a hand-rolled overlay: showModal() is what makes the page
@@ -43,14 +45,14 @@ export function NewOverviewDialog({
     }
     if (open && !element.open) {
       if (run === null) {
-        setUrl("");
+        setUrl(activeVideoUrl ?? "");
       }
       element.showModal();
     }
     if (!open && element.open) {
       element.close();
     }
-  }, [open]);
+  }, [open, activeVideoUrl]);
 
   const inProgress = run !== null && run.overview === null && run.error === null;
 

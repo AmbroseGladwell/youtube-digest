@@ -15,4 +15,6 @@ export interface IwftHooksConfig {
   seedTranscripts?: StoredTranscript[];
   apiKeys?: ApiKeys;
   surface?: Surface;
+  // Absent is a shell that can't see tabs; null is one that can, seeing no video.
+  activeVideoUrl?: string | null;
 }

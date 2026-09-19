@@ -12,5 +12,12 @@ const router = createAppRouter(createBrowserRouter);
 // Node<->browser boundary, so the live store instances have to be read from the global
 // playwright/index.tsx's beforeMount hook already built in the browser, not passed in.
 export function IwftAppRoot() {
-  return <App stores={window.__iwftStores__} router={router} surface={window.__iwftSurface__} />;
+  return (
+    <App
+      stores={window.__iwftStores__}
+      router={router}
+      surface={window.__iwftSurface__}
+      activeVideo={window.__iwftActiveVideo__}
+    />
+  );
 }

@@ -15,6 +15,7 @@ import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
   surface?: Surface;
+  activeVideoUrl?: string | null;
 }
 
 export class Launcher {
@@ -36,6 +37,7 @@ export class Launcher {
           ...this.backendSimulator.buildHooksConfig(),
           apiKeys: options.apiKeys,
           surface: options.surface,
+          activeVideoUrl: options.activeVideoUrl,
         },
       });
       return new HomePageObject(this.testContext).verifyIsShown();
@@ -48,6 +50,13 @@ export class Launcher {
       const dialog = await this.appShell.openNewOverview();
       return dialog.form;
     });
+
+  // The shell's own view of which tab is in front, moved the way a tab change moves it.
+  // Nothing in app-core can reach chrome.tabs, so the simulated source is the seam.
+  watchAnotherVideo = (videoUrl: string | null): Promise<void> =>
+    test.step(`Launcher.watchAnotherVideo ${videoUrl}`, () =>
+      this.page.evaluate((next) => window.__iwftActiveVideo__?.watchAnother(next), videoUrl),
+    );
 
   get appShell(): AppShellPageObject {
     return new AppShellPageObject(this.testContext);
