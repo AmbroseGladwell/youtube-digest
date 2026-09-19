@@ -153,6 +153,40 @@ answers, and the playback reporter was using exactly that as its signal to stop
 after five, with the panel acknowledging each one explicitly — a signal that does not
 depend on which of the extension's listeners happen to be alive.
 
+## Measured against the reference
+
+`zarazhangrui/youtube-digest` injects the same kind of button and opens the same kind of
+panel, so it is worth saying what it settles and where the two differ on purpose.
+
+**The gesture rule is real, and this is the fix.** Its background script carries the
+warning in as many words — "we call setOptions + open synchronously (no await between
+them) to preserve the user gesture context. Chrome requires sidePanel.open() to be
+called within a user gesture — awaiting anything first can expire it." That is exactly
+the fault that was here, and exactly the shape of the correction. Nothing about the open
+should be moved behind an `await` again.
+
+**It opens the panel per tab; this one opens it per window.** `open({ tabId })` gives a
+panel scoped to one tab, which is what that extension wants — it enables the panel on
+YouTube tabs and disables it everywhere else, so the panel is a YouTube-only tool and
+its own `setOptions({ enabled: true })` before each open exists to undo that disabling.
+Ours is `open({ windowId })` and is meant to be: the panel belongs to a window and
+follows the tab in front of it, which is the whole of
+`docs/features/watching-detection.md`. A tab-scoped panel would give each tab its own
+instance and there would be nothing left for the active-tab source to follow. Neither of
+us needs `setOptions`, for opposite reasons.
+
+**How the press reaches a panel that did not exist yet.** Theirs broadcasts
+`startDigestFromButton` 300ms after the open resolves, which is a race with the panel
+mounting and its listener attaching. Ours writes the request to `chrome.storage.session`
+and the panel reads it as it mounts, so there is no window to miss; the broadcast is
+kept only for the case their timeout cannot help with either — a panel that was already
+open, where `open()` does nothing and no mount follows. Worth knowing before anyone
+simplifies the persistence into a timer.
+
+**One thing of theirs not worth copying.** When `sender.tab` is missing it falls back to
+`chrome.tabs.query` and opens against the result — but that is an await, so the gesture
+is gone by the time it calls `open()`. It would fail in exactly the case it exists for.
+
 ## Where this departs from the file
 
 - **The button goes at the end of the native group**, where 17a–c draw it between Share
