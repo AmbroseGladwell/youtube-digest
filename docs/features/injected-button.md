@@ -14,10 +14,19 @@ one thing shouting in it. 18a is 17c refined: the pill is YouTube's, down to the
 top-to-bottom lift and the hairline edge, and the orange appears only in the ring mark.
 
 The pill is transcribed from the design rather than approximated, including the two
-schemes — with one measurement corrected against the live site: the row is **40px**
-tall now, where 17 and 18 both draw 36, so the button is 40 with a 20px radius. Matching
-the row is the entire argument for this treatment, so where the drawing and the row
-disagree the row wins. The radius is half the height or it stops reading as a pill. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
+schemes — with two corrections made against the live site, both on the same principle:
+matching the row is the entire argument for this treatment, so where the drawing and
+the row disagree, the row wins.
+
+**Height.** The row is **40px** now, where 17 and 18 both draw 36. The radius goes to 20
+with it, or a 40px pill reads flatter at the ends than the ones either side of it.
+
+**The top highlight.** Drawn at 1px of 90% white, it was the brightest thing in the
+action row — the opposite of what the quietest of the three treatments is for. It is
+half that opacity at half the thickness, in both schemes so they stay siblings. The
+hairline beside it is the shape's own edge rather than shine, and keeps its weight; on
+the ready pill that hairline is the accent, which is carrying a state rather than
+decorating. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
 `html:not([dark])` in the stylesheet and there is no theme detection to get wrong or to
 keep in sync.
 
