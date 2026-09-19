@@ -16,6 +16,9 @@ const CSS = `
   align-self: center;
   flex: 0 0 auto;
   gap: 8px;
+  /* The native row sets no gap of its own, so the button carries the 8px design 18a
+     leaves between the pills. Logical, so it stays on the leading edge in RTL. */
+  margin-inline-start: 8px;
   height: 36px;
   padding: 0 16px;
   border: 0;
