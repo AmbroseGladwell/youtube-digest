@@ -2,7 +2,7 @@
   "name": "@overview/extension",
   "version": "0.0.0",
   "private": true,
-  "description": "The Chrome MV3 shell: a side panel and a full page, each mounting @overview/app-core against the extension origin's own local IndexedDB. @overview is a placeholder scope — product naming is parked.",
+  "description": "The Chrome MV3 shell: a side panel and a full page, each mounting @overview/app-core against the extension origin's own local IndexedDB \u2014 the panel in its pared-back one-video layout, with the tab and player capabilities app-core cannot reach itself (docs/features/extension-panel.md). @overview is a placeholder scope \u2014 product naming is parked.",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit && vite build",

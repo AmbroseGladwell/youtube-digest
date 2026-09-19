@@ -1,8 +1,18 @@
 import type { Page, Route } from "@playwright/test";
-import type { Overview, OverviewId, OverviewState, StoredTranscript, Topic, VideoId } from "@overview/types";
+import type {
+  Overview,
+  OverviewId,
+  OverviewState,
+  StoredTranscript,
+  Topic,
+  VideoId,
+} from "@overview/types";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
-import { makeAnthropicMessageResponse, makeGeneratedOutputFixture } from "./fixtures/anthropicFixtures.js";
+import {
+  makeAnthropicMessageResponse,
+  makeGeneratedOutputFixture,
+} from "./fixtures/anthropicFixtures.js";
 import { makeMetadataFixture, makeTranscriptFixture } from "./fixtures/supadataFixtures.js";
 import type {} from "./iwftWindow.testHelper.js";
 
@@ -17,7 +27,11 @@ export class BackendSimulator {
     Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
   );
   #callCounts = new Map<EndpointKey, number>();
-  #stalled: Array<{ endpoint: EndpointKey; route: Route; onDefault: () => { status: number; body: unknown } }> = [];
+  #stalled: Array<{
+    endpoint: EndpointKey;
+    route: Route;
+    onDefault: () => { status: number; body: unknown };
+  }> = [];
   #generatedOutputOverrides: Record<string, unknown> = {};
 
   constructor(page: Page) {
@@ -68,7 +82,11 @@ export class BackendSimulator {
         onDefault: () => ({ status: 200, body: makeMetadataFixture() }),
         onError: () => ({
           status: 401,
-          body: { error: "invalid-request", message: "Unauthorized", details: "Simulated auth failure" },
+          body: {
+            error: "invalid-request",
+            message: "Unauthorized",
+            details: "Simulated auth failure",
+          },
         }),
       }),
     );
@@ -93,7 +111,10 @@ export class BackendSimulator {
         }),
         onError: () => ({
           status: 401,
-          body: { type: "error", error: { type: "authentication_error", message: "Simulated auth failure" } },
+          body: {
+            type: "error",
+            error: { type: "authentication_error", message: "Simulated auth failure" },
+          },
         }),
       }),
     );
@@ -102,7 +123,10 @@ export class BackendSimulator {
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
-    handlers: { onDefault: () => { status: number; body: unknown }; onError: () => { status: number; body: unknown } },
+    handlers: {
+      onDefault: () => { status: number; body: unknown };
+      onError: () => { status: number; body: unknown };
+    },
   ): Promise<void> => {
     this.#callCounts.set(endpoint, this.getCallCount(endpoint) + 1);
     const behaviour = this.#behaviours.get(endpoint) ?? EndpointBehaviour.DEFAULT;
@@ -113,7 +137,8 @@ export class BackendSimulator {
       return;
     }
 
-    const { status, body } = behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
+    const { status, body } =
+      behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
     await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   };
 
@@ -131,7 +156,10 @@ export class BackendSimulator {
       this.#seedTopics.push(topic);
     },
     get: (id: OverviewId) =>
-      this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId), id),
+      this.#page.evaluate(
+        (overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId),
+        id,
+      ),
   };
 
   transcripts = {
@@ -145,10 +173,18 @@ export class BackendSimulator {
       this.#page.evaluate((id) => window.__iwftStores__.transcriptStore.getTranscript(id), videoId),
   };
 
+  settingsStore = {
+    get: () => this.#page.evaluate(() => window.__iwftStores__.settingsStore.get()),
+  };
+
   overviewStore = {
-    listOverviews: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listOverviews()),
+    listOverviews: () =>
+      this.#page.evaluate(() => window.__iwftStores__.overviewStore.listOverviews()),
     listTopics: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listTopics()),
     getOverviewState: (id: OverviewId) =>
-      this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
+      this.#page.evaluate(
+        (overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId),
+        id,
+      ),
   };
 }

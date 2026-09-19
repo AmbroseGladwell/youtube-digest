@@ -1,0 +1,50 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 16b: a hairline box with one accent edge, sitting between the note's head and
+// its tabs. Quieter than 16a because it arrives unasked for, at the moment the overview
+// lands rather than the moment something is wanted (docs/features/plus-upsell.md).
+.root {
+  margin: 0 1.125rem 0.75rem;
+  border: 1px solid var(--edge);
+  border-left: 2px solid var(--accent);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.lede {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.link {
+  font-size: 0.82rem;
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 1px;
+}
+
+.quiet {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--faint);
+  cursor: pointer;
+
+  @include controls.quiet-control;
+}

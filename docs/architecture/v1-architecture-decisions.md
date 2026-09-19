@@ -34,7 +34,10 @@ listed "the extension UX-parity features" among the paid-gated infrastructure, w
 wrong by the paragraph's own test: a BYO-key extension contacts no server of ours, so
 there is nothing for an account to gate. Corrected on 2026-09-18, when `apps/extension`
 was built: the extension is free-tier, BYO-key, and its library is local to the
-extension origin.
+extension origin. It is also where the paid tier is now *described* — the side panel is
+the surface that hits both of the things Plus buys, so that is where the three prompts
+live (`docs/features/plus-upsell.md`). Describing them changes nothing here: generation
+in the extension stays BYO-key and free.
 
 **Two local libraries is the free tier's honest shape, not a gap to be closed.** Browser
 storage is partitioned by origin, so `chrome-extension://<id>` and the web app's origin

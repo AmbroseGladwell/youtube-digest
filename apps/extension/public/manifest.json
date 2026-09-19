@@ -7,11 +7,14 @@
   "permissions": [
     "sidePanel",
     "tabs",
+    "scripting",
     "unlimitedStorage"
   ],
   "host_permissions": [
     "https://api.anthropic.com/*",
-    "https://api.supadata.ai/*"
+    "https://api.supadata.ai/*",
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*"
   ],
   "action": {
     "default_title": "The Overview",

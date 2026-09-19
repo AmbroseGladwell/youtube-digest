@@ -17,7 +17,9 @@ export function IwftAppRoot() {
       stores={window.__iwftStores__}
       router={router}
       surface={window.__iwftSurface__}
+      layout={window.__iwftLayout__}
       activeVideo={window.__iwftActiveVideo__}
+      playback={window.__iwftPlayback__}
     />
   );
 }

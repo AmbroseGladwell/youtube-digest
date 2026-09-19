@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { hasRequiredApiKeys } from "../../../apiKeys/ApiKeys.js";
+import { BYO_KEY_NOTE_SHORT } from "../../../apiKeys/byoKeyNote.js";
 import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
 import { useWatchedTranscriptQuery } from "../../../transcripts/queries/watchedTranscriptQuery.js";
 import { isYouTubeUrl } from "../../util/parseYouTubeUrl.js";
@@ -47,7 +48,11 @@ export function GenerateOverviewForm({
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
-    <form className={styles.root} onSubmit={handleSubmit} data-testid={generateOverviewFormTestIds.root}>
+    <form
+      className={styles.root}
+      onSubmit={handleSubmit}
+      data-testid={generateOverviewFormTestIds.root}
+    >
       <label className={styles.field}>
         <span className={styles.label}>Video link</span>
         <input
@@ -66,7 +71,8 @@ export function GenerateOverviewForm({
         <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>
           The video you're watching, already filled in.
           {watchedTranscript.isFetching && " Fetching its captions now."}
-          {watchedCaptionsHeld && " Its captions are already here, so generating won't buy them again."}
+          {watchedCaptionsHeld &&
+            " Its captions are already here, so generating won't buy them again."}
         </p>
       )}
 
@@ -96,13 +102,17 @@ export function GenerateOverviewForm({
 
       {keysReady ? (
         <p className={styles.note}>
-          Fetches the transcript, then writes the overview. Nothing is saved to your library
-          unless both succeed.
+          Fetches the transcript, then writes the overview. Nothing is saved to your library unless
+          both succeed.
         </p>
       ) : (
         <p className={styles.note}>
-          Generation is bring-your-own-key, and both keys stay on this device.{" "}
-          <Link to={Routes.settings()} onClick={onCancel} data-testid={generateOverviewFormTestIds.settingsLink}>
+          {BYO_KEY_NOTE_SHORT}{" "}
+          <Link
+            to={Routes.settings()}
+            onClick={onCancel}
+            data-testid={generateOverviewFormTestIds.settingsLink}
+          >
             Add your Anthropic and Supadata keys →
           </Link>
         </p>

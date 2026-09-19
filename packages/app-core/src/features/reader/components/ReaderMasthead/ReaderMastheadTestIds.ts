@@ -10,4 +10,5 @@ export const readerMastheadTestIds = {
   meta: "ReaderMasthead.meta",
   readButton: "ReaderMasthead.readButton",
   readAloudButton: "ReaderMasthead.readAloudButton",
+  listenButton: "ReaderMasthead.listenButton",
 };

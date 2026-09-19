@@ -11,6 +11,17 @@
   grid-template-columns: 1fr 16.5rem;
 }
 
+// The side panel is 400px with no rail beside the note, and it takes the masthead's own
+// gutter so the title, the tabs and the prose share one left edge
+// (docs/features/extension-panel.md).
+.panelRoot .grid {
+  grid-template-columns: 1fr;
+}
+
+.panelRoot .main {
+  padding: 1rem 1.125rem 1.5rem;
+}
+
 .main {
   padding: 1.5rem 2.5rem 2rem;
   min-width: 0;

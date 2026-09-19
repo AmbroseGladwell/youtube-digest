@@ -20,8 +20,14 @@ export interface ReaderMastheadProps {
   read: boolean;
   playing: boolean;
   editingTopics: boolean;
+  // Design 15c: the side panel's head is the title, the topics, the meta line and one
+  // Listen — no breadcrumb, no stepper, no thumbnail, because there is no list behind it
+  // to have come from (docs/features/extension-panel.md).
+  compact: boolean;
+  listening: boolean;
   onToggleRead: () => void;
   onTogglePlaying: () => void;
+  onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
 }
 
@@ -39,58 +45,63 @@ export function ReaderMasthead({
   read,
   playing,
   editingTopics,
+  compact,
+  listening,
   onToggleRead,
   onTogglePlaying,
+  onListen,
   onEditingTopicsChange,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
 
   return (
     <header className={styles.root} data-testid={readerMastheadTestIds.root}>
-      <nav className={styles.topBar} aria-label="Overview navigation">
-        <Link
-          className={styles.backLink}
-          to={Routes.home()}
-          viewTransition={animateNavigation}
-          data-testid={readerMastheadTestIds.backLink}
-        >
-          ← All overviews
-        </Link>
-        <span className={styles.breadcrumb} data-testid={readerMastheadTestIds.breadcrumb}>
-          Overviews {topicNames[0] ? `/ ${topicNames[0]} ` : ""}/{" "}
-          <span className={styles.breadcrumbLeaf}>{overview.video.title}</span>
-        </span>
-        <span className={styles.stepper}>
-          {neighbours.previousId && (
-            <Link
-              className={styles.stepLink}
-              to={Routes.overview(neighbours.previousId)}
-              viewTransition={animateNavigation}
-              data-testid={readerMastheadTestIds.previousLink}
-            >
-              ↑ Previous
-            </Link>
-          )}
-          {neighbours.nextId && (
-            <Link
-              className={styles.stepLink}
-              to={Routes.overview(neighbours.nextId)}
-              viewTransition={animateNavigation}
-              data-testid={readerMastheadTestIds.nextLink}
-            >
-              Next ↓
-            </Link>
-          )}
-          {neighbours.position !== null && (
-            <span className={styles.position} data-testid={readerMastheadTestIds.position}>
-              {neighbours.position} of {neighbours.total}
-            </span>
-          )}
-        </span>
-      </nav>
+      {!compact && (
+        <nav className={styles.topBar} aria-label="Overview navigation">
+          <Link
+            className={styles.backLink}
+            to={Routes.home()}
+            viewTransition={animateNavigation}
+            data-testid={readerMastheadTestIds.backLink}
+          >
+            ← All overviews
+          </Link>
+          <span className={styles.breadcrumb} data-testid={readerMastheadTestIds.breadcrumb}>
+            Overviews {topicNames[0] ? `/ ${topicNames[0]} ` : ""}/{" "}
+            <span className={styles.breadcrumbLeaf}>{overview.video.title}</span>
+          </span>
+          <span className={styles.stepper}>
+            {neighbours.previousId && (
+              <Link
+                className={styles.stepLink}
+                to={Routes.overview(neighbours.previousId)}
+                viewTransition={animateNavigation}
+                data-testid={readerMastheadTestIds.previousLink}
+              >
+                ↑ Previous
+              </Link>
+            )}
+            {neighbours.nextId && (
+              <Link
+                className={styles.stepLink}
+                to={Routes.overview(neighbours.nextId)}
+                viewTransition={animateNavigation}
+                data-testid={readerMastheadTestIds.nextLink}
+              >
+                Next ↓
+              </Link>
+            )}
+            {neighbours.position !== null && (
+              <span className={styles.position} data-testid={readerMastheadTestIds.position}>
+                {neighbours.position} of {neighbours.total}
+              </span>
+            )}
+          </span>
+        </nav>
+      )}
 
-      <div className={styles.titleRow}>
-        <OverviewThumbnail video={overview.video} className={styles.thumbnail} />
+      <div className={`${styles.titleRow} ${compact ? styles.titleRowCompact : ""}`}>
+        {!compact && <OverviewThumbnail video={overview.video} className={styles.thumbnail} />}
 
         <div className={styles.titleBlock}>
           <p className={styles.kickerRow}>
@@ -113,7 +124,9 @@ export function ReaderMasthead({
                 <>
                   {" · "}
                   <span
-                    className={overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict}
+                    className={
+                      overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
+                    }
                   >
                     {NOVELTY_LABEL[overview.verdict.novelty]}
                   </span>
@@ -134,24 +147,38 @@ export function ReaderMasthead({
         </div>
 
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.action} ${read ? styles.actionActive : ""}`}
-            onClick={onToggleRead}
-            aria-pressed={read}
-            data-testid={readerMastheadTestIds.readButton}
-          >
-            {read ? "Read" : "Mark read"}
-          </button>
-          <button
-            type="button"
-            className={styles.readAloud}
-            onClick={onTogglePlaying}
-            aria-pressed={playing}
-            data-testid={readerMastheadTestIds.readAloudButton}
-          >
-            <PlayPauseIcon playing={playing} /> Read aloud
-          </button>
+          {compact ? (
+            <button
+              type="button"
+              className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
+              onClick={onListen}
+              aria-pressed={listening}
+              data-testid={readerMastheadTestIds.listenButton}
+            >
+              {listening ? "Listening" : "Listen"}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={`${styles.action} ${read ? styles.actionActive : ""}`}
+                onClick={onToggleRead}
+                aria-pressed={read}
+                data-testid={readerMastheadTestIds.readButton}
+              >
+                {read ? "Read" : "Mark read"}
+              </button>
+              <button
+                type="button"
+                className={styles.readAloud}
+                onClick={onTogglePlaying}
+                aria-pressed={playing}
+                data-testid={readerMastheadTestIds.readAloudButton}
+              >
+                <PlayPauseIcon playing={playing} /> Read aloud
+              </button>
+            </>
+          )}
           <OverviewActionsMenu
             topicCount={overview.topicIds.length}
             onEditTopics={() => onEditingTopicsChange(true)}

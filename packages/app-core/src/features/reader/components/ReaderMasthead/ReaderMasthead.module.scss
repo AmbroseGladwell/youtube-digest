@@ -177,6 +177,47 @@
   @include controls.tinted-control;
 }
 
+// Design 15c and 15d: one tinted pill that fills in while it is running, rather than the
+// pair the wide reader carries. It is the panel's only transport control until the
+// player docks under it (docs/features/extension-panel.md).
+.listen {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.35rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @include controls.tinted-control;
+}
+
+.listenActive,
+.listenActive:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+// The panel is 400px and the meta stack already fills it, so the actions take their own
+// row under the title block rather than a column beside it.
+.titleRowCompact {
+  gap: 0.75rem;
+  padding: 1rem 1.125rem 0.75rem;
+}
+
+.titleRowCompact .title {
+  font-size: 1.375rem;
+}
+
+.titleRowCompact .actions {
+  flex: 1 0 100%;
+  justify-content: flex-start;
+}
+
 // The phone reader keeps the back link and drops the breadcrumb and the stepper: design
 // 2c's mobile header is "← All overviews · Read along · ⋯", not a trail.
 @media (max-width: 61.9375rem) {

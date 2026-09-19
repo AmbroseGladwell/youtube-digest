@@ -195,6 +195,26 @@ IWFT that asserts three stored captions rendering as two blocks is what holds th
 Keeping the store raw also means the limits above can be retuned without re-fetching a
 single transcript.
 
+## Reading the transcript, rather than only looking at it
+
+The tab grew three tools, all of which work on the merged blocks rather than the stored
+cues, and none of which is panel-specific:
+
+- **Search.** A literal, case-insensitive substring match — the box says "words or
+  phrases", and a transcript is full of characters a regular expression would read as
+  syntax. Every hit is marked, the current one is marked differently, and `↑`/`↓` walk
+  them and wrap. Searching also stands down the playback following, for the reason in
+  `docs/features/following-playback.md`.
+- **Copy** and **Export** produce the same text, from one function, so a pasted
+  transcript and a saved one cannot disagree. It opens with the title, channel and URL —
+  a transcript with no video attached to it is hard to place a week later — then one
+  block per paragraph against the time its first words were said, keeping the em dash a
+  change of speaker is printed with. Copy hides itself where `navigator.clipboard` has no
+  `writeText`, which an insecure context does not.
+
+All three render only when there are blocks to act on, so the error, empty and loading
+states carry no tools.
+
 ## What this does not do
 
 - **Chapters.** Still placeholder, and still blocked on generation work rather than on
@@ -203,9 +223,10 @@ single transcript.
   one commit and are plain text again: leaving the whole question of what a block does when
   you click it — open YouTube, move the read-along, follow playback — to be settled at once
   rather than piecemeal. Nothing about the data is missing for it; `startMs` is right there.
-- **Following playback.** The transcript does not move with the read-along, and the
-  read-along still paces the *note*, not the video. That belongs with the extension's
-  playback-following work (`docs/architecture/v1-architecture-decisions.md`, v1 feature scope).
+- ~~**Following playback.**~~ Built — see `docs/features/following-playback.md`. The
+  transcript moves with the *video*, off the player's own `currentTime`, in the side
+  panel only. The read-along still paces the note rather than the video, and the two are
+  deliberately separate clocks.
 - **Highlighting the "watch it anyway" range** inside the transcript. Closer than it was:
   a block carries `endMs` as well as `startMs`, so the range and a block are now in the same
   units and comparable directly.

@@ -83,6 +83,18 @@ $rule: 2px;
   @include controls.tinted-control;
 }
 
+// The panel's whole masthead is the mark and this: no + New and no list, because there
+// is only ever the one video it is beside (docs/features/extension-panel.md).
+.panelSettingsLink {
+  flex: none;
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--faint);
+  text-decoration: none;
+
+  @include controls.quiet-control;
+}
+
 .nav {
   flex: none;
   display: flex;

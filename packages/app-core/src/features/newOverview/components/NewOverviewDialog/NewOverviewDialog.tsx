@@ -5,9 +5,9 @@ import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
-import { generationRunSteps } from "../../util/generationRunSteps.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { GenerateOverviewForm } from "../GenerateOverviewForm/GenerateOverviewForm.js";
+import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
 import { newOverviewDialogTestIds } from "./NewOverviewDialogTestIds.js";
 
@@ -21,8 +21,6 @@ export interface NewOverviewDialogProps {
 }
 
 const HEADING_ID = "NewOverviewDialog-heading";
-
-const STEP_MARK: Record<string, string> = { done: "✓", running: "●", waiting: "" };
 
 export function NewOverviewDialog({
   open,
@@ -134,7 +132,6 @@ interface RunProgressProps {
 function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: RunProgressProps) {
   const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
-  const steps = generationRunSteps(run);
   const isDone = run.overview !== null;
 
   return (
@@ -144,7 +141,11 @@ function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: Run
           <>
             <OverviewThumbnail video={run.video} className={styles.thumbnail} />
             <div className={styles.sourceText}>
-              <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+              <h2
+                className={styles.sourceTitle}
+                id={headingId}
+                data-testid={newOverviewDialogTestIds.sourceTitle}
+              >
                 {run.video.title}
               </h2>
               <p className={styles.sourceMeta}>
@@ -165,32 +166,7 @@ function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: Run
 
       <span className={styles.rule} aria-hidden="true" />
 
-      <ol className={styles.steps} aria-live="polite" data-testid={newOverviewDialogTestIds.steps}>
-        {steps.map((step) => (
-          <li
-            key={step.number}
-            className={styles.step}
-            data-testid={newOverviewDialogTestIds.step(step.number)}
-            data-state={step.state}
-          >
-            <span className={styles.stepNumber} aria-hidden="true">
-              {step.number}
-            </span>
-            <span className={styles.stepBody}>
-              <span className={styles.stepLabel}>{step.label}</span>
-              <span className={styles.stepDetail} data-testid={newOverviewDialogTestIds.stepDetail(step.number)}>
-                {step.detail}
-              </span>
-              <span className={styles.barTrack} aria-hidden="true">
-                <span className={styles.barFill} />
-              </span>
-            </span>
-            <span className={styles.stepMark} aria-hidden="true">
-              {STEP_MARK[step.state]}
-            </span>
-          </li>
-        ))}
-      </ol>
+      <GenerationSteps run={run} />
 
       <div className={styles.foot}>
         {!isDone && (

@@ -2,10 +2,15 @@ import { expect } from "@playwright/experimental-ct-react";
 import { newOverviewDialogTestIds } from "../../src/features/newOverview/components/NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
+import { GenerationStepsPageObject } from "./GenerationStepsPageObject.testHelper.js";
 
 export class NewOverviewDialogPageObject extends PageObject {
   get form(): GenerateOverviewFormPageObject {
     return new GenerateOverviewFormPageObject(this.testContext);
+  }
+
+  get steps(): GenerationStepsPageObject {
+    return new GenerationStepsPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<NewOverviewDialogPageObject> =>
@@ -23,24 +28,15 @@ export class NewOverviewDialogPageObject extends PageObject {
     );
 
   verifyStepDetail = (stepNumber: string, detail: string) =>
-    this.step(`verifyStepDetail ${stepNumber} ${detail}`, () =>
-      expect(this.get(newOverviewDialogTestIds.stepDetail(stepNumber))).toHaveText(detail),
-    );
+    this.steps.verifyStepDetail(stepNumber, detail);
 
   verifyStepDetailMatches = (stepNumber: string, pattern: RegExp) =>
-    this.step(`verifyStepDetailMatches ${stepNumber} ${pattern.source}`, () =>
-      expect(this.get(newOverviewDialogTestIds.stepDetail(stepNumber))).toHaveText(pattern),
-    );
+    this.steps.verifyStepDetailMatches(stepNumber, pattern);
 
-  verifyStepCountIs = (count: number) =>
-    this.step(`verifyStepCountIs ${count}`, () =>
-      expect(this.get(newOverviewDialogTestIds.steps).getByRole("listitem")).toHaveCount(count),
-    );
+  verifyStepCountIs = (count: number) => this.steps.verifyStepCountIs(count);
 
   verifyStepState = (stepNumber: string, state: "waiting" | "running" | "done") =>
-    this.step(`verifyStepState ${stepNumber} ${state}`, () =>
-      expect(this.get(newOverviewDialogTestIds.step(stepNumber))).toHaveAttribute("data-state", state),
-    );
+    this.steps.verifyStepState(stepNumber, state);
 
   verifyFootNote = (pattern: RegExp) =>
     this.step(`verifyFootNote ${pattern.source}`, () =>
@@ -55,7 +51,9 @@ export class NewOverviewDialogPageObject extends PageObject {
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
   clickRunInBackground = () =>
-    this.step("clickRunInBackground", () => this.click(newOverviewDialogTestIds.runInBackgroundButton));
+    this.step("clickRunInBackground", () =>
+      this.click(newOverviewDialogTestIds.runInBackgroundButton),
+    );
 
   clickCancelRun = () =>
     this.step("clickCancelRun", () => this.click(newOverviewDialogTestIds.cancelRunButton));

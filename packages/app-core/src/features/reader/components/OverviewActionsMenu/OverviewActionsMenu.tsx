@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import styles from "./OverviewActionsMenu.module.scss";
 import { overviewActionsMenuTestIds } from "./OverviewActionsMenuTestIds.js";
 
@@ -11,27 +12,7 @@ export function OverviewActionsMenu({ topicCount, onEditTopics }: OverviewAction
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [open]);
+  useDismissOnOutside(open, () => setOpen(false), root);
 
   return (
     <div className={styles.root} ref={root} data-testid={overviewActionsMenuTestIds.root}>

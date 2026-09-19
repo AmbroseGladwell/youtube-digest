@@ -27,6 +27,22 @@ export class AppShellPageObject extends PageObject {
       expect(this.page.locator("html")).toHaveAttribute("data-nav-direction", direction),
     );
 
+  verifyIsParedBackToThePanel = () =>
+    this.step("verifyIsParedBackToThePanel", async () => {
+      await this.expectToBeVisible(appShellTestIds.brand);
+      await this.expectToBeVisible(appShellTestIds.settingsLink);
+      await this.expectNotToBeVisible(appShellTestIds.newOverviewButton);
+      await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(0);
+    });
+
+  verifyCarriesTheLibraryChrome = () =>
+    this.step("verifyCarriesTheLibraryChrome", async () => {
+      await this.expectToBeVisible(appShellTestIds.newOverviewButton);
+      await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(1);
+    });
+
+  clickBrand = () => this.step("clickBrand", () => this.click(appShellTestIds.brand));
+
   clickNewOverview = () =>
     this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
 
