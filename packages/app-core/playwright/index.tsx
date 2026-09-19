@@ -2,6 +2,7 @@ import { beforeMount } from "@playwright/experimental-ct-react/hooks";
 import "../src/theme/global.scss";
 import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
+import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { InMemoryOverviewStore } from "./network/InMemoryOverviewStore.testHelper.js";
 import { InMemorySettingsStore } from "./network/InMemorySettingsStore.testHelper.js";
 import { InMemoryTranscriptStore } from "./network/InMemoryTranscriptStore.testHelper.js";
@@ -20,4 +21,6 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
 
   window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";
+  window.__iwftActiveVideo__ =
+    hooksConfig?.activeVideoUrl === undefined ? null : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
 });

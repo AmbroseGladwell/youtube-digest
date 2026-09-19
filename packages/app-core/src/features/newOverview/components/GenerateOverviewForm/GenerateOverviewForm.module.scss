@@ -58,6 +58,28 @@
   @include controls.outlined-control;
 }
 
+// The accent marks the suggested path without taking the primary action's tint.
+.watchingButton {
+  align-self: flex-start;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: transparent;
+  color: var(--accent-deep);
+  padding: 0.35rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  @include controls.outlined-control;
+}
+
+.provenance {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
 .note {
   margin: 0;
   font-size: 0.75rem;
@@ -108,7 +130,8 @@
 
 // On a phone the pair stacks full-width at the sheet's foot, on the design's 44px target.
 @media (max-width: 47.9375rem) {
-  .pasteButton {
+  .pasteButton,
+  .watchingButton {
     align-self: stretch;
     min-height: 2.75rem;
   }

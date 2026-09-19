@@ -5,6 +5,7 @@ import { Routes } from "../../app/Routes.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
+import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import {
   navigationDirection,
@@ -40,6 +41,10 @@ export function AppShell() {
   // outlive both the dialog it was started from and the page it was started on
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
+
+  // Held here rather than in the dialog so the captions are already in hand by the time
+  // the dialog is opened at all (docs/features/watching-detection.md).
+  useWatchedTranscriptQuery();
 
   const readOverview = (overview: Overview) => {
     newOverview.dismiss();

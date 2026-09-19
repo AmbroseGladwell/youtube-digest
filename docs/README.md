@@ -29,6 +29,9 @@ Five folders, five different questions.
 - `transcript-storage.md` — why a transcript is keyed by video rather than by note, how its
   captions are merged into readable blocks, and what the reader's tab does with the timings.
 - `tts-pre-rendered-speech.md` — a designed and measured feature that was not built.
+- `watching-detection.md` — how the side panel learns which video is in front of it, why it
+  offers that link rather than filling it in over the top of yours, and where the line
+  between fetching captions automatically and writing an overview on request sits.
 
 ## `reference/` — external background material, not all of it specific to this repo
 

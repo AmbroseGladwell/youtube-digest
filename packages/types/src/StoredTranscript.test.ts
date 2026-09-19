@@ -20,3 +20,21 @@ test("a video with no captions at all still stores, as an empty segment list", (
 test("an empty video id is rejected, because it would key every transcript to the same row", () => {
   assert.throws(() => StoredTranscript.parse({ ...baseTranscript, videoId: "" }));
 });
+
+test("a record written before metadata was kept still parses, and simply holds no video", () => {
+  assert.equal(StoredTranscript.parse(baseTranscript).video, undefined);
+});
+
+test("the metadata the captions were fetched with round-trips beside them", () => {
+  const video = {
+    id: "tL9Lw250spc",
+    url: "https://www.youtube.com/watch?v=tL9Lw250spc",
+    title: "Example",
+    channel: "Example Channel",
+    description: null,
+    durationMs: 180_000,
+    publishedAt: null,
+    thumbnailUrl: null,
+  };
+  assert.deepEqual(StoredTranscript.parse({ ...baseTranscript, video }).video, video);
+});

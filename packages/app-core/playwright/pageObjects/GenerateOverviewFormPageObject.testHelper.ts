@@ -54,6 +54,28 @@ export class GenerateOverviewFormPageObject extends PageObject {
   verifyUrlInputDisabled = () =>
     this.step("verifyUrlInputDisabled", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeDisabled());
 
+  clickUseWatchedVideo = () =>
+    this.step("clickUseWatchedVideo", () => this.click(generateOverviewFormTestIds.watchingButton));
+
+  verifyOffersWatchedVideo = () =>
+    this.step("verifyOffersWatchedVideo", () => this.expectToBeVisible(generateOverviewFormTestIds.watchingButton));
+
+  verifySaysUrlCameFromWatchedVideo = () =>
+    this.step("verifySaysUrlCameFromWatchedVideo", () =>
+      this.expectToBeVisible(generateOverviewFormTestIds.watchingNote),
+    );
+
+  verifyWatchedVideoNote = (pattern: RegExp) =>
+    this.step(`verifyWatchedVideoNote ${pattern.source}`, () =>
+      expect(this.get(generateOverviewFormTestIds.watchingNote)).toHaveText(pattern),
+    );
+
+  verifySaysNothingAboutAWatchedVideo = () =>
+    this.step("verifySaysNothingAboutAWatchedVideo", async () => {
+      await this.expectToHaveCount(generateOverviewFormTestIds.watchingButton, 0);
+      await this.expectToHaveCount(generateOverviewFormTestIds.watchingNote, 0);
+    });
+
   clickSettingsLink = () =>
     this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.settingsLink));
 }
