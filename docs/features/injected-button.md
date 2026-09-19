@@ -14,7 +14,10 @@ one thing shouting in it. 18a is 17c refined: the pill is YouTube's, down to the
 top-to-bottom lift and the hairline edge, and the orange appears only in the ring mark.
 
 The pill is transcribed from the design rather than approximated, including the two
-schemes. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
+schemes — with one measurement corrected against the live site: the row is **40px**
+tall now, where 17 and 18 both draw 36, so the button is 40 with a 20px radius. Matching
+the row is the entire argument for this treatment, so where the drawing and the row
+disagree the row wins. The radius is half the height or it stops reading as a pill. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
 `html:not([dark])` in the stylesheet and there is no theme detection to get wrong or to
 keep in sync.
 
@@ -129,6 +132,10 @@ depend on which of the extension's listeners happen to be alive.
   the set that was asked for, does not. The behaviour it describes is built — a press
   without keys opens Settings and spends nothing.
 - **The failed run is not drawn** — see above.
+- **40px tall, not 36** — see above. Worth knowing that this is a constant and will
+  drift again the next time YouTube retunes the row; matching a native sibling's height
+  at runtime is the alternative, and was not built because measuring the wrong sibling
+  (a hidden copy, or the segmented like/dislike pair) fails in ways a constant does not.
 
 ## What this does not do
 

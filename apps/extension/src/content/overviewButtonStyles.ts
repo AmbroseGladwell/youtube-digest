@@ -6,6 +6,10 @@ const STYLE_ID = "overview-injected-button-style";
 // lift and a hairline edge, in both schemes — and the only thing that is ours is the
 // mark. YouTube puts `dark` on <html>, which is why the scheme needs no JavaScript.
 //
+// 40px tall, where the design draws 36: matching the row is the whole point of this
+// treatment, and the row has since grown. The radius is half the height or it stops
+// being a pill (docs/features/injected-button.md).
+//
 // The ready hover is the one value 18c does not draw; it is 18b's hover on the same
 // accent pill rather than something invented (docs/features/injected-button.md).
 const CSS = `
@@ -19,10 +23,10 @@ const CSS = `
   /* The native row sets no gap of its own, so the button carries the 8px design 18a
      leaves between the pills. Logical, so it stays on the leading edge in RTL. */
   margin-inline-start: 8px;
-  height: 36px;
+  height: 40px;
   padding: 0 16px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   font-family: Roboto, Arial, sans-serif;
   font-size: 14px;
