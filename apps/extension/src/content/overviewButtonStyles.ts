@@ -10,10 +10,12 @@ const STYLE_ID = "overview-injected-button-style";
 // treatment, and the row has since grown. The radius is half the height or it stops
 // being a pill (docs/features/injected-button.md).
 //
-// The top highlight is half the design's opacity at half its thickness. Drawn at 1px
-// and 90% white it was the brightest thing in the row, which is the opposite of what
-// the quietest of the three treatments is for. The hairline beside it is the shape's
-// own edge rather than shine, and keeps its weight.
+// Both inset lines are half the design's opacity — the top highlight also at half its
+// thickness. Drawn as given, the pill was the brightest thing in the action row, which
+// is the opposite of what the quietest of the three treatments is for.
+//
+// The accent hairline on the ready pill is not reduced with them: there it is carrying
+// a state rather than describing an edge.
 //
 // The ready hover is the one value 18c does not draw; it is 18b's hover on the same
 // accent pill rather than something invented (docs/features/injected-button.md).
@@ -80,12 +82,12 @@ const CSS = `
 html:not([dark]) #${OVERVIEW_BUTTON_ID} {
   --ovb-mark: #E2511E;
   background: linear-gradient(180deg, #f6f6f6 0%, #ececec 100%);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.05);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.025);
   color: #0f0f0f;
 }
 html:not([dark]) #${OVERVIEW_BUTTON_ID}:hover {
   background: linear-gradient(180deg, #eaeaea 0%, #e0e0e0 100%);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.07);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(0,0,0,.035);
 }
 html:not([dark]) #${OVERVIEW_BUTTON_ID}[data-state="ready"] {
   background: linear-gradient(180deg, #fdf0ea 0%, #f8e2d8 100%);
@@ -99,12 +101,12 @@ html:not([dark]) #${OVERVIEW_BUTTON_ID}[data-state="ready"]:hover {
 html[dark] #${OVERVIEW_BUTTON_ID} {
   --ovb-mark: #F0794A;
   background: linear-gradient(180deg, #303030 0%, #262626 100%);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.04);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.02);
   color: #f1f1f1;
 }
 html[dark] #${OVERVIEW_BUTTON_ID}:hover {
   background: linear-gradient(180deg, #414141 0%, #363636 100%);
-  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.06);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.03);
   color: #fff;
 }
 html[dark] #${OVERVIEW_BUTTON_ID}[data-state="ready"] {

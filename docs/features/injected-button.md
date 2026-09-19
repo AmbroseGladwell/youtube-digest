@@ -21,12 +21,16 @@ the row disagree, the row wins.
 **Height.** The row is **40px** now, where 17 and 18 both draw 36. The radius goes to 20
 with it, or a 40px pill reads flatter at the ends than the ones either side of it.
 
-**The top highlight.** Drawn at 1px of 90% white, it was the brightest thing in the
-action row — the opposite of what the quietest of the three treatments is for. It is
-half that opacity at half the thickness, in both schemes so they stay siblings. The
-hairline beside it is the shape's own edge rather than shine, and keeps its weight; on
-the ready pill that hairline is the accent, which is carrying a state rather than
-decorating. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
+**The two inset lines.** Drawn as given — a 1px top highlight at 90% white over a
+hairline edge — the pill was the brightest thing in the action row, which is the
+opposite of what the quietest of the three treatments is for. Both are at half the
+drawn opacity, the highlight also at half the thickness, in both schemes so they stay
+siblings. On dark that leaves the edge at 2% white, which is close to no edge at all;
+that is the value to raise if the pill ever needs its boundary back there.
+
+The accent hairline on the **ready** pill is deliberately not reduced with them. There
+it is carrying a state rather than describing an edge, and the tinted ground and the
+accent label are the only other things saying so. YouTube puts `dark` on `<html>`, so the scheme is `html[dark]` versus
 `html:not([dark])` in the stylesheet and there is no theme detection to get wrong or to
 keep in sync.
 
