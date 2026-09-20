@@ -198,3 +198,42 @@ test("every failure leaves a TranscriptFetchError, never a raw throw from the fe
     },
   );
 });
+
+// A caption failure that cascades and then hits a turned-away client used to surface the
+// second client's player error, which points a reader at the wrong request entirely.
+test("a caption failure is reported as one, not as the next client's player failure", async () => {
+  const { youTubeFetch } = scriptedFetch((request, clientName) => {
+    if (request.url.includes("timedtext")) return { status: 403, body: "" };
+    if (clientName === "WEB") return ok(makeMetadataResponse());
+    if (clientName === "IOS") return { status: 403, body: "" };
+    return ok(makePlayerResponse());
+  });
+
+  await assert.rejects(
+    () =>
+      fetchInnerTubeTranscript(youTubeFetch, FIXTURE_VIDEO_ID, URL, {
+        clients: [client("ANDROID"), client("IOS")],
+      }),
+    (error: unknown) => {
+      assert.ok(error instanceof TranscriptFetchError);
+      assert.match(error.message, /caption track/);
+      return true;
+    },
+  );
+});
+
+test("a player failure is still reported when no client ever reached the captions", async () => {
+  const { youTubeFetch } = scriptedFetch(() => ({ status: 500, body: "" }));
+
+  await assert.rejects(
+    () =>
+      fetchInnerTubeTranscript(youTubeFetch, FIXTURE_VIDEO_ID, URL, {
+        clients: [client("ANDROID"), client("IOS")],
+      }),
+    (error: unknown) => {
+      assert.ok(error instanceof TranscriptFetchError);
+      assert.match(error.message, /player endpoint/);
+      return true;
+    },
+  );
+});

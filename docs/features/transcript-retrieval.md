@@ -186,6 +186,21 @@ to wake is the textbook transient.
 The manifest needed no change: `https://www.youtube.com/*` and `https://m.youtube.com/*`
 were already there for the tab-watching work.
 
+### The request is anonymous on purpose
+
+`fetchYouTubeInWorker` sends `credentials: "omit"`, and that is load-bearing rather than
+tidy. It originally sent `"include"`, on the reasoning that the user's own session could
+only help — age-gated videos, say. The opposite is true: a signed-in browser sends
+`SAPISID`, InnerTube then treats the call as authenticated and expects an
+`Authorization: SAPISIDHASH …` header we have no way to produce, and answers **403** — for
+exactly the people most likely to be using this, and only for them. The failure is
+invisible to anyone testing signed out.
+
+What this costs is what was claimed for it: age-gated and members-only videos fail with
+`access-restricted`, which is what they should report anyway. What was never at stake is
+the thing that actually matters — the fetch still leaves from the user's own address,
+which is the whole point of doing it here.
+
 ### The allowlist is a security boundary
 
 `fetchYouTubeInWorker` refuses any URL whose origin is not one of those two. This is not

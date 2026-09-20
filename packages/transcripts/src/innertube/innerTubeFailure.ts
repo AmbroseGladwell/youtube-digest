@@ -12,6 +12,14 @@ const PLAYABILITY_FAILURES: Record<string, TranscriptFetchFailure> = {
   CONTENT_CHECK_REQUIRED: TranscriptFetchFailure.ACCESS_RESTRICTED,
 };
 
+// Every rejection out of this source is a TranscriptFetchError, so the ladder above never
+// has to guess what it caught.
+export function asInnerTubeError(error: unknown): TranscriptFetchError {
+  return error instanceof TranscriptFetchError
+    ? error
+    : innerTubeError("the request failed", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
+}
+
 export function innerTubeError(
   message: string,
   failure: TranscriptFetchFailure,

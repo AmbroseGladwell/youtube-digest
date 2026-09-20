@@ -1,10 +1,12 @@
 import type { YouTubeFetchRequest, YouTubeFetchResponse } from "@overview/app-core";
 import { isAllowedYouTubeUrl } from "./youTubeFetchBridge.js";
 
-// credentials: "include" so the request carries the user's own YouTube session where the
-// browser will attach it. Nothing here depends on it — a public video needs no auth, and
-// the point of fetching from this device is the address it comes from
-// (docs/features/transcript-retrieval.md).
+// credentials: "omit", and that is load-bearing rather than tidy. A signed-in session
+// sends SAPISID, which makes InnerTube treat the call as authenticated and expect an
+// Authorization: SAPISIDHASH header we have no way to produce — so it answers 403 for
+// exactly the people most likely to be using this. Anonymous is the shape that works, and
+// the point of fetching here was never the session: it is the address the request comes
+// from (docs/features/transcript-retrieval.md).
 export async function fetchYouTubeInWorker(
   request: YouTubeFetchRequest,
 ): Promise<YouTubeFetchResponse> {
@@ -16,7 +18,7 @@ export async function fetchYouTubeInWorker(
     method: request.method,
     headers: request.headers,
     ...(request.body === undefined ? {} : { body: request.body }),
-    credentials: "include",
+    credentials: "omit",
   });
 
   return { status: response.status, body: await response.text() };

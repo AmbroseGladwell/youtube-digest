@@ -1,4 +1,3 @@
-import type { TranscriptSegment } from "@overview/types";
 import type { FetchedTranscript } from "../FetchedTranscript.js";
 import { TranscriptFetchError } from "../TranscriptFetchError.js";
 import { TranscriptFetchFailure, isWorthAnotherSource } from "../TranscriptFetchFailure.js";
@@ -9,7 +8,7 @@ import {
   DEFAULT_METADATA_CLIENT,
   type InnerTubeClientConfig,
 } from "./InnerTubeClientConfig.js";
-import { innerTubeError, playabilityFailure } from "./innerTubeFailure.js";
+import { asInnerTubeError, innerTubeError, playabilityFailure } from "./innerTubeFailure.js";
 import { mapPlayerResponseToVideoSource } from "./mapPlayerResponseToVideoSource.js";
 import { captionTracksOf, type PlayerResponse } from "./PlayerResponse.js";
 import { requestPlayerResponse } from "./requestPlayerResponse.js";
@@ -22,14 +21,12 @@ export interface InnerTubeOptions {
   metadataClient?: InnerTubeClientConfig | null;
 }
 
-async function captionsWithClient(
+async function playableResponse(
   youTubeFetch: YouTubeFetch,
   videoId: string,
   client: InnerTubeClientConfig,
-  options: InnerTubeOptions,
-): Promise<{ response: PlayerResponse; segments: TranscriptSegment[]; generated: boolean }> {
+): Promise<PlayerResponse> {
   const response = await requestPlayerResponse(youTubeFetch, videoId, client);
-
   const failure = playabilityFailure(response.playabilityStatus?.status);
   if (failure !== null) {
     throw innerTubeError(
@@ -37,17 +34,7 @@ async function captionsWithClient(
       failure,
     );
   }
-
-  const track = selectCaptionTrack(captionTracksOf(response), {
-    lang: options.lang,
-    allowMachineTranscription: options.allowMachineTranscription ?? true,
-  });
-  if (track === null) {
-    throw innerTubeError("this video has no captions", TranscriptFetchFailure.NO_CAPTIONS);
-  }
-
-  const segments = await fetchCaptionTrack(youTubeFetch, track, client);
-  return { response, segments, generated: isMachineTranscribed(track) };
+  return response;
 }
 
 // publishDate lives on a client that carries no caption tracks, so it is a second call and
@@ -63,7 +50,9 @@ async function metadataResponse(
 }
 
 // One player call serves the metadata and the caption tracks together, which is the whole
-// reason this replaces two billed calls with none.
+// reason this replaces two billed calls with none. The two stages are kept apart so a
+// failure fetching the captions is not reported as the next client's player failure —
+// that masks the thing that actually went wrong.
 export async function fetchInnerTubeTranscript(
   youTubeFetch: YouTubeFetch,
   videoId: string,
@@ -71,35 +60,54 @@ export async function fetchInnerTubeTranscript(
   options: InnerTubeOptions = {},
 ): Promise<FetchedTranscript> {
   const clients = options.clients ?? DEFAULT_CAPTION_CLIENTS;
-  let lastError: TranscriptFetchError | null = null;
+  let playerError: TranscriptFetchError | null = null;
+  let captionError: TranscriptFetchError | null = null;
 
   for (const client of clients) {
+    let response: PlayerResponse;
     try {
-      const { response, segments, generated } = await captionsWithClient(
-        youTubeFetch,
-        videoId,
-        client,
-        options,
-      );
+      response = await playableResponse(youTubeFetch, videoId, client);
+    } catch (error) {
+      const failed = asInnerTubeError(error);
+      playerError ??= failed;
+      // Another client will not make a removed video exist.
+      if (!isWorthAnotherSource(failed.failure)) throw failed;
+      continue;
+    }
+
+    const track = selectCaptionTrack(captionTracksOf(response), {
+      lang: options.lang,
+      allowMachineTranscription: options.allowMachineTranscription ?? true,
+    });
+    // Another client will not find a track this one could not see.
+    if (track === null) {
+      throw innerTubeError("this video has no captions", TranscriptFetchFailure.NO_CAPTIONS);
+    }
+
+    try {
+      const segments = await fetchCaptionTrack(youTubeFetch, track, client);
       const metadata = await metadataResponse(
         youTubeFetch,
         videoId,
         options.metadataClient === undefined ? DEFAULT_METADATA_CLIENT : options.metadataClient,
       );
-      return { video: mapPlayerResponseToVideoSource(response, url, metadata), transcript: segments, generated };
+      return {
+        video: mapPlayerResponseToVideoSource(response, url, metadata),
+        transcript: segments,
+        generated: isMachineTranscribed(track),
+      };
     } catch (error) {
-      const failed =
-        error instanceof TranscriptFetchError
-          ? error
-          : innerTubeError("the player request failed", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
-      lastError = failed;
-      // Another client will not find captions this one could not see, and will not make
-      // a removed video exist.
-      if (!isWorthAnotherSource(failed.failure) || failed.failure === TranscriptFetchFailure.NO_CAPTIONS) {
-        throw failed;
-      }
+      const failed = asInnerTubeError(error);
+      captionError ??= failed;
+      if (!isWorthAnotherSource(failed.failure)) throw failed;
     }
   }
 
-  throw lastError ?? innerTubeError("no InnerTube client was configured", TranscriptFetchFailure.SOURCE_UNSUPPORTED);
+  // A caption failure is the one that actually stopped us, and says more than a later
+  // client being turned away at the player.
+  throw (
+    captionError ??
+    playerError ??
+    innerTubeError("no InnerTube client was configured", TranscriptFetchFailure.SOURCE_UNSUPPORTED)
+  );
 }
