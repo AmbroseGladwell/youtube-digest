@@ -111,6 +111,17 @@ Matched on the video's own id rather than on the URL, because `youtu.be/X` and
 
 ## Where this departs from the file
 
+- **The panel's head prints two facts, where the wide reader prints five.** 15c draws
+  the title and the channel; the wide reader's byline runs channel, published, saved and
+  novelty across one line, which at 400px wraps into a paragraph about when things
+  happened. Published, saved and novelty are dropped there and the channel moves under
+  the title, above the topics and the read times. The warnings — thin, and a dubious
+  claim — stay: those are the note's judgement rather than its filing.
+- **The ⋯ menu hangs from the trigger's leading edge in the panel** and its trailing edge
+  on the wide reader, because the trigger sits at opposite ends of the two. A menu fixed
+  to one edge leaves the window on the other layout. Sticking the panel's head also gave
+  it a stacking context, which the menu cannot escape however high its own z-index goes,
+  so the head outranks the tab strip rather than the menu trying to.
 - **`Mark read` is gone from the panel's reader.** 15c draws `Listen` and `⋯` and nothing
   else, and read state is a property of a list the panel does not have. It is still
   there on every other surface, and still settable from a library row.

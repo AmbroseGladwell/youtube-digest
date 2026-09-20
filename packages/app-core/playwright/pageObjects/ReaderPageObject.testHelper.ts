@@ -69,6 +69,48 @@ export class ReaderPageObject extends PageObject {
   openActionsMenu = () =>
     this.step("openActionsMenu", () => this.click(overviewActionsMenuTestIds.trigger));
 
+  verifyChannelReads = (channel: string) =>
+    this.step(`verifyChannelReads ${channel}`, () =>
+      expect(this.get(readerMastheadTestIds.channel)).toHaveText(channel),
+    );
+
+  // The head is four facts wide on the desktop reader and two in the panel, so what it
+  // leaves out is as much the behaviour as what it prints.
+  verifyMastheadOmits = (pattern: RegExp) =>
+    this.step(`verifyMastheadOmits ${pattern.source}`, () =>
+      expect(this.get(readerMastheadTestIds.root)).not.toHaveText(pattern),
+    );
+
+  verifyMastheadMentions = (pattern: RegExp) =>
+    this.step(`verifyMastheadMentions ${pattern.source}`, () =>
+      expect(this.get(readerMastheadTestIds.root)).toHaveText(pattern),
+    );
+
+  // Both halves of the bug this covers: a menu anchored to the wrong edge leaves the
+  // window, and one trapped in the sticky head's stacking context is painted over by
+  // the tab strip.
+  verifyActionsMenuFitsAndIsOnTop = () =>
+    this.step("verifyActionsMenuFitsAndIsOnTop", () =>
+      expect(async () => {
+        const menu = this.get(overviewActionsMenuTestIds.menu);
+        const box = (await menu.boundingBox())!;
+        const viewport = this.page.viewportSize()!;
+
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(Math.round(box.x + box.width)).toBeLessThanOrEqual(viewport.width);
+
+        const unobstructed = await menu.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          const atCentre = document.elementFromPoint(
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2,
+          );
+          return atCentre !== null && element.contains(atCentre);
+        });
+        expect(unobstructed).toBe(true);
+      }).toPass({ timeout: 2_000 }),
+    );
+
   verifyActionsMenuIsShown = (shown: boolean) =>
     this.step(`verifyActionsMenuIsShown ${shown}`, () =>
       shown

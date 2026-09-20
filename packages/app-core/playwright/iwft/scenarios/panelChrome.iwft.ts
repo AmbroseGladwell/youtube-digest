@@ -26,6 +26,13 @@ const LONG_NOTE_POINTS = Array.from(
   (_, index) => `Key point ${index}, written long enough to take a line of its own in the panel.`,
 );
 
+const VERDICT = {
+  novelty: "novel" as const,
+  dubious: false,
+  reasoning: "Nobody else has said this.",
+  similarTo: [],
+};
+
 const seedNote = (backendSimulator: {
   overviews: { seed: (overview: ReturnType<typeof makeOverview>) => void };
   transcripts: { seed: (transcript: ReturnType<typeof makeStoredTranscript>) => void };
@@ -34,7 +41,15 @@ const seedNote = (backendSimulator: {
   backendSimulator.overviews.seed({
     ...overview,
     keyPoints: LONG_NOTE_POINTS,
-    video: { ...overview.video, id: VIDEO_ID, url: VIDEO_URL },
+    verdict: VERDICT,
+    savedAt: "2026-09-16T00:00:00.000Z",
+    video: {
+      ...overview.video,
+      id: VIDEO_ID,
+      url: VIDEO_URL,
+      channel: "Practical Engineering",
+      publishedAt: "2026-09-01T00:00:00.000Z",
+    },
   });
   backendSimulator.transcripts.seed(
     makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
@@ -87,4 +102,49 @@ test("the Plus prompt holds the foot of the window rather than the end of the no
 
   await reader.verifyPlusPromptIsShown(true);
   await reader.verifyPlusPromptHoldsTheWindowFoot();
+});
+
+test("the panel's head is the video and whose it is, not four facts about when", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator);
+  const capture = await launcher.launchPanel(panel);
+  const reader = await capture.openStoredOverview();
+
+  await reader.verifyChannelReads("Practical Engineering");
+  await reader.verifyShowsNoPublished();
+  await reader.verifyMastheadOmits(/saved/i);
+  await reader.verifyMastheadOmits(/Novel/);
+});
+
+test("the wide reader keeps all of it, having the width for it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator);
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.verifyPublishedReads("· published 1 Sept 2026");
+  await reader.verifyMastheadMentions(/saved 16 Sep/);
+  await reader.verifyMastheadMentions(/Novel/);
+});
+
+// At the panel's real width, a menu hung from the wrong edge leaves the window and one
+// trapped under the sticky head is painted over by the tabs.
+test("the actions menu opens inside the panel and over the tabs, not under them", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 720 });
+  seedNote(backendSimulator);
+  const capture = await launcher.launchPanel(panel);
+  const reader = await capture.openStoredOverview();
+
+  await reader.openActionsMenu();
+
+  await reader.verifyActionsMenuIsShown(true);
+  await reader.verifyActionsMenuFitsAndIsOnTop();
 });

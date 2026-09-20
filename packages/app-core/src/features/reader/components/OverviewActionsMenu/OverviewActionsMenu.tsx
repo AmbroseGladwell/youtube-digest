@@ -5,10 +5,12 @@ import { overviewActionsMenuTestIds } from "./OverviewActionsMenuTestIds.js";
 
 export interface OverviewActionsMenuProps {
   topicCount: number;
+  // Which edge of the trigger the menu hangs from, so it opens into the space there is.
+  align: "start" | "end";
   onEditTopics: () => void;
 }
 
-export function OverviewActionsMenu({ topicCount, onEditTopics }: OverviewActionsMenuProps) {
+export function OverviewActionsMenu({ topicCount, align, onEditTopics }: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
 
@@ -29,7 +31,11 @@ export function OverviewActionsMenu({ topicCount, onEditTopics }: OverviewAction
       </button>
 
       {open && (
-        <div className={styles.menu} role="menu" data-testid={overviewActionsMenuTestIds.menu}>
+        <div
+          className={`${styles.menu} ${align === "start" ? styles.menuStart : styles.menuEnd}`}
+          role="menu"
+          data-testid={overviewActionsMenuTestIds.menu}
+        >
           <button
             type="button"
             role="menuitem"

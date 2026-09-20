@@ -84,18 +84,18 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
       <div className={styles.head}>
-        <p className={styles.heading}>
-          Full transcript
-          {transcript?.generated === true && (
-            <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
-              Machine-transcribed
-            </span>
-          )}
-        </p>
+        <div className={styles.headingRow}>
+          <p className={styles.heading}>
+            Full transcript
+            {transcript?.generated === true && (
+              <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
+                Machine-transcribed
+              </span>
+            )}
+          </p>
 
-        {unreadable === null && (
-          <div className={styles.tools} data-testid={transcriptPanelTestIds.tools}>
-            <div className={styles.toolRow}>
+          {unreadable === null && (
+            <div className={styles.toolRow} data-testid={transcriptPanelTestIds.tools}>
               {canCopy() && (
                 <button
                   type="button"
@@ -115,9 +115,10 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
                 Export
               </button>
             </div>
-            <TranscriptSearchBar search={search} onQueryChange={searchFor} />
-          </div>
-        )}
+          )}
+        </div>
+
+        {unreadable === null && <TranscriptSearchBar search={search} onQueryChange={searchFor} />}
       </div>
 
       {follow.following && (

@@ -57,6 +57,14 @@ export function ReaderMasthead({
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
 
+  const topicLine = (
+    <TopicLine
+      overview={overview}
+      editing={editingTopics}
+      onEditingChange={onEditingTopicsChange}
+    />
+  );
+
   return (
     <header
       className={`${styles.root} ${compact ? styles.rootSticky : ""}`}
@@ -111,42 +119,59 @@ export function ReaderMasthead({
         {!compact && <OverviewThumbnail video={overview.video} className={styles.thumbnail} />}
 
         <div className={styles.titleBlock}>
-          <p className={styles.kickerRow}>
-            <TopicLine
-              overview={overview}
-              editing={editingTopics}
-              onEditingChange={onEditingTopicsChange}
-            />
-            <span className={styles.byline}>
-              {overview.video.channel}
-              {Boolean(overview.video.publishedAt) && (
-                <span data-testid={readerMastheadTestIds.published}>
-                  {" · published "}
-                  {formatPublishedDate(overview.video.publishedAt!)}
-                </span>
-              )}
-              {" · saved "}
-              {savedOn(overview.savedAt)}
-              {overview.verdict && (
-                <>
-                  {" · "}
-                  <span
-                    className={
-                      overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
-                    }
-                  >
-                    {NOVELTY_LABEL[overview.verdict.novelty]}
+          {/* The panel drops published, saved and novelty and puts the channel under the
+              title: at 400px the line was four facts wide and the two that matter are
+              which video this is and whose it is (docs/features/extension-panel.md). */}
+          {!compact && (
+            <p className={styles.kickerRow}>
+              {topicLine}
+              <span className={styles.byline}>
+                {overview.video.channel}
+                {Boolean(overview.video.publishedAt) && (
+                  <span data-testid={readerMastheadTestIds.published}>
+                    {" · published "}
+                    {formatPublishedDate(overview.video.publishedAt!)}
                   </span>
-                </>
-              )}
-              {overview.thin && <span className={styles.verdict}> · Thin · no clear claim</span>}
-            </span>
-            {overview.verdict?.dubious && <span className={styles.dubious}>⚠ Dubious claim</span>}
-          </p>
+                )}
+                {" · saved "}
+                {savedOn(overview.savedAt)}
+                {overview.verdict && (
+                  <>
+                    {" · "}
+                    <span
+                      className={
+                        overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
+                      }
+                    >
+                      {NOVELTY_LABEL[overview.verdict.novelty]}
+                    </span>
+                  </>
+                )}
+                {overview.thin && <span className={styles.verdict}> · Thin · no clear claim</span>}
+              </span>
+              {overview.verdict?.dubious && <span className={styles.dubious}>⚠ Dubious claim</span>}
+            </p>
+          )}
 
           <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
             {overview.video.title}
           </h2>
+
+          {compact && (
+            <>
+              <p className={styles.channel} data-testid={readerMastheadTestIds.channel}>
+                {overview.video.channel}
+              </p>
+              {/* The warnings stay: they are the note's judgement, not its filing. */}
+              <p className={styles.kickerRow}>
+                {topicLine}
+                {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
+                {overview.verdict?.dubious && (
+                  <span className={styles.dubious}>⚠ Dubious claim</span>
+                )}
+              </p>
+            </>
+          )}
 
           <p className={styles.meta} data-testid={readerMastheadTestIds.meta}>
             {metaParts.join(" · ")}
@@ -188,6 +213,7 @@ export function ReaderMasthead({
           )}
           <OverviewActionsMenu
             topicCount={overview.topicIds.length}
+            align={compact ? "start" : "end"}
             onEditTopics={() => onEditingTopicsChange(true)}
           />
         </div>

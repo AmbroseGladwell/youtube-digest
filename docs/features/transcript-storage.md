@@ -203,6 +203,10 @@ single transcript.
 
 ## Reading the transcript, rather than only looking at it
 
+The tab's head is one line — the label, and what you can do with the whole transcript
+against the far edge — over the search box, with room above it so the label is not
+pinned against the tab strip it comes to rest under.
+
 The tab grew three tools, all of which work on the merged blocks rather than the stored
 cues, and none of which is panel-specific:
 
