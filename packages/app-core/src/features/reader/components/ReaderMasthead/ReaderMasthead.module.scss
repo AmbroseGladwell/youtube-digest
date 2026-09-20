@@ -240,6 +240,12 @@
   margin: 0.5rem 0 0;
 }
 
+// A note filed nowhere, with no verdict and no warnings, renders none of them —
+// leaving a paragraph with no children and its margin still taking space.
+.titleRowCompact .kickerRow:empty {
+  display: none;
+}
+
 .titleRowCompact .actions {
   flex: 1 0 100%;
   justify-content: flex-start;

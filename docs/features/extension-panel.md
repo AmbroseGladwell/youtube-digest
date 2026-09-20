@@ -111,12 +111,17 @@ Matched on the video's own id rather than on the URL, because `youtu.be/X` and
 
 ## Where this departs from the file
 
-- **The panel's head prints two facts, where the wide reader prints five.** 15c draws
-  the title and the channel; the wide reader's byline runs channel, published, saved and
-  novelty across one line, which at 400px wraps into a paragraph about when things
-  happened. Published, saved and novelty are dropped there and the channel moves under
-  the title, above the topics and the read times. The warnings — thin, and a dubious
-  claim — stay: those are the note's judgement rather than its filing.
+- **The panel's head keeps the judgement and drops the dates.** The wide reader runs
+  channel, published, saved and novelty across one byline, with the thin and
+  dubious-claim marks beside them. At 400px that is a paragraph about when things
+  happened wrapped around the two words that say what the note is. So the channel moves
+  under the title where 15c draws it, published and saved go, and the verdict and the
+  warnings move onto the topics' own line — filing and judgement read together rather
+  than as two bands of small caps. The fixture the panel's tests seed carries every one
+  of these, so both what is kept and what is dropped are asserted rather than passing on
+  an empty note. That the three share a line is measured as overlapping rows rather than
+  a shared top edge: a topic chip has a border and padding that plain text beside it
+  does not.
 - **The ⋯ menu hangs from the trigger's leading edge in the panel** and its trailing edge
   on the wide reader, because the trigger sits at opposite ends of the two. A menu fixed
   to one edge leaves the window on the other layout. Sticking the panel's head also gave

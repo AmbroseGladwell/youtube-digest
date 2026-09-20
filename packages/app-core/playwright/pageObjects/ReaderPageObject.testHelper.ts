@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import type { Locator } from "@playwright/test";
 import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { readerMastheadTestIds } from "../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
@@ -84,6 +85,28 @@ export class ReaderPageObject extends PageObject {
   verifyMastheadMentions = (pattern: RegExp) =>
     this.step(`verifyMastheadMentions ${pattern.source}`, () =>
       expect(this.get(readerMastheadTestIds.root)).toHaveText(pattern),
+    );
+
+  // Same line, measured rather than assumed: the verdict and the warnings share the
+  // topics' row rather than stacking into a second band of small caps. Overlap rather
+  // than a shared top edge — a chip carries a border and padding that plain text on the
+  // same line does not, so their boxes start a couple of pixels apart.
+  verifyJudgementSharesTheTopicLine = () =>
+    this.step("verifyJudgementSharesTheTopicLine", () =>
+      expect(async () => {
+        const rowOf = async (locator: Locator) => {
+          const box = (await locator.boundingBox())!;
+          return { top: box.y, bottom: box.y + box.height };
+        };
+        const chip = await rowOf(this.get(topicLineTestIds.chip).first());
+        const novelty = await rowOf(this.page.getByText("Novel", { exact: true }));
+        const dubious = await rowOf(this.page.getByText(/Dubious claim/));
+
+        for (const beside of [novelty, dubious]) {
+          expect(beside.top).toBeLessThan(chip.bottom);
+          expect(chip.top).toBeLessThan(beside.bottom);
+        }
+      }).toPass({ timeout: 2_000 }),
     );
 
   // Both halves of the bug this covers: a menu anchored to the wrong edge leaves the

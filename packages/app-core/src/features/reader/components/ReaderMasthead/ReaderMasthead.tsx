@@ -119,9 +119,9 @@ export function ReaderMasthead({
         {!compact && <OverviewThumbnail video={overview.video} className={styles.thumbnail} />}
 
         <div className={styles.titleBlock}>
-          {/* The panel drops published, saved and novelty and puts the channel under the
-              title: at 400px the line was four facts wide and the two that matter are
-              which video this is and whose it is (docs/features/extension-panel.md). */}
+          {/* The panel keeps the judgement and drops the dates: at 400px "published"
+              and "saved" are two facts about when, and what the head is for is what the
+              note says (docs/features/extension-panel.md). */}
           {!compact && (
             <p className={styles.kickerRow}>
               {topicLine}
@@ -162,9 +162,19 @@ export function ReaderMasthead({
               <p className={styles.channel} data-testid={readerMastheadTestIds.channel}>
                 {overview.video.channel}
               </p>
-              {/* The warnings stay: they are the note's judgement, not its filing. */}
+              {/* One line with the topics: the filing and the verdict read together
+                  rather than as two bands of small caps. */}
               <p className={styles.kickerRow}>
                 {topicLine}
+                {overview.verdict && (
+                  <span
+                    className={
+                      overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
+                    }
+                  >
+                    {NOVELTY_LABEL[overview.verdict.novelty]}
+                  </span>
+                )}
                 {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
                 {overview.verdict?.dubious && (
                   <span className={styles.dubious}>⚠ Dubious claim</span>

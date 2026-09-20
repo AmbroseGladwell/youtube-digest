@@ -2,6 +2,7 @@ import type { TranscriptSegment } from "@overview/types";
 import { VideoId } from "@overview/types";
 import { test } from "../../support/fixtures.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 
@@ -28,20 +29,28 @@ const LONG_NOTE_POINTS = Array.from(
 
 const VERDICT = {
   novelty: "novel" as const,
-  dubious: false,
+  dubious: true,
   reasoning: "Nobody else has said this.",
   similarTo: [],
 };
 
+const ENERGY = makeTopic({ name: "energy" });
+
 const seedNote = (backendSimulator: {
-  overviews: { seed: (overview: ReturnType<typeof makeOverview>) => void };
+  overviews: {
+    seed: (overview: ReturnType<typeof makeOverview>) => void;
+    seedTopic: (topic: ReturnType<typeof makeTopic>) => void;
+  };
   transcripts: { seed: (transcript: ReturnType<typeof makeStoredTranscript>) => void };
 }) => {
+  backendSimulator.overviews.seedTopic(ENERGY);
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
+    topicIds: [ENERGY.id],
     keyPoints: LONG_NOTE_POINTS,
     verdict: VERDICT,
+    thin: true,
     savedAt: "2026-09-16T00:00:00.000Z",
     video: {
       ...overview.video,
@@ -104,7 +113,9 @@ test("the Plus prompt holds the foot of the window rather than the end of the no
   await reader.verifyPlusPromptHoldsTheWindowFoot();
 });
 
-test("the panel's head is the video and whose it is, not four facts about when", async ({
+// The note this is seeded from carries all of these, so both what the panel keeps and
+// what it drops are asserted rather than passing on an empty fixture.
+test("the panel keeps the judgement beside the topics and drops the dates", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -113,9 +124,23 @@ test("the panel's head is the video and whose it is, not four facts about when",
   const reader = await capture.openStoredOverview();
 
   await reader.verifyChannelReads("Practical Engineering");
+  await reader.verifyMastheadMentions(/Novel/);
+  await reader.verifyMastheadMentions(/Thin/);
+  await reader.verifyMastheadMentions(/Dubious claim/);
+
   await reader.verifyShowsNoPublished();
   await reader.verifyMastheadOmits(/saved/i);
-  await reader.verifyMastheadOmits(/Novel/);
+});
+
+test("the verdict and the warnings sit on the same line as the topics", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator);
+  const capture = await launcher.launchPanel(panel);
+  const reader = await capture.openStoredOverview();
+
+  await reader.verifyJudgementSharesTheTopicLine();
 });
 
 test("the wide reader keeps all of it, having the width for it", async ({
@@ -129,6 +154,8 @@ test("the wide reader keeps all of it, having the width for it", async ({
   await reader.verifyPublishedReads("· published 1 Sept 2026");
   await reader.verifyMastheadMentions(/saved 16 Sep/);
   await reader.verifyMastheadMentions(/Novel/);
+  await reader.verifyMastheadMentions(/Thin/);
+  await reader.verifyMastheadMentions(/Dubious claim/);
 });
 
 // At the panel's real width, a menu hung from the wrong edge leaves the window and one
