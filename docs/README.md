@@ -24,6 +24,16 @@ Five folders, five different questions.
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
+- `extension-panel.md` — why the side panel is one video rather than a small library:
+  the layout seam, its three screens, and what it drops.
+- `following-playback.md` — how the transcript follows the video, what now touches the
+  YouTube page and how little, and why the follow scroll is the one movement that isn't
+  eased.
+- `injected-button.md` — the Overview button in YouTube's own action row: why it wears
+  their pill, where each of its four states gets its facts, and the three-document
+  conversation behind it.
+- `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
+  and why Settings has no upgrade button.
 - `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the
   single overview's topic editor.
 - `transcript-storage.md` — why a transcript is keyed by video rather than by note, how its

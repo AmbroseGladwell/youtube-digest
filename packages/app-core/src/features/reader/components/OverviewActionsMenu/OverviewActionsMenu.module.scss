@@ -22,9 +22,12 @@
   @include controls.icon-control;
 }
 
+// Which edge it hangs from is the caller's to say: in the wide reader the trigger is
+// at the right of the masthead and a menu growing rightwards would leave the window;
+// in the panel it sits at the left gutter and one growing leftwards does the same
+// (docs/features/extension-panel.md).
 .menu {
   position: absolute;
-  right: 0;
   top: calc(100% + 0.5rem);
   z-index: 3;
   width: 13.5rem;
@@ -34,6 +37,14 @@
   box-shadow: var(--shadow-lg);
   padding: 0.375rem 0;
   animation: menuRise var(--motion-arrive) var(--motion-ease) both;
+}
+
+.menuEnd {
+  right: 0;
+}
+
+.menuStart {
+  left: 0;
 }
 
 @keyframes menuRise {

@@ -1,6 +1,6 @@
 .root {
   position: sticky;
-  top: var(--masthead-height);
+  top: calc(var(--masthead-height) + var(--reader-masthead-height));
   z-index: 2;
   background: var(--ground);
   display: flex;

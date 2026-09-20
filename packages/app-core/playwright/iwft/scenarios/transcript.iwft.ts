@@ -5,40 +5,39 @@ import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
-import { makeTranscriptSegment } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import {
+  makeCaptionRun,
+  makeTranscriptSegment,
+} from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-const captionRun = (texts: string[], startMs: number, cueMs: number): TranscriptSegment[] =>
-  texts.map((text, index) =>
-    makeTranscriptSegment({
-      text,
-      startMs: startMs + index * cueMs,
-      endMs: startMs + (index + 1) * cueMs,
-    }),
-  );
-
 // Nine captions, in three runs of the length YouTube actually emits — which the reader
 // merges into the three blocks below (docs/features/transcript-storage.md).
 const SEGMENTS: TranscriptSegment[] = [
-  ...captionRun(
+  ...makeCaptionRun(
     [
       "The claim starts here,",
       "and the whole of it takes four captions",
       "before it finally reaches",
       "its first full stop.",
     ],
-    0,
-    3500,
+    { startMs: 0, cueMs: 3500 },
   ),
-  ...captionRun(
-    ["This is the part worth watching,", "and this is the reason you might", "want to see it for yourself."],
-    65_000,
-    4000,
+  ...makeCaptionRun(
+    [
+      "This is the part worth watching,",
+      "and this is the reason you might",
+      "want to see it for yourself.",
+    ],
+    { startMs: 65_000, cueMs: 4000 },
   ),
-  ...captionRun(["And this is where it ends.", "Thanks for watching."], 3_661_000, 3000),
+  ...makeCaptionRun(["And this is where it ends.", "Thanks for watching."], {
+    startMs: 3_661_000,
+    cueMs: 3000,
+  }),
 ];
 
 const BLOCKS = [
@@ -58,7 +57,9 @@ test("the transcript tab merges the captions into blocks, each against the time 
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
+  );
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -78,9 +79,17 @@ test("each turn of an interview is its own block, marked as a new speaker", asyn
     makeStoredTranscript({
       videoId: VIDEO_ID,
       segments: [
-        makeTranscriptSegment({ text: ">> Thank you so much for being here.", startMs: 11_000, endMs: 14_000 }),
+        makeTranscriptSegment({
+          text: ">> Thank you so much for being here.",
+          startMs: 11_000,
+          endMs: 14_000,
+        }),
         makeTranscriptSegment({ text: ">> Thank you.", startMs: 14_000, endMs: 15_000 }),
-        makeTranscriptSegment({ text: ">> I came into your class last term.", startMs: 15_000, endMs: 18_000 }),
+        makeTranscriptSegment({
+          text: ">> I came into your class last term.",
+          startMs: 15_000,
+          endMs: 18_000,
+        }),
       ],
     }),
   );
@@ -102,7 +111,9 @@ test("a transcript with one speaker throughout carries no speaker marks", async 
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
+  );
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -150,7 +161,9 @@ test("machine-heard captions are labelled as such, and a video's own captions ar
   backendSimulator.transcripts.seed(
     makeStoredTranscript({ videoId: machineHeardId, segments: SEGMENTS, generated: true }),
   );
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
+  );
 
   const library = await launcher.launchExpectingLibrary();
   const machineHeard = await library.nthCard(0).openReader();
@@ -170,7 +183,9 @@ test("a transcript still being read shows the tab's skeleton rather than its emp
   page,
 }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.transcripts.seed(
+    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
+  );
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -242,7 +257,10 @@ test("a second note on a video already in the library reads the stored captions 
   backendSimulator.transcripts.seed(
     makeStoredTranscript({
       videoId: VideoId.parse(IWFT_VIDEO_ID),
-      segments: captionRun(["Captions already held.", "Bought once, read twice."], 0, 2000),
+      segments: makeCaptionRun(["Captions already held.", "Bought once, read twice."], {
+        startMs: 0,
+        cueMs: 2000,
+      }),
     }),
   );
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });

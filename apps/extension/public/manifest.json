@@ -7,11 +7,15 @@
   "permissions": [
     "sidePanel",
     "tabs",
+    "scripting",
+    "storage",
     "unlimitedStorage"
   ],
   "host_permissions": [
     "https://api.anthropic.com/*",
-    "https://api.supadata.ai/*"
+    "https://api.supadata.ai/*",
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*"
   ],
   "action": {
     "default_title": "The Overview",
@@ -36,5 +40,16 @@
   "background": {
     "service_worker": "serviceWorker.js",
     "type": "module"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "contentScript.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }

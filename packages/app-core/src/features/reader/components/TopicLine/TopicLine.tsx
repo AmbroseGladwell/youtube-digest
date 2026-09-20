@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { Overview, TopicId } from "@overview/types";
 import { useCreateTopicMutation } from "../../../overviews/mutations/useCreateTopicMutation.js";
@@ -6,6 +6,7 @@ import { useSetOverviewTopicsMutation } from "../../../overviews/mutations/useSe
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import { topicCounts } from "../../../overviews/util/topicCounts.js";
+import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { TopicPicker } from "../TopicPicker/TopicPicker.js";
 import styles from "./TopicLine.module.scss";
@@ -38,28 +39,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
 
   const close = () => onEditingChange(false);
 
-  useEffect(() => {
-    if (!editing) {
-      return;
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        close();
-      }
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!root.current?.contains(target) && !picker.current?.contains(target)) {
-        close();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [editing]);
+  useDismissOnOutside(editing, close, root, picker);
 
   const topics = topicsQuery.data ?? [];
   const selected = topics.filter((topic) => overview.topicIds.includes(topic.id));

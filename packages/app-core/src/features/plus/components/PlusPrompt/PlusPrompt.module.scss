@@ -1,0 +1,79 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 16a: the case is made where the want is, so the prompt takes the foot of the
+// panel under the same 2px rule the masthead uses, on an accent wash rather than a
+// coloured fill (docs/features/plus-upsell.md).
+.root {
+  // The same hold the player bar takes, for the same reason: a case made for Plus at
+  // the end of the note is a case nobody scrolls to (docs/features/plus-upsell.md).
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  border-top: 2px solid var(--ink);
+  background: color-mix(in srgb, var(--accent) 8%, var(--ground));
+  padding: 0.875rem 1.125rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .root {
+    animation: plusPromptUp var(--motion-arrive) var(--motion-ease) both;
+  }
+}
+
+@keyframes plusPromptUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-control);
+}
+
+.primary {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-btn);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.5rem 1.125rem;
+  font-size: 0.84rem;
+  text-decoration: none;
+
+  @include controls.tinted-control;
+}
+
+.quiet {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--faint);
+  cursor: pointer;
+
+  @include controls.quiet-control;
+}

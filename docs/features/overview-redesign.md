@@ -648,3 +648,14 @@ theme has always done. The light theme is untouched throughout.
   not by fading the title, so nothing fades the title here either.
 - **Topic pills** render only for topics an overview actually belongs to, and `+ New topic`
   is absent — topic creation has no UI yet.
+- **The reader's masthead has a pared-back variant**, which the side panel takes: no
+  breadcrumb, no stepper, no thumbnail, no rail, and `Listen` in place of
+  `Mark read` / `Read aloud`. Design 15c, and the rest of that turn, is in
+  `docs/features/extension-panel.md`.
+- **The transcript tab's progress list is shared with the dialog.** `GenerationSteps`
+  came out of `NewOverviewDialog` so the panel's own working screen reports a run the way
+  the dialog does rather than as a second implementation of the same two steps.
+- **The player bar is conditional in the panel only.** Everywhere else it stays as this
+  file describes it: always present, because every control on it works. In the panel it
+  docks on `Listen`, which is design 15d, and on a free plan `Listen` sells Plus instead
+  — `docs/features/plus-upsell.md` carries that argument and the cost of it.

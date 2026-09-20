@@ -1,4 +1,6 @@
-import type { Overview, OverviewState, StoredTranscript, Topic } from "@overview/types";
+import type { Overview, OverviewState, Settings, StoredTranscript, Topic } from "@overview/types";
+import type { AppLayout } from "../../src/app/LayoutContext.js";
+import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 
@@ -13,8 +15,16 @@ export interface IwftHooksConfig {
   seedStates?: OverviewState[];
   seedTopics?: Topic[];
   seedTranscripts?: StoredTranscript[];
+  seedSettings?: Partial<Settings>;
   apiKeys?: ApiKeys;
   surface?: Surface;
+  layout?: AppLayout;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
   activeVideoUrl?: string | null;
+  // Absent is a shell that can't see the player; null is one that can, with nothing to
+  // report yet (docs/features/following-playback.md).
+  playback?: PlaybackPosition | null;
+  // Whether this shell has a page with an injected button on it
+  // (docs/features/injected-button.md).
+  runBridge?: boolean;
 }

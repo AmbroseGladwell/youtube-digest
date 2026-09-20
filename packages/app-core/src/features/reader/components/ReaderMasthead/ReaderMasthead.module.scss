@@ -5,6 +5,19 @@
   flex-direction: column;
 }
 
+// Design 15c's head is the title, the topics, the meta line and Listen — small enough
+// to hold the top of a 400px panel while the note scrolls under it, which the wide
+// reader's masthead is not (docs/features/extension-panel.md).
+.rootSticky {
+  position: sticky;
+  top: var(--masthead-height);
+  // Above the tab strip's 2. Sticking the head gives it a stacking context of its own,
+  // which the ⋯ menu cannot escape however high its own z-index goes — on the wide
+  // reader the masthead is unpositioned and the menu simply outranks the tabs.
+  z-index: 3;
+  background: var(--ground);
+}
+
 .topBar {
   display: flex;
   align-items: center;
@@ -175,6 +188,67 @@
   color: var(--accent-deep);
 
   @include controls.tinted-control;
+}
+
+// Design 15c and 15d: one tinted pill that fills in while it is running, rather than the
+// pair the wide reader carries. It is the panel's only transport control until the
+// player docks under it (docs/features/extension-panel.md).
+.listen {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.35rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @include controls.tinted-control;
+}
+
+.listenActive,
+.listenActive:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+// The panel is 400px and the meta stack already fills it, so the actions take their own
+// row under the title block rather than a column beside it.
+.titleRowCompact {
+  gap: 0.75rem;
+  padding: 1rem 1.125rem 0.75rem;
+}
+
+.titleRowCompact .title {
+  font-size: 1.375rem;
+}
+
+// Whose video this is, directly under what it is called. The same uppercase face the
+// design gives it in 15c, rather than the wide reader's run-on byline.
+.channel {
+  margin: 0.375rem 0 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.titleRowCompact .kickerRow {
+  margin: 0.5rem 0 0;
+}
+
+// A note filed nowhere, with no verdict and no warnings, renders none of them —
+// leaving a paragraph with no children and its margin still taking space.
+.titleRowCompact .kickerRow:empty {
+  display: none;
+}
+
+.titleRowCompact .actions {
+  flex: 1 0 100%;
+  justify-content: flex-start;
 }
 
 // The phone reader keeps the back link and drops the breadcrumb and the stepper: design

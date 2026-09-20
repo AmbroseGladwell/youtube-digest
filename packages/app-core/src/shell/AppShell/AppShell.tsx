@@ -1,10 +1,13 @@
 import { useLayoutEffect, useRef } from "react";
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/types";
+import { useIsPanel } from "../../app/LayoutContext.js";
 import { Routes } from "../../app/Routes.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
+import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
+import { useRunBridgeExchange } from "../../features/newOverview/useRunBridgeExchange.js";
 import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import {
@@ -21,6 +24,7 @@ const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 export function AppShell() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const isPanel = useIsPanel();
   const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
   const animateNavigation = useShouldAnimateNavigation();
 
@@ -42,6 +46,10 @@ export function AppShell() {
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
 
+  // The injected YouTube button's end of that same run
+  // (docs/features/injected-button.md).
+  useRunBridgeExchange(newOverview);
+
   // Held here rather than in the dialog so the captions are already in hand by the time
   // the dialog is opened at all (docs/features/watching-detection.md).
   useWatchedTranscriptQuery();
@@ -52,76 +60,110 @@ export function AppShell() {
   };
 
   return (
-    <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
-      <header
-        className={styles.masthead}
-        ref={mastheadHeight.measured}
-        data-testid={appShellTestIds.masthead}
-      >
-        <div className={styles.bar}>
-          <Link className={styles.brand} to={Routes.home()}>
-            <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true" className={styles.mark}>
-              <circle cx="16" cy="14.5" r="7.5" fill="none" stroke="currentColor" strokeWidth="3" />
-              <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
-            </svg>
-            <h1 className={styles.title}>The Overview</h1>
-          </Link>
+    <NewOverviewRunProvider value={newOverview}>
+      <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
+        <header
+          className={styles.masthead}
+          ref={mastheadHeight.measured}
+          data-testid={appShellTestIds.masthead}
+        >
+          <div className={styles.bar}>
+            <Link className={styles.brand} to={Routes.home()} data-testid={appShellTestIds.brand}>
+              <svg
+                viewBox="0 0 32 32"
+                width="24"
+                height="24"
+                aria-hidden="true"
+                className={styles.mark}
+              >
+                <circle
+                  cx="16"
+                  cy="14.5"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+                <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
+              </svg>
+              <h1 className={styles.title}>The Overview</h1>
+            </Link>
 
-          <button
-            type="button"
-            className={styles.newOverviewButton}
-            onClick={newOverview.open}
-            aria-haspopup="dialog"
-            aria-expanded={newOverview.dialogOpen}
-            data-testid={appShellTestIds.newOverviewButton}
-          >
-            + New
-          </button>
+            {isPanel ? (
+              <Link
+                className={styles.panelSettingsLink}
+                to={Routes.settings()}
+                viewTransition={animateNavigation}
+                data-testid={appShellTestIds.settingsLink}
+              >
+                Settings
+              </Link>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className={styles.newOverviewButton}
+                  onClick={newOverview.open}
+                  aria-haspopup="dialog"
+                  aria-expanded={newOverview.dialogOpen}
+                  data-testid={appShellTestIds.newOverviewButton}
+                >
+                  + New
+                </button>
 
-          <nav className={styles.nav} aria-label="Sections">
-            <NavLink
-              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-              to={Routes.home()}
-              viewTransition={animateNavigation}
-              end
-            >
-              Overviews
-            </NavLink>
-            <NavLink
-              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-              to={Routes.settings()}
-              viewTransition={animateNavigation}
-              data-testid={appShellTestIds.settingsLink}
-            >
-              Settings
-            </NavLink>
-          </nav>
+                <nav className={styles.nav} aria-label="Sections">
+                  <NavLink
+                    className={({ isActive }) =>
+                      `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+                    }
+                    to={Routes.home()}
+                    viewTransition={animateNavigation}
+                    end
+                  >
+                    Overviews
+                  </NavLink>
+                  <NavLink
+                    className={({ isActive }) =>
+                      `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+                    }
+                    to={Routes.settings()}
+                    viewTransition={animateNavigation}
+                    data-testid={appShellTestIds.settingsLink}
+                  >
+                    Settings
+                  </NavLink>
+                </nav>
+              </>
+            )}
+          </div>
+
+          {!isPanel && newOverview.run && !newOverview.dialogOpen && (
+            <GenerationStatusStrip
+              run={newOverview.run}
+              onDetails={newOverview.open}
+              onDismiss={newOverview.dismiss}
+              onReadOverview={readOverview}
+            />
+          )}
+        </header>
+
+        <div className={styles.pane} data-testid={appShellTestIds.pane}>
+          <Outlet />
         </div>
 
-        {newOverview.run && !newOverview.dialogOpen && (
-          <GenerationStatusStrip
+        <ScrollRestoration />
+
+        {!isPanel && (
+          <NewOverviewDialog
+            open={newOverview.dialogOpen}
             run={newOverview.run}
-            onDetails={newOverview.open}
+            onSubmit={newOverview.start}
+            onClose={newOverview.close}
             onDismiss={newOverview.dismiss}
             onReadOverview={readOverview}
           />
         )}
-      </header>
-
-      <div className={styles.pane} data-testid={appShellTestIds.pane}>
-        <Outlet />
       </div>
-
-      <ScrollRestoration />
-
-      <NewOverviewDialog
-        open={newOverview.dialogOpen}
-        run={newOverview.run}
-        onSubmit={newOverview.start}
-        onClose={newOverview.close}
-        onDismiss={newOverview.dismiss}
-        onReadOverview={readOverview}
-      />
-    </div>
+    </NewOverviewRunProvider>
   );
 }

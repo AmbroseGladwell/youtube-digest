@@ -7,7 +7,9 @@ export const readerMastheadTestIds = {
   position: "ReaderMasthead.position",
   published: "ReaderMasthead.published",
   title: "ReaderMasthead.title",
+  channel: "ReaderMasthead.channel",
   meta: "ReaderMasthead.meta",
   readButton: "ReaderMasthead.readButton",
   readAloudButton: "ReaderMasthead.readAloudButton",
+  listenButton: "ReaderMasthead.listenButton",
 };

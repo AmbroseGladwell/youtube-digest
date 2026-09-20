@@ -109,8 +109,14 @@ behalf rather than leaving it to show up on a bill.
 
 ## What holds this up, and what doesn't
 
-The `tabs` permission is what buys the active tab's URL. There is no content script and no
-host permission for `youtube.com` — nothing here reads or touches the page itself.
+The `tabs` permission is what buys the active tab's URL, and on its own it is all this
+feature needs: there is no content script, and nothing here reads the page.
+
+Something else in the panel now does. Following playback reads the player's own
+`currentTime`, which needs `scripting` and a host permission for `youtube.com` — see
+`docs/features/following-playback.md` for what is injected and when. Noticing which video
+you are on is still done entirely from the tab's URL, and would still work with those
+permissions withheld.
 
 `chrome.tabs.onUpdated` is listened to alongside `onActivated` because YouTube navigates
 without a page load: a new video arrives as a URL change on a tab that was already open,

@@ -149,103 +149,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   background: var(--ink);
 }
 
-.steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.step {
-  display: grid;
-  grid-template-columns: 1.125rem 1fr 1rem;
-  gap: 0.75rem;
-  align-items: baseline;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--divider);
-}
-
-.step[data-state="waiting"] {
-  opacity: 0.55;
-}
-
-.stepNumber {
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  font-variant-numeric: tabular-nums;
-  color: var(--faint);
-}
-
-.stepBody {
-  min-width: 0;
-}
-
-.stepLabel {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.2;
-  color: var(--faint);
-}
-
-.step[data-state="running"] .stepLabel {
-  color: var(--accent-deep);
-}
-
-.step[data-state="done"] .stepLabel {
-  color: var(--ink);
-}
-
-.stepDetail {
-  display: block;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--faint);
-}
-
-.stepMark {
-  font-size: 0.75rem;
-  text-align: right;
-  color: var(--accent);
-}
-
-.step[data-state="done"] .stepMark {
-  color: var(--accent-strong);
-}
-
-.step[data-state="running"] .stepMark {
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.barTrack {
-  display: block;
-  height: 2px;
-  margin-top: 0.44rem;
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  overflow: hidden;
-}
-
-.step[data-state="waiting"] .barTrack {
-  background: transparent;
-}
-
-.barFill {
-  display: block;
-  height: 2px;
-  width: 0;
-  background: var(--accent);
-}
-
-.step[data-state="done"] .barFill {
-  width: 100%;
-}
-
-// A sweep rather than a percentage: nothing here knows how far through a step it is, and
-// a bar that claimed to would be inventing the number (docs/prototype/constraints.md).
-.step[data-state="running"] .barFill {
-  width: 40%;
-  animation: sweep 1.5s linear infinite;
-}
-
 .foot {
   display: flex;
   flex-direction: column;
@@ -314,25 +217,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   cursor: pointer;
 
   @include controls.quiet-control;
-}
-
-@keyframes sweep {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(300%);
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 @media (max-width: 47.9375rem) {

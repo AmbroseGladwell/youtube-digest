@@ -21,7 +21,10 @@ const seedLibrary = (backendSimulator: BackendSimulator) => {
   });
   backendSimulator.overviews.seed(overview);
   backendSimulator.overviews.seed(
-    makeOverview({ topicIds: [CLEAN_TECH.id], video: { ...makeOverview().video, title: "A second note" } }),
+    makeOverview({
+      topicIds: [CLEAN_TECH.id],
+      video: { ...makeOverview().video, title: "A second note" },
+    }),
   );
   return overview;
 };
@@ -33,7 +36,10 @@ const openReader = async (launcher: Launcher, backendSimulator: BackendSimulator
   return { overview, reader };
 };
 
-test("reading, the topic line is the topics and nothing else", async ({ launcher, backendSimulator }) => {
+test("reading, the topic line is the topics and nothing else", async ({
+  launcher,
+  backendSimulator,
+}) => {
   const { reader } = await openReader(launcher, backendSimulator);
 
   await reader.verifyFiledUnder(["energy", "politics"]);
@@ -148,6 +154,38 @@ test("escape closes the picker and hands the line back read-only", async ({
   await picker.verifyIsNotShown();
   await reader.verifyTopicsAreEditable(false);
   await reader.verifyFiledUnder(["energy", "politics"]);
+});
+
+// Both of these and the picker's own Escape run through one useDismissOnOutside, so the
+// uncovered halves are what would let a change to it break something quietly.
+test("a pointer down outside the picker closes it, the same way Escape does", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const { reader } = await openReader(launcher, backendSimulator);
+  const picker = await reader.editTopics();
+
+  await reader.clickAwayFromAnyPopover();
+
+  await picker.verifyIsNotShown();
+  await reader.verifyTopicsAreEditable(false);
+});
+
+test("the actions menu closes on Escape, and on a pointer down outside it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const { reader } = await openReader(launcher, backendSimulator);
+
+  await reader.openActionsMenu();
+  await reader.verifyActionsMenuIsShown(true);
+  await reader.pressEscape();
+  await reader.verifyActionsMenuIsShown(false);
+
+  await reader.openActionsMenu();
+  await reader.verifyActionsMenuIsShown(true);
+  await reader.clickAwayFromAnyPopover();
+  await reader.verifyActionsMenuIsShown(false);
 });
 
 test("on a phone the same control arrives as a sheet, and Done closes it", async ({
