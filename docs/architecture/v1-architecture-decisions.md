@@ -391,6 +391,35 @@ per field, made once, rather than at every call site forever. It is not worth bu
 against a handful of local dev records; it becomes worth building at the point either real
 users or a synced paid tier exist, whichever is first.
 
+**Two of the stores now fill their defaults at read time, and that is a stopgap, not the
+migration above.** `IndexedDbSettingsStore.get()` returned `DEFAULT_SETTINGS` only when the
+record was *absent*, so a record written before `plan` and `plusNoticeDismissed` existed
+came back missing both — the same trap as `publishedAt`, one layer lower, and reached by
+every reader rather than one component. It now merges the stored record onto the defaults,
+and `getOverviewState` does the same. Two limits are worth naming rather than discovering:
+the merge is shallow, so a newly added *section toggle* inside `sectionsEnabled` is still
+absent (deep-merging it would contradict the wholesale-replace rule the conformance suite
+pins), and nothing is validated on the way out, so a record that is wrong rather than old
+still passes through. Both are the migration's job. What the merge buys is that adding a
+top-level field stops being a bug.
+
+**Every connection closes itself when another context needs to upgrade, and a blocked open
+fails instead of hanging.** `indexedDB.open` fires `blocked` — not `error` — when another
+connection holds the database at a lower version, and the request simply never completes.
+`openLocalDatabase` had no handler for it, so the returned promise never settled: the web
+app's second tab, or the extension's panel against a service worker holding a connection,
+would sit on a blank page forever with nothing logged. This was latent only because
+`DATABASE_VERSION` had not moved since the transcripts store; the migration above is
+exactly the change that moves it, so this is a prerequisite rather than a separate cleanup.
+
+Connections now set `onversionchange` to close themselves, which is what makes the common
+case work — the upgrading context proceeds instead of waiting on a tab the user forgot. The
+cost is that the closed connection's next transaction throws, so the surface holding it has
+to say so; `openLocalDatabase` takes an `onSuperseded` callback for that, and **nothing
+consumes it yet.** Until something does, that tab degrades invisibly, which is the habit in
+`CLAUDE.md` this is meant to honour and currently doesn't. `LocalDatabaseBlockedError`
+covers the other direction — the open that cannot start — and is likewise unrendered.
+
 ## Explicitly out of scope for v1
 
 - Multi-LLM-provider BYO (Idea 1) — Claude-only behind an interface, see above.

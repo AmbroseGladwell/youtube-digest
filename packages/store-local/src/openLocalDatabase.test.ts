@@ -3,6 +3,7 @@ import test from "node:test";
 import { IDBFactory } from "fake-indexeddb";
 import {
   DATABASE_NAME,
+  DATABASE_VERSION,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   SETTINGS_KEY,
@@ -10,6 +11,7 @@ import {
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
+import { LocalDatabaseBlockedError } from "./LocalDatabaseBlockedError.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 
@@ -98,4 +100,42 @@ test("adding the transcripts store keeps the overviews a reader already has", as
   assert.equal((await getAll(after, OVERVIEWS_STORE)).length, 1);
   assert.equal((await getAll(after, OVERVIEW_STATES_STORE)).length, 1);
   assert.deepEqual(await getAll(after, TRANSCRIPTS_STORE), []);
+});
+
+function openNextVersion(indexedDB: IDBFactory): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION + 1);
+    request.onupgradeneeded = () => undefined;
+    request.onblocked = () => reject(new Error("the upgrade was blocked"));
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+test("an open that an older connection blocks rejects rather than never settling", async () => {
+  const indexedDB = new IDBFactory();
+  const holding = await openVersionTwoDatabase(indexedDB);
+
+  await assert.rejects(() => openLocalDatabase({ indexedDB }), LocalDatabaseBlockedError);
+
+  holding.close();
+});
+
+test("an open connection closes itself so another context's upgrade is not blocked", async () => {
+  const indexedDB = new IDBFactory();
+  await openLocalDatabase({ indexedDB });
+
+  const upgraded = await openNextVersion(indexedDB);
+
+  assert.equal(upgraded.version, DATABASE_VERSION + 1);
+});
+
+test("a connection that closed for another context's upgrade says so, rather than failing silently later", async () => {
+  const indexedDB = new IDBFactory();
+  let superseded = false;
+  await openLocalDatabase({ indexedDB, onSuperseded: () => (superseded = true) });
+
+  await openNextVersion(indexedDB);
+
+  assert.equal(superseded, true);
 });

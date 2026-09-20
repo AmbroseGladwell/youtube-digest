@@ -73,8 +73,8 @@ export class IndexedDbOverviewStore implements OverviewStore {
 
   async getOverviewState(overviewId: OverviewId) {
     const store = this.#db.transaction(OVERVIEW_STATES_STORE, "readonly").objectStore(OVERVIEW_STATES_STORE);
-    const state = await promisifyRequest<OverviewState | undefined>(store.get(overviewId));
-    return state ?? { overviewId, ...DEFAULT_OVERVIEW_STATE };
+    const state = await promisifyRequest<Partial<OverviewState> | undefined>(store.get(overviewId));
+    return { ...DEFAULT_OVERVIEW_STATE, ...state, overviewId };
   }
 
   async setOverviewState(

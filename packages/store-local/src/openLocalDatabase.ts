@@ -1,3 +1,4 @@
+import { LocalDatabaseBlockedError } from "./LocalDatabaseBlockedError.js";
 import {
   DATABASE_NAME,
   DATABASE_VERSION,
@@ -11,12 +12,13 @@ import {
 export interface OpenLocalDatabaseOptions {
   name?: string;
   indexedDB?: IDBFactory;
+  onSuperseded?: () => void;
 }
 
 const NOVELTY_RENAME_RESET_VERSION = 2;
 
 export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> {
-  const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB } = options;
+  const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB, onSuperseded } = options;
 
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(name, DATABASE_VERSION);
@@ -47,7 +49,16 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
     };
 
-    request.onsuccess = () => resolve(request.result);
+    request.onblocked = () => reject(new LocalDatabaseBlockedError(name));
+
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        onSuperseded?.();
+      };
+      resolve(db);
+    };
     request.onerror = () => reject(request.error);
   });
 }
