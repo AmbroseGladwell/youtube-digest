@@ -15,5 +15,6 @@ export const DEFAULT_API_KEYS: ApiKeys = {
   supadataApiKey: null,
 };
 
-export const hasRequiredApiKeys = (keys: ApiKeys): boolean =>
-  keys.anthropicApiKey !== null && keys.supadataApiKey !== null;
+// What generation needs is not a fixed pair of keys any more: a browser that fetches its
+// own captions needs no transcript key at all, so the question is asked by
+// useGenerationReadiness (docs/features/transcript-retrieval.md).
