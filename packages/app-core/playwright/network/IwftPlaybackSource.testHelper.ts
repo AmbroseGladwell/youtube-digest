@@ -14,6 +14,14 @@ export class IwftPlaybackSource implements PlaybackSource {
     };
   };
 
+  // Recorded rather than acted on: there is no player here, and what the reader needs
+  // to know is that pressing the control asked for the right moment.
+  readonly seeks: number[] = [];
+
+  seekTo = (positionMs: number): void => {
+    this.seeks.push(positionMs);
+  };
+
   moveTo = (position: PlaybackPosition | null): void => {
     this.position = position;
     for (const listener of this.listeners) listener();

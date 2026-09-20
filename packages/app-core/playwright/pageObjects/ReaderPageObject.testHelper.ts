@@ -10,6 +10,7 @@ import { topicLineTestIds } from "../../src/features/reader/components/TopicLine
 import { overviewActionsMenuTestIds } from "../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
 import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
+import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
 import { plusPromptTestIds } from "../../src/features/plus/components/PlusPrompt/PlusPromptTestIds.js";
 import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
@@ -309,6 +310,26 @@ export class ReaderPageObject extends PageObject {
 
   clickFollowPlayback = () =>
     this.step("clickFollowPlayback", () => this.click(transcriptPanelTestIds.followButton));
+
+  verifyWatchAnywayRangeReads = (range: string) =>
+    this.step(`verifyWatchAnywayRangeReads ${range}`, () =>
+      expect(this.get(watchAnywayJumpTestIds.range)).toHaveText(range),
+    );
+
+  verifyHasNoWatchAnywayJump = () =>
+    this.step("verifyHasNoWatchAnywayJump", () =>
+      this.expectNotToBeVisible(watchAnywayJumpTestIds.root),
+    );
+
+  verifyOffersToSkipTheVideo = (offered: boolean) =>
+    this.step(`verifyOffersToSkipTheVideo ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(watchAnywayJumpTestIds.skipButton)
+        : this.expectNotToBeVisible(watchAnywayJumpTestIds.skipButton),
+    );
+
+  clickSkipToWatchAnyway = () =>
+    this.step("clickSkipToWatchAnyway", () => this.click(watchAnywayJumpTestIds.skipButton));
 
   clickListen = () =>
     this.step("clickListen", () => this.click(readerMastheadTestIds.listenButton));

@@ -1,0 +1,34 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-control);
+  margin: 0.25rem 0 0;
+  padding-left: 0.625rem;
+  max-width: var(--measure);
+}
+
+// The measured range, in the same tabular face the meta line and the transcript's own
+// times use, so the three read as the same kind of number.
+.range {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+
+.skip {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-btn);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.28rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @include controls.tinted-control;
+}

@@ -22,6 +22,7 @@ import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.j
 import { ReaderRail } from "../components/ReaderRail/ReaderRail.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
+import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { noteSectionNames, overviewNoteLines } from "../util/overviewNoteLines.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
@@ -167,6 +168,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 activeIndex={readAlong.activeIndex}
                 onSelectLine={readAlong.selectLine}
               />
+              {range !== null && <WatchAnywayJump range={range} videoId={overview.video.id} />}
               <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
                 {overview.tags.map((tag) => (
                   <span key={tag} className={styles.tag}>

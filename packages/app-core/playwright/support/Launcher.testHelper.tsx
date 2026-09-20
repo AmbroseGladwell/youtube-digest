@@ -103,6 +103,10 @@ export class Launcher {
           ) ?? [],
       ));
 
+  readPlaybackSeeks = (): Promise<number[]> =>
+    test.step("Launcher.readPlaybackSeeks", () =>
+      this.page.evaluate(() => window.__iwftPlayback__?.seeks ?? []));
+
   get capturePage(): CapturePageObject {
     return new CapturePageObject(this.testContext);
   }

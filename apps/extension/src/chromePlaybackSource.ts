@@ -93,16 +93,53 @@ function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number
   };
 }
 
-async function injectIntoActiveTab(): Promise<void> {
+// Serialized into the tab like the reporter above, and the only thing here that writes
+// to the page. It sets one property on the player and reads nothing
+// (docs/features/following-playback.md).
+function seekPlayback(positionMs: number): void {
+  const video =
+    document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+    document.querySelector("video");
+  if (video) {
+    video.currentTime = positionMs / 1000;
+  }
+}
+
+async function activeYouTubeTabId(): Promise<number | null> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url ?? tab?.pendingUrl;
   if (tab?.id === undefined || url === undefined || !isYouTubeUrl(url)) {
+    return null;
+  }
+  return tab.id;
+}
+
+async function seekInActiveTab(positionMs: number): Promise<void> {
+  const tabId = await activeYouTubeTabId();
+  if (tabId === null) {
+    return;
+  }
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: seekPlayback,
+      args: [positionMs],
+    });
+  } catch {
+    // No host permission for this page, or it went away mid-seek. The video simply does
+    // not move; the range beside the button is still there to navigate by.
+  }
+}
+
+async function injectIntoActiveTab(): Promise<void> {
+  const tabId = await activeYouTubeTabId();
+  if (tabId === null) {
     publish(null);
     return;
   }
   try {
     await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+      target: { tabId },
       func: reportPlayback,
       args: [PLAYBACK_REPORT, REPORT_EVERY_MS, GIVE_UP_AFTER_MISSES],
     });
@@ -140,6 +177,8 @@ const onUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
 
 export const chromePlaybackSource: PlaybackSource = {
   getPosition: () => position,
+
+  seekTo: (positionMs) => void seekInActiveTab(positionMs),
   subscribe: (onChange) => {
     listeners.add(onChange);
     if (listeners.size === 1) {

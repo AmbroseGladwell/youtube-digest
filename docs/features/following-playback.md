@@ -161,12 +161,35 @@ already marked — nearly always — scrolled nowhere and looked broken. Ours sc
 effect that takes `following` in its dependencies, so re-engaging always scrolls whether
 or not the marked row changed.
 
+## One thing that writes to the player
+
+Following is otherwise one-way — the panel reads the player and never touches it — and
+the watch-it-anyway range is the single exception. `PlaybackSource` grew `seekTo`, which
+injects a function that sets `currentTime` on the main `<video>` and reads nothing.
+
+The distinction that makes it safe is not the size of the write but who asked for it:
+this only ever runs from a press on a control the reader can see, pointed at a moment
+the model was given rather than one it invented. `startMs` comes from the same caption
+timings everything else here is built on (`docs/features/overview-redesign.md`).
+
+Where it appears is deliberately narrow. The button is drawn only when a player is
+reporting **and** it is playing the video being read, which is `useSeekPlayback`'s whole
+job — the web app has no player to move, and a panel whose tab has wandered to another
+video would otherwise offer to skip the wrong one. The range beside it is printed
+regardless, because reading it is how someone gets to the moment on their own, and that
+is the half of this that works everywhere.
+
+It sits under the watch-it-anyway paragraph by sitting after the note, which holds only
+because that is the last section `overviewNoteLines` builds. A unit test pins that
+ordering rather than leaving the placement to depend on something nothing checks.
+
 ## What this does not do
 
-- **Seek the video from a block.** Still parked, and still parked as one question with
-  jumping to YouTube and moving the read-along, exactly as
-  `docs/features/transcript-storage.md` left it. Following is one-way: the panel reads
-  the player and never writes to it.
+- **Seek the video from a transcript block.** Still parked, and still parked as one
+  question with jumping to YouTube and moving the read-along, exactly as
+  `docs/features/transcript-storage.md` left it. A block is a paragraph you read, not a
+  control, and settling what clicking one does is a separate decision from the one
+  below.
 - **Work on a YouTube tab that is not the active one.** The panel belongs to a window and
   follows that window's front tab, which is the same rule `chromeActiveVideoSource`
   already follows.
