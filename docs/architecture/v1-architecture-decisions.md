@@ -391,6 +391,11 @@ per field, made once, rather than at every call site forever. It is not worth bu
 against a handful of local dev records; it becomes worth building at the point either real
 users or a synced paid tier exist, whichever is first.
 
+That replacement is now designed in `docs/features/record-migrations.md`, which argues —
+against the trigger set here — that the backend is the thing that makes it expensive to
+defer, because `schemaVersion` has to exist in the API contract and the Postgres row either
+way. Not built.
+
 **Two of the stores now fill their defaults at read time, and that is a stopgap, not the
 migration above.** `IndexedDbSettingsStore.get()` returned `DEFAULT_SETTINGS` only when the
 record was *absent*, so a record written before `plan` and `plusNoticeDismissed` existed

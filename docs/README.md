@@ -34,6 +34,10 @@ Five folders, five different questions.
   conversation behind it.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
+- `record-migrations.md` — the versioned-record design that replaces reading stored records
+  unvalidated: two version numbers doing two jobs, why migration happens on read rather than
+  in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
+  Designed, not built.
 - `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the
   single overview's topic editor.
 - `transcript-retrieval.md` — why retrieval is a ladder of sources rather than a provider,
