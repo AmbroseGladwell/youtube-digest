@@ -5,6 +5,7 @@ import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
 import { IwftRunBridge } from "./network/IwftRunBridge.testHelper.js";
+import { iwftYouTubeFetch } from "./network/IwftYouTubeFetch.testHelper.js";
 import { InMemoryOverviewStore } from "./network/InMemoryOverviewStore.testHelper.js";
 import { InMemorySettingsStore } from "./network/InMemorySettingsStore.testHelper.js";
 import { InMemoryTranscriptStore } from "./network/InMemoryTranscriptStore.testHelper.js";
@@ -33,4 +34,5 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftPlayback__ =
     hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
   window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;
+  window.__iwftYouTubeFetch__ = hooksConfig?.youTubeFetch === true ? iwftYouTubeFetch : null;
 });

@@ -2,9 +2,11 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../../app/Routes.js";
-import { hasRequiredApiKeys } from "../../../apiKeys/ApiKeys.js";
-import { BYO_KEY_NOTE_SHORT } from "../../../apiKeys/byoKeyNote.js";
-import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
+import {
+  settingsLinkLabel,
+  transcriptSourceNote,
+} from "../../../transcripts/transcriptSourceNote.js";
+import { useGenerationReadiness } from "../../useGenerationReadiness.js";
 import { useWatchedTranscriptQuery } from "../../../transcripts/queries/watchedTranscriptQuery.js";
 import { isYouTubeUrl } from "../../util/parseYouTubeUrl.js";
 import styles from "./GenerateOverviewForm.module.scss";
@@ -27,9 +29,10 @@ export function GenerateOverviewForm({
   onCancel,
   generationError = null,
 }: GenerateOverviewFormProps) {
-  const { apiKeys } = useApiKeys();
   const activeVideoUrl = useActiveVideoUrl();
   const watchedTranscript = useWatchedTranscriptQuery();
+  const readiness = useGenerationReadiness();
+  const keysReady = readiness === "ready";
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent) => {
@@ -42,7 +45,6 @@ export function GenerateOverviewForm({
     onSubmit(url);
   };
 
-  const keysReady = hasRequiredApiKeys(apiKeys);
   const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
   const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
@@ -107,13 +109,13 @@ export function GenerateOverviewForm({
         </p>
       ) : (
         <p className={styles.note}>
-          {BYO_KEY_NOTE_SHORT}{" "}
+          {transcriptSourceNote(readiness)}{" "}
           <Link
             to={Routes.settings()}
             onClick={onCancel}
             data-testid={generateOverviewFormTestIds.settingsLink}
           >
-            Add your Anthropic and Supadata keys →
+            {settingsLinkLabel(readiness)}
           </Link>
         </p>
       )}

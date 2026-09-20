@@ -24,6 +24,7 @@ export interface LaunchOptions {
   playback?: PlaybackPosition | null;
   plan?: Plan;
   runBridge?: boolean;
+  youTubeFetch?: boolean;
 }
 
 export class Launcher {
@@ -63,6 +64,7 @@ export class Launcher {
         activeVideoUrl: options.activeVideoUrl,
         playback: options.playback,
         runBridge: options.runBridge,
+        youTubeFetch: options.youTubeFetch,
       },
     });
   };

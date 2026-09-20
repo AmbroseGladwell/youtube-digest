@@ -6,6 +6,8 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const ANOTHER_WATCHED_URL = "https://www.youtube.com/watch?v=anotherVideoId";
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+// The panel of a browser that can reach YouTube, which is what an extension always is.
+const PANEL = { apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true } as const;
 
 test("the side panel opens on the video in front of it, and that link is the one it generates from", async ({
   launcher,
@@ -57,10 +59,14 @@ test("the captions for the video in front of the panel are fetched before anyone
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
+  await launcher.launch(PANEL);
 
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
-  expect(await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID))).not.toBeNull();
+  // The store, not the call count: the fetch firing is not the same moment as the
+  // captions being held.
+  await expect
+    .poll(() => backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID)))
+    .not.toBeNull();
+  expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
@@ -68,33 +74,43 @@ test("generating from a video whose captions are already held doesn't buy them a
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  await launcher.launch(PANEL);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.verifyWatchedVideoNote(/captions are already here/);
   await dialog.form.clickGenerate();
   await dialog.clickReadOverview();
 
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });
 
 test("moving to another video goes and gets that one's captions too", async ({
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(1);
+  await launcher.launch(PANEL);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
 
   await launcher.watchAnotherVideo(ANOTHER_WATCHED_URL);
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(2);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(2);
 });
 
-test("nothing is bought in the background without the key that would pay for it", async ({
+test("the panel fetches the captions with no key at all, because the free path costs nothing", async ({
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ surface: "extension", activeVideoUrl: WATCHED_URL });
+  await launcher.launch({ surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true });
+
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+});
+
+test("with only a paid rung, nothing is bought for a video nobody asked about", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
   await launcher.appShell.openNewOverview();
 
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
@@ -116,13 +132,14 @@ test("a video the panel already looked up costs one metadata call, not one for i
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(1);
+  await launcher.launch(PANEL);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
 
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.clickGenerate();
   await dialog.clickReadOverview();
 
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(1);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  // One player call served the look-up and the note, and the captions were fetched once.
+  expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });

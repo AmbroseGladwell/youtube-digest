@@ -9,6 +9,8 @@ import {
   type ButtonState,
 } from "./overviewBridge.js";
 import { overviewButtonState } from "./overviewButtonState.js";
+import { fetchYouTubeInWorker } from "./fetchYouTubeInWorker.js";
+import { isYouTubeFetchMessage } from "./youTubeFetchBridge.js";
 
 // Top level, not onInstalled: this re-runs on every worker start, so the toolbar icon keeps
 // opening the panel even if the flag doesn't survive a profile restart or an update.
@@ -104,6 +106,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       await broadcast(report);
       sendResponse({ received: true });
     })();
+    return true;
+  }
+
+  if (isYouTubeFetchMessage(message)) {
+    void fetchYouTubeInWorker(message.request).then(
+      (response) => sendResponse({ ok: true, response }),
+      (error: unknown) =>
+        sendResponse({ ok: false, message: error instanceof Error ? error.message : "the fetch failed" }),
+    );
     return true;
   }
 

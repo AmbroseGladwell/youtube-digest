@@ -4,9 +4,9 @@ function stripHostPrefix(host: string): string {
   return host.startsWith("www.") ? host.slice(4) : host;
 }
 
-// Cheap client-side validation, not a duplicate of what Supadata/the metadata call
-// already checks server-side — this exists only to reject an obviously-not-YouTube
-// paste before it burns a transcript-fetch credit.
+// Cheap client-side validation, not a duplicate of what a source checks for itself —
+// this exists only to reject an obviously-not-YouTube paste before a rung is asked, and
+// to give the InnerTube rung the id it needs (docs/features/transcript-retrieval.md).
 export function extractYouTubeVideoId(input: string): string | null {
   let parsed: URL;
   try {

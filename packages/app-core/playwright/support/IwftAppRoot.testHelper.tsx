@@ -21,6 +21,7 @@ export function IwftAppRoot() {
       activeVideo={window.__iwftActiveVideo__}
       playback={window.__iwftPlayback__}
       runBridge={window.__iwftRunBridge__}
+      youTubeFetch={window.__iwftYouTubeFetch__}
     />
   );
 }

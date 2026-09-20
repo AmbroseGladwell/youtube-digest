@@ -178,7 +178,7 @@ actually are. `generationRunSteps.test.ts`'s first case is the one that fails if
 row is ever added back without the audio.
 
 Inside a running step the bar **sweeps** rather than filling to a percentage: nothing here
-knows how far through a Supadata fetch or an Anthropic call it is, and a bar that claimed
+knows how far through a transcript fetch or an Anthropic call it is, and a bar that claimed
 to would be inventing the number (`docs/prototype/constraints.md`). The strip's own rule
 is a fraction, but only of steps that have actually finished — the running step is credited
 with half of its own, and nothing else.
@@ -205,7 +205,7 @@ asserts exactly that, before and after the strip appears.
 Only one run exists at a time, so `+ New` while one is going shows that run rather than
 starting another — the same thing the strip's `Details` does.
 
-**Cancel abandons the run rather than aborting a request.** Neither the Supadata client nor
+**Cancel abandons the run rather than aborting a request.** Neither a transcript source nor
 `GenerationClient` takes an `AbortSignal`, so cancelling bumps the run id, which the
 pipeline reads through `isCancelled` between phases: a cancel during the transcript fetch
 means the Anthropic call is never made, and a cancel during generation means nothing is
@@ -244,8 +244,9 @@ anything). So:
 - **Read** and **listen** are arithmetic over the note's own words, done in
   `noteTiming.ts` — 220 words per minute read, 150 spoken. Code counts the words; nothing
   estimates them.
-- **Video** is `video.durationMs`, which Supadata does return. When it is null — notes
-  generated before that field existed — the term is dropped rather than guessed, and the
+- **Video** is `video.durationMs`, the video's own length as the platform reports it — not
+  the end of its last caption (`docs/features/transcript-retrieval.md`). When it is null —
+  notes generated before that field existed, and live content — the term is dropped rather than guessed, and the
   line reads `4 min read · 6 min listen`. `readerMetaParts.test.ts` holds that.
 
 The spoken rate is not decoration: it is also what paces the reading mark, so the clock in

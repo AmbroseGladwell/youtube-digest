@@ -53,11 +53,26 @@
   border-bottom-color: var(--accent);
 }
 
-.modelDescription {
+%secondaryNote {
   margin: 0.2rem 0 0;
   font-size: 0.78rem;
   line-height: 1.55;
   color: var(--muted);
+}
+
+.modelDescription {
+  @extend %secondaryNote;
+}
+
+.fieldNote {
+  @extend %secondaryNote;
+}
+
+.optional {
+  margin-left: 0.4rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: none;
 }
 
 .saveButton {

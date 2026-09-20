@@ -7,7 +7,7 @@ import { VideoId } from "@overview/types";
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL };
+const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 
 test("the side panel's masthead is the mark and Settings, with no + New and no list behind it", async ({
   launcher,

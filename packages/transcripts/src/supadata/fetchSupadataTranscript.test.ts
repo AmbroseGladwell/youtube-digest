@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SupadataError, type GeneralTranscriptParams, type Metadata, type TranscriptOrJobId } from "@supadata/js";
-import { fetchTranscript } from "./fetchTranscript.js";
-import { TranscriptFetchError } from "./TranscriptFetchError.js";
-import type { TranscriptSourceClient } from "./TranscriptSourceClient.js";
+import { fetchSupadataTranscript } from "./fetchSupadataTranscript.js";
+import { TranscriptFetchError } from "../TranscriptFetchError.js";
+import type { SupadataClient } from "./SupadataClient.js";
 
 const metadata: Metadata = {
   platform: "youtube",
@@ -32,7 +32,7 @@ function scriptedClient(options: {
 }) {
   const transcriptCalls: GeneralTranscriptParams[] = [];
   let transcriptCallIndex = 0;
-  const client: TranscriptSourceClient = {
+  const client: SupadataClient = {
     metadata: options.metadata ?? (() => Promise.resolve(metadata)),
     transcript: Object.assign(
       async (params: GeneralTranscriptParams) => {
@@ -49,7 +49,7 @@ function scriptedClient(options: {
 
 test("the happy path: metadata plus a native transcript, no fallback needed", async () => {
   const { client, transcriptCalls } = scriptedClient({ transcript: [() => Promise.resolve(nativeTranscript)] });
-  const result = await fetchTranscript(client, "https://youtube.com/watch?v=abc");
+  const result = await fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc");
   assert.equal(result.generated, false);
   assert.equal(result.video.channel, "A Channel");
   assert.deepEqual(result.transcript, [{ text: "Hello.", startMs: 0, endMs: 1000 }]);
@@ -63,7 +63,7 @@ test("no native captions falls back to the generate (ASR) mode automatically", a
       () => Promise.resolve(nativeTranscript),
     ],
   });
-  const result = await fetchTranscript(client, "https://youtube.com/watch?v=abc");
+  const result = await fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc");
   assert.equal(result.generated, true);
   assert.equal(transcriptCalls[0]?.mode, "native");
   assert.equal(transcriptCalls[1]?.mode, "generate");
@@ -74,7 +74,7 @@ test("the generate fallback can be turned off, surfacing the no-captions error i
     transcript: [() => Promise.reject(new SupadataError({ error: "transcript-unavailable" }))],
   });
   await assert.rejects(
-    () => fetchTranscript(client, "https://youtube.com/watch?v=abc", { allowGeneratedFallback: false }),
+    () => fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc", { allowGeneratedFallback: false }),
     TranscriptFetchError,
   );
 });
@@ -86,7 +86,7 @@ test("a transient error gets exactly one retry before succeeding", async () => {
       () => Promise.resolve(nativeTranscript),
     ],
   });
-  const result = await fetchTranscript(client, "https://youtube.com/watch?v=abc");
+  const result = await fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc");
   assert.equal(result.generated, false);
   assert.equal(transcriptCalls.length, 2);
 });
@@ -95,6 +95,49 @@ test("a non-retryable error (invalid request) fails on the first attempt, not af
   const { client, transcriptCalls } = scriptedClient({
     transcript: [() => Promise.reject(new SupadataError({ error: "invalid-request" }))],
   });
-  await assert.rejects(() => fetchTranscript(client, "https://youtube.com/watch?v=abc"), TranscriptFetchError);
+  await assert.rejects(() => fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc"), TranscriptFetchError);
+  assert.equal(transcriptCalls.length, 1);
+});
+
+// The three below pin bugs that were live before the port. Each one cost money or told
+// a caller something untrue (docs/features/transcript-retrieval.md).
+
+test("a failure in the generate fallback is still a TranscriptFetchError, not a raw provider error", async () => {
+  const { client } = scriptedClient({
+    transcript: [
+      () => Promise.reject(new SupadataError({ error: "transcript-unavailable" })),
+      () => Promise.reject(new SupadataError({ error: "upgrade-required" })),
+    ],
+  });
+  await assert.rejects(
+    () => fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc"),
+    (error: unknown) => {
+      assert.ok(error instanceof TranscriptFetchError);
+      assert.equal(error.failure, "source-unsupported");
+      return true;
+    },
+  );
+});
+
+test("a metadata failure is a TranscriptFetchError too, so callers never see a provider error", async () => {
+  const { client } = scriptedClient({
+    metadata: () => Promise.reject(new SupadataError({ error: "not-found" })),
+    transcript: [],
+  });
+  await assert.rejects(
+    () => fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc"),
+    (error: unknown) => {
+      assert.ok(error instanceof TranscriptFetchError);
+      assert.equal(error.failure, "video-unavailable");
+      return true;
+    },
+  );
+});
+
+test("a rate limit is not retried into a second charge on a non-retryable code", async () => {
+  const { client, transcriptCalls } = scriptedClient({
+    transcript: [() => Promise.reject(new SupadataError({ error: "unauthorized" }))],
+  });
+  await assert.rejects(() => fetchSupadataTranscript(client, "https://youtube.com/watch?v=abc"), TranscriptFetchError);
   assert.equal(transcriptCalls.length, 1);
 });

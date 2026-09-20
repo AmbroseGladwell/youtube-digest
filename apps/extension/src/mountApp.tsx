@@ -8,6 +8,7 @@ import {
   type AppLayout,
   type PlaybackSource,
   type RunBridge,
+  type YouTubeFetch,
 } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
@@ -21,6 +22,7 @@ export interface MountOptions {
   activeVideo?: ActiveVideoSource | null;
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
+  youTubeFetch?: YouTubeFetch | null;
 }
 
 // A hash router, not a browser one: an extension document is a packaged file, so a pushed
@@ -30,6 +32,7 @@ export async function mountApp({
   activeVideo = null,
   playback = null,
   runBridge = null,
+  youTubeFetch = null,
 }: MountOptions = {}): Promise<void> {
   const container = document.getElementById("root");
   if (!container) throw new Error("the extension document is missing its #root element");
@@ -49,6 +52,7 @@ export async function mountApp({
         activeVideo={activeVideo}
         playback={playback}
         runBridge={runBridge}
+        youTubeFetch={youTubeFetch}
       />
     </StrictMode>,
   );

@@ -1,5 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router";
+import type { YouTubeFetch } from "@overview/transcripts";
 import { StoresProvider, type Stores } from "../stores/StoresContext.js";
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
@@ -7,6 +8,7 @@ import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
 import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
 import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
 import { SurfaceProvider, type Surface } from "./SurfaceContext.js";
+import { YouTubeFetchProvider } from "./YouTubeFetchContext.js";
 import type { AppRouter } from "./createAppRouter.js";
 import "../theme/global.scss";
 
@@ -18,6 +20,7 @@ export interface AppProps {
   activeVideo?: ActiveVideoSource | null;
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
+  youTubeFetch?: YouTubeFetch | null;
 }
 
 export function App({
@@ -28,22 +31,25 @@ export function App({
   activeVideo = null,
   playback = null,
   runBridge = null,
+  youTubeFetch = null,
 }: AppProps) {
   return (
-    <ActiveVideoProvider value={activeVideo}>
-      <PlaybackProvider value={playback}>
-        <RunBridgeProvider value={runBridge}>
-          <LayoutProvider value={layout}>
-            <SurfaceProvider value={surface}>
-              <StoresProvider value={stores}>
-                <QueryClientProvider client={queryClient}>
-                  <RouterProvider router={router} />
-                </QueryClientProvider>
-              </StoresProvider>
-            </SurfaceProvider>
-          </LayoutProvider>
-        </RunBridgeProvider>
-      </PlaybackProvider>
-    </ActiveVideoProvider>
+    <YouTubeFetchProvider value={youTubeFetch}>
+      <ActiveVideoProvider value={activeVideo}>
+        <PlaybackProvider value={playback}>
+          <RunBridgeProvider value={runBridge}>
+            <LayoutProvider value={layout}>
+              <SurfaceProvider value={surface}>
+                <StoresProvider value={stores}>
+                  <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                  </QueryClientProvider>
+                </StoresProvider>
+              </SurfaceProvider>
+            </LayoutProvider>
+          </RunBridgeProvider>
+        </PlaybackProvider>
+      </ActiveVideoProvider>
+    </YouTubeFetchProvider>
   );
 }

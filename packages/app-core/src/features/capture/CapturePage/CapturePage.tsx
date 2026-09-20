@@ -3,9 +3,8 @@ import { Link, useNavigate } from "react-router";
 import type { Overview } from "@overview/types";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../app/Routes.js";
-import { hasRequiredApiKeys } from "../../apiKeys/ApiKeys.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
-import { useApiKeys } from "../../apiKeys/useApiKeys.js";
+import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
 import { JUST_GENERATED } from "../../newOverview/justGenerated.js";
 import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
@@ -24,10 +23,10 @@ import { capturePageTestIds } from "./CapturePageTestIds.js";
 export function CapturePage() {
   const navigate = useNavigate();
   const activeVideoUrl = useActiveVideoUrl();
-  const { apiKeys } = useApiKeys();
   const controller = useNewOverviewRunController();
   const overviewsQuery = useOverviewsWithStateQuery();
   const watchedTranscript = useWatchedTranscriptQuery();
+  const keysReady = useGenerationReadiness() === "ready";
 
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
@@ -56,7 +55,6 @@ export function CapturePage() {
     );
   }
 
-  const keysReady = hasRequiredApiKeys(apiKeys);
   const alreadyHeld = overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl);
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 

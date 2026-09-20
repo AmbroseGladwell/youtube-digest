@@ -1,7 +1,7 @@
 {
   "name": "@overview/transcripts",
   "version": "0.0.0",
-  "description": "Real transcript retrieval: Supadata, BYO-key, client-fetched. @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "description": "Real transcript retrieval: the sources a transcript can come from, and the mapping each one needs. @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@overview/types": "*",
+    "zod": "^4.6.5",
     "@supadata/js": "^1.4.0"
   },
   "devDependencies": {

@@ -27,4 +27,7 @@ export interface IwftHooksConfig {
   // Whether this shell has a page with an injected button on it
   // (docs/features/injected-button.md).
   runBridge?: boolean;
+  // Whether this shell can reach YouTube at all. The web app cannot, and that is a
+  // browser rule rather than a setting (docs/features/transcript-retrieval.md).
+  youTubeFetch?: boolean;
 }

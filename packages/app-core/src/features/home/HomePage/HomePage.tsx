@@ -2,9 +2,11 @@ import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
-import { hasRequiredApiKeys } from "../../apiKeys/ApiKeys.js";
-import { BYO_KEY_NOTE_SHORT } from "../../apiKeys/byoKeyNote.js";
-import { useApiKeys } from "../../apiKeys/useApiKeys.js";
+import {
+  settingsLinkLabel,
+  transcriptSourceNote,
+} from "../../transcripts/transcriptSourceNote.js";
+import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
@@ -19,7 +21,7 @@ export function HomePage() {
 
 function LibraryHome() {
   const overviewsQuery = useOverviewsWithStateQuery();
-  const { apiKeys } = useApiKeys();
+  const readiness = useGenerationReadiness();
   const surface = useSurface();
 
   if (overviewsQuery.isPending) {
@@ -64,11 +66,11 @@ function LibraryHome() {
               itself.
             </p>
           )}
-          {!hasRequiredApiKeys(apiKeys) && (
+          {readiness !== "ready" && (
             <p className={styles.heroKeys}>
-              {BYO_KEY_NOTE_SHORT}{" "}
+              {transcriptSourceNote(readiness)}{" "}
               <Link to={Routes.settings()} data-testid={homePageTestIds.settingsLink}>
-                Add your keys in Settings →
+                {settingsLinkLabel(readiness)}
               </Link>
             </p>
           )}
