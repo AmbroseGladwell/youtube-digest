@@ -1,6 +1,6 @@
 import { VideoId } from "@overview/types";
 import { describe, expect, it } from "vitest";
-import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverviewWithState } from "../types/OverviewFactory.testHelper.js";
 import { overviewForVideoUrl } from "./overviewForVideoUrl.js";
 
 const noteOn = (videoId: string | null, savedAt = "2026-09-16T00:00:00.000Z") => {

@@ -56,6 +56,10 @@ export class OverviewButton {
     this.setState(IDLE_BUTTON_STATE);
   }
 
+  get kind(): ButtonState["kind"] {
+    return this.#state.kind;
+  }
+
   setState(state: ButtonState): void {
     this.#state = state;
     this.element.dataset.state = state.kind;

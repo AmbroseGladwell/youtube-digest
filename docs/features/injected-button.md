@@ -71,6 +71,16 @@ is the exact hazard `docs/features/extension-panel.md` added the capture screen'
 "already in your library" for. So the worker answers the button by reading the store as
 well as the last run.
 
+**And pressing ready reads that note rather than writing another.** Painting the state
+was only half of it: the panel asks the same question again before it starts anything,
+because the button is not the only thing that can be out of date — the note may have
+been written since the state was painted, in this window or another. Design 17d calls
+this "Ready · opens popup", and `overviewForVideoUrl` is the one answer both the capture
+screen and this path use. A press on a held video therefore spends nothing at all, which
+`injectedButton.iwft.ts` holds by comparing the spend either side of the press rather
+than expecting zero: the panel's own caption prefetch for the video in front of it is
+not the press's doing (`docs/features/watching-detection.md`).
+
 **Failure is not a state here.** A failed run puts the button back to `Overview`,
 inviting another go; the error itself is in the panel, where there is room to read it.
 Design 17d draws a fifth state for missing keys and 18c does not, so the button does not
@@ -107,9 +117,12 @@ in the handler spends it — so the open is started synchronously and the reques
 written behind it. That inverts the obvious order, and the nudge above is what covers
 the panel mounting before the write lands.
 
-A panel that declines the request reports no run, rather than simply not starting one.
-Nothing else would tell the page: the panel may already have been open, in which case no
-run changed and no report would otherwise be sent, and the button would keep showing the
+A panel that declines the request — because the note is already held, or because there
+are no keys — restates what is true rather than simply not starting anything. Nothing
+else would tell the page: the panel may already have been open, in which case no run
+changed and no report would otherwise be sent, and the button would keep showing the
+press. It restates the *current* run rather than reporting null, because another video's
+run may be going at the time and that button should not lose its state to this one's
 press.
 
 ## What the page gets told, and what it does not

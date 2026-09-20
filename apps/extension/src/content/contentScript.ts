@@ -55,23 +55,34 @@ function press(): void {
     return;
   }
 
-  // Shown at once so the press does not read as a miss, but with no startedAt: nothing
-  // has started yet, and a clock ticking on a press that was declined — no keys, say —
-  // would be timing a run that does not exist. The clock begins when the panel reports
-  // the run's own startedAt (docs/features/injected-button.md).
-  button.setState({ kind: "generating", startedAt: null, progressFraction: 0 });
+  // A ready button is opening the note the library already holds, not starting work, so
+  // it says nothing new. Otherwise the spinner shows at once so the press does not read
+  // as a miss — but with no startedAt, because nothing has started yet and a clock
+  // ticking on a press that was declined would be timing a run that does not exist. The
+  // clock begins when the panel reports the run's own startedAt
+  // (docs/features/injected-button.md).
+  const showedPending = button.kind !== "ready";
+  if (showedPending) {
+    button.setState({ kind: "generating", startedAt: null, progressFraction: 0 });
 
-  const videoId = watchedVideoId;
-  confirmTimer = setTimeout(() => {
-    confirmTimer = null;
-    if (videoId !== null && videoId === watchedVideoId) {
-      void readState(videoId);
-    }
-  }, CONFIRM_WITHIN_MS);
+    const videoId = watchedVideoId;
+    confirmTimer = setTimeout(() => {
+      confirmTimer = null;
+      if (videoId !== null && videoId === watchedVideoId) {
+        void readState(videoId);
+      }
+    }, CONFIRM_WITHIN_MS);
+  }
 
   void chrome.runtime
     .sendMessage({ type: BridgeMessage.REQUEST_OVERVIEW, videoUrl: window.location.href })
-    .catch(() => applyState(IDLE_BUTTON_STATE));
+    // Only what this press put up comes back down. A ready button whose message failed
+    // is still ready — the note is in the library either way.
+    .catch(() => {
+      if (showedPending) {
+        applyState(IDLE_BUTTON_STATE);
+      }
+    });
 }
 
 function reconcile(): void {

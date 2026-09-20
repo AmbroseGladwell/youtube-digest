@@ -14,7 +14,7 @@ import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
 import { formatClock } from "../../../util/formatClock.js";
-import { overviewForVideoUrl } from "../util/overviewForVideoUrl.js";
+import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
 
