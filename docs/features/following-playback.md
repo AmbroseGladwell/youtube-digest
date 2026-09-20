@@ -183,13 +183,19 @@ It sits under the watch-it-anyway paragraph by sitting after the note, which hol
 because that is the last section `overviewNoteLines` builds. A unit test pins that
 ordering rather than leaving the placement to depend on something nothing checks.
 
+The transcript's times are the second place that writes, and the same rules hold: only
+the time is a control, never the paragraph around it, and only where a player is playing
+this video. Clicking one does exactly one thing — it moves the video. Whether the
+transcript then follows is a separate question with its own control, so a time pressed
+while the following is stood down leaves it stood down; `followPlayback.iwft.ts` holds
+that, because quietly re-engaging would yank a reader who was deliberately reading
+ahead.
+
 ## What this does not do
 
-- **Seek the video from a transcript block.** Still parked, and still parked as one
-  question with jumping to YouTube and moving the read-along, exactly as
-  `docs/features/transcript-storage.md` left it. A block is a paragraph you read, not a
-  control, and settling what clicking one does is a separate decision from the one
-  below.
+- **Open YouTube in a new tab from a block.** The transcript's times move the video that
+  is already there instead. These rows were links to `youtubeTimestampUrl` for one commit
+  and that is what `docs/features/transcript-storage.md` reverted.
 - **Work on a YouTube tab that is not the active one.** The panel belongs to a window and
   follows that window's front tab, which is the same rule `chromeActiveVideoSource`
   already follows.

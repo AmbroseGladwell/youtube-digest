@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { VideoSource } from "@overview/types";
+import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockParts } from "../../../transcripts/util/blockParts.js";
 import { transcriptBlocks } from "../../../transcripts/util/transcriptBlocks.js";
@@ -32,6 +33,7 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
 
   const search = useTranscriptSearch(blocks);
   const follow = useFollowPlayback(video.id, blocks);
+  const seek = useSeekPlayback(video.id);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
         </p>
       )}
 
-      {unreadable ?? <TranscriptRows blocks={blocks} search={search} follow={follow} />}
+      {unreadable ?? <TranscriptRows blocks={blocks} search={search} follow={follow} seek={seek} />}
 
       {follow.offered && (
         <button
@@ -182,9 +184,10 @@ interface TranscriptRowsProps {
   blocks: TranscriptBlock[];
   search: TranscriptSearch;
   follow: FollowPlayback;
+  seek: ((positionMs: number) => void) | null;
 }
 
-function TranscriptRows({ blocks, search, follow }: TranscriptRowsProps) {
+function TranscriptRows({ blocks, search, follow, seek }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -203,9 +206,21 @@ function TranscriptRows({ blocks, search, follow }: TranscriptRowsProps) {
             data-current={current}
             data-testid={transcriptPanelTestIds.row}
           >
-            <span className={styles.time} data-testid={transcriptPanelTestIds.rowTime}>
-              {formatTimestamp(block.startMs)}
-            </span>
+            {seek === null ? (
+              <span className={styles.time} data-testid={transcriptPanelTestIds.rowTime}>
+                {formatTimestamp(block.startMs)}
+              </span>
+            ) : (
+              <button
+                type="button"
+                className={`${styles.time} ${styles.timeSeek}`}
+                onClick={() => seek(block.startMs)}
+                aria-label={`Play the video from ${formatTimestamp(block.startMs)}`}
+                data-testid={transcriptPanelTestIds.rowTime}
+              >
+                {formatTimestamp(block.startMs)}
+              </button>
+            )}
             <span className={styles.text}>
               {block.speakerChange && (
                 <span

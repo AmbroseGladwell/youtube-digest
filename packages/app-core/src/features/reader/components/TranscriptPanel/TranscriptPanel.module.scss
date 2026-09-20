@@ -199,6 +199,21 @@
   color: var(--faint);
 }
 
+// Only the time becomes a control, never the paragraph. A block stays something you
+// read — and a whole row that seeks would swallow the click that selects its words, and
+// would have to be a button wrapping a paragraph to be reachable by keyboard at all
+// (docs/features/transcript-storage.md).
+.timeSeek {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+
+  @include controls.quiet-control;
+}
+
 .text {
   font-size: 0.94rem;
   line-height: 1.6;

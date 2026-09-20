@@ -1,6 +1,6 @@
 import type { TranscriptSegment } from "@overview/types";
 import { VideoId } from "@overview/types";
-import { test } from "../../support/fixtures.testHelper.js";
+import { test, expect } from "../../support/fixtures.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -105,6 +105,59 @@ test("the web app, which cannot see a player, offers none of the following", asy
   await reader.verifyIsFollowingTheVideo(false);
   await reader.verifyOffersToFollowPlayback(false);
   await reader.verifyNoTranscriptBlockIsCurrent();
+});
+
+// transcript-storage.md parked what a block does when you click it until there was one
+// answer for all of it. Seeking is that answer, and only the time takes the click.
+test("the time against a block sends the video to it", async ({ launcher, backendSimulator }) => {
+  seedTranscript(backendSimulator);
+  const capture = await launcher.launchPanel({
+    apiKeys: API_KEYS,
+    activeVideoUrl: VIDEO_URL,
+    playback: playingAt(5000),
+  });
+  const reader = await capture.openStoredOverview();
+  await reader.clickTab("Transcript");
+
+  await reader.clickTranscriptTime("1:05");
+
+  await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([65_000]);
+});
+
+test("the web app, with no player to send anywhere, prints the times as plain text", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedTranscript(backendSimulator);
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyTranscriptBlockTimesRead(["0:00", "1:05", "1:01:01"]);
+  await reader.verifyTranscriptTimesSeek(false);
+});
+
+// Clicking a time does one thing. Whether the transcript is following is a separate
+// question, answered by the control that exists for it.
+test("sending the video somewhere does not quietly re-engage the following", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedTranscript(backendSimulator);
+  const capture = await launcher.launchPanel({
+    apiKeys: API_KEYS,
+    activeVideoUrl: VIDEO_URL,
+    playback: playingAt(5000),
+  });
+  const reader = await capture.openStoredOverview();
+  await reader.clickTab("Transcript");
+  await reader.searchTheTranscript("argument");
+  await reader.verifyIsFollowingTheVideo(false);
+
+  await reader.clickTranscriptTime("1:05");
+
+  await reader.verifyIsFollowingTheVideo(false);
+  await reader.verifyOffersToFollowPlayback(true);
 });
 
 test("searching stands the following down and offers it back, rather than fighting it for the scroll", async ({

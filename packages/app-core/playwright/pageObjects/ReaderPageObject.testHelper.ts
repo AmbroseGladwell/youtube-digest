@@ -212,6 +212,21 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(transcriptPanelTestIds.rowTime)).toHaveText(times),
     );
 
+  clickTranscriptTime = (time: string) =>
+    this.step(`clickTranscriptTime ${time}`, () =>
+      this.get(transcriptPanelTestIds.rowTime)
+        .filter({ hasText: new RegExp(`^${time}$`) })
+        .click(),
+    );
+
+  verifyTranscriptTimesSeek = (seekable: boolean) =>
+    this.step(`verifyTranscriptTimesSeek ${seekable}`, async () => {
+      const seekControls = this.page.getByRole("button", { name: /^Play the video from/ });
+      await (seekable
+        ? expect(seekControls.first()).toBeVisible()
+        : expect(seekControls).toHaveCount(0));
+    });
+
   verifyTranscriptBlockCountIs = (count: number) =>
     this.step(`verifyTranscriptBlockCountIs ${count}`, () =>
       this.expectToHaveCount(transcriptPanelTestIds.row, count),

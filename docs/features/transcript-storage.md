@@ -174,9 +174,15 @@ every number there is Supadata's own caption offset — the rule in
 `formatTimeRange` (the "Jump to 3:20–5:10" pointer in the reader's rail) is built from the
 same function so the two can't drift apart.
 
-The time is printed, not linked: a block is a paragraph you read, not a control. Jumping to
-a moment from the transcript is a real thing to want and is deliberately parked rather than
-half-built — see below.
+A block is a paragraph you read, not a control — still true now that the time beside it
+sends the video there, because only the **time** takes the click and never the paragraph.
+The reference extension shows both sides of why: a whole row that seeks swallows the click
+that selects its words, which it has to guard with a text-selection check, and a row made
+clickable by a listener on a `div` cannot be reached by keyboard at all. A timestamp that
+is a button is reachable, is labelled, and breaks no selection.
+
+Where there is no player to move, the time is printed exactly as it was. See
+`docs/features/following-playback.md` for what draws that line.
 
 The cost of that choice: when one caption contains a whole short block, the next block
 starts inside the same caption and the two print the same second. That is true rather than
@@ -219,10 +225,11 @@ states carry no tools.
 
 - **Chapters.** Still placeholder, and still blocked on generation work rather than on
   data: titling each stretch of a video is a new prompt section, not a UI change.
-- **Jumping to the video from a block.** The rows were links to `youtubeTimestampUrl` for
-  one commit and are plain text again: leaving the whole question of what a block does when
-  you click it — open YouTube, move the read-along, follow playback — to be settled at once
-  rather than piecemeal. Nothing about the data is missing for it; `startMs` is right there.
+- ~~**Jumping to the video from a block.**~~ Settled, once there was one answer for all of
+  it: the time seeks the video already playing beside the panel. Opening YouTube in a new
+  tab — what these rows linked to for one commit — is the half this was waiting to avoid,
+  and moving the read-along stays a separate clock
+  (`docs/features/following-playback.md`).
 - ~~**Following playback.**~~ Built — see `docs/features/following-playback.md`. The
   transcript moves with the *video*, off the player's own `currentTime`, in the side
   panel only. The read-along still paces the note rather than the video, and the two are
