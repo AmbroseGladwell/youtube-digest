@@ -50,6 +50,11 @@ meaning what it says and the oddity goes away on its own. If that wait turns out
 long, the cheaper fix is to sell audio only and leave the reading mark free everywhere,
 which is one condition in `ReaderPage`.
 
+The prompt takes the foot of the window rather than the end of the note, on the same
+sticky hold the player bar uses. A case for Plus that has to be scrolled to is a case
+nobody reads, and the press that summons it is at the top of the panel — so it arrives
+where the eye already is.
+
 Docking is its own state rather than a read of whether the reading mark is moving.
 Pausing from the bar is the only way a Plus listener can pause, so a bar that vanished on
 pause would take away the control that had just been used; `Listening` is what puts it

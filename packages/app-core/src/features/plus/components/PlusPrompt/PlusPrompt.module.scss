@@ -4,6 +4,11 @@
 // panel under the same 2px rule the masthead uses, on an accent wash rather than a
 // coloured fill (docs/features/plus-upsell.md).
 .root {
+  // The same hold the player bar takes, for the same reason: a case made for Plus at
+  // the end of the note is a case nobody scrolls to (docs/features/plus-upsell.md).
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   border-top: 2px solid var(--ink);
   background: color-mix(in srgb, var(--accent) 8%, var(--ground));
   padding: 0.875rem 1.125rem 1rem;

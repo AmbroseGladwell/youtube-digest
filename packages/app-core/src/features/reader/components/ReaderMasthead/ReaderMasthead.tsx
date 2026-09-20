@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { Link } from "react-router";
 import type { Overview } from "@overview/types";
 import { Routes } from "../../../../app/Routes.js";
@@ -29,6 +30,7 @@ export interface ReaderMastheadProps {
   onTogglePlaying: () => void;
   onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
+  ref?: Ref<HTMLElement> | undefined;
 }
 
 // Boolean(...), not !== null: an overview saved before publishedAt existed has no such
@@ -51,11 +53,16 @@ export function ReaderMasthead({
   onTogglePlaying,
   onListen,
   onEditingTopicsChange,
+  ref,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
 
   return (
-    <header className={styles.root} data-testid={readerMastheadTestIds.root}>
+    <header
+      className={`${styles.root} ${compact ? styles.rootSticky : ""}`}
+      ref={ref}
+      data-testid={readerMastheadTestIds.root}
+    >
       {!compact && (
         <nav className={styles.topBar} aria-label="Overview navigation">
           <Link

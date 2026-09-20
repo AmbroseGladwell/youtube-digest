@@ -418,6 +418,34 @@ export class ReaderPageObject extends PageObject {
       await this.page.waitForTimeout(300);
     });
 
+  // The panel's whole sticky stack, in the order it has to rest in: the app's bar, the
+  // note's own head, the tabs, and — on the transcript — its tools.
+  verifyPanelChromeStacks = (withTranscriptTools: boolean) =>
+    this.step(`verifyPanelChromeStacks ${withTranscriptTools}`, () =>
+      expect(async () => {
+        const appBar = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
+        const head = (await this.get(readerMastheadTestIds.root).boundingBox())!;
+        const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
+
+        expect(Math.round(head.y)).toBe(Math.round(appBar.y + appBar.height));
+        expect(Math.round(tabs.y)).toBe(Math.round(head.y + head.height));
+
+        if (withTranscriptTools) {
+          const tools = (await this.get(transcriptPanelTestIds.tools).boundingBox())!;
+          expect(Math.round(tools.y)).toBeGreaterThanOrEqual(Math.round(tabs.y + tabs.height));
+        }
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyPlusPromptHoldsTheWindowFoot = () =>
+    this.step("verifyPlusPromptHoldsTheWindowFoot", () =>
+      expect(async () => {
+        const prompt = (await this.get(plusPromptTestIds.root).boundingBox())!;
+        const viewport = this.page.viewportSize()!;
+        expect(Math.round(prompt.y + prompt.height)).toBe(viewport.height);
+      }).toPass({ timeout: 2_000 }),
+    );
+
   verifyTabsRestOnTheMasthead = () =>
     this.step("verifyTabsRestOnTheMasthead", () =>
       expect(async () => {

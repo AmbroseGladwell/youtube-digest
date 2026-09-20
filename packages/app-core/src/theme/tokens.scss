@@ -72,6 +72,9 @@
 
   --measure: 46rem;
   --masthead-height: 3.5rem;
+  // Zero unless a layout sticks the reader's own masthead under the app's, which only
+  // the side panel does (docs/features/extension-panel.md).
+  --reader-masthead-height: 0px;
   --reader-tabs-height: 2.25rem;
   --gap-control: 0.625rem;
   --gap-group: 1rem;

@@ -5,6 +5,16 @@
   flex-direction: column;
 }
 
+// Design 15c's head is the title, the topics, the meta line and Listen — small enough
+// to hold the top of a 400px panel while the note scrolls under it, which the wide
+// reader's masthead is not (docs/features/extension-panel.md).
+.rootSticky {
+  position: sticky;
+  top: var(--masthead-height);
+  z-index: 2;
+  background: var(--ground);
+}
+
 .topBar {
   display: flex;
   align-items: center;

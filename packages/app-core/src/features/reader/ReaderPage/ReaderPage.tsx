@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { OverviewId } from "@overview/types";
 import { useIsPanel } from "../../../app/LayoutContext.js";
@@ -33,6 +33,7 @@ import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
+const READER_MASTHEAD_HEIGHT_PROPERTY = "--reader-masthead-height";
 
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
@@ -55,7 +56,20 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const [editingTopics, setEditingTopics] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
+  const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
+    READER_MASTHEAD_HEIGHT_PROPERTY,
+  );
   const isPanel = useIsPanel();
+
+  // Two measurements, one element to publish them on. The setters are stable, so this
+  // is too — a fresh arrow would tear both observers down on every render.
+  const publishHeightsOn = useCallback(
+    (element: HTMLElement | null) => {
+      tabsHeight.host(element);
+      readerMastheadHeight.host(element);
+    },
+    [tabsHeight.host, readerMastheadHeight.host],
+  );
   const { isPlus } = usePlan();
   const [plusPromptOpen, setPlusPromptOpen] = useState(false);
   const [playerDocked, setPlayerDocked] = useState(false);
@@ -124,7 +138,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   return (
     <article
       className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
-      ref={tabsHeight.host}
+      ref={publishHeightsOn}
       data-testid={readerPageTestIds.root}
     >
       <ReaderMasthead
@@ -137,6 +151,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         editingTopics={editingTopics}
         compact={isPanel}
         listening={playerDocked}
+        // Measured only where it sticks: published on the wide reader it would push the
+        // tab strip down by the height of a masthead that scrolls away.
+        ref={isPanel ? readerMastheadHeight.measured : undefined}
         onToggleRead={() => setOverviewState.mutate({ overviewId, patch: { read: !state.read } })}
         onTogglePlaying={readAlong.togglePlaying}
         onListen={listen}

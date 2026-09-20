@@ -59,6 +59,25 @@ the wide one with everything it has nothing to point at removed: no breadcrumb, 
 `↑ Previous` / `Next ↓`, no thumbnail, no rail. What is left is title, channel, topics,
 the meta line, `Listen`, `⋯`, the three tabs and the tags at the foot.
 
+**And in the panel that head holds still.** The wide reader sticks its app bar and its
+tab strip and lets the note's own masthead scroll away, which is right there — it
+carries a thumbnail, a trail and a stepper, and holding it would cost the note most of
+the window. Pared back to 15c it is four short lines, and at 400px the question of which
+video you are reading is worth never having to scroll back for. So in the panel the
+stack is the app's bar, the note's head, the tabs, and — on the Transcript tab — its
+tools, which keeps search, copy and export reachable part-way down a long transcript.
+
+None of that is a second set of offsets. `--reader-masthead-height` is `0px` in the
+tokens and published only by a layout that sticks the masthead, so the one formula each
+of the tab strip and the transcript's tools already had gains a term that is zero
+everywhere else. `readAlong.iwft.ts` is what holds the wide reader to the old
+arrangement, and would fail if this leaked into it.
+
+Chapters is the one tab where none of this can be observed: it is still a placeholder
+with nothing to scroll. The masthead and the tabs render outside the tab panel, so it is
+the same chrome by construction rather than by assertion — `panelChrome.iwft.ts` covers
+the mechanism on the two tabs that can actually move.
+
 There is no fourth screen, and in particular there is no list. The way back out of the
 reader is the mark in the masthead, which is a link home in every layout already.
 
