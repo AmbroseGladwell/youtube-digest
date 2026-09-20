@@ -407,8 +407,8 @@ sample is evidence the need shows up today, in the only real Yes in the set, not
 
 **Decided: add `partial` now.** `answer: yes | no | partial`, with an optional
 `range: {start_ms, end_ms}` when partial. This is affordable specifically because
-transcript source is pinned to Supadata (`docs/architecture/v1-architecture-decisions.md`), whose
-native mode carries YouTube's own per-segment start/duration timing — the model reads
+every transcript source carries YouTube's own per-segment start/duration timing
+(`docs/features/transcript-retrieval.md`) — the model reads
 an offset already present in its input rather than measuring or estimating one
 itself, so this doesn't trip the `docs/prototype/constraints.md` rule against a model
 counting/timing something. Reason text still does the descriptive work ("the
@@ -428,7 +428,7 @@ approximately. That's not the model skipping the instruction; `docs/prototype/op
 #3 already established the prototype's transcript source exposed no duration at all,
 so there was never a real number to report, and `docs/prototype/constraints.md`'s rule against
 fabricating a measurement means the model correctly never guessed one instead. This is
-the third thing the Supadata pin fixes for free, alongside video runtime and
+the third thing real caption timing fixes for free, alongside video runtime and
 Watch-it-anyway's range: once real segment timing exists, this clause finally has
 something to point at.
 

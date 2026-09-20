@@ -36,6 +36,9 @@ Five folders, five different questions.
   and why Settings has no upgrade button.
 - `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the
   single overview's topic editor.
+- `transcript-retrieval.md` — why retrieval is a ladder of sources rather than a provider,
+  what each rung costs, how a failure decides whether the next one is worth asking, and
+  what `generated` actually means.
 - `transcript-storage.md` — why a transcript is keyed by video rather than by note, how its
   captions are merged into readable blocks, and what the reader's tab does with the timings.
 - `tts-pre-rendered-speech.md` — a designed and measured feature that was not built.

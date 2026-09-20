@@ -7,7 +7,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, runBridge: true };
+const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, runBridge: true, youTubeFetch: true };
 
 test("pressing the button on the page starts the run, rather than only opening the panel", async ({
   launcher,
@@ -55,7 +55,7 @@ test("without keys the press goes to Settings rather than starting a run that ca
 
   await launcher.settingsPage.verifyIsShown();
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(0);
 
   // The page has to be told, or the button it drew on the press keeps claiming a run
   // that was never started.
@@ -84,14 +84,14 @@ test("pressing it on a video already in the library opens that note and buys not
   // video in front of it on its own (docs/features/watching-detection.md), and a
   // baseline read while that is still in flight counts the prefetch as the press's
   // spend. What the press must add is nothing.
-  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 
   await launcher.pressInjectedButton(WATCHED_URL);
 
   const reader = await capture.waitForReader();
   await reader.verifyTitle("Held already");
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });
 
 test("the web app, which has no page to be pressed from, reports nothing to anyone", async ({

@@ -1,5 +1,5 @@
 import { Supadata } from "@supadata/js";
-import { fetchTranscript } from "@overview/transcripts";
+import { fetchSupadataTranscript } from "@overview/transcripts";
 
 const url = process.argv[2];
 if (!url) {
@@ -9,7 +9,7 @@ if (!url) {
 
 const client = new Supadata({ apiKey: process.env.SUPADATA_API_KEY! });
 
-const result = await fetchTranscript(client, url);
+const result = await fetchSupadataTranscript(client, url);
 
 console.log(
   JSON.stringify(

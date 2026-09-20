@@ -7,9 +7,9 @@ import {
   type VideoSource,
 } from "@overview/types";
 import { generateOverview, type GenerationClient } from "@overview/generation";
-import type { TranscriptSourceClient } from "@overview/transcripts";
 import { countWords } from "../../../util/countWords.js";
 import { resolveVideo } from "../../transcripts/api/resolveVideo.js";
+import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 
 // What the run has produced so far, so the progress list can report a receipt rather than
@@ -20,7 +20,7 @@ export interface GenerationProgress {
 }
 
 export interface GenerationPipelineDeps {
-  transcriptClient: TranscriptSourceClient;
+  sources: TranscriptSource[];
   generationClient: GenerationClient;
   overviewStore: OverviewStore;
   transcriptStore: TranscriptStore;

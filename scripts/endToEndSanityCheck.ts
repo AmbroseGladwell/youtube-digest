@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Supadata } from "@supadata/js";
 import Anthropic from "@anthropic-ai/sdk";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
-import { fetchTranscript } from "@overview/transcripts";
+import { fetchSupadataTranscript } from "@overview/transcripts";
 import { generateOverview, createAnthropicGenerationClient } from "@overview/generation";
 
 const url = process.argv[2];
@@ -12,7 +12,7 @@ if (!url) {
 }
 
 const supadata = new Supadata({ apiKey: process.env.SUPADATA_API_KEY! });
-const fetched = await fetchTranscript(supadata, url);
+const fetched = await fetchSupadataTranscript(supadata, url);
 console.error(
   `fetched ${fetched.transcript.length} segments (${fetched.generated ? "ASR-generated" : "native captions"}) ` +
     `for "${fetched.video.title}"`,

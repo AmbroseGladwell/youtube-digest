@@ -4,8 +4,7 @@ import { useNavigate } from "react-router";
 import { useRunBridge } from "../../app/RunBridgeContext.js";
 import { Routes } from "../../app/Routes.js";
 import { useStores } from "../../stores/StoresContext.js";
-import { hasRequiredApiKeys } from "../apiKeys/ApiKeys.js";
-import { useApiKeys } from "../apiKeys/useApiKeys.js";
+import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { overviewsWithStateQueryOptions } from "../overviews/queries/overviewsWithStateQuery.js";
 import { overviewForVideoUrl } from "../overviews/util/overviewForVideoUrl.js";
 import type { NewOverviewRunController } from "./useNewOverviewRun.js";
@@ -22,7 +21,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { overviewStore } = useStores();
-  const { apiKeys } = useApiKeys();
+  const readiness = useGenerationReadiness();
   const { run, start } = controller;
 
   useEffect(() => {
@@ -57,7 +56,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         return;
       }
 
-      if (!hasRequiredApiKeys(apiKeys)) {
+      if (readiness !== "ready") {
         restateCurrentRun();
         void navigate(Routes.settings());
         return;
@@ -78,5 +77,5 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
 
     take();
     return bridge.subscribe(take);
-  }, [bridge, apiKeys, navigate, start, queryClient, overviewStore]);
+  }, [bridge, readiness, navigate, start, queryClient, overviewStore]);
 }

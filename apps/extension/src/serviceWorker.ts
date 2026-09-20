@@ -9,10 +9,17 @@ import {
   type ButtonState,
 } from "./overviewBridge.js";
 import { overviewButtonState } from "./overviewButtonState.js";
+import { fetchYouTubeInWorker } from "./fetchYouTubeInWorker.js";
+import { isYouTubeFetchMessage } from "./youTubeFetchBridge.js";
+import { installYouTubeOriginRule } from "./youTubeOriginRule.js";
 
 // Top level, not onInstalled: this re-runs on every worker start, so the toolbar icon keeps
 // opening the panel even if the flag doesn't survive a profile restart or an update.
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
+// Same reasoning as above: top level, so a rule lost to a profile restart or an update
+// comes back rather than the caption fetch silently 403ing.
+void installYouTubeOriginRule();
 
 // A worker is killed between messages, so anything that has to outlive one goes to
 // session storage rather than a module variable — the request in particular is written
@@ -104,6 +111,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       await broadcast(report);
       sendResponse({ received: true });
     })();
+    return true;
+  }
+
+  if (isYouTubeFetchMessage(message)) {
+    void fetchYouTubeInWorker(message.request).then(
+      (response) => sendResponse({ ok: true, response }),
+      (error: unknown) =>
+        sendResponse({ ok: false, message: error instanceof Error ? error.message : "the fetch failed" }),
+    );
     return true;
   }
 

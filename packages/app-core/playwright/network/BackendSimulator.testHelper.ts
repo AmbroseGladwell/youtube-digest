@@ -14,6 +14,11 @@ import {
   makeGeneratedOutputFixture,
 } from "./fixtures/anthropicFixtures.js";
 import { makeMetadataFixture, makeTranscriptFixture } from "./fixtures/supadataFixtures.js";
+import {
+  makeJson3Fixture,
+  makeMicroformatFixture,
+  makePlayerResponseFixture,
+} from "./fixtures/innerTubeFixtures.js";
 import type {} from "./iwftWindow.testHelper.js";
 
 export class BackendSimulator {
@@ -77,6 +82,34 @@ export class BackendSimulator {
   });
 
   handleNetworking = async (): Promise<void> => {
+    // The WEB client is asked only for a publish date and carries no caption tracks, so it
+    // is not the call worth counting (docs/features/transcript-retrieval.md).
+    await this.#page.route("**/www.youtube.com/youtubei/v1/player**", (route) => {
+      const isMetadataClient =
+        route.request().headers()["x-youtube-client-name"]?.toUpperCase() === "WEB";
+      if (isMetadataClient) {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(makeMicroformatFixture()),
+        });
+      }
+      return this.#respond(route, EndpointKey.INNERTUBE_PLAYER, {
+        onDefault: () => ({ status: 200, body: makePlayerResponseFixture() }),
+        // A source failure rather than a dead video: ERROR would be a fact about the
+        // video and would stop the ladder instead of falling to the next rung.
+        onError: () => ({ status: 500, body: { error: "Simulated player failure" } }),
+      });
+    });
+
+    await this.#page.route("**/www.youtube.com/api/timedtext**", (route) =>
+      this.#respond(route, EndpointKey.YOUTUBE_TIMEDTEXT, {
+        onDefault: () => ({ status: 200, body: makeJson3Fixture() }),
+        // An empty track is a gated one, not a video without captions.
+        onError: () => ({ status: 200, body: { events: [] } }),
+      }),
+    );
+
     await this.#page.route("**/api.supadata.ai/v1/metadata**", (route) =>
       this.#respond(route, EndpointKey.SUPADATA_METADATA, {
         onDefault: () => ({ status: 200, body: makeMetadataFixture() }),

@@ -7,7 +7,7 @@ import { VideoId } from "@overview/types";
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
-const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL };
+const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 
 test("the side panel's masthead is the mark and Settings, with no + New and no list behind it", async ({
   launcher,
@@ -148,4 +148,30 @@ test("the panel's reader drops the trail, the stepper and the rail it has nothin
 
   const reader = await capture.openStoredOverview();
   await reader.verifyMastheadIsPanelSized();
+});
+
+// The panel is a browser that fetches its own captions, so a transcript key is not one of
+// the things it is waiting for (docs/features/transcript-retrieval.md).
+test("the panel creates with the Anthropic key alone, and asks for no transcript key", async ({
+  launcher,
+}) => {
+  const capture = await launcher.launchPanel({
+    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: null },
+    activeVideoUrl: WATCHED_URL,
+    youTubeFetch: true,
+  });
+
+  await capture.verifyAsksForKeys(false);
+  await capture.verifyOffersToCreate(true);
+});
+
+test("the panel still asks when it is the Anthropic key that is missing", async ({ launcher }) => {
+  const capture = await launcher.launchPanel({
+    apiKeys: { anthropicApiKey: null, supadataApiKey: "sd-test" },
+    activeVideoUrl: WATCHED_URL,
+    youTubeFetch: true,
+  });
+
+  await capture.verifyAsksForKeys(true);
+  await capture.verifyOffersToCreate(false);
 });

@@ -73,15 +73,15 @@ scar that proves it: its Digest button "used to force-clear the cache on every c
 silently burned a transcript credit + analysis tokens per click". So the same order holds
 here — `resolveVideo` asks the store before it asks the network, and it asks using the id
 parsed straight out of the URL, so a video already held costs no call at all. That parsed
-id is only ever used to ask a question: a parse that disagreed with Supadata's own id would
-cost one metadata call and then resolve by the real id. It can never file captions under an
+id is only ever used to ask a question: a parse that disagreed with the platform's own id
+would cost one look-up and then resolve by the real id. It can never file captions under an
 invented one.
 
 ## Both halves of the purchase are cached, in one record
 
-Supadata sells two things per video — the metadata and the captions — and the panel would
-otherwise buy the metadata twice: once to notice the video, once more when the note is
-generated. So `StoredTranscript` carries the `VideoSource` the captions were fetched with,
+A video has two halves worth holding — the metadata and the captions — and a paid rung bills
+them separately, so the panel would otherwise buy the metadata twice: once to notice the
+video, once more when the note is generated. So `StoredTranscript` carries the `VideoSource` the captions were fetched with,
 in the same IndexedDB record, under the same `videoId` key.
 
 One record rather than a second object store, because there is no case where you want one

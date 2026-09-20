@@ -48,6 +48,13 @@ inert in any browser without the extension installed, which is a worse story tha
 the user plainly that these are two libraries until an account syncs them. Both surfaces
 say so on screen — the Settings page and the empty-library hero.
 
+What is rejected there is the bridge as *the mechanism for merging the libraries*, and
+that still stands. It is not a ban on the API: `docs/features/transcript-retrieval.md`
+plans to use `externally_connectable` to let the web app borrow the extension's YouTube
+access as **one rung of four**, where a missing extension costs money rather than
+function and nothing goes inert. Different use, different verdict — noted here because
+the next reader will otherwise find this paragraph and think it was overruled quietly.
+
 **Generation stays BYO-key at every tier, for now.** We never hold an LLM provider
 key or run generation ourselves, at either tier. This is an explicit, revisitable
 choice, not a permanent stance — but it means the users×videos cost tension
@@ -80,6 +87,39 @@ fix: existing prototype notes have no such timing and can't get it without a
 Supadata re-fetch of their source video, per the same doc's own note that "existing
 notes cannot be backfilled without re-fetching every transcript."
 
+**Amended on 2026-09-20: the part that changed is "via Supadata".** This paragraph was
+written when there was one client, so "client-fetched" meant the same thing in both of
+them. It does not. The extension holds `host_permissions` on `youtube.com`, which is a
+standing exemption from the same-origin policy; the web app holds nothing of the kind and
+cannot read YouTube at all — `youtubei/v1/player`, `timedtext` and `/oembed` all answer a
+cross-origin request from an arbitrary page with no `Access-Control-Allow-Origin` header.
+That was checked, not assumed, and it is the constraint the replacement hangs off.
+
+So retrieval is now a **ladder** — the shared cache, then the user's own extension, then a
+BYO Supadata key, then a server — with the extension fetching YouTube's caption track
+itself and Supadata kept as an opt-in rung rather than as the source. The reasoning is in
+`docs/features/transcript-retrieval.md`.
+
+What this paragraph got right is why the ladder can exist at all, and none of it is
+withdrawn: it was Supadata's native mode that proved a flat-rate transcript carrying
+YouTube's own per-segment timing was obtainable, and that timing is the same timing
+whichever rung supplies it. `docs/prototype/open-questions.md` #3 stays resolved.
+
+**One claim here was wrong, and it is the kind this project cares most about.** This
+section says Supadata's native timing makes runtime "the actual video duration, not a
+word-count estimate". Measured against the video in `mapMetadataToVideoSource.test.ts`,
+Supadata's `duration` of 2127.2s is *exactly* where that video's last caption cue ends —
+while YouTube's own `lengthSeconds` is 2132. Supadata derives duration from the caption
+track. It is not the video's length, and it errs in both directions: measured gaps across
+five real videos ran from 13.8s short to 1.5s long. A caption-derived figure presented as
+runtime is precisely what `docs/prototype/constraints.md` exists to forbid, so the move off
+Supadata does not only make retrieval free, it **corrects a measurement**.
+
+The server-side deferral below still stands, and nothing built since is server-side. What
+changed is why it is deferred: the extension removed the urgency for its own users, and
+the web app — which cannot fetch at all — is now the named reason a server will eventually
+be needed, rather than cost.
+
 It also changes what a partial "Watch it anyway?" can carry — see
 `docs/features/overview-generation-decisions.md`'s Watch-it-anyway section — from a purely
 qualitative pointer ("the fractal-folding section") to an actual `{start_ms, end_ms}`
@@ -99,7 +139,7 @@ per-video-type content templates (recipe steps, process instructions, a
 subjectivity/bullshit rating for commentary); suggested timestamp ranges for a
 partial "watch it anyway" — deferred as a UX decision (see
 `docs/features/overview-generation-decisions.md`), not because the timing data is unavailable,
-now that transcript source is pinned to Supadata; ads on any surface.
+now that the transcript source carries YouTube's own per-segment timing; ads on any surface.
 
 ## Answers to architecture-options.md §11
 
@@ -108,7 +148,7 @@ now that transcript source is pinned to Supadata; ads on any surface.
 | 1 | Confirm v1 = Model D | Yes, in the free/paid split described above — Model D's server shape is what the paid tier is. |
 | 2 | Keys per-device or synced | Per-device. Generate on the device with a key, listen anywhere. We never hold a provider secret. |
 | 3 | Store audio server-side or regenerate | Store it, keyed by a hash of the spoken script — Kokoro now runs server-side (see below), so regenerating per-play would mean re-running CPU synthesis on every listen for content that never changes. |
-| 4 | Transcript source | Supadata, BYO-key, client-fetched, contributed to the shared cache (see above). |
+| 4 | Transcript source | A ladder — the shared cache, then the user's own extension, then a BYO Supadata key, then a server. Still client-fetched and contributed to the shared cache. Amended 2026-09-20, see `docs/features/transcript-retrieval.md`. |
 | 5 | TTS provider | Self-hosted Kokoro, per `docs/features/tts-pre-rendered-speech.md` — see Technology stack. |
 | 6 | Headless queue draining | Not required for v1. The capture queue drains next time a keyed device opens; no background worker needed. |
 | 7 | Browser support | Chrome/Edge only for v1. |

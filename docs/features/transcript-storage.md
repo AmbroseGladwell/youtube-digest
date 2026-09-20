@@ -31,7 +31,7 @@ record".
 
 ## Where the video id comes from
 
-`VideoSource` gained an `id`, taken straight from Supadata's `Metadata.id` — the
+`VideoSource` gained an `id`, taken straight from whichever rung answered — the
 platform's own id for the video, not something derived by parsing the URL. Two URLs for
 the same video (`youtu.be/X`, `watch?v=X&t=30`) would otherwise key two copies of the same
 captions, and the stored `url` is whatever the reader happened to paste.
@@ -50,19 +50,15 @@ behind. That ordering only saves money if something reads them back, and origina
 did — the pipeline wrote the store and never queried it, so a retry, and a second note on
 the same video, each bought the same captions again.
 
-The obstacle was that the video id arrives from Supadata's metadata call while the credit is
-spent by the separate transcript call, and `fetchTranscript` did both in one step with no gap
-between them to ask a question in. So it is now three pieces rather than one:
-`fetchVideoSource` (metadata, no credit for captions), `fetchTranscriptContent` (the call
-that spends one), and `fetchTranscript` composing the two for callers that hold no store —
-`scripts/endToEndSanityCheck.ts` is the one that does.
-
-`runOverviewGeneration` uses the two halves directly, and asks `transcriptStore` between
-them. Metadata is still resolved on every run: the overview needs the title, channel,
+The obstacle was that the video id arrives from a metadata call while the credit is spent by
+a separate transcript call, with no gap between them to ask a question in. That split is now
+internal to the rung that needs it: a source billing the two halves separately probes the
+store between them, and one returning both in a single free call has no such gap to fake
+(`docs/features/transcript-retrieval.md`). Metadata is still resolved on every run: the overview needs the title, channel,
 duration and thumbnail, and `StoredTranscript` holds none of those — it is captions keyed by
 video, not a copy of the video.
 
-Two IWFT scenarios hold this in place, and both assert the Supadata transcript endpoint's
+Two IWFT scenarios hold this in place, and both assert the caption endpoint's
 call count rather than only the stored record, because the call count is the thing that costs
 money: `a generation that fails still leaves the transcript stored` now retries to completion
 and expects that count still at one, and `a second note on a video already in the library`
@@ -125,7 +121,7 @@ markers and keeps neither the break nor the mark. We keep both — the dash *is*
 in the punctuation a reader already knows for dialogue.
 
 The markers are stripped from the text at display rather than at fetch, because
-`mapTranscriptContent` stays 1:1 with Supadata — that stored text is what the model is given
+the store keeps the platform's own caption text — that stored text is what the model is given
 — and stripping at display also fixes every transcript stored before this. A `>>` in the
 middle of a cue is left alone.
 
@@ -169,7 +165,7 @@ interpolated inside that caption, which is what the reference does: `formatTimes
 rather than rounds precisely so a time lands just before its words rather than just after
 them, and an interpolated offset is as likely to overshoot as to undershoot. It would also
 sit in the same column as the measured ones with nothing to tell them apart, where today
-every number there is Supadata's own caption offset — the rule in
+every number there is the platform's own caption offset — the rule in
 `docs/prototype/constraints.md` about never letting anything fabricate a measurement.
 `formatTimeRange` (the "Jump to 3:20–5:10" pointer in the reader's rail) is built from the
 same function so the two can't drift apart.

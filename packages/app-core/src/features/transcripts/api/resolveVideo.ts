@@ -1,23 +1,19 @@
-import { VideoId, type StoredTranscript, type TranscriptSegment, type TranscriptStore, type VideoSource } from "@overview/types";
-import {
-  fetchTranscriptContent,
-  fetchVideoSource,
-  type TranscriptSourceClient,
-} from "@overview/transcripts";
+import { TranscriptFetchError, isWorthAnotherSource } from "@overview/transcripts";
+import { VideoId, type StoredTranscript, type TranscriptStore } from "@overview/types";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
+import type { ResolvedVideo, TranscriptSource, TranscriptSourceContext } from "../types/TranscriptSource.js";
+import { transcriptFailureMessage } from "../util/transcriptFailureMessage.js";
+import { NoTranscriptSourceError, type TranscriptSourceFailure } from "./NoTranscriptSourceError.js";
 
 export interface VideoResolutionDeps {
-  transcriptClient: TranscriptSourceClient;
+  sources: TranscriptSource[];
   transcriptStore: TranscriptStore;
 }
 
-export interface ResolvedVideo {
-  video: VideoSource;
-  transcript: TranscriptSegment[];
-}
+export type { ResolvedVideo };
 
-// Both halves of what the provider sells for one video — the metadata and the captions —
-// read before either is bought (docs/features/watching-detection.md).
+// The rungs in order, each asked only if the one before could not answer. The store is
+// read before any of them (docs/features/transcript-retrieval.md).
 export async function resolveVideo(
   url: string,
   deps: VideoResolutionDeps,
@@ -25,27 +21,48 @@ export async function resolveVideo(
   const cached = await readCachedVideo(url, deps.transcriptStore);
   if (cached) return cached;
 
-  const video = await fetchVideoSource(deps.transcriptClient, url);
-  const stored = video.id === null ? null : await deps.transcriptStore.getTranscript(video.id);
+  const context: TranscriptSourceContext = {
+    readHeldTranscript: (videoId) => deps.transcriptStore.getTranscript(videoId),
+  };
+  const failures: TranscriptSourceFailure[] = [];
 
-  if (stored) {
-    await deps.transcriptStore.saveTranscript({ ...stored, video });
-    return { video, transcript: stored.segments };
+  for (const source of deps.sources) {
+    if (!(await source.isReady())) {
+      failures.push({ tier: source.tier, outcome: "unavailable" });
+      continue;
+    }
+
+    try {
+      const resolved = await source.resolve(url, context);
+      if (resolved === null) {
+        failures.push({ tier: source.tier, outcome: "no-answer" });
+        continue;
+      }
+      await saveResolved(resolved, deps.transcriptStore);
+      return resolved;
+    } catch (error) {
+      failures.push({ tier: source.tier, outcome: "failed", error });
+      // Nothing about the video will be different at the next rung.
+      if (error instanceof TranscriptFetchError && !isWorthAnotherSource(error.failure)) {
+        throw error;
+      }
+    }
   }
 
-  const fetched = await fetchTranscriptContent(deps.transcriptClient, url);
+  throw new NoTranscriptSourceError(transcriptFailureMessage(failures), failures);
+}
 
-  if (video.id !== null) {
-    await deps.transcriptStore.saveTranscript({
-      videoId: video.id,
-      segments: fetched.transcript,
-      generated: fetched.generated,
-      fetchedAt: new Date().toISOString(),
-      video,
-    });
-  }
-
-  return { video, transcript: fetched.transcript };
+// The one place a resolved video is written back, so every rung completes a record that
+// was stored before metadata was kept (docs/features/watching-detection.md).
+async function saveResolved(resolved: ResolvedVideo, transcriptStore: TranscriptStore): Promise<void> {
+  if (resolved.video.id === null) return;
+  await transcriptStore.saveTranscript({
+    videoId: resolved.video.id,
+    segments: resolved.transcript,
+    generated: resolved.generated,
+    fetchedAt: new Date().toISOString(),
+    video: resolved.video,
+  });
 }
 
 // The url is this request's, not the one the first fetch happened to use: everything else
@@ -60,7 +77,7 @@ async function readCachedVideo(
   const stored: StoredTranscript | null = await transcriptStore.getTranscript(parsedId);
   if (!stored?.video) return null;
 
-  return { video: { ...stored.video, url }, transcript: stored.segments };
+  return { video: { ...stored.video, url }, transcript: stored.segments, generated: stored.generated };
 }
 
 // Only ever used to ask the store a question. A parse that disagreed with the platform's

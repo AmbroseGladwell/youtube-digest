@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mapTranscriptContent } from "./mapTranscriptContent.js";
-import { TranscriptFetchError } from "./TranscriptFetchError.js";
+import { TranscriptFetchError } from "../TranscriptFetchError.js";
 
 test("offset/duration chunks map to startMs/endMs segments", () => {
   const segments = mapTranscriptContent([

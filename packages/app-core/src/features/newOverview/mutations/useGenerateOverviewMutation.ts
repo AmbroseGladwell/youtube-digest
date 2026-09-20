@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_ANTHROPIC_MODEL, type Overview } from "@overview/types";
 import { useStores } from "../../../stores/StoresContext.js";
+import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
 import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
-import { createGenerationClient, createTranscriptClient } from "../api/generationClients.js";
+import { createGenerationClient, createTranscriptSources } from "../api/generationClients.js";
 import { runOverviewGeneration, type RunOverviewGenerationOptions } from "../api/generationPipeline.js";
 
 // The progress and cancellation callbacks travel as variables rather than as hook
@@ -19,17 +20,21 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
   const { overviewStore, transcriptStore } = useStores();
   const queryClient = useQueryClient();
   const settingsQuery = useSettingsQuery();
+  const youTubeFetch = useYouTubeFetch();
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
     mutationFn: async ({ url, onProgress, isCancelled }) => {
-      if (!apiKeys.anthropicApiKey || !apiKeys.supadataApiKey) {
-        throw new Error("Add your Anthropic and Supadata API keys first.");
+      if (!apiKeys.anthropicApiKey) {
+        throw new Error("Add your Anthropic API key first.");
       }
       return runOverviewGeneration(
         url,
         {
-          transcriptClient: createTranscriptClient(apiKeys.supadataApiKey),
+          sources: createTranscriptSources({
+            youTubeFetch,
+            supadataApiKey: apiKeys.supadataApiKey,
+          }),
           generationClient: createGenerationClient(
             apiKeys.anthropicApiKey,
             settingsQuery.data?.model ?? DEFAULT_ANTHROPIC_MODEL,

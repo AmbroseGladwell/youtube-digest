@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import type { JobResult, Transcript } from "@supadata/js";
+import { SupadataError, type JobResult, type Transcript } from "@supadata/js";
 import { pollTranscriptJob } from "./pollTranscriptJob.js";
-import { TranscriptFetchError } from "./TranscriptFetchError.js";
-import type { TranscriptSourceClient } from "./TranscriptSourceClient.js";
+import { TranscriptFetchError } from "../TranscriptFetchError.js";
+import type { SupadataClient } from "./SupadataClient.js";
 
 const completedTranscript: Transcript = {
   content: [{ text: "Hello.", offset: 0, duration: 1000, lang: "en" }],
@@ -11,7 +11,7 @@ const completedTranscript: Transcript = {
   availableLangs: ["en"],
 };
 
-function fakeClient(statuses: JobResult<Transcript>[]): TranscriptSourceClient {
+function fakeClient(statuses: JobResult<Transcript>[]): SupadataClient {
   let calls = 0;
   return {
     metadata: () => Promise.reject(new Error("not used")),
@@ -56,4 +56,23 @@ test("a job stuck queued past the timeout is a retryable error, not a hang", asy
       return true;
     },
   );
+});
+
+test("a status read that fails transiently is one lost tick, not an abandoned job", async () => {
+  let calls = 0;
+  const client: SupadataClient = {
+    metadata: () => Promise.reject(new Error("not used")),
+    transcript: Object.assign(() => Promise.reject(new Error("not used")), {
+      getJobStatus: async (): Promise<JobResult<Transcript>> => {
+        calls += 1;
+        if (calls === 1) throw new SupadataError({ error: "internal-error" });
+        return { status: "completed", result: completedTranscript };
+      },
+    }),
+  };
+
+  const result = await pollTranscriptJob(client, "job-1", { intervalMs: 1, timeoutMs: 1000 });
+
+  assert.deepEqual(result, completedTranscript);
+  assert.equal(calls, 2);
 });
