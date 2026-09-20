@@ -9,7 +9,8 @@
     "tabs",
     "scripting",
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "https://api.anthropic.com/*",

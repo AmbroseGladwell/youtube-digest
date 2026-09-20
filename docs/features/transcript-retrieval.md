@@ -186,6 +186,35 @@ to wake is the textbook transient.
 The manifest needed no change: `https://www.youtube.com/*` and `https://m.youtube.com/*`
 were already there for the tab-watching work.
 
+### The Origin header has to be stripped, or YouTube answers 403
+
+Chrome attaches `Origin: chrome-extension://<id>` to the worker's `POST`, and the player
+endpoint answers **403** to a call carrying one. Reproduced against the live endpoint, and
+it is that header alone:
+
+| Request | |
+|---|---|
+| `Origin: chrome-extension://…` | **403** |
+| `Origin: https://www.youtube.com` | 200 |
+| no `Origin` | 200 |
+| an Android user-agent, or a desktop one | no effect either way |
+| a session cookie | no effect |
+
+`Origin` is a forbidden header, so `fetch()` can neither set nor remove it. The only way
+is `declarativeNetRequest`: `youTubeOriginRule` removes it, scoped twice over — to
+requests this extension initiates (`initiatorDomains: [chrome.runtime.id]`) and to YouTube
+(`requestDomains`). That second bound matters and has its own test: the panel's calls to
+Anthropic carry the user's key, and a header rule loose enough to reach them would be a
+much worse bug than the one it fixes.
+
+The rule is installed at the worker's top level rather than in `onInstalled`, for the same
+reason `setPanelBehavior` is: a rule lost to a profile restart or an update comes back,
+instead of every caption fetch silently 403ing.
+
+**Only the player `POST` was ever affected.** The caption `GET` carries no `Origin` and
+tolerates one when sent. So a symptom reading "the player endpoint answered 403" is this,
+and nothing to do with the caption track.
+
 ### The request is anonymous on purpose
 
 `fetchYouTubeInWorker` sends `credentials: "omit"`, and that is load-bearing rather than
