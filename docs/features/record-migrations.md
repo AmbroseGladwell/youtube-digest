@@ -147,10 +147,44 @@ The interface shape this implies, for argument:
 - `listOverviews()` keeps returning `Overview[]` — the readable ones. Call sites are
   unchanged.
 - `OverviewStore` gains `listUnreadable(): Promise<UnreadableRecord[]>`, carrying the id,
-  the version found, and why it failed.
+  the version found, why it failed, and **whatever of the record could still be salvaged**
+  — see below.
 - `getOverview(id)` **throws** a typed error for a quarantined record rather than
   returning `null`. `null` already means *no such record*, and collapsing "broken" into
   "absent" is the silent drop again at single-record scale.
+
+### Salvage, so the reader has something to do
+
+The first draft of this design left the reader with nothing. The screen said the record was
+still saved and a future update should restore it, and offered a way back to the library.
+That is honest, and it is passive: they cannot fix it, retry it or read it, and "wait" is a
+thin thing to tell someone about their own note.
+
+**A record that fails `Overview.parse` almost always still has its video.** The failures
+this exists for are missing or malformed *fields* — `durationMs` absent, `publishedAt`
+unparseable — not corrupted blobs. So the quarantine read does a second, deliberately
+minimal parse against a **salvage schema**: the id, and the video's `url` and `title` if
+they are there. Anything that survives that is enough to turn a dead end into a choice:
+
+- **Watch it on YouTube.** The thing the overview was about is still reachable, and this
+  costs nothing.
+- **Generate it again.** A real recovery rather than a wait, at the price of a fresh run.
+
+If even the salvage parse fails, the record degrades to an id and the screen says only what
+it said before. Salvage is best-effort by construction, which is why it is a separate parse
+rather than a relaxed version of the main one.
+
+**Generating again is not free of consequence, and the copy should not pretend otherwise.**
+It should reuse the quarantined record's salvaged id, so the separate state row — read,
+favourite, user tags — stays attached rather than being orphaned under a new id. But
+writing to that id replaces the quarantined record, which forecloses the later migration
+that was the whole reason for keeping it. The new note is also written against today's
+reader context, so it is a different note, not a restoration of the old one.
+
+That makes regeneration the destructive option and watching the safe one, which is the
+opposite of how the two would naturally be ranked. Whether that inverts their prominence —
+watch as the recovery pill, generate as the quieter control, or a word in the copy carrying
+it — is a design question, not one to settle here.
 
 ### Why throwing costs almost nothing, checked against the call sites
 
@@ -267,9 +301,11 @@ context that has since moved on, for a record the user may have annotated. No.
 
 ## Open questions, in the order they need answering
 
-1. **Is the quarantine surfaced per-record or as a count?** A count is one banner and no
-   new screen. Per-record means a reader can see *which* note is stuck, which matters far
-   more once notes are irreplaceable and synced.
+1. **How are three controls arranged on a screen built for two?** Salvage gives the
+   quarantined record two actions plus a way back, and `ErrorState` takes one recovery
+   action and an optional back link — deliberately, so a pill and a link can never be
+   confused (`docs/features/error-state.md`). Three controls is a turn-19 follow-up, and
+   the ranking above is part of the same question.
 2. **Where does the migration code live?** `packages/types` already holds the schemas,
    the defaults and the refinements, so it is the honest home — but it makes a package
    named `types` into a domain package with behaviour. The alternative is a
@@ -279,6 +315,11 @@ context that has since moved on, for a record the user may have annotated. No.
 4. **Does the corpus get committed from a real dev profile, and whose?** Real records
    carry real video titles and a real `readerContext`. That is the point, and it is also
    personal data in a repo.
+
+**Settled by salvage: the quarantine is surfaced per record, not as a count.** That was
+the first open question here, and offering anything to do about a stuck note answers it —
+a count can offer neither a video nor a regeneration, because it does not know which note
+it is talking about.
 
 ## When to build it
 
