@@ -49,8 +49,18 @@ Tone comes from the wording and the hierarchy.
 library's empty state already use, which is why the screen reads as part of the app rather
 than as an interstitial.
 
-**Focus lands on the way out** — the pill when there is one, the back link when that is all
-there is. The container announces as an alert and the hairline is decorative.
+**Focus lands on the screen, and the way out is one Tab away.** The design asked for focus
+to land on the first action itself, and that was built first and then changed after looking
+at it: `global.scss` draws focus as a 2px rectangle, and Chromium matches `:focus-visible`
+on script-moved focus however the reader arrived — mouse, keyboard or a fresh load, all
+three checked. So focusing the back link directly drew a box around it and turned
+navigation into something shaped like the pill it must never be mistaken for, undoing the
+distinction the rest of this screen is built on. The container takes focus instead, with
+its own outline suppressed, which keeps what the design was after — a keyboard lands in the
+dead end rather than at the top of the page — without dressing a link as a button. Tabbing
+once reaches the action and rings it properly, because then the reader asked.
+
+The container announces as an alert and the hairline is decorative.
 
 ## Two rendering contexts, and the narrow treatment
 

@@ -30,6 +30,8 @@ export function ErrorState({ title, body, action, back = false }: ErrorStateProp
     <div
       role="alert"
       aria-live="assertive"
+      tabIndex={-1}
+      ref={focusOnMount}
       className={`${styles.root} ${isPanel ? styles.panel : ""}`}
       data-testid={errorStateTestIds.root}
     >
@@ -47,7 +49,6 @@ export function ErrorState({ title, body, action, back = false }: ErrorStateProp
           {action !== undefined && (
             <button
               type="button"
-              ref={focusOnMount}
               className={styles.action}
               onClick={action.onSelect}
               data-testid={errorStateTestIds.action}
@@ -58,7 +59,6 @@ export function ErrorState({ title, body, action, back = false }: ErrorStateProp
           {back && (
             <Link
               to={Routes.home()}
-              ref={action === undefined ? focusOnMount : undefined}
               className={styles.back}
               data-testid={errorStateTestIds.back}
             >

@@ -39,12 +39,13 @@ test("a case with nothing to add renders no body, rather than padding one out", 
   await deadEnd.verifyHasNoBody();
 });
 
-test("the way out takes focus, so a keyboard lands on it rather than at the top", async ({
+test("the screen takes focus, so a keyboard lands on it rather than at the top", async ({
   launcher,
 }) => {
   const deadEnd = await launcher.launchExpectingDeadEnd({ failingReads: ["overviews"] });
 
-  await deadEnd.verifyActionHasFocus();
+  await deadEnd.verifyHoldsFocus();
+  await deadEnd.verifyWayOutIsOneTabAway();
 });
 
 test("trying again re-reads the library, and shows it once the read succeeds", async ({

@@ -28,11 +28,14 @@ export class ErrorStatePageObject extends PageObject {
   verifyOffersNoWayBack = (): Promise<void> =>
     this.step("verifyOffersNoWayBack", () => this.expectToHaveCount(errorStateTestIds.back, 0));
 
-  verifyActionHasFocus = (): Promise<void> =>
-    this.step("verifyActionHasFocus", () => expect(this.get(errorStateTestIds.action)).toBeFocused());
+  verifyHoldsFocus = (): Promise<void> =>
+    this.step("verifyHoldsFocus", () => expect(this.get(errorStateTestIds.root)).toBeFocused());
 
-  verifyWayBackHasFocus = (): Promise<void> =>
-    this.step("verifyWayBackHasFocus", () => expect(this.get(errorStateTestIds.back)).toBeFocused());
+  verifyWayOutIsOneTabAway = (): Promise<void> =>
+    this.step("verifyWayOutIsOneTabAway", async () => {
+      await this.page.keyboard.press("Tab");
+      await expect(this.get(errorStateTestIds.action)).toBeFocused();
+    });
 
   verifyHasNoBody = (): Promise<void> =>
     this.step("verifyHasNoBody", () => this.expectToHaveCount(errorStateTestIds.body, 0));
