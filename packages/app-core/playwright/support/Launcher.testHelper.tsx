@@ -6,9 +6,11 @@ import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { Plan } from "@overview/types";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
+import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
 import { IwftAppRoot } from "./IwftAppRoot.testHelper.js";
 import { CapturePageObject } from "../pageObjects/CapturePageObject.testHelper.js";
+import { ErrorStatePageObject } from "../pageObjects/ErrorStatePageObject.testHelper.js";
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
@@ -25,6 +27,7 @@ export interface LaunchOptions {
   plan?: Plan;
   runBridge?: boolean;
   youTubeFetch?: boolean;
+  failingReads?: InMemoryStoreRead[];
 }
 
 export class Launcher {
@@ -52,6 +55,14 @@ export class Launcher {
       return new HomePageObject(this.testContext).verifyIsShown();
     });
 
+  // A launch that lands on the dead-end screen rather than a page, because the read the
+  // landing page depends on was told to fail (frontend-testing-guide.md 5.2).
+  launchExpectingDeadEnd = (options: LaunchOptions = {}): Promise<ErrorStatePageObject> =>
+    test.step("Launcher.launchExpectingDeadEnd", async () => {
+      await this.mountApp(options);
+      return new ErrorStatePageObject(this.testContext).verifyIsShown();
+    });
+
   private mountApp = async (options: LaunchOptions): Promise<void> => {
     await this.backendSimulator.handleNetworking();
     await this.mount(<IwftAppRoot />, {
@@ -65,6 +76,7 @@ export class Launcher {
         playback: options.playback,
         runBridge: options.runBridge,
         youTubeFetch: options.youTubeFetch,
+        failingReads: options.failingReads,
       },
     });
   };
@@ -78,6 +90,14 @@ export class Launcher {
       const dialog = await this.appShell.openNewOverview();
       return dialog.form;
     });
+
+  // The read recovering underneath a dead-end screen, so pressing its action can succeed.
+  stopFailing = (read: InMemoryStoreRead): Promise<void> =>
+    test.step(`Launcher.stopFailing ${read}`, () =>
+      this.page.evaluate(
+        (next) => window.__iwftStores__.overviewStore.recoverRead(next),
+        read,
+      ));
 
   // The shell's own view of which tab is in front, moved the way a tab change moves it.
   // Nothing in app-core can reach chrome.tabs, so the simulated source is the seam.

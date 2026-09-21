@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter } from "react-router";
-import { App, createAppRouter } from "@overview/app-core";
+import { App, createAppRouter, OutOfDateTab, StartupFailure } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
+  LocalDatabaseBlockedError,
   IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
@@ -13,12 +14,24 @@ async function main() {
   const container = document.getElementById("root");
   if (!container) throw new Error("index.html is missing its #root element");
 
-  const db = await openLocalDatabase();
+  // The root is made before the database is opened, so the callback below has something to
+  // render into: it fires long after mount, whenever another tab or the worker upgrades.
+  const root = createRoot(container);
+
+  let db: IDBDatabase;
+  try {
+    db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
+  } catch (error) {
+    console.error(error);
+    root.render(<StartupFailure blocked={error instanceof LocalDatabaseBlockedError} />);
+    return;
+  }
+
   const overviewStore = new IndexedDbOverviewStore(db);
   const settingsStore = new IndexedDbSettingsStore(db);
   const transcriptStore = new IndexedDbTranscriptStore(db);
 
-  createRoot(container).render(
+  root.render(
     <StrictMode>
       <App
         stores={{ overviewStore, settingsStore, transcriptStore }}
@@ -29,4 +42,4 @@ async function main() {
   );
 }
 
-main();
+main().catch((error: unknown) => console.error(error));

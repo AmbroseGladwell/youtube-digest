@@ -9,6 +9,7 @@ import { PlusSavedLocallyNote } from "../../plus/components/PlusSavedLocallyNote
 import { usePlan } from "../../plus/usePlan.js";
 import { usePlusSavedLocallyNote } from "../../plus/usePlusSavedLocallyNote.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
+import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithStateQuery.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
@@ -110,11 +111,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   if (overviewQuery.isError) {
     return (
-      <div className={styles.state}>
-        <p className={styles.error} data-testid={readerPageTestIds.error}>
-          Couldn't load this overview: {overviewQuery.error.message}
-        </p>
-      </div>
+      <ErrorState
+        title="Couldn't load this overview"
+        body="Something went wrong reading it. Nothing has been lost."
+        action={{ label: "Try again", onSelect: () => void overviewQuery.refetch() }}
+        back
+      />
     );
   }
 

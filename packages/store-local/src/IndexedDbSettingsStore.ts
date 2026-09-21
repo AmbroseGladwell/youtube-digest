@@ -11,8 +11,8 @@ export class IndexedDbSettingsStore implements SettingsStore {
 
   async get() {
     const store = this.#db.transaction(SETTINGS_STORE, "readonly").objectStore(SETTINGS_STORE);
-    const settings = await promisifyRequest<Settings | undefined>(store.get(SETTINGS_KEY));
-    return settings ?? DEFAULT_SETTINGS;
+    const settings = await promisifyRequest<Partial<Settings> | undefined>(store.get(SETTINGS_KEY));
+    return { ...DEFAULT_SETTINGS, ...settings };
   }
 
   async update(patch: Partial<Settings>) {

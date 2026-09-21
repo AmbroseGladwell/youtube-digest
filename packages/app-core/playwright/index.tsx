@@ -22,6 +22,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   for (const transcript of hooksConfig?.seedTranscripts ?? [])
     transcriptStore.seedTranscript(transcript);
   if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);
+  for (const read of hooksConfig?.failingReads ?? []) overviewStore.failOn(read);
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
 
   window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore };

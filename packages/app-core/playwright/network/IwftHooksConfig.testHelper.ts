@@ -3,6 +3,7 @@ import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
+import type { InMemoryStoreRead } from "./InMemoryOverviewStore.testHelper.js";
 
 // Playwright Component Testing serializes props/hooksConfig across the Node<->browser
 // boundary as plain JSON — a live store instance built in the Node test process can't
@@ -16,6 +17,8 @@ export interface IwftHooksConfig {
   seedTopics?: Topic[];
   seedTranscripts?: StoredTranscript[];
   seedSettings?: Partial<Settings>;
+  // Store reads told to throw, for the dead-end screen's own scenarios.
+  failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;
   surface?: Surface;
   layout?: AppLayout;

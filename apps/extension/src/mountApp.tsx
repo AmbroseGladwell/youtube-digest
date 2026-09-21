@@ -9,10 +9,13 @@ import {
   type PlaybackSource,
   type RunBridge,
   type YouTubeFetch,
+  OutOfDateTab,
+  StartupFailure,
 } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
+  LocalDatabaseBlockedError,
   IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
@@ -37,12 +40,22 @@ export async function mountApp({
   const container = document.getElementById("root");
   if (!container) throw new Error("the extension document is missing its #root element");
 
-  const db = await openLocalDatabase();
+  const root = createRoot(container);
+
+  let db: IDBDatabase;
+  try {
+    db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
+  } catch (error) {
+    console.error(error);
+    root.render(<StartupFailure blocked={error instanceof LocalDatabaseBlockedError} />);
+    return;
+  }
+
   const overviewStore = new IndexedDbOverviewStore(db);
   const settingsStore = new IndexedDbSettingsStore(db);
   const transcriptStore = new IndexedDbTranscriptStore(db);
 
-  createRoot(container).render(
+  root.render(
     <StrictMode>
       <App
         stores={{ overviewStore, settingsStore, transcriptStore }}

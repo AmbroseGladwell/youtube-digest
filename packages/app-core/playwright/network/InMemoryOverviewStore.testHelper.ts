@@ -14,7 +14,10 @@ import {
 // own reference implementation (packages/store-conformance) uses node:crypto, which
 // Vite won't bundle for a browser-mounted component, so this is a separate small copy
 // rather than a shared import.
+export type InMemoryStoreRead = "overviews" | "topics";
+
 export class InMemoryOverviewStore implements OverviewStore {
+  #failing = new Set<InMemoryStoreRead>();
   #overviews = new Map<OverviewId, Overview>();
   #topics = new Map<TopicId, Topic>();
   #states = new Map<OverviewId, OverviewState>();
@@ -24,6 +27,7 @@ export class InMemoryOverviewStore implements OverviewStore {
   }
 
   async listOverviews(query: OverviewQuery = {}) {
+    this.#throwIfFailing("overviews");
     return [...this.#overviews.values()].filter((overview) => {
       if (query.unsorted) return overview.topicIds.length === 0;
       if (query.topicId) return overview.topicIds.includes(query.topicId);
@@ -48,6 +52,7 @@ export class InMemoryOverviewStore implements OverviewStore {
   }
 
   async listTopics() {
+    this.#throwIfFailing("topics");
     return [...this.#topics.values()];
   }
 
@@ -74,7 +79,19 @@ export class InMemoryOverviewStore implements OverviewStore {
     this.#states.set(overviewId, { ...current, ...patch });
   }
 
+  #throwIfFailing(read: InMemoryStoreRead): void {
+    if (this.#failing.has(read)) throw new Error(`the ${read} read was told to fail`);
+  }
+
   // Test-only seeding helpers — not part of the OverviewStore interface.
+  failOn(read: InMemoryStoreRead): void {
+    this.#failing.add(read);
+  }
+
+  recoverRead(read: InMemoryStoreRead): void {
+    this.#failing.delete(read);
+  }
+
   seedOverview(overview: Overview): void {
     this.#overviews.set(overview.id, overview);
   }
