@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run typecheck
+      - run: npm run typecheck:iwft --workspace packages/app-core
+
+  unit-packages:
+    name: unit (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - types
+          - transcripts
+          - generation
+          - store-conformance
+          - store-local
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm test --workspace packages/${{ matrix.package }}
+
+  unit-app:
+    name: unit (app-core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm test --workspace packages/app-core
+
+  unit-extension:
+    name: unit (extension)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm test --workspace apps/extension
+
+  iwft:
+    name: iwft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:iwft --workspace packages/app-core
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: iwft-traces
+          path: packages/app-core/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  build:
+    name: build (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - web
+          - extension
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run build --workspace apps/${{ matrix.app }}
+      - if: matrix.app == 'extension'
+        uses: actions/upload-artifact@v7
+        with:
+          name: extension-${{ github.sha }}
+          path: apps/extension/dist
+          retention-days: 14
+          if-no-files-found: error
+
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - typecheck
+      - unit-packages
+      - unit-app
+      - unit-extension
+      - iwft
+      - build
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

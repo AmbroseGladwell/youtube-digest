@@ -1,0 +1,16 @@
+name: Setup
+description: >
+  Node, dependencies, and the built library packages. Every suite resolves @overview/*
+  imports through those packages' dist output, and npm's --workspaces ordering is
+  alphabetical rather than topological, so the build order lives in build:packages.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+    - run: npm ci
+      shell: bash
+    - run: npm run build:packages
+      shell: bash
