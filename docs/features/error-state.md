@@ -73,6 +73,29 @@ two axes rather than one. `useIsPanel()` drives them because the side panel is 4
 design's second axis is literally the panel; the existing 47.9375rem breakpoint applies the
 same treatment, because a web window that narrow wants it for the same reason.
 
+## The two startup failures use it too
+
+The database is opened before the app is rendered, so a failure there leaves no stores to
+give it. That was first described as a tier this screen could not serve, on the grounds
+that it happens "before React" — which is wrong, and worth correcting rather than quietly
+fixing. React is loaded and `createRoot` works; it is only the *stores* that are missing.
+The screen needs neither.
+
+So both shells catch the failed open and render `StartupFailure` instead of the app. Two
+cases, split on whether the reader can act:
+
+- **A blocked open** — another window holds an older version, so the upgrade cannot start.
+  Closing that window fixes it, and the copy says so, because reloading alone will not.
+- **Anything else** — a storage failure. Quota, blocked site data, some private modes. Only
+  a retry to offer.
+
+Before this, both were a permanently blank page with nothing logged: `apps/web` called
+`main()` with no `.catch()`, and both extension entries `void mountApp(...)`, which
+discards the rejection outright.
+
+The third startup failure, a missing `#root`, stays unhandled on purpose. There is nowhere
+to render a screen that reports it, so it logs and stops.
+
 ## Where the build departs from the design file
 
 Four small deviations, all of them the token set winning over a literal colour in the
