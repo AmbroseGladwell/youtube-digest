@@ -81,11 +81,18 @@
   margin-top: 0.75rem;
 }
 
+// The same paint as + New and Listen, which is the system's accent control: a tint fill
+// rather than the design file's transparent outline, so a recovery action is one of the
+// three treatments controls.scss documents and not a fourth (docs/features/error-state.md).
+// The size is this screen's own, because it is a page-level action rather than masthead
+// furniture.
 .action {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--accent);
-  border-radius: var(--radius-btn);
-  background: transparent;
-  color: var(--accent-strong);
+  border-radius: var(--radius-badge);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
   padding: 0.7rem 1.4rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -93,17 +100,7 @@
   white-space: nowrap;
   cursor: pointer;
 
-  @include controls.control-motion;
-  @include controls.control-disabled;
-
-  &:hover:not(:disabled) {
-    background: var(--accent-wash);
-  }
-
-  &:active:not(:disabled) {
-    background: var(--accent-tint-press);
-    transform: translateY(1px);
-  }
+  @include controls.tinted-control;
 }
 
 .back {

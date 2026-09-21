@@ -89,12 +89,24 @@ design, and one judgement call:
   mirrors. Taking the file's lighter value would undo a measurement.
 - **The hover wash** is `--accent-wash` rather than the file's literal 8%/14%.
 
-The judgement call: this pill does **not** use the `outlined-control` mixin, whose hover is
-`--ink-wash`. That mixin exists for controls whose border and ink report a state they are
-offering to set — Read, Favourited, an applied filter — and its comment says so. A recovery
-action is a one-shot, reports nothing, and the design draws an accent wash under it. So it
-takes `control-motion` and an accent wash instead, which is a fourth treatment in a system
-that documents three. If that is wrong, this is the paragraph to argue with.
+The largest departure is the recovery action itself. **The file draws it as a transparent
+pill with an accent border; the build fills it with `--accent-tint` and takes
+`tinted-control`, which is the same paint as `+ New` and Listen** — identical fill, ink and
+border, at this screen's own larger size because it is a page-level action rather than
+masthead furniture.
+
+That was not the first answer. Built to the file, the transparent-accent pill was a
+treatment `controls.scss` does not have: the system's accent control is filled and its
+transparent control is neutral, so an accent-bordered transparent one needed a hover wash
+of its own, and then a press state the file never specified — reaching for
+`--accent-tint-press`, a token built to sit on a filled control. That is two inventions to
+support one, in a system that documents exactly three treatments and explains each. Taking
+the existing one removes both, and costs a fill the file did not draw.
+
+The general rule this leaves: where the design file and `controls.scss` disagree about a
+*control*, the system wins, because a control that behaves like the others is worth more
+than one that looks exactly like its drawing. Type, colour, spacing and copy still follow
+the file.
 
 ## What is not wired
 
