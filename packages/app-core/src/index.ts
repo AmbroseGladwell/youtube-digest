@@ -8,6 +8,7 @@ export { useYouTubeFetch } from "./app/YouTubeFetchContext.js";
 export type { YouTubeFetch, YouTubeFetchRequest, YouTubeFetchResponse } from "@overview/transcripts";
 export type { RunReport } from "./features/newOverview/types/RunReport.js";
 export { createAppRouter, type AppRouter, type RouterFactory } from "./app/createAppRouter.js";
+export { OutOfDateTab } from "./app/OutOfDateTab.js";
 export { Routes } from "./app/Routes.js";
 export type { Surface } from "./app/SurfaceContext.js";
 export type { Stores } from "./stores/StoresContext.js";

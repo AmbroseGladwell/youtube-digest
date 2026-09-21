@@ -9,6 +9,7 @@ import {
   type PlaybackSource,
   type RunBridge,
   type YouTubeFetch,
+  OutOfDateTab,
 } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
@@ -37,12 +38,13 @@ export async function mountApp({
   const container = document.getElementById("root");
   if (!container) throw new Error("the extension document is missing its #root element");
 
-  const db = await openLocalDatabase();
+  const root = createRoot(container);
+  const db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
   const overviewStore = new IndexedDbOverviewStore(db);
   const settingsStore = new IndexedDbSettingsStore(db);
   const transcriptStore = new IndexedDbTranscriptStore(db);
 
-  createRoot(container).render(
+  root.render(
     <StrictMode>
       <App
         stores={{ overviewStore, settingsStore, transcriptStore }}

@@ -110,13 +110,23 @@ the file.
 
 ## What is not wired
 
-Four of the six cases are live. Two are not, and neither is blocked on this screen:
+Five of the six cases are live. One is not:
 
-- **This tab is out of date** needs the `onSuperseded` callback that
-  `openLocalDatabase` already takes and nothing yet consumes. The screen it will show is
-  built and takes a Reload action.
 - **This overview was saved in an older format** needs record migrations, which are
   designed and not built (`docs/features/record-migrations.md`).
+
+**The out-of-date tab replaces the whole tree, and does so from the shell.** Both shells
+now make the React root *before* opening the database, so `onSuperseded` has somewhere to
+render into when it fires — which is long after mount, whenever another tab or the
+extension's worker upgrades. It replaces the app rather than rendering inside it because
+there is no working app left to render into: the connection closed itself so that upgrade
+could proceed, and every store call from that point throws.
+
+One consequence worth knowing before editing `OutOfDateTab`: it renders **outside the
+router**, so it must never be given `back`. A back link is a `<Link>`, and a `<Link>` with
+no router around it throws. The case wants only a reload anyway — that is the one thing
+that fixes it — so the constraint and the content model agree, but they agree by luck
+rather than by construction.
 
 The reader's generic load failure is wired, with copy that is not in the design's six —
 the design's reader case is the older-format one, so a title and sentence were written for
