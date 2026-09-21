@@ -24,6 +24,9 @@ Five folders, five different questions.
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
+- `error-state.md` — design turn 19's one dead-end screen: the six cases it serves, why the
+  way out is the caller's to name rather than a fixed pair, and where the build departs from
+  the design file.
 - `extension-panel.md` — why the side panel is one video rather than a small library:
   the layout seam, its three screens, and what it drops.
 - `following-playback.md` — how the transcript follows the video, what now touches the

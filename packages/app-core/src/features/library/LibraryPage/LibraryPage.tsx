@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
+import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
 import { orderOverviewsBySavedAt } from "../../overviews/util/orderOverviewsBySavedAt.js";
@@ -31,6 +32,15 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
   const [newTopicOpen, setNewTopicOpen] = useState(false);
 
   const entering = useEnteringOverviewIds(overviewsWithState.map((entry) => entry.overview.id));
+
+  if (topicsQuery.isError) {
+    return (
+      <ErrorState
+        title="Couldn't load your topics"
+        action={{ label: "Try again", onSelect: () => void topicsQuery.refetch() }}
+      />
+    );
+  }
 
   const filters = parseLibraryFilters(searchParams);
   const topics = topicsQuery.data ?? [];

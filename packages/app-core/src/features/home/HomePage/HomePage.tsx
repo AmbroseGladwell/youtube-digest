@@ -8,6 +8,7 @@ import {
 } from "../../transcripts/transcriptSourceNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
+import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
 import styles from "./HomePage.module.scss";
@@ -39,9 +40,11 @@ function LibraryHome() {
   if (overviewsQuery.isError) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <p className={styles.error} data-testid={homePageTestIds.error}>
-          Couldn't load your library: {overviewsQuery.error.message}
-        </p>
+        <ErrorState
+          title="Couldn't load your library"
+          body="Something went wrong reading your saved overviews. Nothing has been lost."
+          action={{ label: "Try again", onSelect: () => void overviewsQuery.refetch() }}
+        />
       </div>
     );
   }
