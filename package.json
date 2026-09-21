@@ -11,6 +11,10 @@
   "engines": {
     "node": ">=20"
   },
+  "scripts": {
+    "build:packages": "npm run build --workspace packages/types --workspace packages/transcripts --workspace packages/generation --workspace packages/store-conformance --workspace packages/store-local --workspace packages/app-core",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
   "devDependencies": {
     "playwright": "1.62.1"
   }
