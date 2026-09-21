@@ -150,8 +150,37 @@ The interface shape this implies, for argument:
   the version found, and why it failed.
 - `getOverview(id)` **throws** a typed error for a quarantined record rather than
   returning `null`. `null` already means *no such record*, and collapsing "broken" into
-  "absent" is the silent drop again at single-record scale. The reader route already has
-  `RouterErrorBoundary` to catch it.
+  "absent" is the silent drop again at single-record scale.
+
+### Why throwing costs almost nothing, checked against the call sites
+
+This was the first open question and it is settled. `getOverview` has **one** production
+call site — `overviewWithStateQuery` — so the fear that throwing would scatter error
+handling across the app was unfounded.
+
+`ReaderPage` already branches three ways on that query: pending renders a skeleton,
+`isError` renders "Couldn't load this overview: {message}", and absent renders
+`ReaderNotFound` ("That overview isn't in your library"). The distinction between *broken*
+and *absent* is therefore already built, already tested, and already on screen. Returning
+`null` would not avoid work; it would collapse a quarantined record into "isn't in your
+library", which is false about a record that is still sitting in the store.
+
+An earlier draft of this document claimed the throw would be caught by
+`RouterErrorBoundary`. **It would not.** The throw happens inside a TanStack Query
+`queryFn`, which captures it into `query.error`; it reaches a React error boundary only
+under `throwOnError`, which is not set. That is fortunate rather than a gap —
+`RouterErrorBoundary` says "Reloading usually fixes it", and for a record that fails to
+parse deterministically, reloading fixes nothing. The conclusion survives the correction;
+the reason given for it did not.
+
+`queryClient` sets `retry: 0`, so a deterministic parse failure is not retried three times
+with backoff — which is the strongest generic objection to throwing inside a query.
+
+**The constraint this puts on the error type:** `ReaderPage` renders
+`overviewQuery.error.message` verbatim, so an `UnreadableRecordError`'s message is
+user-facing copy, not a developer string. A raw zod message would reach a reader as
+"Invalid input: expected number, received undefined at video.durationMs". The message has
+to be human — the parse detail belongs on `cause`, for the console.
 
 ## Not every store deserves the same treatment
 
@@ -238,19 +267,16 @@ context that has since moved on, for a record the user may have annotated. No.
 
 ## Open questions, in the order they need answering
 
-1. **Does `getOverview` throw for a quarantined record, or return `null`?** Argued above
-   for throwing. The counter is that it makes every single-record call site a potential
-   error boundary trip, for a case that should be rare.
-2. **Is the quarantine surfaced per-record or as a count?** A count is one banner and no
+1. **Is the quarantine surfaced per-record or as a count?** A count is one banner and no
    new screen. Per-record means a reader can see *which* note is stuck, which matters far
    more once notes are irreplaceable and synced.
-3. **Where does the migration code live?** `packages/types` already holds the schemas,
+2. **Where does the migration code live?** `packages/types` already holds the schemas,
    the defaults and the refinements, so it is the honest home — but it makes a package
    named `types` into a domain package with behaviour. The alternative is a
    `packages/migrations` that depends on it.
-4. **Is settings' fallback-to-defaults visible, and how?** It is the one store with no
+3. **Is settings' fallback-to-defaults visible, and how?** It is the one store with no
    quarantine list to put anything in.
-5. **Does the corpus get committed from a real dev profile, and whose?** Real records
+4. **Does the corpus get committed from a real dev profile, and whose?** Real records
    carry real video titles and a real `readerContext`. That is the point, and it is also
    personal data in a repo.
 
