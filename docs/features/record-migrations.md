@@ -545,11 +545,12 @@ The API tells each client where it stands:
 
 | Number | Meaning | What the client does |
 |---|---|---|
-| `minSupportedClientVersion` | below this, writes are refused | hard stop — "update to continue", on the handshake |
+| `minSupportedClientVersion` | below this, writes are refused | hard stop on the handshake — the wall, below |
 | `currentSchemaVersion` | the highest version that exists | informational |
 
 The soft prompt fires **on encounter, not on the handshake** — "3 overviews need a newer
-version", when records are actually being held back. Prompting from the handshake alone nags
+version", when records are actually being held back. It is the banner below; the hard one is
+the wall below that. Prompting from the handshake alone nags
 every user the day after a bump, including those whose libraries contain nothing new.
 
 There is no third number telling clients which version to write at. An earlier draft proposed
@@ -585,6 +586,100 @@ the library list filters.
 That function is `catch { return false }` today, so the same bug is already latent: any throw
 from the read path — which parse-on-read will introduce — silently reports that the library
 does not hold the video. The catch has to tell *no overview* apart from *could not tell*.
+
+### Both kinds get a card; only one of them gets a button
+
+A held-back record appears in the library exactly like an unreadable one, for the reason
+that governs all of this: a library showing 28 of 30 with only a banner to hint at it is the
+silent shrink with an extra step.
+
+What differs is the screen behind the card, and by more than its copy. **For a held-back
+record, *Generate again* is forbidden rather than merely destructive.** Regenerating writes a
+record at this client's version over one written at a newer version — the precise clobber
+*A client reads up to its own version* exists to prevent. It is not offered.
+
+*Watch on YouTube* survives, which is worth noticing. The salvage parse wants `id`,
+`savedAt`, `video.url` and `video.title`, and those are the fields least likely to have moved
+in whatever bump caused the hold-back. So a record from the future is still watchable while
+being unreadable.
+
+That narrows what the banner is for. The cards already carry the count and the individual
+records; the banner carries **the global cause and the one global action**, which no card can
+sensibly repeat twelve times.
+
+### Where the banner lives, and when it has a button
+
+The shell already has the slot. `GenerationStatusStrip` sits inside `<header>` below the bar,
+with `--masthead-height` measured and republished so everything downstream reflows. Same
+slot, same solved geometry.
+
+One thing does not carry over: that strip is `!isPanel`. **This banner cannot be**, because
+the extension is precisely the client that goes stale and the panel is where its reader
+lives. It needs a 400px treatment the generation strip never needed. The two can also
+co-occur — generating a note while stale is ordinary — so they stack on the web, and in the
+panel the banner outranks the strip.
+
+**Dismissal is a third model, and neither existing one fits:**
+
+| | Model | Why |
+|---|---|---|
+| `GenerationStatusStrip` | auto-dismisses after `READY_DISMISS_MS` | the condition resolves itself |
+| The Plus notice | dismissal persisted in `Settings.plusNoticeDismissed` | a sales message: once refused, refused |
+| This banner | **dismissed for the session only** | the condition does not resolve until the app updates, and what it reports is the reader's own data being invisible |
+
+Persisting the dismissal would put the reader back in a quietly short library, with a stored
+flag recording that they agreed to it. Never dismissing is punishing in a 400px panel used
+daily. Session-scoped comes back until the thing is actually fixed, without nagging inside
+one sitting.
+
+**The action is present only where it can work**, which is this project's third habit rather
+than a special case:
+
+- **Web** — a reload, and the handshake can tell a stale tab that this is all it needs. A
+  real button.
+- **Extension** — a Chrome update the app cannot perform on demand, so usually there is no
+  button and the banner degrades to information. Except when there is: `onUpdateAvailable`
+  fires once an update is downloaded and waiting, and `chrome.runtime.reload()` applies it.
+  So the button appears exactly when pressing it would do something.
+
+**The two counts are never added together.** `listUnreadable()` already carries a reason per
+record, so the banner counts the future-versioned ones and the library's "couldn't be read"
+count takes the rest. One resolves on update and the other does not, so a single total would
+describe neither.
+
+### Below the write floor is a wall, not a banner
+
+`minSupportedClientVersion` is a different severity and gets a different shape: **the whole
+page**, replacing the app.
+
+The justification is not that reading stops — it does not. Below the floor the server refuses
+*writes*, so the local library still reads perfectly well. It is that every action fails:
+no new overview, no topic filing, no marking read. The sharpest case is `+ New`, which would
+spend roughly 30,000 tokens before the rejection arrives. An app whose every control fails at
+the end is worse than an honest wall in front of it, and a banner over a working-looking app
+invites exactly that.
+
+The cost is stated rather than hidden: a full page takes away a library the reader could
+still have read. That is the trade, taken deliberately.
+
+The shell already replaces the whole tree twice — `StartupFailure` and `OutOfDateTab`, both
+exported from app-core and rendered by both shells. **This one renders in place of
+`<Outlet />` rather than outside the router**, which is the one departure from that
+precedent and buys something: `docs/features/error-state.md` records that `OutOfDateTab` must
+never be given a back link, because a `<Link>` with no router around it throws. Here the app
+is intact and only writes are refused, so the wall can carry links like anything else.
+
+Its action follows the same can-it-work rule, with one more option than the banner has:
+
+| Surface | Action |
+|---|---|
+| Web | **Reload** — always available, always sufficient |
+| Extension, update waiting | **Update now** — `chrome.runtime.reload()` |
+| Extension, no update waiting | **Open extensions** — `chrome.tabs.create({ url: "chrome://extensions" })`, which a web page cannot do and an extension can; `tabs` is already in the manifest |
+
+That last row is the reason the wall is better than a banner here. It can give instructions
+and take the reader to the place the instructions are about, which a strip above a working
+app has no room to do.
 
 ### How stale a client can actually get
 
@@ -763,11 +858,18 @@ store-reviewed client is ever built.
 
 ## Open questions, in the order they need answering
 
-1. **Where does the held-back banner live, and what does it say?** It is app-level rather
-   than per record, so it belongs to neither `ErrorState` nor the quarantine list.
-2. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
-   the fastest way to clear a stale service worker, and it would kill a generation run in
-   flight. The interesting case is what happens to a job mid-flight, not the reload itself.
+1. **What happens to a generation run in flight when the extension reloads?**
+   `chrome.runtime.reload()` is now the banner's and the wall's button, so the reload itself
+   is settled — but pressing it during a run kills the run, and a run costs roughly 30,000
+   tokens. Whether the button warns, waits, or simply refuses while a run is active is the
+   part still open, and it is a question about generation rather than about migration.
+
+**Settled by narrowing what the banner is for: it carries the cause and the one global
+action, because the cards carry everything else.** Held-back records get library cards like
+any other unreadable record, so the count is already on screen — which leaves the banner the
+job no card can do twelve times over. Its button appears only where pressing it would work,
+and below the write floor it stops being a banner at all: an app whose every control fails
+after the fact is worse than an honest wall in front of it.
 
 **Settled by working through what the library does to every record: the unreadable one is
 a card in place.** The placement was never the hard part — see *What the library does with
