@@ -235,9 +235,27 @@ that was the whole reason for keeping it. The new note is also written against t
 reader context, so it is a different note, not a restoration of the old one.
 
 That makes regeneration the destructive option and watching the safe one, which is the
-opposite of how the two would naturally be ranked. Whether that inverts their prominence —
-watch as the recovery pill, generate as the quieter control, or a word in the copy carrying
-it — is a design question, not one to settle here.
+opposite of how the two would naturally be ranked.
+
+**The prominence follows from that, and it resolves what looked like a layout problem.**
+`ErrorState` takes one recovery action, rendered as a pill, and an optional back link, and
+the distinction between the two is the invariant the whole screen is built on — which is why
+"three controls on a screen built for two" read as the question. It is not. *Watch on
+YouTube* is neither a recovery, since nothing is recovered, nor in-app navigation: the
+two-shape system has no shape for **an action that leaves the app**, and that is the actual
+gap.
+
+The arrangement that needs no new shape:
+
+- **Watch on YouTube is the pill.** It is the one thing the reader can still do about the
+  thing they actually wanted, and it costs nothing.
+- **Back is the link**, unchanged, with its existing surface-dependent wording.
+- **Generate again is not a control on this screen.** It goes in the body copy as a sentence
+  that says what it costs, carrying an inline link.
+
+So the screen keeps one pill and one link, the safe action takes the prominent slot, and the
+destructive one stops being a click away from destroying the record the screen exists to
+explain.
 
 ### Why throwing costs almost nothing, checked against the call sites
 
@@ -245,12 +263,12 @@ This was the first open question and it is settled. `getOverview` has **one** pr
 call site — `overviewWithStateQuery` — so the fear that throwing would scatter error
 handling across the app was unfounded.
 
-`ReaderPage` already branches three ways on that query: pending renders a skeleton,
-`isError` renders "Couldn't load this overview: {message}", and absent renders
-`ReaderNotFound` ("That overview isn't in your library"). The distinction between *broken*
-and *absent* is therefore already built, already tested, and already on screen. Returning
-`null` would not avoid work; it would collapse a quarantined record into "isn't in your
-library", which is false about a record that is still sitting in the store.
+`ReaderPage` already branches three ways on that query: pending renders a skeleton, `isError`
+renders the dead-end screen, and absent renders `ReaderNotFound` ("That overview isn't in
+your library"). The distinction between *broken* and *absent* is therefore already built,
+already tested, and already on screen. Returning `null` would not avoid work; it would
+collapse a quarantined record into "isn't in your library", which is false about a record
+that is still sitting in the store.
 
 An earlier draft of this document claimed the throw would be caught by
 `RouterErrorBoundary`. **It would not.** The throw happens inside a TanStack Query
@@ -263,11 +281,20 @@ the reason given for it did not.
 `queryClient` sets `retry: 0`, so a deterministic parse failure is not retried three times
 with backoff — which is the strongest generic objection to throwing inside a query.
 
-**The constraint this puts on the error type:** `ReaderPage` renders
-`overviewQuery.error.message` verbatim, so an `UnreadableRecordError`'s message is
-user-facing copy, not a developer string. A raw zod message would reach a reader as
-"Invalid input: expected number, received undefined at video.durationMs". The message has
-to be human — the parse detail belongs on `cause`, for the console.
+**The constraint this puts on `ReaderPage`** — and this document had it wrong. It claimed
+the page renders `overviewQuery.error.message` verbatim, and concluded that an
+`UnreadableRecordError`'s message therefore has to be user-facing copy. Design turn 19
+replaced that branch: `ReaderPage.tsx:112` now renders fixed copy, *"Couldn't load this
+overview"* over *"Something went wrong reading it. Nothing has been lost."*, with a **Try
+again** pill. No message reaches the screen.
+
+So the message need not be human — but the branch has to split, and for a sharper reason
+than copy. **A quarantined record must not be offered *Try again*.** Retrying a
+deterministic parse failure is precisely the harm `docs/features/error-state.md` opens with:
+the reader retries, gets the same screen, retries again, concludes the app is broken and
+clears site data — destroying a record that a later migration would have recovered. The
+transient case keeps its retry; the quarantined case gets the older-format screen and the
+salvage actions above. The parse detail belongs on `cause`, for the console, either way.
 
 ## Not every store deserves the same treatment
 
@@ -340,6 +367,25 @@ field set with no nullable member.
 The cost, stated plainly: this holds while overviews stay write-once, and every future
 editable field on an overview is another named endpoint. That tax is paid per product
 decision, and it is one endpoint today.
+
+**With no server yet, "field-scoped" means something specific.** A local store still has to
+`put` a whole object — there is no patch endpoint to send anything to. The local rule is
+therefore: **merge the patch into the raw stored record, never into the parsed one.**
+
+Both offenders route their write through a read that will parse:
+
+| Write path | Reads through | What the parse would delete |
+|---|---|---|
+| `IndexedDbOverviewStore.setOverviewState` | `getOverviewState`, merging over `DEFAULT_OVERVIEW_STATE` | any state field this client does not know |
+| `IndexedDbSettingsStore.update` | `this.get()`, merging over `DEFAULT_SETTINGS` | any setting this client does not know |
+
+Each needs a raw read on its write path. The API's patch endpoints are the remote expression
+of the same rule rather than a different one.
+
+While in there: `update` does `{ ...current, ...patch }`, so patching `sectionsEnabled`
+replaces the whole nested object rather than merging into it. That is the nested-merge gap
+this document notes as left open — confirmed in code, and the same change is its natural
+home.
 
 **`OverviewState` is the worked example of the whole principle.** `DEFAULT_OVERVIEW_STATE`
 is merged over every read, so a field added tomorrow is already answered for every record
@@ -656,12 +702,7 @@ store-reviewed client is ever built.
 
 ## Open questions, in the order they need answering
 
-1. **How are three controls arranged on a screen built for two?** Salvage gives the
-   quarantined record two actions plus a way back, and `ErrorState` takes one recovery
-   action and an optional back link — deliberately, so a pill and a link can never be
-   confused (`docs/features/error-state.md`). Three controls is a turn-19 follow-up, and
-   the ranking above is part of the same question.
-2. **Does `packages/types` get renamed, or does the chain move out of it?** The chain's
+1. **Does `packages/types` get renamed, or does the chain move out of it?** The chain's
    home should be `packages/types`, next to the schema it migrates: the design's whole
    premise is that the decision about an absent field is made where the field is added, and
    a separate `packages/migrations` makes that a two-package change forever. The objection —
@@ -670,11 +711,13 @@ store-reviewed client is ever built.
    discomfort is with the name rather than the structure, and `@overview` is a placeholder
    scope with product naming parked anyway. The open part is only whether to spend the
    rename.
-3. **Is settings' fallback-to-defaults visible, and how?** It is the one store with no
-   quarantine list to put anything in.
-4. **Where does the held-back banner live, and what does it say?** It is app-level rather
+2. **How does the library surface an unreadable record?** A card in place in the grid —
+   salvaged title where there is one, clicking through to the older-format screen — keeps
+   the count honest and the record in its position, which is what *kept, not dropped* should
+   look like. A separate section is the alternative. This is a call rather than a deduction.
+3. **Where does the held-back banner live, and what does it say?** It is app-level rather
    than per record, so it belongs to neither `ErrorState` nor the quarantine list.
-5. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
+4. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
    the fastest way to clear a stale service worker, and it would kill a generation run in
    flight. The interesting case is what happens to a job mid-flight, not the reload itself.
 
@@ -682,6 +725,18 @@ store-reviewed client is ever built.
 the first open question here, and offering anything to do about a stuck note answers it —
 a count can offer neither a video nor a regeneration, because it does not know which note
 it is talking about.
+
+**Settled by ranking the salvage actions: the screen keeps one pill and one link.** "Three
+controls on a screen built for two" was the wrong question. *Watch on YouTube* is neither a
+recovery nor in-app navigation, so the gap was a missing shape for an action that leaves the
+app — closed by making watching the pill and leaving regeneration to the body copy, which
+also stops the destructive option being the prominent one.
+
+**Settled elsewhere, and worth not re-asking: settings' fallback to defaults is a
+dismissible notice, not a dead end.** `docs/features/error-state.md` decided that
+deliberately — replacing a page that still works with a dead end would stop the reader
+fixing the very thing being reported. What is missing is only the component:
+`components/shared/` has no notice.
 
 **Settled by the argument recorded above:** that writes are field-scoped rather than
 whole-record, and that the endpoints are three named ones rather than a patch language;
@@ -696,8 +751,8 @@ A runtime guard at each seam answers it for the cost of one comparison, where fr
 per-version schemas would answer it for the cost of copying the whole record tree every time
 a field moves.
 
-**Settled by curating the corpus: open question 4 — whose dev profile the fixtures come
-from — does not arise.** Nobody's.
+**Settled by curating the corpus: whose dev profile the fixtures come from does not
+arise.** Nobody's.
 
 ## When to build it
 
@@ -706,12 +761,28 @@ whichever is first," and neither has happened. That trigger now applies to less 
 document than it did, because the mechanism has split into two pieces with different
 triggers.
 
-**The local half needs no backend and no version chain**: parse at the read boundary,
-quarantine what fails, and write field-scoped patches. It is worth building on its own
-evidence — the three bugs at the top of this document were unvalidated reads, not missing
-migrations — and the two halves of it are coupled. Parsing on read is what makes the
-existing read-modify-write in `setOverviewState` lossy, so the patch-shaped write has to
-land in the same change rather than after it.
+**Be honest about what the local half catches today: nothing.** Every record in every store
+was written by the current schema, because there has only ever been one. Parse-on-read would
+quarantine approximately nothing, and the three bugs at the top of this document are evidence
+that reads should be validated — not evidence that anything is broken right now.
+
+It is still worth building, for two reasons that are not "it finds bugs":
+
+1. **The clobber fix has to land with the parse**, and only the parse makes it necessary.
+   Shipped apart, there is a window in which `setOverviewState` and settings `update` are
+   silently lossy.
+2. **It makes the failure path exist and be tested before there is data to lose.** The first
+   migration is a bad time to discover what `listOverviews` does with a record it cannot read.
+
+The order, then:
+
+| | |
+|---|---|
+| **First** | `Overview.parse` on both read paths; raw-merge writes in `setOverviewState` and settings `update`; `listUnreadable()` on the interface, with the conformance suite and the in-memory test helper following; `ReaderPage` branching on `UnreadableRecordError` with no retry |
+| **With it, cheaply** | the salvage parse and the older-format screen — its copy is already written in `docs/features/error-state.md`'s table |
+| **After** | the library's per-record surfacing, and the settings notice component |
+
+The last row defers safely: with no unreadable records, both render nothing at all.
 
 **The versioned half waits for the API**, and the original argument for pre-empting it
 stands: `schemaVersion` has to exist on the Postgres row and in the API contract, and
