@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sameTopicName, type Overview, type Topic } from "@overview/types";
+import { sameTopicName, type Overview, type Topic } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { overviewKeys } from "../overviewKeys.js";
 import { topicKeys } from "../topicKeys.js";

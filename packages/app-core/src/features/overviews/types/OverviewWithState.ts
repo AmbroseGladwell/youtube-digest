@@ -1,4 +1,4 @@
-import type { Overview, OverviewState } from "@overview/types";
+import type { Overview, OverviewState } from "@overview/domain";
 
 export interface OverviewWithState {
   overview: Overview;

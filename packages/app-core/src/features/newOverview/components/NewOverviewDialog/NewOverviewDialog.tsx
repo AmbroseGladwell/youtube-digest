@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";

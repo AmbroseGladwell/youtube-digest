@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { TranscriptStore, VideoId } from "@overview/types";
+import type { TranscriptStore, VideoId } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { transcriptKeys } from "../transcriptKeys.js";
 

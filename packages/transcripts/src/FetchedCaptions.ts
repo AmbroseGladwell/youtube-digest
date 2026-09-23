@@ -1,4 +1,4 @@
-import type { TranscriptSegment } from "@overview/types";
+import type { TranscriptSegment } from "@overview/domain";
 
 export interface FetchedCaptions {
   transcript: TranscriptSegment[];

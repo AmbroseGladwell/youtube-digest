@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { OverviewId, TopicId, type OverviewStore } from "@overview/types";
+import { OverviewId, TopicId, type OverviewStore } from "@overview/domain";
 import { makeOverview } from "./makeOverview.js";
 
 export function defineOverviewStoreConformanceSuite(

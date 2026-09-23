@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { OverviewStore, SettingsStore, TranscriptStore } from "@overview/types";
+import type { OverviewStore, SettingsStore, TranscriptStore } from "@overview/domain";
 
 export interface Stores {
   overviewStore: OverviewStore;

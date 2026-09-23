@@ -258,7 +258,7 @@ apps/extension/       thin MV3 shell, mounts app-core in the side panel / full p
 apps/web/             thin static-SPA shell, mounts app-core
 apps/api/             Fastify — auth, overviews, captures, audio, serves apps/web's build
 services/tts/         Python, kokoro-onnx, private
-packages/types/       shared OverviewStore/AudioStore interfaces, overview schema
+packages/domain/      shared OverviewStore/AudioStore interfaces, overview schema
 ```
 
 **Data**: Postgres via **Neon** — serverless, scales to zero between requests, and

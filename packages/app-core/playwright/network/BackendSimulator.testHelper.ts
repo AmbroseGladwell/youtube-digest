@@ -6,7 +6,7 @@ import type {
   StoredTranscript,
   Topic,
   VideoId,
-} from "@overview/types";
+} from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import {

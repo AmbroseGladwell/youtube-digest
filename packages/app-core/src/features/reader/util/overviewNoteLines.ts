@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { NOVELTY_LABEL } from "../../overviews/noveltyLabel.js";
 import { SELLING_LABEL } from "../../overviews/sellingLabel.js";
 import { WATCH_ANYWAY_LABEL } from "../../overviews/watchAnywayLabel.js";

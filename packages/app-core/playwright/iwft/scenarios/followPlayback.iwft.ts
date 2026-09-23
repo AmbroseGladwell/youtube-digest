@@ -1,5 +1,5 @@
-import type { TranscriptSegment } from "@overview/types";
-import { VideoId } from "@overview/types";
+import type { TranscriptSegment } from "@overview/domain";
+import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";

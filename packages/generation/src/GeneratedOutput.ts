@@ -1,4 +1,4 @@
-import type { Novelty, SellingType, WatchAnswer } from "@overview/types";
+import type { Novelty, SellingType, WatchAnswer } from "@overview/domain";
 import type { SuggestedTopicShape } from "./sections/filingSection.js";
 import type { SegmentRangeShape } from "./sections/watchAnywaySection.js";
 

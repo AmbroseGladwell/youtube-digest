@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TopicId } from "@overview/types";
+import { TopicId } from "@overview/domain";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { cappedTopics } from "./cappedTopics.js";
 

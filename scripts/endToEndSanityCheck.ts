@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Supadata } from "@supadata/js";
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/domain";
 import { fetchSupadataTranscript } from "@overview/transcripts";
 import { generateOverview, createAnthropicGenerationClient } from "@overview/generation";
 

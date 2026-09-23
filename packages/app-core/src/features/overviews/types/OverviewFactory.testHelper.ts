@@ -4,7 +4,7 @@ import {
   VideoId,
   type Overview,
   type OverviewState,
-} from "@overview/types";
+} from "@overview/domain";
 import type { OverviewWithState } from "./OverviewWithState.js";
 
 export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({

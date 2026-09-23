@@ -1,4 +1,4 @@
-import type { Topic } from "@overview/types";
+import type { Topic } from "@overview/domain";
 import { NOVELTY_LABEL } from "../../overviews/noveltyLabel.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 

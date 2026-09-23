@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { SettingsStore } from "@overview/types";
+import type { SettingsStore } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { settingsKeys } from "../settingsKeys.js";
 

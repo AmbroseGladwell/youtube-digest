@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ANTHROPIC_MODEL_OPTIONS, DEFAULT_ANTHROPIC_MODEL, type AnthropicModel } from "@overview/types";
+import { ANTHROPIC_MODEL_OPTIONS, DEFAULT_ANTHROPIC_MODEL, type AnthropicModel } from "@overview/domain";
 import { useYouTubeFetch } from "../../../../app/YouTubeFetchContext.js";
 import type { ApiKeys } from "../../../apiKeys/ApiKeys.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";

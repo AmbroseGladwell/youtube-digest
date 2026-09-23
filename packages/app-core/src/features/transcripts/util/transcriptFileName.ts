@@ -1,4 +1,4 @@
-import type { VideoSource } from "@overview/types";
+import type { VideoSource } from "@overview/domain";
 
 const SLUG_LIMIT = 60;
 

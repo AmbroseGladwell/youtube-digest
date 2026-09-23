@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { VideoId, type TranscriptStore } from "@overview/types";
+import { VideoId, type TranscriptStore } from "@overview/domain";
 import { makeStoredTranscript } from "./makeStoredTranscript.js";
 
 export function defineTranscriptStoreConformanceSuite(

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { OverviewId, type Overview } from "@overview/types";
+import { OverviewId, type Overview } from "@overview/domain";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
 

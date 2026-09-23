@@ -1,4 +1,4 @@
-import { VideoSource } from "@overview/types";
+import { VideoSource } from "@overview/domain";
 import { TranscriptFetchFailure } from "../TranscriptFetchFailure.js";
 import { innerTubeError } from "./innerTubeFailure.js";
 import type { PlayerResponse } from "./PlayerResponse.js";
@@ -18,7 +18,7 @@ const publishedAt = (raw: string | undefined): string | null => {
 };
 
 // YouTube's own resolved thumbnails, widest first. Never assembled from the video id:
-// the rule in packages/types/src/VideoSource.ts outlives the source it was written for.
+// the rule in packages/domain/src/VideoSource.ts outlives the source it was written for.
 const widestThumbnail = (response: PlayerResponse): string | null => {
   const thumbnails = response.videoDetails?.thumbnail?.thumbnails ?? [];
   const widest = thumbnails.reduce<{ url: string; width: number } | null>(

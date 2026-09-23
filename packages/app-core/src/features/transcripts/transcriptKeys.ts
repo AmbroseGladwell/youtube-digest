@@ -1,4 +1,4 @@
-import type { VideoId } from "@overview/types";
+import type { VideoId } from "@overview/domain";
 
 export const transcriptKeys = {
   all: ["transcript"] as const,

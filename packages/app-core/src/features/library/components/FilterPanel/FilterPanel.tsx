@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Novelty, Topic } from "@overview/types";
+import type { Novelty, Topic } from "@overview/domain";
 import { NOVELTY_LABEL, NOVELTY_ORDER } from "../../../overviews/noveltyLabel.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
 import type { LibraryFilters } from "../../types/LibraryFilters.js";

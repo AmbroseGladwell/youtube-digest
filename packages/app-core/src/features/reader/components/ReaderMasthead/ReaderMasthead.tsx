@@ -1,6 +1,6 @@
 import type { Ref } from "react";
 import { Link } from "react-router";
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";

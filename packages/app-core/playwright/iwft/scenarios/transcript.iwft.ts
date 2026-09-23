@@ -1,5 +1,5 @@
-import type { StoredTranscript, TranscriptSegment } from "@overview/types";
-import { VideoId } from "@overview/types";
+import type { StoredTranscript, TranscriptSegment } from "@overview/domain";
+import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";

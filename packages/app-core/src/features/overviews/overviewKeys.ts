@@ -1,4 +1,4 @@
-import type { OverviewId } from "@overview/types";
+import type { OverviewId } from "@overview/domain";
 
 export const overviewKeys = {
   all: ["overview"] as const,

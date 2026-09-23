@@ -1,4 +1,4 @@
-import type { WatchAnswer } from "@overview/types";
+import type { WatchAnswer } from "@overview/domain";
 
 export const WATCH_ANYWAY_LABEL: Record<WatchAnswer, string> = {
   yes: "Worth watching anyway",

@@ -1,4 +1,4 @@
-import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/types";
+import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/domain";
 import { defineTranscriptStoreConformanceSuite } from "./transcriptStoreConformanceSuite.js";
 
 class InMemoryTranscriptStore implements TranscriptStore {

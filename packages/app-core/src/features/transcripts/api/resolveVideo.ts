@@ -1,5 +1,5 @@
 import { TranscriptFetchError, isWorthAnotherSource } from "@overview/transcripts";
-import { VideoId, type StoredTranscript, type TranscriptStore } from "@overview/types";
+import { VideoId, type StoredTranscript, type TranscriptStore } from "@overview/domain";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { ResolvedVideo, TranscriptSource, TranscriptSourceContext } from "../types/TranscriptSource.js";
 import { transcriptFailureMessage } from "../util/transcriptFailureMessage.js";

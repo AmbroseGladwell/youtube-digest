@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Settings } from "@overview/types";
+import type { Settings } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { settingsKeys } from "../settingsKeys.js";
 

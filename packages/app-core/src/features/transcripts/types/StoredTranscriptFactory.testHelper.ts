@@ -1,4 +1,4 @@
-import { VideoId, type StoredTranscript } from "@overview/types";
+import { VideoId, type StoredTranscript } from "@overview/domain";
 
 export const makeStoredTranscript = (overrides: Partial<StoredTranscript> = {}): StoredTranscript => {
   const videoId = overrides.videoId ?? VideoId.parse("example");

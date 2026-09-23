@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { noteTiming } from "../../reader/util/noteTiming.js";
 import { overviewNoteLines } from "../../reader/util/overviewNoteLines.js";
 

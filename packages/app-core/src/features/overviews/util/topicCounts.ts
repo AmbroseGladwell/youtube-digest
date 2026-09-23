@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 
 export function topicCounts(overviews: Overview[]): Record<string, number> {
   const counts: Record<string, number> = {};

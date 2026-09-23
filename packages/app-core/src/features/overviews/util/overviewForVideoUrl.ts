@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { OverviewWithState } from "../types/OverviewWithState.js";
 import { orderOverviewsBySavedAt } from "./orderOverviewsBySavedAt.js";

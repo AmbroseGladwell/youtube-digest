@@ -1,4 +1,4 @@
-import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/types";
+import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/domain";
 
 export class InMemoryTranscriptStore implements TranscriptStore {
   #transcripts = new Map<VideoId, StoredTranscript>();

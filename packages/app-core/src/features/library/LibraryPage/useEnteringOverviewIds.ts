@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { OverviewId } from "@overview/types";
+import type { OverviewId } from "@overview/domain";
 
 // Design 7a is an entrance for a row that *arrives*, so whatever is on screen at the first
 // render is never treated as new — otherwise every row would draw its rule on load

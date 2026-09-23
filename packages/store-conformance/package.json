@@ -17,7 +17,7 @@
     "test": "npm run build && node --test \"dist/**/*.test.js\""
   },
   "dependencies": {
-    "@overview/types": "*"
+    "@overview/domain": "*"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

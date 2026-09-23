@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Overview, TopicId } from "@overview/types";
+import type { Overview, TopicId } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import type { OverviewWithState } from "../types/OverviewWithState.js";
 import { overviewKeys } from "../overviewKeys.js";

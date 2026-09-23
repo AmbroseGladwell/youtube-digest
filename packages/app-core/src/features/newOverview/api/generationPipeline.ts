@@ -5,7 +5,7 @@ import {
   type OverviewStore,
   type TranscriptStore,
   type VideoSource,
-} from "@overview/types";
+} from "@overview/domain";
 import { generateOverview, type GenerationClient } from "@overview/generation";
 import { countWords } from "../../../util/countWords.js";
 import { resolveVideo } from "../../transcripts/api/resolveVideo.js";

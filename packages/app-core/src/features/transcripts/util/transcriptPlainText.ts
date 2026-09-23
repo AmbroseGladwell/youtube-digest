@@ -1,4 +1,4 @@
-import type { VideoSource } from "@overview/types";
+import type { VideoSource } from "@overview/domain";
 import { formatTimestamp } from "../../../util/formatTimestamp.js";
 import type { TranscriptBlock } from "../types/TranscriptBlock.js";
 

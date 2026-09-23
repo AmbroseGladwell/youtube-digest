@@ -1,4 +1,4 @@
-import type { Topic, TopicId } from "@overview/types";
+import type { Topic, TopicId } from "@overview/domain";
 
 export const TOPIC_LIMIT = 6;
 

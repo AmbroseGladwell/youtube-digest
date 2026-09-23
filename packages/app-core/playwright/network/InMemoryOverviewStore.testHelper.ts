@@ -8,7 +8,7 @@ import {
   type OverviewState,
   type OverviewStore,
   type Topic,
-} from "@overview/types";
+} from "@overview/domain";
 
 // A fresh, browser-safe in-memory OverviewStore for IWFT runs — the conformance suite's
 // own reference implementation (packages/store-conformance) uses node:crypto, which

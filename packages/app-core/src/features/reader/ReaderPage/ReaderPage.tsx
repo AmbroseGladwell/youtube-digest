@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
-import { OverviewId } from "@overview/types";
+import { OverviewId } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";

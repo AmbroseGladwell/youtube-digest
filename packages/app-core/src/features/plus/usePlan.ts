@@ -1,4 +1,4 @@
-import { DEFAULT_PLAN, type Plan } from "@overview/types";
+import { DEFAULT_PLAN, type Plan } from "@overview/domain";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 
 export interface PlanState {
