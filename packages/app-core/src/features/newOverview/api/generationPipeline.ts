@@ -29,6 +29,10 @@ export interface GenerationPipelineDeps {
 export interface RunOverviewGenerationOptions {
   onProgress?: ((progress: GenerationProgress) => void) | undefined;
   isCancelled?: (() => boolean) | undefined;
+  // Regenerating an unreadable record writes under its own id, so the separate state row
+  // — read, favourite, user tags — stays attached rather than being orphaned under a new
+  // one (docs/features/record-migrations.md).
+  overviewId?: OverviewId | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -62,7 +66,10 @@ export async function runOverviewGeneration(
       existingTopics,
       pastClaims,
     },
-    { id: OverviewId.parse(crypto.randomUUID()), savedAt: new Date().toISOString() },
+    {
+      id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
+      savedAt: new Date().toISOString(),
+    },
   );
 
   stopIfCancelled();

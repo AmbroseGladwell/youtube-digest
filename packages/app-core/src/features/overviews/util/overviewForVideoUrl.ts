@@ -1,7 +1,7 @@
 import type { Overview } from "@overview/domain";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
-import type { OverviewWithState } from "../types/OverviewWithState.js";
-import { orderOverviewsBySavedAt } from "./orderOverviewsBySavedAt.js";
+import { readableEntries, type LibraryEntry } from "../types/LibraryEntry.js";
+import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js";
 
 // Matched on the video's own id rather than on the url, because youtu.be/X and
 // watch?v=X&t=30 are the same video and the stored url is whichever one was pasted
@@ -12,7 +12,7 @@ import { orderOverviewsBySavedAt } from "./orderOverviewsBySavedAt.js";
 // and the injected button ask the same question, and both ask it to avoid paying for a
 // video twice (docs/features/injected-button.md).
 export function overviewForVideoUrl(
-  overviewsWithState: OverviewWithState[],
+  entries: LibraryEntry[],
   videoUrl: string | null,
 ): Overview | null {
   if (videoUrl === null) {
@@ -22,7 +22,7 @@ export function overviewForVideoUrl(
   if (videoId === null) {
     return null;
   }
-  const match = orderOverviewsBySavedAt(overviewsWithState).find(
+  const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
     ({ overview }) => overview.video.id === videoId,
   );
   return match?.overview ?? null;

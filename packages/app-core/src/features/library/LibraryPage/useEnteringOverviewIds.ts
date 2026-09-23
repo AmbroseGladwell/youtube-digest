@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { OverviewId } from "@overview/domain";
 
 // Design 7a is an entrance for a row that *arrives*, so whatever is on screen at the first
 // render is never treated as new — otherwise every row would draw its rule on load
 // (docs/features/overview-redesign.md, "How a new row arrives").
-export function useEnteringOverviewIds(overviewIds: OverviewId[]): ReadonlySet<OverviewId> {
-  const seen = useRef<Set<OverviewId> | null>(null);
-  const [entering, setEntering] = useState<ReadonlySet<OverviewId>>(() => new Set());
+export function useEnteringOverviewIds(overviewIds: string[]): ReadonlySet<string> {
+  const seen = useRef<Set<string> | null>(null);
+  const [entering, setEntering] = useState<ReadonlySet<string>>(() => new Set());
   const key = overviewIds.join("|");
 
   useEffect(() => {

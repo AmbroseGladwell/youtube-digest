@@ -17,6 +17,10 @@ class InMemoryOverviewStore implements OverviewStore {
     return this.#overviews.get(id) ?? null;
   }
 
+  async listUnreadable() {
+    return [];
+  }
+
   async listOverviews(query: OverviewQuery = {}) {
     return [...this.#overviews.values()].filter((overview) => {
       if (query.unsorted) return overview.topicIds.length === 0;
@@ -27,6 +31,13 @@ class InMemoryOverviewStore implements OverviewStore {
 
   async saveOverview(overview: Overview) {
     this.#overviews.set(overview.id, overview);
+  }
+
+  async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
+    const overview = this.#overviews.get(overviewId);
+    if (overview) {
+      this.#overviews.set(overviewId, { ...overview, topicIds });
+    }
   }
 
   async deleteOverview(id: OverviewId) {

@@ -84,7 +84,7 @@ function LibraryHome() {
 
   return (
     <div className={styles.wide} data-testid={homePageTestIds.root}>
-      <LibraryPage overviewsWithState={overviewsQuery.data} />
+      <LibraryPage entries={overviewsQuery.data} />
     </div>
   );
 }

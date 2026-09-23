@@ -38,7 +38,7 @@ export function defineSettingsStoreConformanceSuite(
     assert.equal(updated.readerContext, "I'm a beginner cook.");
   });
 
-  test(behaviour("update() replaces sectionsEnabled wholesale, it does not merge individual toggles"), async () => {
+  test(behaviour("update() takes every toggle a sectionsEnabled patch names"), async () => {
     const store = await createStore();
     await store.update({
       sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
@@ -47,6 +47,12 @@ export function defineSettingsStoreConformanceSuite(
       sectionsEnabled: { verdict: true, selling: false, howToApply: false, watchAnyway: false },
     });
     assert.deepEqual(updated.sectionsEnabled, { verdict: true, selling: false, howToApply: false, watchAnyway: false });
+  });
+
+  test(behaviour("unreadable() is null while the stored settings parse"), async () => {
+    const store = await createStore();
+    await store.update({ readerContext: "I'm a beginner cook." });
+    assert.equal(await store.unreadable(), null);
   });
 
   test(behaviour("consecutive updates accumulate across separate calls"), async () => {

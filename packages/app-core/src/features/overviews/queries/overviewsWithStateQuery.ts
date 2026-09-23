@@ -1,18 +1,50 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { OverviewStore } from "@overview/domain";
+import {
+  DEFAULT_OVERVIEW_STATE,
+  OverviewId,
+  type OverviewState,
+  type OverviewStore,
+} from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
-import type { OverviewWithState } from "../types/OverviewWithState.js";
+import type { LibraryEntry } from "../types/LibraryEntry.js";
 import { overviewKeys } from "../overviewKeys.js";
+
+// Read and favourite survive a record that does not, because overview state is its own
+// record in its own store (docs/prototype/decisions.md).
+const stateFor = (overviewStore: OverviewStore, id: string): Promise<OverviewState> => {
+  const parsed = OverviewId.safeParse(id);
+  return parsed.success
+    ? overviewStore.getOverviewState(parsed.data)
+    : Promise.resolve({ ...DEFAULT_OVERVIEW_STATE, overviewId: id as OverviewId });
+};
 
 export const overviewsWithStateQueryOptions = (overviewStore: OverviewStore) =>
   queryOptions({
     queryKey: overviewKeys.list(),
-    queryFn: async (): Promise<OverviewWithState[]> => {
-      const overviews = await overviewStore.listOverviews();
-      const states = await Promise.all(
-        overviews.map((overview) => overviewStore.getOverviewState(overview.id)),
-      );
-      return overviews.map((overview, index) => ({ overview, state: states[index]! }));
+    queryFn: async (): Promise<LibraryEntry[]> => {
+      const [overviews, unreadable] = await Promise.all([
+        overviewStore.listOverviews(),
+        overviewStore.listUnreadable(),
+      ]);
+      const unreadableOverviews = unreadable.filter((record) => record.kind === "overview");
+
+      const [overviewStates, unreadableStates] = await Promise.all([
+        Promise.all(overviews.map((overview) => stateFor(overviewStore, overview.id))),
+        Promise.all(unreadableOverviews.map((record) => stateFor(overviewStore, record.id))),
+      ]);
+
+      return [
+        ...overviews.map((overview, index) => ({
+          kind: "overview" as const,
+          overview,
+          state: overviewStates[index]!,
+        })),
+        ...unreadableOverviews.map((record, index) => ({
+          kind: "unreadable" as const,
+          record,
+          state: unreadableStates[index]!,
+        })),
+      ];
     },
   });
 

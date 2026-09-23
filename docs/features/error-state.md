@@ -20,7 +20,7 @@ the caller's to name, and the component has no default pair.
 | Case | Title | Body | Way out |
 |---|---|---|---|
 | Another window upgraded the database, closing this tab's connection | This tab is out of date | yes | Reload |
-| An overview cannot be read | This overview was saved in an older format | yes | Back |
+| An overview cannot be read | This overview was saved in an older format | yes | Watch on YouTube + Back |
 | The library read failed | Couldn't load your library | yes | Try again |
 | The topics read failed | Couldn't load your topics | — | Try again |
 | Unknown URL | There's nothing at this address | — | Back |
@@ -32,6 +32,17 @@ is the small underlined link the rest of the app already uses, and it keeps the
 surface-dependent wording the settings page established — "← All overviews" on the web,
 "← Back" in the side panel. Because the two read differently, a one-action screen doesn't
 look like it lost its pair.
+
+**The pill later took a third kind of thing, and it needed no third shape.** *Watch on
+YouTube*, on the unreadable-record screen, is neither a recovery — nothing is recovered —
+nor in-app navigation. It is an action that leaves the app, and the gap the two-shape system
+actually had. It renders as an anchor wearing the pill, because what the reader is doing is
+taking the screen's one action, and the thing they can still do about the video is the most
+useful thing on that screen (`docs/features/record-migrations.md`). The genuinely
+destructive option on that screen — regenerating, which replaces the record a later
+migration could have recovered — is deliberately *not* a control: it is a sentence in the
+body carrying an inline link, which is what keeps it from sitting one stray click away from
+the thing it would destroy. The body is a node rather than a string for exactly that.
 
 The body is optional, and when it is absent the column simply has one fewer row. Nothing is
 centred or padded to compensate.
@@ -131,12 +142,15 @@ The general rule this leaves: where the design file and `controls.scss` disagree
 than one that looks exactly like its drawing. Type, colour, spacing and copy still follow
 the file.
 
-## What is not wired
+## What is wired
 
-Five of the six cases are live. One is not:
-
-- **This overview was saved in an older format** needs record migrations, which are
-  designed and not built (`docs/features/record-migrations.md`).
+All six cases are live. The last of them — **this overview was saved in an older format** —
+arrived with record migrations (`docs/features/record-migrations.md`), and split in two on
+the way: a record this client cannot parse keeps that title, and one written by a *newer*
+client reads "This overview needs a newer version", because the first is the data and the
+second is the app. Neither is offered **Try again**, which is the whole point of the actions
+being the caller's to name: the parse fails the same way every time, and a reader who retries
+until they conclude the app is broken is a reader who clears site data.
 
 **The out-of-date tab replaces the whole tree, and does so from the shell.** Both shells
 now make the React root *before* opening the database, so `onSuperseded` has somewhere to

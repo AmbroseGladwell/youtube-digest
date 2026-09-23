@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
-import { OverviewId } from "@overview/domain";
+import { OverviewId, isUnreadableRecordError } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";
@@ -14,7 +14,7 @@ import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithS
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { formatTimeRange } from "../../overviews/util/formatTimeRange.js";
-import { orderOverviewsBySavedAt } from "../../overviews/util/orderOverviewsBySavedAt.js";
+import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import { youtubeTimestampUrl } from "../../overviews/util/youtubeTimestampUrl.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
@@ -22,6 +22,7 @@ import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderRail } from "../components/ReaderRail/ReaderRail.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
+import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
@@ -109,7 +110,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     );
   }
 
+  // Try again is withheld from a record that fails to parse deterministically: retrying
+  // it returns the same screen, and the reader who concludes the app is broken and clears
+  // site data destroys what a later migration would have recovered
+  // (docs/features/error-state.md).
   if (overviewQuery.isError) {
+    if (isUnreadableRecordError(overviewQuery.error)) {
+      return <UnreadableOverview record={overviewQuery.error.record} />;
+    }
     return (
       <ErrorState
         title="Couldn't load this overview"
@@ -131,7 +139,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     .filter((name): name is string => name !== undefined);
 
   const neighbours = overviewNeighbours(
-    orderOverviewsBySavedAt(libraryQuery.data ?? []),
+    orderLibraryEntriesBySavedAt(libraryQuery.data ?? []),
     overviewId,
   );
   const metaParts = overviewMetaParts(overview);

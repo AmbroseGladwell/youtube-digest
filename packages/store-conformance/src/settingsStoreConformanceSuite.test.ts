@@ -8,6 +8,10 @@ class InMemorySettingsStore implements SettingsStore {
     return this.#settings;
   }
 
+  async unreadable() {
+    return null;
+  }
+
   async update(patch: Partial<Settings>) {
     this.#settings = { ...this.#settings, ...patch };
     return this.#settings;

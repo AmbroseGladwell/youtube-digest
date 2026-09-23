@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { IDBFactory } from "fake-indexeddb";
 import { defineSettingsStoreConformanceSuite } from "@overview/store-conformance";
-import { DEFAULT_SETTINGS, Settings } from "@overview/domain";
+import { DEFAULT_SETTINGS, Settings, UnreadableRecordError } from "@overview/domain";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { SETTINGS_KEY, SETTINGS_STORE } from "./localDatabaseSchema.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";
@@ -46,4 +46,48 @@ test("get() keeps what the stored settings do say, it does not reset them to the
 
   assert.equal(settings.readerContext, "I'm a beginner cook.");
   assert.equal(settings.sectionsEnabled.verdict, false);
+});
+
+test("a toggle a newer client added to sectionsEnabled survives this client changing another one", async () => {
+  const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
+  await promisifyRequest(
+    db
+      .transaction(SETTINGS_STORE, "readwrite")
+      .objectStore(SETTINGS_STORE)
+      .put({ ...DEFAULT_SETTINGS, sectionsEnabled: { ...DEFAULT_SETTINGS.sectionsEnabled, chapters: false } }, SETTINGS_KEY),
+  );
+  const store = new IndexedDbSettingsStore(db);
+
+  await store.update({
+    sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true },
+  });
+
+  const stored = await promisifyRequest<Record<string, Record<string, unknown>>>(
+    db.transaction(SETTINGS_STORE, "readonly").objectStore(SETTINGS_STORE).get(SETTINGS_KEY),
+  );
+  assert.equal(stored.sectionsEnabled?.chapters, false);
+  assert.equal(stored.sectionsEnabled?.verdict, false);
+});
+
+test("a setting a newer client added survives this client changing another one", async () => {
+  const store = await storeHoldingSettings({ ...DEFAULT_SETTINGS, theme: "dark" });
+
+  await store.update({ readerContext: "I'm a beginner cook." });
+
+  assert.equal((await store.unreadable()), null);
+});
+
+test("settings written by a newer client are reported rather than silently reset", async () => {
+  const store = await storeHoldingSettings({ ...DEFAULT_SETTINGS, schemaVersion: 99 });
+
+  assert.deepEqual(await store.get(), DEFAULT_SETTINGS);
+  const unreadable = await store.unreadable();
+  assert.equal(unreadable?.reason, "future-version");
+  assert.equal(unreadable?.kind, "settings");
+});
+
+test("an unreadable settings record is never written over", async () => {
+  const store = await storeHoldingSettings({ ...DEFAULT_SETTINGS, schemaVersion: 99, readerContext: "theirs" });
+
+  await assert.rejects(() => store.update({ readerContext: "mine" }), UnreadableRecordError);
 });

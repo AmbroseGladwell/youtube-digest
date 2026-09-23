@@ -80,4 +80,11 @@ describe("overviewButtonState", () => {
 
     expect(overviewButtonState({ videoId: VIDEO_ID, report, held: true }).kind).toBe("ready");
   });
+
+  // A library that could not be read has not said "no overview" — and the two answers
+  // cost different things to get wrong: a wrong "ready" costs a click, a wrong invite
+  // costs a whole generation (docs/features/record-migrations.md).
+  it("does not invite a run when the library could not say whether it holds one", () => {
+    expect(overviewButtonState({ videoId: VIDEO_ID, report: null, held: null }).kind).toBe("ready");
+  });
 });

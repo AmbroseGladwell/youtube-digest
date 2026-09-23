@@ -1,20 +1,22 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../app/Routes.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import styles from "./ErrorState.module.scss";
 import { errorStateTestIds } from "./ErrorStateTestIds.js";
 
-export interface ErrorStateAction {
-  label: string;
-  onSelect: () => void;
-}
+// A recovery action does something here; a departure leaves the app entirely. Both take
+// the pill, because the distinction the screen is built on is between an action and
+// navigation, and leaving for the video is an action (docs/features/record-migrations.md).
+export type ErrorStateAction =
+  | { label: string; onSelect: () => void }
+  | { label: string; href: string };
 
 export interface ErrorStateProps {
   title: string;
-  body?: string;
-  action?: ErrorStateAction;
-  back?: boolean;
+  body?: ReactNode;
+  action?: ErrorStateAction | undefined;
+  back?: boolean | undefined;
 }
 
 // Design turn 19's one dead-end screen. A recovery action is a pill and navigation is the
@@ -46,16 +48,27 @@ export function ErrorState({ title, body, action, back = false }: ErrorStateProp
       )}
       {(action !== undefined || back) && (
         <div className={styles.actions}>
-          {action !== undefined && (
-            <button
-              type="button"
-              className={styles.action}
-              onClick={action.onSelect}
-              data-testid={errorStateTestIds.action}
-            >
-              {action.label}
-            </button>
-          )}
+          {action !== undefined &&
+            ("href" in action ? (
+              <a
+                className={styles.action}
+                href={action.href}
+                target="_blank"
+                rel="noreferrer"
+                data-testid={errorStateTestIds.action}
+              >
+                {action.label}
+              </a>
+            ) : (
+              <button
+                type="button"
+                className={styles.action}
+                onClick={action.onSelect}
+                data-testid={errorStateTestIds.action}
+              >
+                {action.label}
+              </button>
+            ))}
           {back && (
             <Link
               to={Routes.home()}

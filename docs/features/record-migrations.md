@@ -1,12 +1,51 @@
 # Record migrations
 
-Designed, not built. This is the replacement for the stopgap named in
+Built, apart from what needs a server. This is the replacement for the stopgap named in
 `docs/architecture/v1-architecture-decisions.md` ("Stored records are read back
 unvalidated, and a versioned migration is the accepted way out — not yet built"),
-written so it can be argued with before any of it exists. It has since been argued with,
+written so it could be argued with before any of it existed. It has since been argued with,
 and the sections on writes, on the server and on what counts as a migration are the result.
 Where a conclusion survived an argument that turned out to be wrong, that is said rather than
 quietly tidied away.
+
+**What is built, and where**, since the rest of this document is written in the present
+tense of a design:
+
+| The decision | Where it lives |
+|---|---|
+| The chain, the precondition, and the version on the record | `packages/domain`: `RecordMigration`, `migrateRecord`, `storedSchemaVersion` |
+| Migrate, then parse, at the read boundary | `packages/domain/src/readStoredRecord.ts`, over `migrateStoredRecord` |
+| The first migration — the three video fields, filled with the null the schema already means | `packages/domain/src/overviewMigrations.ts`, at version 2 |
+| Quarantine, and the salvage parse | `UnreadableRecord`, `UnreadableRecordError`, `SalvagedOverview` |
+| Reading up to this client's version and no further | `migrateStoredRecord`, which holds back anything above it |
+| Per-store policy — quarantine, discard, or defaults | `packages/store-local`, one store at a time |
+| Field-scoped writes | `setOverviewTopics` on the store interface; `setOverviewState` and `Settings.update` merge into the raw record |
+| The corpus, and the registry-driven check | `overviewCorpus.ts` with `overviewMigrations.test.ts` |
+| The chain is actually run | `packages/store-conformance`, behind a raw-seeding hook a store may or may not offer |
+| The record in the library, and the screen behind it | `LibraryUnreadableCard`, `UnreadableOverview`, and `unreadableRecord.iwft.ts` |
+
+**What is not built, and why:** everything downstream of a handshake — `minSupportedClientVersion`,
+`currentSchemaVersion`, the stale-client banner and the write-floor wall. There is no API
+yet, and locally no record can exceed this client's version, because this client is the only
+thing that writes. The read rule that those screens report is built and tested; only the
+screens wait. The `future-version` reason exists and is carried through to the library card
+and the reader, so the day a record does arrive from a newer client, it is quarantined and
+named rather than read loosely.
+
+**Three departures from what is written below**, each small enough to have been made rather
+than re-argued:
+
+- **The corpus is a TypeScript module, not JSON files.** `npm test` compiles `src` and runs
+  `dist`, and JSON does not make that trip without import attributes and a compiler flag. The
+  records are literals either way, and the pairwise and registry-driven checks are unchanged.
+- **`listUnreadable()` carries a `kind`**, so one method answers for the overviews, the
+  overview states and the topics in the same store rather than three methods answering for
+  one store each. The library reads the `overview` ones; the rest are there to be counted
+  rather than rendered.
+- **An unreadable overview *state* falls back to the defaults rather than throwing**, because
+  `getOverviewState` has no absent case to borrow and one bad state record would otherwise
+  take the whole library list down. It is still counted by `listUnreadable()`, and the write
+  path refuses it, so nothing is written over.
 
 ## What this is actually for
 

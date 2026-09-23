@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { errorStateTestIds } from "../../src/components/shared/ErrorState/ErrorStateTestIds.js";
+import { unreadableOverviewTestIds } from "../../src/features/reader/components/UnreadableOverview/UnreadableOverviewTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class ErrorStatePageObject extends PageObject {
@@ -36,6 +37,16 @@ export class ErrorStatePageObject extends PageObject {
       await this.page.keyboard.press("Tab");
       await expect(this.get(errorStateTestIds.action)).toBeFocused();
     });
+
+  verifyOffersGenerateAgain = (): Promise<void> =>
+    this.step("verifyOffersGenerateAgain", () =>
+      this.expectToBeVisible(unreadableOverviewTestIds.generateAgain),
+    );
+
+  verifyOffersNoGenerateAgain = (): Promise<void> =>
+    this.step("verifyOffersNoGenerateAgain", () =>
+      this.expectToHaveCount(unreadableOverviewTestIds.generateAgain, 0),
+    );
 
   verifyHasNoBody = (): Promise<void> =>
     this.step("verifyHasNoBody", () => this.expectToHaveCount(errorStateTestIds.body, 0));

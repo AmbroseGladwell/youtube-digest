@@ -4,6 +4,7 @@ import type { Overview, TopicId } from "@overview/domain";
 import { useCreateTopicMutation } from "../../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewTopicsMutation } from "../../../overviews/mutations/useSetOverviewTopicsMutation.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
+import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
 import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import { topicCounts } from "../../../overviews/util/topicCounts.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -43,7 +44,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
 
   const topics = topicsQuery.data ?? [];
   const selected = topics.filter((topic) => overview.topicIds.includes(topic.id));
-  const counts = topicCounts((libraryQuery.data ?? []).map((entry) => entry.overview));
+  const counts = topicCounts(readableEntries(libraryQuery.data ?? []).map((entry) => entry.overview));
   const busy = setOverviewTopics.isPending || createTopic.isPending;
 
   const toggle = (topicId: TopicId) =>

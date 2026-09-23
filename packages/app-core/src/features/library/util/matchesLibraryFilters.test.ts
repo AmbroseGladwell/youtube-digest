@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
-import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.testHelper.js";
+import {
+  makeOverviewWithState,
+  makeUnreadableEntry,
+} from "../../overviews/types/OverviewFactory.testHelper.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
 
@@ -65,5 +68,31 @@ describe("matchesLibraryFilters", () => {
     expect(
       matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" }),
     ).toBe(false);
+  });
+
+  // Read and favourite live in their own store, so they are answerable for a record whose
+  // overview is not. Every other filter reads a field of the overview, and including a
+  // record that cannot answer would pollute the view
+  // (docs/features/record-migrations.md).
+  it("keeps an unreadable record under an unfiltered view and under the filters its state can answer", () => {
+    const favourited = makeUnreadableEntry({}, { favourite: true });
+
+    expect(matchesLibraryFilters(favourited, DEFAULT_LIBRARY_FILTERS)).toBe(true);
+    expect(matchesLibraryFilters(favourited, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(true);
+    expect(
+      matchesLibraryFilters(makeUnreadableEntry({}, { read: true }), {
+        ...DEFAULT_LIBRARY_FILTERS,
+        status: "unread",
+      }),
+    ).toBe(false);
+  });
+
+  it("drops an unreadable record from every filter that reads the overview itself", () => {
+    const entry = makeUnreadableEntry();
+
+    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, query: "anything" })).toBe(false);
   });
 });

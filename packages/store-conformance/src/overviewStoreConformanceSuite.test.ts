@@ -9,6 +9,7 @@ import {
   type OverviewState,
   type OverviewStore,
   type Topic,
+  type UnreadableRecord,
 } from "@overview/domain";
 import { defineOverviewStoreConformanceSuite } from "./overviewStoreConformanceSuite.js";
 
@@ -29,8 +30,19 @@ class InMemoryOverviewStore implements OverviewStore {
     });
   }
 
+  async listUnreadable(): Promise<UnreadableRecord[]> {
+    return [];
+  }
+
   async saveOverview(overview: Overview) {
     this.#overviews.set(overview.id, overview);
+  }
+
+  async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
+    const overview = this.#overviews.get(overviewId);
+    if (overview) {
+      this.#overviews.set(overviewId, { ...overview, topicIds });
+    }
   }
 
   async deleteOverview(id: OverviewId) {
@@ -73,4 +85,6 @@ class InMemoryOverviewStore implements OverviewStore {
   }
 }
 
-defineOverviewStoreConformanceSuite("InMemoryOverviewStore (reference)", () => new InMemoryOverviewStore());
+defineOverviewStoreConformanceSuite("InMemoryOverviewStore (reference)", () => ({
+  store: new InMemoryOverviewStore(),
+}));
