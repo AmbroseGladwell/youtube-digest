@@ -681,6 +681,61 @@ That last row is the reason the wall is better than a banner here. It can give i
 and take the reader to the place the instructions are about, which a strip above a working
 app has no room to do.
 
+### The update button never kills a generation
+
+That button can appear while a generation is running, and the intuition that it should warn
+before cancelling turns out to be backwards. Three facts from the code decide it.
+
+**Cancellation is not a refund.** There is no `AbortSignal` anywhere in `packages/generation`
+or `features/newOverview`: `RunOverviewGenerationOptions` carries `onProgress` and
+`isCancelled` and nothing else, and `stopIfCancelled()` is checked at exactly two points —
+after `resolveVideo` and after `generateOverview`. Cancelling during the model call does not
+stop it. It discards the answer.
+
+The roughly 30,000 tokens are spent the moment `generateOverview` is called, so the choice is
+never *spend them or don't*. It is **whether the note the money already bought gets written**,
+and killing the run means it bought nothing.
+
+**A run in flight survives the wall, by construction.** `useNewOverviewRun` is owned by
+`AppShell`, above `<Outlet />`, deliberately so that a run outlives the dialog it was started
+from and every navigation after it. The wall replaces `<Outlet />` rather than the tree, so
+the shell stays mounted and the run keeps going. That placement was chosen above for an
+unrelated reason — `OutOfDateTab` cannot carry links — and this is the second thing it buys.
+
+It matters because `minSupportedClientVersion` refuses *server* writes. The local IndexedDB
+write still lands, so a run finishing below the floor still produces a usable overview that
+syncs once the app updates. Tearing it down would destroy something that was going to work.
+
+**Nothing is resumable, and the code invites the opposite assumption.** `NewOverviewRun` is
+React state in whichever page holds the shell. The `RunReport` in `chrome.storage.session`
+looks like durable run state and is not — it is status, `progressFraction` and ids for the
+injected button to paint with, by design. There is no work in it to resume. What *is* durable
+is the transcript: `resolveVideo` saves it before generation starts, so a killed run does not
+pay for it twice. That is already the ceiling of what survives.
+
+So the button is **disabled while a run is active**, naming what it is waiting for. The status
+strip is already rendering that run's elapsed time beside it, so the reason needs no
+explaining.
+
+**The escape is a control already on screen**, which is what makes disabling safe rather than
+a trap: `dismiss()` bumps `runIdRef`, which makes `isCancelled` true and clears the run. A
+wedged generation therefore never blocks updating permanently. But the copy must not pretend
+that click saves anything — it neither refunds nor aborts, it only unblocks. *"Waiting for the
+overview you're generating — dismiss it to update now"* is honest about abandoning a result
+rather than cancelling a cost.
+
+Two alternatives, both rejected:
+
+- **Confirm and kill** — "updating will cancel your generation" offers a saving it cannot
+  deliver, and puts a modal on top of a wall.
+- **Update automatically once the run finishes** — invisible deferral. If the run wedges, the
+  update silently never happens and the reader is left believing they actioned it.
+
+**What would make this a non-question**, named so it is not rediscovered: an `AbortSignal`
+threaded through `generateOverview` so that cancelling stops the request, and persisted run
+state so that a reload can resume one. Both are generation work rather than migration work,
+and the second is a large change for a case measured in minutes a year.
+
 ### How stale a client can actually get
 
 The strict read rule is affordable only because this fleet updates quickly. That is a
@@ -856,13 +911,17 @@ indefinitely.
 integer, and a silent failure whenever the judgement behind it is wrong. Reopen only if a
 store-reviewed client is ever built.
 
-## Open questions, in the order they need answering
+## Open questions
 
-1. **What happens to a generation run in flight when the extension reloads?**
-   `chrome.runtime.reload()` is now the banner's and the wall's button, so the reload itself
-   is settled — but pressing it during a run kills the run, and a run costs roughly 30,000
-   tokens. Whether the button warns, waits, or simply refuses while a run is active is the
-   part still open, and it is a question about generation rather than about migration.
+**None remain in this document.** The last of them — what the update button does to a
+generation already running — is answered in *The update button never kills a generation*, and
+what is left over belongs to generation rather than to migration: an `AbortSignal` threaded
+through `generateOverview`, and persisted run state. Both are named there and neither is
+built.
+
+That is a statement about this design being argued through, not about it being right. The
+list below records what each answer rests on, so that a wrong one can be found and reopened
+rather than inherited.
 
 **Settled by narrowing what the banner is for: it carries the cause and the one global
 action, because the cards carry everything else.** Held-back records get library cards like
