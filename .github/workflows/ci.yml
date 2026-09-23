@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - types
+          - domain
           - transcripts
           - generation
           - store-conformance

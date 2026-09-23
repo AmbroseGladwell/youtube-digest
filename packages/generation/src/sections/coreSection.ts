@@ -1,4 +1,4 @@
-import { CoreFields } from "@overview/types";
+import { CoreFields } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
 
 export const coreSection: PromptSection = {

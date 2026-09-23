@@ -1,4 +1,4 @@
-import { VideoId } from "@overview/types";
+import { VideoId } from "@overview/domain";
 import { describe, expect, it } from "vitest";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { buildSearchHaystack } from "./buildSearchHaystack.js";

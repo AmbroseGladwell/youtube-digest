@@ -1,4 +1,4 @@
-import type { ClaimSummary, SectionsEnabled, Topic, TranscriptSegment, VideoSource } from "@overview/types";
+import type { ClaimSummary, SectionsEnabled, Topic, TranscriptSegment, VideoSource } from "@overview/domain";
 
 export interface GenerationInput {
   video: VideoSource;

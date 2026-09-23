@@ -1,4 +1,4 @@
-import type { Overview, TopicId } from "@overview/types";
+import type { Overview, TopicId } from "@overview/domain";
 
 export const filedUnderTopic = (overview: Overview, topicId: TopicId): Overview =>
   overview.topicIds.includes(topicId)

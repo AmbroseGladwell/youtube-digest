@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OverviewId } from "@overview/types";
+import { OverviewId } from "@overview/domain";
 import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { overviewNeighbours } from "./overviewNeighbours.js";
 

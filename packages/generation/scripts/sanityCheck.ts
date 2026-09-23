@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
 import {
   generateOverview,
   createAnthropicGenerationClient,

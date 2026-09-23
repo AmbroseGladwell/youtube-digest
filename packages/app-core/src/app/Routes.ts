@@ -1,4 +1,4 @@
-import type { OverviewId } from "@overview/types";
+import type { OverviewId } from "@overview/domain";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
 // 1.2). Call sites (navigate(), <Link>, tests) go through this rather than a string

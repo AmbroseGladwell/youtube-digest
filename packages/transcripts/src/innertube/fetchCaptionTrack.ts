@@ -1,4 +1,4 @@
-import type { TranscriptSegment } from "@overview/types";
+import type { TranscriptSegment } from "@overview/domain";
 import type { YouTubeFetch } from "../YouTubeFetch.js";
 import type { InnerTubeClientConfig } from "./InnerTubeClientConfig.js";
 import { httpFailure, innerTubeError } from "./innerTubeFailure.js";

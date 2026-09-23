@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { IDBFactory } from "fake-indexeddb";
 import { defineSettingsStoreConformanceSuite } from "@overview/store-conformance";
-import { DEFAULT_SETTINGS, Settings } from "@overview/types";
+import { DEFAULT_SETTINGS, Settings } from "@overview/domain";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { SETTINGS_KEY, SETTINGS_STORE } from "./localDatabaseSchema.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";

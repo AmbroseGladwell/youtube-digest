@@ -1,4 +1,4 @@
-import { Novelty, TopicId } from "@overview/types";
+import { Novelty, TopicId } from "@overview/domain";
 import { DEFAULT_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);

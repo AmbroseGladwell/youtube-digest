@@ -19,7 +19,7 @@
     "test:iwft": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
-    "@overview/types": "*",
+    "@overview/domain": "*",
     "@overview/transcripts": "*",
     "@overview/generation": "*",
     "@anthropic-ai/sdk": "^0.126.0",

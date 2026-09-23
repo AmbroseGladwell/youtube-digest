@@ -1,4 +1,4 @@
-import type { TranscriptSegment } from "@overview/types";
+import type { TranscriptSegment } from "@overview/domain";
 import type { TranscriptBlock } from "../types/TranscriptBlock.js";
 
 // Ported from zarazhangrui/youtube-digest's groupTranscriptEntries, logic not file

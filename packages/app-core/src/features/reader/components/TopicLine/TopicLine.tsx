@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import type { Overview, TopicId } from "@overview/types";
+import type { Overview, TopicId } from "@overview/domain";
 import { useCreateTopicMutation } from "../../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewTopicsMutation } from "../../../overviews/mutations/useSetOverviewTopicsMutation.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";

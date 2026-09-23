@@ -1,4 +1,4 @@
-import type { VideoSource } from "@overview/types";
+import type { VideoSource } from "@overview/domain";
 import { describe, expect, it } from "vitest";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTranscriptBlock } from "../types/TranscriptBlockFactory.testHelper.js";

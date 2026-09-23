@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { generationRunStatus } from "../../util/generationRunStatus.js";

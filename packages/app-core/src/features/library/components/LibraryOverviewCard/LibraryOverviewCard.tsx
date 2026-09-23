@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import type { Novelty } from "@overview/types";
+import type { Novelty } from "@overview/domain";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";

@@ -17,7 +17,7 @@
     "test": "npm run build && node --test \"dist/**/*.test.js\""
   },
   "dependencies": {
-    "@overview/types": "*",
+    "@overview/domain": "*",
     "zod": "^4.6.5",
     "@supadata/js": "^1.4.0"
   },

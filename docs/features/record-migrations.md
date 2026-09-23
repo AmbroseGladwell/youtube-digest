@@ -702,24 +702,22 @@ store-reviewed client is ever built.
 
 ## Open questions, in the order they need answering
 
-1. **Does `packages/types` get renamed, or does the chain move out of it?** The chain's
-   home should be `packages/types`, next to the schema it migrates: the design's whole
-   premise is that the decision about an absent field is made where the field is added, and
-   a separate `packages/migrations` makes that a two-package change forever. The objection —
-   that it turns a package named `types` into a domain package with behaviour — is already
-   true of `DEFAULT_OVERVIEW_STATE`, `DEFAULT_SETTINGS` and `Overview.superRefine`. So the
-   discomfort is with the name rather than the structure, and `@overview` is a placeholder
-   scope with product naming parked anyway. The open part is only whether to spend the
-   rename.
-2. **How does the library surface an unreadable record?** A card in place in the grid —
+1. **How does the library surface an unreadable record?** A card in place in the grid —
    salvaged title where there is one, clicking through to the older-format screen — keeps
    the count honest and the record in its position, which is what *kept, not dropped* should
    look like. A separate section is the alternative. This is a call rather than a deduction.
-3. **Where does the held-back banner live, and what does it say?** It is app-level rather
+2. **Where does the held-back banner live, and what does it say?** It is app-level rather
    than per record, so it belongs to neither `ErrorState` nor the quarantine list.
-4. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
+3. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
    the fastest way to clear a stale service worker, and it would kill a generation run in
    flight. The interesting case is what happens to a job mid-flight, not the reload itself.
+
+**Settled by renaming the package: the chain lives in `packages/domain`, next to the schema
+it migrates.** The premise of the whole design is that the decision about an absent field is
+made where the field is added, and a separate `packages/migrations` would make that a
+two-package change forever. The objection was never to the structure — it was that a package
+called `types` had stopped being one, which `DEFAULT_OVERVIEW_STATE`, `DEFAULT_SETTINGS` and
+`Overview.superRefine` had already made true. So the name moved rather than the code.
 
 **Settled by salvage: the quarantine is surfaced per record, not as a count.** That was
 the first open question here, and offering anything to do about a stuck note answers it —

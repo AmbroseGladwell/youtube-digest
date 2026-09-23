@@ -1,4 +1,4 @@
-import { sameTopicName, type Topic } from "@overview/types";
+import { sameTopicName, type Topic } from "@overview/domain";
 
 export interface TopicMatch {
   topic: Topic;

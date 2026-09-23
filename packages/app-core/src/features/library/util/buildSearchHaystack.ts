@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 
 // Logic ported from prototype/index_template.html's haystack() (CLAUDE.md: port the
 // logic, not the file) — concatenate everything a reader might search by into one

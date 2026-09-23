@@ -1,4 +1,4 @@
-import type { Overview, OverviewId } from "@overview/types";
+import type { Overview, OverviewId } from "@overview/domain";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";

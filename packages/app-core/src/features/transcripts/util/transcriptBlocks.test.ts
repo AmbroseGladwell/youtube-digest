@@ -1,4 +1,4 @@
-import type { TranscriptSegment } from "@overview/types";
+import type { TranscriptSegment } from "@overview/domain";
 import { describe, expect, it } from "vitest";
 import {
   makeCaptionRun,

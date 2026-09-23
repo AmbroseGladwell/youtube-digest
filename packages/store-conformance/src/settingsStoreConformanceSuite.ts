@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_SETTINGS, Settings, type SettingsStore } from "@overview/types";
+import { DEFAULT_SETTINGS, Settings, type SettingsStore } from "@overview/domain";
 
 export function defineSettingsStoreConformanceSuite(
   label: string,

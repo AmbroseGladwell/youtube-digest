@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DEFAULT_ANTHROPIC_MODEL, type Overview } from "@overview/types";
+import { DEFAULT_ANTHROPIC_MODEL, type Overview } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";

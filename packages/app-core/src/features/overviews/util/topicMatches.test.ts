@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TopicId, type Topic } from "@overview/types";
+import { TopicId, type Topic } from "@overview/domain";
 import { creatableTopicName, topicMatches } from "./topicMatches.js";
 
 const topic = (name: string): Topic => ({

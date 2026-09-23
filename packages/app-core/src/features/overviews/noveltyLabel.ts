@@ -1,4 +1,4 @@
-import type { Novelty } from "@overview/types";
+import type { Novelty } from "@overview/domain";
 
 export const NOVELTY_LABEL: Record<Novelty, string> = {
   novel: "Novel",

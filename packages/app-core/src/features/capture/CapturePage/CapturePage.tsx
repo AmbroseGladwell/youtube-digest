@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import type { Overview } from "@overview/types";
+import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";

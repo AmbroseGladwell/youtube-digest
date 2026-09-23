@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TopicId } from "@overview/types";
+import { TopicId } from "@overview/domain";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { applyLibraryFilterPatch, parseLibraryFilters } from "./libraryFilterParams.js";
 

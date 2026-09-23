@@ -1,4 +1,4 @@
-import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/types";
+import type { StoredTranscript, TranscriptStore, VideoId } from "@overview/domain";
 import { TRANSCRIPTS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 

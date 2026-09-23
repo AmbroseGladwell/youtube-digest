@@ -8,7 +8,7 @@ import {
   type OverviewState,
   type OverviewStore,
   type Topic,
-} from "@overview/types";
+} from "@overview/domain";
 import { OVERVIEWS_STORE, OVERVIEW_STATES_STORE, TOPICS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 

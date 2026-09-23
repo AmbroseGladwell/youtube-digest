@@ -1,4 +1,4 @@
-import type { VideoSource } from "@overview/types";
+import type { VideoSource } from "@overview/domain";
 import { withSingleRetry } from "../withSingleRetry.js";
 import { mapMetadataToVideoSource } from "./mapMetadataToVideoSource.js";
 import type { SupadataClient } from "./SupadataClient.js";

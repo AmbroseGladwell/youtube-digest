@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { OverviewId, VideoId, type Overview } from "@overview/types";
+import { OverviewId, VideoId, type Overview } from "@overview/domain";
 
 export function makeOverview(overrides: Partial<Overview> = {}): Overview {
   return {

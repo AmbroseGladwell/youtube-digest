@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type Settings, type SettingsStore } from "@overview/types";
+import { DEFAULT_SETTINGS, type Settings, type SettingsStore } from "@overview/domain";
 import { SETTINGS_KEY, SETTINGS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 

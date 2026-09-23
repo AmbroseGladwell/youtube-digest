@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type Settings, type SettingsStore } from "@overview/types";
+import { DEFAULT_SETTINGS, type Settings, type SettingsStore } from "@overview/domain";
 
 export class InMemorySettingsStore implements SettingsStore {
   #settings: Settings = DEFAULT_SETTINGS;

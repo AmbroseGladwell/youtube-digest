@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Supadata } from "@supadata/js";
 import { createAnthropicGenerationClient, type GenerationClient } from "@overview/generation";
-import type { AnthropicModel } from "@overview/types";
+import type { AnthropicModel } from "@overview/domain";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
 import { supadataTranscriptSource } from "../../transcripts/api/supadataTranscriptSource.js";

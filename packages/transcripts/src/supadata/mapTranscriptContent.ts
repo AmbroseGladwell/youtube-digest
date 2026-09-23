@@ -1,5 +1,5 @@
 import type { Transcript } from "@supadata/js";
-import { TranscriptSegment } from "@overview/types";
+import { TranscriptSegment } from "@overview/domain";
 import { TranscriptFetchError } from "../TranscriptFetchError.js";
 import { TranscriptFetchFailure } from "../TranscriptFetchFailure.js";
 

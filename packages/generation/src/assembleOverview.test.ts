@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, TopicId, VideoId } from "@overview/types";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, TopicId, VideoId } from "@overview/domain";
 import { assembleOverview } from "./assembleOverview.js";
 import { GenerationError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";

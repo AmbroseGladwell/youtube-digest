@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import type { Topic, TopicId } from "@overview/types";
+import type { Topic, TopicId } from "@overview/domain";
 import { creatableTopicName, topicMatches } from "../../../overviews/util/topicMatches.js";
 import styles from "./TopicPicker.module.scss";
 import { topicPickerTestIds } from "./TopicPickerTestIds.js";

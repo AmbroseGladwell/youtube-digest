@@ -1,4 +1,4 @@
-import { VideoId } from "@overview/types";
+import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { PLUS_FEATURES } from "../../../src/features/plus/plusFeatures.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";

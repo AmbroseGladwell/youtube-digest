@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import type { Plan } from "@overview/types";
+import type { Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";

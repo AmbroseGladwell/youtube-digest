@@ -1,5 +1,5 @@
 import type { Metadata } from "@supadata/js";
-import { VideoSource } from "@overview/types";
+import { VideoSource } from "@overview/domain";
 
 const publishedAt = (createdAt: string | null | undefined): string | null => {
   const parsed = createdAt === null || createdAt === undefined ? NaN : Date.parse(createdAt);

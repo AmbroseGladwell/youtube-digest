@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { TranscriptStore, VideoId } from "@overview/types";
+import type { TranscriptStore, VideoId } from "@overview/domain";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";

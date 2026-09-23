@@ -1,5 +1,5 @@
 import type { RunReport } from "@overview/app-core";
-import { OverviewId, VideoId } from "@overview/types";
+import { OverviewId, VideoId } from "@overview/domain";
 import { describe, expect, it } from "vitest";
 import { overviewButtonState } from "./overviewButtonState.js";
 

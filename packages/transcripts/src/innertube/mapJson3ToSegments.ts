@@ -1,4 +1,4 @@
-import { TranscriptSegment } from "@overview/types";
+import { TranscriptSegment } from "@overview/domain";
 import { TranscriptFetchFailure } from "../TranscriptFetchFailure.js";
 import { innerTubeError } from "./innerTubeFailure.js";
 

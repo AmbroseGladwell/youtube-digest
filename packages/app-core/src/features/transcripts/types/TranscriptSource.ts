@@ -1,4 +1,4 @@
-import type { StoredTranscript, TranscriptSegment, VideoId, VideoSource } from "@overview/types";
+import type { StoredTranscript, TranscriptSegment, VideoId, VideoSource } from "@overview/domain";
 
 export type TranscriptTier = "shared-cache" | "extension" | "supadata" | "service";
 

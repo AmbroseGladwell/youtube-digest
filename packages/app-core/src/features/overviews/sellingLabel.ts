@@ -1,4 +1,4 @@
-import type { SellingType } from "@overview/types";
+import type { SellingType } from "@overview/domain";
 
 export const SELLING_LABEL: Record<SellingType, string> = {
   own_paid_product: "Sells their own paid product",

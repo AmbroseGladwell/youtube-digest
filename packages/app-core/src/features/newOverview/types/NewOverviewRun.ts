@@ -1,4 +1,4 @@
-import type { Overview, VideoSource } from "@overview/types";
+import type { Overview, VideoSource } from "@overview/domain";
 
 // One generation, from the moment Generate is pressed until it is dismissed. It outlives
 // the dialog: closing the dialog leaves the run going and hands it to the status strip

@@ -1,4 +1,4 @@
-export type { TranscriptSegment } from "@overview/types";
+export type { TranscriptSegment } from "@overview/domain";
 export * from "./GenerationInput.js";
 export * from "./GeneratedOutput.js";
 export * from "./PromptSection.js";

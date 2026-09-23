@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import type { VideoSource } from "@overview/types";
+import type { VideoSource } from "@overview/domain";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./OverviewThumbnail.module.scss";
 import { overviewThumbnailTestIds } from "./OverviewThumbnailTestIds.js";

@@ -1,4 +1,4 @@
-import type { Overview, OverviewState, Settings, StoredTranscript, Topic } from "@overview/types";
+import type { Overview, OverviewState, Settings, StoredTranscript, Topic } from "@overview/domain";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";

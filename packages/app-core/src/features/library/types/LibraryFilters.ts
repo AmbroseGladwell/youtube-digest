@@ -1,4 +1,4 @@
-import type { Novelty, TopicId } from "@overview/types";
+import type { Novelty, TopicId } from "@overview/domain";
 
 export interface LibraryFilters {
   topicId: TopicId | "all";

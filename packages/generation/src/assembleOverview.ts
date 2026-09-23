@@ -1,4 +1,4 @@
-import { HowToApply, Overview, Selling, Verdict, WatchAnyway, type OverviewId } from "@overview/types";
+import { HowToApply, Overview, Selling, Verdict, WatchAnyway, type OverviewId } from "@overview/domain";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";

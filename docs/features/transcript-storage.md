@@ -20,7 +20,7 @@ A transcript belongs to the video, not to the note taken from it. Two things fol
   shared cache arrives, it is a second implementation of this interface rather than a
   migration.
 
-So a transcript gets its own interface (`packages/types/src/TranscriptStore.ts`), its own
+So a transcript gets its own interface (`packages/domain/src/TranscriptStore.ts`), its own
 IndexedDB object store, and its own conformance suite — a third store alongside
 `OverviewStore` and `SettingsStore` rather than a few more methods on either.
 

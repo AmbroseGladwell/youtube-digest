@@ -3,7 +3,7 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { IDBFactory } from "fake-indexeddb";
 import { defineOverviewStoreConformanceSuite } from "@overview/store-conformance";
-import { OverviewId, OverviewState } from "@overview/types";
+import { OverviewId, OverviewState } from "@overview/domain";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { OVERVIEW_STATES_STORE } from "./localDatabaseSchema.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";

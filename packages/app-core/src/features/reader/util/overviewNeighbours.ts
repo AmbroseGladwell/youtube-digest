@@ -1,4 +1,4 @@
-import type { OverviewId } from "@overview/types";
+import type { OverviewId } from "@overview/domain";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
 
 export interface OverviewNeighbours {

@@ -9,7 +9,7 @@ import {
   type OverviewState,
   type OverviewStore,
   type Topic,
-} from "@overview/types";
+} from "@overview/domain";
 import { defineOverviewStoreConformanceSuite } from "./overviewStoreConformanceSuite.js";
 
 class InMemoryOverviewStore implements OverviewStore {

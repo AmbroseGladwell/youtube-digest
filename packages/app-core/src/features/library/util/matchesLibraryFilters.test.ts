@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TopicId } from "@overview/types";
+import { TopicId } from "@overview/domain";
 import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";

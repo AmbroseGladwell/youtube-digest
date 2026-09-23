@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { OverviewStore } from "@overview/types";
+import type { OverviewStore } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { topicKeys } from "../topicKeys.js";
 

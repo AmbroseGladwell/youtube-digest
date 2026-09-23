@@ -1,4 +1,4 @@
-import type { Novelty, TopicId } from "@overview/types";
+import type { Novelty, TopicId } from "@overview/domain";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
 
 export interface LibraryFilterCounts {
