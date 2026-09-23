@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OverviewId, OverviewState } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
+import { libraryEntryId, type LibraryEntry } from "../types/LibraryEntry.js";
 import type { OverviewWithState } from "../types/OverviewWithState.js";
 import { overviewKeys } from "../overviewKeys.js";
 
@@ -10,7 +11,7 @@ export interface SetOverviewStateVariables {
 }
 
 interface SetOverviewStateContext {
-  previousList: OverviewWithState[] | undefined;
+  previousList: LibraryEntry[] | undefined;
   previousDetail: OverviewWithState | null | undefined;
 }
 
@@ -25,14 +26,14 @@ export function useSetOverviewStateMutation() {
     onMutate: async ({ overviewId, patch }) => {
       await queryClient.cancelQueries({ queryKey: overviewKeys.all });
 
-      const previousList = queryClient.getQueryData<OverviewWithState[]>(overviewKeys.list());
+      const previousList = queryClient.getQueryData<LibraryEntry[]>(overviewKeys.list());
       const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
         overviewKeys.detail(overviewId),
       );
 
-      queryClient.setQueryData<OverviewWithState[]>(overviewKeys.list(), (current) =>
+      queryClient.setQueryData<LibraryEntry[]>(overviewKeys.list(), (current) =>
         current?.map((entry) =>
-          entry.overview.id === overviewId ? { ...entry, state: { ...entry.state, ...patch } } : entry,
+          libraryEntryId(entry) === overviewId ? { ...entry, state: { ...entry.state, ...patch } } : entry,
         ),
       );
       queryClient.setQueryData<OverviewWithState | null>(overviewKeys.detail(overviewId), (current) =>

@@ -19,6 +19,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   for (const overview of hooksConfig?.seedOverviews ?? []) overviewStore.seedOverview(overview);
   for (const state of hooksConfig?.seedStates ?? []) overviewStore.seedState(state);
   for (const topic of hooksConfig?.seedTopics ?? []) overviewStore.seedTopic(topic);
+  for (const record of hooksConfig?.seedUnreadable ?? []) overviewStore.seedUnreadable(record);
   for (const transcript of hooksConfig?.seedTranscripts ?? [])
     transcriptStore.seedTranscript(transcript);
   if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);

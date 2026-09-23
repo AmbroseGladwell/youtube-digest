@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Overview, TopicId } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
+import type { LibraryEntry } from "../types/LibraryEntry.js";
 import type { OverviewWithState } from "../types/OverviewWithState.js";
 import { overviewKeys } from "../overviewKeys.js";
 
@@ -10,7 +11,7 @@ export interface SetOverviewTopicsVariables {
 }
 
 interface SetOverviewTopicsContext {
-  previousList: OverviewWithState[] | undefined;
+  previousList: LibraryEntry[] | undefined;
   previousDetail: OverviewWithState | null | undefined;
 }
 
@@ -20,19 +21,19 @@ export function useSetOverviewTopicsMutation() {
 
   return useMutation<void, Error, SetOverviewTopicsVariables, SetOverviewTopicsContext>({
     mutationKey: overviewKeys.all,
-    mutationFn: ({ overview, topicIds }) => overviewStore.saveOverview({ ...overview, topicIds }),
+    mutationFn: ({ overview, topicIds }) => overviewStore.setOverviewTopics(overview.id, topicIds),
 
     onMutate: async ({ overview, topicIds }) => {
       await queryClient.cancelQueries({ queryKey: overviewKeys.all });
 
-      const previousList = queryClient.getQueryData<OverviewWithState[]>(overviewKeys.list());
+      const previousList = queryClient.getQueryData<LibraryEntry[]>(overviewKeys.list());
       const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
         overviewKeys.detail(overview.id),
       );
 
-      queryClient.setQueryData<OverviewWithState[]>(overviewKeys.list(), (current) =>
+      queryClient.setQueryData<LibraryEntry[]>(overviewKeys.list(), (current) =>
         current?.map((entry) =>
-          entry.overview.id === overview.id
+          entry.kind === "overview" && entry.overview.id === overview.id
             ? { ...entry, overview: { ...entry.overview, topicIds } }
             : entry,
         ),

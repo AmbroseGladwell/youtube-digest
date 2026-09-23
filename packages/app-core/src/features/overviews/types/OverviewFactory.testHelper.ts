@@ -4,7 +4,9 @@ import {
   VideoId,
   type Overview,
   type OverviewState,
+  type UnreadableRecord,
 } from "@overview/domain";
+import type { LibraryEntry } from "./LibraryEntry.js";
 import type { OverviewWithState } from "./OverviewWithState.js";
 
 export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
@@ -43,7 +45,34 @@ export const makeOverviewState = (overviewId: string, overrides: Partial<Overvie
 export const makeOverviewWithState = (
   overviewOverrides: Partial<Overview> = {},
   stateOverrides: Partial<OverviewState> = {},
-): OverviewWithState => {
+): { kind: "overview" } & OverviewWithState => {
   const overview = makeOverview(overviewOverrides);
-  return { overview, state: makeOverviewState(overview.id, stateOverrides) };
+  return { kind: "overview", overview, state: makeOverviewState(overview.id, stateOverrides) };
+};
+
+export const makeUnreadableEntry = (
+  recordOverrides: Partial<UnreadableRecord> = {},
+  stateOverrides: Partial<OverviewState> = {},
+): LibraryEntry => {
+  const id = recordOverrides.id ?? crypto.randomUUID();
+  return {
+    kind: "unreadable",
+    record: {
+      kind: "overview",
+      id,
+      schemaVersion: 1,
+      reason: "invalid",
+      detail: "coreClaim: expected string",
+      salvaged: {
+        savedAt: new Date().toISOString(),
+        video: {
+          id: VideoId.parse("example"),
+          url: "https://www.youtube.com/watch?v=example",
+          title: "Example",
+        },
+      },
+      ...recordOverrides,
+    },
+    state: makeOverviewState(id, stateOverrides),
+  };
 };

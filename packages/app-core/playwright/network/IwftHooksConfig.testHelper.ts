@@ -1,4 +1,11 @@
-import type { Overview, OverviewState, Settings, StoredTranscript, Topic } from "@overview/domain";
+import type {
+  Overview,
+  OverviewState,
+  Settings,
+  StoredTranscript,
+  Topic,
+  UnreadableRecord,
+} from "@overview/domain";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
@@ -15,6 +22,9 @@ export interface IwftHooksConfig {
   seedOverviews?: Overview[];
   seedStates?: OverviewState[];
   seedTopics?: Topic[];
+  // Records the store holds and cannot read, for the quarantine's own scenarios
+  // (docs/features/record-migrations.md).
+  seedUnreadable?: UnreadableRecord[];
   seedTranscripts?: StoredTranscript[];
   seedSettings?: Partial<Settings>;
   // Store reads told to throw, for the dead-end screen's own scenarios.

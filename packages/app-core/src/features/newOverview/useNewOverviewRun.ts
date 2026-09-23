@@ -1,14 +1,19 @@
 import { useCallback, useRef, useState } from "react";
+import type { OverviewId } from "@overview/domain";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
 import type { NewOverviewRun } from "./types/NewOverviewRun.js";
+
+export interface StartOverviewRunOptions {
+  overviewId?: OverviewId | undefined;
+}
 
 export interface NewOverviewRunController {
   run: NewOverviewRun | null;
   dialogOpen: boolean;
   open: () => void;
   close: () => void;
-  start: (url: string) => void;
+  start: (url: string, options?: StartOverviewRunOptions) => void;
   dismiss: () => void;
 }
 
@@ -24,7 +29,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
 
   // The callbacks are stable because the status strip's self-dismiss timer depends on
   // them: a fresh identity every render would restart the countdown on every re-render.
-  const start = useCallback((url: string) => {
+  const start = useCallback((url: string, options: StartOverviewRunOptions = {}) => {
     const runId = (runIdRef.current += 1);
     const isCurrent = () => runIdRef.current === runId;
 
@@ -41,6 +46,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
     mutate(
       {
         url,
+        overviewId: options.overviewId,
         onProgress: (progress) => {
           if (isCurrent()) {
             setRun((current) => (current === null ? null : { ...current, ...progress }));

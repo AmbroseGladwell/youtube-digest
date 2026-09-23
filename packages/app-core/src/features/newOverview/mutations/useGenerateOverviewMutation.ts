@@ -24,7 +24,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
-    mutationFn: async ({ url, onProgress, isCancelled }) => {
+    mutationFn: async ({ url, onProgress, isCancelled, overviewId }) => {
       if (!apiKeys.anthropicApiKey) {
         throw new Error("Add your Anthropic API key first.");
       }
@@ -42,7 +42,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
           overviewStore,
           transcriptStore,
         },
-        { onProgress, isCancelled },
+        { onProgress, isCancelled, overviewId },
       );
     },
     onSuccess: () => {

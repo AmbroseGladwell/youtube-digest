@@ -25,7 +25,7 @@ export function useCreateTopicMutation() {
         (await overviewStore.createTopic({ name: trimmed }));
 
       for (const overview of overviews) {
-        await overviewStore.saveOverview(filedUnderTopic(overview, topic.id));
+        await overviewStore.setOverviewTopics(overview.id, filedUnderTopic(overview, topic.id).topicIds);
       }
 
       return topic;

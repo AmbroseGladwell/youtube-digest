@@ -88,6 +88,7 @@
 // furniture.
 .action {
   display: inline-flex;
+  text-decoration: none;
   align-items: center;
   border: 1px solid var(--accent);
   border-radius: var(--radius-badge);

@@ -370,8 +370,9 @@ surfacing at runtime as a query that silently returns nothing. `Brands.test.ts`
 encodes this as a permanent check (`@ts-expect-error` on the two cases that must not
 compile) rather than something that only held the day it was written.
 
-**Stored records are read back unvalidated, and a versioned migration is the accepted
-way out — not yet built.** A record written by an older schema comes back exactly as it
+**Stored records were read back unvalidated, and a versioned migration was the accepted
+way out. It is now built** (`docs/features/record-migrations.md`), and what follows is the
+problem it was built for, kept because it is the evidence. A record written by an older schema came back exactly as it
 was written, so a field added since has no key at all: `undefined`, not `null`. Every
 reader of a progressively-added field therefore has to guard on truthiness rather than on
 the one absent value the current schema can express — `OverviewThumbnail` carries the long
@@ -391,22 +392,27 @@ per field, made once, rather than at every call site forever. It is not worth bu
 against a handful of local dev records; it becomes worth building at the point either real
 users or a synced paid tier exist, whichever is first.
 
-That replacement is now designed in `docs/features/record-migrations.md`, which argues —
-against the trigger set here — that the backend is the thing that makes it expensive to
+That replacement is designed and built in `docs/features/record-migrations.md`, which argued
+— against the trigger set here — that the backend is the thing that makes it expensive to
 defer, because `schemaVersion` has to exist in the API contract and the Postgres row either
-way. Not built.
+way, and that a rule about who may write to what cannot be retrofitted once two versions are
+already syncing. Records now carry a `schemaVersion`, are migrated and parsed on the way out
+of the store, and are quarantined and counted rather than dropped when they cannot be read.
+What waits for the API is the handshake and the two screens it fires.
 
 **Two of the stores now fill their defaults at read time, and that is a stopgap, not the
 migration above.** `IndexedDbSettingsStore.get()` returned `DEFAULT_SETTINGS` only when the
 record was *absent*, so a record written before `plan` and `plusNoticeDismissed` existed
 came back missing both — the same trap as `publishedAt`, one layer lower, and reached by
 every reader rather than one component. It now merges the stored record onto the defaults,
-and `getOverviewState` does the same. Two limits are worth naming rather than discovering:
-the merge is shallow, so a newly added *section toggle* inside `sectionsEnabled` is still
-absent (deep-merging it would contradict the wholesale-replace rule the conformance suite
-pins), and nothing is validated on the way out, so a record that is wrong rather than old
-still passes through. Both are the migration's job. What the merge buys is that adding a
-top-level field stops being a bug.
+and `getOverviewState` does the same. Two limits were named here rather than left to be
+discovered, and the migration has since closed both: the merge was shallow, so a toggle added
+inside `sectionsEnabled` was still absent — the write path now merges into that nested object
+instead of replacing it — and nothing was validated on the way out, so a record that was
+*wrong* rather than old passed straight through. Both reads now parse, and fall back or
+quarantine rather than handing back a shape nobody checked. The defaults stay where they are:
+merging them is still what makes adding a top-level field a non-event, and a migration is only
+needed where a default cannot express the answer.
 
 **Every connection closes itself when another context needs to upgrade, and a blocked open
 fails instead of hanging.** `indexedDB.open` fires `blocked` — not `error` — when another

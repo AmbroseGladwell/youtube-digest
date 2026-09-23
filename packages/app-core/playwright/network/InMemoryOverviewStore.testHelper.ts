@@ -8,6 +8,8 @@ import {
   type OverviewState,
   type OverviewStore,
   type Topic,
+  type UnreadableRecord,
+  UnreadableRecordError,
 } from "@overview/domain";
 
 // A fresh, browser-safe in-memory OverviewStore for IWFT runs — the conformance suite's
@@ -21,8 +23,13 @@ export class InMemoryOverviewStore implements OverviewStore {
   #overviews = new Map<OverviewId, Overview>();
   #topics = new Map<TopicId, Topic>();
   #states = new Map<OverviewId, OverviewState>();
+  #unreadable: UnreadableRecord[] = [];
 
   async getOverview(id: OverviewId) {
+    const unreadable = this.#unreadable.find((record) => record.id === id);
+    if (unreadable) {
+      throw new UnreadableRecordError(unreadable);
+    }
     return this.#overviews.get(id) ?? null;
   }
 
@@ -35,8 +42,20 @@ export class InMemoryOverviewStore implements OverviewStore {
     });
   }
 
+  async listUnreadable(): Promise<UnreadableRecord[]> {
+    this.#throwIfFailing("overviews");
+    return [...this.#unreadable];
+  }
+
   async saveOverview(overview: Overview) {
     this.#overviews.set(overview.id, overview);
+  }
+
+  async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
+    const overview = this.#overviews.get(overviewId);
+    if (overview) {
+      this.#overviews.set(overviewId, { ...overview, topicIds });
+    }
   }
 
   async deleteOverview(id: OverviewId) {
@@ -94,6 +113,10 @@ export class InMemoryOverviewStore implements OverviewStore {
 
   seedOverview(overview: Overview): void {
     this.#overviews.set(overview.id, overview);
+  }
+
+  seedUnreadable(record: UnreadableRecord): void {
+    this.#unreadable.push(record);
   }
 
   seedTopic(topic: Topic): void {

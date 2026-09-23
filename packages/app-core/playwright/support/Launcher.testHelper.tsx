@@ -137,6 +137,10 @@ export class Launcher {
     return new AppShellPageObject(this.testContext);
   }
 
+  get errorState(): ErrorStatePageObject {
+    return new ErrorStatePageObject(this.testContext);
+  }
+
   get readerPage(): ReaderPageObject {
     return new ReaderPageObject(this.testContext);
   }

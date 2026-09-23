@@ -5,6 +5,7 @@ import type {
   OverviewState,
   StoredTranscript,
   Topic,
+  UnreadableRecord,
   VideoId,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
@@ -27,6 +28,7 @@ export class BackendSimulator {
   #seedStates: OverviewState[] = [];
   #seedTopics: Topic[] = [];
   #seedTranscripts: StoredTranscript[] = [];
+  #seedUnreadable: UnreadableRecord[] = [];
 
   #behaviours = new Map<EndpointKey, EndpointBehaviour>(
     Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
@@ -77,6 +79,7 @@ export class BackendSimulator {
   buildHooksConfig = (): Omit<IwftHooksConfig, "apiKeys"> => ({
     seedOverviews: this.#seedOverviews,
     seedStates: this.#seedStates,
+    seedUnreadable: this.#seedUnreadable,
     seedTopics: this.#seedTopics,
     seedTranscripts: this.#seedTranscripts,
   });
@@ -187,6 +190,9 @@ export class BackendSimulator {
     },
     seedTopic: (topic: Topic): void => {
       this.#seedTopics.push(topic);
+    },
+    seedUnreadable: (record: UnreadableRecord): void => {
+      this.#seedUnreadable.push(record);
     },
     get: (id: OverviewId) =>
       this.#page.evaluate(

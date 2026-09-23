@@ -4,12 +4,17 @@ import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopic
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
-import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
-import { orderOverviewsBySavedAt } from "../../overviews/util/orderOverviewsBySavedAt.js";
+import {
+  libraryEntryId,
+  readableEntries,
+  type LibraryEntry,
+} from "../../overviews/types/LibraryEntry.js";
+import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
 import { applyLibraryFilterPatch, parseLibraryFilters } from "../util/libraryFilterParams.js";
@@ -20,10 +25,10 @@ import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 
 export interface LibraryPageProps {
-  overviewsWithState: OverviewWithState[];
+  entries: LibraryEntry[];
 }
 
-export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
+export function LibraryPage({ entries }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
@@ -31,7 +36,7 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
 
-  const entering = useEnteringOverviewIds(overviewsWithState.map((entry) => entry.overview.id));
+  const entering = useEnteringOverviewIds(entries.map(libraryEntryId));
 
   if (topicsQuery.isError) {
     return (
@@ -44,14 +49,14 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
 
   const filters = parseLibraryFilters(searchParams);
   const topics = topicsQuery.data ?? [];
-  const counts = libraryFilterCounts(overviewsWithState);
+  const counts = libraryFilterCounts(entries);
   const applied = appliedLibraryFilters(filters, topics);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1]) =>
     setSearchParams(applyLibraryFilterPatch(searchParams, patch), { replace: true });
 
-  const visible = orderOverviewsBySavedAt(
-    overviewsWithState.filter((entry) => matchesLibraryFilters(entry, filters)),
+  const visible = orderLibraryEntriesBySavedAt(
+    entries.filter((entry) => matchesLibraryFilters(entry, filters)),
   );
 
   return (
@@ -129,6 +134,7 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
             </button>
             <span className={styles.sheetCount}>
               {visible.length} of {counts.total} shown
+              {counts.unreadable > 0 && ` · ${counts.unreadable} couldn't be read`}
             </span>
           </div>
         </aside>
@@ -147,28 +153,36 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
             </p>
           ) : (
             <div className={styles.list} data-testid={libraryPageTestIds.list}>
-              {visible.map((entry) => (
-                <LibraryOverviewCard
-                  key={entry.overview.id}
-                  overviewWithState={entry}
-                  entering={entering.has(entry.overview.id)}
-                  topicNames={entry.overview.topicIds
-                    .map((topicId) => topicNameById.get(topicId))
-                    .filter((name): name is string => name !== undefined)}
-                  onToggleFavourite={() =>
-                    setOverviewState.mutate({
-                      overviewId: entry.overview.id,
-                      patch: { favourite: !entry.state.favourite },
-                    })
-                  }
-                  onToggleRead={() =>
-                    setOverviewState.mutate({
-                      overviewId: entry.overview.id,
-                      patch: { read: !entry.state.read },
-                    })
-                  }
-                />
-              ))}
+              {visible.map((entry) =>
+                entry.kind === "unreadable" ? (
+                  <LibraryUnreadableCard
+                    key={entry.record.id}
+                    record={entry.record}
+                    entering={entering.has(entry.record.id)}
+                  />
+                ) : (
+                  <LibraryOverviewCard
+                    key={entry.overview.id}
+                    overviewWithState={entry}
+                    entering={entering.has(entry.overview.id)}
+                    topicNames={entry.overview.topicIds
+                      .map((topicId) => topicNameById.get(topicId))
+                      .filter((name): name is string => name !== undefined)}
+                    onToggleFavourite={() =>
+                      setOverviewState.mutate({
+                        overviewId: entry.overview.id,
+                        patch: { favourite: !entry.state.favourite },
+                      })
+                    }
+                    onToggleRead={() =>
+                      setOverviewState.mutate({
+                        overviewId: entry.overview.id,
+                        patch: { read: !entry.state.read },
+                      })
+                    }
+                  />
+                ),
+              )}
             </div>
           )}
         </main>
@@ -182,7 +196,7 @@ export function LibraryPage({ overviewsWithState }: LibraryPageProps) {
 
       <NewTopicDialog
         open={newTopicOpen}
-        unsorted={unsortedOverviews(overviewsWithState.map((entry) => entry.overview))}
+        unsorted={unsortedOverviews(readableEntries(entries).map((entry) => entry.overview))}
         busy={createTopic.isPending}
         onCreate={(input) => {
           createTopic.mutate(input, { onSuccess: () => setNewTopicOpen(false) });

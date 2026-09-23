@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { OverviewId } from "@overview/domain";
-import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.testHelper.js";
+import {
+  makeOverviewWithState,
+  makeUnreadableEntry,
+} from "../../overviews/types/OverviewFactory.testHelper.js";
 import { overviewNeighbours } from "./overviewNeighbours.js";
 
 const ordered = [
@@ -22,6 +25,18 @@ describe("overviewNeighbours", () => {
   it("has no previous at the top of the list and no next at the bottom", () => {
     expect(overviewNeighbours(ordered, ordered[0]!.overview.id).previousId).toBeNull();
     expect(overviewNeighbours(ordered, ordered[2]!.overview.id).nextId).toBeNull();
+  });
+
+  it("steps onto an unreadable record rather than skipping past it", () => {
+    const first = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z" });
+    const unreadable = makeUnreadableEntry({
+      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", video: null },
+    });
+    const last = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z" });
+
+    expect(overviewNeighbours([first, unreadable, last], first.overview.id).nextId).toEqual(
+      unreadable.kind === "unreadable" ? unreadable.record.id : null,
+    );
   });
 
   it("reports no position for an overview that isn't in the list", () => {

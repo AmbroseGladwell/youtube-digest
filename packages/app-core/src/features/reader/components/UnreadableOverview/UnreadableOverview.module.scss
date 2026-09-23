@@ -1,0 +1,12 @@
+// The destructive action is a sentence rather than a control, so it is painted as the
+// app's inline link and never as the pill beside it
+// (docs/features/record-migrations.md).
+.inlineLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  border-bottom: 1px solid var(--accent);
+  cursor: pointer;
+}

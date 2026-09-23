@@ -6,6 +6,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
+import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
@@ -70,6 +71,15 @@ export class LibraryPageObject extends PageObject {
 
   nthCard = (index: number): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).nth(index));
+
+  get unreadableCard(): LibraryUnreadableCardPageObject {
+    return new LibraryUnreadableCardPageObject(this.testContext);
+  }
+
+  verifyFilterCountReads = (count: string) =>
+    this.step(`verifyFilterCountReads ${count}`, () =>
+      expect(this.get(libraryPageTestIds.rail).getByText(count)).toBeVisible(),
+    );
 
   cardWithTitle = (title: string): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(

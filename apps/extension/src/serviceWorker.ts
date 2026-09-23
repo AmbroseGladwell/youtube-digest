@@ -34,13 +34,24 @@ async function readSession<T>(key: string): Promise<T | null> {
 
 let database: Promise<IDBDatabase> | null = null;
 
-async function holdsOverviewOf(videoId: string): Promise<boolean> {
+// Existence checks see the whole store, quarantined records included: a record that
+// cannot be rendered is still one the reader owns, and offering to generate it again is
+// offering to buy it twice (docs/features/record-migrations.md). null is "could not tell",
+// which is not the same answer as "no".
+async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
   try {
     database ??= openLocalDatabase();
-    const overviews = await new IndexedDbOverviewStore(await database).listOverviews();
-    return overviews.some((overview) => overview.video.id === videoId);
+    const store = new IndexedDbOverviewStore(await database);
+    const [overviews, unreadable] = await Promise.all([
+      store.listOverviews(),
+      store.listUnreadable(),
+    ]);
+    return (
+      overviews.some((overview) => overview.video.id === videoId) ||
+      unreadable.some((record) => record.salvaged?.video?.id === videoId)
+    );
   } catch {
-    return false;
+    return null;
   }
 }
 
