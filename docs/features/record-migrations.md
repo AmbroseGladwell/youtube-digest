@@ -216,8 +216,12 @@ thin thing to tell someone about their own note.
 **A record that fails `Overview.parse` almost always still has its video.** The failures
 this exists for are missing or malformed *fields* — `durationMs` absent, `publishedAt`
 unparseable — not corrupted blobs. So the quarantine read does a second, deliberately
-minimal parse against a **salvage schema**: the id, and the video's `url` and `title` if
-they are there. Anything that survives that is enough to turn a dead end into a choice:
+minimal parse against a **salvage schema**: the id, `savedAt`, and the video's `url` and
+`title` if they are there. `savedAt` earns its place for a reason that only shows up
+downstream — the library orders by it, so a salvaged record without one has nowhere to sit —
+and it is the field likeliest to survive, because the store writes it rather than the model.
+
+Anything that survives that parse is enough to turn a dead end into a choice:
 
 - **Watch it on YouTube.** The thing the overview was about is still reachable, and this
   costs nothing.
@@ -256,6 +260,63 @@ The arrangement that needs no new shape:
 So the screen keeps one pill and one link, the safe action takes the prominent slot, and the
 destructive one stops being a click away from destroying the record the screen exists to
 explain.
+
+### What the library does with one
+
+The quarantine is surfaced per record, so the library has to show something per record.
+Placing it is the easy half. Four things the library does to every record cannot be answered
+for this one.
+
+**Two counts already on screen would lie.** `LibraryPage` renders `{counts.total} overviews ·
+{counts.unread} unread` in the list head and `{visible.length} of {counts.total} shown` in the
+filter sheet's foot, where `counts.total` is `entries.length` in `libraryFilterCounts`. A
+`listOverviews` that quietly excludes unreadable records puts the eleven-notes bug straight
+into a visible integer: the library says 28 and means 30. So unreadable records are inside
+`counts.total`, whatever else is decided.
+
+**Ordering needs a date, which is why salvage takes one.** `orderOverviewsBySavedAt` sorts on
+`savedAt`, so without it a record has no position and "in place" means nothing. Where even the
+salvaged date is missing, the record sorts last: an unknown date cannot claim a position.
+
+**It joins the reader's Previous/Next chain**, because `overviewNeighbours` shares that order
+and the reader's "4 of 31" is a position in it. So *Next* can step onto the dead-end screen.
+That is correct — a record in the library is in the sequence, and skipping it would be the
+silent drop at navigation scale — but it means the reader has to survive its neighbour
+throwing.
+
+**Half the filters can be evaluated and half cannot**, and the split is not where it looks:
+
+| Predicate | Read from | Evaluable |
+|---|---|---|
+| `status`, `favourite` | `state` — the separate overview-state record | **yes** |
+| `topicId` | `overview.topicIds` | no |
+| `novelty`, `dubious` | `overview.verdict` | no |
+| the search query | `buildSearchHaystack(overview)` | no |
+
+Read and favourite survive because overview state is its own record in its own store. For the
+rest, including the record pollutes every filtered view and excluding it is a silent shrink at
+filter scope. So it is excluded, and the exclusion is stated where the count already is —
+*12 of 30 shown · 2 couldn't be read*. That is this document's own rule applied one level down.
+
+**It stays out of `unsortedOverviews`**, which feeds `NewTopicDialog` with the overviews that
+have no topics. An unreadable record has no *readable* `topicIds`, so it would present as
+unfiled when it may well be filed — and filing it from that dialog would call `saveOverview`
+on a record nobody can read, which the write rule forbids. It is not unsorted, it is unknown.
+The same reasoning keeps it out of `byTopic`, so topic counts stop summing to `total`. That is
+acceptable precisely because `total` is the honest number.
+
+**The card is a sibling component, not a prop.** `LibraryOverviewCard` needs `overview.video`,
+`overview.selling`, `overview.verdict`, `overviewMetaParts` and topic names, none of which
+survive. It carries no read or favourite controls either — not because the write would be
+unsafe, since the state row is readable and writable, but because marking read something that
+cannot be read is absurd. It links to `Routes.overview(id)` like any other card, landing on the
+older-format screen with the salvage actions, so the path needs no special case anywhere.
+
+**The alternative, recorded because it is cheaper.** A separate section sidesteps the ordering
+and the filtering by construction: no position to compute, and a section sits outside the
+filtered list. It costs the honesty of position, and it makes the record read as a system
+message rather than as one of the reader's own notes sitting where they left it. In place is a
+judgement rather than a deduction.
 
 ### Why throwing costs almost nothing, checked against the call sites
 
@@ -702,15 +763,17 @@ store-reviewed client is ever built.
 
 ## Open questions, in the order they need answering
 
-1. **How does the library surface an unreadable record?** A card in place in the grid —
-   salvaged title where there is one, clicking through to the older-format screen — keeps
-   the count honest and the record in its position, which is what *kept, not dropped* should
-   look like. A separate section is the alternative. This is a call rather than a deduction.
-2. **Where does the held-back banner live, and what does it say?** It is app-level rather
+1. **Where does the held-back banner live, and what does it say?** It is app-level rather
    than per record, so it belongs to neither `ErrorState` nor the quarantine list.
-3. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
+2. **Should the extension force `chrome.runtime.reload()` on `onUpdateAvailable`?** It is
    the fastest way to clear a stale service worker, and it would kill a generation run in
    flight. The interesting case is what happens to a job mid-flight, not the reload itself.
+
+**Settled by working through what the library does to every record: the unreadable one is
+a card in place.** The placement was never the hard part — see *What the library does with
+one*. What decided it was that two counts already on screen would under-report, that ordering
+needs a salvaged `savedAt`, that only the filters reading overview *state* can be evaluated at
+all, and that `unsortedOverviews` would otherwise offer to file a record nobody can write to.
 
 **Settled by renaming the package: the chain lives in `packages/domain`, next to the schema
 it migrates.** The premise of the whole design is that the decision about an absent field is
