@@ -41,6 +41,10 @@ Five folders, five different questions.
   unvalidated: two version numbers doing two jobs, why migration happens on read rather than
   in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
   Built, apart from the screens that need a server to fire them.
+- `sync-metadata.md` — the one field every synced record carries so that it can say when it
+  last changed: why a date is insurance rather than mechanism, why it is the only piece that
+  cannot be backfilled, which three numbers a synced record ends up carrying and which of them
+  the server owns, and why transcripts are the store that gets none.
 - `topic-filing.md` — how topics get made and assigned: the rail's New topic modal, and the
   single overview's topic editor.
 - `transcript-retrieval.md` — why retrieval is a ladder of sources rather than a provider,

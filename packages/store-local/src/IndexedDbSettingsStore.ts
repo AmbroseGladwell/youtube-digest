@@ -6,7 +6,7 @@ import {
   UnreadableRecordError,
   migrateStoredRecord,
   readStoredRecord,
-  stampSchemaVersion,
+  stampStoredRecord,
   unreadableRecord,
   type SettingsStore,
   type UnreadableRecord,
@@ -44,7 +44,7 @@ export class IndexedDbSettingsStore implements SettingsStore {
     const store = this.#db.transaction(SETTINGS_STORE, "readwrite").objectStore(SETTINGS_STORE);
     await promisifyRequest(
       store.put(
-        stampSchemaVersion(merged(migrated.record, patch), CURRENT_SETTINGS_SCHEMA_VERSION),
+        stampStoredRecord(merged(migrated.record, patch), CURRENT_SETTINGS_SCHEMA_VERSION),
         SETTINGS_KEY,
       ),
     );
