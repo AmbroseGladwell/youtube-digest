@@ -4,6 +4,8 @@ export * from "./Brands.js";
 export * from "./RecordMigration.js";
 export * from "./RecordMigrationError.js";
 export * from "./storedSchemaVersion.js";
+export * from "./storedUpdatedAt.js";
+export * from "./stampStoredRecord.js";
 export * from "./currentSchemaVersion.js";
 export * from "./migrateRecord.js";
 export * from "./SalvagedOverview.js";

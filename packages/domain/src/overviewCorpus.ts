@@ -60,10 +60,19 @@ const version2 = {
   schemaVersion: 2,
 };
 
+const { savedNote: _renamedToCaptureReason, ...version2WithoutTheOldKey } = version2;
+
+const version3 = {
+  ...version2WithoutTheOldKey,
+  captureReason: version2.savedNote,
+  schemaVersion: 3,
+};
+
 // One curated record per version, exercising every field at that version — which an
 // arbitrary real record does not guarantee, and which is why these are written rather
 // than harvested from a dev profile (docs/features/record-migrations.md).
 export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unknown>([
   [1, version1],
   [2, version2],
+  [3, version3],
 ]);

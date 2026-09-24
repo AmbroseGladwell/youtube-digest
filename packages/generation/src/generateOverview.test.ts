@@ -18,7 +18,7 @@ const input: GenerationInput = {
     thumbnailUrl: null,
   },
   transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
-  savedNote: null,
+  captureReason: null,
   readerContext: null,
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
   existingTopics: [],

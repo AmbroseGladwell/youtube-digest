@@ -41,7 +41,7 @@ export function assembleOverview(
     id: meta.id,
     video: input.video,
     savedAt: meta.savedAt,
-    savedNote: input.savedNote,
+    captureReason: input.captureReason,
     inOneLine: output.inOneLine,
     coreClaim: output.coreClaim,
     thin: output.thin,

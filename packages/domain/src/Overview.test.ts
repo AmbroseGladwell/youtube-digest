@@ -22,7 +22,7 @@ const baseOverview = {
   id: OVERVIEW_ID,
   video: baseVideo,
   savedAt: new Date().toISOString(),
-  savedNote: null,
+  captureReason: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,

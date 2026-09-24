@@ -13,7 +13,7 @@ import {
   UnreadableRecordError,
   migrateStoredRecord,
   readStoredRecord,
-  stampSchemaVersion,
+  stampStoredRecord,
   unreadableRecord,
   type ClaimSummary,
   type OverviewId,
@@ -81,7 +81,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
   }
 
   async saveOverview(overview: Overview) {
-    await this.#write(OVERVIEWS_STORE, stampSchemaVersion(overview, CURRENT_OVERVIEW_SCHEMA_VERSION));
+    await this.#write(OVERVIEWS_STORE, stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION));
   }
 
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
@@ -92,7 +92,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const current = this.#writable("overview", overviewId, raw, OVERVIEW_MIGRATIONS);
     await this.#write(
       OVERVIEWS_STORE,
-      stampSchemaVersion({ ...current, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION),
+      stampStoredRecord({ ...current, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION),
     );
   }
 
@@ -124,7 +124,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
       description: input.description ?? null,
       createdAt: new Date().toISOString(),
     };
-    await this.#write(TOPICS_STORE, stampSchemaVersion(topic, CURRENT_TOPIC_SCHEMA_VERSION));
+    await this.#write(TOPICS_STORE, stampStoredRecord(topic, CURRENT_TOPIC_SCHEMA_VERSION));
     return topic;
   }
 
@@ -150,7 +150,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
 
     await this.#write(
       OVERVIEW_STATES_STORE,
-      stampSchemaVersion(
+      stampStoredRecord(
         { ...current, ...patch, overviewId },
         CURRENT_OVERVIEW_STATE_SCHEMA_VERSION,
       ),

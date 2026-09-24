@@ -33,7 +33,7 @@ const input: GenerationInput = {
     thumbnailUrl: null,
   },
   transcript,
-  savedNote: "Why do mammals get 1 billion heart beats?",
+  captureReason: "Why do mammals get 1 billion heart beats?",
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],

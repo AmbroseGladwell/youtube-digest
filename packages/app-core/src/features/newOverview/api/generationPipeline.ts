@@ -60,7 +60,7 @@ export async function runOverviewGeneration(
     {
       video,
       transcript,
-      savedNote: null,
+      captureReason: null,
       readerContext: null,
       sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
       existingTopics,

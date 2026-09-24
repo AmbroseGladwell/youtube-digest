@@ -3,7 +3,7 @@ import type { ClaimSummary, SectionsEnabled, Topic, TranscriptSegment, VideoSour
 export interface GenerationInput {
   video: VideoSource;
   transcript: TranscriptSegment[];
-  savedNote: string | null;
+  captureReason: string | null;
   readerContext: string | null;
   sectionsEnabled: SectionsEnabled;
   existingTopics: Topic[];

@@ -91,3 +91,21 @@ test("an unreadable settings record is never written over", async () => {
 
   await assert.rejects(() => store.update({ readerContext: "mine" }), UnreadableRecordError);
 });
+
+test("an update dates the settings it wrote, and get() hands back settings with no stamp on them", async () => {
+  const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
+  const store = new IndexedDbSettingsStore(db);
+
+  const before = new Date().toISOString();
+  await store.update({ readerContext: "A product engineer." });
+  const after = new Date().toISOString();
+
+  const stored = await promisifyRequest<Record<string, unknown>>(
+    db.transaction(SETTINGS_STORE, "readonly").objectStore(SETTINGS_STORE).get(SETTINGS_KEY),
+  );
+  assert.ok(
+    typeof stored.updatedAt === "string" && stored.updatedAt >= before && stored.updatedAt <= after,
+    `${String(stored.updatedAt)} is not the time of the write it was stamped by`,
+  );
+  assert.deepEqual(await store.get(), { ...DEFAULT_SETTINGS, readerContext: "A product engineer." });
+});

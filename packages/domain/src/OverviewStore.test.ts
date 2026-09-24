@@ -98,7 +98,7 @@ const exampleOverview: Overview = {
     thumbnailUrl: null,
   },
   savedAt: new Date().toISOString(),
-  savedNote: null,
+  captureReason: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
