@@ -24,7 +24,7 @@ const { overview, suggestedTopic } = await generateOverview(
   {
     video: fetched.video,
     transcript: fetched.transcript,
-    savedNote: null,
+    captureReason: null,
     readerContext: null,
     sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
     existingTopics: [],

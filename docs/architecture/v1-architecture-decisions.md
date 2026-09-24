@@ -326,9 +326,13 @@ tension known, not an accident.** Three things were weighed:
 **"Note" was freed up on purpose: a future iteration is expected to let users take
 their own notes on a video** (likely timestamped, similar to the reference repo's
 floating note-taking panel) — genuinely different from the AI-generated record, and
-worth not colliding with. `Overview.savedNote` (the free-text note captured once, at
-save time) already sits on the right side of that split by coincidence and needed no
-change.
+worth not colliding with. The field holding the reader's own words was called
+`Overview.savedNote`, and an earlier version of this paragraph claimed it "already sits on
+the right side of that split by coincidence and needed no change". **That was wrong on
+inspection**: it is the reader's stated reason for wanting the video overviewed at all —
+context the prompt is handed, not a note taken against the video — so it was the one place
+still spending the freed-up word. It is now `Overview.captureReason`, renamed through the
+migration chain (`docs/features/record-migrations.md`), and "note" is genuinely free.
 
 **One `OverviewStore` interface, backed by two collections, not one.** Overviews and
 per-overview read/favourite state are exposed through the same interface but never

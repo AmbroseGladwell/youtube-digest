@@ -20,7 +20,7 @@ const baseInput: GenerationInput = {
     { text: "Hello and welcome.", startMs: 0, endMs: 2000 },
     { text: "Here is the technique.", startMs: 2000, endMs: 8000 },
   ],
-  savedNote: null,
+  captureReason: null,
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
@@ -129,4 +129,19 @@ test("with an empty transcript, watch-it-anyway's range can only be null", () =>
       watchAnyway: { answer: "partial", reason: "x", range: { startSegmentIndex: 0, endSegmentIndex: 0 } },
     }),
   );
+});
+
+test("the reader's reason for saving the video reaches the prompt in their own words", () => {
+  const { userMessage } = composePrompt({
+    ...baseInput,
+    captureReason: "Why do mammals get a billion heartbeats?",
+  });
+
+  assert.match(userMessage, /Why they saved it: Why do mammals get a billion heartbeats\?/);
+});
+
+test("a video saved without a reason says so, rather than leaving the line blank", () => {
+  const { userMessage } = composePrompt(baseInput);
+
+  assert.match(userMessage, /Why they saved it: not said/);
 });

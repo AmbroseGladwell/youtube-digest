@@ -26,7 +26,7 @@ const baseInput: GenerationInput = {
     { text: "Here is the technique.", startMs: 2000, endMs: 8000 },
     { text: "That's everything.", startMs: 8000, endMs: 9000 },
   ],
-  savedNote: null,
+  captureReason: null,
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [

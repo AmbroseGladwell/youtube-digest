@@ -27,8 +27,24 @@ const fillVideoFieldsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// A rename is derivable: the record already holds the value, under the other key
+// (docs/features/record-migrations.md). Nothing has shipped and no client but this one
+// writes, so the deprecation window that a rename would otherwise need — write both names,
+// raise the write floor, then drop one — is not needed and is not built.
+const renameSavedNoteToCaptureReason: RecordMigration = {
+  newSchemaVersion: 3,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    const { savedNote, ...rest } = record as Record<string, unknown>;
+    return { ...rest, captureReason: savedNote ?? null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
+  renameSavedNoteToCaptureReason,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

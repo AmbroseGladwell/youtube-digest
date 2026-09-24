@@ -10,7 +10,7 @@ function contextBlock(input: GenerationInput): string {
 Title: ${input.video.title}
 Channel: ${input.video.channel}
 Description: ${input.video.description ?? "unavailable"}
-Saved note: ${input.savedNote ?? "none"}
+Why they saved it: ${input.captureReason ?? "not said"}
 
 Transcript, as numbered segments:
 ${transcript}`;
