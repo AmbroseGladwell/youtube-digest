@@ -101,7 +101,7 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
             Full transcript
             {transcript?.generated === true && (
               <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
-                Machine-transcribed
+                Auto-generated
               </span>
             )}
           </p>

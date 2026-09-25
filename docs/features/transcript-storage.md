@@ -154,9 +154,16 @@ character classes, because without it a Chinese transcript would never find a bo
 ASR captions carry no punctuation, so no sentence or clause boundary ever fires and only the
 run-on guardrails are left: a block every 384 characters or 25 seconds, cut mid-sentence.
 That is still around seventy words at a normal speaking rate, so it reads as a paragraph —
-but an arbitrary one, which is part of what the `Machine-transcribed` label in the tab's
+but an arbitrary one, which is part of what the `Auto-generated` label in the tab's
 accent slot is telling the reader. Restoring punctuation would mean a model re-emitting the
 video's own words, which is not a trade worth making.
+
+The label was `Machine-transcribed` for a while, which is the developer's term and told a
+reader nothing. It now uses YouTube's own word, the one every viewer has seen in the
+captions menu as "English (auto-generated)", so the line explains the missing full stops
+and the misheard names in a word the reader already has a meaning for. Just the one
+word: it shares the heading line with "Full transcript", and in the 400px panel there is
+no room for "captions" after it.
 
 ## What the tab does with the timing
 

@@ -532,8 +532,10 @@ export class ReaderPageObject extends PageObject {
 
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
   verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
+  // YouTube's own phrase for its speech-recognition track, not the developer's
+  // (docs/features/transcript-storage.md).
   verifyShowsMachineTranscribedNote = () =>
-    this.expectToBeVisible(transcriptPanelTestIds.sourceNote);
+    expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText("Auto-generated");
   verifyShowsNoMachineTranscribedNote = () =>
     this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPanel = () => this.expectToBeVisible(chaptersPanelTestIds.root);
