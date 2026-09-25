@@ -30,6 +30,7 @@ export interface ReaderMastheadProps {
   onTogglePlaying: () => void;
   onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
+  onEditReason: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
 
@@ -53,6 +54,7 @@ export function ReaderMasthead({
   onTogglePlaying,
   onListen,
   onEditingTopicsChange,
+  onEditReason,
   ref,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
@@ -223,8 +225,10 @@ export function ReaderMasthead({
           )}
           <OverviewActionsMenu
             topicCount={overview.topicIds.length}
+            hasReason={overview.captureReason !== null}
             align={compact ? "start" : "end"}
             onEditTopics={() => onEditingTopicsChange(true)}
+            onEditReason={onEditReason}
           />
         </div>
       </div>

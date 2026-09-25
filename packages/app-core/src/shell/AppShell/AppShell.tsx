@@ -161,6 +161,8 @@ export function AppShell() {
             onClose={newOverview.close}
             onDismiss={newOverview.dismiss}
             onReadOverview={readOverview}
+            onCaptureReasonChange={newOverview.setCaptureReason}
+            onCaptureReasonCommit={newOverview.commitCaptureReason}
           />
         )}
       </div>

@@ -8,6 +8,7 @@ import {
 } from "@overview/domain";
 import { generateOverview, type GenerationClient } from "@overview/generation";
 import { countWords } from "../../../util/countWords.js";
+import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
 import { resolveVideo } from "../../transcripts/api/resolveVideo.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
@@ -33,6 +34,9 @@ export interface RunOverviewGenerationOptions {
   // — read, favourite, user tags — stays attached rather than being orphaned under a new
   // one (docs/features/record-migrations.md).
   overviewId?: OverviewId | undefined;
+  // Read at the moment the record is written, not when the run starts: the reason is
+  // typed while the overview is being made (docs/features/capture-reason.md).
+  captureReason?: (() => string) | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -73,7 +77,10 @@ export async function runOverviewGeneration(
   );
 
   stopIfCancelled();
-  await deps.overviewStore.saveOverview(overview);
+  const saved = options.captureReason
+    ? { ...overview, captureReason: captureReasonFromDraft(options.captureReason()) }
+    : overview;
+  await deps.overviewStore.saveOverview(saved);
 
-  return overview;
+  return saved;
 }

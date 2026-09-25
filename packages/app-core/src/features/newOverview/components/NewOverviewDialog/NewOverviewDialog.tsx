@@ -6,6 +6,7 @@ import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbna
 import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
+import { CaptureReasonField } from "../CaptureReasonField/CaptureReasonField.js";
 import { GenerateOverviewForm } from "../GenerateOverviewForm/GenerateOverviewForm.js";
 import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
@@ -18,6 +19,8 @@ export interface NewOverviewDialogProps {
   onClose: () => void;
   onDismiss: () => void;
   onReadOverview: (overview: Overview) => void;
+  onCaptureReasonChange: (captureReason: string) => void;
+  onCaptureReasonCommit: () => void;
 }
 
 const HEADING_ID = "NewOverviewDialog-heading";
@@ -29,6 +32,8 @@ export function NewOverviewDialog({
   onClose,
   onDismiss,
   onReadOverview,
+  onCaptureReasonChange,
+  onCaptureReasonCommit,
 }: NewOverviewDialogProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
@@ -114,6 +119,8 @@ export function NewOverviewDialog({
             onClose={onClose}
             onDismiss={onDismiss}
             onReadOverview={onReadOverview}
+            onCaptureReasonChange={onCaptureReasonChange}
+            onCaptureReasonCommit={onCaptureReasonCommit}
           />
         )}
       </div>
@@ -127,9 +134,19 @@ interface RunProgressProps {
   onClose: () => void;
   onDismiss: () => void;
   onReadOverview: (overview: Overview) => void;
+  onCaptureReasonChange: (captureReason: string) => void;
+  onCaptureReasonCommit: () => void;
 }
 
-function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: RunProgressProps) {
+function RunProgress({
+  run,
+  headingId,
+  onClose,
+  onDismiss,
+  onReadOverview,
+  onCaptureReasonChange,
+  onCaptureReasonCommit,
+}: RunProgressProps) {
   const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const isDone = run.overview !== null;
@@ -167,6 +184,14 @@ function RunProgress({ run, headingId, onClose, onDismiss, onReadOverview }: Run
       <span className={styles.rule} aria-hidden="true" />
 
       <GenerationSteps run={run} />
+
+      {/* Design 21a: the field stays through the done state too, so a reason can still
+          be added before pressing Read overview. */}
+      <CaptureReasonField
+        value={run.captureReason}
+        onChange={onCaptureReasonChange}
+        onCommit={onCaptureReasonCommit}
+      />
 
       <div className={styles.foot}>
         {!isDone && (

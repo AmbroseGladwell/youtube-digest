@@ -8,5 +8,6 @@ export const makeNewOverviewRun = (overrides: Partial<NewOverviewRun> = {}): New
   transcriptWords: null,
   overview: null,
   error: null,
+  captureReason: "",
   ...overrides,
 });

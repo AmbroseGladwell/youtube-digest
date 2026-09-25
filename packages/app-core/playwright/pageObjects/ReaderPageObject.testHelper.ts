@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import type { Locator } from "@playwright/test";
 import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
+import { captureReasonLineTestIds } from "../../src/features/reader/components/CaptureReasonLine/CaptureReasonLineTestIds.js";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { readerMastheadTestIds } from "../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
 import { readerPlayerBarTestIds } from "../../src/features/reader/components/ReaderPlayerBar/ReaderPlayerBarTestIds.js";
@@ -174,6 +175,68 @@ export class ReaderPageObject extends PageObject {
       editable
         ? this.expectToBeVisible(topicLineTestIds.addButton)
         : this.expectNotToBeVisible(topicLineTestIds.addButton),
+    );
+
+  verifyReasonReads = (reason: string) =>
+    this.step(`verifyReasonReads ${reason}`, () =>
+      expect(this.get(captureReasonLineTestIds.reason)).toHaveText(reason),
+    );
+
+  verifyHasNoReason = () =>
+    this.step("verifyHasNoReason", () => this.expectNotToBeVisible(captureReasonLineTestIds.root));
+
+  verifyReasonMenuItemReads = (label: string) =>
+    this.step(`verifyReasonMenuItemReads ${label}`, () =>
+      expect(this.get(overviewActionsMenuTestIds.reasonItem)).toHaveText(label),
+    );
+
+  clickReasonMenuItem = () =>
+    this.step("clickReasonMenuItem", () => this.click(overviewActionsMenuTestIds.reasonItem));
+
+  editReason = () =>
+    this.step("editReason", async () => {
+      await this.openActionsMenu();
+      await this.clickReasonMenuItem();
+      await this.verifyReasonEditorIsShown(true);
+    });
+
+  verifyReasonEditorIsShown = (shown: boolean) =>
+    this.step(`verifyReasonEditorIsShown ${shown}`, () =>
+      shown
+        ? this.expectToBeVisible(captureReasonLineTestIds.editor)
+        : this.expectNotToBeVisible(captureReasonLineTestIds.editor),
+    );
+
+  verifyReasonFieldIsFocused = () =>
+    this.step("verifyReasonFieldIsFocused", () =>
+      expect(this.get(captureReasonLineTestIds.input)).toBeFocused(),
+    );
+
+  verifyReasonFieldHolds = (text: string) =>
+    this.step(`verifyReasonFieldHolds ${text}`, () =>
+      expect(this.get(captureReasonLineTestIds.input)).toHaveValue(text),
+    );
+
+  fillReason = (text: string) =>
+    this.step(`fillReason ${text}`, () => this.get(captureReasonLineTestIds.input).fill(text));
+
+  pressEnterInReason = () =>
+    this.step("pressEnterInReason", () => this.get(captureReasonLineTestIds.input).press("Enter"));
+
+  clickSaveReason = () =>
+    this.step("clickSaveReason", () => this.click(captureReasonLineTestIds.saveButton));
+
+  clickCancelReason = () =>
+    this.step("clickCancelReason", () => this.click(captureReasonLineTestIds.cancelButton));
+
+  clickRemoveReason = () =>
+    this.step("clickRemoveReason", () => this.click(captureReasonLineTestIds.removeButton));
+
+  verifyOffersToRemoveReason = (offered: boolean) =>
+    this.step(`verifyOffersToRemoveReason ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(captureReasonLineTestIds.removeButton)
+        : this.expectNotToBeVisible(captureReasonLineTestIds.removeButton),
     );
 
   verifyActiveLineReads = (text: string) =>

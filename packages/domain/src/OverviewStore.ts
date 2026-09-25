@@ -29,6 +29,7 @@ export interface OverviewStore {
   // record: parsing on read is what makes saving a spread of a parsed overview lossy
   // (docs/features/record-migrations.md).
   setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]): Promise<void>;
+  setOverviewCaptureReason(overviewId: OverviewId, captureReason: string | null): Promise<void>;
   deleteOverview(id: OverviewId): Promise<void>;
 
   listClaims(): Promise<ClaimSummary[]>;

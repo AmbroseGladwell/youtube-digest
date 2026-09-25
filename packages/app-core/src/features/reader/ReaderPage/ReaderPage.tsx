@@ -16,6 +16,7 @@ import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { formatTimeRange } from "../../overviews/util/formatTimeRange.js";
 import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import { youtubeTimestampUrl } from "../../overviews/util/youtubeTimestampUrl.js";
+import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
@@ -57,6 +58,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const setOverviewState = useSetOverviewStateMutation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const [editingTopics, setEditingTopics] = useState(false);
+  const [editingReason, setEditingReason] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
     READER_MASTHEAD_HEIGHT_PROPERTY,
@@ -76,6 +78,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [plusPromptOpen, setPlusPromptOpen] = useState(false);
   const [playerDocked, setPlayerDocked] = useState(false);
   const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(useLocation().state));
+
+  // The line lives on the Overview tab, so asking to edit it from any other tab brings
+  // that tab back first.
+  const editReason = () => {
+    setTab("Overview");
+    setEditingReason(true);
+  };
 
   const overview = overviewQuery.data?.overview ?? null;
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
@@ -168,6 +177,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         onTogglePlaying={readAlong.togglePlaying}
         onListen={listen}
         onEditingTopicsChange={setEditingTopics}
+        onEditReason={editReason}
       />
 
       {savedLocallyNote.shown && <PlusSavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
@@ -190,6 +200,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         >
           {tab === "Overview" && (
             <div data-testid={readerPageTestIds.overviewPanel}>
+              <CaptureReasonLine
+                overview={overview}
+                editing={editingReason}
+                compact={isPanel}
+                onEditingChange={setEditingReason}
+              />
               <ReadAlongNote
                 lines={lines}
                 activeIndex={readAlong.activeIndex}

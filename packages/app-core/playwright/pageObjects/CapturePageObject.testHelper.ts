@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { capturePageTestIds } from "../../src/features/capture/CapturePage/CapturePageTestIds.js";
+import { captureReasonFieldTestIds } from "../../src/features/newOverview/components/CaptureReasonField/CaptureReasonFieldTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { GenerationStepsPageObject } from "./GenerationStepsPageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
@@ -72,6 +73,18 @@ export class CapturePageObject extends PageObject {
   verifySaysToKeepThePanelOpen = () =>
     this.step("verifySaysToKeepThePanelOpen", () =>
       expect(this.get(capturePageTestIds.keepOpenNote)).toHaveText(/Closing it stops the run\./),
+    );
+
+  verifyAsksForAReason = (asks: boolean) =>
+    this.step(`verifyAsksForAReason ${asks}`, () =>
+      asks
+        ? this.expectToBeVisible(captureReasonFieldTestIds.input)
+        : this.expectNotToBeVisible(captureReasonFieldTestIds.input),
+    );
+
+  fillCaptureReason = (reason: string) =>
+    this.step(`fillCaptureReason ${reason}`, () =>
+      this.get(captureReasonFieldTestIds.input).fill(reason),
     );
 
   verifyElapsedIsShown = () =>
