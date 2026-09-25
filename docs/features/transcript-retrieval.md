@@ -101,7 +101,7 @@ These were live, and each one either cost money or told a caller something untru
 
 ## What `generated` means, and why it was wrong
 
-`StoredTranscript.generated` drives the `Machine-transcribed` label in the reader's
+`StoredTranscript.generated` drives the `Auto-generated` label in the reader's
 transcript tab. It was set from *which Supadata mode answered*: `native` meant `false`,
 `generate` meant `true`.
 
