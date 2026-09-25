@@ -5,12 +5,20 @@ import { overviewActionsMenuTestIds } from "./OverviewActionsMenuTestIds.js";
 
 export interface OverviewActionsMenuProps {
   topicCount: number;
+  hasReason: boolean;
   // Which edge of the trigger the menu hangs from, so it opens into the space there is.
   align: "start" | "end";
   onEditTopics: () => void;
+  onEditReason: () => void;
 }
 
-export function OverviewActionsMenu({ topicCount, align, onEditTopics }: OverviewActionsMenuProps) {
+export function OverviewActionsMenu({
+  topicCount,
+  hasReason,
+  align,
+  onEditTopics,
+  onEditReason,
+}: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
 
@@ -50,6 +58,19 @@ export function OverviewActionsMenu({ topicCount, align, onEditTopics }: Overvie
             <span className={styles.count} data-testid={overviewActionsMenuTestIds.topicCount}>
               {topicCount}
             </span>
+          </button>
+          {/* Design 21c: under Edit topics, because both are "about this overview" edits. */}
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={() => {
+              setOpen(false);
+              onEditReason();
+            }}
+            data-testid={overviewActionsMenuTestIds.reasonItem}
+          >
+            {hasReason ? "Edit reason" : "Add reason"}
           </button>
         </div>
       )}

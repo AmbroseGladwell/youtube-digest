@@ -5,6 +5,7 @@ import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
+import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
 import { JUST_GENERATED } from "../../newOverview/justGenerated.js";
 import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
@@ -50,7 +51,12 @@ export function CapturePage() {
   if (run !== null && run.overview === null) {
     return (
       <div className={styles.root} data-testid={capturePageTestIds.root}>
-        <RunInProgress run={run} onDismiss={dismiss} />
+        <RunInProgress
+          run={run}
+          onDismiss={dismiss}
+          onCaptureReasonChange={controller.setCaptureReason}
+          onCaptureReasonCommit={controller.commitCaptureReason}
+        />
       </div>
     );
   }
@@ -145,9 +151,16 @@ export function CapturePage() {
 interface RunInProgressProps {
   run: NewOverviewRun;
   onDismiss: () => void;
+  onCaptureReasonChange: (captureReason: string) => void;
+  onCaptureReasonCommit: () => void;
 }
 
-function RunInProgress({ run, onDismiss }: RunInProgressProps) {
+function RunInProgress({
+  run,
+  onDismiss,
+  onCaptureReasonChange,
+  onCaptureReasonCommit,
+}: RunInProgressProps) {
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const failed = run.error !== null;
 
@@ -165,6 +178,14 @@ function RunInProgress({ run, onDismiss }: RunInProgressProps) {
       <span className={styles.rule} aria-hidden="true" />
 
       <GenerationSteps run={run} />
+
+      {!failed && (
+        <CaptureReasonField
+          value={run.captureReason}
+          onChange={onCaptureReasonChange}
+          onCommit={onCaptureReasonCommit}
+        />
+      )}
 
       {failed && (
         <p className={styles.error} data-testid={capturePageTestIds.error}>

@@ -183,6 +183,36 @@ export function defineOverviewStoreConformanceSuite(
     assert.equal(await store.getOverview(overviewId), null);
   });
 
+  test(behaviour("setOverviewCaptureReason sets the reason without touching anything else on it"), async () => {
+    const store = await createStore();
+    const overview = makeOverview();
+    await store.saveOverview(overview);
+
+    await store.setOverviewCaptureReason(overview.id, "Does the capacity argument hold for the UK?");
+
+    assert.deepEqual(await store.getOverview(overview.id), {
+      ...overview,
+      captureReason: "Does the capacity argument hold for the UK?",
+    });
+  });
+
+  test(behaviour("setOverviewCaptureReason with null takes the reason back off"), async () => {
+    const store = await createStore();
+    const overview = makeOverview({ captureReason: "Careers in the AI era" });
+    await store.saveOverview(overview);
+
+    await store.setOverviewCaptureReason(overview.id, null);
+
+    assert.deepEqual(await store.getOverview(overview.id), { ...overview, captureReason: null });
+  });
+
+  test(behaviour("setOverviewCaptureReason on an id nobody has saved does not create one"), async () => {
+    const store = await createStore();
+    const overviewId = OverviewId.parse(randomUUID());
+    await store.setOverviewCaptureReason(overviewId, "anything");
+    assert.equal(await store.getOverview(overviewId), null);
+  });
+
   defineMigrationChecks(behaviour, createStoreUnderTest);
 }
 
@@ -274,6 +304,19 @@ function defineMigrationChecks(
 
     await assert.rejects(
       () => store.setOverviewTopics(oldRecordId, [TopicId.parse(randomUUID())]),
+      UnreadableRecordError,
+    );
+  });
+
+  test(behaviour("setOverviewCaptureReason refuses a record this client cannot read"), async () => {
+    const store = await seeded({
+      ...oldRecord,
+      schemaVersion: CURRENT_OVERVIEW_SCHEMA_VERSION + 1,
+    });
+    if (!store) return;
+
+    await assert.rejects(
+      () => store.setOverviewCaptureReason(oldRecordId, "anything"),
       UnreadableRecordError,
     );
   });

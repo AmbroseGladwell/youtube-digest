@@ -16,10 +16,10 @@ export const Overview = z
     id: OverviewId,
     video: VideoSource,
     savedAt: z.iso.datetime(),
-    // Why the reader wanted this video overviewed, in their own words, captured once when
-    // they asked for it. Context the prompt is handed — not a note taken against the video,
-    // which is a separate future feature the word "note" is kept free for
-    // (docs/architecture/v1-architecture-decisions.md).
+    // Why the reader wanted this video overviewed, in their own words: asked for while the
+    // overview is being made, and editable from its page after. Not a note taken against
+    // the video, which is a separate future feature the word "note" is kept free for
+    // (docs/architecture/v1-architecture-decisions.md, docs/features/capture-reason.md).
     captureReason: z.string().nullable(),
   })
   .extend(CoreFields.shape)

@@ -96,6 +96,18 @@ export class IndexedDbOverviewStore implements OverviewStore {
     );
   }
 
+  async setOverviewCaptureReason(overviewId: OverviewId, captureReason: string | null) {
+    const raw = await this.#read(OVERVIEWS_STORE, overviewId);
+    if (raw === undefined) {
+      return;
+    }
+    const current = this.#writable("overview", overviewId, raw, OVERVIEW_MIGRATIONS);
+    await this.#write(
+      OVERVIEWS_STORE,
+      stampStoredRecord({ ...current, captureReason }, CURRENT_OVERVIEW_SCHEMA_VERSION),
+    );
+  }
+
   async deleteOverview(id: OverviewId) {
     const store = this.#db.transaction(OVERVIEWS_STORE, "readwrite").objectStore(OVERVIEWS_STORE);
     await promisifyRequest(store.delete(id));

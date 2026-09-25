@@ -11,4 +11,8 @@ export interface NewOverviewRun {
   transcriptWords: number | null;
   overview: Overview | null;
   error: string | null;
+  // The reason as typed so far. It is asked for while the overview is being made, so it
+  // is kept here rather than on the form, and copied onto the record when the run lands
+  // (docs/features/capture-reason.md).
+  captureReason: string;
 }

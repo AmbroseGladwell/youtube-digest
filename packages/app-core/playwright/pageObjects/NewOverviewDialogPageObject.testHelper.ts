@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { captureReasonFieldTestIds } from "../../src/features/newOverview/components/CaptureReasonField/CaptureReasonFieldTestIds.js";
 import { newOverviewDialogTestIds } from "../../src/features/newOverview/components/NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
@@ -49,6 +50,23 @@ export class NewOverviewDialogPageObject extends PageObject {
     );
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
+
+  verifyAsksForAReason = (asks: boolean) =>
+    this.step(`verifyAsksForAReason ${asks}`, () =>
+      asks
+        ? this.expectToBeVisible(captureReasonFieldTestIds.input)
+        : this.expectNotToBeVisible(captureReasonFieldTestIds.input),
+    );
+
+  fillCaptureReason = (reason: string) =>
+    this.step(`fillCaptureReason ${reason}`, () =>
+      this.get(captureReasonFieldTestIds.input).fill(reason),
+    );
+
+  verifyCaptureReasonHolds = (reason: string) =>
+    this.step(`verifyCaptureReasonHolds ${reason}`, () =>
+      expect(this.get(captureReasonFieldTestIds.input)).toHaveValue(reason),
+    );
 
   clickRunInBackground = () =>
     this.step("clickRunInBackground", () =>
