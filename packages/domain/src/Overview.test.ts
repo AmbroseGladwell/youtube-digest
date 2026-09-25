@@ -33,6 +33,7 @@ const baseOverview = {
   selling: null,
   howToApply: null,
   watchAnyway: null,
+  chapters: null,
 };
 
 test("an overview with every optional section toggled off validates", () => {
@@ -106,6 +107,50 @@ test("a partial watch-it-anyway answer requires a range", () => {
 test("a yes/no watch-it-anyway answer doesn't need a range", () => {
   assert.doesNotThrow(() =>
     Overview.parse({ ...baseOverview, watchAnyway: { answer: "no", reason: "x", range: null } }),
+  );
+});
+
+const chapter = (startMs: number, endMs: number) => ({
+  title: "A chapter",
+  summary: "What this stretch covers.",
+  startMs,
+  endMs,
+});
+
+test("chapters are null for a note made before they existed, and a list for one made since", () => {
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, chapters: null }));
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, chapters: [] }));
+  assert.doesNotThrow(() =>
+    Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(60_000, 90_000)] }),
+  );
+});
+
+test("chapters run in order and do not overlap", () => {
+  assert.throws(() =>
+    Overview.parse({ ...baseOverview, chapters: [chapter(60_000, 90_000), chapter(0, 60_000)] }),
+  );
+  assert.throws(() =>
+    Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(30_000, 90_000)] }),
+  );
+});
+
+test("a chapter cannot end before it starts", () => {
+  assert.throws(() => Overview.parse({ ...baseOverview, chapters: [chapter(60_000, 30_000)] }));
+});
+
+test("a chapter title is at most 8 words and its summary at most 40", () => {
+  const words = (count: number) => Array(count).fill("word").join(" ");
+  assert.doesNotThrow(() =>
+    Overview.parse({
+      ...baseOverview,
+      chapters: [{ ...chapter(0, 1000), title: words(8), summary: words(40) }],
+    }),
+  );
+  assert.throws(() =>
+    Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), title: words(9) }] }),
+  );
+  assert.throws(() =>
+    Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), summary: words(41) }] }),
   );
 });
 

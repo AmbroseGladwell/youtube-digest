@@ -42,9 +42,22 @@ const renameSavedNoteToCaptureReason: RecordMigration = {
   },
 };
 
+// Not derivable: nothing in an older record says where its video's subject changes, so
+// the honest value is the one the reader is told about (docs/features/chapters.md).
+const fillChaptersAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 4,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "chapters" in record ? record : { ...record, chapters: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
+  fillChaptersAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

@@ -12,6 +12,10 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
       "It states one claim.",
       "It closes with how to apply that claim.",
     ],
+    chapters: [
+      { title: "The greeting", summary: "The simulated creator says hello.", startSegmentIndex: 0 },
+      { title: "The claim and how to apply it", summary: "One claim, then its use.", startSegmentIndex: 1 },
+    ],
     matchedTopicNames: [],
     suggestedTopic: null,
     tags: ["iwft-fixture", "simulated-video", "test-data"],

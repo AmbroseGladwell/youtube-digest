@@ -43,6 +43,11 @@ non-personal, cacheable half; Verdict/Selling/How-to-apply/Watch-anyway is exact
 personalised half. Building the registry on that boundary now means the caching work
 reuses it later instead of re-deriving it.
 
+**Chapters joined the structural side, later.** Where a video's subject changes is a fact
+about the video rather than a judgement for one reader, and the tab that shows them is
+drawn either way, so there is nothing for a toggle to honestly remove. The section, the
+shape and the reasons are in `docs/features/chapters.md`.
+
 ## The verdict scale: two axes, one blunt label
 
 **Evidence the single scale conflates two things.** Across the 30-note prototype

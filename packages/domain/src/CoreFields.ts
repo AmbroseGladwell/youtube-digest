@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+import { wordCount } from "./wordCount.js";
 
 export const CoreFields = z.object({
   inOneLine: z

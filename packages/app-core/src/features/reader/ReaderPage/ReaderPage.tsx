@@ -57,6 +57,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const topicsQuery = useTopicsQuery();
   const setOverviewState = useSetOverviewStateMutation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
+  const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
   const [editingTopics, setEditingTopics] = useState(false);
   const [editingReason, setEditingReason] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
@@ -79,10 +80,21 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [playerDocked, setPlayerDocked] = useState(false);
   const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(useLocation().state));
 
+  // A chapter opens the transcript at its start; choosing the tab yourself opens it at
+  // the top, so the target is cleared by every other route to it.
+  const changeTab = (next: ReaderTab) => {
+    setTranscriptOpenAtMs(null);
+    setTab(next);
+  };
+  const openTranscriptAt = (positionMs: number) => {
+    setTranscriptOpenAtMs(positionMs);
+    setTab("Transcript");
+  };
+
   // The line lives on the Overview tab, so asking to edit it from any other tab brings
   // that tab back first.
   const editReason = () => {
-    setTab("Overview");
+    changeTab("Overview");
     setEditingReason(true);
   };
 
@@ -186,7 +198,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         active={tab}
         tabId={tabId}
         panelId={panelId}
-        onChange={setTab}
+        onChange={changeTab}
         ref={tabsHeight.measured}
       />
 
@@ -221,8 +233,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               </div>
             </div>
           )}
-          {tab === "Transcript" && <TranscriptPanel video={overview.video} />}
-          {tab === "Chapters" && <ChaptersPanel />}
+          {tab === "Transcript" && (
+            <TranscriptPanel video={overview.video} openAtMs={transcriptOpenAtMs} />
+          )}
+          {tab === "Chapters" && (
+            <ChaptersPanel
+              chapters={overview.chapters}
+              video={overview.video}
+              onOpenTranscriptAt={openTranscriptAt}
+            />
+          )}
         </div>
 
         {!isPanel && (

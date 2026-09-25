@@ -9,3 +9,4 @@ export * from "./anthropicGenerationClient.js";
 export * from "./GenerationError.js";
 export * from "./sections/filingSection.js";
 export * from "./sections/watchAnywaySection.js";
+export * from "./sections/chaptersSection.js";

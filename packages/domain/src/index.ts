@@ -22,6 +22,7 @@ export * from "./Verdict.js";
 export * from "./Selling.js";
 export * from "./HowToApply.js";
 export * from "./WatchAnyway.js";
+export * from "./Chapter.js";
 export * from "./Overview.js";
 export * from "./overviewMigrations.js";
 export * from "./overviewCorpus.js";

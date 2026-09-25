@@ -7,6 +7,7 @@ import { Verdict } from "./Verdict.js";
 import { Selling } from "./Selling.js";
 import { HowToApply } from "./HowToApply.js";
 import { WatchAnyway } from "./WatchAnyway.js";
+import { Chapters } from "./Chapter.js";
 
 // Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
 // in its own table, keyed by overview id, because this record can be replaced
@@ -29,6 +30,9 @@ export const Overview = z
     selling: Selling.nullable(),
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
+    // Null for a record written before chapters existed; a list, possibly empty, for one
+    // written since (docs/features/chapters.md).
+    chapters: Chapters.nullable(),
   })
   .superRefine((overview, ctx) => {
     if (overview.thin && overview.verdict !== null) {

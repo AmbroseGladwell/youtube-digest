@@ -1,3 +1,5 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -15,8 +17,11 @@
   color: var(--faint);
 }
 
-.placeholderNote {
-  color: var(--accent-strong);
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.6;
 }
 
 .row {
@@ -24,7 +29,21 @@
   flex-direction: column;
   gap: 0.25rem;
   border-bottom: 1px solid var(--divider);
-  padding: 0.875rem 0;
+  padding: 0.875rem 0 0.875rem 0.625rem;
+  transition: background var(--motion-state) var(--motion-ease);
+}
+
+// The chapter the player is inside, marked the way the transcript marks its block: an
+// accent edge and the faintest wash, and nothing heavier.
+.rowCurrent {
+  background: var(--accent-wash);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-control);
 }
 
 .range {
@@ -33,6 +52,32 @@
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--faint);
+}
+
+.rangeControl {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  @include controls.quiet-control;
+}
+
+.transcriptButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  cursor: pointer;
+
+  @include controls.quiet-control;
 }
 
 .title {

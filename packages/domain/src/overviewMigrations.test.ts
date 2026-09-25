@@ -82,6 +82,13 @@ test("migrating an already-current record changes nothing", () => {
   assert.deepEqual(migrateRecord(current, OVERVIEW_MIGRATIONS), current);
 });
 
+test("a record from before chapters existed reads with chapters null, which the chapters tab reports", () => {
+  const migrated = migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS) as Record<string, unknown>;
+  assert.ok("chapters" in migrated);
+  assert.equal(migrated.chapters, null);
+  assert.equal(Overview.parse(migrated).chapters, null);
+});
+
 test("the filled video fields are null rather than absent, which is what every reader guards on", () => {
   const migrated = migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS) as {
     video: Record<string, unknown>;

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
+import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { blockParts } from "../../../transcripts/util/blockParts.js";
 import { transcriptBlocks } from "../../../transcripts/util/transcriptBlocks.js";
 import { transcriptFileName } from "../../../transcripts/util/transcriptFileName.js";
@@ -19,11 +20,14 @@ const NOTHING_STORED = "No transcript was stored for this note. Generating it ag
 
 export interface TranscriptPanelProps {
   video: VideoSource;
+  // Where a chapter asked the transcript to open, or null when the reader chose the tab
+  // themselves (docs/features/chapters.md).
+  openAtMs: number | null;
 }
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video }: TranscriptPanelProps) {
+export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
   const transcriptQuery = useTranscriptQuery(video.id);
   const transcript = transcriptQuery.data ?? null;
   const blocks = useMemo(
@@ -35,6 +39,14 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
   const follow = useFollowPlayback(video.id, blocks);
   const seek = useSeekPlayback(video.id);
   const [copied, setCopied] = useState(false);
+  const targetBlockIndex = openAtMs === null ? -1 : blockAtPosition(blocks, openAtMs);
+
+  // Opening at a chapter is scrolling away from the video, the same as searching is.
+  useEffect(() => {
+    if (targetBlockIndex !== -1) {
+      follow.stop();
+    }
+  }, [targetBlockIndex]);
 
   useEffect(() => {
     if (!copied) {
@@ -130,7 +142,15 @@ export function TranscriptPanel({ video }: TranscriptPanelProps) {
         </p>
       )}
 
-      {unreadable ?? <TranscriptRows blocks={blocks} search={search} follow={follow} seek={seek} />}
+      {unreadable ?? (
+        <TranscriptRows
+          blocks={blocks}
+          search={search}
+          follow={follow}
+          seek={seek}
+          targetBlockIndex={targetBlockIndex}
+        />
+      )}
 
       {follow.offered && (
         <button
@@ -186,25 +206,33 @@ interface TranscriptRowsProps {
   search: TranscriptSearch;
   follow: FollowPlayback;
   seek: ((positionMs: number) => void) | null;
+  targetBlockIndex: number;
 }
 
-function TranscriptRows({ blocks, search, follow, seek }: TranscriptRowsProps) {
+function TranscriptRows({ blocks, search, follow, seek, targetBlockIndex }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
+  const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     currentMatch?.scrollIntoView({ block: "center" });
   }, [currentMatch]);
 
+  useEffect(() => {
+    targetRow?.scrollIntoView({ block: "center" });
+  }, [targetRow]);
+
   return (
     <>
       {blocks.map((block, index) => {
         const current = index === follow.currentBlockIndex;
+        const target = index === targetBlockIndex;
         return (
           <div
             key={`${index}-${block.startMs}`}
-            className={`${styles.row} ${current ? styles.rowCurrent : ""}`}
-            ref={current ? follow.currentRow : undefined}
+            className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""}`}
+            ref={current ? follow.currentRow : target ? setTargetRow : undefined}
             data-current={current}
+            data-target={target}
             data-testid={transcriptPanelTestIds.row}
           >
             {seek === null ? (

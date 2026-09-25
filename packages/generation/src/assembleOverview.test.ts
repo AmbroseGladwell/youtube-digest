@@ -43,6 +43,7 @@ const baseOutput: GeneratedOutput = {
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: ["one", "two", "three"],
+  chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
   tags: ["one-tag", "two-tag", "three-tag"],
@@ -139,6 +140,57 @@ test("a watch-it-anyway range pointing past the transcript is a generation error
             range: { startSegmentIndex: 1, endSegmentIndex: 99 },
           },
         },
+        meta,
+      ),
+    GenerationError,
+  );
+});
+
+test("chapters take their times from the transcript, each ending where the next begins", () => {
+  const overview = assembleOverview(
+    baseInput,
+    {
+      ...baseOutput,
+      chapters: [
+        { title: "Welcome", summary: "The greeting.", startSegmentIndex: 0 },
+        { title: "The technique", summary: "The technique itself.", startSegmentIndex: 1 },
+      ],
+    },
+    { ...meta },
+  );
+  assert.deepEqual(overview.chapters, [
+    { title: "Welcome", summary: "The greeting.", startMs: 0, endMs: 2000 },
+    { title: "The technique", summary: "The technique itself.", startMs: 2000, endMs: 600000 },
+  ]);
+});
+
+test("the last chapter ends where the video ends, which is the longer of its length and its captions", () => {
+  const withoutLength = assembleOverview(
+    { ...baseInput, video: { ...baseInput.video, durationMs: null } },
+    baseOutput,
+    meta,
+  );
+  assert.equal(withoutLength.chapters?.at(-1)?.endMs, 9000);
+
+  const captionsRunLonger = assembleOverview(
+    { ...baseInput, video: { ...baseInput.video, durationMs: 8500 } },
+    baseOutput,
+    meta,
+  );
+  assert.equal(captionsRunLonger.chapters?.at(-1)?.endMs, 9000);
+});
+
+test("an empty transcript yields an empty chapter list rather than a chapter with no times", () => {
+  const overview = assembleOverview({ ...baseInput, transcript: [] }, { ...baseOutput, chapters: [] }, meta);
+  assert.deepEqual(overview.chapters, []);
+});
+
+test("a chapter pointing past the transcript is a generation error, not a silent clamp", () => {
+  assert.throws(
+    () =>
+      assembleOverview(
+        baseInput,
+        { ...baseOutput, chapters: [{ title: "x", summary: "y", startSegmentIndex: 99 }] },
         meta,
       ),
     GenerationError,

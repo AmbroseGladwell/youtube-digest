@@ -1,4 +1,5 @@
 import { coreSection } from "./sections/coreSection.js";
+import { chaptersSection } from "./sections/chaptersSection.js";
 import { filingSection } from "./sections/filingSection.js";
 import { verdictSection } from "./sections/verdictSection.js";
 import { sellingSection } from "./sections/sellingSection.js";
@@ -9,6 +10,7 @@ import type { GenerationInput } from "./GenerationInput.js";
 
 const REGISTRY: PromptSection[] = [
   coreSection,
+  chaptersSection,
   filingSection,
   verdictSection,
   sellingSection,

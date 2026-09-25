@@ -164,8 +164,10 @@ or not the marked row changed.
 ## One thing that writes to the player
 
 Following is otherwise one-way — the panel reads the player and never touches it — and
-the watch-it-anyway range is the single exception. `PlaybackSource` grew `seekTo`, which
-injects a function that sets `currentTime` on the main `<video>` and reads nothing.
+seeking is the single exception, first for the watch-it-anyway range and since for a
+transcript block's time and a chapter's range (`docs/features/chapters.md`).
+`PlaybackSource` grew `seekTo`, which injects a function that sets `currentTime` on the
+main `<video>` and reads nothing.
 
 The distinction that makes it safe is not the size of the write but who asked for it:
 this only ever runs from a press on a control the reader can see, pointed at a moment
