@@ -10,6 +10,7 @@ import { transcriptPlainText } from "../../../transcripts/util/transcriptPlainTe
 import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import { useFollowPlayback, type FollowPlayback } from "./useFollowPlayback.js";
+import { useReadingPosition, type ReadingPosition } from "./useReadingPosition.js";
 import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearch.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
@@ -36,10 +37,15 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
   );
 
   const search = useTranscriptSearch(blocks);
-  const follow = useFollowPlayback(video.id, blocks);
+  const targetBlockIndex = openAtMs === null ? -1 : blockAtPosition(blocks, openAtMs);
+  const position = useReadingPosition(video.id, blocks, { ignored: openAtMs !== null });
+  const follow = useFollowPlayback(video.id, blocks, { held: position.restoredBlockIndex !== -1 });
   const seek = useSeekPlayback(video.id);
   const [copied, setCopied] = useState(false);
-  const targetBlockIndex = openAtMs === null ? -1 : blockAtPosition(blocks, openAtMs);
+
+  useEffect(() => {
+    position.setRemembering(!follow.following);
+  }, [position.setRemembering, follow.following]);
 
   // Opening at a chapter is scrolling away from the video, the same as searching is.
   useEffect(() => {
@@ -147,6 +153,7 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
           blocks={blocks}
           search={search}
           follow={follow}
+          position={position}
           seek={seek}
           targetBlockIndex={targetBlockIndex}
         />
@@ -205,11 +212,19 @@ interface TranscriptRowsProps {
   blocks: TranscriptBlock[];
   search: TranscriptSearch;
   follow: FollowPlayback;
+  position: ReadingPosition;
   seek: ((positionMs: number) => void) | null;
   targetBlockIndex: number;
 }
 
-function TranscriptRows({ blocks, search, follow, seek, targetBlockIndex }: TranscriptRowsProps) {
+function TranscriptRows({
+  blocks,
+  search,
+  follow,
+  position,
+  seek,
+  targetBlockIndex,
+}: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
 
@@ -222,17 +237,27 @@ function TranscriptRows({ blocks, search, follow, seek, targetBlockIndex }: Tran
   }, [targetRow]);
 
   return (
-    <>
+    <div ref={position.rows}>
       {blocks.map((block, index) => {
         const current = index === follow.currentBlockIndex;
         const target = index === targetBlockIndex;
+        const restored = index === position.restoredBlockIndex;
         return (
           <div
             key={`${index}-${block.startMs}`}
             className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""}`}
-            ref={current ? follow.currentRow : target ? setTargetRow : undefined}
+            ref={
+              target
+                ? setTargetRow
+                : restored
+                  ? position.restoredRow
+                  : current
+                    ? follow.currentRow
+                    : undefined
+            }
             data-current={current}
             data-target={target}
+            data-start-ms={block.startMs}
             data-testid={transcriptPanelTestIds.row}
           >
             {seek === null ? (
@@ -282,7 +307,7 @@ function TranscriptRows({ blocks, search, follow, seek, targetBlockIndex }: Tran
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 

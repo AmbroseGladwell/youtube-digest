@@ -234,7 +234,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             </div>
           )}
           {tab === "Transcript" && (
-            <TranscriptPanel video={overview.video} openAtMs={transcriptOpenAtMs} />
+            <TranscriptPanel
+              key={overview.video.id}
+              video={overview.video}
+              openAtMs={transcriptOpenAtMs}
+            />
           )}
           {tab === "Chapters" && (
             <ChaptersPanel

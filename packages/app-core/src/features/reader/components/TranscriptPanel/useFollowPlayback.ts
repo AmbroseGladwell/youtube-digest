@@ -18,14 +18,29 @@ export interface FollowPlayback {
 // than smooth on purpose: the observer below treats the current row leaving the viewport
 // as the reader taking over, and a scroll still in flight would trip it
 // (docs/features/following-playback.md).
+export interface FollowPlaybackOptions {
+  // True while a remembered reading position is about to be restored. The follow must
+  // not scroll over it in the same frame, and it stays off afterwards until the reader
+  // asks for it back (docs/features/reading-position.md).
+  held?: boolean;
+}
+
 export function useFollowPlayback(
   videoId: string | null,
   blocks: TranscriptBlock[],
+  { held = false }: FollowPlaybackOptions = {},
 ): FollowPlayback {
   const canFollow = useCanFollowPlayback();
   const position = usePlaybackPosition(videoId);
-  const [following, setFollowing] = useState(true);
+  const [wanted, setFollowing] = useState(true);
   const [currentRow, setCurrentRow] = useState<HTMLElement | null>(null);
+  const following = wanted && !held;
+
+  useEffect(() => {
+    if (held) {
+      setFollowing(false);
+    }
+  }, [held]);
 
   const reporting = position !== null;
   const currentBlockIndex = position === null ? -1 : blockAtPosition(blocks, position.positionMs);

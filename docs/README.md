@@ -43,6 +43,9 @@ Five folders, five different questions.
   conversation behind it.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
+- `reading-position.md` — the transcript tab opening where you had got to, per video:
+  why it remembers a block's time rather than a scroll offset, why it lives in
+  `localStorage`, and how a restored position takes precedence over the player.
 - `record-migrations.md` — the versioned-record design that replaces reading stored records
   unvalidated: two version numbers doing two jobs, why migration happens on read rather than
   in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
