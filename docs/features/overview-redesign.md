@@ -140,10 +140,9 @@ Each of these needs data or a surface the app doesn't have. None is a styling ga
   `PLACEHOLDER_TRANSCRIPT` / `PLACEHOLDER_CHAPTERS`, each saying so on screen in the
   design's own accent slot beside the section kicker, so the rows were never mistaken for
   the real thing. The transcript half has since been built — see
-  `docs/features/transcript-storage.md` — and that placeholder is gone. Chapters are still
-  not generated at all: titled summaries of each stretch of audio are new work in
-  `packages/generation`, not a UI change, so that panel still renders its placeholder and
-  still says so.
+  `docs/features/transcript-storage.md` — and that placeholder is gone. Chapters followed
+  — see `docs/features/chapters.md` — as a new structural section in
+  `packages/generation`, so both placeholders are gone and the tab reads the record.
 - **Narrated audio.** `docs/features/tts-pre-rendered-speech.md` is the designed-and-measured
   version and was not built. The player bar is therefore a *reading pacer*, not an audio
   transport — see "The player bar without audio" below, and 5a's missing third step under

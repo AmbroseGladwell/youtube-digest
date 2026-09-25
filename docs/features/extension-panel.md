@@ -73,10 +73,11 @@ of the tab strip and the transcript's tools already had gains a term that is zer
 everywhere else. `readAlong.iwft.ts` is what holds the wide reader to the old
 arrangement, and would fail if this leaked into it.
 
-Chapters is the one tab where none of this can be observed: it is still a placeholder
-with nothing to scroll. The masthead and the tabs render outside the tab panel, so it is
-the same chrome by construction rather than by assertion — `panelChrome.iwft.ts` covers
-the mechanism on the two tabs that can actually move.
+Chapters is the one tab where little of this can be observed: a chapter list is short
+enough to fit, and it does not scroll to follow the video by design
+(`docs/features/chapters.md`). The masthead and the tabs render outside the tab panel, so
+it is the same chrome by construction rather than by assertion — `panelChrome.iwft.ts`
+covers the mechanism on the two tabs that can actually move.
 
 There is no fourth screen, and in particular there is no list. The way back out of the
 reader is the mark in the masthead, which is a link home in every layout already.

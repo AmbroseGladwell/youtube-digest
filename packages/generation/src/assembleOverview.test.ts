@@ -43,6 +43,7 @@ const baseOutput: GeneratedOutput = {
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: ["one", "two", "three"],
+  chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
   tags: ["one-tag", "two-tag", "three-tag"],
@@ -139,6 +140,61 @@ test("a watch-it-anyway range pointing past the transcript is a generation error
             range: { startSegmentIndex: 1, endSegmentIndex: 99 },
           },
         },
+        meta,
+      ),
+    GenerationError,
+  );
+});
+
+test("chapters take their times from the transcript, each ending where the next begins", () => {
+  const overview = assembleOverview(
+    baseInput,
+    {
+      ...baseOutput,
+      chapters: [
+        { title: "Welcome", summary: "The greeting.", startSegmentIndex: 0 },
+        { title: "The technique", summary: "The technique itself.", startSegmentIndex: 1 },
+      ],
+    },
+    { ...meta },
+  );
+  assert.deepEqual(overview.chapters, [
+    { title: "Welcome", summary: "The greeting.", startMs: 0, endMs: 2000 },
+    { title: "The technique", summary: "The technique itself.", startMs: 2000, endMs: 9000 },
+  ]);
+});
+
+// A wordless outro is not part of any chapter, and a wordless intro is not either: the
+// first chapter starts at the first caption, wherever that falls.
+test("the chapters span the words, not the video: the first starts and the last ends with the captions", () => {
+  const overview = assembleOverview(
+    {
+      ...baseInput,
+      video: { ...baseInput.video, durationMs: 600000 },
+      transcript: baseInput.transcript.map((segment) => ({
+        ...segment,
+        startMs: segment.startMs + 12_000,
+        endMs: segment.endMs + 12_000,
+      })),
+    },
+    baseOutput,
+    meta,
+  );
+  assert.equal(overview.chapters?.[0]?.startMs, 12_000);
+  assert.equal(overview.chapters?.at(-1)?.endMs, 21_000);
+});
+
+test("an empty transcript yields an empty chapter list rather than a chapter with no times", () => {
+  const overview = assembleOverview({ ...baseInput, transcript: [] }, { ...baseOutput, chapters: [] }, meta);
+  assert.deepEqual(overview.chapters, []);
+});
+
+test("a chapter pointing past the transcript is a generation error, not a silent clamp", () => {
+  assert.throws(
+    () =>
+      assembleOverview(
+        baseInput,
+        { ...baseOutput, chapters: [{ title: "x", summary: "y", startSegmentIndex: 99 }] },
         meta,
       ),
     GenerationError,

@@ -116,6 +116,7 @@ const exampleOverview: Overview = {
   selling: null,
   howToApply: null,
   watchAnyway: null,
+  chapters: null,
 };
 
 test("an overview with no topics shows up under an unsorted query", async () => {

@@ -536,8 +536,117 @@ export class ReaderPageObject extends PageObject {
     this.expectToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsNoMachineTranscribedNote = () =>
     this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
-  verifyShowsChaptersPlaceholder = () =>
-    this.expectToBeVisible(chaptersPanelTestIds.placeholderNote);
+  verifyShowsChaptersPanel = () => this.expectToBeVisible(chaptersPanelTestIds.root);
+
+  verifyChaptersNoteReads = (pattern: RegExp) =>
+    this.step(`verifyChaptersNoteReads ${pattern.source}`, () =>
+      expect(this.get(chaptersPanelTestIds.note)).toHaveText(pattern),
+    );
+
+  verifyChapterCountReads = (count: string) =>
+    this.step(`verifyChapterCountReads ${count}`, () =>
+      expect(this.get(chaptersPanelTestIds.count)).toHaveText(count),
+    );
+
+  verifyChapterTitlesRead = (titles: string[]) =>
+    this.step(`verifyChapterTitlesRead ${titles.join(" / ")}`, () =>
+      expect(this.get(chaptersPanelTestIds.title)).toHaveText(titles),
+    );
+
+  verifyChapterSummariesRead = (summaries: string[]) =>
+    this.step(`verifyChapterSummariesRead ${summaries.join(" / ")}`, () =>
+      expect(this.get(chaptersPanelTestIds.summary)).toHaveText(summaries),
+    );
+
+  verifyChapterRangesRead = (ranges: string[]) =>
+    this.step(`verifyChapterRangesRead ${ranges.join(", ")}`, () =>
+      expect(this.get(chaptersPanelTestIds.range)).toHaveText(ranges),
+    );
+
+  private chapterRange = (range: string): Locator =>
+    this.get(chaptersPanelTestIds.range).filter({ hasText: new RegExp(`^${range}$`) });
+
+  clickChapterRange = (range: string) =>
+    this.step(`clickChapterRange ${range}`, () => this.chapterRange(range).click());
+
+  verifyChapterRangesSeek = (seekable: boolean) =>
+    this.step(`verifyChapterRangesSeek ${seekable}`, async () => {
+      const seekControls = this.page.getByRole("button", { name: /^Play the video from/ });
+      await (seekable
+        ? expect(seekControls).toHaveCount(await this.get(chaptersPanelTestIds.row).count())
+        : expect(seekControls).toHaveCount(0));
+    });
+
+  // The wide reader's chapter is a link out, opened beside the note rather than over it.
+  verifyChapterRangeLinksTo = (range: string, href: string) =>
+    this.step(`verifyChapterRangeLinksTo ${range} ${href}`, async () => {
+      const link = this.chapterRange(range);
+      await expect(link).toHaveRole("link");
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toHaveAttribute("target", "_blank");
+    });
+
+  verifyChapterRangesLinkOut = (linked: boolean) =>
+    this.step(`verifyChapterRangesLinkOut ${linked}`, async () => {
+      const links = this.page.getByRole("link", { name: /^Open the video on YouTube at/ });
+      await (linked
+        ? expect(links).toHaveCount(await this.get(chaptersPanelTestIds.row).count())
+        : expect(links).toHaveCount(0));
+    });
+
+  verifyCurrentChapterReads = (title: string) =>
+    this.step(`verifyCurrentChapterReads ${title}`, () =>
+      expect(
+        this.get(chaptersPanelTestIds.row)
+          .and(this.page.locator('[data-current="true"]'))
+          .getByTestId(chaptersPanelTestIds.title),
+      ).toHaveText(title),
+    );
+
+  verifyNoChapterIsCurrent = () =>
+    this.step("verifyNoChapterIsCurrent", () =>
+      expect(
+        this.get(chaptersPanelTestIds.row).and(this.page.locator('[data-current="true"]')),
+      ).toHaveCount(0),
+    );
+
+  clickChapterTranscript = (title: string) =>
+    this.step(`clickChapterTranscript ${title}`, () =>
+      this.get(chaptersPanelTestIds.row)
+        .filter({ has: this.page.getByTestId(chaptersPanelTestIds.title).getByText(title, { exact: true }) })
+        .getByTestId(chaptersPanelTestIds.transcriptButton)
+        .click(),
+    );
+
+  verifyChaptersOfferTranscript = (offered: boolean) =>
+    this.step(`verifyChaptersOfferTranscript ${offered}`, async () =>
+      offered
+        ? expect(this.get(chaptersPanelTestIds.transcriptButton)).toHaveCount(
+            await this.get(chaptersPanelTestIds.row).count(),
+          )
+        : this.expectToHaveCount(chaptersPanelTestIds.transcriptButton, 0),
+    );
+
+  verifyActiveTabIs = (tab: string) =>
+    this.step(`verifyActiveTabIs ${tab}`, () =>
+      expect(this.get(readerTabsTestIds.tab(tab))).toHaveAttribute("aria-selected", "true"),
+    );
+
+  private targetTranscriptBlock = (): Locator =>
+    this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-target="true"]'));
+
+  verifyTargetTranscriptBlockReads = (text: string | RegExp) =>
+    this.step(`verifyTargetTranscriptBlockReads ${String(text)}`, async () => {
+      await expect(
+        this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText),
+      ).toHaveText(text);
+      await expect(this.targetTranscriptBlock()).toBeInViewport();
+    });
+
+  verifyNoTranscriptBlockIsTargeted = () =>
+    this.step("verifyNoTranscriptBlockIsTargeted", () =>
+      expect(this.targetTranscriptBlock()).toHaveCount(0),
+    );
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 
   scrollDown = (pixels: number) =>

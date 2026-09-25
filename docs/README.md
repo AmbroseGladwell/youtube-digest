@@ -24,6 +24,9 @@ Five folders, five different questions.
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
+- `chapters.md` — the reader's third tab: chapters as a structural prompt section timed
+  from the transcript, why the model names a segment and never a time, what a range does
+  on each surface, and how a chapter opens the transcript at its start.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.

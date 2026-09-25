@@ -1,6 +1,15 @@
-import { HowToApply, Overview, Selling, Verdict, WatchAnyway, type OverviewId } from "@overview/domain";
+import {
+  HowToApply,
+  Overview,
+  Selling,
+  Verdict,
+  WatchAnyway,
+  type Chapter,
+  type OverviewId,
+} from "@overview/domain";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
+import type { ChapterShape } from "./sections/chaptersSection.js";
 import { GenerationError } from "./GenerationError.js";
 
 export function assembleOverview(
@@ -52,6 +61,33 @@ export function assembleOverview(
     selling,
     howToApply,
     watchAnyway,
+    chapters: resolveChapters(input, output.chapters),
+  });
+}
+
+// Each chapter ends where the next begins, and the last where the words do, not where
+// the video does (docs/features/chapters.md).
+function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chapter[] {
+  const segmentAt = (index: number) => {
+    const segment = input.transcript[index];
+    if (!segment) {
+      throw new GenerationError(
+        `a chapter referenced a segment index out of bounds: ${index} ` +
+          `(transcript has ${input.transcript.length} segments)`,
+      );
+    }
+    return segment;
+  };
+  const lastCaptionEndsMs = input.transcript.at(-1)?.endMs ?? 0;
+
+  return chapters.map((chapter, index) => {
+    const next = chapters[index + 1];
+    return {
+      title: chapter.title,
+      summary: chapter.summary,
+      startMs: segmentAt(chapter.startSegmentIndex).startMs,
+      endMs: next ? segmentAt(next.startSegmentIndex).startMs : lastCaptionEndsMs,
+    };
   });
 }
 

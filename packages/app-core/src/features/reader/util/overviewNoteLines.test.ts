@@ -104,6 +104,7 @@ describe("overviewNoteLines", () => {
           howToApply: { items: [] },
           selling: { type: "none", detail: "", compromisesContent: false },
           watchAnyway: null,
+          chapters: null,
           verdict: null,
         }),
       ),

@@ -223,8 +223,9 @@ states carry no tools.
 
 ## What this does not do
 
-- **Chapters.** Still placeholder, and still blocked on generation work rather than on
-  data: titling each stretch of a video is a new prompt section, not a UI change.
+- ~~**Chapters.**~~ Built — see `docs/features/chapters.md`. It was a new prompt
+  section, as this said, and the tab now opens the transcript at a chapter's start,
+  which is the one thing this panel does for another.
 - ~~**Jumping to the video from a block.**~~ Settled, once there was one answer for all of
   it: the time seeks the video already playing beside the panel. Opening YouTube in a new
   tab — what these rows linked to for one commit — is the half this was waiting to avoid,

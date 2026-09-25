@@ -179,6 +179,12 @@
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
+// The block a chapter opened the transcript at. The wash the current block carries, but
+// no edge: it says "here is where you asked for", not "here is where the video is".
+.rowTarget {
+  background: var(--accent-wash);
+}
+
 .skeletonRow {
   display: grid;
   grid-template-columns: 4rem 1fr;

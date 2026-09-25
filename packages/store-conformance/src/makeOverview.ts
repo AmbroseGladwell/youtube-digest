@@ -26,6 +26,7 @@ export function makeOverview(overrides: Partial<Overview> = {}): Overview {
     selling: null,
     howToApply: null,
     watchAnyway: null,
+    chapters: null,
     ...overrides,
   };
 }

@@ -34,6 +34,7 @@ const overview = {
   selling: null,
   howToApply: null,
   watchAnyway: null,
+  chapters: null,
 };
 
 test("a stamped record carries both the version it was written at and the time", () => {

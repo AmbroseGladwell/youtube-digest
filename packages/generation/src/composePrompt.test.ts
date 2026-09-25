@@ -33,7 +33,7 @@ test("structural fields are always in the schema, regardless of toggles", () => 
     sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
   });
   const keys = Object.keys(schema.shape);
-  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "matchedTopicNames", "tags"]) {
+  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags"]) {
     assert.ok(keys.includes(structural), `expected ${structural} in schema`);
   }
 });
@@ -129,6 +129,39 @@ test("with an empty transcript, watch-it-anyway's range can only be null", () =>
       watchAnyway: { answer: "partial", reason: "x", range: { startSegmentIndex: 0, endSegmentIndex: 0 } },
     }),
   );
+});
+
+const chapterAt = (startSegmentIndex: number) => ({
+  title: "A chapter",
+  summary: "What it covers.",
+  startSegmentIndex,
+});
+
+test("a chapter names where it starts as a segment index, never a time the model would have to invent", () => {
+  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  assert.doesNotThrow(() => picked.parse({ chapters: [chapterAt(0), chapterAt(1)] }));
+  assert.throws(() =>
+    picked.parse({ chapters: [{ title: "A chapter", summary: "What it covers.", startMs: 0 }] }),
+  );
+});
+
+test("the first chapter starts at segment 0 and each one starts after the one before it", () => {
+  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  assert.throws(() => picked.parse({ chapters: [chapterAt(1)] }));
+  assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(0)] }));
+  assert.throws(() => picked.parse({ chapters: [chapterAt(1), chapterAt(0)] }));
+});
+
+test("a chapter cannot start past the last segment, and there is always at least one", () => {
+  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(2)] }));
+  assert.throws(() => picked.parse({ chapters: [] }));
+});
+
+test("with an empty transcript, the chapter list can only be empty", () => {
+  const picked = composePrompt({ ...baseInput, transcript: [] }).schema.pick({ chapters: true });
+  assert.doesNotThrow(() => picked.parse({ chapters: [] }));
+  assert.throws(() => picked.parse({ chapters: [chapterAt(0)] }));
 });
 
 test("the reader's reason for saving the video reaches the prompt in their own words", () => {
