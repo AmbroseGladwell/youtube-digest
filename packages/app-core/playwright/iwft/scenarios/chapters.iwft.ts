@@ -226,7 +226,7 @@ test("a note whose transcript had nothing to split says that instead", async ({
 });
 
 // The fixture answers with segment indices; the ranges below are the transcript's own
-// times, and the last chapter runs to the video's length rather than its last caption.
+// times, and the last chapter ends with the last caption rather than the video.
 test("a freshly generated overview has chapters timed from its transcript", async ({ launcher }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();
@@ -239,5 +239,5 @@ test("a freshly generated overview has chapters timed from its transcript", asyn
 
   await reader.verifyChapterCountReads("2 chapters");
   await reader.verifyChapterTitlesRead(["The greeting", "The claim and how to apply it"]);
-  await reader.verifyChapterRangesRead(["0:00–0:03", "0:03–3:00"]);
+  await reader.verifyChapterRangesRead(["0:00–0:03", "0:03–0:10"]);
 });

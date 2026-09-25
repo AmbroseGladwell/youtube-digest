@@ -160,24 +160,28 @@ test("chapters take their times from the transcript, each ending where the next 
   );
   assert.deepEqual(overview.chapters, [
     { title: "Welcome", summary: "The greeting.", startMs: 0, endMs: 2000 },
-    { title: "The technique", summary: "The technique itself.", startMs: 2000, endMs: 600000 },
+    { title: "The technique", summary: "The technique itself.", startMs: 2000, endMs: 9000 },
   ]);
 });
 
-test("the last chapter ends where the video ends, which is the longer of its length and its captions", () => {
-  const withoutLength = assembleOverview(
-    { ...baseInput, video: { ...baseInput.video, durationMs: null } },
+// A wordless outro is not part of any chapter, and a wordless intro is not either: the
+// first chapter starts at the first caption, wherever that falls.
+test("the chapters span the words, not the video: the first starts and the last ends with the captions", () => {
+  const overview = assembleOverview(
+    {
+      ...baseInput,
+      video: { ...baseInput.video, durationMs: 600000 },
+      transcript: baseInput.transcript.map((segment) => ({
+        ...segment,
+        startMs: segment.startMs + 12_000,
+        endMs: segment.endMs + 12_000,
+      })),
+    },
     baseOutput,
     meta,
   );
-  assert.equal(withoutLength.chapters?.at(-1)?.endMs, 9000);
-
-  const captionsRunLonger = assembleOverview(
-    { ...baseInput, video: { ...baseInput.video, durationMs: 8500 } },
-    baseOutput,
-    meta,
-  );
-  assert.equal(captionsRunLonger.chapters?.at(-1)?.endMs, 9000);
+  assert.equal(overview.chapters?.[0]?.startMs, 12_000);
+  assert.equal(overview.chapters?.at(-1)?.endMs, 21_000);
 });
 
 test("an empty transcript yields an empty chapter list rather than a chapter with no times", () => {

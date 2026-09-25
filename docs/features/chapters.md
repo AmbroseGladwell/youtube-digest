@@ -39,14 +39,18 @@ uses — and code does everything with time:
 - a chapter starts where its segment starts;
 - it ends where the next chapter begins, so the list is contiguous and reads as a map of
   the whole video rather than a set of highlights with gaps between them;
-- the last one ends where the video ends.
+- the last one ends where the last caption ends.
 
-That last point has a wrinkle worth recording. `video.durationMs` is YouTube's own length
-when the InnerTube rung fetched the video, but Supadata derives its duration from the
-caption track, and `docs/architecture/v1-architecture-decisions.md` measured that figure
-falling short of the captions it came from. So the last chapter ends at the **longer** of
-the recorded length and the final caption's end. Either way it is a measured number; the
-`max` only decides which measurement.
+**Chapters span the words, not the video.** The first build ran the last chapter out to
+`video.durationMs`, on the reasoning that a map of the video should reach its end. It was
+changed on the first real run: a video often has an outro with nothing said in it, and an
+intro with no words before the first caption, and neither is part of any chapter. So the
+first chapter starts wherever the first caption starts, which may not be 0:00, and the
+last ends with the final caption, which may be short of the video's length. The
+transcript tab already prints the same times, so the two tabs agree on where the words
+are. `video.durationMs` is not consulted at all, which also sidesteps the fact that a
+Supadata duration is caption-derived and was measured falling short of the captions
+(`docs/architecture/v1-architecture-decisions.md`).
 
 The schema carries the ordering as a refinement — the first chapter starts at segment 0,
 each starts after the one before it — which is not expressible in the JSON Schema the model

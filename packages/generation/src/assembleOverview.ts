@@ -65,10 +65,8 @@ export function assembleOverview(
   });
 }
 
-// Each chapter ends where the next begins, and the last where the video does: the
-// longer of YouTube's own length and the final caption's end, since a caption-derived
-// duration can fall short of the captions it was derived from
-// (docs/features/chapters.md).
+// Each chapter ends where the next begins, and the last where the words do, not where
+// the video does (docs/features/chapters.md).
 function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chapter[] {
   const segmentAt = (index: number) => {
     const segment = input.transcript[index];
@@ -80,8 +78,7 @@ function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chap
     }
     return segment;
   };
-  const lastSegment = input.transcript.at(-1);
-  const videoEndMs = Math.max(input.video.durationMs ?? 0, lastSegment?.endMs ?? 0);
+  const lastCaptionEndsMs = input.transcript.at(-1)?.endMs ?? 0;
 
   return chapters.map((chapter, index) => {
     const next = chapters[index + 1];
@@ -89,7 +86,7 @@ function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chap
       title: chapter.title,
       summary: chapter.summary,
       startMs: segmentAt(chapter.startSegmentIndex).startMs,
-      endMs: next ? segmentAt(next.startSegmentIndex).startMs : videoEndMs,
+      endMs: next ? segmentAt(next.startSegmentIndex).startMs : lastCaptionEndsMs,
     };
   });
 }
