@@ -657,6 +657,34 @@ export class ReaderPageObject extends PageObject {
       await this.page.waitForTimeout(300);
     });
 
+  // The block across the middle of the window, which is what the reading position
+  // remembers (docs/features/reading-position.md).
+  readTranscriptBlockAtCentre = (): Promise<string | null> =>
+    this.step("readTranscriptBlockAtCentre", () =>
+      this.page.evaluate(
+        ({ rowId, textId }) => {
+          const centre = window.innerHeight / 2;
+          const rows = Array.from(document.querySelectorAll(`[data-testid="${rowId}"]`));
+          const row = rows.find((candidate) => {
+            const rect = candidate.getBoundingClientRect();
+            return rect.top <= centre && rect.bottom >= centre;
+          });
+          return row?.querySelector(`[data-testid="${textId}"]`)?.textContent ?? null;
+        },
+        { rowId: transcriptPanelTestIds.row, textId: transcriptPanelTestIds.rowText },
+      ),
+    );
+
+  verifyTranscriptBlockAtCentreReads = (text: string) =>
+    this.step(`verifyTranscriptBlockAtCentreReads ${text}`, () =>
+      expect.poll(() => this.readTranscriptBlockAtCentre(), { timeout: 2_000 }).toBe(text),
+    );
+
+  verifyTranscriptIsAtTheTop = () =>
+    this.step("verifyTranscriptIsAtTheTop", () =>
+      expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0),
+    );
+
   // The panel's whole sticky stack, in the order it has to rest in: the app's bar, the
   // note's own head, the tabs, and — on the transcript — its tools.
   verifyPanelChromeStacks = (withTranscriptTools: boolean) =>

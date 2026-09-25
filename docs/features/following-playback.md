@@ -150,9 +150,10 @@ report of ours carries the video id it was measured from and
 **The one it does better.** It remembers where you had scrolled to per video, in
 `chrome.storage.session`, capped at the twenty most recent, and when it restores that
 position it starts with following *off* and the button already showing — so coming back
-to a transcript you were reading ahead in does not yank you to the player. We have no
-reading-position memory at all. That is a genuinely good idea and is not built; it is a
-feature in its own right rather than a detail of this one.
+to a transcript you were reading ahead in does not yank you to the player. That was a
+genuinely good idea, and it is now built as a feature in its own right —
+`docs/features/reading-position.md` — with the same rule: a restored position wins over
+the player, and the follow is offered back rather than resumed.
 
 It also has a bug we do not, worth recording because the shape of it is easy to
 reintroduce: its highlight step early-returns when the row is already highlighted, to
