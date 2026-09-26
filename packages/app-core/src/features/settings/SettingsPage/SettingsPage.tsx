@@ -6,6 +6,7 @@ import { useSurface } from "../../../app/SurfaceContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
+import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { ApiKeysPanel } from "../components/ApiKeysPanel/ApiKeysPanel.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
@@ -52,6 +53,8 @@ export function SettingsPage() {
           Saved on this device.
         </p>
       )}
+
+      <SyncPanel />
     </div>
   );
 }

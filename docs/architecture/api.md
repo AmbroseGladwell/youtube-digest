@@ -206,5 +206,7 @@ first, costs nothing.
 
 Magic-link sign-in and the cookie transport; serving the SPA from this process (the
 `@fastify/static` half of the one-origin decision, with `index.html` set to revalidate);
-Dockerfile, Fly.io and Neon configuration; rate limiting; a session sweep; the client half
-of the sync engine, which is the next slice and is named in `docs/features/sync-api.md`.
+Dockerfile, Fly.io and Neon configuration; rate limiting; a session sweep; CORS or a
+host permission for the extension's origin, without which the extension cannot reach this
+service (`docs/features/sync-client.md`). The client half of the sync engine is built:
+`docs/features/sync-client.md`.

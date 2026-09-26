@@ -1,10 +1,13 @@
 import { createContext, useContext } from "react";
-import type { OverviewStore, SettingsStore, TranscriptStore } from "@overview/domain";
+import type { OverviewStore, SettingsStore, SyncStorage, TranscriptStore } from "@overview/domain";
 
 export interface Stores {
   overviewStore: OverviewStore;
   settingsStore: SettingsStore;
   transcriptStore: TranscriptStore;
+  // Null is a shell whose library cannot sync at all, and every sync control hides itself
+  // rather than offering something that cannot work (docs/features/sync-client.md).
+  syncStorage: SyncStorage | null;
 }
 
 // No default: which backend answers OverviewStore/SettingsStore (local IndexedDB today,

@@ -1,0 +1,104 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: 1px solid var(--divider);
+  padding-top: 1.1rem;
+  max-width: 35rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.hint {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--edge);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.45rem 0.125rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-group);
+}
+
+.primaryButton {
+  align-self: flex-start;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-btn);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+  padding: 0.4rem 1.1rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  @include controls.tinted-control;
+}
+
+.quietButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--faint);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+
+  &:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+}

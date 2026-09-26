@@ -6,6 +6,7 @@ import {
   createAppRouter,
   type ActiveVideoSource,
   type AppLayout,
+  type AppUpdate,
   type PlaybackSource,
   type RunBridge,
   type YouTubeFetch,
@@ -15,6 +16,7 @@ import {
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
+  IndexedDbSyncStorage,
   LocalDatabaseBlockedError,
   IndexedDbTranscriptStore,
   openLocalDatabase,
@@ -27,6 +29,13 @@ export interface MountOptions {
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
 }
+
+// The one thing an extension page can do about being out of date that a web page cannot:
+// take the reader to where Chrome updates it (docs/features/record-migrations.md).
+const openExtensionsPage: AppUpdate = {
+  label: "Open extensions",
+  apply: () => void chrome.tabs.create({ url: "chrome://extensions" }),
+};
 
 // A hash router, not a browser one: an extension document is a packaged file, so a pushed
 // path like /overviews/<id> resolves to nothing and the panel 404s on reload.
@@ -51,14 +60,16 @@ export async function mountApp({
     return;
   }
 
-  const overviewStore = new IndexedDbOverviewStore(db);
-  const settingsStore = new IndexedDbSettingsStore(db);
+  const syncStorage = new IndexedDbSyncStorage(db);
+  const overviewStore = new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled });
+  const settingsStore = new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled });
   const transcriptStore = new IndexedDbTranscriptStore(db);
 
   root.render(
     <StrictMode>
       <App
-        stores={{ overviewStore, settingsStore, transcriptStore }}
+        stores={{ overviewStore, settingsStore, transcriptStore, syncStorage }}
+        appUpdate={openExtensionsPage}
         router={createAppRouter(createHashRouter)}
         surface="extension"
         layout={layout}

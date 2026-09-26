@@ -16,23 +16,30 @@ import {
   stampStoredRecord,
   unreadableRecord,
   type ClaimSummary,
+  type OutboxChange,
   type OverviewId,
   type OverviewQuery,
   type OverviewStore,
   type RecordMigration,
   type StoredRecordRead,
+  type SyncedRecordKind,
   type UnreadableRecord,
   type UnreadableRecordKind,
 } from "@overview/domain";
+import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
+import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
 import { OVERVIEWS_STORE, OVERVIEW_STATES_STORE, TOPICS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
+import { promisifyTransaction } from "./promisifyTransaction.js";
 import { storedRecordId } from "./storedRecordId.js";
 
 export class IndexedDbOverviewStore implements OverviewStore {
   #db: IDBDatabase;
+  #onJournaled: (() => void) | undefined;
 
-  constructor(db: IDBDatabase) {
+  constructor(db: IDBDatabase, { onJournaled }: IndexedDbStoreOptions = {}) {
     this.#db = db;
+    this.#onJournaled = onJournaled;
   }
 
   async getOverview(id: OverviewId) {
@@ -81,7 +88,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
   }
 
   async saveOverview(overview: Overview) {
-    await this.#write(OVERVIEWS_STORE, stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION));
+    const now = new Date();
+    const record = stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION, now);
+    await this.#write(OVERVIEWS_STORE, record, "overview", overview.id, now, { op: "replace", record });
   }
 
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
@@ -90,9 +99,14 @@ export class IndexedDbOverviewStore implements OverviewStore {
       return;
     }
     const current = this.#writable("overview", overviewId, raw, OVERVIEW_MIGRATIONS);
+    const now = new Date();
     await this.#write(
       OVERVIEWS_STORE,
-      stampStoredRecord({ ...current, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION),
+      stampStoredRecord({ ...current, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      "overview",
+      overviewId,
+      now,
+      { op: "topics", topicIds },
     );
   }
 
@@ -102,15 +116,34 @@ export class IndexedDbOverviewStore implements OverviewStore {
       return;
     }
     const current = this.#writable("overview", overviewId, raw, OVERVIEW_MIGRATIONS);
+    const now = new Date();
     await this.#write(
       OVERVIEWS_STORE,
-      stampStoredRecord({ ...current, captureReason }, CURRENT_OVERVIEW_SCHEMA_VERSION),
+      stampStoredRecord({ ...current, captureReason }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      "overview",
+      overviewId,
+      now,
+      { op: "captureReason", captureReason },
     );
   }
 
+  // The state row goes with the overview, as it does on the server: ids are never reused,
+  // so a surviving state would be a permanent orphan (docs/features/sync-api.md).
   async deleteOverview(id: OverviewId) {
-    const store = this.#db.transaction(OVERVIEWS_STORE, "readwrite").objectStore(OVERVIEWS_STORE);
-    await promisifyRequest(store.delete(id));
+    const transaction = this.#db.transaction(
+      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, ...JOURNALLED_STORES],
+      "readwrite",
+    );
+    transaction.objectStore(OVERVIEWS_STORE).delete(id);
+    transaction.objectStore(OVERVIEW_STATES_STORE).delete(id);
+    const journaled = await appendPendingWrite(transaction, {
+      kind: "overview",
+      id,
+      updatedAt: new Date().toISOString(),
+      change: { op: "delete" },
+    });
+    await promisifyTransaction(transaction);
+    if (journaled) this.#onJournaled?.();
   }
 
   async listClaims(): Promise<ClaimSummary[]> {
@@ -130,13 +163,15 @@ export class IndexedDbOverviewStore implements OverviewStore {
   }
 
   async createTopic(input: { name: string; description?: string }) {
+    const now = new Date();
     const topic: Topic = {
       id: TopicId.parse(crypto.randomUUID()),
       name: input.name,
       description: input.description ?? null,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
     };
-    await this.#write(TOPICS_STORE, stampStoredRecord(topic, CURRENT_TOPIC_SCHEMA_VERSION));
+    const record = stampStoredRecord(topic, CURRENT_TOPIC_SCHEMA_VERSION, now);
+    await this.#write(TOPICS_STORE, record, "topic", topic.id, now, { op: "replace", record });
     return topic;
   }
 
@@ -160,12 +195,14 @@ export class IndexedDbOverviewStore implements OverviewStore {
         ? { ...DEFAULT_OVERVIEW_STATE, overviewId }
         : this.#writable("overviewState", overviewId, raw, OVERVIEW_STATE_MIGRATIONS);
 
+    const now = new Date();
     await this.#write(
       OVERVIEW_STATES_STORE,
-      stampStoredRecord(
-        { ...current, ...patch, overviewId },
-        CURRENT_OVERVIEW_STATE_SCHEMA_VERSION,
-      ),
+      stampStoredRecord({ ...current, ...patch, overviewId }, CURRENT_OVERVIEW_STATE_SCHEMA_VERSION, now),
+      "overviewState",
+      overviewId,
+      now,
+      { op: "state", patch },
     );
   }
 
@@ -195,9 +232,24 @@ export class IndexedDbOverviewStore implements OverviewStore {
     return promisifyRequest<unknown[]>(store.getAll());
   }
 
-  async #write(storeName: string, record: object): Promise<void> {
-    const store = this.#db.transaction(storeName, "readwrite").objectStore(storeName);
-    await promisifyRequest(store.put(record));
+  async #write(
+    storeName: string,
+    record: object,
+    kind: SyncedRecordKind,
+    id: string,
+    writtenAt: Date,
+    change: OutboxChange,
+  ): Promise<void> {
+    const transaction = this.#db.transaction([storeName, ...JOURNALLED_STORES], "readwrite");
+    transaction.objectStore(storeName).put(record);
+    const journaled = await appendPendingWrite(transaction, {
+      kind,
+      id,
+      updatedAt: writtenAt.toISOString(),
+      change,
+    });
+    await promisifyTransaction(transaction);
+    if (journaled) this.#onJournaled?.();
   }
 }
 

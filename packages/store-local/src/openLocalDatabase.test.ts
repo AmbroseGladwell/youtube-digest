@@ -4,9 +4,12 @@ import { IDBFactory } from "fake-indexeddb";
 import {
   DATABASE_NAME,
   DATABASE_VERSION,
+  OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   SETTINGS_KEY,
+  SYNC_META_STORE,
+  SYNC_REVISIONS_STORE,
   SETTINGS_STORE,
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
@@ -39,6 +42,22 @@ function openVersionTwoDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
       db.createObjectStore(TOPICS_STORE, { keyPath: "id" });
       db.createObjectStore(OVERVIEW_STATES_STORE, { keyPath: "overviewId" });
       db.createObjectStore(SETTINGS_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openVersionThreeDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, 3);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      db.createObjectStore(OVERVIEWS_STORE, { keyPath: "id" });
+      db.createObjectStore(TOPICS_STORE, { keyPath: "id" });
+      db.createObjectStore(OVERVIEW_STATES_STORE, { keyPath: "overviewId" });
+      db.createObjectStore(SETTINGS_STORE);
+      db.createObjectStore(TRANSCRIPTS_STORE, { keyPath: "videoId" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -100,6 +119,25 @@ test("adding the transcripts store keeps the overviews a reader already has", as
   assert.equal((await getAll(after, OVERVIEWS_STORE)).length, 1);
   assert.equal((await getAll(after, OVERVIEW_STATES_STORE)).length, 1);
   assert.deepEqual(await getAll(after, TRANSCRIPTS_STORE), []);
+});
+
+test("adding the sync stores keeps every record and transcript a reader already has", async () => {
+  const indexedDB = new IDBFactory();
+  const before = await openVersionThreeDatabase(indexedDB);
+  await put(before, OVERVIEWS_STORE, { id: "overview-1", coreClaim: "A claim worth keeping." });
+  await put(before, OVERVIEW_STATES_STORE, { overviewId: "overview-1", read: true, favourite: true });
+  await put(before, TRANSCRIPTS_STORE, { videoId: "video-1", segments: [] });
+  before.close();
+
+  const after = await openLocalDatabase({ indexedDB });
+
+  assert.equal((await getAll(after, OVERVIEWS_STORE)).length, 1);
+  assert.equal((await getAll(after, OVERVIEW_STATES_STORE)).length, 1);
+  assert.equal((await getAll(after, TRANSCRIPTS_STORE)).length, 1);
+  for (const store of [OUTBOX_STORE, SYNC_REVISIONS_STORE, SYNC_META_STORE]) {
+    assert.ok(after.objectStoreNames.contains(store), `${store} was not created`);
+    assert.deepEqual(await getAll(after, store), []);
+  }
 });
 
 function openNextVersion(indexedDB: IDBFactory): Promise<IDBDatabase> {

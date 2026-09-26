@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { DEFAULT_SETTINGS, SectionsEnabled, Settings } from "@overview/domain";
+import { DEFAULT_SETTINGS, SectionsEnabled, Settings, mergeSettingsRecord } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { ifMatchOf, sendWritten, UpdatedAt } from "../http/writeHeaders.js";
@@ -10,19 +10,6 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 const SettingsPatch = Settings.partial()
   .extend({ sectionsEnabled: SectionsEnabled.partial().optional(), updatedAt: UpdatedAt })
   .strict();
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-// sectionsEnabled merges one level deep, as the local store does, so a patch to one
-// toggle does not take a newer client's toggles with it (docs/features/record-migrations.md).
-const mergeSettings = (base: Record<string, unknown>, patch: Record<string, unknown>) => ({
-  ...base,
-  ...patch,
-  ...(isObject(patch.sectionsEnabled)
-    ? { sectionsEnabled: { ...(isObject(base.sectionsEnabled) ? base.sectionsEnabled : {}), ...patch.sectionsEnabled } }
-    : {}),
-});
 
 export function settingsRoutes(app: FastifyInstance, records: RecordsRepository): void {
   app.put("/settings", async (request, reply) => {
@@ -39,7 +26,7 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
           decideMerge(
             "settings",
             current,
-            { patch, updatedAt, ifMatch, defaults: { ...DEFAULT_SETTINGS }, merge: mergeSettings },
+            { patch, updatedAt, ifMatch, defaults: { ...DEFAULT_SETTINGS }, merge: mergeSettingsRecord },
             request.client!,
           ),
       },

@@ -121,6 +121,22 @@ export function defineOverviewStoreConformanceSuite(
     assert.equal((await store.listOverviews()).length, 0);
   });
 
+  test(behaviour("deleteOverview takes the overview's read/favourite state with it, since the id is never reused"), async () => {
+    const store = await createStore();
+    const overview = makeOverview();
+    await store.saveOverview(overview);
+    await store.setOverviewState(overview.id, { read: true, favourite: true, userTags: ["keep"] });
+
+    await store.deleteOverview(overview.id);
+
+    assert.deepEqual(await store.getOverviewState(overview.id), {
+      overviewId: overview.id,
+      read: false,
+      favourite: false,
+      userTags: [],
+    });
+  });
+
   test(behaviour("deleting an overview that was never saved does not throw"), async () => {
     const store = await createStore();
     await assert.doesNotReject(() => store.deleteOverview(OverviewId.parse(randomUUID())));

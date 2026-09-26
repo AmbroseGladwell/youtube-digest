@@ -5,6 +5,7 @@ import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
+import type { SyncConnection } from "../../src/features/sync/types/SyncConnection.js";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
@@ -20,6 +21,9 @@ import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
+  // Whether this shell can sync, and the server and token it already has.
+  sync?: boolean;
+  syncConnection?: SyncConnection;
   surface?: Surface;
   layout?: AppLayout;
   activeVideoUrl?: string | null;
@@ -70,6 +74,8 @@ export class Launcher {
         ...this.backendSimulator.buildHooksConfig(),
         seedSettings: options.plan === undefined ? undefined : { plan: options.plan },
         apiKeys: options.apiKeys,
+        syncAvailable: options.sync,
+        syncConnection: options.syncConnection,
         surface: options.surface,
         layout: options.layout,
         activeVideoUrl: options.activeVideoUrl,

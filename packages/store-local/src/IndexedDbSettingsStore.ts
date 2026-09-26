@@ -4,6 +4,7 @@ import {
   SETTINGS_MIGRATIONS,
   Settings,
   UnreadableRecordError,
+  mergeSettingsRecord,
   migrateStoredRecord,
   readStoredRecord,
   stampStoredRecord,
@@ -11,14 +12,19 @@ import {
   type SettingsStore,
   type UnreadableRecord,
 } from "@overview/domain";
+import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
+import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
 import { SETTINGS_KEY, SETTINGS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
+import { promisifyTransaction } from "./promisifyTransaction.js";
 
 export class IndexedDbSettingsStore implements SettingsStore {
   #db: IDBDatabase;
+  #onJournaled: (() => void) | undefined;
 
-  constructor(db: IDBDatabase) {
+  constructor(db: IDBDatabase, { onJournaled }: IndexedDbStoreOptions = {}) {
     this.#db = db;
+    this.#onJournaled = onJournaled;
   }
 
   async get() {
@@ -41,13 +47,19 @@ export class IndexedDbSettingsStore implements SettingsStore {
       throw new UnreadableRecordError(unreadableRecord("settings", SETTINGS_KEY, migrated, raw));
     }
 
-    const store = this.#db.transaction(SETTINGS_STORE, "readwrite").objectStore(SETTINGS_STORE);
-    await promisifyRequest(
-      store.put(
-        stampStoredRecord(merged(migrated.record, patch), CURRENT_SETTINGS_SCHEMA_VERSION),
-        SETTINGS_KEY,
-      ),
-    );
+    const now = new Date();
+    const transaction = this.#db.transaction([SETTINGS_STORE, ...JOURNALLED_STORES], "readwrite");
+    transaction
+      .objectStore(SETTINGS_STORE)
+      .put(stampStoredRecord(mergeSettingsRecord(migrated.record, patch), CURRENT_SETTINGS_SCHEMA_VERSION, now), SETTINGS_KEY);
+    const journaled = await appendPendingWrite(transaction, {
+      kind: "settings",
+      id: SETTINGS_KEY,
+      updatedAt: now.toISOString(),
+      change: { op: "settings", patch },
+    });
+    await promisifyTransaction(transaction);
+    if (journaled) this.#onJournaled?.();
     return this.get();
   }
 
@@ -59,21 +71,4 @@ export class IndexedDbSettingsStore implements SettingsStore {
       ...(typeof stored === "object" && stored !== null ? (stored as Record<string, unknown>) : {}),
     };
   }
-}
-
-// sectionsEnabled is merged rather than replaced: patching one toggle used to take the
-// other three with it (docs/features/record-migrations.md).
-function merged(current: Record<string, unknown>, patch: Partial<Settings>): Record<string, unknown> {
-  const sectionsEnabled =
-    patch.sectionsEnabled === undefined
-      ? {}
-      : {
-          sectionsEnabled: {
-            ...(typeof current.sectionsEnabled === "object" && current.sectionsEnabled !== null
-              ? (current.sectionsEnabled as Record<string, unknown>)
-              : {}),
-            ...patch.sectionsEnabled,
-          },
-        };
-  return { ...current, ...patch, ...sectionsEnabled };
 }

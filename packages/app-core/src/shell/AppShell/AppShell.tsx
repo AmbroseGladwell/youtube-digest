@@ -8,6 +8,9 @@ import { NewOverviewDialog } from "../../features/newOverview/components/NewOver
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
 import { useRunBridgeExchange } from "../../features/newOverview/useRunBridgeExchange.js";
+import { StaleClientBanner } from "../../features/sync/components/StaleClientBanner/StaleClientBanner.js";
+import { WriteFloorWall } from "../../features/sync/components/WriteFloorWall/WriteFloorWall.js";
+import { useSync } from "../../features/sync/SyncContext.js";
 import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import {
@@ -27,6 +30,7 @@ export function AppShell() {
   const isPanel = useIsPanel();
   const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
   const animateNavigation = useShouldAnimateNavigation();
+  const belowWriteFloor = useSync().status.phase === "unsupported";
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
   // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
@@ -137,6 +141,8 @@ export function AppShell() {
             )}
           </div>
 
+          <StaleClientBanner />
+
           {!isPanel && newOverview.run && !newOverview.dialogOpen && (
             <GenerationStatusStrip
               run={newOverview.run}
@@ -148,7 +154,7 @@ export function AppShell() {
         </header>
 
         <div className={styles.pane} data-testid={appShellTestIds.pane}>
-          <Outlet />
+          {belowWriteFloor ? <WriteFloorWall generating={newOverview.run !== null} /> : <Outlet />}
         </div>
 
         <ScrollRestoration />

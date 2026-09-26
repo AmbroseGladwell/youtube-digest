@@ -22,6 +22,7 @@
     "@overview/domain": "*",
     "@overview/transcripts": "*",
     "@overview/generation": "*",
+    "@overview/sync": "*",
     "@anthropic-ai/sdk": "^0.126.0",
     "@supadata/js": "^1.4.0",
     "@tanstack/react-query": "^5.103.0",

@@ -7,6 +7,7 @@ import type { YouTubeFetch } from "@overview/transcripts";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
+import type { InMemorySyncStorage } from "./InMemorySyncStorage.testHelper.js";
 
 declare global {
   interface Window {
@@ -14,6 +15,7 @@ declare global {
       overviewStore: InMemoryOverviewStore;
       settingsStore: InMemorySettingsStore;
       transcriptStore: InMemoryTranscriptStore;
+      syncStorage: InMemorySyncStorage | null;
     };
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;

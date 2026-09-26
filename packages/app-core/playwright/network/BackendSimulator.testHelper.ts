@@ -1,12 +1,14 @@
 import type { Page, Route } from "@playwright/test";
-import type {
-  Overview,
-  OverviewId,
-  OverviewState,
-  StoredTranscript,
-  Topic,
-  UnreadableRecord,
-  VideoId,
+import {
+  CLIENT_VERSION,
+  type Overview,
+  type OverviewId,
+  type OverviewState,
+  type RecordChange,
+  type StoredTranscript,
+  type Topic,
+  type UnreadableRecord,
+  type VideoId,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
@@ -40,6 +42,8 @@ export class BackendSimulator {
     onDefault: () => { status: number; body: unknown };
   }> = [];
   #generatedOutputOverrides: Record<string, unknown> = {};
+  #feed: RecordChange[] = [];
+  #minSupportedClientVersion = 1;
 
   constructor(page: Page) {
     this.#page = page;
@@ -85,6 +89,7 @@ export class BackendSimulator {
   });
 
   handleNetworking = async (): Promise<void> => {
+    await this.#handleSyncNetworking();
     // The WEB client is asked only for a publish date and carries no caption tracks, so it
     // is not the call worth counting (docs/features/transcript-retrieval.md).
     await this.#page.route("**/www.youtube.com/youtubei/v1/player**", (route) => {
@@ -156,6 +161,34 @@ export class BackendSimulator {
     );
   };
 
+  #handleSyncNetworking = async (): Promise<void> => {
+    const unauthenticated = () => ({
+      status: 401,
+      body: { error: { code: "unauthenticated", message: "Simulated: no such session" } },
+    });
+
+    await this.#page.route("**/api/handshake", (route) =>
+      this.#respond(route, EndpointKey.SYNC_HANDSHAKE, {
+        onDefault: () => ({
+          status: 200,
+          body: { minSupportedClientVersion: this.#minSupportedClientVersion, currentClientVersion: CLIENT_VERSION },
+        }),
+        onError: unauthenticated,
+      }),
+    );
+
+    await this.#page.route("**/api/changes**", (route) =>
+      this.#respond(route, EndpointKey.SYNC_CHANGES, {
+        onDefault: () => {
+          const since = Number(new URL(route.request().url()).searchParams.get("since") ?? "0");
+          const changes = this.#feed.filter((change) => change.seq > since);
+          return { status: 200, body: { changes, next: changes.at(-1)?.seq ?? since, more: false } };
+        },
+        onError: unauthenticated,
+      }),
+    );
+  };
+
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
@@ -199,6 +232,18 @@ export class BackendSimulator {
         (overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId),
         id,
       ),
+  };
+
+  // The account as the sync server holds it: what a pull would bring down, and where the
+  // server puts its write floor (docs/features/sync-client.md).
+  sync = {
+    seedChange: (change: RecordChange): void => {
+      this.#feed.push(change);
+    },
+    setMinSupportedClientVersion: (version: number): void => {
+      this.#minSupportedClientVersion = version;
+    },
+    cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
   };
 
   transcripts = {

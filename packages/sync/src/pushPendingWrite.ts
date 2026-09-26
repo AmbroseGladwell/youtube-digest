@@ -1,0 +1,99 @@
+import type { OutboxEntry, OutboxFailure, WrittenRecord } from "@overview/domain";
+import type { SyncApi } from "./SyncApi.js";
+import { isSyncRequestError } from "./SyncRequestError.js";
+import { describe, stopReasonFor, type StopReason } from "./stopReasonFor.js";
+
+export type PushOutcome =
+  | { result: "written"; rev: number }
+  | { result: "gone" }
+  | { result: "stuck"; failure: OutboxFailure }
+  | { result: "stopped"; reason: StopReason; detail: string };
+
+const REPLACE_ATTEMPTS = 3;
+
+// One outbox entry onto the route it belongs to. A whole-record write over a record the
+// server already holds is retried with the revision the server names, because a
+// regeneration is the reader's deliberate act and the last local write wins, as it does
+// in the local store. A field write to a record the server no longer has is done with:
+// the tombstone will arrive on the next pull (docs/features/sync-client.md).
+export async function pushPendingWrite(
+  api: SyncApi,
+  entry: OutboxEntry,
+  knownRev: number | null,
+): Promise<PushOutcome> {
+  try {
+    return await send(api, entry, knownRev);
+  } catch (error) {
+    const reason = stopReasonFor(error);
+    if (reason !== null) {
+      return { result: "stopped", reason, detail: describe(error) };
+    }
+    if (isSyncRequestError(error)) {
+      if (error.code === "not_found" && entry.change.op !== "replace") {
+        return { result: "gone" };
+      }
+      return { result: "stuck", failure: { code: error.code, message: error.message } };
+    }
+    return { result: "stuck", failure: { code: "unknown", message: describe(error) } };
+  }
+}
+
+async function send(api: SyncApi, entry: OutboxEntry, knownRev: number | null): Promise<PushOutcome> {
+  const { change } = entry;
+  switch (change.op) {
+    case "replace":
+      return entry.kind === "topic"
+        ? createTopic(api, change.record)
+        : replaceOverview(api, change.record, knownRev);
+    case "topics":
+      return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt));
+    case "captureReason":
+      return written(await api.setOverviewCaptureReason(entry.id, change.captureReason, entry.updatedAt));
+    case "state":
+      return written(await api.setOverviewState(entry.id, change.patch, entry.updatedAt));
+    case "settings":
+      return written(await api.updateSettings(change.patch, entry.updatedAt));
+    case "delete": {
+      await api.deleteOverview(entry.id);
+      return { result: "gone" };
+    }
+  }
+}
+
+const written = ({ rev }: WrittenRecord): PushOutcome => ({ result: "written", rev });
+
+const revisionNamedBy = (error: unknown): number | null =>
+  isSyncRequestError(error) && typeof error.details?.rev === "number" ? error.details.rev : null;
+
+async function replaceOverview(
+  api: SyncApi,
+  record: Record<string, unknown>,
+  knownRev: number | null,
+): Promise<PushOutcome> {
+  let ifMatch = knownRev;
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return written(await api.createOverview(record, ifMatch));
+    } catch (error) {
+      const named = revisionNamedBy(error);
+      if (named === null || attempt >= REPLACE_ATTEMPTS) {
+        throw error;
+      }
+      ifMatch = named;
+    }
+  }
+}
+
+// Topics are create-only. One the server already holds under this id is this same topic,
+// pushed once before and not acknowledged in time; there is nothing to replace.
+async function createTopic(api: SyncApi, record: Record<string, unknown>): Promise<PushOutcome> {
+  try {
+    return written(await api.createTopic(record));
+  } catch (error) {
+    const named = revisionNamedBy(error);
+    if (isSyncRequestError(error) && error.code === "already_exists" && named !== null) {
+      return { result: "written", rev: named };
+    }
+    throw error;
+  }
+}

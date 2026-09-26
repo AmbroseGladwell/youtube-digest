@@ -2,9 +2,12 @@ import { LocalDatabaseBlockedError } from "./LocalDatabaseBlockedError.js";
 import {
   DATABASE_NAME,
   DATABASE_VERSION,
+  OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   SETTINGS_STORE,
+  SYNC_META_STORE,
+  SYNC_REVISIONS_STORE,
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
@@ -46,6 +49,15 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
       if (!db.objectStoreNames.contains(TRANSCRIPTS_STORE)) {
         db.createObjectStore(TRANSCRIPTS_STORE, { keyPath: "videoId" });
+      }
+      if (!db.objectStoreNames.contains(OUTBOX_STORE)) {
+        db.createObjectStore(OUTBOX_STORE, { keyPath: "key", autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains(SYNC_REVISIONS_STORE)) {
+        db.createObjectStore(SYNC_REVISIONS_STORE, { keyPath: ["kind", "id"] });
+      }
+      if (!db.objectStoreNames.contains(SYNC_META_STORE)) {
+        db.createObjectStore(SYNC_META_STORE);
       }
     };
 

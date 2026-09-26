@@ -33,6 +33,7 @@ jobs:
           - generation
           - store-conformance
           - store-local
+          - sync
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup

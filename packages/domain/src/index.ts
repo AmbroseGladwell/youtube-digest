@@ -41,3 +41,8 @@ export * from "./clientSchemaVersions.js";
 export * from "./ApiErrorCode.js";
 export * from "./ApiErrorEnvelope.js";
 export * from "./Handshake.js";
+export * from "./OutboxEntry.js";
+export * from "./RecordChange.js";
+export * from "./SyncStorage.js";
+export * from "./mergeSettingsRecord.js";
+export * from "./rebasePendingChanges.js";
