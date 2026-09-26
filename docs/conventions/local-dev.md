@@ -44,6 +44,10 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 | `task session -- you@example.com` | a sync token, until sign-in exists (`docs/architecture/api.md`) |
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
 
+The panel is a different origin from the API, so for it to sync `.env` also needs
+`CORS_ALLOWED_ORIGINS=chrome-extension://<id>`, with the id `chrome://extensions` shows
+for the unpacked build, and the API restarted (`docs/architecture/api.md`, Origins).
+
 The database lives under `.local/pg`, created on the first `task run:db` with trust
 authentication on port 5433, so `.env`'s `DATABASE_URL` needs no password. `task db:stop`
 stops it and `task db:psql` opens it; `task clean` deletes it along with every `dist`.

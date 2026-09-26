@@ -4,6 +4,7 @@ import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
+import { corsPlugin } from "./http/corsPlugin.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
@@ -16,6 +17,7 @@ import { writeFloorPlugin } from "./versions/writeFloorPlugin.js";
 export interface AppConfig {
   minSupportedClientVersion: number;
   sessionTtlDays: number;
+  allowedOrigins: string[];
 }
 
 export interface BuildAppOptions {
@@ -45,6 +47,9 @@ export async function buildApp({
   await app.register(
     async (api) => {
       registerApiErrorHandler(api);
+      if (config.allowedOrigins.length > 0) {
+        await api.register(corsPlugin, { allowedOrigins: config.allowedOrigins });
+      }
       await api.register(clientVersionPlugin);
       await api.register(writeFloorPlugin, {
         minSupportedClientVersion: config.minSupportedClientVersion,
