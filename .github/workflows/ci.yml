@@ -54,6 +54,14 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm test --workspace apps/extension
 
+  unit-api:
+    name: unit (api)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm test --workspace apps/api
+
   iwft:
     name: iwft
     runs-on: ubuntu-latest
@@ -79,6 +87,7 @@ jobs:
         app:
           - web
           - extension
+          - api
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -100,6 +109,7 @@ jobs:
       - unit-packages
       - unit-app
       - unit-extension
+      - unit-api
       - iwft
       - build
     steps:

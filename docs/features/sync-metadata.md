@@ -20,6 +20,7 @@ given for it, that is said rather than quietly tidied away.
 | One stamp for the write seam, carrying both numbers | `packages/domain/src/stampStoredRecord.ts` |
 | Every local write path stamped | `packages/store-local`: the overview store's four writes, the settings store's one |
 | Read back without it, because zod strips it | the existing `readStoredRecord`, unchanged |
+| Stored verbatim by the server, beside a separately named `stored_at` | `apps/api`, `docs/features/sync-api.md` |
 
 Nothing reads `updatedAt` yet. That is true, and the next section is the honest version of
 why it is worth writing anyway.
@@ -380,4 +381,6 @@ possible fix and this is the note that says so.
 
 Now, and it is: stamping is in the local stores. Everything downstream — the outbox, the pull
 cursor, the revision, the conflict rule, deletions — arrives with the API, which is the next
-thing to be built and the reason this landed first.
+thing to be built and the reason this landed first. The server half has since been built
+(`docs/features/sync-api.md`): the revision, the cursor, the conflict rule and tombstones are
+there; the outbox is the client half and is the slice after it.

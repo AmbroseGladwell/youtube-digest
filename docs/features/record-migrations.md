@@ -587,6 +587,11 @@ The API tells each client where it stands:
 | `minSupportedClientVersion` | below this, writes are refused | hard stop on the handshake — the wall, below |
 | `currentSchemaVersion` | the highest version that exists | informational |
 
+*Built as `currentClientVersion` (`docs/architecture/api.md`): there are four schema versions
+now, one per record kind, and the number a client compares itself against is its own
+`CLIENT_VERSION`. A number named after the wrong thing gets used as that thing, which is the
+warning `sync-metadata.md` records about SQL Server's `timestamp`.*
+
 The soft prompt fires **on encounter, not on the handshake** — "3 overviews need a newer
 version", when records are actually being held back. It is the banner below; the hard one is
 the wall below that. Prompting from the handshake alone nags
