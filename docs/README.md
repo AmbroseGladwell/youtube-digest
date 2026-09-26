@@ -23,6 +23,8 @@ Five folders, five different questions.
 - `backend-testing-guide.md` — the API's two test kinds, the in-process Postgres they run
   against, and the helpers that stand in for page objects.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
+- `local-dev.md` — the Nix dev shell and the Task menu: how to run the stack and the
+  suites locally, and which Taskfile conventions are used and why.
 
 ## `features/` — feature-specific design, one file per feature
 

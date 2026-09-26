@@ -189,13 +189,19 @@ printing the reason:
 | `SESSION_TTL_DAYS` | 30 | |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
-machines cannot both apply the same one, then listens. Locally:
+machines cannot both apply the same one, then listens. Locally, from the Nix dev shell
+(`docs/conventions/local-dev.md`):
 
 ```
-docker run -d -e POSTGRES_PASSWORD=secret -e POSTGRES_USER=overview -e POSTGRES_DB=overview -p 5433:5432 postgres:17
-DATABASE_URL=postgres://overview:secret@localhost:5433/overview npm run mint-session --workspace apps/api -- me@example.com
-DATABASE_URL=postgres://overview:secret@localhost:5433/overview npm run dev --workspace apps/api
+task env:init                          # .env pointed at the local Postgres
+task run:db                            # Postgres 17 under .local/pg, port 5433
+task session -- me@example.com         # a bearer token, printed to stdout
+task run:api                           # builds, migrates, listens on :3000
 ```
+
+Both scripts read `.env` from the repo root. Without the shell, the same thing is a
+Postgres 17 on port 5433, `npm run mint-session --workspace apps/api -- me@example.com`,
+and `npm run dev --workspace apps/api`.
 
 **Deploy the API before or with the clients.** A client newer than the server has its
 records stored as given and unvalidated (`docs/features/sync-api.md`); nothing breaks, but

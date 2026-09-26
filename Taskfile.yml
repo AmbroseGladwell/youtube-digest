@@ -1,0 +1,51 @@
+# The front door. Every task wraps a package.json script or a tool the Nix shell provides;
+# the build logic stays where it belongs, and CI runs the same scripts (docs/conventions/local-dev.md).
+version: '3'
+silent: true
+
+includes:
+  local:
+    taskfile: ./Taskfiles/Taskfile-local.yml
+    flatten: true
+    optional: true
+  run:
+    taskfile: ./Taskfiles/Taskfile-run.yml
+    flatten: true
+  test:
+    taskfile: ./Taskfiles/Taskfile-test.yml
+    flatten: true
+
+tasks:
+  default:
+    cmds:
+      - task --list
+
+  search:
+    desc: 'Search the task list by keyword (e.g. task search -- test)'
+    cmds:
+      - task --list | grep -i "{{.CLI_ARGS}}"
+
+  install:
+    desc: Install every workspace's dependencies exactly as CI does
+    cmds:
+      - npm ci
+
+  env:init:
+    desc: Create .env from .env.example, pointed at the local Postgres that task run:db starts
+    status:
+      - test -f .env
+    cmds:
+      - cp .env.example .env
+      - sed -i.bak 's#^DATABASE_URL=.*#DATABASE_URL={{.DATABASE_URL}}#' .env && rm .env.bak
+      - echo "Wrote .env for the local Postgres. Add your provider keys to it if you want generation."
+
+  clean:
+    desc: Remove every build output and the local Postgres data (node_modules and .env stay)
+    prompt: This deletes dist/ everywhere and the local database under .local/. Continue?
+    cmds:
+      - task: db:stop
+      - find . -name dist -type d -prune -not -path '*/node_modules/*' -exec rm -rf {} +
+      - rm -rf .local
+
+vars:
+  DATABASE_URL: postgres://overview@localhost:5433/overview
