@@ -54,6 +54,7 @@ class InMemoryOverviewStore implements OverviewStore {
 
   async deleteOverview(id: OverviewId) {
     this.#overviews.delete(id);
+    this.#states.delete(id);
   }
 
   async listClaims(): Promise<ClaimSummary[]> {

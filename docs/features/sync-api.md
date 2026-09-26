@@ -187,11 +187,10 @@ to hide data from the account that owns it.
 
 ## Not built in this slice
 
-The client half: an IndexedDB outbox written in the same transaction as each local write,
-a sync loop that pushes it and pulls this feed, a `SyncedOverviewStore` and
-`SyncedSettingsStore` passing the conformance suite, and the stale-client banner and
-write-floor wall wired to the handshake. Also: the shared transcript cache (its gating is
-still contradictory across the docs), captures, audio, topic rename and delete, the
-one-overview-per-video question at first sync, and set-valued merging of `userTags` and
-`topicIds`. Aligning the local store's `deleteOverview` with the state cascade is a small
-follow-up.
+The client half, since built: `docs/features/sync-client.md`. It departs from the shape
+named here in one way, recorded there: the local stores journal to an outbox and no
+`SyncedOverviewStore` wraps them, because the journal entry has to be inside the write's
+own transaction. The local store's `deleteOverview` now takes the state row with it.
+Still not built: the shared transcript cache (its gating is still contradictory across the
+docs), captures, audio, topic rename and delete, the one-overview-per-video question at
+first sync, and set-valued merging of `userTags` and `topicIds`.

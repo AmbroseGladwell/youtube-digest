@@ -24,13 +24,11 @@ tense of a design:
 | The chain is actually run | `packages/store-conformance`, behind a raw-seeding hook a store may or may not offer |
 | The record in the library, and the screen behind it | `LibraryUnreadableCard`, `UnreadableOverview`, and `unreadableRecord.iwft.ts` |
 
-**What is not built, and why:** everything downstream of a handshake — `minSupportedClientVersion`,
-`currentSchemaVersion`, the stale-client banner and the write-floor wall. There is no API
-yet, and locally no record can exceed this client's version, because this client is the only
-thing that writes. The read rule that those screens report is built and tested; only the
-screens wait. The `future-version` reason exists and is carried through to the library card
-and the reader, so the day a record does arrive from a newer client, it is quarantined and
-named rather than read loosely.
+**What was not built when this was written, and has been since:** everything downstream of
+a handshake. The API exists (`docs/architecture/api.md`), records arrive from it
+(`docs/features/sync-client.md`), and the stale-client banner and the write-floor wall are
+built as the sections below argue them, in `packages/app-core/src/features/sync/`. The
+`future-version` reason is what the banner counts.
 
 **Three departures from what is written below**, each small enough to have been made rather
 than re-argued:

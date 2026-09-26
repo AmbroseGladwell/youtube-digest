@@ -1,4 +1,5 @@
 export { App, type AppProps } from "./app/App.js";
+export type { AppUpdate } from "./app/AppUpdateContext.js";
 export type { ActiveVideoSource } from "./app/ActiveVideoContext.js";
 export type { AppLayout } from "./app/LayoutContext.js";
 export type { PlaybackPosition, PlaybackSource } from "./app/PlaybackContext.js";

@@ -14,4 +14,12 @@ export default defineConfig({
       "@overview/app-core": path.resolve(dirname, "../../packages/app-core/src/index.ts"),
     },
   },
+  // In production the API serves this SPA from one origin (docs/architecture/v1-architecture-decisions.md);
+  // in dev the proxy stands in for that, so the sync client can talk to the API at this
+  // page's own origin and the API needs no CORS.
+  server: {
+    proxy: {
+      "/api": process.env.API_URL ?? "http://localhost:3000",
+    },
+  },
 });

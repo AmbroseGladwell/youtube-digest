@@ -23,6 +23,8 @@ Five folders, five different questions.
 - `backend-testing-guide.md` — the API's two test kinds, the in-process Postgres they run
   against, and the helpers that stand in for page objects.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
+- `local-dev.md` — the Nix dev shell and the Task menu: how to run the stack and the
+  suites locally, and which Taskfile conventions are used and why.
 
 ## `features/` — feature-specific design, one file per feature
 
@@ -56,6 +58,10 @@ Five folders, five different questions.
   Built, apart from the screens that need a server to fire them.
 - `sync-api.md` — the server half of the sync engine: one table over every kind, the four
   numbers on a row and who owns each, why a merge migrates first, tombstones, and the feed.
+- `sync-client.md` — the client half: the outbox written in the same transaction as each
+  write and why it carries the change rather than the record, enrolment, one cycle's order,
+  which refusals stop it and which park one write, pending writes rebased over a pull, and
+  the three screens.
 - `sync-metadata.md` — the one field every synced record carries so that it can say when it
   last changed: why a date is insurance rather than mechanism, why it is the only piece that
   cannot be backfilled, which three numbers a synced record ends up carrying and which of them

@@ -1,0 +1,71 @@
+version: '3'
+silent: true
+
+tasks:
+  build:packages:
+    desc: Build the library packages in dependency order (every suite resolves @overview/* through dist)
+    aliases: [bp]
+    cmds:
+      - npm run build:packages
+
+  build:
+    desc: Build the packages and all three apps, as CI does
+    cmds:
+      - task: build:packages
+      - npm run build --workspace apps/web
+      - npm run build --workspace apps/extension
+      - npm run build --workspace apps/api
+
+  typecheck:
+    desc: Typecheck every workspace and the IWFT harness
+    aliases: [tc]
+    cmds:
+      - npm run typecheck
+      - npm run typecheck:iwft --workspace packages/app-core
+
+  test:
+    desc: Run every unit suite, in the order CI does, then the IWFT suite
+    cmds:
+      - for: [domain, transcripts, generation, store-conformance, store-local, sync, app-core]
+        task: test:{{.ITEM}}
+      - task: test:extension
+      - task: test:api
+      - task: iwft
+
+  test:api:
+    desc: 'Run the API suite over an in-process Postgres (e.g. task test:api -- --test-name-pattern sync)'
+    dir: apps/api
+    cmds:
+      - npm test -- {{.CLI_ARGS}}
+
+  test:extension:
+    desc: Run the extension's unit suite
+    dir: apps/extension
+    cmds:
+      - npm test -- {{.CLI_ARGS}}
+
+  test:app-core:
+    desc: 'Run app-core unit tests with vitest (e.g. task test:app-core -- syncStatusLine)'
+    dir: packages/app-core
+    cmds:
+      - npm test -- {{.CLI_ARGS}}
+
+  iwft:
+    desc: 'Run the IWFT suite in Chromium (e.g. task iwft -- sync to run one scenario file)'
+    dir: packages/app-core
+    preconditions:
+      - sh: test -d ~/Library/Caches/ms-playwright || test -d ~/.cache/ms-playwright
+        msg: 'No Playwright browsers. Install Chromium with: npx playwright install --with-deps chromium'
+    cmds:
+      - npx playwright test -c playwright-ct.config.ts {{.CLI_ARGS}}
+
+  # Wildcard — must be last so the specific tasks above take precedence.
+  test:*:
+    desc: 'Run one library package''s unit suite (e.g. task test:store-local, task test:sync)'
+    vars:
+      PACKAGE: '{{index .MATCH 0}}'
+    preconditions:
+      - sh: test -d "{{.ROOT_DIR}}/packages/{{.PACKAGE}}"
+        msg: 'No package named {{.PACKAGE}} under packages/. The apps are test:api and test:extension.'
+    cmds:
+      - npm test --workspace packages/{{.PACKAGE}}

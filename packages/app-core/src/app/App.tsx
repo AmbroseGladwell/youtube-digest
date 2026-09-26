@@ -1,7 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router";
 import type { YouTubeFetch } from "@overview/transcripts";
+import { SyncRuntime } from "../features/sync/SyncRuntime.js";
 import { StoresProvider, type Stores } from "../stores/StoresContext.js";
+import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
 import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
@@ -21,6 +23,7 @@ export interface AppProps {
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
+  appUpdate?: AppUpdate | null;
 }
 
 export function App({
@@ -32,6 +35,7 @@ export function App({
   playback = null,
   runBridge = null,
   youTubeFetch = null,
+  appUpdate = null,
 }: AppProps) {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
@@ -41,9 +45,13 @@ export function App({
             <LayoutProvider value={layout}>
               <SurfaceProvider value={surface}>
                 <StoresProvider value={stores}>
-                  <QueryClientProvider client={queryClient}>
-                    <RouterProvider router={router} />
-                  </QueryClientProvider>
+                  <AppUpdateProvider value={appUpdate}>
+                    <QueryClientProvider client={queryClient}>
+                      <SyncRuntime>
+                        <RouterProvider router={router} />
+                      </SyncRuntime>
+                    </QueryClientProvider>
+                  </AppUpdateProvider>
                 </StoresProvider>
               </SurfaceProvider>
             </LayoutProvider>

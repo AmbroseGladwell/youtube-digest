@@ -6,6 +6,8 @@ import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject
 import { GenerationStatusStripPageObject } from "./GenerationStatusStripPageObject.testHelper.js";
 import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
+import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testHelper.js";
+import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
 
 export class AppShellPageObject extends PageObject {
   get generateForm(): GenerateOverviewFormPageObject {
@@ -18,6 +20,16 @@ export class AppShellPageObject extends PageObject {
 
   get generationStatusStrip(): GenerationStatusStripPageObject {
     return new GenerationStatusStripPageObject(this.testContext);
+  }
+
+  get staleClientBanner(): StaleClientBannerPageObject {
+    return new StaleClientBannerPageObject(this.testContext);
+  }
+
+  // The wall stands in for the pane, so it is the shell's to find
+  // (docs/features/record-migrations.md, "Below the write floor is a wall").
+  get writeFloorWall(): ErrorStatePageObject {
+    return new ErrorStatePageObject(this.testContext, this.get(appShellTestIds.pane));
   }
 
   // paneTransitions.scss is a stylesheet and can't be asserted on, but it keys every rule

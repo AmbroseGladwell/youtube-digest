@@ -10,6 +10,7 @@ import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
+import type { SyncConnection } from "../../src/features/sync/types/SyncConnection.js";
 import type { InMemoryStoreRead } from "./InMemoryOverviewStore.testHelper.js";
 
 // Playwright Component Testing serializes props/hooksConfig across the Node<->browser
@@ -30,6 +31,10 @@ export interface IwftHooksConfig {
   // Store reads told to throw, for the dead-end screen's own scenarios.
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;
+  // Whether this shell can sync at all, and the server and token it was given, if any
+  // (docs/features/sync-client.md).
+  syncAvailable?: boolean;
+  syncConnection?: SyncConnection;
   surface?: Surface;
   layout?: AppLayout;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.

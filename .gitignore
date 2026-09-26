@@ -8,3 +8,6 @@ test-results/
 playwright-report/
 **/playwright/.cache/
 blob-report/
+.direnv/
+.local/
+Taskfiles/Taskfile-local.yml

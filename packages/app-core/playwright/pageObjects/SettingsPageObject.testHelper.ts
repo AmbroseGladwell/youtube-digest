@@ -3,10 +3,15 @@ import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/Se
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
+import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
 
 export class SettingsPageObject extends PageObject {
   get apiKeysPanel(): ApiKeysPanelPageObject {
     return new ApiKeysPanelPageObject(this.testContext);
+  }
+
+  get syncPanel(): SyncPanelPageObject {
+    return new SyncPanelPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<SettingsPageObject> =>

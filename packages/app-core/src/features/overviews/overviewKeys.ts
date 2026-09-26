@@ -5,4 +5,5 @@ export const overviewKeys = {
   lists: ["overview", "list"] as const,
   list: () => [...overviewKeys.lists] as const,
   detail: (overviewId: OverviewId) => [...overviewKeys.all, "detail", overviewId] as const,
+  unreadable: () => [...overviewKeys.all, "unreadable"] as const,
 };
