@@ -70,10 +70,9 @@ thing they serve:
   (`hmacUtils.kt`, `responses.kt`) — the same primary-export rule. *Not applicable to
   this repo today — there is no JVM service in `docs/architecture/v1-architecture-decisions.md`'s
   stack. Kept here because it's a standing convention, not because one is planned.*
-- **SQL migrations**: `V{4-digit}__{snake_case_description}.sql`. *This is Flyway's
-  naming convention specifically. No migration tool has been chosen yet for the
-  Neon/Postgres side — this is what to use if Flyway (or a tool following the same
-  convention) is the pick, not a decision that it is.*
+- **SQL migrations**: `V{4-digit}__{snake_case_description}.sql`. *Flyway's naming
+  convention, applied by a small in-repo runner (`apps/api/src/db/runMigrations.ts`)
+  rather than by Flyway itself — see `docs/architecture/api.md`.*
 - **Python** (`services/tts/`): `snake_case` throughout. This one's real — it's the
   actual TTS service in this project's decided stack.
 

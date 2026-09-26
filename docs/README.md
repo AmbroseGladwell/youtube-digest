@@ -12,12 +12,16 @@ Five folders, five different questions.
 
 - `architecture-options.md` — the models considered for a real build, and the trade-offs between them.
 - `v1-architecture-decisions.md` — what was actually decided: the free/paid split, the stack, hosting, data layer, and the monorepo layout.
+- `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
+  version numbers on the wire, the one error envelope, configuration, and how to run it.
 
 ## `conventions/` — how code gets written here, day to day
 
 - `frontend-architecture-guide.md` — routing, state, and query conventions for the frontend, written for this project's real stack.
 - `frontend-testing-guide.md` — the testing conventions built on top of that stack.
 - `naming-conventions.md` — file and folder naming, authoritative for this repo.
+- `backend-testing-guide.md` — the API's two test kinds, the in-process Postgres they run
+  against, and the helpers that stand in for page objects.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
 
 ## `features/` — feature-specific design, one file per feature
@@ -50,6 +54,8 @@ Five folders, five different questions.
   unvalidated: two version numbers doing two jobs, why migration happens on read rather than
   in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
   Built, apart from the screens that need a server to fire them.
+- `sync-api.md` — the server half of the sync engine: one table over every kind, the four
+  numbers on a row and who owns each, why a merge migrates first, tombstones, and the feed.
 - `sync-metadata.md` — the one field every synced record carries so that it can say when it
   last changed: why a date is insurance rather than mechanism, why it is the only piece that
   cannot be backfilled, which three numbers a synced record ends up carrying and which of them
