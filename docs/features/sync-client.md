@@ -170,7 +170,8 @@ work.
 **Settings.** The shell says whether its library can sync at all; a shell that cannot
 shows no sync section. One that can asks for the server's address and a session token,
 because sign-in is not built and `mint-session` is what exists (`docs/architecture/api.md`).
-Connected, it shows one status line and two buttons. The line always carries what is still
+In the extension the server has to list the panel's origin as well, or the browser stops
+every call before it leaves (`docs/architecture/api.md`, Origins). Connected, it shows one status line and two buttons. The line always carries what is still
 waiting, `3 changes waiting to send · 1 couldn't be sent`, whatever else it says, because a
 library that is quietly behind is the failure this project exists to avoid.
 
@@ -199,10 +200,8 @@ extension it is `Open extensions`, which the shell provides and app-core cannot.
 
 ## Not built
 
-Sign-in, so the token is pasted rather than earned; the extension reaching the API at all,
-which needs either a host permission for the API's origin or CORS on the API for the
-extension's; `chrome.runtime.onUpdateAvailable` feeding the wall's `Update now`; the
-one-overview-per-video question at first sync; set-valued merging of `userTags` and
-`topicIds`; the shared transcript cache; captures and audio. Retrying a parked write once
-the app has updated is a one-line change to `#push` when the day comes, and is left until
-it does.
+Sign-in, so the token is pasted rather than earned; `chrome.runtime.onUpdateAvailable`
+feeding the wall's `Update now`; the one-overview-per-video question at first sync;
+set-valued merging of `userTags` and `topicIds`; the shared transcript cache; captures and
+audio. Retrying a parked write once the app has updated is a one-line change to `#push`
+when the day comes, and is left until it does.

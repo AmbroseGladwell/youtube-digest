@@ -29,7 +29,7 @@ export async function createTestApp(config: Partial<AppConfig> = {}): Promise<Te
     },
   };
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, ...config },
+    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], ...config },
     sql,
     clock: () => clock.now,
   });

@@ -20,6 +20,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | The handshake, and the write floor as a hook | `src/versions/handshakeRoutes.ts`, `writeFloorPlugin.ts` |
 | One error envelope, codes and statuses shared with the clients | `packages/domain/src/ApiErrorCode.ts`, `ApiErrorEnvelope.ts`; `src/http/` |
 | Configuration from the environment, refused at startup when wrong | `src/loadConfig.ts` |
+| The extension's origin vouched for, from an allowlist in the environment | `src/http/corsPlugin.ts`, `allowedOriginsFromEnv.ts` |
 | A session minted from the command line, until sign-in exists | `src/scripts/mintSession.ts` |
 
 ## Shape
@@ -29,10 +30,10 @@ apps/api/
   migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql
   src/
     server.ts            env → SqlClient → migrations → buildApp → listen
-    buildApp.ts          the /api scope: error handler, then parse → floor → session, then routes
+    buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
-    http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers
+    http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
     auth/                accounts, sessions, the plugin, GET/DELETE /api/session
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
@@ -88,6 +89,41 @@ expires, which is the startup check both shells will make and where a plan will 
 read from instead of `Settings.plan`; `DELETE /api/session` deletes the row, so a second
 call with the same token is a `401`, which is right: the effect is idempotent, the status
 is not.
+
+## Origins
+
+The web app shares this service's origin, so the browser lets it call `/api` with no
+ceremony. The extension's panel is `chrome-extension://<id>`, a different origin, so
+before every sync call the browser asks this server whether that origin may read the
+answer, and before a write it asks in advance, with a preflight that carries no token.
+`src/http/corsPlugin.ts` answers both, for the origins in `CORS_ALLOWED_ORIGINS` and no
+others.
+
+**Why the server and not the manifest.** A host permission would exempt the extension's
+own pages from the check, but it has to name the API's origin in the manifest, and the
+server's address is typed into Settings and is `localhost` in development. Naming it there
+would mean an optional permission and a runtime prompt on connect, built in the shell.
+One line of config on the server does the same job with nothing to build.
+
+**An allowlist, never `*`.** Today a bearer token is the only credential and the browser
+attaches nothing of its own, so vouching for every origin would cost nothing; the cookie
+transport above changes that the day it lands, and a permissive setting nobody remembers
+is how it would become a hole. `loadConfig` refuses `*` and anything carrying a path.
+Empty, the default, registers nothing and the service behaves exactly as it did: a
+preflight is the same 404 as any unknown route.
+
+**What is vouched for.** GET, POST, PUT and DELETE; the four headers a sync request
+carries, `Authorization`, `Content-Type`, `If-Match` and `X-Client-Version`; and `ETag`
+exposed, so the answer to a write can be read whole. The preflight is answered before the
+parse, floor and session hooks run, because it carries no token and a 401 on it would
+reach the client as an unreachable server rather than a sign-out. The origin is echoed
+on error responses for the same reason: an envelope the browser hides reaches the client
+as a transport failure, and `stopReasonFor` would call a sign-out, or a write the server
+refused, being offline.
+
+**Finding the extension's origin.** An unpacked build's id is derived from its directory
+and shown at `chrome://extensions`; a store build's id is fixed at publication.
+`.env.example` has the line, and `docs/conventions/local-dev.md` the step.
 
 ## Versions on the wire
 
@@ -187,6 +223,7 @@ printing the reason:
 | `PORT` | 3000 | |
 | `MIN_SUPPORTED_CLIENT_VERSION` | 1 | the floor; refused if above the server's own `CLIENT_VERSION`, which would refuse the clients it ships with |
 | `SESSION_TTL_DAYS` | 30 | |
+| `CORS_ALLOWED_ORIGINS` | empty | comma-separated origins the browser may call `/api` from, as the browser sends them: the extension's `chrome-extension://<id>`. Empty vouches for none; `*` and anything with a path are refused |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell
@@ -212,7 +249,5 @@ first, costs nothing.
 
 Magic-link sign-in and the cookie transport; serving the SPA from this process (the
 `@fastify/static` half of the one-origin decision, with `index.html` set to revalidate);
-Dockerfile, Fly.io and Neon configuration; rate limiting; a session sweep; CORS or a
-host permission for the extension's origin, without which the extension cannot reach this
-service (`docs/features/sync-client.md`). The client half of the sync engine is built:
-`docs/features/sync-client.md`.
+Dockerfile, Fly.io and Neon configuration; rate limiting; a session sweep. The client half
+of the sync engine is built: `docs/features/sync-client.md`.
