@@ -63,6 +63,14 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm test --workspace apps/api
 
+  unit-tooling:
+    name: unit (tooling)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run test:tooling
+
   iwft:
     name: iwft
     runs-on: ubuntu-latest
@@ -111,6 +119,7 @@ jobs:
       - unit-app
       - unit-extension
       - unit-api
+      - unit-tooling
       - iwft
       - build
     steps:

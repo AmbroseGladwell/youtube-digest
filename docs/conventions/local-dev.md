@@ -6,8 +6,10 @@ or Task by hand, and nobody remembers which directory a command runs from.
 
 ## The shell
 
-`flake.nix` declares one dev shell: Node 22 (the version CI uses), Postgres 17, and
-`go-task`. `.envrc` enters it through direnv and puts `node_modules/.bin` on the path.
+`flake.nix` declares one dev shell: Node 22 (the version CI uses), Postgres 17,
+`go-task`, and the three tools secrets need, `bws`, `gitleaks` and `jq`
+(`docs/conventions/secrets.md`). `.envrc` enters it through direnv, puts
+`node_modules/.bin` on the path, and exports the Bitwarden token from the login keychain.
 
 ```
 direnv allow      # once, in the repo root; from then on cd is enough
@@ -37,8 +39,9 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 
 | | |
 |---|---|
-| `task install` | `npm ci`, as CI does |
-| `task env:init` | `.env` from the example, pointed at the local Postgres |
+| `task install` | `npm ci`, as CI does, and git pointed at the repo's hooks |
+| `task secrets:login` | once: the Bitwarden machine access token into the login keychain |
+| `task secrets` | `.env` rendered from `.env.tpl` with the secrets in Bitwarden (`docs/conventions/secrets.md`) |
 | `task build:packages` | the library packages, in dependency order |
 | `task run` | Postgres, then the API on :3000 and the web app on :5173 together |
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
@@ -49,17 +52,19 @@ for a link from Settings prints it to the API's output, and opening it on
 `http://localhost:5173` signs that browser in. An extension link's page shows the code to
 enter in the panel (`docs/features/sign-in.md`).
 
-The panel is a different origin from the API, so for it to sync `.env` also needs
+The panel is a different origin from the API, so for it to sync `.env.local` needs
 `CORS_ALLOWED_ORIGINS=chrome-extension://<id>`, with the id `chrome://extensions` shows
-for the unpacked build, and the API restarted (`docs/architecture/api.md`, Origins).
+for the unpacked build, and the API restarted (`docs/architecture/api.md`, Origins). It
+goes in `.env.local` rather than `.env` because the id is derived from the checkout's
+path, so it differs per worktree, and because `task secrets` overwrites `.env` whole.
 
 The database lives under `.local/pg`, created on the first `task run:db` with trust
 authentication on port 5433, so `.env`'s `DATABASE_URL` needs no password. `task db:stop`
 stops it and `task db:psql` opens it; `task clean` deletes it along with every `dist`.
 
 **Testing** mirrors CI's jobs one to one: `task test:<package>` for any library package,
-`task test:api`, `task test:extension`, `task iwft`, `task typecheck`, `task build`, and
-`task test` for the lot.
+`task test:api`, `task test:extension`, `task test:tooling` for the repo's own scripts and
+hooks, `task iwft`, `task typecheck`, `task build`, and `task test` for the lot.
 
 ## The conventions that carry it
 
@@ -68,7 +73,7 @@ commands, and each is used deliberately:
 
 - **`dir:` on every task that has one**, so any task runs from anywhere in the repo.
 - **`preconditions:` whose message names the next command.** `task run:api` without a
-  database says `task run:db`; without `.env` it says `task env:init`; without built
+  database says `task run:db`; without `.env` it says `task secrets`; without built
   packages it says `task build:packages`, which is the stale-types failure that
   otherwise looks like a real type error.
 - **`{{.CLI_ARGS}}` on every wrapper**, so `task test:api -- --test-name-pattern sync`

@@ -25,6 +25,10 @@ Five folders, five different questions.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
 - `local-dev.md` — the Nix dev shell and the Task menu: how to run the stack and the
   suites locally, and which Taskfile conventions are used and why.
+- `secrets.md` — the secret manager is the only place a value exists: the committed
+  template and the one command that renders it, `run --` for one-off commands, the
+  gitleaks hook, the Claude Code guard and what it honestly covers, and which parts of
+  the larger pattern were left out for one person.
 
 ## `features/` — feature-specific design, one file per feature
 

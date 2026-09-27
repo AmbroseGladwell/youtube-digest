@@ -1,0 +1,12 @@
+# The default rules plus the one provider this repo actually holds a key for
+# (docs/conventions/secrets.md).
+title = "The Overview"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "brevo-api-key"
+description = "Brevo API key"
+regex = '''xkeysib-[a-f0-9]{64}-[A-Za-z0-9]{16}'''
+keywords = ["xkeysib-"]

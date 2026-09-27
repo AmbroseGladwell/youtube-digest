@@ -128,7 +128,8 @@ refused, being offline.
 
 **Finding the extension's origin.** An unpacked build's id is derived from its directory
 and shown at `chrome://extensions`; a store build's id is fixed at publication.
-`.env.example` has the line, and `docs/conventions/local-dev.md` the step.
+`.env.tpl` has the line, `.env.local` is where the id goes, and `docs/conventions/local-dev.md`
+has the step.
 
 ## Versions on the wire
 
@@ -221,7 +222,8 @@ about the client; `record_newer_than_client` is about the resource's state, whic
 ## Configuration and running
 
 `loadConfig` reads the environment through zod and refuses to start on anything wrong,
-printing the reason:
+printing the reason. Where the values come from, and how a secret among them is kept out
+of the repository, is `docs/conventions/secrets.md`:
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -240,7 +242,7 @@ machines cannot both apply the same one, then listens. Locally, from the Nix dev
 (`docs/conventions/local-dev.md`):
 
 ```
-task env:init                          # .env pointed at the local Postgres
+task secrets                           # .env rendered from .env.tpl and Bitwarden
 task run:db                            # Postgres 17 under .local/pg, port 5433
 task run:api                           # builds, migrates, listens on :3000
 task session -- me@example.com         # a bearer token with no mail involved, if wanted
@@ -249,7 +251,8 @@ task session -- me@example.com         # a bearer token with no mail involved, i
 With `MAIL_TRANSPORT=log`, asking for a link from either shell prints it to the API's
 output, and opening it on `http://localhost:5173` signs the browser in.
 
-Both scripts read `.env` from the repo root. Without the shell, the same thing is a
+Both scripts read `.env` from the repo root, then `.env.local` if it exists. Without the
+shell, the same thing is a
 Postgres 17 on port 5433, `npm run mint-session --workspace apps/api -- me@example.com`,
 and `npm run dev --workspace apps/api`.
 

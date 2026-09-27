@@ -30,6 +30,7 @@ tasks:
         task: test:{{.ITEM}}
       - task: test:extension
       - task: test:api
+      - task: test:tooling
       - task: iwft
 
   test:api:
