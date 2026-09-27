@@ -2,6 +2,8 @@ import { z } from "zod";
 import { CLIENT_VERSION } from "@overview/domain";
 import { allowedOriginsFromEnv } from "./http/allowedOriginsFromEnv.js";
 
+const DEV_APP_URL = "http://localhost:5173";
+
 const ConfigEnv = z
   .object({
     DATABASE_URL: z.string().min(1),
@@ -16,11 +18,31 @@ const ConfigEnv = z
         return z.NEVER;
       }
     }),
+    APP_URL: z.url().default(DEV_APP_URL),
+    MAIL_TRANSPORT: z.enum(["log", "brevo"]).default("log"),
+    BREVO_API_KEY: z.string().min(1).optional(),
+    MAIL_FROM: z.string().min(1).optional(),
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
     message: `above this server's own client version ${CLIENT_VERSION}, so it would refuse the clients it ships with`,
+  })
+  .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.BREVO_API_KEY !== undefined, {
+    path: ["BREVO_API_KEY"],
+    message: "required when MAIL_TRANSPORT is brevo",
+  })
+  .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.MAIL_FROM !== undefined, {
+    path: ["MAIL_FROM"],
+    message: "required when MAIL_TRANSPORT is brevo",
+  })
+  .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.APP_URL.startsWith("https://"), {
+    path: ["APP_URL"],
+    message: "must be the https address readers will open, when real mail is being sent",
   });
+
+export type MailConfig =
+  | { transport: "log" }
+  | { transport: "brevo"; brevoApiKey: string; from: string };
 
 export interface Config {
   databaseUrl: string;
@@ -28,6 +50,8 @@ export interface Config {
   minSupportedClientVersion: number;
   sessionTtlDays: number;
   allowedOrigins: string[];
+  appUrl: string;
+  mail: MailConfig;
 }
 
 export class ConfigError extends Error {}
@@ -37,11 +61,17 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   if (!parsed.success) {
     throw new ConfigError(z.prettifyError(parsed.error));
   }
+  const { data } = parsed;
   return {
-    databaseUrl: parsed.data.DATABASE_URL,
-    port: parsed.data.PORT,
-    minSupportedClientVersion: parsed.data.MIN_SUPPORTED_CLIENT_VERSION,
-    sessionTtlDays: parsed.data.SESSION_TTL_DAYS,
-    allowedOrigins: parsed.data.CORS_ALLOWED_ORIGINS,
+    databaseUrl: data.DATABASE_URL,
+    port: data.PORT,
+    minSupportedClientVersion: data.MIN_SUPPORTED_CLIENT_VERSION,
+    sessionTtlDays: data.SESSION_TTL_DAYS,
+    allowedOrigins: data.CORS_ALLOWED_ORIGINS,
+    appUrl: data.APP_URL.replace(/\/+$/, ""),
+    mail:
+      data.MAIL_TRANSPORT === "brevo"
+        ? { transport: "brevo", brevoApiKey: data.BREVO_API_KEY!, from: data.MAIL_FROM! }
+        : { transport: "log" },
   };
 }

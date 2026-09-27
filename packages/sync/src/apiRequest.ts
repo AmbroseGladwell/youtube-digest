@@ -1,0 +1,110 @@
+import { z } from "zod";
+import {
+  API_ERROR_CODES,
+  ApiErrorEnvelope,
+  CLIENT_VERSION,
+  CLIENT_VERSION_HEADER,
+  type ApiErrorCode,
+} from "@overview/domain";
+import { SyncRequestError, SyncTransportError } from "./SyncRequestError.js";
+
+export type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
+
+export interface ApiRequestOptions {
+  body?: unknown;
+  ifMatch?: number | null | undefined;
+}
+
+export interface ApiRequesterOptions {
+  baseUrl: string;
+  // The bearer, for a shell whose session is a token it holds. Absent, the browser's own
+  // cookie for the API's origin is the session, which is the web app's transport
+  // (docs/features/sign-in.md).
+  token?: string | null | undefined;
+  clientVersion?: number | undefined;
+  fetch?: typeof fetch | undefined;
+}
+
+export type ApiRequester = <T>(
+  method: ApiMethod,
+  path: string,
+  schema: z.ZodType<T>,
+  options?: ApiRequestOptions,
+) => Promise<T | null>;
+
+// One request against /api: the headers every call carries, the envelope every failure
+// wears, and the schema every answer is parsed with (docs/architecture/api.md).
+export function createApiRequester({
+  baseUrl,
+  token = null,
+  clientVersion = CLIENT_VERSION,
+  fetch: fetchImpl = globalThis.fetch,
+}: ApiRequesterOptions): ApiRequester {
+  const root = baseUrl.replace(/\/+$/, "");
+
+  return async <T>(
+    method: ApiMethod,
+    path: string,
+    schema: z.ZodType<T>,
+    { body, ifMatch }: ApiRequestOptions = {},
+  ): Promise<T | null> => {
+    let response: Response;
+    try {
+      response = await fetchImpl(`${root}/api${path}`, {
+        method,
+        headers: {
+          ...(token === null ? {} : { authorization: `Bearer ${token}` }),
+          [CLIENT_VERSION_HEADER]: String(clientVersion),
+          ...(body === undefined ? {} : { "content-type": "application/json" }),
+          ...(ifMatch === null || ifMatch === undefined ? {} : { "if-match": `"${ifMatch}"` }),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+    } catch (error) {
+      throw new SyncTransportError("The sync server could not be reached", { cause: error });
+    }
+
+    if (response.status === 204) {
+      return null;
+    }
+
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch (error) {
+      throw new SyncTransportError(`The sync server answered ${response.status} without a readable body`, {
+        cause: error,
+      });
+    }
+
+    if (!response.ok) {
+      const envelope = ApiErrorEnvelope.safeParse(json);
+      if (!envelope.success) {
+        throw new SyncTransportError(`The sync server answered ${response.status} with something other than an API error`);
+      }
+      const { code, message, details } = envelope.data.error;
+      throw new SyncRequestError(
+        code in API_ERROR_CODES ? (code as ApiErrorCode) : "internal_error",
+        response.status,
+        message,
+        details,
+      );
+    }
+
+    const parsed = schema.safeParse(json);
+    if (!parsed.success) {
+      throw new SyncTransportError(`The sync server's answer to ${method} ${path} did not have the expected shape`, {
+        cause: parsed.error,
+      });
+    }
+    return parsed.data;
+  };
+}
+
+export async function answered<T>(promise: Promise<T | null>): Promise<T> {
+  const result = await promise;
+  if (result === null) {
+    throw new SyncTransportError("The sync server answered with no content where content was expected");
+  }
+  return result;
+}

@@ -1,3 +1,4 @@
+import type { AppRouter } from "../../src/app/createAppRouter.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { IwftActiveVideoSource } from "./IwftActiveVideoSource.testHelper.js";
@@ -17,6 +18,7 @@ declare global {
       transcriptStore: InMemoryTranscriptStore;
       syncStorage: InMemorySyncStorage | null;
     };
+    __iwftRouter__: AppRouter;
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;
     __iwftActiveVideo__: IwftActiveVideoSource | null;

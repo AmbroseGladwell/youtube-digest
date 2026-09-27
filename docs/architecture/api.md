@@ -15,26 +15,28 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Postgres behind one small interface, `pg` in production and PGlite in tests | `src/db/SqlClient.ts`, `createPgSqlClient.ts`, `createPgliteSqlClient.ts` |
 | SQL migrations in Flyway's naming, applied by an in-repo runner | `migrations/V*.sql`, `src/db/runMigrations.ts` |
 | Accounts and sessions; bearer tokens, hashed | `migrations/V0001__accounts_and_sessions.sql`, `src/auth/` |
+| Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
 | Deny-by-default session plugin; routes opt out with `config: { public: true }` | `src/auth/sessionPlugin.ts` |
 | One client version on the wire, and the table that turns it into schema versions | `packages/domain`: `clientVersion.ts`, `clientSchemaVersions.ts` |
 | The handshake, and the write floor as a hook | `src/versions/handshakeRoutes.ts`, `writeFloorPlugin.ts` |
 | One error envelope, codes and statuses shared with the clients | `packages/domain/src/ApiErrorCode.ts`, `ApiErrorEnvelope.ts`; `src/http/` |
 | Configuration from the environment, refused at startup when wrong | `src/loadConfig.ts` |
 | The extension's origin vouched for, from an allowlist in the environment | `src/http/corsPlugin.ts`, `allowedOriginsFromEnv.ts` |
-| A session minted from the command line, until sign-in exists | `src/scripts/mintSession.ts` |
+| A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
 
 ## Shape
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql
   src/
-    server.ts            env → SqlClient → migrations → buildApp → listen
+    server.ts            env → SqlClient → migrations → mailer → buildApp → listen
     buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
-    auth/                accounts, sessions, the plugin, GET/DELETE /api/session
+    auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, the three /api/auth routes
+    mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
     routes/              changes, overviews, topics, settings
@@ -42,31 +44,33 @@ apps/api/
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 
-`buildApp({ config, sql, clock })` takes everything it depends on, so a test builds the
-same app over an in-process database with a clock it owns, and `server.ts` is the only
-place the environment is read.
+`buildApp({ config, sql, mailer, clock })` takes everything it depends on, so a test
+builds the same app over an in-process database with a clock it owns and a mailer that
+records, and `server.ts` is the only place the environment is read.
 
 ## Auth
 
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
-a session unless it says otherwise; three do: `GET /api/health`, `GET /api/handshake`, and
-anything outside `/api`, which is not registered yet.
+a session unless it says otherwise; six do: `GET /api/health`, `GET /api/handshake`, the
+three `/api/auth` routes that exist to make a session, and anything outside `/api`, which
+is not registered yet.
 
-**The mechanism is a session row, and the transport is a bearer token.** An opaque
-32-byte token is minted once, handed back once, and only its SHA-256 hex is stored, in
-`sessions.token_hash`. `Authorization: Bearer <token>` resolves it. Missing, unknown and
+**The mechanism is a session row, and the transport is a bearer token or a cookie.** An
+opaque 32-byte token is minted once, handed back once, and only its SHA-256 hex is stored,
+in `sessions.token_hash`. `Authorization: Bearer <token>` resolves it, and so does the
+`overview_session` cookie, which carries the same kind of token onto the same row; the
+plugin looks for the bearer first and the cookie only in its absence. Missing, unknown and
 expired tokens get one answer, `401 unauthenticated` with a `WWW-Authenticate: Bearer`
 challenge, because the client has one response to all three and a prober learns nothing
 from the difference.
 
-**Bearer only, for now.** The one-origin decision was made so a cookie session could work
-without CORS or cross-site cookies, and that value is not spent by waiting: a cookie can
-only be set by a response, and the only response that will ever set one is the magic-link
-callback, which cannot exist until an email provider does. The extension is a separate
-origin and has to send a header regardless. When the cookie lands it is a second transport
-onto the same row, and `bearerToken` is the one function that grows a fallback. No refresh
-token: a server-held row is revocable by deleting it, which is all a refresh token buys.
+**Which transport is whose.** The web app shares this service's origin, so a cookie set by
+the sign-in response is sent by the browser on every call with no script holding a secret.
+The extension is another origin, so it holds a bearer and sends the header. Both are set
+out in `docs/features/sign-in.md`, with the cookie's attributes and why a cross-site write
+is refused before any handler runs. No refresh token: a server-held row is revocable by
+deleting it, which is all a refresh token buys.
 
 **Lifetime.** Thirty days, sliding: a request more than an hour after the session was last
 seen moves both `last_seen_at` and `expires_at` forward, and a request within the hour
@@ -84,11 +88,11 @@ answering 202 whether or not the account exists, `GET /api/auth/callback?token=`
 the link and setting the cookie, an extension link-code exchange so the panel gets its
 bearer, and a transactional email provider, which is still unchosen.
 
-**Two routes belong to auth:** `GET /api/session` says who is signed in and when it
+**Two routes belong to the session:** `GET /api/session` says who is signed in and when it
 expires, which is the startup check both shells will make and where a plan will one day be
-read from instead of `Settings.plan`; `DELETE /api/session` deletes the row, so a second
-call with the same token is a `401`, which is right: the effect is idempotent, the status
-is not.
+read from instead of `Settings.plan`; `DELETE /api/session` deletes the row, clears the
+cookie when the cookie was the transport, and answers a second call with the same token
+`401`, which is right: the effect is idempotent, the status is not.
 
 ## Origins
 
@@ -105,12 +109,13 @@ server's address is typed into Settings and is `localhost` in development. Namin
 would mean an optional permission and a runtime prompt on connect, built in the shell.
 One line of config on the server does the same job with nothing to build.
 
-**An allowlist, never `*`.** Today a bearer token is the only credential and the browser
-attaches nothing of its own, so vouching for every origin would cost nothing; the cookie
-transport above changes that the day it lands, and a permissive setting nobody remembers
-is how it would become a hole. `loadConfig` refuses `*` and anything carrying a path.
-Empty, the default, registers nothing and the service behaves exactly as it did: a
-preflight is the same 404 as any unknown route.
+**An allowlist, never `*`.** The browser attaches the session cookie to a request from any
+origin it vouches for that asks with credentials, so vouching for every origin would be
+the hole, and a permissive setting nobody remembers is how it would become one.
+`loadConfig` refuses `*` and anything carrying a path, and the CORS plugin never sets
+`Access-Control-Allow-Credentials`, so a listed origin can send a bearer and cannot borrow
+the cookie. Empty, the default, registers nothing and the service behaves exactly as it
+did: a preflight is the same 404 as any unknown route.
 
 **What is vouched for.** GET, POST, PUT and DELETE; the four headers a sync request
 carries, `Authorization`, `Content-Type`, `If-Match` and `X-Client-Version`; and `ETag`
@@ -201,6 +206,7 @@ sends:
 | `client_unsupported` | 403 | a write from below `minSupportedClientVersion`; `details` carry both numbers |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
+| `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
@@ -224,6 +230,10 @@ printing the reason:
 | `MIN_SUPPORTED_CLIENT_VERSION` | 1 | the floor; refused if above the server's own `CLIENT_VERSION`, which would refuse the clients it ships with |
 | `SESSION_TTL_DAYS` | 30 | |
 | `CORS_ALLOWED_ORIGINS` | empty | comma-separated origins the browser may call `/api` from, as the browser sends them: the extension's `chrome-extension://<id>`. Empty vouches for none; `*` and anything with a path are refused |
+| `APP_URL` | `http://localhost:5173` | where the web app is served from: every magic link opens `/sign-in` there, and the session cookie is `Secure` when it is https |
+| `MAIL_TRANSPORT` | `log` | `log` prints each magic link to the server's output; `brevo` sends it |
+| `BREVO_API_KEY` | | required with `brevo` |
+| `MAIL_FROM` | | the sender, e.g. `The Overview <signin@example.com>`; required with `brevo`, and with `brevo` `APP_URL` must be https |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell
@@ -232,9 +242,12 @@ machines cannot both apply the same one, then listens. Locally, from the Nix dev
 ```
 task env:init                          # .env pointed at the local Postgres
 task run:db                            # Postgres 17 under .local/pg, port 5433
-task session -- me@example.com         # a bearer token, printed to stdout
 task run:api                           # builds, migrates, listens on :3000
+task session -- me@example.com         # a bearer token with no mail involved, if wanted
 ```
+
+With `MAIL_TRANSPORT=log`, asking for a link from either shell prints it to the API's
+output, and opening it on `http://localhost:5173` signs the browser in.
 
 Both scripts read `.env` from the repo root. Without the shell, the same thing is a
 Postgres 17 on port 5433, `npm run mint-session --workspace apps/api -- me@example.com`,
@@ -247,7 +260,8 @@ first, costs nothing.
 
 ## Not built in this slice
 
-Magic-link sign-in and the cookie transport; serving the SPA from this process (the
-`@fastify/static` half of the one-origin decision, with `index.html` set to revalidate);
-Dockerfile, Fly.io and Neon configuration; rate limiting; a session sweep. The client half
-of the sync engine is built: `docs/features/sync-client.md`.
+Serving the SPA from this process (the `@fastify/static` half of the one-origin decision,
+with `index.html` set to revalidate); Dockerfile, Fly.io and Neon configuration; rate
+limiting beyond the magic link's per-address cooldown; a sweep of expired sessions, links
+and codes. The client half of the sync engine is built: `docs/features/sync-client.md`;
+sign-in is built: `docs/features/sign-in.md`.

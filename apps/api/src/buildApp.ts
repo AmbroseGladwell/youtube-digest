@@ -1,10 +1,12 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { corsPlugin } from "./http/corsPlugin.js";
+import type { Mailer } from "./mail/Mailer.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
@@ -18,11 +20,15 @@ export interface AppConfig {
   minSupportedClientVersion: number;
   sessionTtlDays: number;
   allowedOrigins: string[];
+  // Where the web app is served from: the origin a magic link opens, and the origin the
+  // session cookie is Secure on when it is https (docs/features/sign-in.md).
+  appUrl: string;
 }
 
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
+  mailer: Mailer;
   clock?: () => Date;
   logger?: boolean;
 }
@@ -39,10 +45,12 @@ declare module "fastify" {
 export async function buildApp({
   config,
   sql,
+  mailer,
   clock = () => new Date(),
   logger = false,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
+  const sessionCookieSecure = config.appUrl.startsWith("https://");
 
   await app.register(
     async (api) => {
@@ -54,7 +62,12 @@ export async function buildApp({
       await api.register(writeFloorPlugin, {
         minSupportedClientVersion: config.minSupportedClientVersion,
       });
-      await api.register(sessionPlugin, { sql, clock, sessionTtlDays: config.sessionTtlDays });
+      await api.register(sessionPlugin, {
+        sql,
+        clock,
+        sessionTtlDays: config.sessionTtlDays,
+        sessionCookieSecure,
+      });
 
       api.get("/health", { config: { public: true } }, async () => {
         try {
@@ -65,7 +78,15 @@ export async function buildApp({
         return { ok: true };
       });
       handshakeRoutes(api, config.minSupportedClientVersion);
-      sessionRoutes(api, sql);
+      sessionRoutes(api, sql, sessionCookieSecure);
+      authRoutes(api, {
+        sql,
+        clock,
+        mailer,
+        appUrl: config.appUrl,
+        sessionTtlDays: config.sessionTtlDays,
+        sessionCookieSecure,
+      });
 
       const records = new RecordsRepository(sql, clock);
       changesRoutes(api, records);

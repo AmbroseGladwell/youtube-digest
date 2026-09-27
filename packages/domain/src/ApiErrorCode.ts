@@ -4,6 +4,7 @@ export const API_ERROR_CODES = {
   client_unsupported: 403,
   not_found: 404,
   already_exists: 409,
+  link_invalid: 410,
   record_newer_than_client: 409,
   revision_mismatch: 412,
   internal_error: 500,

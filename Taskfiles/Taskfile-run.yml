@@ -98,7 +98,7 @@ tasks:
       - echo "Load {{.ROOT_DIR}}/apps/extension/dist as an unpacked extension. Rebuild after changes."
 
   session:
-    desc: 'Mint a session token for sync, creating the account if needed (e.g. task session -- you@example.com)'
+    desc: 'Mint a bearer token with no mail involved, creating the account if needed (e.g. task session -- you@example.com)'
     dir: apps/api
     preconditions:
       - sh: test -n "{{.CLI_ARGS}}"

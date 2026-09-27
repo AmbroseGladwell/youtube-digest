@@ -23,8 +23,18 @@ describe("syncConnectionStorage", () => {
 
   it("round-trips a connection", () => {
     const storage = makeStorage();
-    writeSyncConnection({ apiUrl: "https://sync.example.com", token: "tok" }, storage);
-    expect(readSyncConnection(storage)).toEqual({ apiUrl: "https://sync.example.com", token: "tok" });
+    writeSyncConnection({ apiUrl: "https://sync.example.com", token: "tok", email: "reader@example.com" }, storage);
+    expect(readSyncConnection(storage)).toEqual({
+      apiUrl: "https://sync.example.com",
+      token: "tok",
+      email: "reader@example.com",
+    });
+  });
+
+  it("reads a connection written before the address was kept, with no address", () => {
+    const storage = makeStorage();
+    storage.setItem("overview.syncConnection.v1", JSON.stringify({ apiUrl: "https://sync.example.com", token: "tok" }));
+    expect(readSyncConnection(storage)).toEqual({ apiUrl: "https://sync.example.com", token: "tok", email: null });
   });
 
   it("is disconnected when what was stored is not a connection", () => {

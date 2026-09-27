@@ -18,6 +18,8 @@ import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.j
 import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
 import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper.js";
+import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js";
+import { Routes } from "../../src/app/Routes.js";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -134,6 +136,19 @@ export class Launcher {
   readPlaybackSeeks = (): Promise<number[]> =>
     test.step("Launcher.readPlaybackSeeks", () =>
       this.page.evaluate(() => window.__iwftPlayback__?.seeks ?? []));
+
+  // Opening the link from the email: the sign-in path with the token in the hash, or with
+  // no token at all (docs/features/sign-in.md).
+  openSignInLink = (token: string | null): Promise<void> =>
+    test.step(`Launcher.openSignInLink ${token ?? "without a token"}`, () =>
+      this.page.evaluate(
+        ({ path, hash }) => window.__iwftRouter__.navigate({ pathname: path, hash }),
+        { path: Routes.signIn(), hash: token === null ? "" : `#token=${encodeURIComponent(token)}` },
+      ));
+
+  get signInPage(): SignInPageObject {
+    return new SignInPageObject(this.testContext);
+  }
 
   get capturePage(): CapturePageObject {
     return new CapturePageObject(this.testContext);

@@ -1,10 +1,11 @@
 import { CLIENT_VERSION, CURRENT_SCHEMA_VERSIONS, type RecordChange, type UnreadableRecord } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
+import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const SERVER = "https://sync.test";
-const CONNECTED = { apiUrl: SERVER, token: "session-token" };
+const CONNECTED = { apiUrl: SERVER, token: "session-token", email: SIMULATED_EMAIL };
 
 const overviewChange = (seq: number, overview = makeOverview()): RecordChange => ({
   kind: "overview",
@@ -35,15 +36,24 @@ test("a shell that cannot sync shows no sync controls", async ({ launcher }) => 
   await settings.syncPanel.verifyIsAbsent();
 });
 
-test("connecting from settings starts a sync, and the panel reports it", async ({ launcher, backendSimulator }) => {
-  await launcher.launch({ sync: true });
+// The extension's way in: a link asked for from the panel, and the code the page it
+// opens shows, exchanged here for the panel's own session (docs/features/sign-in.md).
+test("in the extension, the code from the sign-in page connects the panel and starts a sync", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launch({ sync: true, surface: "extension" });
   const settings = await launcher.appShell.openSettings();
-  await settings.syncPanel.verifyAsksToConnect();
+  await settings.syncPanel.verifyAsksToSignIn();
+  await settings.syncPanel.setServerAddress(SERVER);
+  await settings.syncPanel.requestLink(SIMULATED_EMAIL);
+  await settings.syncPanel.verifyLinkSentReads(/enter the code it shows below/);
 
-  await settings.syncPanel.connect(SERVER, "session-token");
+  await settings.syncPanel.enterCode(SIMULATED_LINK_CODE);
 
+  await settings.syncPanel.verifySignedInAs(SIMULATED_EMAIL);
   await settings.syncPanel.verifyStatusReads(/Synced just now/);
-  await settings.syncPanel.verifyIsShown();
+  test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "extension" }]);
   test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_HANDSHAKE)).toBeGreaterThan(0);
   test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_CHANGES)).toBeGreaterThan(0);
 });
@@ -59,23 +69,27 @@ test("what the account holds arrives in the library without a reload", async ({ 
   test.expect(await backendSimulator.sync.cursor()).toBe(1);
 });
 
-test("a refused token is said in settings rather than failing quietly", async ({ launcher, backendSimulator }) => {
+test("a session the server no longer knows is said in settings rather than failing quietly", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.simulateEndpointError(EndpointKey.SYNC_HANDSHAKE);
   await launcher.launch({ sync: true, syncConnection: CONNECTED });
 
   const settings = await launcher.appShell.openSettings();
 
-  await settings.syncPanel.verifyStatusReads(/refused this token/);
+  await settings.syncPanel.verifyStatusReads(/Sign in again/);
 });
 
-test("disconnecting asks for a server and a token again", async ({ launcher }) => {
+test("signing out tells the server and asks to sign in again", async ({ launcher, backendSimulator }) => {
   await launcher.launch({ sync: true, syncConnection: CONNECTED });
   const settings = await launcher.appShell.openSettings();
   await settings.syncPanel.verifyStatusReads(/Synced|Connected/);
 
-  await settings.syncPanel.clickDisconnect();
+  await settings.syncPanel.clickSignOut();
 
-  await settings.syncPanel.verifyAsksToConnect();
+  await settings.syncPanel.verifyAsksToSignIn();
+  test.expect(backendSimulator.getCallCount(EndpointKey.SESSION_DELETE)).toBe(1);
 });
 
 // An app whose every control fails at the end is worse than an honest wall in front of it

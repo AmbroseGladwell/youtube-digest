@@ -1,6 +1,8 @@
 import type { Page, Route } from "@playwright/test";
 import {
   CLIENT_VERSION,
+  type AuthSurface,
+  type MagicLinkRequest,
   type Overview,
   type OverviewId,
   type OverviewState,
@@ -24,6 +26,11 @@ import {
 } from "./fixtures/innerTubeFixtures.js";
 import type {} from "./iwftWindow.testHelper.js";
 
+// What the simulated server hands a signed-in reader (docs/features/sign-in.md).
+export const SIMULATED_EMAIL = "reader@example.com";
+export const SIMULATED_LINK_CODE = "ABCD-EFGH";
+export const SIMULATED_BEARER = "linked-session-token";
+
 export class BackendSimulator {
   #page: Page;
   #seedOverviews: Overview[] = [];
@@ -44,6 +51,9 @@ export class BackendSimulator {
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
   #minSupportedClientVersion = 1;
+  #magicLinkRequests: MagicLinkRequest[] = [];
+  #signInAttempts: string[] = [];
+  #linkSurface: AuthSurface = "web";
 
   constructor(page: Page) {
     this.#page = page;
@@ -166,6 +176,65 @@ export class BackendSimulator {
       status: 401,
       body: { error: { code: "unauthenticated", message: "Simulated: no such session" } },
     });
+    const spent = () => ({
+      status: 410,
+      body: { error: { code: "link_invalid", message: "Simulated: spent" } },
+    });
+    const expiresAt = "2026-10-26T09:00:00.000Z";
+
+    await this.#page.route("**/api/auth/magic-link", (route) =>
+      this.#respond(route, EndpointKey.AUTH_MAGIC_LINK, {
+        onDefault: () => {
+          this.#magicLinkRequests.push(route.request().postDataJSON() as MagicLinkRequest);
+          return { status: 202, body: { accepted: true } };
+        },
+        onError: () => ({
+          status: 400,
+          body: { error: { code: "invalid_request", message: "Simulated: not an email address" } },
+        }),
+      }),
+    );
+
+    await this.#page.route("**/api/auth/sign-in", (route) =>
+      this.#respond(route, EndpointKey.AUTH_SIGN_IN, {
+        onDefault: () => {
+          this.#signInAttempts.push((route.request().postDataJSON() as { token: string }).token);
+          return {
+            status: 200,
+            body:
+              this.#linkSurface === "extension"
+                ? {
+                    surface: "extension",
+                    email: SIMULATED_EMAIL,
+                    linkCode: SIMULATED_LINK_CODE,
+                    linkCodeExpiresAt: "2026-09-26T09:10:00.000Z",
+                  }
+                : { surface: "web", email: SIMULATED_EMAIL, expiresAt },
+          };
+        },
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/auth/link-code", (route) =>
+      this.#respond(route, EndpointKey.AUTH_LINK_CODE, {
+        onDefault: () => ({ status: 200, body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, expiresAt } }),
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/session", (route) =>
+      route.request().method() === "DELETE"
+        ? this.#respond(route, EndpointKey.SESSION_DELETE, {
+            onDefault: () => ({ status: 204, body: undefined }),
+            onError: unauthenticated,
+          })
+        : route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ accountId: "account", email: SIMULATED_EMAIL, expiresAt }),
+          }),
+    );
 
     await this.#page.route("**/api/handshake", (route) =>
       this.#respond(route, EndpointKey.SYNC_HANDSHAKE, {
@@ -244,6 +313,16 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
+  };
+
+  // Sign-in as the server sees it: what was asked for, what was presented, and which
+  // shell the link the reader opens was asked for from (docs/features/sign-in.md).
+  auth = {
+    magicLinkRequests: (): MagicLinkRequest[] => [...this.#magicLinkRequests],
+    signInAttempts: (): string[] => [...this.#signInAttempts],
+    linkWasAskedForFrom: (surface: AuthSurface): void => {
+      this.#linkSurface = surface;
+    },
   };
 
   transcripts = {

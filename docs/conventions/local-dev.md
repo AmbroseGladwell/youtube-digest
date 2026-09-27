@@ -41,8 +41,13 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 | `task env:init` | `.env` from the example, pointed at the local Postgres |
 | `task build:packages` | the library packages, in dependency order |
 | `task run` | Postgres, then the API on :3000 and the web app on :5173 together |
-| `task session -- you@example.com` | a sync token, until sign-in exists (`docs/architecture/api.md`) |
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
+| `task session -- you@example.com` | a bearer token with no mail involved, if one is wanted (`docs/architecture/api.md`) |
+
+Signing in locally needs no mail account: with the default `MAIL_TRANSPORT=log`, asking
+for a link from Settings prints it to the API's output, and opening it on
+`http://localhost:5173` signs that browser in. An extension link's page shows the code to
+enter in the panel (`docs/features/sign-in.md`).
 
 The panel is a different origin from the API, so for it to sync `.env` also needs
 `CORS_ALLOWED_ORIGINS=chrome-extension://<id>`, with the id `chrome://extensions` shows

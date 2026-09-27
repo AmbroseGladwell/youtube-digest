@@ -62,6 +62,10 @@ Five folders, five different questions.
   write and why it carries the change rather than the record, enrolment, one cycle's order,
   which refusals stop it and which park one write, pending writes rebased over a pull, and
   the three screens.
+- `sign-in.md` — magic-link sign-in: why the link is spent by a POST from the page and
+  carries its token in the fragment, the cookie the web app gets and the code the
+  extension exchanges for its bearer, why the tab that opened an extension link stays
+  signed out, and the mailer with the log behind it in development.
 - `sync-metadata.md` — the one field every synced record carries so that it can say when it
   last changed: why a date is insurance rather than mechanism, why it is the only piece that
   cannot be backfilled, which three numbers a synced record ends up carrying and which of them
