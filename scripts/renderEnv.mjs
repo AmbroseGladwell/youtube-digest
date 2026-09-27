@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const PLACEHOLDER = /\$\{([A-Z][A-Z0-9_]*)\}/g;
@@ -31,4 +31,5 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     process.exit(1);
   }
   writeFileSync(outputPath, rendered, { mode: 0o600 });
+  chmodSync(outputPath, 0o600);
 }

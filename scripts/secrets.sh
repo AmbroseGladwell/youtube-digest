@@ -38,7 +38,7 @@ case "${1:-}" in
     fi
     id="$(projectId)"
     existing="$(bws secret list "$id" | jq -r '.[].key')"
-    keys="$(grep -o '\${[A-Z0-9_]*}' .env.tpl | tr -d '${}'; grep -v '^#' scripts/sanityCheck.env | grep -v '^$')"
+    keys="$(grep -v '^#' .env.tpl | grep -o '\${[A-Z0-9_]*}' | tr -d '${}'; grep -v '^#' scripts/sanityCheck.env | grep -v '^$')"
     for key in $keys; do
       if grep -qx "$key" <<< "$existing"; then
         echo "$key: already in $PROJECT"

@@ -53,7 +53,10 @@ injects the whole project regardless.
 to the projects it may read. `task secrets:login` stores it in the macOS login keychain
 under `overview-bws`, and `.envrc` exports it as `BWS_ACCESS_TOKEN` on entering the dev
 shell, so no file on disk holds it. On another platform, export the variable however
-that platform keeps secrets; `.envrc` leaves an existing value alone.
+that platform keeps secrets; `.envrc` leaves an existing value alone. The account is on
+Bitwarden's EU server, and `bws` talks to the US one unless told, answering
+`invalid_client` as if the token were wrong; `.envrc` exports `BWS_SERVER_URL` for that
+too. When the token expires, make a new one, then `task secrets:login` and `direnv reload`.
 
 **Deployed.** Not built, because there is nothing to deploy to yet. When there is, the
 same shape is one more template and one task: `bws run --project-id <overview-prod> --
@@ -97,11 +100,15 @@ unpiped, a bare `env`, `printenv`, `set`, `export -p` or `declare -p`, or a prin
 command that names a secret variable. Its lists come from the templates, so a new
 template or placeholder is guarded with no upkeep: the rendered files are the tracked
 `*.tpl` names with the suffix removed, plus `.env` and `.env.local` always, and the
-names are every `${NAME}` in them plus `BWS_ACCESS_TOKEN`. It is pipe-aware in the way
-the pattern it copies is: `cat .env | grep -c =` is allowed because the output goes to
-another process, and that is a defence against accident, not against an interpreter
-sharing the shell that wants the value. It fails open with a line on stderr if it cannot
-run, because a guard that cannot run should not also take every shell command with it.
+names are every `${NAME}` in them plus `BWS_ACCESS_TOKEN`. A pipeline that touches a
+rendered file or `bws secret` output may end only in a sink that repeats nothing: `wc`, a
+checksum, `grep -c` or `-q`, or for `bws` a `jq` that selects keys. The pattern this copies
+allowed any pipe at all, on the reasoning that piped output goes to another process, and
+the first day of this guard showed why that is not enough: a `head` into `cut` put part of
+a key into the conversation. What remains is a defence against accident, not against an
+interpreter sharing the shell that wants the value. It fails open with a line on stderr if
+it cannot run, because a guard that cannot run should not also take every shell command
+with it.
 `.claude/hooks/guardSecrets.test.mjs` is the list of what it refuses and what it lets
 through, and `npm run test:tooling` runs it in CI.
 

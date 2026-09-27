@@ -21,9 +21,16 @@ test("printing a generated file into the conversation is refused", () => {
   assert.match(bash("cat .env.local"), /would print/);
 });
 
-test("output that goes to another process is allowed, as the doc's pipe rule says", () => {
+test("a pipeline that touches a generated file may end only in a sink that repeats nothing", () => {
   assert.equal(bash("cat .env | grep -c ="), null);
-  assert.equal(bash("grep '^MAIL_FROM=' .env | cut -d= -f1"), null);
+  assert.equal(bash("cat .env | wc -l"), null);
+  assert.equal(bash("grep -c '^BREVO_API_KEY=xkeysib-' .env"), null);
+  assert.equal(bash("grep -q MAIL_FROM .env && echo present"), null);
+  assert.equal(bash("shasum .env"), null);
+  assert.match(bash("head -1 .env | cut -c1-60"), /still ends in a command whose output reaches/);
+  assert.match(bash("grep '^MAIL_FROM=' .env | cut -d= -f1"), /still ends in/);
+  assert.match(bash("cat .env | grep MAIL"), /still ends in/);
+  assert.match(bash("grep -c = .env | cat"), /still ends in/);
 });
 
 test("handling a generated file without printing it is allowed", () => {
@@ -75,6 +82,10 @@ test("bws prints values only through get and list, and those are refused unpiped
   assert.match(bash("bws secret get 1234"), /prints secret values/);
   assert.match(bash("bws secret list"), /prints secret values/);
   assert.equal(bash("bws secret list | jq -r '.[].key'"), null);
+  assert.equal(bash("bws secret list | wc -l"), null);
+  assert.match(bash("bws secret list | jq -r '.[].value'"), /still ends in/);
+  assert.match(bash("bws secret get 1234 | jq ."), /still ends in/);
+  assert.match(bash("bws secret list | cat"), /still ends in/);
   assert.equal(bash("bws project list"), null);
   assert.equal(bash("bws run --project-id 1 -- npm test"), null);
 });

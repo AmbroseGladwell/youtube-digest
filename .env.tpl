@@ -1,5 +1,5 @@
 # Rendered to .env by `task secrets`; edit this template, never .env (docs/conventions/secrets.md).
-# ${NAME} is a secret in Bitwarden Secrets Manager, project overview-dev, keyed NAME.
+# A placeholder in dollar-braces is a secret in Bitwarden Secrets Manager, project overview-dev, keyed as the variable.
 # Per-machine values that are not secrets go in .env.local, which is read after .env.
 
 # apps/api

@@ -117,7 +117,8 @@ function decideStage(stage, { generatedFiles, secretNames }) {
   const file = mentionsGeneratedFile(tokens, generatedFiles);
   if (file !== null) {
     const inPlaceSed = first === "sed" && rest.some((token) => /^-[a-zA-Z]*i/.test(token));
-    if (!SAFE_WITH_FILE.has(first) && !SAFE_WITH_FILE.has(unquote(command)) && !inPlaceSed) {
+    const counts = consumesWithoutPrinting(tokens, false);
+    if (!SAFE_WITH_FILE.has(first) && !SAFE_WITH_FILE.has(unquote(command)) && !inPlaceSed && !counts) {
       return `${first} would print ${file}, a generated secrets file, into the conversation. Pipe it into another process, or read the template it was rendered from.`;
     }
   }
@@ -189,10 +190,42 @@ export function decide({ toolName, toolInput }, harvested) {
   }
   if (toolName !== "Bash") return null;
   for (const stages of pipelines(String(toolInput?.command ?? ""))) {
-    const reason = decideStage(stages[stages.length - 1], harvested);
+    const last = stages[stages.length - 1];
+    const reason = decideStage(last, harvested);
     if (reason !== null) return reason;
+    const upstream = stages.slice(0, -1).map(stageTokens);
+    const file = upstream.map((tokens) => mentionsGeneratedFile(tokens, harvested.generatedFiles)).find((name) => name !== null);
+    const values = upstream.some(printsBwsValues);
+    if ((file !== undefined || values) && !consumesWithoutPrinting(stageTokens(last), values)) {
+      const what = file ?? "secret values";
+      return `That pipeline reads ${what} and still ends in a command whose output reaches the conversation. End it in wc, a checksum, grep -c, or for bws a jq that selects keys.`;
+    }
   }
   return null;
+}
+
+// What a pipeline that has touched a secret may end in: something that answers a
+// question about the text without repeating it. The first version of this guard allowed
+// any pipe at all, and a head into cut put part of a key into the conversation.
+const SINKS = new Set(["wc", "sha256sum", "shasum", "md5", "md5sum", "cmp", "true", "test", "["]);
+
+function printsBwsValues(tokens) {
+  const [command, ...rest] = tokens;
+  if (command === undefined) return false;
+  return basename(unquote(command)) === "bws" && rest[0] === "secret" && (rest[1] === "get" || rest[1] === "list");
+}
+
+function consumesWithoutPrinting(tokens, fromBws) {
+  const [command, ...rest] = tokens;
+  if (command === undefined) return false;
+  const first = basename(unquote(command).replace(/^[`'"]+/, ""));
+  if (SINKS.has(first)) return true;
+  if (first === "grep") return rest.some((token) => /^-[a-zA-Z]*[cql]/.test(token));
+  if (first === "jq" && fromBws) {
+    const program = rest.join(" ");
+    return /\.(key|id|name)\b/.test(program) && !program.includes("value");
+  }
+  return false;
 }
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
