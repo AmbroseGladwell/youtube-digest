@@ -27,11 +27,13 @@ runs `dist/**/*.test.js`. `app.inject()` opens no port.
 ## The helpers
 
 `src/testing/createTestApp.testHelper.ts` builds the whole API over a fresh PGlite with
-migrations applied and a clock the test owns:
+migrations applied, a clock the test owns, and a mailer that records every magic link
+so a test can open it the way a reader would:
 
 ```ts
 const testApp = await createTestApp({ minSupportedClientVersion: 2 });
 testApp.clock.advance(HOUR_MS);
+const token = testApp.mailer.lastToken();
 await testApp.close();
 ```
 

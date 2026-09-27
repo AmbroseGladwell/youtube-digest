@@ -32,7 +32,7 @@ export function syncStatusLine(status: SyncStatus, now: Date): string {
       case "failed":
         return "The server had a problem. Trying again shortly.";
       case "signedOut":
-        return "The server refused this token. Paste a new one.";
+        return "The server no longer knows this session. Sign in again.";
       case "unsupported":
         return "This version of the app can no longer send changes. Update it.";
     }

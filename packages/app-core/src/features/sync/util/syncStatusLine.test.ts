@@ -27,7 +27,7 @@ describe("syncStatusLine", () => {
   });
 
   it("names the way out for a refused token and for a client below the floor", () => {
-    expect(syncStatusLine(status({ phase: "signedOut" }), NOW)).toMatch(/refused this token/);
+    expect(syncStatusLine(status({ phase: "signedOut" }), NOW)).toMatch(/Sign in again/);
     expect(syncStatusLine(status({ phase: "unsupported" }), NOW)).toMatch(/Update it/);
   });
 });

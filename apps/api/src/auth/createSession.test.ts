@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { ApiError } from "../http/ApiError.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { createSession } from "./createSession.js";
-import { hashSessionToken } from "./hashSessionToken.js";
+import { hashToken } from "./hashToken.js";
 
 const options = { now: new Date("2026-09-26T09:00:00.000Z"), sessionTtlDays: 30 };
 
@@ -14,7 +14,7 @@ test("a minted token is not stored, only its hash", async () => {
   const rows = await sql.query<{ token_hash: string }>("select token_hash from sessions");
   assert.equal(rows.length, 1);
   assert.notEqual(rows[0]!.token_hash, token);
-  assert.equal(rows[0]!.token_hash, hashSessionToken(token));
+  assert.equal(rows[0]!.token_hash, hashToken(token));
   await close();
 });
 

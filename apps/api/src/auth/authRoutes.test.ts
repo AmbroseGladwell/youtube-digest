@@ -1,0 +1,261 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import type { LightMyRequestResponse } from "fastify";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { createTestApp, TEST_APP_URL, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { hashToken } from "./hashToken.js";
+import { SESSION_COOKIE } from "./sessionCookie.js";
+
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const EMAIL = "reader@example.com";
+
+const setCookie = (response: LightMyRequestResponse): string => {
+  const header = response.headers["set-cookie"];
+  assert.ok(header !== undefined, "a cookie was set");
+  return Array.isArray(header) ? header[0]! : header;
+};
+
+const cookiePair = (response: LightMyRequestResponse): string => setCookie(response).split(";")[0]!;
+
+const askForLink = (testApp: TestApp, surface: "web" | "extension", email = EMAIL) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/magic-link", payload: { email, surface } });
+
+const signIn = (testApp: TestApp, token: string) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/sign-in", payload: { token } });
+
+const exchange = (testApp: TestApp, code: string) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code } });
+
+const whoAmI = (testApp: TestApp, headers: Record<string, string>) =>
+  testApp.app.inject({ method: "GET", url: "/api/session", headers });
+
+const signInOnTheWeb = async (testApp: TestApp): Promise<string> => {
+  await askForLink(testApp, "web");
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+  assert.equal(response.statusCode, 200);
+  return cookiePair(response);
+};
+
+test("asking for a link mails one that points at the app, and keeps only the token's hash", async () => {
+  const testApp = await createTestApp();
+
+  const response = await askForLink(testApp, "web", " Reader@Example.com ");
+
+  assert.equal(response.statusCode, 202);
+  assert.deepEqual(response.json(), { accepted: true });
+  assert.equal(testApp.mailer.sent.length, 1);
+  const [mail] = testApp.mailer.sent;
+  assert.equal(mail!.to, EMAIL);
+  assert.equal(mail!.surface, "web");
+  assert.ok(mail!.link.startsWith(`${TEST_APP_URL}/sign-in#token=`), mail!.link);
+  const rows = await testApp.sql.query<{ token_hash: string; email: string }>("select token_hash, email from magic_links");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]!.email, EMAIL);
+  assert.equal(rows[0]!.token_hash, hashToken(testApp.mailer.lastToken()));
+  await testApp.close();
+});
+
+test("asking for a link makes no account: only a consumed link does", async () => {
+  const testApp = await createTestApp();
+
+  await askForLink(testApp, "web");
+
+  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  await testApp.close();
+});
+
+test("an address that is not an email is refused before anything is sent", async () => {
+  const testApp = await createTestApp();
+
+  const response = await askForLink(testApp, "web", "not an address");
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.json().error.code, "invalid_request");
+  assert.equal(testApp.mailer.sent.length, 0);
+  await testApp.close();
+});
+
+test("a second ask within a minute is answered the same and sends nothing", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  testApp.clock.advance(30 * 1000);
+
+  const second = await askForLink(testApp, "web");
+
+  assert.equal(second.statusCode, 202);
+  assert.equal(testApp.mailer.sent.length, 1);
+  testApp.clock.advance(MINUTE_MS);
+  await askForLink(testApp, "web");
+  assert.equal(testApp.mailer.sent.length, 2);
+  await testApp.close();
+});
+
+test("a web link signs the browser in with a cookie the API then accepts", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { surface: "web", email: EMAIL, expiresAt: "2026-10-26T09:00:00.000Z" });
+  assert.match(setCookie(response), new RegExp(`^${SESSION_COOKIE}=.+; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax; Secure$`));
+  const session = await whoAmI(testApp, { cookie: cookiePair(response) });
+  assert.equal(session.statusCode, 200);
+  assert.equal(session.json().email, EMAIL);
+  await testApp.close();
+});
+
+test("the cookie is not marked Secure when the app is served over plain http", async () => {
+  const testApp = await createTestApp({ appUrl: "http://localhost:5173" });
+  await askForLink(testApp, "web");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.doesNotMatch(setCookie(response), /Secure/);
+  await testApp.close();
+});
+
+test("a link works once: the second use is refused as link_invalid", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  const token = testApp.mailer.lastToken();
+  await signIn(testApp, token);
+
+  const again = await signIn(testApp, token);
+
+  assert.equal(again.statusCode, 410);
+  assert.equal(again.json().error.code, "link_invalid");
+  assert.equal(again.headers["set-cookie"], undefined);
+  await testApp.close();
+});
+
+test("a link older than fifteen minutes is refused, and so is a token nobody was sent", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  testApp.clock.advance(16 * MINUTE_MS);
+
+  const expired = await signIn(testApp, testApp.mailer.lastToken());
+  const unknown = await signIn(testApp, "never-issued");
+
+  assert.equal(expired.json().error.code, "link_invalid");
+  assert.equal(unknown.json().error.code, "link_invalid");
+  assert.equal(unknown.statusCode, expired.statusCode);
+  await testApp.close();
+});
+
+test("a link asked for from the extension answers a code and signs no browser in", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "extension");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(response.statusCode, 200);
+  const body = response.json();
+  assert.equal(body.surface, "extension");
+  assert.equal(body.email, EMAIL);
+  assert.match(body.linkCode, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  assert.equal(body.linkCodeExpiresAt, "2026-09-26T09:10:00.000Z");
+  assert.equal(response.headers["set-cookie"], undefined);
+  assert.deepEqual(await testApp.sql.query("select id from sessions"), []);
+  assert.equal((await testApp.sql.query("select id from accounts")).length, 1);
+  await testApp.close();
+});
+
+test("the code exchanges once for a bearer the panel can sync with", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "extension");
+  const { linkCode } = (await signIn(testApp, testApp.mailer.lastToken())).json();
+
+  const exchanged = await exchange(testApp, linkCode);
+
+  assert.equal(exchanged.statusCode, 200);
+  const { token, email, expiresAt } = exchanged.json();
+  assert.equal(email, EMAIL);
+  assert.equal(expiresAt, "2026-10-26T09:00:00.000Z");
+  const headers = { authorization: `Bearer ${token}`, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
+  assert.equal((await whoAmI(testApp, headers)).json().email, EMAIL);
+  assert.equal((await testApp.app.inject({ method: "GET", url: "/api/changes?since=0", headers })).statusCode, 200);
+  const again = await exchange(testApp, linkCode);
+  assert.equal(again.statusCode, 410);
+  assert.equal(again.json().error.code, "link_invalid");
+  await testApp.close();
+});
+
+test("a code is read however the reader typed it, and refused once ten minutes have passed", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "extension");
+  const { linkCode } = (await signIn(testApp, testApp.mailer.lastToken())).json();
+  const typed = ` ${(linkCode as string).toLowerCase().replace("-", " ")} `;
+  testApp.clock.advance(11 * MINUTE_MS);
+  assert.equal((await exchange(testApp, typed)).json().error.code, "link_invalid");
+
+  const fresh = await createTestApp();
+  await askForLink(fresh, "extension");
+  const second = (await signIn(fresh, fresh.mailer.lastToken())).json();
+  const relaxed = await exchange(fresh, ` ${(second.linkCode as string).toLowerCase().replace("-", " ")} `);
+
+  assert.equal(relaxed.statusCode, 200);
+  await testApp.close();
+  await fresh.close();
+});
+
+test("signing out with the cookie deletes the session and clears the cookie", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+
+  const signOut = await testApp.app.inject({
+    method: "DELETE",
+    url: "/api/session",
+    headers: { cookie, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+  });
+
+  assert.equal(signOut.statusCode, 204);
+  assert.match(setCookie(signOut), new RegExp(`^${SESSION_COOKIE}=; Max-Age=0;`));
+  assert.equal((await whoAmI(testApp, { cookie })).statusCode, 401);
+  await testApp.close();
+});
+
+test("a write with the cookie still needs the client version, so a cross-site form cannot make one", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+
+  const response = await testApp.app.inject({ method: "DELETE", url: "/api/session", headers: { cookie } });
+
+  assert.equal(response.statusCode, 400);
+  assert.equal((await whoAmI(testApp, { cookie })).statusCode, 200);
+  await testApp.close();
+});
+
+test("a cookie session used more than an hour on is re-issued with its new expiry", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+  testApp.clock.advance(2 * HOUR_MS);
+
+  const response = await whoAmI(testApp, { cookie });
+
+  assert.equal(response.json().expiresAt, "2026-10-26T11:00:00.000Z");
+  assert.match(setCookie(response), /Max-Age=2592000;/);
+  const within = await whoAmI(testApp, { cookie });
+  assert.equal(within.headers["set-cookie"], undefined);
+  await testApp.close();
+});
+
+test("a bearer is looked at before the cookie, so the extension's header is never mistaken for the tab's session", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+
+  const response = await whoAmI(testApp, { cookie, authorization: "Bearer not-a-real-token" });
+
+  assert.equal(response.statusCode, 401);
+  await testApp.close();
+});
+
+test("the auth routes need no session and no client version", async () => {
+  const testApp = await createTestApp();
+
+  const response = await testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code: "nope" } });
+
+  assert.equal(response.statusCode, 410);
+  await testApp.close();
+});

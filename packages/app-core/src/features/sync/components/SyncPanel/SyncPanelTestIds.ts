@@ -1,9 +1,15 @@
 export const syncPanelTestIds = {
   root: "SyncPanel.root",
   apiUrlInput: "SyncPanel.apiUrlInput",
-  tokenInput: "SyncPanel.tokenInput",
+  emailInput: "SyncPanel.emailInput",
+  requestLinkButton: "SyncPanel.requestLinkButton",
+  linkSent: "SyncPanel.linkSent",
+  changeAddressButton: "SyncPanel.changeAddressButton",
+  codeInput: "SyncPanel.codeInput",
   connectButton: "SyncPanel.connectButton",
+  formError: "SyncPanel.formError",
+  signedInAs: "SyncPanel.signedInAs",
   statusLine: "SyncPanel.statusLine",
   syncNowButton: "SyncPanel.syncNowButton",
-  disconnectButton: "SyncPanel.disconnectButton",
+  signOutButton: "SyncPanel.signOutButton",
 };

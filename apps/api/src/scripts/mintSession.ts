@@ -4,8 +4,8 @@ import { createPgSqlClient } from "../db/createPgSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 
-// How a session is born until magic-link sign-in exists: the token goes to stdout alone,
-// so a shell can capture it (docs/architecture/api.md).
+// A session with no mail involved, for scripts and a first day: the token goes to stdout
+// alone, so a shell can capture it (docs/architecture/api.md).
 const email = process.argv[2];
 if (!email) {
   console.error("usage: npm run mint-session -- <email>");

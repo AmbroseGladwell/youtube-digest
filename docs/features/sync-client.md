@@ -20,7 +20,7 @@ this document is written against all three. Where it departs from one of them, i
 | Which failures stop the cycle and which park one write | `packages/sync/src/stopReasonFor.ts` |
 | The API client over `fetch`, parsing every answer with the shared schemas | `packages/sync/src/fetchSyncApi.ts` |
 | The runtime that owns one engine per tab, and re-reads every page after a pull | `packages/app-core/src/features/sync/SyncRuntime.tsx` |
-| Server and token, device-local like the API keys | `syncConnectionStorage.ts`, `useSyncConnection.ts` |
+| Server, session and who, device-local like the API keys; the web app's session is a cookie and stores no token | `syncConnectionStorage.ts`, `useSyncConnection.ts`, `types/SyncConnection.ts` |
 | The settings panel, the stale-client banner, the write-floor wall | `features/sync/components/` |
 | Two real devices through the real API in process | `apps/api/src/sync/twoDevices.test.ts` |
 | The screens, in a browser, against a simulated feed | `packages/app-core/playwright/iwft/scenarios/sync.iwft.ts` |
@@ -86,8 +86,8 @@ Three rules inside that:
   that will not migrate stays quarantined and counted where it is. Pushing it would either
   be refused or, worse, accepted at the wrong version.
 
-Leaving, for the day a sign-out exists, is the reverse: the bookkeeping goes and the
-records stay.
+Leaving, which signing out does, is the reverse: the bookkeeping goes and the records
+stay.
 
 ## One cycle
 
@@ -168,12 +168,14 @@ Every screen follows the third habit in `CLAUDE.md`: a control appears only wher
 work.
 
 **Settings.** The shell says whether its library can sync at all; a shell that cannot
-shows no sync section. One that can asks for the server's address and a session token,
-because sign-in is not built and `mint-session` is what exists (`docs/architecture/api.md`).
-In the extension the server has to list the panel's origin as well, or the browser stops
-every call before it leaves (`docs/architecture/api.md`, Origins). Connected, it shows one status line and two buttons. The line always carries what is still
-waiting, `3 changes waiting to send · 1 couldn't be sent`, whatever else it says, because a
-library that is quietly behind is the failure this project exists to avoid.
+shows no sync section. One that can asks for an email and sends a sign-in link; in the
+extension it asks for the server's address as well, and then for the code the link's
+page shows (`docs/features/sign-in.md`). In the extension the server has to list the
+panel's origin too, or the browser stops every call before it leaves
+(`docs/architecture/api.md`, Origins). Signed in, it shows who, one status line and two
+buttons. The line always carries what is still waiting, `3 changes waiting to send · 1
+couldn't be sent`, whatever else it says, because a library that is quietly behind is the
+failure this project exists to avoid.
 
 **The banner** is the one `record-migrations.md` designed: it fires on encounter, counting
 the records actually held back, not on the handshake; it takes the generation strip's slot;
@@ -200,7 +202,7 @@ extension it is `Open extensions`, which the shell provides and app-core cannot.
 
 ## Not built
 
-Sign-in, so the token is pasted rather than earned; `chrome.runtime.onUpdateAvailable`
+`chrome.runtime.onUpdateAvailable`
 feeding the wall's `Update now`; the one-overview-per-video question at first sync;
 set-valued merging of `userTags` and `topicIds`; the shared transcript cache; captures and
 audio. Retrying a parked write once the app has updated is a one-line change to `#push`

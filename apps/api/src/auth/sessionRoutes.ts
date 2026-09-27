@@ -1,15 +1,22 @@
 import type { FastifyInstance } from "fastify";
+import type { SessionInfo } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { deleteSession } from "./deleteSession.js";
+import { clearedSessionCookie } from "./sessionCookie.js";
 
-export function sessionRoutes(app: FastifyInstance, sql: SqlClient): void {
+export function sessionRoutes(app: FastifyInstance, sql: SqlClient, sessionCookieSecure: boolean): void {
   app.get("/session", async (request) => {
     const { accountId, email, expiresAt } = request.session!;
-    return { accountId, email, expiresAt };
+    const info: SessionInfo = { accountId, email, expiresAt };
+    return info;
   });
 
   app.delete("/session", async (request, reply) => {
-    await deleteSession(sql, request.session!.tokenHash);
+    const session = request.session!;
+    await deleteSession(sql, session.tokenHash);
+    if (session.transport === "cookie") {
+      reply.header("set-cookie", clearedSessionCookie({ secure: sessionCookieSecure }));
+    }
     return reply.status(204).send();
   });
 }
