@@ -42,7 +42,8 @@ writing a file with a hole in it. The rendered file is mode 600 and says at its 
 template it came from. Everything the API's scripts read comes from `.env`, and after it
 from `.env.local`, which is where a value that differs per checkout and is not a secret
 goes: the extension's origin for CORS, derived from the path the unpacked build was
-loaded from, so different in every worktree.
+loaded from, so different in every worktree until the store's key fixes it
+(`docs/architecture/deploy.md`).
 
 **For one command.** `task secrets:run -- npx tsx scripts/endToEndSanityCheck.ts` runs
 the command with the project's secrets in its environment and writes nothing.

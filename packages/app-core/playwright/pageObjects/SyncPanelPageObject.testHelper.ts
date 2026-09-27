@@ -14,6 +14,11 @@ export class SyncPanelPageObject extends PageObject {
   verifyAsksToSignIn = () =>
     this.step("verifyAsksToSignIn", () => this.expectToBeVisible(syncPanelTestIds.requestLinkButton));
 
+  verifyServerAddressReads = (apiUrl: string) =>
+    this.step(`verifyServerAddressReads ${apiUrl}`, () =>
+      expect(this.get(syncPanelTestIds.apiUrlInput)).toHaveValue(apiUrl),
+    );
+
   setServerAddress = (apiUrl: string) =>
     this.step(`setServerAddress ${apiUrl}`, () => this.get(syncPanelTestIds.apiUrlInput).fill(apiUrl));
 

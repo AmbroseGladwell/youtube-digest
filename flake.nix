@@ -25,6 +25,8 @@
             pkgs.gitleaks
             pkgs.flyctl
             pkgs.jq
+            pkgs.zip
+            pkgs.unzip
           ];
         };
       });

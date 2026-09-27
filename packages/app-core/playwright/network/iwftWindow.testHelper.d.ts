@@ -21,6 +21,7 @@ declare global {
     __iwftRouter__: AppRouter;
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;
+    __iwftDefaultApiUrl__: string | null;
     __iwftActiveVideo__: IwftActiveVideoSource | null;
     __iwftPlayback__: IwftPlaybackSource | null;
     __iwftRunBridge__: IwftRunBridge | null;

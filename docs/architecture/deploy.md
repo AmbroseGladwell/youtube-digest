@@ -14,6 +14,9 @@ why; this is how they fit together and what a deploy actually does.
 | Secrets from the `overview-prod` Bitwarden project straight into Fly, touching no file | `.env.prod.tpl`, `scripts/secrets.sh fly-import`, `task deploy:secrets` |
 | The menu | `Taskfiles/Taskfile-deploy.yml` |
 | CI proves the image builds on every push | the `image` job in `.github/workflows/ci.yml` |
+| The extension's id fixed by the store's key, and its origin derived from it | `key` in `apps/extension/public/manifest.json`, `scripts/extensionId.mjs`, `task deploy:extension:id` |
+| The extension built knowing its server, with Settings still able to say otherwise | `apps/extension/src/productionApiUrl.ts`, `DefaultApiUrlContext` in `app-core` |
+| The store zip, named by the manifest's version, key stripped and read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
 
 ## The API serves the web app
 
@@ -143,15 +146,73 @@ looked at:
 - `https://theoverviewapp.com/api/handshake` answers with the floor and the version.
 - The root serves the web app, and Settings can ask for a magic link that arrives.
 
+## The extension
+
+The extension is not deployed. It is uploaded to the Chrome Web Store once per version,
+and three things had to be settled for that to be a mechanical step: which id it has,
+which server it talks to, and what number it carries.
+
+**Its id is the store's to give.** Chrome derives an extension's id from its public key,
+and an unpacked build with no key in its manifest gets one derived from the directory it
+was loaded from, which is why every worktree has had a different origin and
+`CORS_ALLOWED_ORIGINS` has lived in `.env.local`. One id everywhere means the store's key
+in the manifest, and the store hands that over only after a first upload: a new item whose
+manifest already carries a `key` is refused with "key field is not allowed in manifest",
+because the store assigns the id itself. So the order is fixed. Upload a draft once,
+without publishing; on the item's Package tab, View public key; paste its body into
+`apps/extension/public/manifest.json` as `key`, one line, header and footer removed. From
+then on every unpacked build in every checkout has the store's id, `task
+deploy:extension:id` prints the origin from it, and that origin goes in two places,
+`fly.toml`'s `CORS_ALLOWED_ORIGINS` and `.env.tpl`'s, replacing the per-checkout value.
+The zip that goes back to the store has the key stripped again, since the store refuses it
+on a new item and needs it on no upload; `scripts/packExtension.mjs` does that and reads
+the zip back to check. A library made under the old unpacked id does not follow the new
+one, because it is a different origin; that is the free tier's shape, and sync is how a
+library moves.
+
+**It knows its server.** `PRODUCTION_API_URL` in `apps/extension/src/productionApiUrl.ts`
+is what the panel's Settings shows as the server address before anything is typed, and it
+is `APP_URL`: one origin serves the web app, the API and the sign-in page. The field
+stays, because a build loaded unpacked against a local API has to be able to say
+`http://localhost:3000`, and what is typed wins. Three lines carry the address and move
+together: `APP_URL` in `fly.toml`, the deploy job's URL in `ci.yml`, and this constant, and
+all three name `theoverviewapp.com`.
+
+**Its version is the manifest's.** `manifest.json`'s `version` is the release number: it
+is what Chrome reads, what the store requires to rise on every upload, and what names the
+zip. The `0.0.0` in `package.json` is the placeholder every workspace carries and means
+nothing. `task deploy:extension` builds and zips into
+`apps/extension/release/the-overview-<version>.zip`, refuses `0.0.0`, and reads the zip
+back before reporting: the manifest at its root, the version it expected, no key. CI runs
+the same pack on every push and keeps the zip for fourteen days, so the file uploaded to
+the store can be the one CI built from the merge rather than a laptop's. Bump the version
+in the PR that ships.
+
+**Once, by hand**, to fix the id:
+
+```
+task deploy:extension                      # apps/extension/release/the-overview-0.1.0.zip
+```
+
+1. Upload the zip to the developer dashboard as a new item, and leave it as a draft.
+2. Package tab, View public key, into `manifest.json` as `key`.
+3. `task deploy:extension:id`, and its output into `fly.toml` and `.env.tpl` as
+   `CORS_ALLOWED_ORIGINS`.
+4. Commit. The next merge deploys an API that vouches for the extension's origin, and the
+   next `task run:extension` in any checkout loads with the store's id.
+
 ## What this does not do
 
 - **Hold a deploy for approval.** A merge to `main` deploys without a pause. GitHub's
   `production` environment can require a reviewer with one setting, if that is ever
   wanted; the job already runs under that environment so the switch is in the repository
   settings, not in the workflow.
-- **Reach the extension.** Production's `CORS_ALLOWED_ORIGINS` needs the extension's
-  published id, which waits on the Web Store listing. Until then the web app is the whole
-  product in production, and that is a complete one.
+- **List the extension.** The mechanics above end at a zip and an id. The listing itself
+  needs a privacy policy the web app does not yet serve, a justification for each
+  permission the manifest asks for, screenshots and the store copy, and the first draft
+  upload that fixes the id has not been made. Until it is, `CORS_ALLOWED_ORIGINS` in
+  `fly.toml` is empty and production vouches for no extension; the web app is the whole
+  product there, and that is a complete one.
 - **Sweep expired rows.** Sessions, magic links and codes are ignored when expired rather
   than deleted; the cron that would delete them has nowhere to run yet, and this machine
   stopping when idle is not it.

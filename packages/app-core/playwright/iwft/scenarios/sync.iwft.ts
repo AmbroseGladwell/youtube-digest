@@ -58,6 +58,23 @@ test("in the extension, the code from the sign-in page connects the panel and st
   test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_CHANGES)).toBeGreaterThan(0);
 });
 
+// The built extension knows which server it was built for, so the panel does not ask
+// for an address before it asks for an email; the field stays, for a server that is not
+// production (docs/architecture/deploy.md, "The extension").
+test("in the extension the server address is filled in with the one it was built for", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+  const settings = await launcher.appShell.openSettings();
+  await settings.syncPanel.verifyServerAddressReads(SERVER);
+
+  await settings.syncPanel.requestLink(SIMULATED_EMAIL);
+
+  await settings.syncPanel.verifyLinkSentReads(/enter the code it shows below/);
+  test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "extension" }]);
+});
+
 test("what the account holds arrives in the library without a reload", async ({ launcher, backendSimulator }) => {
   const arriving = makeOverview({ video: { ...makeOverview().video, title: "Arrived From Another Device" } });
   backendSimulator.sync.seedChange(overviewChange(1, arriving));

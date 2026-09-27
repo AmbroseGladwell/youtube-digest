@@ -49,19 +49,23 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 
 **Deploying** is its own include, `Taskfiles/Taskfile-deploy.yml`: `task deploy:secrets`
 once, then `task deploy` for every release, with `task deploy:image` to build the image
-locally and `task deploy:status` and `task deploy:logs` to look at the result
-(`docs/architecture/deploy.md`). The shell provides `flyctl`.
+locally and `task deploy:status` and `task deploy:logs` to look at the result, and
+`task deploy:extension` for the zip the Web Store takes, with `task deploy:extension:id`
+for the origin the API has to vouch for (`docs/architecture/deploy.md`). The shell
+provides `flyctl`, `zip` and `unzip`.
 
 Signing in locally needs no mail account: with the default `MAIL_TRANSPORT=log`, asking
 for a link from Settings prints it to the API's output, and opening it on
 `http://localhost:5173` signs that browser in. An extension link's page shows the code to
 enter in the panel (`docs/features/sign-in.md`).
 
-The panel is a different origin from the API, so for it to sync `.env.local` needs
-`CORS_ALLOWED_ORIGINS=chrome-extension://<id>`, with the id `chrome://extensions` shows
-for the unpacked build, and the API restarted (`docs/architecture/api.md`, Origins). It
-goes in `.env.local` rather than `.env` because the id is derived from the checkout's
-path, so it differs per worktree, and because `task secrets` overwrites `.env` whole.
+The panel is a different origin from the API, so for it to sync the API has to vouch for
+that origin in `CORS_ALLOWED_ORIGINS`, and be restarted (`docs/architecture/api.md`,
+Origins). With the store's key in the manifest the id is the same in every checkout and
+`.env.tpl` carries the origin; until that key lands, an unpacked build's id comes from its
+directory, so it differs per worktree and goes in `.env.local`, read off
+`chrome://extensions` (`docs/architecture/deploy.md`, "The extension"). The panel's
+server address is filled in with production; type `http://localhost:3000` over it.
 
 The database lives under `.local/pg`, created on the first `task run:db` with trust
 authentication on port 5433, so `.env`'s `DATABASE_URL` needs no password. `task db:stop`

@@ -12,3 +12,4 @@ blob-report/
 .direnv/
 .local/
 Taskfiles/Taskfile-local.yml
+apps/extension/release/

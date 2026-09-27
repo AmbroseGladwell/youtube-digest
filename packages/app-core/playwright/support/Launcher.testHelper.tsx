@@ -28,6 +28,7 @@ export interface LaunchOptions {
   syncConnection?: SyncConnection;
   surface?: Surface;
   layout?: AppLayout;
+  defaultApiUrl?: string;
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
   plan?: Plan;
@@ -80,6 +81,7 @@ export class Launcher {
         syncConnection: options.syncConnection,
         surface: options.surface,
         layout: options.layout,
+        defaultApiUrl: options.defaultApiUrl,
         activeVideoUrl: options.activeVideoUrl,
         playback: options.playback,
         runBridge: options.runBridge,

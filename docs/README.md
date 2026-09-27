@@ -15,7 +15,8 @@ Five folders, five different questions.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
-  Neon, secrets piped from Bitwarden, and what a deploy does and what to check after.
+  Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
+  how the extension gets its id, its server and its store zip.
 
 ## `conventions/` — how code gets written here, day to day
 
