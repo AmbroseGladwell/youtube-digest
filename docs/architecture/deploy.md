@@ -92,10 +92,29 @@ task deploy:secrets                         # DATABASE_URL and BREVO_API_KEY, fr
 task deploy
 ```
 
-Then every deploy is `task deploy`: `fly deploy --remote-only` builds the image on Fly's
-builders from the checkout and rolls the machine over. Migrations run when the new
-process starts, under the advisory lock, so a deploy is also a schema upgrade and needs
-no separate step.
+After that, **a merge to `main` is a deploy.** The `deploy` job at the end of the CI
+workflow runs only on a push to `main` and only once every other job has passed, and it
+runs the same `flyctl deploy --remote-only` a person would, then asks `/api/health` and
+fails the job if the answer is not a 200. Deploys queue rather than cancel one another,
+so two merges in quick succession roll out in order, each waiting for the previous
+machine to come up healthy. GitHub records each one under the `production` environment
+with the app's URL. `task deploy` still works from a laptop, for a rollback or a hotfix
+while CI is red for an unrelated reason.
+
+The job needs one secret, `FLY_API_TOKEN`, a deploy token scoped to this app and nothing
+else, made and stored without it ever appearing on screen:
+
+```
+fly tokens create deploy --name github-actions --expiry 8760h | gh secret set FLY_API_TOKEN
+```
+
+It is the one production value that lives outside Bitwarden, because GitHub's runners can
+only read GitHub's secrets; `docs/conventions/secrets.md` records the exception. Rotate it
+by running the same line again and revoking the old token with `fly tokens list` and
+`fly tokens revoke`.
+
+Migrations run when the new process starts, under the advisory lock, so a deploy is also
+a schema upgrade and needs no separate step.
 
 What to verify afterwards, because a deploy that logged success is not one that was
 looked at:
@@ -106,9 +125,10 @@ looked at:
 
 ## What this does not do
 
-- **Deploy from CI.** A push to `main` builds the image and stops there. Deploying on
-  merge is one workflow with a `FLY_API_TOKEN` secret, and is left until there is a
-  reason a deploy should not be a person's decision.
+- **Hold a deploy for approval.** A merge to `main` deploys without a pause. GitHub's
+  `production` environment can require a reviewer with one setting, if that is ever
+  wanted; the job already runs under that environment so the switch is in the repository
+  settings, not in the workflow.
 - **Reach the extension.** Production's `CORS_ALLOWED_ORIGINS` needs the extension's
   published id, which waits on the Web Store listing. Until then the web app is the whole
   product in production, and that is a complete one.
