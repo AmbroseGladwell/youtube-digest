@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-PROJECT="${BWS_PROJECT:-overview-local}"
+PROJECT="${BWS_PROJECT:-overview-dev}"
 KEYCHAIN_SERVICE="overview-bws"
 
 projectId() {

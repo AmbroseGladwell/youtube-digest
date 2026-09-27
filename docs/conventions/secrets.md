@@ -11,7 +11,7 @@ parts were left out and why.
 
 | The decision | Where it lives |
 |---|---|
-| The store: Bitwarden Secrets Manager, one project per environment | `overview-local` now; `overview-prod` when there is a deploy |
+| The store: Bitwarden Secrets Manager, one project per environment | `overview-dev` now; `overview-prod` when there is a deploy |
 | The committed template, `${NAME}` per secret | `.env.tpl` |
 | One command renders it to the gitignored `.env` | `task secrets`, `scripts/secrets.sh`, `scripts/renderEnv.mjs` |
 | Per-machine values that are not secrets | `.env.local`, read after `.env` by the API's scripts |
@@ -62,9 +62,9 @@ terminal or a dashboard.
 
 ## Projects are the environment boundary
 
-One Bitwarden project per environment, `overview-local` and later `overview-prod`, with
+One Bitwarden project per environment, `overview-dev` and later `overview-prod`, with
 separate credentials in each: a separate Brevo key, a separate database. A token scoped
-to `overview-local` cannot read production, which is the whole of the value when the same
+to `overview-dev` cannot read production, which is the whole of the value when the same
 laptop can reach both, and separate credentials cost nothing now and are painful to
 introduce later. Keys are named exactly as the environment variable they become,
 `BREVO_API_KEY`, because `bws run` injects by key and a second naming layer would be a
@@ -137,7 +137,7 @@ tools nobody has named yet.
   will name the keys the project is missing and the hand-written values will still be
   in `.env` to seed from.
 - **The keychain token is per user, the project is per token.** A token scoped to
-  `overview-local` will render locally and refuse a production project by design.
+  `overview-dev` will render locally and refuse a production project by design.
 - **The guard splits on newlines and pipes, not on shell grammar.** A heredoc body that
   contains a line like `cat .env` is refused as if it were a command. Write such prose
   with the Write tool rather than through a shell.
