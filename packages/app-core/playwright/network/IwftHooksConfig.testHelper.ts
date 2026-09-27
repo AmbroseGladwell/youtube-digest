@@ -37,6 +37,8 @@ export interface IwftHooksConfig {
   syncConnection?: SyncConnection;
   surface?: Surface;
   layout?: AppLayout;
+  // The server this shell was built for, filled into the panel before anything is typed.
+  defaultApiUrl?: string;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
   activeVideoUrl?: string | null;
   // Absent is a shell that can't see the player; null is one that can, with nothing to

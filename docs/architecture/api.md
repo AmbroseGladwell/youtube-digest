@@ -105,7 +105,7 @@ others.
 
 **Why the server and not the manifest.** A host permission would exempt the extension's
 own pages from the check, but it has to name the API's origin in the manifest, and the
-server's address is typed into Settings and is `localhost` in development. Naming it there
+server's address is a setting, filled in with production and `localhost` in development. Naming it there
 would mean an optional permission and a runtime prompt on connect, built in the shell.
 One line of config on the server does the same job with nothing to build.
 
@@ -127,9 +127,10 @@ as a transport failure, and `stopReasonFor` would call a sign-out, or a write th
 refused, being offline.
 
 **Finding the extension's origin.** An unpacked build's id is derived from its directory
-and shown at `chrome://extensions`; a store build's id is fixed at publication.
-`.env.tpl` has the line, `.env.local` is where the id goes, and `docs/conventions/local-dev.md`
-has the step.
+and shown at `chrome://extensions` until the store's key is in its manifest, after which
+it is the store's id everywhere and `task deploy:extension:id` prints the origin
+(`docs/architecture/deploy.md`, "The extension"). `.env.tpl` has the line, `.env.local` is
+where a per-checkout id goes until then, and `docs/conventions/local-dev.md` has the step.
 
 ## Versions on the wire
 

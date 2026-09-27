@@ -12,6 +12,8 @@ primary_region = "lhr"
   PORT = "3000"
   STATIC_ROOT = "/app/apps/web/dist"
   APP_URL = "https://theoverviewapp.com"
+  # The extension's origin, once the Web Store has fixed its id: task deploy:extension:id prints it.
+  CORS_ALLOWED_ORIGINS = ""
   MAIL_TRANSPORT = "brevo"
   MAIL_FROM = "The Overview <hello@theoverviewapp.com>"
   MIN_SUPPORTED_CLIENT_VERSION = "1"

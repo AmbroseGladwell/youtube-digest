@@ -7,7 +7,8 @@ DATABASE_URL=postgres://overview@localhost:5433/overview
 PORT=3000
 MIN_SUPPORTED_CLIENT_VERSION=1
 SESSION_TTL_DAYS=30
-# The extension panel's origin, chrome-extension://<id> from chrome://extensions. Differs per checkout, so set it in .env.local.
+# The extension panel's origin. Once the store's key is in its manifest the id is the same everywhere and
+# belongs here, from `task deploy:extension:id`; until then it differs per checkout and goes in .env.local.
 CORS_ALLOWED_ORIGINS=
 # Where the web app is served from: every magic link opens /sign-in there (docs/features/sign-in.md).
 APP_URL=http://localhost:5173

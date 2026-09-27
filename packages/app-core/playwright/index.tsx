@@ -35,6 +35,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore, syncStorage };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";
   window.__iwftLayout__ = hooksConfig?.layout ?? "full";
+  window.__iwftDefaultApiUrl__ = hooksConfig?.defaultApiUrl ?? null;
   window.__iwftActiveVideo__ =
     hooksConfig?.activeVideoUrl === undefined
       ? null

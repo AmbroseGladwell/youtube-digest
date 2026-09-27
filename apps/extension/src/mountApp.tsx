@@ -21,6 +21,7 @@ import {
   IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
+import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 
 export interface MountOptions {
   layout?: AppLayout;
@@ -77,6 +78,7 @@ export async function mountApp({
         playback={playback}
         runBridge={runBridge}
         youTubeFetch={youTubeFetch}
+        defaultApiUrl={PRODUCTION_API_URL}
       />
     </StrictMode>,
   );

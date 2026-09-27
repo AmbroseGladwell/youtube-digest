@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useDefaultApiUrl } from "../../../../app/DefaultApiUrlContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { useExchangeLinkCodeMutation } from "../../../auth/mutations/useExchangeLinkCodeMutation.js";
 import { useRequestMagicLinkMutation } from "../../../auth/mutations/useRequestMagicLinkMutation.js";
@@ -31,8 +32,9 @@ const isUrl = (value: string): boolean => {
 export function SyncPanel() {
   const sync = useSync();
   const surface = useSurface();
+  const defaultApiUrl = useDefaultApiUrl();
   const { connection, setConnection } = useSyncConnection();
-  const [apiUrl, setApiUrl] = useState(connection.apiUrl ?? "");
+  const [apiUrl, setApiUrl] = useState(connection.apiUrl ?? defaultApiUrl ?? "");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [refused, setRefused] = useState<string | null>(null);

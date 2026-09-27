@@ -102,10 +102,12 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm run build --workspace apps/${{ matrix.app }}
       - if: matrix.app == 'extension'
+        run: node scripts/packExtension.mjs
+      - if: matrix.app == 'extension'
         uses: actions/upload-artifact@v7
         with:
           name: extension-${{ github.sha }}
-          path: apps/extension/dist
+          path: apps/extension/release
           retention-days: 14
           if-no-files-found: error
 

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit && vite build && vite build -c vite.content.config.ts",
+    "zip": "npm run build && node ../../scripts/packExtension.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

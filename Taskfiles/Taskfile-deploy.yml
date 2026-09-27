@@ -42,3 +42,17 @@ tasks:
     desc: 'Follow the running app''s log (e.g. task deploy:logs)'
     cmds:
       - fly logs
+
+  deploy:extension:
+    desc: Build the extension and zip it for the Web Store into apps/extension/release, named by its manifest version
+    dir: apps/extension
+    preconditions:
+      - sh: command -v zip && command -v unzip
+        msg: 'zip or unzip is missing. Enter the dev shell first: direnv allow, or nix develop.'
+    cmds:
+      - npm run zip
+
+  deploy:extension:id:
+    desc: Print the extension's origin for CORS_ALLOWED_ORIGINS, derived from the store's key in its manifest
+    cmds:
+      - node scripts/extensionId.mjs
