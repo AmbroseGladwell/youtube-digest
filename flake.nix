@@ -23,6 +23,7 @@
             pkgs.postgresql_17
             pkgs.bws
             pkgs.gitleaks
+            pkgs.flyctl
             pkgs.jq
           ];
         };

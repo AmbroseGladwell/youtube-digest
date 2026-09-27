@@ -35,7 +35,7 @@ export async function createTestApp(config: Partial<AppConfig> = {}): Promise<Te
   };
   const mailer = makeRecordingMailer();
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, ...config },
+    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, ...config },
     sql,
     mailer,
     clock: () => clock.now,

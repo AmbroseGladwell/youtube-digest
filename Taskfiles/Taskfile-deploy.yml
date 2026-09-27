@@ -1,0 +1,44 @@
+version: '3'
+silent: true
+
+vars:
+  PROD_PROJECT: overview-prod
+
+tasks:
+  deploy:
+    desc: Build the image on Fly's builders from this checkout and roll it out (docs/architecture/deploy.md)
+    preconditions:
+      - sh: command -v fly
+        msg: 'flyctl is missing. Enter the dev shell first: direnv allow, or nix develop.'
+      - sh: fly auth whoami > /dev/null 2>&1
+        msg: 'Not signed in to Fly. Run: fly auth login'
+    cmds:
+      - fly deploy --remote-only
+
+  deploy:secrets:
+    desc: Render .env.prod.tpl from the overview-prod Bitwarden project straight into fly secrets, touching no file
+    preconditions:
+      - sh: command -v fly
+        msg: 'flyctl is missing. Enter the dev shell first: direnv allow, or nix develop.'
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh fly-import
+
+  deploy:image:
+    desc: Build the production image locally with Docker, as CI does, without deploying it
+    preconditions:
+      - sh: command -v docker
+        msg: 'Docker is missing.'
+    cmds:
+      - docker build --tag overview:local .
+
+  deploy:status:
+    desc: The app's machines and the last release
+    cmds:
+      - fly status
+
+  deploy:logs:
+    desc: 'Follow the running app''s log (e.g. task deploy:logs)'
+    cmds:
+      - fly logs

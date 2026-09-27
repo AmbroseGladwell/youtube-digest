@@ -14,6 +14,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     allowedOrigins: [],
     appUrl: "http://localhost:5173",
     mail: { transport: "log" },
+    staticRoot: null,
   });
 });
 
@@ -65,6 +66,10 @@ test("an allowed origin that is a wildcard or carries a path is refused", () => 
     () => loadConfig({ DATABASE_URL, CORS_ALLOWED_ORIGINS: "https://sync.example.com/api" }),
     ConfigError,
   );
+});
+
+test("serves no web app unless told where one is", () => {
+  assert.equal(loadConfig({ DATABASE_URL, STATIC_ROOT: "/srv/web" }).staticRoot, "/srv/web");
 });
 
 test("refuses to start without a database", () => {

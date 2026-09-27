@@ -109,6 +109,13 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  image:
+    name: image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --tag overview:${{ github.sha }} .
+
   ci:
     name: ci
     runs-on: ubuntu-latest
@@ -122,6 +129,7 @@ jobs:
       - unit-tooling
       - iwft
       - build
+      - image
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

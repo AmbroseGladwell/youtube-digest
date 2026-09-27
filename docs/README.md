@@ -14,6 +14,8 @@ Five folders, five different questions.
 - `v1-architecture-decisions.md` — what was actually decided: the free/paid split, the stack, hosting, data layer, and the monorepo layout.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
+- `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
+  Neon, secrets piped from Bitwarden, and what a deploy does and what to check after.
 
 ## `conventions/` — how code gets written here, day to day
 

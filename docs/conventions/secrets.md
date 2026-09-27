@@ -58,10 +58,12 @@ Bitwarden's EU server, and `bws` talks to the US one unless told, answering
 `invalid_client` as if the token were wrong; `.envrc` exports `BWS_SERVER_URL` for that
 too. When the token expires, make a new one, then `task secrets:login` and `direnv reload`.
 
-**Deployed.** Not built, because there is nothing to deploy to yet. When there is, the
-same shape is one more template and one task: `bws run --project-id <overview-prod> --
-fly secrets import` with the rendered lines on stdin, so no value is typed into a
-terminal or a dashboard.
+**Deployed.** The same shape, one more template and one task: `.env.prod.tpl` names the
+secrets production needs, and `task deploy:secrets` renders it under `bws run` against
+`overview-prod` and pipes the lines straight into `fly secrets import`, so no value is
+written to a file, typed into a terminal or pasted into a dashboard
+(`docs/architecture/deploy.md`). Everything that is not a secret lives in `fly.toml`'s
+`[env]`, in the repository.
 
 ## Projects are the environment boundary
 

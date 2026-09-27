@@ -22,6 +22,7 @@ const ConfigEnv = z
     MAIL_TRANSPORT: z.enum(["log", "brevo"]).default("log"),
     BREVO_API_KEY: z.string().min(1).optional(),
     MAIL_FROM: z.string().min(1).optional(),
+    STATIC_ROOT: z.string().min(1).optional(),
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
@@ -52,6 +53,8 @@ export interface Config {
   allowedOrigins: string[];
   appUrl: string;
   mail: MailConfig;
+  // The built web app to serve outside /api, or null to serve none (docs/architecture/deploy.md).
+  staticRoot: string | null;
 }
 
 export class ConfigError extends Error {}
@@ -73,5 +76,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       data.MAIL_TRANSPORT === "brevo"
         ? { transport: "brevo", brevoApiKey: data.BREVO_API_KEY!, from: data.MAIL_FROM! }
         : { transport: "log" },
+    staticRoot: data.STATIC_ROOT ?? null,
   };
 }

@@ -47,6 +47,11 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
 | `task session -- you@example.com` | a bearer token with no mail involved, if one is wanted (`docs/architecture/api.md`) |
 
+**Deploying** is its own include, `Taskfiles/Taskfile-deploy.yml`: `task deploy:secrets`
+once, then `task deploy` for every release, with `task deploy:image` to build the image
+locally and `task deploy:status` and `task deploy:logs` to look at the result
+(`docs/architecture/deploy.md`). The shell provides `flyctl`.
+
 Signing in locally needs no mail account: with the default `MAIL_TRANSPORT=log`, asking
 for a link from Settings prints it to the API's output, and opening it on
 `http://localhost:5173` signs that browser in. An extension link's page shows the code to
