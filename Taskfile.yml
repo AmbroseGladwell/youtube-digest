@@ -26,18 +26,47 @@ tasks:
       - task --list | grep -i "{{.CLI_ARGS}}"
 
   install:
-    desc: Install every workspace's dependencies exactly as CI does
+    desc: Install every workspace's dependencies exactly as CI does, and point git at the repo's hooks
     cmds:
       - npm ci
+      - git config core.hooksPath .githooks
 
-  env:init:
-    desc: Create .env from .env.example, pointed at the local Postgres that task run:db starts
-    status:
-      - test -f .env
+  secrets:
+    desc: Render .env from .env.tpl with the secrets in Bitwarden (docs/conventions/secrets.md)
+    aliases: [env:init]
+    preconditions:
+      - sh: command -v bws
+        msg: 'bws is missing. Enter the dev shell first: direnv allow, or nix develop.'
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
     cmds:
-      - cp .env.example .env
-      - sed -i.bak 's#^DATABASE_URL=.*#DATABASE_URL={{.DATABASE_URL}}#' .env && rm .env.bak
-      - echo "Wrote .env for the local Postgres. Add your provider keys to it if you want generation."
+      - scripts/secrets.sh render
+
+  secrets:login:
+    desc: Store the Bitwarden machine access token in the login keychain, where .envrc reads it
+    cmds:
+      - scripts/secrets.sh login
+
+  secrets:run:
+    desc: 'Run one command with the secrets injected and nothing written (e.g. task secrets:run -- npx tsx scripts/endToEndSanityCheck.ts)'
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - scripts/secrets.sh run {{.CLI_ARGS}}
+
+  secrets:seed:
+    desc: One-time migration; create the Bitwarden project and copy the values from an existing hand-written .env into it
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - scripts/secrets.sh seed
+
+  test:tooling:
+    desc: Run the tests for the repo's own scripts and hooks
+    cmds:
+      - npm run test:tooling
 
   clean:
     desc: Remove every build output and the local Postgres data (node_modules and .env stay)
@@ -46,6 +75,3 @@ tasks:
       - task: db:stop
       - find . -name dist -type d -prune -not -path '*/node_modules/*' -exec rm -rf {} +
       - rm -rf .local
-
-vars:
-  DATABASE_URL: postgres://overview@localhost:5433/overview

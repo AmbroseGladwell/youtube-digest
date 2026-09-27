@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build:packages": "npm run build --workspace packages/domain --workspace packages/transcripts --workspace packages/generation --workspace packages/store-conformance --workspace packages/store-local --workspace packages/sync --workspace packages/app-core",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:tooling": "node --test scripts/*.test.mjs .claude/hooks/*.test.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

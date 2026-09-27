@@ -73,7 +73,7 @@ tasks:
     dir: apps/api
     preconditions:
       - sh: test -f "{{.ROOT_DIR}}/.env"
-        msg: 'No .env at the repo root. Create one with: task env:init'
+        msg: 'No .env at the repo root. Render one with: task secrets'
       - sh: test -d "{{.ROOT_DIR}}/packages/domain/dist"
         msg: 'The library packages are not built. Build them with: task build:packages'
       - sh: pg_isready -q -h localhost -p {{.PGPORT}}
@@ -104,7 +104,7 @@ tasks:
       - sh: test -n "{{.CLI_ARGS}}"
         msg: 'An email is needed: task session -- you@example.com'
       - sh: test -f "{{.ROOT_DIR}}/.env"
-        msg: 'No .env at the repo root. Create one with: task env:init'
+        msg: 'No .env at the repo root. Render one with: task secrets'
       - sh: pg_isready -q -h localhost -p {{.PGPORT}}
         msg: 'Postgres is not running. Start it with: task run:db'
     cmds:

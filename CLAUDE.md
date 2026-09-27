@@ -69,6 +69,10 @@ Three habits earned their keep and are worth continuing:
 
 Read all four before adding a new file, folder, or pattern anywhere in the monorepo.
 
+- `docs/conventions/secrets.md` — a secret value must never appear in this conversation.
+  The repo holds references; `.env` is rendered and never read or printed whole. A hook
+  refuses the calls that would, and says why.
+
 ## Immediate suggestion
 
 Do not start by porting code. Start by reading `README.md`, `docs/prototype/decisions.md` and `prototype/summary-prompt.md`, then propose an architecture and argue with the open questions in `docs/prototype/open-questions.md`. The verdict scale in particular is not settled, and 77% of the existing library falls into a single bucket.
