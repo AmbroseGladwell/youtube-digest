@@ -147,11 +147,11 @@ jobs:
       cancel-in-progress: false
     environment:
       name: production
-      url: https://the-overview-app.fly.dev
+      url: https://theoverviewapp.com
     steps:
       - uses: actions/checkout@v7
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - run: curl --fail --silent --show-error https://the-overview-app.fly.dev/api/health
+      - run: curl --fail --silent --show-error https://theoverviewapp.com/api/health

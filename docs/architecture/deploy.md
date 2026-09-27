@@ -62,8 +62,8 @@ means `APP_URL` is https, which `loadConfig` insists on whenever real mail is se
 The health check is `GET /api/health`, which runs `select 1` against the database, so a
 machine that starts but cannot reach Neon is unhealthy rather than up.
 
-The app name and `APP_URL` are the two lines to edit if the Fly app is called something
-else; both say so. Everything that is not a secret lives in `[env]` here, in the
+`APP_URL` is the domain below, and the app name is the one line to edit if the Fly app is
+called something else. Everything that is not a secret lives in `[env]` here, in the
 repository, where a change to it is a diff: the mail transport, the sender, the floor, the
 session length.
 
@@ -80,6 +80,26 @@ encrypted and restarts the machine with them in its environment.
 The production database string is the direct one Neon shows, not the pooled one: the API
 opens a small pool of its own and applies migrations on startup, and a pooler in front
 of that buys nothing here.
+
+## The domain
+
+The app is `https://theoverviewapp.com`. Fly holds the certificate, issued by Let's Encrypt
+after `fly certs add theoverviewapp.com` and `fly certs add www.theoverviewapp.com`, and
+Cloudflare holds the DNS: an `A` and an `AAAA` record at the apex pointing at the
+addresses `fly ips list` shows, and `www` as a `CNAME` to the apex. The records are DNS
+only, not proxied: Fly already terminates TLS and redirects HTTP to HTTPS, and a second
+proxy in front would add a TLS hop, get in the way of certificate issuance, and buy one
+small app nothing. `fly certs check theoverviewapp.com` says whether the certificate is
+issued.
+
+`APP_URL` is the domain, and that is not cosmetic: every magic link opens `/sign-in` at
+`APP_URL`, and the session cookie is set for that origin, so a link that opened the
+`fly.dev` hostname would sign a different origin in. The `fly.dev` hostname keeps answering
+as a second address; nothing points at it.
+
+`MAIL_FROM` sends from the same domain, and Brevo wants it verified for deliverability:
+SPF and DKIM records, which Brevo's Senders and Domains page prints, go in the same
+Cloudflare zone.
 
 ## A first deploy, and every one after
 
@@ -120,7 +140,7 @@ What to verify afterwards, because a deploy that logged success is not one that 
 looked at:
 
 - `task deploy:status` shows one machine, started or stopped, and a passing check.
-- `https://the-overview-app.fly.dev/api/handshake` answers with the floor and the version.
+- `https://theoverviewapp.com/api/handshake` answers with the floor and the version.
 - The root serves the web app, and Settings can ask for a magic link that arrives.
 
 ## What this does not do
@@ -135,6 +155,3 @@ looked at:
 - **Sweep expired rows.** Sessions, magic links and codes are ignored when expired rather
   than deleted; the cron that would delete them has nowhere to run yet, and this machine
   stopping when idle is not it.
-- **Custom domain.** `theoverviewapp.com` is the sender's domain in `MAIL_FROM` and not
-  yet the app's; a Fly certificate and a DNS record are the whole of that change, plus
-  `APP_URL`.

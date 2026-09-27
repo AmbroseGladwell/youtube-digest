@@ -1,6 +1,7 @@
 # One small machine that stops when idle and starts on the next request; Postgres is on Neon
 # and there is no volume (docs/architecture/v1-architecture-decisions.md, docs/architecture/deploy.md).
-# The app name and APP_URL are the two lines to change if the Fly app is called something else.
+# APP_URL is the domain, not the fly.dev hostname: magic links open there and the session
+# cookie is set for it (docs/architecture/deploy.md, The domain).
 app = "the-overview-app"
 primary_region = "lhr"
 
@@ -10,7 +11,7 @@ primary_region = "lhr"
 [env]
   PORT = "3000"
   STATIC_ROOT = "/app/apps/web/dist"
-  APP_URL = "https://the-overview-app.fly.dev"
+  APP_URL = "https://theoverviewapp.com"
   MAIL_TRANSPORT = "brevo"
   MAIL_FROM = "The Overview <hello@theoverviewapp.com>"
   MIN_SUPPORTED_CLIENT_VERSION = "1"
