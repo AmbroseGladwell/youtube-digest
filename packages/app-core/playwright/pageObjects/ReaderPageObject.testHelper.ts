@@ -651,10 +651,32 @@ export class ReaderPageObject extends PageObject {
     );
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 
+  // Scrolled by script and confirmed, rather than a wheel event and a fixed pause: under
+  // load a wheel event can land after the pause has ended. The target is retried while the
+  // page is still growing, and a page too short for it counts once its height has settled.
   scrollDown = (pixels: number) =>
     this.step(`scrollDown ${pixels}`, async () => {
-      await this.page.mouse.wheel(0, pixels);
-      await this.page.waitForTimeout(300);
+      const target = Math.max(0, (await this.page.evaluate(() => window.scrollY)) + pixels);
+      const started = Date.now();
+      let lastHeight = -1;
+      await expect
+        .poll(
+          async () => {
+            const { y, height, limit } = await this.page.evaluate((to) => {
+              window.scrollTo({ top: to, behavior: "instant" });
+              return {
+                y: window.scrollY,
+                height: document.documentElement.scrollHeight,
+                limit: document.documentElement.scrollHeight - window.innerHeight,
+              };
+            }, target);
+            const settled = height === lastHeight && Date.now() - started >= 300;
+            lastHeight = height;
+            return y === target || (y >= limit && settled);
+          },
+          { timeout: 3_000 },
+        )
+        .toBe(true);
     });
 
   // The block across the middle of the window, which is what the reading position
