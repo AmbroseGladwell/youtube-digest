@@ -236,6 +236,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `MAIL_TRANSPORT` | `log` | `log` prints each magic link to the server's output; `brevo` sends it |
 | `BREVO_API_KEY` | | required with `brevo` |
 | `MAIL_FROM` | | the sender, e.g. `The Overview <signin@example.com>`; required with `brevo`, and with `brevo` `APP_URL` must be https |
+| `STATIC_ROOT` | unset | the built web app to serve outside `/api`; unset serves the API alone and says so at startup (`docs/architecture/deploy.md`) |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell
@@ -263,8 +264,7 @@ first, costs nothing.
 
 ## Not built in this slice
 
-Serving the SPA from this process (the `@fastify/static` half of the one-origin decision,
-with `index.html` set to revalidate); Dockerfile, Fly.io and Neon configuration; rate
-limiting beyond the magic link's per-address cooldown; a sweep of expired sessions, links
-and codes. The client half of the sync engine is built: `docs/features/sync-client.md`;
+Rate limiting beyond the magic link's per-address cooldown; a sweep of expired sessions,
+links and codes. Serving the SPA from this process, the image and the Fly.io configuration
+are built: `docs/architecture/deploy.md`. The client half of the sync engine is built: `docs/features/sync-client.md`;
 sign-in is built: `docs/features/sign-in.md`.

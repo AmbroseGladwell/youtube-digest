@@ -22,7 +22,7 @@ export function renderEnvTemplate(template, env) {
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [templatePath, outputPath] = process.argv.slice(2);
   if (templatePath === undefined || outputPath === undefined) {
-    console.error("usage: node scripts/renderEnv.mjs <template> <output>");
+    console.error("usage: node scripts/renderEnv.mjs <template> <output | ->");
     process.exit(2);
   }
   const { rendered, missing } = renderEnvTemplate(readFileSync(templatePath, "utf8"), process.env);
@@ -30,6 +30,10 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     console.error(`${templatePath} names secrets the environment does not carry: ${missing.join(", ")}`);
     process.exit(1);
   }
-  writeFileSync(outputPath, rendered, { mode: 0o600 });
-  chmodSync(outputPath, 0o600);
+  if (outputPath === "-") {
+    process.stdout.write(rendered);
+  } else {
+    writeFileSync(outputPath, rendered, { mode: 0o600 });
+    chmodSync(outputPath, 0o600);
+  }
 }

@@ -6,6 +6,7 @@ import type { SqlClient } from "./db/SqlClient.js";
 import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { corsPlugin } from "./http/corsPlugin.js";
+import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
@@ -23,6 +24,7 @@ export interface AppConfig {
   // Where the web app is served from: the origin a magic link opens, and the origin the
   // session cookie is Secure on when it is https (docs/features/sign-in.md).
   appUrl: string;
+  staticRoot: string | null;
 }
 
 export interface BuildAppOptions {
@@ -96,6 +98,10 @@ export async function buildApp({
     },
     { prefix: "/api" },
   );
+
+  if (config.staticRoot !== null) {
+    await app.register(webAppPlugin, { root: config.staticRoot });
+  }
 
   return app;
 }

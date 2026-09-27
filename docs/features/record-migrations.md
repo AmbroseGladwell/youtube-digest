@@ -792,7 +792,8 @@ property of today's clients rather than a law, so it is worth recording what it 
 Two changes would quietly reintroduce the multi-refresh update problem, and both read as
 improvements at the time:
 
-- **`index.html` must revalidate.** Hashed assets can be `immutable`; the HTML cannot. When
+- **`index.html` must revalidate.** Built that way in `webAppPlugin`
+  (`docs/architecture/deploy.md`). Hashed assets can be `immutable`; the HTML cannot. When
   the Fastify API serves the SPA, a blanket `maxAge` added for performance would hand back
   stale HTML pointing at deleted bundles.
 - **Adding offline support to the web app** brings it back by definition, and is plausible

@@ -165,6 +165,6 @@ already forgotten would be a control with nothing behind it.
 Rate limiting beyond the per-address cooldown; a sweep of spent links and codes, which
 is the same later cron as the session sweep; changing the email on an account; the web
 app minting a link code for an extension already signed in beside it, which would save
-one email and is a small addition to `authRoutes` when it is wanted; and serving the
-SPA from the API, without which `/sign-in` in production is wherever the web app is
-deployed, named by `APP_URL`.
+one email and is a small addition to `authRoutes` when it is wanted. Serving the SPA
+from the API is built since (`docs/architecture/deploy.md`), so `/sign-in` in production
+is on the API's own origin, which `APP_URL` names.

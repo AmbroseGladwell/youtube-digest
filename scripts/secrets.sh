@@ -31,6 +31,11 @@ case "${1:-}" in
     shift
     bws run --project-id "$(projectId)" -- "$@"
     ;;
+  fly-import)
+    # The rendered lines go straight down a pipe into fly secrets import: nothing is
+    # written to disk, typed, or shown.
+    bws run --project-id "$(projectId)" -- node scripts/renderEnv.mjs .env.prod.tpl - | fly secrets import
+    ;;
   seed)
     if ! bws project list | jq -e --arg name "$PROJECT" '.[] | select(.name == $name)' > /dev/null; then
       bws project create "$PROJECT" > /dev/null
@@ -54,7 +59,7 @@ case "${1:-}" in
     done
     ;;
   *)
-    echo "usage: scripts/secrets.sh login | render | run -- <command> | seed" >&2
+    echo "usage: scripts/secrets.sh login | render | run -- <command> | fly-import | seed" >&2
     exit 2
     ;;
 esac

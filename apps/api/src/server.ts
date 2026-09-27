@@ -18,4 +18,8 @@ const applied = await runMigrations(sql);
 const app = await buildApp({ config, sql, mailer: createMailer(config.mail), logger: true });
 app.log.info({ applied }, "migrations applied");
 app.log.info({ transport: config.mail.transport, appUrl: config.appUrl }, "magic links");
+app.log.info(
+  config.staticRoot === null ? "STATIC_ROOT is not set: serving the API only" : { root: config.staticRoot },
+  "web app",
+);
 await app.listen({ port: config.port, host: "0.0.0.0" });

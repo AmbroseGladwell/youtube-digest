@@ -1,0 +1,35 @@
+# One small machine that stops when idle and starts on the next request; Postgres is on Neon
+# and there is no volume (docs/architecture/v1-architecture-decisions.md, docs/architecture/deploy.md).
+# The app name and APP_URL are the two lines to change if the Fly app is called something else.
+app = "the-overview-app"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+  STATIC_ROOT = "/app/apps/web/dist"
+  APP_URL = "https://the-overview-app.fly.dev"
+  MAIL_TRANSPORT = "brevo"
+  MAIL_FROM = "The Overview <hello@theoverviewapp.com>"
+  MIN_SUPPORTED_CLIENT_VERSION = "1"
+  SESSION_TTL_DAYS = "30"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/api/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
