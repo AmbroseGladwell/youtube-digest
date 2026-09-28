@@ -8,6 +8,7 @@ import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { ApiKeysPanel } from "../components/ApiKeysPanel/ApiKeysPanel.js";
+import { BuildLine } from "../components/BuildLine/BuildLine.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
 
@@ -55,6 +56,8 @@ export function SettingsPage() {
       )}
 
       <SyncPanel />
+
+      <BuildLine />
     </div>
   );
 }

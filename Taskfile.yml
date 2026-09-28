@@ -66,6 +66,16 @@ tasks:
     cmds:
       - scripts/secrets.sh seed
 
+  version:
+    desc: Print the one version number every build of the web app and the extension carries
+    cmds:
+      - node -p "require('./package.json').version"
+
+  version:bump:
+    desc: 'Bump that version in the root package.json (e.g. task version:bump -- minor), to commit in the PR that ships it'
+    cmds:
+      - npm version {{.CLI_ARGS}} --no-git-tag-version
+
   test:tooling:
     desc: Run the tests for the repo's own scripts and hooks
     cmds:

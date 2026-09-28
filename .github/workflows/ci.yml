@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: docker build --tag overview:${{ github.sha }} .
+      - run: docker build --build-arg BUILD_COMMIT=${{ github.sha }} --tag overview:${{ github.sha }} .
 
   ci:
     name: ci
@@ -144,6 +144,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: ci
     if: needs.ci.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     concurrency:
       group: deploy-production
       cancel-in-progress: false
@@ -152,8 +154,28 @@ jobs:
       url: https://theoverviewapp.com
     steps:
       - uses: actions/checkout@v7
+      # The zip the build job made from this same commit, read back before anything ships:
+      # a release is only ever tagged with a zip built from the commit it deployed.
+      - uses: actions/download-artifact@v7
+        with:
+          name: extension-${{ github.sha }}
+          path: apps/extension/release
+      - run: node scripts/verifyRelease.mjs ${{ github.sha }}
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+      - run: flyctl deploy --remote-only --build-arg BUILD_COMMIT=${{ github.sha }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       - run: curl --fail --silent --show-error https://theoverviewapp.com/api/health
+      # A tag marks the first deploy of each version; later deploys under the same number
+      # are told apart by the commit Settings shows (docs/architecture/deploy.md).
+      - name: tag and release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "v$version is already tagged; this deploy of ${{ github.sha }} stays under it"
+          else
+            gh release create "v$version" "apps/extension/release/the-overview-$version.zip" \
+              --target "${{ github.sha }}" --title "v$version" --generate-notes
+          fi

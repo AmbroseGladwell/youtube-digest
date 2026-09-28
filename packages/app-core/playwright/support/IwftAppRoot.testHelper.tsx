@@ -27,6 +27,7 @@ export function IwftAppRoot() {
       runBridge={window.__iwftRunBridge__}
       youTubeFetch={window.__iwftYouTubeFetch__}
       defaultApiUrl={window.__iwftDefaultApiUrl__}
+      build={window.__iwftBuild__}
     />
   );
 }

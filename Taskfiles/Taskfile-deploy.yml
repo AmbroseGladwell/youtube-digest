@@ -13,7 +13,7 @@ tasks:
       - sh: fly auth whoami > /dev/null 2>&1
         msg: 'Not signed in to Fly. Run: fly auth login'
     cmds:
-      - fly deploy --remote-only
+      - fly deploy --remote-only --build-arg BUILD_COMMIT=$(git rev-parse HEAD)
 
   deploy:secrets:
     desc: Render .env.prod.tpl from the overview-prod Bitwarden project straight into fly secrets, touching no file
@@ -31,7 +31,7 @@ tasks:
       - sh: command -v docker
         msg: 'Docker is missing.'
     cmds:
-      - docker build --tag overview:local .
+      - docker build --build-arg BUILD_COMMIT=$(git rev-parse HEAD) --tag overview:local .
 
   deploy:status:
     desc: The app's machines and the last release

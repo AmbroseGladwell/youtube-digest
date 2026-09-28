@@ -1,5 +1,6 @@
 import { test, type ComponentFixtures } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
+import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
@@ -29,6 +30,7 @@ export interface LaunchOptions {
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
+  build?: AppBuild;
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
   plan?: Plan;
@@ -82,6 +84,7 @@ export class Launcher {
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
+        build: options.build,
         activeVideoUrl: options.activeVideoUrl,
         playback: options.playback,
         runBridge: options.runBridge,
