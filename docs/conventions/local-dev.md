@@ -45,6 +45,8 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 | `task build:packages` | the library packages, in dependency order |
 | `task run` | Postgres, then the API on :3000 and the web app on :5173 together |
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
+| `task version` | the one version number every build carries |
+| `task version:bump -- patch` | move it, in the PR whose extension zip is going to the store; a web-only change needs none, and the size is `docs/conventions/versioning.md`'s call |
 | `task session -- you@example.com` | a bearer token with no mail involved, if one is wanted (`docs/architecture/api.md`) |
 
 **Deploying** is its own include, `Taskfiles/Taskfile-deploy.yml`: `task deploy:secrets`

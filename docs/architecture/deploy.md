@@ -194,6 +194,17 @@ it, with no tag or commit of its own: commit the bump in the PR that ships it. T
 app deploys on every merge whether or not the number moved, so two deploys can share a
 version; the commit beside it is what tells them apart.
 
+**Bumping is a decision, and nobody makes it for you.** Nothing in CI moves the number.
+A merge with no bump still deploys the web app, Settings shows the new commit under the
+old version, and no tag or release is made; for a web-only change that is the right
+outcome and there is nothing to do. The number has to move when a zip is going to the
+store, because the store refuses an upload whose version has not risen above the last
+one, and the draft it holds is `0.1.0`. So the rule is: bump in the PR whose zip you
+intend to upload, and otherwise leave it. Which of patch, minor or major is
+`docs/conventions/versioning.md`'s. If that PR is merged without the bump, the
+release the deploy makes is skipped as already tagged, and the fix is a second PR with
+the bump alone.
+
 `task deploy:extension` builds and zips into
 `apps/extension/release/the-overview-<version>.zip`, and reads the zip back before
 reporting: the manifest at its root, the version it expected, no key. CI runs the same
