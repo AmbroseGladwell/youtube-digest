@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "The Overview",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAm2N3ClKsB0626ERxffB2ndOPOtjtrxfMZPuaHygCALB8IGLw2uOBC7HvN+Ch1VGwqxuFMIZcR47XxtbBRckhin64zeYOvwvV5q/z3CHAIjPdJH8od/6MTo0t8QgJXkCYMNVZvQnH70g7w25yLYcrb89dGgh9XNUBSIJahSXGTexJ2mnXtwwjo1bTeNWgQApni8aSJEUSOWQwCROec6kO2WYPba3kRlNsh0Wc18NYq3+kL80G4gP5L6Ns3EPcfM4BN8SPO9AG7Zd6eJ1go9OobUwoXV9Dk+7X1/T2WJhkZJew0EHHQMbzev/AWFl1yBhS38nKVVLa/T4NhuacfX3WjQIDAQAB",
   "description": "Turns the videos you save and never watch into a blunt, structured note you can read in ninety seconds.",
   "minimum_chrome_version": "114",
   "permissions": [

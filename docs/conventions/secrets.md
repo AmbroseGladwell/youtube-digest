@@ -17,7 +17,7 @@ parts were left out and why.
 | Per-machine values that are not secrets | `.env.local`, read after `.env` by the API's scripts |
 | One-off commands get values injected and nothing written | `task secrets:run -- <cmd>`, `scripts/sanityCheck.env` |
 | The one long-lived secret on the machine, in the login keychain | `task secrets:login`, `.envrc` |
-| A commit that stages a secret value is refused | `.githooks/pre-commit`, gitleaks with its default rules plus a Brevo key rule in `.gitleaks.toml` |
+| A commit that stages a secret value is refused | `.githooks/pre-commit`, gitleaks with its default rules plus a Brevo key rule in `.gitleaks.toml`, which also allows the extension's public key through |
 | A tool call that would print a secret into Claude's context is refused | `.claude/settings.json`, `.claude/hooks/guardSecrets.mjs` |
 | The tools, from the dev shell | `flake.nix`: `bws`, `gitleaks`, `jq` |
 
