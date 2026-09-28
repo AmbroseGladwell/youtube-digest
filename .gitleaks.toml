@@ -10,3 +10,11 @@ id = "brevo-api-key"
 description = "Brevo API key"
 regex = '''xkeysib-[a-f0-9]{64}-[A-Za-z0-9]{16}'''
 keywords = ["xkeysib-"]
+
+# The extension's public key sits in its manifest and trips the generic rule. Only a public
+# key starts with this: it is the RSA SubjectPublicKeyInfo header, and nothing derived from
+# it can sign (docs/architecture/deploy.md, The extension).
+[[allowlists]]
+description = "The Web Store's public key for the extension, in its manifest"
+regexTarget = "line"
+regexes = ['''"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A''']
