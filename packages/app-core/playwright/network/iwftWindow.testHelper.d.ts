@@ -1,3 +1,4 @@
+import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppRouter } from "../../src/app/createAppRouter.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
@@ -22,6 +23,7 @@ declare global {
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;
     __iwftDefaultApiUrl__: string | null;
+    __iwftBuild__: AppBuild | null;
     __iwftActiveVideo__: IwftActiveVideoSource | null;
     __iwftPlayback__: IwftPlaybackSource | null;
     __iwftRunBridge__: IwftRunBridge | null;

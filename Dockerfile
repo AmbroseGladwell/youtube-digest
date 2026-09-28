@@ -1,5 +1,7 @@
 # The API and the web app it serves, in one image (docs/architecture/deploy.md).
 FROM node:22-slim AS build
+ARG BUILD_COMMIT
+ENV BUILD_COMMIT=$BUILD_COMMIT
 WORKDIR /app
 COPY . .
 RUN npm ci

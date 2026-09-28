@@ -23,7 +23,10 @@ described, if it's showing or explaining something instead. If it asserts
 nothing and is pure vibes, say so plainly and set thin to true.
 
 ## Key points
-3 to 5 bullets. Substance only. Strip the hook, the story, the
-restatement, and the call to action.`,
+3 to 7 bullets. Substance only. Strip the hook, the story, the
+restatement, and the call to action. Most videos need five or fewer.
+Seven is the ceiling however long the video is: a two hour debate still
+gets seven at most, so keep the ones that matter most and let the
+chapters carry the rest of the structure.`,
   schemaShape: () => CoreFields.shape,
 };

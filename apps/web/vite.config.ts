@@ -2,11 +2,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { buildStamp } from "../../scripts/buildStamp.mjs";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __BUILD_STAMP__: JSON.stringify(buildStamp()),
+  },
   resolve: {
     alias: {
       // app-core is TSX source, not a build step apps/web should have to run first —

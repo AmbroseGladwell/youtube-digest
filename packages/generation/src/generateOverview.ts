@@ -12,6 +12,21 @@ export type GenerationClient = (request: {
   schema: z.ZodObject<z.ZodRawShape>;
 }) => Promise<unknown>;
 
+function correctionRequest(previous: unknown, error: z.ZodError): string {
+  const violations = error.issues
+    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+    .join("; ");
+  return [
+    "Your previous attempt was:",
+    JSON.stringify(previous),
+    "",
+    `It violated: ${violations}.`,
+    "Send that same response again, corrected, changing only what those violations need.",
+    "A list with too many items keeps the ones that matter most and drops the rest.",
+    "A field with too many words keeps its meaning and drops words.",
+  ].join("\n");
+}
+
 export async function generateOverview(
   client: GenerationClient,
   input: GenerationInput,
@@ -19,30 +34,25 @@ export async function generateOverview(
 ): Promise<Overview> {
   const { systemPrompt, userMessage, schema } = composePrompt(input);
 
-  const attempt = async (retryNote?: string) => {
+  const attempt = async (correction?: string) => {
     const raw = await client({
       systemPrompt,
-      userMessage: retryNote ? `${userMessage}\n\n${retryNote}` : userMessage,
+      userMessage: correction ? `${userMessage}\n\n${correction}` : userMessage,
       schema,
     });
-    return schema.safeParse(raw);
+    return { raw, parsed: schema.safeParse(raw) };
   };
 
-  let result = await attempt();
-  if (!result.success) {
-    const violations = result.error.issues
-      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-      .join("; ");
-    result = await attempt(
-      `Your previous attempt violated: ${violations}. Send a corrected response that fixes only that.`,
-    );
+  let { raw, parsed } = await attempt();
+  if (!parsed.success) {
+    ({ raw, parsed } = await attempt(correctionRequest(raw, parsed.error)));
   }
 
-  if (!result.success) {
+  if (!parsed.success) {
     throw new GenerationError(
-      `generated output still failed its own schema after a retry: ${result.error.message}`,
+      `generated output still failed its own schema after a retry: ${parsed.error.message}`,
     );
   }
 
-  return assembleOverview(input, result.data as unknown as GeneratedOutput, meta);
+  return assembleOverview(input, parsed.data as unknown as GeneratedOutput, meta);
 }

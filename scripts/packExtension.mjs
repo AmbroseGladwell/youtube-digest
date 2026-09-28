@@ -12,7 +12,7 @@ const UNRELEASED_VERSION = "0.0.0";
 export function storeManifest(manifest) {
   if (manifest.version === undefined || manifest.version === UNRELEASED_VERSION) {
     throw new Error(
-      `manifest.json is at version ${manifest.version ?? "(none)"}, which is not a release: set the version before packing`,
+      `manifest.json is at version ${manifest.version ?? "(none)"}, which is not a release: the build stamps it from the root package.json`,
     );
   }
   const { key: _key, ...rest } = manifest;

@@ -461,6 +461,34 @@ that already-made choice, alongside the parsing-fragility one earlier in this do
 doesn't just stop misreading what the model said, it stops the model quietly
 exceeding its own stated bounds.
 
+**That turned out to be half true: the array cap is checked, but the model never
+sees it as a constraint.** Structured outputs don't support array length constraints,
+and the SDK's Zod-to-JSON-Schema step strips `maxItems` out of the schema it sends,
+leaving only a description string. So the cap is enforced the same way the word caps
+and the chapter ordering are: `generateOverview` parses the response itself and asks
+once more on a violation. The first real failure was a two and a half hour parliamentary
+debate, where the model sent more than five points and did so again on the retry. Two
+things were wrong. The prompt said "3 to 5" without saying what to do when a long video
+has more, so the model reasonably kept them. And the retry re-sent the whole prompt
+with a one-line note appended after the transcript, asking for a fresh generation, so
+the model faced the same long transcript and the same judgement again.
+
+**Decision: the retry is a correction, not a regeneration, and the prompt owns the
+long-video case.** The retry now sends the previous attempt back as JSON, names the
+violations, and asks for that same response with only those fixed, with a rule for the
+two shapes a cap failure takes: a list that is too long keeps the items that matter
+most, a field that is too long keeps its meaning and drops words. The cap itself moved
+from 5 to 7, a hard maximum with "most videos need five or fewer" kept as the
+guidance: the debate genuinely had more than five things worth taking, and a ceiling
+the model keeps breaking on the videos that most need a digest is the wrong ceiling.
+Key points' own instruction now says seven is the ceiling however long the video is,
+and that chapters carry the rest of the structure. What was rejected: truncating the
+list in code after a failed retry, which would pick by position rather than by weight
+and hide the loss; and a second retry, which spends another full pass on a model that
+has already been told twice. This is also why `anthropicGenerationClient` uses `messages.create`
+and not `messages.parse`: `parse` throws away the whole response on any client-side
+check, and a response that is nearly right is the thing the correction pass needs.
+
 ## Stress-testing against genres outside the samples
 
 None of the five real samples are a narrative interview, an instructional video, a
