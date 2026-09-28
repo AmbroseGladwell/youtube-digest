@@ -11,6 +11,7 @@ export * from "./innertube/mapJson3ToSegments.js";
 export * from "./innertube/mapPlayerResponseToVideoSource.js";
 export * from "./innertube/fetchInnerTubeTranscript.js";
 export * from "./supadata/SupadataClient.js";
+export * from "./supadata/createSupadataClient.js";
 export * from "./supadata/mapMetadataToVideoSource.js";
 export * from "./supadata/mapTranscriptContent.js";
 export * from "./supadata/pollTranscriptJob.js";

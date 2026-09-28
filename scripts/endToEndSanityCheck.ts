@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { Supadata } from "@supadata/js";
 import Anthropic from "@anthropic-ai/sdk";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/domain";
 import {
+  createSupadataClient,
   fetchInnerTubeTranscript,
   fetchSupadataTranscript,
   isWorthAnotherSource,
@@ -45,7 +45,7 @@ async function fetchTranscript(videoUrl: string): Promise<FetchedTranscript> {
       error instanceof TranscriptFetchError && isWorthAnotherSource(error.failure) && apiKey;
     if (!worthAsking) throw error;
     console.error(`InnerTube failed (${error.failure}): ${error.message}; asking Supadata`);
-    return fetchSupadataTranscript(new Supadata({ apiKey }), videoUrl);
+    return fetchSupadataTranscript(createSupadataClient({ apiKey }), videoUrl);
   }
 }
 

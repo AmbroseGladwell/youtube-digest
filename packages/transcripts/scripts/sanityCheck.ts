@@ -1,5 +1,4 @@
-import { Supadata } from "@supadata/js";
-import { fetchSupadataTranscript } from "@overview/transcripts";
+import { createSupadataClient, fetchSupadataTranscript } from "@overview/transcripts";
 
 const url = process.argv[2];
 if (!url) {
@@ -7,7 +6,7 @@ if (!url) {
   process.exit(1);
 }
 
-const client = new Supadata({ apiKey: process.env.SUPADATA_API_KEY! });
+const client = createSupadataClient({ apiKey: process.env.SUPADATA_API_KEY! });
 
 const result = await fetchSupadataTranscript(client, url);
 
