@@ -24,7 +24,7 @@ export function extensionOriginFrom(manifest) {
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const manifestPath = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
-    "../apps/extension/public/manifest.json",
+    "../apps/extension/manifest.json",
   );
   try {
     console.log(extensionOriginFrom(JSON.parse(readFileSync(manifestPath, "utf8"))));

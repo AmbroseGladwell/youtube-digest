@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
+import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
@@ -56,6 +57,12 @@ export class SettingsPageObject extends PageObject {
     this.step("verifySaysPlusIsNotOnSale", () =>
       this.expectToBeVisible(plusPlanPanelTestIds.notOnSaleNote),
     );
+
+  verifyBuildLineReads = (text: string) =>
+    this.step(`verifyBuildLineReads ${text}`, () => expect(this.get(buildLineTestIds.root)).toHaveText(text));
+
+  verifyHasNoBuildLine = () =>
+    this.step("verifyHasNoBuildLine", () => this.expectToHaveCount(buildLineTestIds.root, 0));
 
   clickBackToOverviews = () =>
     this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.backLink));

@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
 import { StoresProvider, type Stores } from "../stores/StoresContext.js";
+import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
 import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
 import { queryClient } from "./queryClient.js";
@@ -26,6 +27,7 @@ export interface AppProps {
   youTubeFetch?: YouTubeFetch | null;
   appUpdate?: AppUpdate | null;
   defaultApiUrl?: string | null;
+  build?: AppBuild | null;
 }
 
 export function App({
@@ -39,6 +41,7 @@ export function App({
   youTubeFetch = null,
   appUpdate = null,
   defaultApiUrl = null,
+  build = null,
 }: AppProps) {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
@@ -50,11 +53,13 @@ export function App({
                 <StoresProvider value={stores}>
                   <AppUpdateProvider value={appUpdate}>
                     <DefaultApiUrlProvider value={defaultApiUrl}>
-                      <QueryClientProvider client={queryClient}>
-                        <SyncRuntime>
-                          <RouterProvider router={router} />
-                        </SyncRuntime>
-                      </QueryClientProvider>
+                      <AppBuildProvider value={build}>
+                        <QueryClientProvider client={queryClient}>
+                          <SyncRuntime>
+                            <RouterProvider router={router} />
+                          </SyncRuntime>
+                        </QueryClientProvider>
+                      </AppBuildProvider>
                     </DefaultApiUrlProvider>
                   </AppUpdateProvider>
                 </StoresProvider>

@@ -10,6 +10,7 @@ import {
   IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
+import { appBuild } from "./appBuild.js";
 
 async function main() {
   const container = document.getElementById("root");
@@ -39,6 +40,7 @@ async function main() {
         stores={{ overviewStore, settingsStore, transcriptStore, syncStorage }}
         router={createAppRouter(createBrowserRouter)}
         surface="web"
+        build={appBuild}
       />
     </StrictMode>,
   );

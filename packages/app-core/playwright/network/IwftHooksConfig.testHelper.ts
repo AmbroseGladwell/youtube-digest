@@ -6,6 +6,7 @@ import type {
   Topic,
   UnreadableRecord,
 } from "@overview/domain";
+import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
@@ -39,6 +40,8 @@ export interface IwftHooksConfig {
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.
   defaultApiUrl?: string;
+  // What this shell's build knows about itself; absent is a shell that was told nothing.
+  build?: AppBuild;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
   activeVideoUrl?: string | null;
   // Absent is a shell that can't see the player; null is one that can, with nothing to

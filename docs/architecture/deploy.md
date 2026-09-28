@@ -14,9 +14,11 @@ why; this is how they fit together and what a deploy actually does.
 | Secrets from the `overview-prod` Bitwarden project straight into Fly, touching no file | `.env.prod.tpl`, `scripts/secrets.sh fly-import`, `task deploy:secrets` |
 | The menu | `Taskfiles/Taskfile-deploy.yml` |
 | CI proves the image builds on every push | the `image` job in `.github/workflows/ci.yml` |
-| The extension's id fixed by the store's key, and its origin derived from it | `key` in `apps/extension/public/manifest.json`, `scripts/extensionId.mjs`, `task deploy:extension:id` |
+| The extension's id fixed by the store's key, and its origin derived from it | `key` in `apps/extension/manifest.json`, `scripts/extensionId.mjs`, `task deploy:extension:id` |
 | The extension built knowing its server, with Settings still able to say otherwise | `apps/extension/src/productionApiUrl.ts`, `DefaultApiUrlContext` in `app-core` |
-| The store zip, named by the manifest's version, key stripped and read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
+| One version number for every build, from the root `package.json`, shown at the foot of Settings | `version` in `package.json`, `task version:bump`, `scripts/buildStamp.mjs`, `define` and the manifest plugin in each app's `vite.config.ts`, `BuildLine` in `app-core`, `BUILD_COMMIT` in the `Dockerfile` |
+| The store zip, named by that version, key stripped and read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
+| The first deploy of each version tagged `v<version>`, with a release holding that commit's zip | the `deploy` job's last two steps, `scripts/verifyRelease.mjs` |
 
 ## The API serves the web app
 
@@ -145,6 +147,8 @@ looked at:
 - `task deploy:status` shows one machine, started or stopped, and a passing check.
 - `https://theoverviewapp.com/api/handshake` answers with the floor and the version.
 - The root serves the web app, and Settings can ask for a magic link that arrives.
+- Settings shows the version and commit that were merged, and if the version was new,
+  the repo has a `v<version>` release with the extension's zip attached.
 
 ## The extension
 
@@ -160,7 +164,7 @@ in the manifest, and the store hands that over only after a first upload: a new 
 manifest already carries a `key` is refused with "key field is not allowed in manifest",
 because the store assigns the id itself. So the order is fixed. Upload a draft once,
 without publishing; on the item's Package tab, View public key; paste its body into
-`apps/extension/public/manifest.json` as `key`, one line, header and footer removed. From
+`apps/extension/manifest.json` as `key`, one line, header and footer removed. From
 then on every unpacked build in every checkout has the store's id, `task
 deploy:extension:id` prints the origin from it, and that origin goes in two places,
 `fly.toml`'s `CORS_ALLOWED_ORIGINS` and `.env.tpl`'s, replacing the per-checkout value.
@@ -178,15 +182,51 @@ stays, because a build loaded unpacked against a local API has to be able to say
 together: `APP_URL` in `fly.toml`, the deploy job's URL in `ci.yml`, and this constant, and
 all three name `theoverviewapp.com`.
 
-**Its version is the manifest's.** `manifest.json`'s `version` is the release number: it
-is what Chrome reads, what the store requires to rise on every upload, and what names the
-zip. The `0.0.0` in `package.json` is the placeholder every workspace carries and means
-nothing. `task deploy:extension` builds and zips into
-`apps/extension/release/the-overview-<version>.zip`, refuses `0.0.0`, and reads the zip
-back before reporting: the manifest at its root, the version it expected, no key. CI runs
-the same pack on every push and keeps the zip for fourteen days, so the file uploaded to
-the store can be the one CI built from the merge rather than a laptop's. Bump the version
-in the PR that ships.
+**The version.** There is one number, `version` in the root `package.json`, and every
+build of both shells carries it: the web app in its bundle, the extension in its bundle
+and in its manifest, which is emitted by a plugin in `apps/extension/vite.config.ts` from
+`apps/extension/manifest.json` with that version written in, rather than copied from
+`public/` with a number of its own. Chrome reads it, the store requires it to rise on
+every upload, and it names the zip. The `0.0.0` in each workspace's `package.json` is
+the placeholder it has always been and means nothing; the root's is the real one, and a
+build refuses to run at `0.0.0`. `task version:bump -- patch` (or `minor`, `major`) moves
+it, with no tag or commit of its own: commit the bump in the PR that ships it. The web
+app deploys on every merge whether or not the number moved, so two deploys can share a
+version; the commit beside it is what tells them apart.
+
+`task deploy:extension` builds and zips into
+`apps/extension/release/the-overview-<version>.zip`, and reads the zip back before
+reporting: the manifest at its root, the version it expected, no key. CI runs the same
+pack on every push and keeps the zip for fourteen days, so the file uploaded to the store
+can be the one CI built from the merge rather than a laptop's.
+
+**What a build says it is.** The foot of Settings carries one line, `Version 0.1.0
+(30bb95a)`, the same in the web app, the extension's page and its panel, so the two can be
+checked against each other and an unpacked build against the tree it came from. The stamp
+is made once by `scripts/buildStamp.mjs` and baked in by `define` in each app's
+`vite.config.ts`: the version, the short commit, and whether tracked files had uncommitted
+changes, which the line then says. The image has no checkout (`.dockerignore` leaves
+`.git` out), so the commit goes in as the `BUILD_COMMIT` build arg: the deploy job passes
+the merge's sha, and `task deploy` and `task deploy:image` pass `HEAD`. A build given
+neither shows the version alone, and a shell that passes nothing shows no line at all,
+rather than an empty one.
+
+**Tags and releases.** Nothing tags by hand, and `npm version` is run with no tag or
+commit of its own, because a tag here means "this deployed", not "someone bumped the
+number". The `deploy` job, once the machine is healthy, looks for the tag `v<version>`
+for the version it just shipped. If it is there, the deploy stays under it: the web app
+deploys on every merge whether or not the number moved, and the commit beside the version
+in Settings is what tells same-version deploys apart. If it is not, the job creates it on
+the merge commit together with a GitHub release of the same name, notes generated from
+the merged pull requests since the last tag, and the extension's zip attached. That zip
+is the one the `build (extension)` job made from the same commit, downloaded from the
+run's own artifact rather than rebuilt, and read back before the deploy starts by
+`scripts/verifyRelease.mjs`: the manifest inside is at the version being tagged with no
+key, and `build.json` beside it, emitted by the same plugin as the manifest, names that
+version, the short form of the commit being deployed, and a clean tree. Anything else
+fails the job before Fly is touched. So the file to upload to the store is the one on the
+release, and the store's number, the tag, the manifest and the bundle all agree. A
+`task deploy` from a laptop tags nothing; it is the escape hatch, not a release.
 
 **Once, by hand**, to fix the id:
 
