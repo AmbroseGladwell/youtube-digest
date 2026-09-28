@@ -1,8 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { Supadata } from "@supadata/js";
 import { createAnthropicGenerationClient, type GenerationClient } from "@overview/generation";
 import type { AnthropicModel } from "@overview/domain";
-import type { YouTubeFetch } from "@overview/transcripts";
+import { createSupadataClient, type YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
 import { supadataTranscriptSource } from "../../transcripts/api/supadataTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
@@ -31,6 +30,6 @@ export function createTranscriptSources(options: TranscriptSourceOptions): Trans
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),
     ...(options.supadataApiKey === null
       ? []
-      : [supadataTranscriptSource(new Supadata({ apiKey: options.supadataApiKey }))]),
+      : [supadataTranscriptSource(createSupadataClient({ apiKey: options.supadataApiKey }))]),
   ];
 }

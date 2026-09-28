@@ -128,6 +128,42 @@ it. Caption URLs from YouTube are signed and expire within hours, so a long-live
 holding a cached player response would eventually serve a 403 that looks exactly like
 client drift. Building per resolve makes that impossible rather than unlikely.
 
+## The Supadata rung sends one header, and not through the SDK
+
+The web app has no free rung, so on a phone the Supadata rung is the only one, and it
+never worked from an iPhone. `@supadata/js` puts `User-Agent: supadata-js/<version>` on
+every request. Supadata's CORS preflight answers with a fixed allow-list of headers —
+`Authorization, Content-Type, Accept, Origin, X-Requested-With, x-api-key` — and
+`User-Agent` is not on it. What happens next depends on the engine, reproduced against
+the live API from a plain `http://localhost` page:
+
+| Engine | SDK's headers | `x-api-key` alone |
+|---|---|---|
+| WebKit | refused: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers" | reaches Supadata |
+| Chromium | reaches Supadata (it drops `User-Agent` from `fetch` silently) | reaches Supadata |
+
+Every browser on iOS is WebKit, Chrome included. The refusal surfaces as
+`TypeError: Load failed`, which `asTranscriptFetchError` wraps as "transcript fetch
+failed" — nothing on screen says CORS, and no credit is spent, because the request never
+left the phone.
+
+Two things hid it. The extension lists `https://api.supadata.ai/*` in `host_permissions`,
+which exempts its panel from CORS entirely, so desktop use never went through a preflight.
+And the IWFT suite runs in Chromium against a simulator that answers routed requests, so
+it can see neither the engine nor the preflight.
+
+So the SDK's transport is not used. `createSupadataClient` is a `fetch` that sends
+`x-api-key` and nothing else, builds the same URLs the SDK built (the simulator's routes
+did not have to move), and raises the SDK's own `SupadataError` from an error body so the
+failure mapping above is untouched. The SDK is still the source of the types and of that
+error class; `SupadataClient` is the whole of it this package touches. A unit test asserts
+the header set is exactly the one key, because that set is the invariant.
+
+`packages/transcripts/scripts/supadataBrowserCheck.ts` is the check no fixture can be:
+it launches real WebKit and Chromium, and makes the app's request against the live API
+with a dummy key. A 401 means the request got there; a blocked one never left the
+browser. Run it when the client, or Supadata's CORS policy, changes.
+
 ## The InnerTube fetcher
 
 `fetchInnerTubeTranscript` is the free path. It takes an injected `YouTubeFetch` rather
