@@ -21,9 +21,7 @@ export function createAnthropicGenerationClient(
     if (!textBlock || textBlock.type !== "text") {
       throw new GenerationError("Claude's response had no text content to parse");
     }
-    // messages.parse() throws and discards the response on a zod .refine() failure
-    // (e.g. a word-count cap) — those aren't representable in the JSON Schema the
-    // model saw, so generateOverview's own schema.safeParse checks them and retries.
+    // Not messages.parse(): docs/features/overview-generation-decisions.md, "Key points".
     return JSON.parse(textBlock.text);
   };
 }

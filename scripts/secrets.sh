@@ -29,6 +29,7 @@ case "${1:-}" in
     ;;
   run)
     shift
+    [ "${1:-}" = "--" ] && shift
     bws run --project-id "$(projectId)" -- "$@"
     ;;
   fly-import)

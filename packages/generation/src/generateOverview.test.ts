@@ -56,7 +56,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
   const client: GenerationClient = async ({ userMessage }) => {
     calls++;
     if (calls === 1) {
-      assert.ok(!userMessage.includes("Your previous attempt violated"));
+      assert.ok(!userMessage.includes("Your previous attempt was"));
       return {
         inOneLine: Array(30).fill("word").join(" "),
         coreClaim: "The core claim.",
@@ -69,8 +69,8 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
         howToApply: { items: [] },
       };
     }
-    assert.ok(userMessage.includes("Your previous attempt violated"));
-    assert.ok(userMessage.includes("inOneLine"));
+    assert.ok(userMessage.includes("Your previous attempt was"));
+    assert.ok(userMessage.includes("inOneLine: docs/features/overview-generation-decisions.md: max 25 words"));
     return {
       inOneLine: "A short description.",
       coreClaim: "The core claim.",
@@ -98,4 +98,43 @@ test("two consecutive schema failures surface as one GenerationError, not an inf
 
   await assert.rejects(() => generateOverview(client, input, meta), GenerationError);
   assert.equal(calls, 2);
+});
+
+test("a key points list past the cap is sent back to be trimmed, with the attempt it came from", async () => {
+  const ninePoints = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  let calls = 0;
+  const client: GenerationClient = async ({ userMessage }) => {
+    calls++;
+    if (calls === 1) {
+      return {
+        inOneLine: "A long debate.",
+        coreClaim: "The core claim.",
+        thin: false,
+        keyPoints: ninePoints,
+        chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
+        matchedTopicNames: [],
+        suggestedTopic: null,
+        tags: ["one-tag", "two-tag", "three-tag"],
+        howToApply: { items: [] },
+      };
+    }
+    assert.ok(userMessage.includes(JSON.stringify(ninePoints)));
+    assert.ok(userMessage.includes("keyPoints: Too big"));
+    assert.ok(userMessage.includes("keeps the ones that matter most"));
+    return {
+      inOneLine: "A long debate.",
+      coreClaim: "The core claim.",
+      thin: false,
+      keyPoints: ninePoints.slice(0, 7),
+      chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
+      matchedTopicNames: [],
+      suggestedTopic: null,
+      tags: ["one-tag", "two-tag", "three-tag"],
+      howToApply: { items: [] },
+    };
+  };
+
+  const overview = await generateOverview(client, input, meta);
+  assert.equal(calls, 2);
+  assert.equal(overview.keyPoints.length, 7);
 });
