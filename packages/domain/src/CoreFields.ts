@@ -10,6 +10,6 @@ export const CoreFields = z.object({
     .refine((s) => wordCount(s) <= 60, "docs/features/overview-generation-decisions.md: max 60 words"),
   // Gates Verdict — see Overview.ts's cross-field check and docs/features/overview-generation-decisions.md.
   thin: z.boolean(),
-  keyPoints: z.array(z.string()).min(3).max(5),
+  keyPoints: z.array(z.string()).min(3).max(7),
 });
 export type CoreFields = z.infer<typeof CoreFields>;

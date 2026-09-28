@@ -166,10 +166,13 @@ test("core claim allows up to 60 words but no more", () => {
   assert.throws(() => Overview.parse({ ...baseOverview, coreClaim: overLimit }));
 });
 
-test("key points must be 3 to 5 items, matching the real sample that broke the old free-text limit", () => {
+test("key points must be 3 to 7 items: the old cap of 5 fell to a real two and a half hour debate", () => {
   assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: ["one", "two"] }));
+  assert.doesNotThrow(() =>
+    Overview.parse({ ...baseOverview, keyPoints: ["1", "2", "3", "4", "5", "6", "7"] }),
+  );
   assert.throws(() =>
-    Overview.parse({ ...baseOverview, keyPoints: ["1", "2", "3", "4", "5", "6"] }),
+    Overview.parse({ ...baseOverview, keyPoints: ["1", "2", "3", "4", "5", "6", "7", "8"] }),
   );
 });
 
