@@ -1,6 +1,5 @@
-import type { Overview } from "@overview/domain";
+import { overviewNoteLines, type Overview } from "@overview/domain";
 import { noteTiming } from "../../reader/util/noteTiming.js";
-import { overviewNoteLines } from "../../reader/util/overviewNoteLines.js";
 import { readerMetaParts } from "../../reader/util/readerMetaParts.js";
 
 // "4 min read · 6 min listen · 11:38 video", for the two places that print it: a library

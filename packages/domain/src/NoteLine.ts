@@ -1,6 +1,6 @@
 // One tappable line of the read-along body. `section` is what the rail lists and what the
 // player bar names as "Now reading"; `heading` lines are the design's uppercase kickers
-// and are stepped past rather than read (docs/features/overview-redesign.md).
+// (docs/features/overview-redesign.md), spoken in narration as the section's cue.
 //
 // `bullet` is a property of the note format rather than of the rendering: the README's
 // note shape says Key points is a list of three to seven bullets, so the section that

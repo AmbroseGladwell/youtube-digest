@@ -65,6 +65,20 @@ At London's prices ($0.0489, $0.0977 and $0.1954 an hour for the three performan
 
 For comparison, hosted APIs charge $4 per million characters for the robotic standard voices and $15 to $80 for voices comparable to or better than Kokoro. Kokoro on `performance-4x` works out at about $1.08 per million, at the price of running the service ourselves. ElevenLabs and OpenAI sound better; Kokoro was judged good enough to ship first.
 
+## The spoken script
+
+What gets narrated is `spokenScript(overview)` in `@overview/domain`: the text of every `NoteLine` the reader shows, in order, headings included. Three decisions are packed into that:
+
+- **One entry per line, so a timing is a line index.** The service renders line by line and records where each starts, and the player highlights line `i` from timing `i` with no mapping in between. No finer chunking is needed: `kokoro-onnx` already splits a long line into phoneme batches internally.
+- **Headings are spoken.** "Verdict", "Key points" and the rest are the listener's only section cue, as they were in the prototype, which spoke each section name as its own highlighted chunk.
+- **It lives in the domain, beside the lines it reads.** `overviewNoteLines` and the three label maps it speaks (`NOVELTY_LABEL`, `SELLING_LABEL`, `WATCH_ANYWAY_LABEL`) moved out of `app-core` with it, so the extension, the web app and the API build the same words.
+
+The client sends the script; the server keys the audio on a hash of the script's text and the voice, plus a render version of its own. No script-format version is needed: a builder change that alters the words alters the hash. A render version is: changing pauses, the encoder or how timings are cut changes the audio without changing the text. `SpokenScript` caps a script at 20,000 characters, about five times the longest sample note.
+
+## Voices
+
+`voices-v1.0.bin` holds 54 voices, of which 28 speak English: 20 American (`af_*`, `am_*`) and 8 British (`bf_*`, `bm_*`). The rest are Spanish, French, Hindi, Italian, Japanese, Portuguese and Chinese voices, and would mispronounce an English note, so `NarrationVoice` offers only the 28. Each carries its accent as data, and the accent picks the phonemiser's language: `en-us` or `en-gb`. The default is `af_heart`; readers will choose their own from a sample of each.
+
 ## Where the audio lives
 
 *Superseded: `docs/architecture/v1-architecture-decisions.md` puts audio on Cloudflare R2 behind the API. What follows is the prototype's workaround, kept as the record of why.*

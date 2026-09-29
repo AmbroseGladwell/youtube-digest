@@ -1,12 +1,11 @@
 import type { Ref } from "react";
 import { Link } from "react-router";
-import type { Overview } from "@overview/domain";
+import { NOVELTY_LABEL, type Overview } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import styles from "./ReaderMasthead.module.scss";

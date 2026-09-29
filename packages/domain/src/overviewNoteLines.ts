@@ -1,8 +1,8 @@
-import type { Overview } from "@overview/domain";
-import { NOVELTY_LABEL } from "../../overviews/noveltyLabel.js";
-import { SELLING_LABEL } from "../../overviews/sellingLabel.js";
-import { WATCH_ANYWAY_LABEL } from "../../overviews/watchAnywayLabel.js";
-import type { NoteLine } from "../types/NoteLine.js";
+import type { NoteLine } from "./NoteLine.js";
+import { NOVELTY_LABEL } from "./noveltyLabel.js";
+import type { Overview } from "./Overview.js";
+import { SELLING_LABEL } from "./sellingLabel.js";
+import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
 export const KEY_POINTS_SECTION = "Key points";
