@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { OverviewId, isUnreadableRecordError } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
@@ -9,6 +9,7 @@ import { PlusPrompt } from "../../plus/components/PlusPrompt/PlusPrompt.js";
 import { PlusSavedLocallyNote } from "../../plus/components/PlusSavedLocallyNote/PlusSavedLocallyNote.js";
 import { usePlan } from "../../plus/usePlan.js";
 import { usePlusSavedLocallyNote } from "../../plus/usePlusSavedLocallyNote.js";
+import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithStateQuery.js";
@@ -16,6 +17,7 @@ import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWit
 import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
+import { DeleteOverviewDialog } from "../components/DeleteOverviewDialog/DeleteOverviewDialog.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
@@ -53,11 +55,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
   const libraryQuery = useOverviewsWithStateQuery();
   const setOverviewState = useSetOverviewStateMutation();
+  const deleteOverview = useDeleteOverviewMutation();
+  const navigate = useNavigate();
   const animateNavigation = useShouldAnimateNavigation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
   const [editingTopics, setEditingTopics] = useState(false);
   const [editingReason, setEditingReason] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
     READER_MASTHEAD_HEIGHT_PROPERTY,
@@ -168,6 +173,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     overviewId,
   );
   const range = overview.watchAnyway?.range ?? null;
+  const confirmDelete = () => {
+    setConfirmingDelete(false);
+    deleteOverview.mutate({ overviewId });
+    void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
+  };
 
   return (
     <article
@@ -193,6 +203,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         onListen={listen}
         onEditingTopicsChange={setEditingTopics}
         onEditReason={editReason}
+        onDelete={() => setConfirmingDelete(true)}
       />
 
       {savedLocallyNote.shown && <PlusSavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
@@ -291,6 +302,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       )}
 
       {plusPromptOpen && <PlusPrompt onDismiss={() => setPlusPromptOpen(false)} />}
+
+      {confirmingDelete && (
+        <DeleteOverviewDialog
+          title={overview.video.title}
+          onDelete={confirmDelete}
+          onClose={() => setConfirmingDelete(false)}
+        />
+      )}
 
       {(!isPanel || playerDocked) && (
         <ReaderPlayerBar

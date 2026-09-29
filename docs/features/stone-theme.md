@@ -117,13 +117,6 @@ why, or a jump to where the thing lives today.
 - **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
   **To wire in:** an `href` to the Web Store listing once it is published
   (`chrome-web-store-account` in the project notes), and the button becomes a link.
-- **The sort pill** (`SortPill` in the library's head, design 2a). A disabled surface pill
-  reading `Newest saved first`. **To wire in:** a sort order in `LibraryFilters` and
-  `libraryFilterParams`, applied in `orderLibraryEntriesBySavedAt`'s place, and a menu on
-  the pill.
-- **`Delete overview`** in the reader's ⋯ menu (design 4b), disabled. The store already has
-  `deleteOverview` and the sync journal carries a delete. **To wire in:** a mutation with
-  a confirm step, and the library's cache patched the way the state mutations patch it.
 - **`Open in web app`** in the panel's ⋯ menu (design 6h), disabled. **To wire in:** the
   web app's address for a note, which needs the note to exist there — that is sync's job.
 - **`MCP connection`** in the Plus plan's list of what the plan buys (`plusFeatures.ts`).
@@ -154,8 +147,16 @@ warnings against the channel's row.
 row's 34px circle. **Mark read moved into the ⋯ menu** as `Mark as read` / `Mark as
 unread` (4b), so `ReaderPageObject` reads the state off what the menu offers next. The
 menu also carries `Watch on YouTube`, `Copy link` (the video's link, on either surface)
-and, placed but not wired, `Delete overview` on the web and `Open in web app` in the
-panel (see "Placed but not wired").
+`Delete overview` on the web, and, placed but not wired, `Open in web app` in the panel
+(see "Placed but not wired").
+
+**Deleting asks once.** `Delete overview` opens `DeleteOverviewDialog`, the New topic
+dialog cut down to a question, with focus on `Cancel`. There is no undo: the store's delete
+journals a tombstone that sync carries to every device, so the dialog carries that weight.
+Confirming drops the note from the library's cache straight away
+(`useDeleteOverviewMutation`) and replaces the reader with the library, so Back does not
+return to a note that is gone. The panel's menu leaves it out. `deleteOverview.iwft.ts`
+holds all of it, including a delete pulled in from another device.
 
 **The note.** Key points are numbered rather than bulleted, counted per section by
 `ReadAlongNote` and never spoken. The reason reads back as a stone-tint note above the

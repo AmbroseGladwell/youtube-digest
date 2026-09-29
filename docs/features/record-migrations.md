@@ -311,9 +311,12 @@ filter sheet's foot, where `counts.total` is `entries.length` in `libraryFilterC
 into a visible integer: the library says 28 and means 30. So unreadable records are inside
 `counts.total`, whatever else is decided.
 
-**Ordering needs a date, which is why salvage takes one.** `orderOverviewsBySavedAt` sorts on
+**Ordering needs a date, which is why salvage takes one.** `orderLibraryEntriesBySavedAt` sorts on
 `savedAt`, so without it a record has no position and "in place" means nothing. Where even the
-salvaged date is missing, the record sorts last: an unknown date cannot claim a position.
+salvaged date is missing, the record sorts last: an unknown date cannot claim a position. The
+library's other orders (`orderLibraryEntries`, `docs/features/library-sort.md`) keep the same
+rule: oldest first still puts the undated record last, and title order places a record by its
+salvaged title, or last without one.
 
 **It joins the reader's Previous/Next chain**, because `overviewNeighbours` shares that order
 and the reader's "4 of 31" is a position in it. So *Next* can step onto the dead-end screen.

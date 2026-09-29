@@ -1,5 +1,6 @@
 import { Novelty, TopicId } from "@overview/domain";
 import { DEFAULT_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
+import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
 
@@ -36,6 +37,17 @@ export function applyLibraryFilterPatch(
   if ("dubious" in patch) setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
   if ("query" in patch) setOrDelete(next, "q", patch.query || undefined);
 
+  return next;
+}
+
+export function parseLibrarySort(searchParams: URLSearchParams): LibrarySort {
+  const sortParam = searchParams.get("sort");
+  return LIBRARY_SORTS.find((sort) => sort === sortParam) ?? DEFAULT_LIBRARY_SORT;
+}
+
+export function applyLibrarySort(current: URLSearchParams, sort: LibrarySort): URLSearchParams {
+  const next = new URLSearchParams(current);
+  setOrDelete(next, "sort", sort === DEFAULT_LIBRARY_SORT ? undefined : sort);
   return next;
 }
 

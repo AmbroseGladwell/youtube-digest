@@ -1,9 +1,63 @@
 @use "../../../../theme/controls.scss" as controls;
 
 .root {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
   @include controls.surface-pill;
 
   gap: 0.375rem;
   padding: 0.5rem 0.875rem;
   font-size: 0.8125rem;
+}
+
+.triggerOpen {
+  background: var(--stone-tint);
+}
+
+// The ⋯ menu's surface (OverviewActionsMenu), hung from the pill's right edge because the
+// pill sits at the right of the list head.
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 3;
+  min-width: 13.75rem;
+  background: var(--dialog);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-menu);
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  animation: menuRise var(--motion-arrive) var(--motion-ease) both;
+}
+
+@keyframes menuRise {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.item {
+  @include controls.ghost-pill;
+
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 10px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+
+  &[aria-checked="true"] {
+    font-weight: 600;
+  }
 }

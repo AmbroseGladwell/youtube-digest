@@ -18,6 +18,7 @@ import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
+import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
 export class ReaderPageObject extends PageObject {
@@ -285,6 +286,13 @@ export class ReaderPageObject extends PageObject {
     this.step("clickMarkRead", async () => {
       await this.openActionsMenu();
       await this.click(overviewActionsMenuTestIds.readItem);
+    });
+
+  clickDeleteOverview = (): Promise<DeleteOverviewDialogPageObject> =>
+    this.step("clickDeleteOverview", async () => {
+      await this.openActionsMenu();
+      await this.click(overviewActionsMenuTestIds.deleteItem);
+      return new DeleteOverviewDialogPageObject(this.testContext).verifyIsShown();
     });
 
   clickTab = (tab: string) =>

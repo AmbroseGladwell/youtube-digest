@@ -16,3 +16,6 @@ export const libraryEntrySavedAt = (entry: LibraryEntry): string | null =>
 
 export const readableEntries = (entries: LibraryEntry[]): OverviewWithState[] =>
   entries.filter((entry) => entry.kind === "overview");
+
+export const libraryEntryTitle = (entry: LibraryEntry): string | null =>
+  entry.kind === "overview" ? entry.overview.video.title : (entry.record.salvaged?.video?.title ?? null);
