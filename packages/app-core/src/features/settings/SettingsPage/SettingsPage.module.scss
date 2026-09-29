@@ -48,6 +48,3 @@
 
 // The bar's Sign in lands here by hash, and the masthead is sticky, so the section has to
 // clear it when scrolled into view.
-.syncAnchor {
-  scroll-margin-top: calc(var(--masthead-height) + 1rem);
-}

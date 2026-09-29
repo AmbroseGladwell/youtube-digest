@@ -1,0 +1,16 @@
+@use "../../auth" as auth;
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.secondary {
+  @include auth.secondary;
+}
+
+.note {
+  @include auth.note;
+}

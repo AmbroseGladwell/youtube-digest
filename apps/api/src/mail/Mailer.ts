@@ -1,9 +1,15 @@
 import type { AuthSurface } from "@overview/domain";
 
+// "createAccount" only when there is no account yet: an address that already has one is
+// sent the ordinary sign-in mail whatever it asked for (docs/features/sign-in.md).
+export type MagicLinkPurpose = "signIn" | "createAccount";
+
 export interface MagicLinkMail {
   to: string;
   link: string;
   surface: AuthSurface;
+  purpose: MagicLinkPurpose;
+  firstName: string | null;
   expiresAt: string;
 }
 

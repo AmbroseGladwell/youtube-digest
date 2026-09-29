@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import type { NavigationDirection } from "../../src/util/viewTransitions.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { AccountMenuPageObject } from "./AccountMenuPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { GenerationStatusStripPageObject } from "./GenerationStatusStripPageObject.testHelper.js";
 import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testHelper.js";
@@ -10,6 +11,10 @@ import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testH
 import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
 
 export class AppShellPageObject extends PageObject {
+  get accountMenu(): AccountMenuPageObject {
+    return new AccountMenuPageObject(this.testContext, this.get(appShellTestIds.masthead));
+  }
+
   get generateForm(): GenerateOverviewFormPageObject {
     return new GenerateOverviewFormPageObject(this.testContext);
   }
@@ -42,7 +47,7 @@ export class AppShellPageObject extends PageObject {
   verifyIsParedBackToThePanel = () =>
     this.step("verifyIsParedBackToThePanel", async () => {
       await this.expectToBeVisible(appShellTestIds.brand);
-      await this.expectToBeVisible(appShellTestIds.settingsLink);
+      await expect(this.page.getByRole("button", { name: "Account" })).toBeVisible();
       await this.expectNotToBeVisible(appShellTestIds.newOverviewButton);
       await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(0);
     });
@@ -66,20 +71,16 @@ export class AppShellPageObject extends PageObject {
 
   openSettings = (): Promise<SettingsPageObject> =>
     this.step("openSettings", async () => {
-      await this.click(appShellTestIds.settingsLink);
-      return new SettingsPageObject(this.testContext).verifyIsShown();
+      const menu = await this.accountMenu.open();
+      return menu.chooseSettings();
     });
 
-  verifyOffersSignIn = (offers: boolean) =>
-    this.step(`verifyOffersSignIn ${offers}`, () =>
+  verifyOffersNotNow = (offers: boolean) =>
+    this.step(`verifyOffersNotNow ${offers}`, () =>
       offers
-        ? this.expectToBeVisible(appShellTestIds.signInLink)
-        : this.expectToHaveCount(appShellTestIds.signInLink, 0),
+        ? this.expectToBeVisible(appShellTestIds.notNowLink)
+        : this.expectNotToBeVisible(appShellTestIds.notNowLink),
     );
 
-  clickSignIn = (): Promise<SettingsPageObject> =>
-    this.step("clickSignIn", async () => {
-      await this.click(appShellTestIds.signInLink);
-      return new SettingsPageObject(this.testContext).verifyIsShown();
-    });
+  clickNotNow = () => this.step("clickNotNow", () => this.click(appShellTestIds.notNowLink));
 }

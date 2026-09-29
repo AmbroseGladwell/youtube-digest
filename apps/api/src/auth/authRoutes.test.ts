@@ -98,7 +98,12 @@ test("a web link signs the browser in with a cookie the API then accepts", async
   const response = await signIn(testApp, testApp.mailer.lastToken());
 
   assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.json(), { surface: "web", email: EMAIL, expiresAt: "2026-10-26T09:00:00.000Z" });
+  assert.deepEqual(response.json(), {
+    surface: "web",
+    email: EMAIL,
+    firstName: null,
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
   assert.match(setCookie(response), new RegExp(`^${SESSION_COOKIE}=.+; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax; Secure$`));
   const session = await whoAmI(testApp, { cookie: cookiePair(response) });
   assert.equal(session.statusCode, 200);
@@ -257,5 +262,85 @@ test("the auth routes need no session and no client version", async () => {
   const response = await testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code: "nope" } });
 
   assert.equal(response.statusCode, 410);
+  await testApp.close();
+});
+
+const askToCreate = (testApp: TestApp, surface: "web" | "extension", firstName: string, email = EMAIL) =>
+  testApp.app.inject({
+    method: "POST",
+    url: "/api/auth/magic-link",
+    payload: { email, surface, intent: "createAccount", firstName },
+  });
+
+test("asking to create an account mails a link that says so, greets by name, and still makes no account", async () => {
+  const testApp = await createTestApp();
+
+  const response = await askToCreate(testApp, "web", "  Ada ");
+
+  assert.equal(response.statusCode, 202);
+  assert.deepEqual(response.json(), { accepted: true });
+  assert.equal(testApp.mailer.sent[0]!.purpose, "createAccount");
+  assert.equal(testApp.mailer.sent[0]!.firstName, "Ada");
+  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  await testApp.close();
+});
+
+test("opening a create-account link makes the account with the name it was asked with", async () => {
+  const testApp = await createTestApp();
+  await askToCreate(testApp, "web", "Ada");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(response.json().firstName, "Ada");
+  assert.equal((await whoAmI(testApp, { cookie: cookiePair(response) })).json().firstName, "Ada");
+  await testApp.close();
+});
+
+test("an address that already has an account is sent a sign-in link and keeps its name", async () => {
+  const testApp = await createTestApp();
+  await askToCreate(testApp, "web", "Ada");
+  await signIn(testApp, testApp.mailer.lastToken());
+  testApp.clock.advance(2 * MINUTE_MS);
+
+  const asked = await askToCreate(testApp, "web", "Someone Else");
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(asked.statusCode, 202);
+  assert.equal(testApp.mailer.sent[1]!.purpose, "signIn");
+  assert.equal(testApp.mailer.sent[1]!.firstName, null);
+  assert.equal(response.json().firstName, "Ada");
+  await testApp.close();
+});
+
+test("an account made by signing in has no name, and says so rather than inventing one", async () => {
+  const testApp = await createTestApp();
+
+  const cookie = await signInOnTheWeb(testApp);
+
+  assert.equal((await whoAmI(testApp, { cookie })).json().firstName, null);
+  await testApp.close();
+});
+
+test("the extension's code hands over the name with the bearer", async () => {
+  const testApp = await createTestApp();
+  await askToCreate(testApp, "extension", "Ada");
+  const signedIn = await signIn(testApp, testApp.mailer.lastToken());
+
+  const response = await exchange(testApp, signedIn.json().linkCode);
+
+  assert.equal(signedIn.json().firstName, "Ada");
+  assert.equal(response.json().firstName, "Ada");
+  await testApp.close();
+});
+
+test("a first name that is blank or too long is refused before anything is sent", async () => {
+  const testApp = await createTestApp();
+
+  const blank = await askToCreate(testApp, "web", "   ");
+  const long = await askToCreate(testApp, "web", "a".repeat(81));
+
+  assert.equal(blank.json().error.code, "invalid_request");
+  assert.equal(long.json().error.code, "invalid_request");
+  assert.equal(testApp.mailer.sent.length, 0);
   await testApp.close();
 });

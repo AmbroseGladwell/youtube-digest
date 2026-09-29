@@ -114,12 +114,6 @@ decision, so the screens read complete while the work is scoped. Each is honest 
 in the way CLAUDE.md's degrade-visibly rule allows: a disabled pill with a title saying
 why, or a jump to where the thing lives today.
 
-- **`Sign in` in the bar** (`AppShell`, beside `+ New`, design 2b). It links to
-  `Routes.settingsSync()`, which is Settings with the sync section's id in the hash;
-  React Router's `ScrollRestoration` scrolls that id into view, and the section carries a
-  `scroll-margin-top` so it clears the sticky bar. It is hidden once signed in and where the
-  shell cannot sync. **To wire in:** a sign-in of its own — the magic-link request from the
-  bar or a sign-in page — rather than a jump to Settings. `signIn.iwft.ts` holds the jump.
 - **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
   **To wire in:** an `href` to the Web Store listing once it is published
   (`chrome-web-store-account` in the project notes), and the button becomes a link.

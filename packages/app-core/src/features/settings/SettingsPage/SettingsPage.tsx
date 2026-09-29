@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Routes, SETTINGS_SYNC_ANCHOR } from "../../../app/Routes.js";
+import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -56,9 +56,7 @@ export function SettingsPage() {
         </p>
       )}
 
-      <div id={SETTINGS_SYNC_ANCHOR} className={styles.syncAnchor}>
-        <SyncPanel />
-      </div>
+      <SyncPanel />
 
       <BuildLine />
     </div>

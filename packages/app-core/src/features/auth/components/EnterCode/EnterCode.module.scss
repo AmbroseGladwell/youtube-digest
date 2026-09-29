@@ -1,0 +1,91 @@
+@use "../../auth" as auth;
+
+.form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.labelText {
+  @include auth.field-label;
+}
+
+// Design 10c: the code is typed large, centred and spaced the way the page shows it.
+.code {
+  border: 2px solid transparent;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--divider);
+  padding: 0.875rem 1.125rem;
+  font-family: var(--font-body);
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  transition: border-color var(--motion-state) var(--motion-ease);
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+  }
+}
+
+.codeInvalid,
+.codeInvalid:focus {
+  @include auth.field-invalid;
+}
+
+.error {
+  @include auth.field-error;
+}
+
+.linkActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+}
+
+.secondary {
+  @include auth.secondary;
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.note {
+  @include auth.note;
+  font-size: 0.8125rem;
+}
+
+.submit {
+  @include auth.primary;
+  width: 100%;
+}
+
+// Already well above iOS's zoom threshold, so it keeps its size past global.scss's touch rule.
+@media (pointer: coarse) {
+  .code {
+    font-size: 1.875rem !important;
+  }
+}

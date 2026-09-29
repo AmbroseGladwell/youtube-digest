@@ -11,6 +11,7 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { Mailer } from "../mail/Mailer.js";
+import { accountExists } from "./accountExists.js";
 import { consumeLinkCode } from "./consumeLinkCode.js";
 import { consumeMagicLink } from "./consumeMagicLink.js";
 import { createSessionForAccount } from "./createSession.js";
@@ -31,19 +32,28 @@ export interface AuthRoutesOptions {
 const PUBLIC = { config: { public: true } };
 
 // Every answer here is the same whether or not the address has an account, and an account
-// is only ever made by a consumed link, never by asking for one (docs/features/sign-in.md).
+// is only ever made by a consumed link, never by asking for one. Only the mail differs: an
+// address that asks to create an account it already has is sent a sign-in link
+// (docs/features/sign-in.md).
 export function authRoutes(
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure }: AuthRoutesOptions,
 ): void {
   app.post("/auth/magic-link", PUBLIC, async (request, reply) => {
-    const { email, surface } = parseOrThrow(MagicLinkRequest, request.body, "The sign-in request");
-    const issued = await issueMagicLink(sql, { email, surface, now: clock() });
+    const { email, surface, intent, firstName = null } = parseOrThrow(
+      MagicLinkRequest,
+      request.body,
+      "The sign-in request",
+    );
+    const issued = await issueMagicLink(sql, { email, surface, intent, firstName, now: clock() });
     if (issued !== null) {
+      const creating = intent === "createAccount" && !(await accountExists(sql, issued.email));
       await mailer.sendMagicLink({
         to: issued.email,
         link: signInLink(appUrl, issued.token),
         surface,
+        purpose: creating ? "createAccount" : "signIn",
+        firstName: creating ? firstName : null,
         expiresAt: issued.expiresAt,
       });
     }
@@ -57,23 +67,33 @@ export function authRoutes(
     if (link === null) {
       throw new ApiError("link_invalid", "This link has expired or was already used");
     }
-    const accountId = await findOrCreateAccount(sql, link.email);
+    const account = await findOrCreateAccount(sql, link.email, link.firstName);
+    request.log.info(
+      { created: account.created, intent: link.intent, surface: link.surface },
+      account.created ? "account created" : "signed in",
+    );
     if (link.surface === "extension") {
-      const code = await issueLinkCode(sql, accountId, now);
+      const code = await issueLinkCode(sql, account.id, now);
       const signedIn: SignedIn = {
         surface: "extension",
         email: link.email,
+        firstName: account.firstName,
         linkCode: code.code,
         linkCodeExpiresAt: code.expiresAt,
       };
       return signedIn;
     }
-    const session = await createSessionForAccount(sql, accountId, { now, sessionTtlDays });
+    const session = await createSessionForAccount(sql, account.id, { now, sessionTtlDays });
     reply.header(
       "set-cookie",
       sessionCookie(session.token, { expiresAt: session.expiresAt, now, secure: sessionCookieSecure }),
     );
-    const signedIn: SignedIn = { surface: "web", email: link.email, expiresAt: session.expiresAt };
+    const signedIn: SignedIn = {
+      surface: "web",
+      email: link.email,
+      firstName: account.firstName,
+      expiresAt: session.expiresAt,
+    };
     return signedIn;
   });
 
@@ -85,8 +105,16 @@ export function authRoutes(
       throw new ApiError("link_invalid", "That code is wrong, has expired, or was already used");
     }
     const session = await createSessionForAccount(sql, accountId, { now, sessionTtlDays });
-    const [account] = await sql.query<{ email: string }>("select email from accounts where id = $1", [accountId]);
-    const linked: LinkedSession = { token: session.token, email: account!.email, expiresAt: session.expiresAt };
+    const [account] = await sql.query<{ email: string; first_name: string | null }>(
+      "select email, first_name from accounts where id = $1",
+      [accountId],
+    );
+    const linked: LinkedSession = {
+      token: session.token,
+      email: account!.email,
+      firstName: account!.first_name,
+      expiresAt: session.expiresAt,
+    };
     return linked;
   });
 }

@@ -55,6 +55,7 @@ export class BackendSimulator {
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
   #linkSurface: AuthSurface = "web";
+  #accountFirstName: string | null = null;
 
   constructor(page: Page) {
     this.#page = page;
@@ -207,10 +208,11 @@ export class BackendSimulator {
                 ? {
                     surface: "extension",
                     email: SIMULATED_EMAIL,
+                    firstName: this.#accountFirstName,
                     linkCode: SIMULATED_LINK_CODE,
                     linkCodeExpiresAt: "2026-09-26T09:10:00.000Z",
                   }
-                : { surface: "web", email: SIMULATED_EMAIL, expiresAt },
+                : { surface: "web", email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
           };
         },
         onError: spent,
@@ -219,7 +221,10 @@ export class BackendSimulator {
 
     await this.#page.route("**/api/auth/link-code", (route) =>
       this.#respond(route, EndpointKey.AUTH_LINK_CODE, {
-        onDefault: () => ({ status: 200, body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, expiresAt } }),
+        onDefault: () => ({
+          status: 200,
+          body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+        }),
         onError: spent,
       }),
     );
@@ -233,7 +238,12 @@ export class BackendSimulator {
         : route.fulfill({
             status: 200,
             contentType: "application/json",
-            body: JSON.stringify({ accountId: "account", email: SIMULATED_EMAIL, expiresAt }),
+            body: JSON.stringify({
+              accountId: "account",
+              email: SIMULATED_EMAIL,
+              firstName: this.#accountFirstName,
+              expiresAt,
+            }),
           }),
     );
 
@@ -346,6 +356,9 @@ export class BackendSimulator {
     signInAttempts: (): string[] => [...this.#signInAttempts],
     linkWasAskedForFrom: (surface: AuthSurface): void => {
       this.#linkSurface = surface;
+    },
+    accountIsNamed: (firstName: string): void => {
+      this.#accountFirstName = firstName;
     },
   };
 

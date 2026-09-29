@@ -1,7 +1,7 @@
 import { CLIENT_VERSION, CURRENT_SCHEMA_VERSIONS, type RecordChange, type UnreadableRecord } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const SERVER = "https://sync.test";
@@ -34,45 +34,6 @@ test("a shell that cannot sync shows no sync controls", async ({ launcher }) => 
   const settings = await launcher.appShell.openSettings();
 
   await settings.syncPanel.verifyIsAbsent();
-});
-
-// The extension's way in: a link asked for from the panel, and the code the page it
-// opens shows, exchanged here for the panel's own session (docs/features/sign-in.md).
-test("in the extension, the code from the sign-in page connects the panel and starts a sync", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  await launcher.launch({ sync: true, surface: "extension" });
-  const settings = await launcher.appShell.openSettings();
-  await settings.syncPanel.verifyAsksToSignIn();
-  await settings.syncPanel.setServerAddress(SERVER);
-  await settings.syncPanel.requestLink(SIMULATED_EMAIL);
-  await settings.syncPanel.verifyLinkSentReads(/enter the code it shows below/);
-
-  await settings.syncPanel.enterCode(SIMULATED_LINK_CODE);
-
-  await settings.syncPanel.verifySignedInAs(SIMULATED_EMAIL);
-  await settings.syncPanel.verifyStatusReads(/Synced just now/);
-  test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "extension" }]);
-  test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_HANDSHAKE)).toBeGreaterThan(0);
-  test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_CHANGES)).toBeGreaterThan(0);
-});
-
-// The built extension knows which server it was built for, so the panel does not ask
-// for an address before it asks for an email; the field stays, for a server that is not
-// production (docs/architecture/deploy.md, "The extension").
-test("in the extension the server address is filled in with the one it was built for", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
-  const settings = await launcher.appShell.openSettings();
-  await settings.syncPanel.verifyServerAddressReads(SERVER);
-
-  await settings.syncPanel.requestLink(SIMULATED_EMAIL);
-
-  await settings.syncPanel.verifyLinkSentReads(/enter the code it shows below/);
-  test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "extension" }]);
 });
 
 test("what the account holds arrives in the library without a reload", async ({ launcher, backendSimulator }) => {

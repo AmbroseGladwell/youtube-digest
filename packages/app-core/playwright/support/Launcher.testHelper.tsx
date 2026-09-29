@@ -6,7 +6,8 @@ import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
-import type { SyncConnection } from "../../src/features/sync/types/SyncConnection.js";
+import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
+import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
@@ -26,7 +27,8 @@ export interface LaunchOptions {
   apiKeys?: ApiKeys;
   // Whether this shell can sync, and the server and token it already has.
   sync?: boolean;
-  syncConnection?: SyncConnection;
+  syncConnection?: SyncConnectionInput;
+  pendingSignIn?: PendingSignIn;
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
@@ -81,6 +83,7 @@ export class Launcher {
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,
+        pendingSignIn: options.pendingSignIn,
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
@@ -151,8 +154,17 @@ export class Launcher {
         { path: Routes.signIn(), hash: token === null ? "" : `#token=${encodeURIComponent(token)}` },
       ));
 
+  // Going to a page by its address, the way a typed or bookmarked URL arrives.
+  openPage = (path: string): Promise<void> =>
+    test.step(`Launcher.openPage ${path}`, () =>
+      this.page.evaluate((pathname) => window.__iwftRouter__.navigate(pathname), path));
+
   get signInPage(): SignInPageObject {
     return new SignInPageObject(this.testContext);
+  }
+
+  get homePage(): HomePageObject {
+    return new HomePageObject(this.testContext);
   }
 
   get capturePage(): CapturePageObject {

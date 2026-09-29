@@ -19,24 +19,28 @@ the names that document gave them, it says so.
 | The mailer behind one interface: Brevo in production, the log in development | `src/mail/` |
 | The wire shapes the two sides share, and the one new error code | `packages/domain/src`: `AuthSurface.ts`, `MagicLinkRequest.ts`, `SignInRequest.ts`, `SignedIn.ts`, `LinkCodeRequest.ts`, `LinkedSession.ts`, `SessionInfo.ts`, `ApiErrorCode.ts` |
 | The auth client, beside the sync client, over one shared requester | `packages/sync/src`: `apiRequest.ts`, `fetchAuthApi.ts`, `AuthApi.ts` |
-| Where a link lands | `packages/app-core/src/features/auth/SignInPage/` |
-| The settings panel: email in, then the code in the extension | `features/sync/components/SyncPanel/` |
+| Where a link lands, and where signing in starts | `packages/app-core/src/features/auth/SignInPage/` |
+| Creating an account: a first name, and a link marked as a sign-up | `features/auth/CreateAccountPage/`, `migrations/V0005__account_first_names_and_link_intents.sql`, `packages/domain/src/AuthIntent.ts` |
+| Asking, waiting, the extension's code, the welcome | `features/auth/components/RequestLinkFlow/` and the screens beside it |
+| The account menu in the bar and the panel | `features/auth/components/AccountMenu/` |
+| The extension remembering it is waiting for a code | `features/auth/usePendingSignIn.ts`, `types/PendingSignIn.ts` |
+| The settings panel: who is signed in, or the way to the two pages | `features/sync/components/SyncPanel/` |
 | Sign-out, and a connection that may hold no token | `features/sync/SyncRuntime.tsx`, `types/SyncConnection.ts` |
 | The routes through the whole app over PGlite | `apps/api/src/auth/authRoutes.test.ts` |
 | The screens, in a browser, against a simulated server | `packages/app-core/playwright/iwft/scenarios/signIn.iwft.ts`, `sync.iwft.ts` |
 
 ## The flow, on each shell
 
-**On the web.** Settings asks for an email and nothing else, because the API is the
-page's own origin. `POST /api/auth/magic-link` answers `202` whether or not the address
+**On the web.** The account menu's Sign in opens `/sign-in`, which asks for an email and
+nothing else, because the API is the page's own origin. `POST /api/auth/magic-link` answers `202` whether or not the address
 has an account, and the mail carries one link. Opening it lands on `/sign-in` in the web
 app, which posts the token to `POST /api/auth/sign-in`; the answer sets the session
-cookie and the page goes to Settings, which now says who is signed in. From then on
+cookie and the page goes to the library; the account menu now says who is signed in. From then on
 every sync call carries the cookie and no header.
 
 **In the extension.** The panel is another origin, so no cookie the API sets can reach
 it, and the link opens in a browser tab rather than in the panel. So the panel asks for
-the server's address and an email, and the link it gets is marked as asked for from the
+an email (and the server's address only if the build has none), and the link it gets is marked as asked for from the
 extension. Opening it lands on the same `/sign-in` page, which posts the same token and
 gets back not a session but a **link code**, eight characters shown large. The reader
 types the code into the panel, the panel posts it to `POST /api/auth/link-code`, and
@@ -47,6 +51,63 @@ the cookie as well, and it was decided against: the web app being signed in enro
 pushes its whole local library to the account, which is a thing the reader did not ask
 for by clicking a link in their mail on behalf of the extension. One link signs in the
 one shell that asked. The page says so.
+
+## Creating an account
+
+Design 9b gives creating an account a page of its own, `/create-account`, with a first
+name to greet the reader by. It sends the same kind of link as signing in, carrying
+`intent: "createAccount"` and the name. Nothing else about the flow differs.
+
+**The answer still does not say whether an address has an account.** `POST
+/api/auth/magic-link` answers `202 { accepted: true }` for either intent, as before. Only
+the mail differs: an address with no account gets "Finish creating your account", greeted
+by name; an address that already has one gets the ordinary sign-in mail, and its name is
+not changed. Whoever reads that mail already owns the address, so they learn nothing a
+stranger could.
+
+**The name is written only by the insert that makes the account.**
+`findOrCreateAccount` takes the name the link was asked with and writes it only when
+`insert … on conflict` actually inserted, which is also how the sign-in knows whether it
+created an account. The route logs `account created` or `signed in`, with the intent and
+the surface, so the two can be counted apart. An account made by an ordinary sign-in has
+no name, and every screen that would use one falls back to the address.
+
+**The name travels with the session.** `SignedIn`, `LinkedSession` and `SessionInfo` carry
+`firstName`, nullable and defaulted, so an older server's answer still parses. The client
+keeps it in `SyncConnection` beside the email.
+
+## The account menu
+
+Design 9j replaces the bar's `Settings` tab and `Sign in` pill with one person button,
+which also ends the bar scrolling sideways on a phone. What it holds follows what this
+device can do:
+
+- **Signed out:** Sign in, Create account, Settings.
+- **Signed in:** the name and address, then Settings and Sign out. In the extension it also
+  shows the sync status line, because the panel has nowhere else to show it. If the server
+  has forgotten the session, Sign out becomes Sign in again.
+- **Extension, waiting for a code:** "Waiting for your code" with the address, then Enter
+  code and Settings.
+- **A shell that cannot sync:** Settings only, and a line saying accounts need the web app
+  or the extension.
+
+The button wears a ring while the menu is open or an account page is showing. The menu
+opens onto its first item, moves with the arrow keys, Home and End, and Escape closes it
+back onto the button.
+
+## Waiting for the code
+
+Chrome closes a popup the moment the reader clicks away to their mail, so the extension
+keeps what it asked for (`PendingSignIn`: server, address, intent, name, time sent) in
+`localStorage`. Reopened, the menu says it is waiting, and `/sign-in` goes straight to the
+code. The pending state lapses once no code from that link could still work: the link's
+fifteen minutes plus the code's ten. The web app keeps no such state; its tab stays open.
+
+**Sending another link waits out the server's minute.** Inside the one-a-minute cooldown
+the server answers as if it had sent and sends nothing, so the page counts the minute
+down from when it asked ("Send another in 0:48") rather than offering a send that would
+silently do nothing. The minute, the fifteen and the ten live in
+`packages/domain/src/authTimings.ts`, shared by the server and the screens.
 
 ## Decisions, and why
 
@@ -129,20 +190,29 @@ link that opens. `APP_URL` defaults to `http://localhost:5173`, which is where
 Every screen follows the third habit in `CLAUDE.md`: a control appears only where it can
 work.
 
-**Settings, signed out.** On the web: an email field and `Email me a link`, then
-`Check your email` with the address it went to and a way to use a different one. In the
-extension: the server's address, the email, and below them the code field with
-`Connect`, which is always there because the panel may have been closed and reopened
-between asking and getting the code, and asking again inside the minute sends nothing.
+**Sign in and Create account (9a, 9b).** An email field, plus a first name to create an
+account; a line saying how many overviews in this browser will join the account (none
+when it holds none); and a link to the other page. An address that is not a whole one is
+said under the field before anything is sent (9i).
+
+**Link sent (9c).** `Check your email` with the address, `Use a different email`, and the
+resend countdown. After creating an account it opens with "Thanks, Ada." In the extension
+this step is the code field and `Connect` (10c), then "You're in, Ada" (10e).
+
+**The sign-in page with a token (9f, 9g, 9h).** `Signing you in…` for the moment it takes;
+then the library, or the extension's code with a Copy button and a line saying this tab
+stays signed out and why. A spent, expired or unknown link asks for the address again on
+the same page. Any other failure is the dead-end screen with Try again.
+
+**Settings, signed out.** The Sync section points at the two pages rather than being a
+second place to ask for a link.
 
 **Settings, signed in.** `Signed in as …`, the one status line sync already had,
 `Sync now` and `Sign out`. When the server no longer knows the session the line says
 `Sign in again` and the button does.
 
-**The sign-in page.** `Signing you in…` for the moment it takes; then either Settings, or
-the code with a line saying this tab stays signed out and why; or the dead-end screen
-with the way back, `Go to Settings`, where a new link can be asked for. A `/sign-in`
-with no token in it says so rather than guessing.
+**On a phone (9e).** The sign-in and create-account pages swap the bar's actions for a
+single `Not now`.
 
 **Sign-out** tells the server and then disconnects whether or not it answered. A session
 the server could not be told about ends on its own within thirty days; this device is
@@ -160,9 +230,22 @@ already forgotten would be a control with nothing behind it.
 - **`hashSessionToken` and `generateSessionToken` are `hashToken` and `generateToken`.**
   Three things are hashed now and the name was a lie for two of them.
 
+## Where the build departs from the design
+
+- **The extension can still be pointed at another server.** Design 10b has no server field.
+  The build shows one only when the extension was built without a server, and otherwise
+  keeps it behind a quiet "Use a different server", because `deploy.md` promises the
+  built-in server can be overridden.
+- **The extension's back arrow (10b–10d) is not in the panel's masthead.** The brand
+  already goes home, and adding a back control to the masthead only for these screens was
+  left for later.
+- **Every step moves focus to its heading**, so a screen reader hears which step it is
+  on.
+
 ## Not built
 
-Rate limiting beyond the per-address cooldown; a sweep of spent links and codes, which
+Changing the name on an account, or giving one to an account made by signing in;
+rate limiting beyond the per-address cooldown; a sweep of spent links and codes, which
 is the same later cron as the session sweep; changing the email on an account; the web
 app minting a link code for an extension already signed in beside it, which would save
 one email and is a small addition to `authRoutes` when it is wanted. Serving the SPA

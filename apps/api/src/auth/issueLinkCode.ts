@@ -1,9 +1,10 @@
+import { LINK_CODE_TTL_MINUTES } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import type { AccountId } from "./AccountId.js";
 import { hashToken } from "./hashToken.js";
 import { formatLinkCode, generateLinkCode } from "./linkCode.js";
 
-export const LINK_CODE_TTL_MS = 10 * 60 * 1000;
+export const LINK_CODE_TTL_MS = LINK_CODE_TTL_MINUTES * 60 * 1000;
 
 export interface IssuedLinkCode {
   code: string;

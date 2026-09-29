@@ -6,6 +6,8 @@ const mail = {
   to: "reader@example.com",
   link: "https://overview.example/sign-in#token=t",
   surface: "web" as const,
+  purpose: "signIn" as const,
+  firstName: null,
   expiresAt: "2026-09-26T09:15:00.000Z",
 };
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 export const LinkedSession = z.object({
   token: z.string().min(1),
   email: z.string(),
+  firstName: z.string().nullable().default(null),
   expiresAt: z.string(),
 });
 export type LinkedSession = z.infer<typeof LinkedSession>;
