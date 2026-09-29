@@ -228,6 +228,61 @@ cues, and none of which is panel-specific:
 All three render only when there are blocks to act on, so the error, empty and loading
 states carry no tools.
 
+## Following the reader across devices
+
+A transcript lived only in the IndexedDB of the device that fetched it, and it was never
+one of the synced record kinds. On a newly signed-in browser, sync brought down every overview
+and its chapters (which ride inside the overview record), but the Transcript tab said
+*"No transcript was stored for this note"*. That was false: the transcript was stored,
+just somewhere else. Nothing refilled the miss either. The reader only reads the local
+store, and the only code that fetches again is the watched-video query in the extension (OV-5).
+
+The API keeps a copy per account, at `GET` and `PUT /api/transcripts/:videoId`
+(`apps/api/migrations/V0004__transcripts.sql`, `src/routes/transcriptRoutes.ts`). It
+sits **outside the records feed** on purpose:
+
+- **Size.** A long video's transcript is megabytes, larger than the whole of an
+  account's other records combined. On the feed, a first sync would pull all of
+  them before showing anything. A device fetches one only when it opens that note.
+- **Nothing to merge.** A transcript is never edited. Storing it again replaces it
+  wholesale, so it needs no `rev`, no `If-Match` and no seq.
+- **No schema version.** The body is validated against `StoredTranscript`, not carried
+  opaquely with a version the way records are. An unreadable transcript is already a
+  cache miss on the client (the discard path above), so a shape the server does not know
+  costs one refetch, not a quarantine. Deploying the API first, as
+  `docs/architecture/api.md` asks, keeps it from ever dropping a field a newer client wrote.
+
+The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. It is
+keyed by `(account, video)` and not by video alone: the shared cross-account cache
+(OV-16) is still waiting on its gating decision, and it becomes a second place asked
+first behind the same `TranscriptStore` interface, not a replacement for this one.
+
+**Up, through the outbox.** `IndexedDbTranscriptStore.saveTranscript` journals a
+`transcript` entry in the same transaction as the write, exactly as the record stores do
+(`docs/features/sync-client.md`). So a transcript gets the same retries, parking and
+"waiting to send" count as any record, and there is no wrapper store. The entry names only
+the video. The engine reads the transcript when it pushes the entry, so megabytes of
+segments are never copied into the journal. A transcript that has gone by the time its
+entry is pushed is done with.
+
+**Backfill, once, including for libraries already enrolled.** Enrolment journals every
+readable transcript the library holds. A library enrolled before transcripts were
+synced has its records flag set but not `transcriptsEnrolled`. `isEnrolled` is false until
+both are set, so the next cycle journals the transcripts that library holds, once, and
+touches nothing else.
+
+**Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
+the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET
+/api/transcripts/:videoId` and keeps the answer through `SyncStorage.keepTranscript`,
+which writes without journaling, the same way a pulled record is written, so a
+fetched transcript is never sent straight back. The query key carries whether the server
+can be asked, so signing in asks again.
+
+**What the tab says.** While the server is asked, the tab shows the skeleton. If it cannot
+be asked, the tab shows the failure and a *Try again* button, because a network failure is
+not "none was kept". Only a local miss that the server then confirms, or a miss on a
+device that is not signed in, shows *"No transcript was stored for this note"*.
+
 ## What this does not do
 
 - ~~**Chapters.**~~ Built — see `docs/features/chapters.md`. It was a new prompt

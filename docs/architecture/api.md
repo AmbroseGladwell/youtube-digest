@@ -23,12 +23,13 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Configuration from the environment, refused at startup when wrong | `src/loadConfig.ts` |
 | The extension's origin vouched for, from an allowlist in the environment | `src/http/corsPlugin.ts`, `allowedOriginsFromEnv.ts` |
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
+| Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
 
 ## Shape
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
     buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
@@ -39,7 +40,8 @@ apps/api/
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
-    routes/              changes, overviews, topics, settings
+    transcripts/         the per-account transcript repository
+    routes/              changes, overviews, topics, settings, transcripts
     scripts/             mintSession
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```

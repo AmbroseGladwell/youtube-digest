@@ -1,4 +1,4 @@
-import type { Handshake, RecordChangesPage, WrittenRecord } from "@overview/domain";
+import type { Handshake, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
 
 // The server's write surface, one method per route, so the outbox maps onto it without a
 // translation layer (docs/features/sync-api.md, docs/features/sync-client.md).
@@ -12,4 +12,7 @@ export interface SyncApi {
   deleteOverview(id: string): Promise<WrittenRecord | null>;
   createTopic(record: Record<string, unknown>): Promise<WrittenRecord>;
   updateSettings(patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
+  saveTranscript(transcript: StoredTranscript): Promise<void>;
+  // Null when the account keeps no transcript for the video.
+  getTranscript(videoId: string): Promise<StoredTranscript | null>;
 }

@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { makeOverview } from "@overview/store-conformance";
+import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
 import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
   OVERVIEW_CORPUS,
   OverviewId,
+  VideoId,
   type RecordChange,
 } from "@overview/domain";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
+import { IndexedDbTranscriptStore } from "./IndexedDbTranscriptStore.js";
 import {
   OUTBOX_STORE,
   OVERVIEWS_STORE,
@@ -20,8 +22,16 @@ import {
   SETTINGS_STORE,
   SYNC_REVISIONS_STORE,
   TOPICS_STORE,
+  TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
-import { openTestDatabase, putRaw, readOutbox, readRaw } from "./enrolledDatabase.testHelper.js";
+import {
+  markEnrolled,
+  openEnrolledDatabase,
+  openTestDatabase,
+  putRaw,
+  readOutbox,
+  readRaw,
+} from "./enrolledDatabase.testHelper.js";
 
 const NOW = new Date("2026-09-26T12:00:00.000Z");
 const now = () => NOW;
@@ -289,3 +299,106 @@ test("journal listeners hear a notification once per journaled write", async () 
   assert.equal(heard.length, 1);
 });
 
+
+const transcriptEntry = (videoId: string, fetchedAt: string) => ({
+  kind: "transcript",
+  id: videoId,
+  updatedAt: fetchedAt,
+  change: { op: "transcript" },
+});
+
+test("enrolling journals every transcript the library holds by its video, without copying the segments", async () => {
+  const db = await openTestDatabase();
+  const transcript = makeStoredTranscript();
+  await putRaw(db, TRANSCRIPTS_STORE, transcript);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  const [entry] = await storage.listPending();
+  assert.deepEqual(
+    { kind: entry?.kind, id: entry?.id, updatedAt: entry?.updatedAt, change: entry?.change },
+    transcriptEntry(transcript.videoId, transcript.fetchedAt),
+  );
+});
+
+test("a library enrolled before transcripts were synced journals the transcripts it holds once, and nothing else again", async () => {
+  const db = await openTestDatabase();
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview());
+  const transcript = makeStoredTranscript();
+  await putRaw(db, TRANSCRIPTS_STORE, transcript);
+  await markEnrolled(db);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  assert.equal(await storage.isEnrolled(), false);
+  await storage.enrol();
+  await storage.enrol();
+
+  assert.equal(await storage.isEnrolled(), true);
+  assert.deepEqual(
+    (await storage.listPending()).map((entry) => [entry.kind, entry.id]),
+    [["transcript", transcript.videoId]],
+  );
+});
+
+test("enrolling leaves out a transcript this client cannot read", async () => {
+  const db = await openTestDatabase();
+  await putRaw(db, TRANSCRIPTS_STORE, { videoId: "broken", segments: "not a list" });
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  assert.deepEqual(await storage.listPending(), []);
+});
+
+test("saving a transcript on an enrolled library journals it and says so", async () => {
+  const db = await openEnrolledDatabase();
+  let heard = 0;
+  const transcripts = new IndexedDbTranscriptStore(db, { onJournaled: () => (heard += 1) });
+  const transcript = makeStoredTranscript();
+
+  await transcripts.saveTranscript(transcript);
+
+  const [entry] = await readOutbox(db);
+  assert.deepEqual(
+    { kind: entry?.kind, id: entry?.id, updatedAt: entry?.updatedAt, change: entry?.change },
+    transcriptEntry(transcript.videoId, transcript.fetchedAt),
+  );
+  assert.equal(heard, 1);
+});
+
+test("saving a transcript on a library that was never enrolled journals nothing", async () => {
+  const db = await openTestDatabase();
+  let heard = 0;
+  const transcripts = new IndexedDbTranscriptStore(db, { onJournaled: () => (heard += 1) });
+
+  await transcripts.saveTranscript(makeStoredTranscript());
+
+  assert.deepEqual(await readOutbox(db), []);
+  assert.equal(heard, 0);
+});
+
+test("a transcript kept from the server reads back, and is not journaled to be sent back to it", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const transcript = makeStoredTranscript({ videoId: VideoId.parse("from-the-server") });
+
+  await storage.keepTranscript(transcript);
+
+  assert.deepEqual(await new IndexedDbTranscriptStore(db).getTranscript(transcript.videoId), transcript);
+  assert.deepEqual(await storage.readTranscript(transcript.videoId), transcript);
+  assert.deepEqual(await readOutbox(db), []);
+});
+
+test("acknowledging a sent transcript removes it and remembers no revision", async () => {
+  const db = await openEnrolledDatabase();
+  const transcript = makeStoredTranscript();
+  await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const [entry] = await storage.listPending();
+
+  await storage.acknowledge(entry!.key, { sent: true });
+
+  assert.deepEqual(await storage.listPending(), []);
+  assert.equal(await storage.revisionOf("transcript", transcript.videoId), null);
+});

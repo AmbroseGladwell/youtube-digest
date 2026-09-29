@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CLIENT_VERSION, type RecordChange } from "@overview/domain";
+import { CLIENT_VERSION, VideoId, type RecordChange, type StoredTranscript } from "@overview/domain";
 import { InMemorySyncStorage } from "./InMemorySyncStorage.testHelper.js";
 import { ScriptedSyncApi } from "./ScriptedSyncApi.testHelper.js";
 import { SyncEngine } from "./SyncEngine.js";
@@ -193,4 +193,55 @@ test("a journaled write starts a cycle without being asked", async () => {
   stop();
 
   assert.equal(api.callsTo("setOverviewState").length, 1);
+});
+
+const transcriptFor = (videoId: string): StoredTranscript => ({
+  videoId: VideoId.parse(videoId),
+  segments: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
+  generated: false,
+  fetchedAt: AT,
+});
+
+test("a journaled transcript is sent in the cycle and leaves the outbox without a revision", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  const transcript = transcriptFor("v1");
+  await storage.keepTranscript(transcript);
+  storage.journal({ kind: "transcript", id: "v1", updatedAt: AT, change: { op: "transcript" } });
+
+  const status = await engineOver(api, storage).sync();
+
+  assert.deepEqual(api.callsTo("saveTranscript").map((call) => call.args), [[transcript]]);
+  assert.deepEqual(storage.outbox, []);
+  assert.equal(storage.revisions.has("transcript/v1"), false);
+  assert.equal(status.pending, 0);
+});
+
+test("a transcript fetched from the server is kept on this device", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  const transcript = transcriptFor("v2");
+  api.transcripts.set("v2", transcript);
+
+  const fetched = await engineOver(api, storage).fetchTranscript("v2");
+
+  assert.deepEqual(fetched, transcript);
+  assert.deepEqual(await storage.readTranscript("v2"), transcript);
+  assert.deepEqual(storage.outbox, []);
+});
+
+test("a transcript the server does not keep is null, and nothing is kept", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+
+  assert.equal(await engineOver(api, storage).fetchTranscript("v3"), null);
+  assert.equal(storage.transcripts.size, 0);
+});
+
+test("a transcript that cannot be fetched fails loudly rather than reading as never kept", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("getTranscript", "transport");
+
+  await assert.rejects(engineOver(api, new InMemorySyncStorage()).fetchTranscript("v4"));
 });

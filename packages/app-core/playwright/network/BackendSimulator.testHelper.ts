@@ -50,6 +50,7 @@ export class BackendSimulator {
   }> = [];
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
+  #accountTranscripts = new Map<string, StoredTranscript>();
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
@@ -246,6 +247,26 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/transcripts/*", (route) =>
+      this.#respond(route, EndpointKey.SYNC_TRANSCRIPT, {
+        onDefault: () => {
+          const videoId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          if (route.request().method() === "PUT") {
+            this.#accountTranscripts.set(videoId, route.request().postDataJSON() as StoredTranscript);
+            return { status: 204, body: undefined };
+          }
+          const held = this.#accountTranscripts.get(videoId);
+          return held === undefined
+            ? { status: 404, body: { error: { code: "not_found", message: "Simulated: no transcript kept" } } }
+            : { status: 200, body: held };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
     await this.#page.route("**/api/changes**", (route) =>
       this.#respond(route, EndpointKey.SYNC_CHANGES, {
         onDefault: () => {
@@ -308,6 +329,9 @@ export class BackendSimulator {
   sync = {
     seedChange: (change: RecordChange): void => {
       this.#feed.push(change);
+    },
+    seedTranscript: (transcript: StoredTranscript): void => {
+      this.#accountTranscripts.set(transcript.videoId, transcript);
     },
     setMinSupportedClientVersion: (version: number): void => {
       this.#minSupportedClientVersion = version;

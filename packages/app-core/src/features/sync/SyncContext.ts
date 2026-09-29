@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { StoredTranscript, VideoId } from "@overview/domain";
 import { INITIAL_SYNC_STATUS, type SyncStatus } from "@overview/sync";
 
 export interface SyncState {
@@ -12,6 +13,8 @@ export interface SyncState {
   disconnect: () => Promise<void>;
   // Tells the server to end the session, then disconnects whether or not it answered.
   signOut: () => Promise<void>;
+  // Asks the server for a transcript this device does not hold. Null when not signed in.
+  fetchTranscript: ((videoId: VideoId) => Promise<StoredTranscript | null>) | null;
 }
 
 const SyncContext = createContext<SyncState>({
@@ -21,6 +24,7 @@ const SyncContext = createContext<SyncState>({
   syncNow: () => undefined,
   disconnect: () => Promise.resolve(),
   signOut: () => Promise.resolve(),
+  fetchTranscript: null,
 });
 
 export const SyncProvider = SyncContext.Provider;

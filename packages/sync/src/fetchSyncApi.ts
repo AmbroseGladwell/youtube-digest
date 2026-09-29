@@ -1,6 +1,8 @@
-import { Handshake, RecordChangesPage, WrittenRecord } from "@overview/domain";
+import { z } from "zod";
+import { Handshake, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { SyncApi } from "./SyncApi.js";
+import { isSyncRequestError } from "./SyncRequestError.js";
 
 export type FetchSyncApiOptions = ApiRequesterOptions;
 
@@ -23,5 +25,13 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
     createTopic: (record) => written(request("POST", "/topics", WrittenRecord, { body: record })),
     updateSettings: (patch, updatedAt) =>
       written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
+    saveTranscript: async (transcript) => {
+      await request("PUT", `/transcripts/${encodeURIComponent(transcript.videoId)}`, z.unknown(), { body: transcript });
+    },
+    getTranscript: (videoId) =>
+      answered(request("GET", `/transcripts/${encodeURIComponent(videoId)}`, StoredTranscript)).catch((error: unknown) => {
+        if (isSyncRequestError(error) && error.code === "not_found") return null;
+        throw error;
+      }),
   };
 }

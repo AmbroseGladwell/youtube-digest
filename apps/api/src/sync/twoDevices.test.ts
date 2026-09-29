@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { CLIENT_VERSION, CURRENT_SCHEMA_VERSIONS, DEFAULT_SETTINGS, TopicId, UnreadableRecordError } from "@overview/domain";
-import { makeOverview } from "@overview/store-conformance";
+import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeDevice } from "./SyncedDevice.testHelper.js";
@@ -240,5 +240,48 @@ test("the feed is pulled page by page, and the cursor ends where the feed does",
 
   assert.equal((await phone.overviews.listOverviews()).length, 5);
   assert.equal(await phone.storage.cursor(), 5);
+  await testApp.close();
+});
+
+test("a transcript one device fetched is read on another device, which then holds it without asking again", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  const transcript = makeStoredTranscript();
+  await laptop.transcripts.saveTranscript(transcript);
+
+  const pushed = await laptop.sync();
+  await phone.sync();
+
+  assert.equal(pushed.pending, 0);
+  assert.equal(await phone.transcripts.getTranscript(transcript.videoId), null);
+  assert.deepEqual(await phone.engine.fetchTranscript(transcript.videoId), transcript);
+  assert.deepEqual(await phone.transcripts.getTranscript(transcript.videoId), transcript);
+  assert.deepEqual(await phone.storage.listPending(), []);
+  await testApp.close();
+});
+
+test("transcripts a device held before sync was switched on reach the account on its first sync", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const laptop = await makeDevice(testApp, account, {
+    before: ({ transcripts }) => transcripts.saveTranscript(transcript),
+  });
+  const phone = await makeDevice(testApp, account);
+
+  await laptop.sync();
+
+  assert.deepEqual(await phone.engine.fetchTranscript(transcript.videoId), transcript);
+  await testApp.close();
+});
+
+test("a transcript no device on the account has fetched is not found on the server", async () => {
+  const testApp = await createTestApp();
+  const phone = await makeDevice(testApp, await makeAccount(testApp));
+
+  assert.equal(await phone.engine.fetchTranscript("never-fetched"), null);
   await testApp.close();
 });

@@ -6,6 +6,7 @@ import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
   IndexedDbSyncStorage,
+  IndexedDbTranscriptStore,
   openLocalDatabase,
 } from "@overview/store-local";
 import { createFetchSyncApi, SyncEngine, type SyncStatus } from "@overview/sync";
@@ -37,6 +38,7 @@ export function injectingFetch(app: FastifyInstance): typeof fetch {
 export interface SyncedDevice {
   overviews: IndexedDbOverviewStore;
   settings: IndexedDbSettingsStore;
+  transcripts: IndexedDbTranscriptStore;
   storage: IndexedDbSyncStorage;
   engine: SyncEngine;
   sync(): Promise<SyncStatus>;
@@ -47,7 +49,7 @@ export interface DeviceOptions {
   clientVersion?: number;
   pageSize?: number;
   // A database that already holds records before sync is switched on.
-  before?: (stores: Pick<SyncedDevice, "overviews" | "settings">) => Promise<void>;
+  before?: (stores: Pick<SyncedDevice, "overviews" | "settings" | "transcripts">) => Promise<void>;
 }
 
 // One device: its own IndexedDB, its own stores, its own engine, one account's token.
@@ -65,7 +67,8 @@ export async function makeDevice(
   const storage = new IndexedDbSyncStorage(db, { now: () => testApp.clock.now });
   const overviews = new IndexedDbOverviewStore(db, { onJournaled: storage.notifyJournaled });
   const settings = new IndexedDbSettingsStore(db, { onJournaled: storage.notifyJournaled });
-  await before?.({ overviews, settings });
+  const transcripts = new IndexedDbTranscriptStore(db, { onJournaled: storage.notifyJournaled });
+  await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),
     storage,
@@ -73,5 +76,5 @@ export async function makeDevice(
     pageSize,
     now: () => testApp.clock.now,
   });
-  return { overviews, settings, storage, engine, sync: () => engine.sync() };
+  return { overviews, settings, transcripts, storage, engine, sync: () => engine.sync() };
 }

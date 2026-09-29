@@ -36,5 +36,7 @@ function apply(record: Record<string, unknown>, entry: OutboxEntry): Record<stri
       return mergeSettingsRecord(record, change.patch);
     case "delete":
       return null;
+    case "transcript":
+      return record;
   }
 }

@@ -614,6 +614,12 @@ export class ReaderPageObject extends PageObject {
 
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
   verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
+  verifyTranscriptFailedReads = (pattern: RegExp) =>
+    this.step(`verifyTranscriptFailedReads ${pattern.source}`, () =>
+      expect(this.get(transcriptPanelTestIds.errorNote)).toHaveText(pattern),
+    );
+  clickRetryTranscript = () =>
+    this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
   // YouTube's own phrase for its speech-recognition track, not the developer's
   // (docs/features/transcript-storage.md).
   verifyShowsMachineTranscribedNote = () =>

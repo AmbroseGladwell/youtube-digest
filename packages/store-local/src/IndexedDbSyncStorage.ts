@@ -5,13 +5,16 @@ import {
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
   SETTINGS_MIGRATIONS,
+  StoredTranscript,
   TOPIC_MIGRATIONS,
   migrateStoredRecord,
+  readStoredRecord,
   rebasePendingChanges,
   stampStoredRecord,
   storedUpdatedAt,
   type OutboxEntry,
   type OutboxFailure,
+  type OutboxKind,
   type PendingWrite,
   type RecordChange,
   type RecordMigration,
@@ -29,7 +32,9 @@ import {
   SYNC_ENROLLED_KEY,
   SYNC_META_STORE,
   SYNC_REVISIONS_STORE,
+  SYNC_TRANSCRIPTS_ENROLLED_KEY,
   TOPICS_STORE,
+  TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
@@ -57,6 +62,7 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
 
 const BOOKKEEPING_STORES = [OUTBOX_STORE, SYNC_REVISIONS_STORE, SYNC_META_STORE];
 const EVERY_STORE = [...Object.values(RECORD_STORES), ...BOOKKEEPING_STORES];
+const ENROLMENT_STORES = [...EVERY_STORE, TRANSCRIPTS_STORE];
 
 export interface IndexedDbSyncStorageOptions {
   now?: (() => Date) | undefined;
@@ -83,7 +89,11 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
   async isEnrolled(): Promise<boolean> {
     const meta = this.#db.transaction(SYNC_META_STORE, "readonly").objectStore(SYNC_META_STORE);
-    return (await promisifyRequest(meta.get(SYNC_ENROLLED_KEY))) === true;
+    const [records, transcripts] = await Promise.all([
+      promisifyRequest(meta.get(SYNC_ENROLLED_KEY)),
+      promisifyRequest(meta.get(SYNC_TRANSCRIPTS_ENROLLED_KEY)),
+    ]);
+    return records === true && transcripts === true;
   }
 
   // Everything the library already holds becomes a pending write, at this client's own
@@ -91,30 +101,39 @@ export class IndexedDbSyncStorage implements SyncStorage {
   // cannot push either; that stays quarantined and counted where it is
   // (docs/features/sync-client.md).
   async enrol(): Promise<void> {
-    const transaction = this.#db.transaction(EVERY_STORE, "readwrite");
+    const transaction = this.#db.transaction(ENROLMENT_STORES, "readwrite");
     const meta = transaction.objectStore(SYNC_META_STORE);
-    if ((await promisifyRequest(meta.get(SYNC_ENROLLED_KEY))) === true) {
-      await promisifyTransaction(transaction);
-      return;
-    }
+    const outbox = transaction.objectStore(OUTBOX_STORE);
+    const [recordsEnrolled, transcriptsEnrolled] = await Promise.all([
+      promisifyRequest(meta.get(SYNC_ENROLLED_KEY)),
+      promisifyRequest(meta.get(SYNC_TRANSCRIPTS_ENROLLED_KEY)),
+    ]);
 
+    if (recordsEnrolled !== true) {
+      for (const write of await this.#libraryWrites(transaction)) outbox.add({ ...write, stuck: null });
+      meta.put(true, SYNC_ENROLLED_KEY);
+    }
+    if (transcriptsEnrolled !== true) {
+      const transcripts = await promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll());
+      for (const write of transcripts.flatMap(transcriptWrite)) outbox.add({ ...write, stuck: null });
+      meta.put(true, SYNC_TRANSCRIPTS_ENROLLED_KEY);
+    }
+    await promisifyTransaction(transaction);
+  }
+
+  async #libraryWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
     const overviews = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll());
     const states = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEW_STATES_STORE).getAll());
     const topics = promisifyRequest<unknown[]>(transaction.objectStore(TOPICS_STORE).getAll());
     const settings = promisifyRequest<unknown>(transaction.objectStore(SETTINGS_STORE).get(SETTINGS_KEY));
 
     const now = this.#now();
-    const writes = [
+    return [
       ...(await overviews).flatMap((raw) => wholeRecordWrite("overview", raw, "savedAt", now)),
       ...(await topics).flatMap((raw) => wholeRecordWrite("topic", raw, "createdAt", now)),
       ...(await states).flatMap((raw) => stateWrite(raw, now)),
       ...settingsWrite(await settings, now),
     ];
-
-    const outbox = transaction.objectStore(OUTBOX_STORE);
-    for (const write of writes) outbox.add({ ...write, stuck: null });
-    meta.put(true, SYNC_ENROLLED_KEY);
-    await promisifyTransaction(transaction);
   }
 
   async leave(): Promise<void> {
@@ -143,7 +162,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       const revisions = transaction.objectStore(SYNC_REVISIONS_STORE);
       if ("rev" in outcome) {
         revisions.put({ kind: entry.kind, id: entry.id, rev: outcome.rev });
-      } else {
+      } else if ("tombstoned" in outcome) {
         revisions.delete([entry.kind, entry.id]);
       }
     }
@@ -160,10 +179,22 @@ export class IndexedDbSyncStorage implements SyncStorage {
     await promisifyTransaction(transaction);
   }
 
-  async revisionOf(kind: SyncedRecordKind, id: string): Promise<number | null> {
+  async revisionOf(kind: OutboxKind, id: string): Promise<number | null> {
     const revisions = this.#db.transaction(SYNC_REVISIONS_STORE, "readonly").objectStore(SYNC_REVISIONS_STORE);
     const known = await promisifyRequest<{ rev: number } | undefined>(revisions.get([kind, id]));
     return known?.rev ?? null;
+  }
+
+  async readTranscript(videoId: string): Promise<StoredTranscript | null> {
+    const store = this.#db.transaction(TRANSCRIPTS_STORE, "readonly").objectStore(TRANSCRIPTS_STORE);
+    const raw = await promisifyRequest<unknown>(store.get(videoId));
+    return raw === undefined ? null : readableTranscript(raw);
+  }
+
+  async keepTranscript(transcript: StoredTranscript): Promise<void> {
+    const transaction = this.#db.transaction(TRANSCRIPTS_STORE, "readwrite");
+    transaction.objectStore(TRANSCRIPTS_STORE).put(transcript);
+    await promisifyTransaction(transaction);
   }
 
   // One transaction for the page and the cursor after it, so a crash between the two
@@ -209,7 +240,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
   }
 }
 
-const pendingKey = (kind: SyncedRecordKind, id: string) => `${kind}/${id}`;
+const pendingKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
 
 function groupPending(entries: OutboxEntry[]): Map<string, OutboxEntry[]> {
   const grouped = new Map<string, OutboxEntry[]>();
@@ -293,6 +324,24 @@ function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
       id: SETTINGS_KEY,
       updatedAt: writtenAt(migrated, null, now).toISOString(),
       change: { op: "settings", patch },
+    },
+  ];
+}
+
+function readableTranscript(raw: unknown): StoredTranscript | null {
+  const read = readStoredRecord(raw, StoredTranscript, []);
+  return read.status === "read" ? read.record : null;
+}
+
+function transcriptWrite(raw: unknown): PendingWrite[] {
+  const transcript = readableTranscript(raw);
+  if (transcript === null) return [];
+  return [
+    {
+      kind: "transcript",
+      id: transcript.videoId,
+      updatedAt: transcript.fetchedAt,
+      change: { op: "transcript" },
     },
   ];
 }

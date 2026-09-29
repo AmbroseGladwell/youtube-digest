@@ -1,4 +1,10 @@
-import { CLIENT_VERSION, type RecordChange, type SyncStorage, type SyncedRecordKind } from "@overview/domain";
+import {
+  CLIENT_VERSION,
+  type OutboxKind,
+  type RecordChange,
+  type StoredTranscript,
+  type SyncStorage,
+} from "@overview/domain";
 import { pushPendingWrite } from "./pushPendingWrite.js";
 import type { SyncApi } from "./SyncApi.js";
 import { INITIAL_SYNC_STATUS, type SyncStatus } from "./SyncStatus.js";
@@ -19,7 +25,7 @@ export interface SyncEngineSchedule {
   journalDebounceMs?: number | undefined;
 }
 
-const pendingKey = (kind: SyncedRecordKind, id: string) => `${kind}/${id}`;
+const pendingKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
 
 // One cycle is handshake, enrol if never enrolled, push the outbox in order, then pull
 // the feed to its end. Push goes before pull so that what comes back already carries this
@@ -60,6 +66,14 @@ export class SyncEngine {
     while (this.#running !== null) {
       await this.#running.catch(() => undefined);
     }
+  }
+
+  // A transcript this device does not hold, asked for when the reader opens it rather than
+  // pulled with the feed (docs/features/transcript-storage.md).
+  async fetchTranscript(videoId: string): Promise<StoredTranscript | null> {
+    const transcript = await this.#api.getTranscript(videoId);
+    if (transcript !== null) await this.#storage.keepTranscript(transcript);
+    return transcript;
   }
 
   sync(): Promise<SyncStatus> {
@@ -152,6 +166,7 @@ export class SyncEngine {
         this.#api,
         entry,
         await this.#storage.revisionOf(entry.kind, entry.id),
+        this.#storage,
       );
       switch (outcome.result) {
         case "written":
@@ -159,6 +174,9 @@ export class SyncEngine {
           break;
         case "gone":
           await this.#storage.acknowledge(entry.key, { tombstoned: true });
+          break;
+        case "sent":
+          await this.#storage.acknowledge(entry.key, { sent: true });
           break;
         case "stuck":
           await this.#storage.park(entry.key, outcome.failure);

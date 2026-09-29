@@ -1,4 +1,4 @@
-import type { OutboxEntry, OutboxFailure, WrittenRecord } from "@overview/domain";
+import type { OutboxEntry, OutboxFailure, SyncStorage, WrittenRecord } from "@overview/domain";
 import type { SyncApi } from "./SyncApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
 import { describe, stopReasonFor, type StopReason } from "./stopReasonFor.js";
@@ -6,6 +6,7 @@ import { describe, stopReasonFor, type StopReason } from "./stopReasonFor.js";
 export type PushOutcome =
   | { result: "written"; rev: number }
   | { result: "gone" }
+  | { result: "sent" }
   | { result: "stuck"; failure: OutboxFailure }
   | { result: "stopped"; reason: StopReason; detail: string };
 
@@ -20,16 +21,17 @@ export async function pushPendingWrite(
   api: SyncApi,
   entry: OutboxEntry,
   knownRev: number | null,
+  storage: Pick<SyncStorage, "readTranscript">,
 ): Promise<PushOutcome> {
   try {
-    return await send(api, entry, knownRev);
+    return await send(api, entry, knownRev, storage);
   } catch (error) {
     const reason = stopReasonFor(error);
     if (reason !== null) {
       return { result: "stopped", reason, detail: describe(error) };
     }
     if (isSyncRequestError(error)) {
-      if (error.code === "not_found" && entry.change.op !== "replace") {
+      if (error.code === "not_found" && isFieldWrite(entry)) {
         return { result: "gone" };
       }
       return { result: "stuck", failure: { code: error.code, message: error.message } };
@@ -38,7 +40,12 @@ export async function pushPendingWrite(
   }
 }
 
-async function send(api: SyncApi, entry: OutboxEntry, knownRev: number | null): Promise<PushOutcome> {
+async function send(
+  api: SyncApi,
+  entry: OutboxEntry,
+  knownRev: number | null,
+  storage: Pick<SyncStorage, "readTranscript">,
+): Promise<PushOutcome> {
   const { change } = entry;
   switch (change.op) {
     case "replace":
@@ -57,10 +64,19 @@ async function send(api: SyncApi, entry: OutboxEntry, knownRev: number | null): 
       await api.deleteOverview(entry.id);
       return { result: "gone" };
     }
+    case "transcript": {
+      const transcript = await storage.readTranscript(entry.id);
+      if (transcript !== null) await api.saveTranscript(transcript);
+      return { result: "sent" };
+    }
   }
 }
 
 const written = ({ rev }: WrittenRecord): PushOutcome => ({ result: "written", rev });
+
+// A transcript is not a field of a record, so a 404 for one is a server without the route,
+// not a tombstone on its way down.
+const isFieldWrite = ({ change }: OutboxEntry): boolean => change.op !== "replace" && change.op !== "transcript";
 
 const revisionNamedBy = (error: unknown): number | null =>
   isSyncRequestError(error) && typeof error.details?.rev === "number" ? error.details.rev : null;
