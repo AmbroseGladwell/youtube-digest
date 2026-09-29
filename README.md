@@ -70,3 +70,69 @@ Secondary, and unresolved:
 ## Status
 
 Prototype in daily use by one person. The capture path, transcript retrieval, note generation, topic filing and the reading and listening library all work. The measurable early result is less time spent watching videos to learn from them, and learnings that are easier to bring into a conversation and turn into action.
+
+## Getting set up
+
+Two tools go onto the machine by hand. Everything else — Node 22, Postgres 17, Task, `bws`, `gitleaks`, `flyctl`, `jq` — comes out of the Nix dev shell at the versions CI uses, and installing any of them yourself only gives you a second, different copy.
+
+**Nix, with flakes enabled.** The [Determinate Systems installer](https://install.determinate.systems) turns flakes on for you. With the official installer, add `experimental-features = nix-command flakes` to `~/.config/nix/nix.conf` afterwards.
+
+**direnv, hooked into your shell.** Install it however you install things (`brew install direnv`), then add the hook line to your shell's rc file — `eval "$(direnv hook zsh)"` — and open a new terminal. Without the hook direnv is installed but never runs, and the repo will look like it has no tools at all.
+
+Then, once, in the checkout:
+
+```
+direnv allow     # from now on, cd into the repo is enough
+task install     # npm ci exactly as CI runs it, and git pointed at .githooks
+```
+
+The first `direnv allow` builds the dev shell and takes a while: `bws` is marked unfree, so no binary cache carries it and it compiles from Rust source. That happens once per machine.
+
+From here, `task` on its own prints the menu with a description per entry, and `task search -- db` filters it. Every command below is in there.
+
+### The environment file
+
+The API reads the gitignored `.env` at the repo root, rendered from the committed `.env.tpl`.
+
+With a Bitwarden machine access token for the `overview-dev` project, `task secrets:login` stores it in your login keychain and `task secrets` renders the file. That is the supported path, and `docs/conventions/secrets.md` is the whole of it.
+
+Without one you can still run everything. The only secret in the template is `BREVO_API_KEY`, and the API requires it only when `MAIL_TRANSPORT` is `brevo`, so render the file with a throwaway value:
+
+```
+BREVO_API_KEY=unused node scripts/renderEnv.mjs .env.tpl .env
+```
+
+Leave `MAIL_TRANSPORT=log`, which prints each sign-in link to the API's output instead of mailing it. Per-machine values that are not secrets go in `.env.local`, read after `.env`. Never hand-edit `.env` itself: the next render replaces it whole.
+
+### Running it
+
+```
+task build:packages     # the library packages; every app and suite resolves @overview/* through dist
+task run                # Postgres on :5433, the API on :3000, the web app on :5173
+```
+
+The database is created under `.local/pg` on the first run with trust authentication, so nothing needs a password. `task db:stop` stops it, `task db:psql` opens it, and `task clean` deletes it along with every build output.
+
+To sign in, ask for a link from Settings and follow the one printed in the API's output, or skip the mail entirely with `task session -- you@example.com`.
+
+The extension is a separate build: `task run:extension`, then load `apps/extension/dist` unpacked at `chrome://extensions`. Its panel is filled in with the production server; type `http://localhost:3000` over it.
+
+### Checking it works
+
+```
+task typecheck
+task test
+```
+
+`task test` ends with the browser suite, which needs Chromium once: `npx playwright install --with-deps chromium`. It is the one tool outside the dev shell, because the npm package fetches it into your own cache exactly as CI does.
+
+When a task stops you, read its message rather than the failure: they are written to name the command to run next.
+
+### Where to go next
+
+- `docs/conventions/local-dev.md` — the dev shell and the Task menu in full, and why they are built this way.
+- `docs/README.md` — an index of every doc, folder by folder.
+- `docs/conventions/` — naming, commenting, and the frontend and backend guides. Read them before adding a file, folder or pattern.
+- `CLAUDE.md` — how work is tracked: every branch and pull request carries a card number from the Trello backlog.
+
+Optionally, if you work through Claude Code, attaching the Trello connector lets a session create and update cards on the backlog itself, which is otherwise a hand step in Trello before the branch can be named. Nothing needs it: the connector is a convenience, and the workflow that moves a card to Done on merge runs on its own repository secrets either way.

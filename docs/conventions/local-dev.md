@@ -16,7 +16,9 @@ direnv allow      # once, in the repo root; from then on cd is enough
 ```
 
 Without direnv, `nix develop` opens the same shell. The flake's lock file pins the
-nixpkgs revision, so two machines get the same tool versions.
+nixpkgs revision, so two machines get the same tool versions. Getting Nix and direnv onto
+a machine in the first place, and the rest of a first day in order, is the README's
+"Getting set up".
 
 Playwright's Chromium is the one tool outside the shell. The npm package downloads it
 into the user's cache on macOS and Linux, which is what CI does too; `task iwft` checks
