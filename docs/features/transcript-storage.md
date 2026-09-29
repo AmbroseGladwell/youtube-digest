@@ -228,6 +228,100 @@ cues, and none of which is panel-specific:
 All three render only when there are blocks to act on, so the error, empty and loading
 states carry no tools.
 
+## Following the reader across devices
+
+A transcript lived only in the IndexedDB of the device that fetched it, and it was never
+one of the synced record kinds. On a newly signed-in browser, sync brought down every overview
+and its chapters (which ride inside the overview record), but the Transcript tab said
+*"No transcript was stored for this note"*. That was false: the transcript was stored,
+just somewhere else. Nothing refilled the miss either. The reader only reads the local
+store, and the only code that fetches again is the watched-video query in the extension (OV-5).
+
+The API keeps a copy per account, at `GET` and `PUT /api/transcripts/:videoId`
+(`apps/api/migrations/V0004__transcripts.sql`, `src/routes/transcriptRoutes.ts`). It
+sits **outside the records feed** on purpose:
+
+- **Size.** A long video's transcript is megabytes, larger than the whole of an
+  account's other records combined. On the feed, a first sync would pull all of
+  them before showing anything. A device fetches one only when it opens that note.
+- **Nothing to merge.** A transcript is never edited. Storing it again replaces it
+  wholesale, so it needs no `rev`, no `If-Match` and no seq.
+- **No schema version.** The body is validated against `StoredTranscript`, not carried
+  opaquely with a version the way records are. An unreadable transcript is already a
+  cache miss on the client (the discard path above), so a shape the server does not know
+  costs one refetch, not a quarantine. Deploying the API first, as
+  `docs/architecture/api.md` asks, keeps it from ever dropping a field a newer client wrote.
+
+The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. It is
+keyed by `(account, video)` and not by video alone: the shared cross-account cache
+(OV-16) is still waiting on its gating decision, and it becomes a second place asked
+first behind the same `TranscriptStore` interface, not a replacement for this one.
+
+**Only the transcripts behind a note go up.** The transcript store also holds captions
+fetched only because a video was open in the extension, so they are ready if the reader
+presses Overview (`docs/features/watching-detection.md`). Uploading every transcript saved
+would send the account the reader's viewing history, and megabytes nobody asked for. So
+`saveTranscript` journals nothing. `IndexedDbOverviewStore.saveOverview` journals a
+`transcript` entry for the note's video in the same transaction as the note, and captions
+for a video with no note stay on the device that fetched them.
+
+**Up, through the outbox.** That entry gets the same retries, parking and "waiting to
+send" count as any record, and there is no wrapper store (`docs/features/sync-client.md`).
+It names only the video. The engine reads the transcript when it pushes the entry, so
+megabytes of segments are never copied into the journal. That is also why the order works:
+the pipeline stores the transcript before it saves the note. A transcript that is not there
+by the time its entry is pushed (a note saved before transcripts were kept) is done with.
+Regenerating a note sends its transcript again, which harmlessly replaces the account's copy.
+
+**Backfill, once, including for libraries already enrolled.** Enrolment journals the
+readable transcript behind each note the library holds, skipping any video already
+waiting in the outbox. A library enrolled before transcripts were synced has its records
+flag set but not `transcriptsEnrolled`. `isEnrolled` is false until both are set, so the
+next cycle journals that library's note transcripts, once, and touches nothing else.
+
+**Kept only while a note uses it.** A transcript row ties the account to a video, so it
+lasts only as long as a note needs it, and the server enforces that at both ends:
+
+- **Stored only if noted.** `PUT /api/transcripts/:videoId` keeps the transcript only if a
+  live note on the account uses that video (`putIfNoted`, one `insert … where exists`).
+  Otherwise it answers 204 and keeps nothing. That covers an upload from a device that
+  had not yet heard its note was deleted elsewhere.
+- **Sent after its note.** A transcript entry names the note that queued it, and the engine
+  holds it back while that note's write is parked, exactly as later writes to one record
+  wait behind a parked one (`docs/features/sync-client.md`). Without that, the transcript
+  would go up before the server had the note, be answered 204 and kept nowhere, and the
+  note would land later with no transcript behind it.
+- **Never interleaved with a delete.** The upload runs under the account's row lock, the
+  lock every note write takes to allocate its seq. If the upload locks first, it commits
+  before the delete, and the delete's sweep removes it. If the delete locks first, the
+  upload waits, then finds no live note and keeps nothing. As with the seq lock
+  (`docs/features/sync-api.md`), this is argued rather than tested: PGlite has no second
+  connection to race.
+- **Swept on every delete.** Every `DELETE /api/overviews/:id` removes every transcript on
+  the account that no live note uses (`forgetUnnoted`, one statement). It runs even when
+  the note was already deleted, so a retry heals a first attempt whose cleanup failed after
+  the tombstone was committed. A note sharing its video with another keeps the transcript.
+
+On the client, `SyncStorage.transcriptToPush`
+returns nothing once no note on the device uses the video, so a note deleted before it
+synced sends no transcript at all. What is lost is small: a deleted note's transcript
+cannot seed OV-16's shared cache, and the next note on that video fetches it again for one
+free caption request. When that cache exists, a note delete should drop only the account's
+link to the video; the transcript content can live in the shared table, with no account
+attached.
+
+**Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
+the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET
+/api/transcripts/:videoId` and keeps the answer through `SyncStorage.keepTranscript`,
+which writes without journaling, the same way a pulled record is written, so a
+fetched transcript is never sent straight back. The query key carries whether the server
+can be asked, so signing in asks again.
+
+**What the tab says.** While the server is asked, the tab shows the skeleton. If it cannot
+be asked, the tab shows the failure and a *Try again* button, because a network failure is
+not "none was kept". Only a local miss that the server then confirms, or a miss on a
+device that is not signed in, shows *"No transcript was stored for this note"*.
+
 ## What this does not do
 
 - ~~**Chapters.**~~ Built — see `docs/features/chapters.md`. It was a new prompt

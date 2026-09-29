@@ -96,11 +96,18 @@ range is one of three things:
 full-page document is a library with no player next to it, and it should link out exactly
 as the web app does.
 
-Beside the range, **Transcript** opens the transcript at the chapter's start. It is drawn
-only when a transcript is stored for the video — the query is already cached by the time
-the tab opens — because a note whose captions were never kept would land on the tab's
-"nothing stored" line, and a control that leads to a dead end is worse than none
-(`CLAUDE.md`, "Degrade visibly").
+Beside the range, **Transcript** opens the transcript at the chapter's start. It works
+only when there is a transcript to open. Otherwise it is drawn **disabled, with a
+`title` saying why**, rather than hidden, because a note whose captions were never kept would
+land on the tab's "nothing stored" line. It started out hidden. Once a signed-in device
+could fetch a transcript from the account (`docs/features/transcript-storage.md`), a
+hidden control that appeared seconds later read as a glitch, and a missing one read as a
+chapter with no transcript. Disabled is the placed-but-not-working state `SortPill` already
+uses, painted by the shared `control-disabled` mixin. It says "Looking for this note's
+transcript" only while a request is in flight, "Couldn't load this note's transcript" when
+the account could not be asked, and "No transcript was kept for this note" otherwise. That
+includes a note with no video id, whose query never runs but which React Query still
+reports as pending.
 
 ## Opening the transcript somewhere
 

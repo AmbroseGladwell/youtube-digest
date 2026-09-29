@@ -123,6 +123,7 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
     isPending: transcriptQuery.isPending,
     error: transcriptQuery.isError ? transcriptQuery.error : null,
     blocks,
+    retry: () => void transcriptQuery.refetch(),
   });
 
   const currentBlock = blocks[follow.currentBlockIndex] ?? null;
@@ -225,13 +226,14 @@ interface TranscriptState {
   blocks: TranscriptBlock[];
   isPending: boolean;
   error: Error | null;
+  retry: () => void;
 }
 
 // Null means there are blocks to read, which is the one case the tools and the search
 // box are worth drawing for.
 function unreadableTranscript(
   video: VideoSource,
-  { blocks, isPending, error }: TranscriptState,
+  { blocks, isPending, error, retry }: TranscriptState,
 ): ReactNode | null {
   if (video.id === null) {
     return (
@@ -240,9 +242,19 @@ function unreadableTranscript(
   }
   if (error) {
     return (
-      <TranscriptNote testId={transcriptPanelTestIds.errorNote}>
-        Couldn't load this transcript: {error.message}
-      </TranscriptNote>
+      <div className={styles.failed}>
+        <TranscriptNote testId={transcriptPanelTestIds.errorNote}>
+          Couldn't load this transcript: {error.message}
+        </TranscriptNote>
+        <button
+          type="button"
+          className={styles.tool}
+          onClick={retry}
+          data-testid={transcriptPanelTestIds.retryButton}
+        >
+          Try again
+        </button>
+      </div>
     );
   }
   if (isPending) {

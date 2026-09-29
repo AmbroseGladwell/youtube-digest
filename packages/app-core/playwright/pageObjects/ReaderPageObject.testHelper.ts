@@ -614,6 +614,12 @@ export class ReaderPageObject extends PageObject {
 
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
   verifyShowsTranscriptSkeleton = () => this.expectToBeVisible(transcriptPanelTestIds.skeleton);
+  verifyTranscriptFailedReads = (pattern: RegExp) =>
+    this.step(`verifyTranscriptFailedReads ${pattern.source}`, () =>
+      expect(this.get(transcriptPanelTestIds.errorNote)).toHaveText(pattern),
+    );
+  clickRetryTranscript = () =>
+    this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
   // YouTube's own phrase for its speech-recognition track, not the developer's
   // (docs/features/transcript-storage.md).
   verifyShowsMachineTranscribedNote = () =>
@@ -703,12 +709,17 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyChaptersOfferTranscript = (offered: boolean) =>
-    this.step(`verifyChaptersOfferTranscript ${offered}`, async () =>
-      offered
-        ? expect(this.get(chaptersPanelTestIds.transcriptButton)).toHaveCount(
-            await this.get(chaptersPanelTestIds.row).count(),
-          )
-        : this.expectToHaveCount(chaptersPanelTestIds.transcriptButton, 0),
+    this.step(`verifyChaptersOfferTranscript ${offered}`, async () => {
+      const buttons = this.get(chaptersPanelTestIds.transcriptButton);
+      await expect(buttons).toHaveCount(await this.get(chaptersPanelTestIds.row).count());
+      for (const button of await buttons.all()) {
+        await (offered ? expect(button).toBeEnabled() : expect(button).toBeDisabled());
+      }
+    });
+
+  verifyChapterTranscriptReasonIs = (reason: string) =>
+    this.step(`verifyChapterTranscriptReasonIs ${reason}`, () =>
+      expect(this.get(chaptersPanelTestIds.transcriptButton).first()).toHaveAttribute("title", reason),
     );
 
   verifyActiveTabIs = (tab: string) =>

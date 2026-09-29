@@ -10,7 +10,14 @@ export type OutboxChange =
   | { op: "captureReason"; captureReason: string | null }
   | { op: "state"; patch: Record<string, unknown> }
   | { op: "settings"; patch: Record<string, unknown> }
-  | { op: "delete" };
+  | { op: "delete" }
+  // No body: the transcript is read from the store when the entry is pushed, so megabytes
+  // of segments are not copied into the journal. The note that sent it, which it waits
+  // behind while that note's write is parked (docs/features/transcript-storage.md).
+  | { op: "transcript"; overviewId: string };
+
+// Transcripts are journaled and pushed like records, but never come down the feed.
+export type OutboxKind = SyncedRecordKind | "transcript";
 
 export interface OutboxFailure {
   code: string;
@@ -18,7 +25,7 @@ export interface OutboxFailure {
 }
 
 export interface PendingWrite {
-  kind: SyncedRecordKind;
+  kind: OutboxKind;
   id: string;
   updatedAt: string;
   change: OutboxChange;

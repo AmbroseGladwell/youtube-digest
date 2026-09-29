@@ -8,6 +8,7 @@ import { decideMerge } from "../records/decideMerge.js";
 import { decideReplace } from "../records/decideReplace.js";
 import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
+import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
@@ -17,7 +18,11 @@ const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: t
   .partial()
   .extend({ updatedAt: UpdatedAt });
 
-export function overviewRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export function overviewRoutes(
+  app: FastifyInstance,
+  records: RecordsRepository,
+  transcripts: TranscriptsRepository,
+): void {
   app.post("/overviews", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The overview");
     const id = parseOrThrow(OverviewId, body.id, "The overview's id");
@@ -101,10 +106,13 @@ export function overviewRoutes(app: FastifyInstance, records: RecordsRepository)
   app.delete("/overviews/:id", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
     const ifMatch = ifMatchOf(request);
-    const [overview] = await records.write(request.session!.accountId, [
+    const accountId = request.session!.accountId;
+    const [overview] = await records.write(accountId, [
       { kind: "overview", id, decide: (current) => decideTombstone("overview", current, ifMatch, request.client!) },
       { kind: "overviewState", id, decide: (current) => decideTombstone("overviewState", current, null, request.client!) },
     ]);
+    // On every delete, the retry of one already done included, so a failure here heals.
+    await transcripts.forgetUnnoted(accountId);
     return overview === null || overview === undefined ? reply.status(204).send() : sendWritten(reply, overview);
   });
 }

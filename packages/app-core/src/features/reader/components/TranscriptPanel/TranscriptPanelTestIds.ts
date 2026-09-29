@@ -5,6 +5,7 @@ export const transcriptPanelTestIds = {
   skeleton: "TranscriptPanel.skeleton",
   emptyNote: "TranscriptPanel.emptyNote",
   errorNote: "TranscriptPanel.errorNote",
+  retryButton: "TranscriptPanel.retryButton",
   tools: "TranscriptPanel.tools",
   copyButton: "TranscriptPanel.copyButton",
   exportButton: "TranscriptPanel.exportButton",

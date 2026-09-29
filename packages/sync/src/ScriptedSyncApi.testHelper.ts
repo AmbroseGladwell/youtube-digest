@@ -1,4 +1,4 @@
-import type { Handshake, RecordChange, RecordChangesPage, WrittenRecord } from "@overview/domain";
+import type { Handshake, RecordChange, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
 import { CLIENT_VERSION, type ApiErrorCode, API_ERROR_CODES } from "@overview/domain";
 import type { SyncApi } from "./SyncApi.js";
 import { SyncRequestError, SyncTransportError } from "./SyncRequestError.js";
@@ -16,6 +16,7 @@ export class ScriptedSyncApi implements SyncApi {
   calls: ApiCall[] = [];
   handshakeAnswer: Handshake = { minSupportedClientVersion: 1, currentClientVersion: CLIENT_VERSION };
   pages: RecordChangesPage[] = [];
+  transcripts = new Map<string, StoredTranscript>();
   #rev = 0;
   #failures = new Map<keyof SyncApi, Failure[]>();
   #alwaysFail = new Map<keyof SyncApi, Failure>();
@@ -84,5 +85,15 @@ export class ScriptedSyncApi implements SyncApi {
 
   async updateSettings(patch: Record<string, unknown>, updatedAt: string) {
     return this.#answer("updateSettings", [patch, updatedAt], () => this.#written("settings"));
+  }
+
+  async saveTranscript(transcript: StoredTranscript) {
+    return this.#answer("saveTranscript", [transcript], () => {
+      this.transcripts.set(transcript.videoId, transcript);
+    });
+  }
+
+  async getTranscript(videoId: string) {
+    return this.#answer("getTranscript", [videoId], () => this.transcripts.get(videoId) ?? null);
   }
 }

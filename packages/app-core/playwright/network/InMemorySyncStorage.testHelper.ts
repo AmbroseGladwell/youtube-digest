@@ -5,13 +5,15 @@ import {
   Topic,
   type OutboxEntry,
   type OutboxFailure,
+  type OutboxKind,
   type RecordChange,
+  type StoredTranscript,
   type SyncStorage,
-  type SyncedRecordKind,
   type WriteAcknowledgement,
 } from "@overview/domain";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
+import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
 
 // The browser-side sync bookkeeping for an IWFT run: what the feed delivers is written into
 // the in-memory stores the app is reading, so a pulled record shows up where the reader
@@ -27,6 +29,7 @@ export class InMemorySyncStorage implements SyncStorage {
   constructor(
     private readonly overviewStore: InMemoryOverviewStore,
     private readonly settingsStore: InMemorySettingsStore,
+    private readonly transcriptStore: InMemoryTranscriptStore,
   ) {}
 
   async isEnrolled() {
@@ -59,8 +62,17 @@ export class InMemorySyncStorage implements SyncStorage {
     this.outbox = this.outbox.map((entry) => (entry.key === key ? { ...entry, stuck: failure } : entry));
   }
 
-  async revisionOf(_kind: SyncedRecordKind, _id: string) {
+  async revisionOf(_kind: OutboxKind, _id: string) {
     return null;
+  }
+
+  async transcriptToPush(videoId: string) {
+    const noted = (await this.overviewStore.listOverviews()).some((overview) => overview.video.id === videoId);
+    return noted ? this.transcriptStore.getTranscript(videoId as never) : null;
+  }
+
+  async keepTranscript(transcript: StoredTranscript) {
+    this.transcriptStore.seedTranscript(transcript);
   }
 
   async applyChanges(changes: RecordChange[], next: number) {

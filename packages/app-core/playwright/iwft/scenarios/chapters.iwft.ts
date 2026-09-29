@@ -1,7 +1,8 @@
 import type { Chapter, TranscriptSegment } from "@overview/domain";
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -42,15 +43,21 @@ const playingAt = (positionMs: number, videoId: string = VIDEO_ID) => ({
 
 const panelWatching = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL, playback: playingAt(5000) };
 
+const SIGNED_IN = { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL };
+
 const seedNote = (
   backendSimulator: BackendSimulator,
-  { chapters = CHAPTERS, transcript = true }: { chapters?: Chapter[] | null; transcript?: boolean } = {},
+  {
+    chapters = CHAPTERS,
+    transcript = true,
+    videoId = VIDEO_ID,
+  }: { chapters?: Chapter[] | null; transcript?: boolean; videoId?: VideoId | null } = {},
 ) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
     chapters,
-    video: { ...overview.video, id: VIDEO_ID, url: VIDEO_URL },
+    video: { ...overview.video, id: videoId, url: VIDEO_URL },
   });
   if (transcript) {
     backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
@@ -194,7 +201,7 @@ test("opening the transcript from a chapter stands the following down", async ({
   await reader.verifyOffersToFollowPlayback(true);
 });
 
-test("a note with no transcript stored offers no way into one", async ({
+test("a note with no transcript stored shows the way into one disabled, and says why", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -205,6 +212,57 @@ test("a note with no transcript stored offers no way into one", async ({
 
   await reader.verifyChapterTitlesRead(CHAPTERS.map((chapter) => chapter.title));
   await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("No transcript was kept for this note");
+});
+
+test("signed in, the way into the transcript waits disabled while the account is asked, then opens it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator, { transcript: false });
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_TRANSCRIPT);
+  const library = await launcher.launchExpectingLibrary({
+    sync: true,
+    syncConnection: SIGNED_IN,
+  });
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Chapters");
+  await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("Looking for this note's transcript");
+
+  await backendSimulator.releaseEndpoint(EndpointKey.SYNC_TRANSCRIPT);
+
+  await reader.verifyChaptersOfferTranscript(true);
+  await reader.clickChapterTranscript("The end");
+  await reader.verifyActiveTabIs("Transcript");
+});
+
+test("a note saved before transcripts were stored does not claim to be looking for one", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator, { transcript: false, videoId: null });
+  const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: SIGNED_IN });
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Chapters");
+
+  await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("No transcript was kept for this note");
+});
+
+test("signed in, a transcript the account could not be asked for is not called missing", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator, { transcript: false });
+  backendSimulator.simulateEndpointError(EndpointKey.SYNC_TRANSCRIPT);
+  const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: SIGNED_IN });
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Chapters");
+
+  await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("Couldn't load this note's transcript");
 });
 
 test("a note made before chapters existed says so, rather than showing an empty list", async ({

@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { makeOverview } from "@overview/store-conformance";
+import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
 import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
   OVERVIEW_CORPUS,
   OverviewId,
+  VideoId,
   type RecordChange,
 } from "@overview/domain";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
+import { IndexedDbTranscriptStore } from "./IndexedDbTranscriptStore.js";
 import {
   OUTBOX_STORE,
   OVERVIEWS_STORE,
@@ -20,8 +22,16 @@ import {
   SETTINGS_STORE,
   SYNC_REVISIONS_STORE,
   TOPICS_STORE,
+  TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
-import { openTestDatabase, putRaw, readOutbox, readRaw } from "./enrolledDatabase.testHelper.js";
+import {
+  markEnrolled,
+  openEnrolledDatabase,
+  openTestDatabase,
+  putRaw,
+  readOutbox,
+  readRaw,
+} from "./enrolledDatabase.testHelper.js";
 
 const NOW = new Date("2026-09-26T12:00:00.000Z");
 const now = () => NOW;
@@ -34,6 +44,9 @@ const change = (overrides: Partial<RecordChange> & Pick<RecordChange, "kind" | "
   deleted: false,
   ...overrides,
 });
+
+const recordsPending = async (storage: IndexedDbSyncStorage) =>
+  (await storage.listPending()).filter((entry) => entry.kind !== "transcript");
 
 const corpusAt = (version: number) => OVERVIEW_CORPUS.get(version) as Record<string, unknown>;
 
@@ -120,11 +133,11 @@ test("acknowledging a write removes it and remembers the revision the server gav
   const store = new IndexedDbOverviewStore(db);
   const overview = makeOverview();
   await store.saveOverview(overview);
-  const [entry] = await storage.listPending();
+  const [entry] = await recordsPending(storage);
 
   await storage.acknowledge(entry!.key, { rev: 3 });
 
-  assert.deepEqual(await storage.listPending(), []);
+  assert.deepEqual(await recordsPending(storage), []);
   assert.equal(await storage.revisionOf("overview", overview.id), 3);
 });
 
@@ -148,11 +161,11 @@ test("parking a write keeps it, marked with why, and leaves the others pending",
   const store = new IndexedDbOverviewStore(db);
   await store.saveOverview(makeOverview());
   await store.saveOverview(makeOverview());
-  const [first] = await storage.listPending();
+  const [first] = await recordsPending(storage);
 
   await storage.park(first!.key, { code: "invalid_request", message: "no" });
 
-  const pending = await storage.listPending();
+  const pending = await recordsPending(storage);
   assert.equal(pending.length, 2);
   assert.deepEqual(pending[0]?.stuck, { code: "invalid_request", message: "no" });
   assert.equal(pending[1]?.stuck, null);
@@ -289,3 +302,158 @@ test("journal listeners hear a notification once per journaled write", async () 
   assert.equal(heard.length, 1);
 });
 
+
+const transcriptEntry = (videoId: string, fetchedAt: string, overviewId: string) => ({
+  kind: "transcript",
+  id: videoId,
+  updatedAt: fetchedAt,
+  change: { op: "transcript", overviewId },
+});
+
+test("enrolling journals the transcript behind each note, by its video, without copying the segments", async () => {
+  const db = await openTestDatabase();
+  const transcript = makeStoredTranscript();
+  await putRaw(db, TRANSCRIPTS_STORE, transcript);
+  const note = makeOverview({ video: transcript.video! });
+  await new IndexedDbOverviewStore(db).saveOverview(note);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  const entry = (await storage.listPending()).find((pending) => pending.kind === "transcript");
+  assert.deepEqual(
+    { kind: entry?.kind, id: entry?.id, updatedAt: entry?.updatedAt, change: entry?.change },
+    transcriptEntry(transcript.videoId, transcript.fetchedAt, note.id),
+  );
+});
+
+test("enrolling leaves on this device a transcript kept only because its video was open", async () => {
+  const db = await openTestDatabase();
+  await putRaw(db, TRANSCRIPTS_STORE, makeStoredTranscript({ videoId: VideoId.parse("only-watched") }));
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  assert.deepEqual(await storage.listPending(), []);
+});
+
+test("a library enrolled before transcripts were synced journals its notes' transcripts once, and nothing else again", async () => {
+  const db = await openTestDatabase();
+  const transcript = makeStoredTranscript();
+  await putRaw(db, TRANSCRIPTS_STORE, transcript);
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  await markEnrolled(db);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  assert.equal(await storage.isEnrolled(), false);
+  await storage.enrol();
+  await storage.enrol();
+
+  assert.equal(await storage.isEnrolled(), true);
+  assert.deepEqual(
+    (await storage.listPending()).map((entry) => [entry.kind, entry.id]),
+    [["transcript", transcript.videoId]],
+  );
+});
+
+test("the transcript backfill skips a video whose transcript is already waiting to be sent", async () => {
+  const db = await openEnrolledDatabase();
+  const transcript = makeStoredTranscript();
+  await putRaw(db, TRANSCRIPTS_STORE, transcript);
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  const transcripts = (await storage.listPending()).filter((entry) => entry.kind === "transcript");
+  assert.equal(transcripts.length, 1);
+});
+
+test("enrolling leaves out a transcript this client cannot read", async () => {
+  const db = await openTestDatabase();
+  await putRaw(db, TRANSCRIPTS_STORE, { videoId: "example", segments: "not a list" });
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview());
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  assert.deepEqual((await storage.listPending()).filter((entry) => entry.kind === "transcript"), []);
+});
+
+test("saving a note on an enrolled library journals its video's transcript alongside it, and says so once", async () => {
+  const db = await openEnrolledDatabase();
+  let heard = 0;
+  const overviews = new IndexedDbOverviewStore(db, { onJournaled: () => (heard += 1) });
+  const overview = makeOverview();
+
+  await overviews.saveOverview(overview);
+
+  assert.deepEqual(
+    (await readOutbox(db)).map((entry) => [entry.kind, entry.id, entry.change.op]),
+    [
+      ["overview", overview.id, "replace"],
+      ["transcript", overview.video.id, "transcript"],
+    ],
+  );
+  assert.deepEqual(
+    (await readOutbox(db)).find((entry) => entry.kind === "transcript")?.change,
+    { op: "transcript", overviewId: overview.id },
+  );
+  assert.equal(heard, 1);
+});
+
+test("saving a note whose video has no id journals no transcript", async () => {
+  const db = await openEnrolledDatabase();
+  const overview = makeOverview({ video: { ...makeOverview().video, id: null } });
+
+  await new IndexedDbOverviewStore(db).saveOverview(overview);
+
+  assert.deepEqual((await readOutbox(db)).map((entry) => entry.kind), ["overview"]);
+});
+
+test("saving a transcript journals nothing: only a note sends one to the account", async () => {
+  const db = await openEnrolledDatabase();
+
+  await new IndexedDbTranscriptStore(db).saveTranscript(makeStoredTranscript());
+
+  assert.deepEqual(await readOutbox(db), []);
+});
+
+test("a transcript kept from the server reads back, and is not journaled to be sent back to it", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const transcript = makeStoredTranscript({ videoId: VideoId.parse("from-the-server") });
+
+  await storage.keepTranscript(transcript);
+
+  assert.deepEqual(await new IndexedDbTranscriptStore(db).getTranscript(transcript.videoId), transcript);
+  assert.deepEqual(await readOutbox(db), []);
+});
+
+test("acknowledging a sent transcript removes it and remembers no revision", async () => {
+  const db = await openEnrolledDatabase();
+  const transcript = makeStoredTranscript();
+  await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const entry = (await storage.listPending()).find((pending) => pending.kind === "transcript");
+
+  await storage.acknowledge(entry!.key, { sent: true });
+
+  assert.deepEqual((await storage.listPending()).map((pending) => pending.kind), ["overview"]);
+  assert.equal(await storage.revisionOf("transcript", transcript.videoId), null);
+});
+
+test("a transcript is pushed while a note uses its video, and not once that note is deleted", async () => {
+  const db = await openEnrolledDatabase();
+  const transcript = makeStoredTranscript();
+  await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
+  const overviews = new IndexedDbOverviewStore(db);
+  const overview = makeOverview({ video: transcript.video! });
+  await overviews.saveOverview(overview);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  assert.deepEqual(await storage.transcriptToPush(transcript.videoId), transcript);
+  await overviews.deleteOverview(overview.id);
+  assert.equal(await storage.transcriptToPush(transcript.videoId), null);
+});

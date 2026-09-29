@@ -13,6 +13,8 @@ import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
+import { transcriptRoutes } from "./routes/transcriptRoutes.js";
+import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
 import { writeFloorPlugin } from "./versions/writeFloorPlugin.js";
@@ -92,9 +94,11 @@ export async function buildApp({
 
       const records = new RecordsRepository(sql, clock);
       changesRoutes(api, records);
-      overviewRoutes(api, records);
+      const transcripts = new TranscriptsRepository(sql, clock);
+      overviewRoutes(api, records, transcripts);
       topicRoutes(api, records);
       settingsRoutes(api, records);
+      transcriptRoutes(api, transcripts);
     },
     { prefix: "/api" },
   );

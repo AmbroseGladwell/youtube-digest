@@ -11,6 +11,9 @@ import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
 
 const NOT_MADE = "Chapters weren't made for this note. Generating it again adds them.";
 const NOTHING_TO_SPLIT = "This video's transcript had nothing to split into chapters.";
+const LOOKING_FOR_TRANSCRIPT = "Looking for this note's transcript";
+const NO_TRANSCRIPT = "No transcript was kept for this note";
+const COULD_NOT_LOAD_TRANSCRIPT = "Couldn't load this note's transcript";
 
 export interface ChaptersPanelProps {
   chapters: Chapter[] | null;
@@ -38,6 +41,11 @@ export function ChaptersPanel({ chapters, video, onOpenTranscriptAt }: ChaptersP
   const position = usePlaybackPosition(video.id);
   const transcriptQuery = useTranscriptQuery(video.id);
   const hasTranscript = (transcriptQuery.data?.segments.length ?? 0) > 0;
+  const noTranscriptReason = transcriptQuery.isError
+    ? COULD_NOT_LOAD_TRANSCRIPT
+    : transcriptQuery.fetchStatus === "fetching"
+      ? LOOKING_FOR_TRANSCRIPT
+      : NO_TRANSCRIPT;
 
   const currentIndex =
     chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
@@ -91,17 +99,17 @@ export function ChaptersPanel({ chapters, video, onOpenTranscriptAt }: ChaptersP
                       Playing on YouTube
                     </span>
                   )}
-                  {hasTranscript && (
-                    <button
-                      type="button"
-                      className={styles.transcriptButton}
-                      onClick={() => onOpenTranscriptAt(chapter.startMs)}
-                      aria-label={`Open the transcript at ${formatTimestamp(chapter.startMs)}`}
-                      data-testid={chaptersPanelTestIds.transcriptButton}
-                    >
-                      Transcript
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={styles.transcriptButton}
+                    onClick={() => onOpenTranscriptAt(chapter.startMs)}
+                    disabled={!hasTranscript}
+                    title={hasTranscript ? undefined : noTranscriptReason}
+                    aria-label={`Open the transcript at ${formatTimestamp(chapter.startMs)}`}
+                    data-testid={chaptersPanelTestIds.transcriptButton}
+                  >
+                    Transcript
+                  </button>
                 </span>
               </span>
               <span className={styles.title} data-testid={chaptersPanelTestIds.title}>

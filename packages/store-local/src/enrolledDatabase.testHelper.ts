@@ -26,6 +26,12 @@ export function readOutbox(db: IDBDatabase): Promise<OutboxEntry[]> {
   );
 }
 
+// The outbox without the transcript entries a saved note brings with it, for tests about
+// the records themselves.
+export async function readRecordOutbox(db: IDBDatabase): Promise<OutboxEntry[]> {
+  return (await readOutbox(db)).filter((entry) => entry.kind !== "transcript");
+}
+
 export function readRaw<T = Record<string, unknown>>(db: IDBDatabase, store: string, key: IDBValidKey): Promise<T> {
   return promisifyRequest<T>(db.transaction(store, "readonly").objectStore(store).get(key));
 }

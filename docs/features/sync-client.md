@@ -50,6 +50,7 @@ The ops and the routes they map onto:
 | `deleteOverview` | `delete` | `DELETE /overviews/:id` |
 | `createTopic` | `replace`, the stored topic | `POST /topics` |
 | `Settings.update` | `settings`, the patch as given | `PUT /settings` |
+| `saveOverview`, with a video id | also `transcript`, the video only, read at push time | `PUT /transcripts/:videoId` |
 
 Every entry carries the same `updatedAt` the record was stamped with, from the same
 `Date`, so the server stores the time of the local write and nothing else (`sync-metadata.md`,
@@ -204,6 +205,7 @@ extension it is `Open extensions`, which the shell provides and app-core cannot.
 
 `chrome.runtime.onUpdateAvailable`
 feeding the wall's `Update now`; the one-overview-per-video question at first sync;
-set-valued merging of `userTags` and `topicIds`; the shared transcript cache; captures and
+set-valued merging of `userTags` and `topicIds`; the shared transcript cache (a reader's own
+transcripts do sync, outside the feed: `docs/features/transcript-storage.md`); captures and
 audio. Retrying a parked write once the app has updated is a one-line change to `#push`
 when the day comes, and is left until it does.

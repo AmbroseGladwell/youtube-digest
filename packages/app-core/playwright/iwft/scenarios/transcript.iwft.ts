@@ -3,6 +3,7 @@ import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import {
@@ -271,4 +272,76 @@ test("a second note on a video already in the library reads the stored captions 
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
+});
+
+// Signed in, a transcript fetched on another device is on the account, not on this one
+// (docs/features/transcript-storage.md, "Following the reader across devices").
+const SIGNED_IN = {
+  sync: true,
+  syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+};
+
+test("signed in, a transcript fetched on another device reads here, and is kept here", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+  const transcript = makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS });
+  backendSimulator.sync.seedTranscript(transcript);
+
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyTranscriptBlocksRead(BLOCKS);
+  expect(await backendSimulator.transcriptStore.getTranscript(VIDEO_ID)).toEqual(transcript);
+});
+
+test("signed in, the tab shows it is loading while the account is asked", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_TRANSCRIPT);
+
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+  await reader.verifyShowsTranscriptSkeleton();
+  await backendSimulator.releaseEndpoint(EndpointKey.SYNC_TRANSCRIPT);
+
+  await reader.verifyTranscriptBlocksRead(BLOCKS);
+});
+
+test("signed in, a transcript the account could not be asked for says so, and trying again reads it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.simulateEndpointError(EndpointKey.SYNC_TRANSCRIPT);
+
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+  await reader.verifyTranscriptFailedReads(/Couldn't load this transcript/);
+  backendSimulator.simulateEndpointDefault(EndpointKey.SYNC_TRANSCRIPT);
+  await reader.clickRetryTranscript();
+
+  await reader.verifyTranscriptBlocksRead(BLOCKS);
+});
+
+test("signed in, a transcript no device on the account kept says none was stored", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(noteOn(VIDEO_ID));
+
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyShowsNoStoredTranscript();
+  expect(backendSimulator.getCallCount(EndpointKey.SYNC_TRANSCRIPT)).toBe(1);
 });

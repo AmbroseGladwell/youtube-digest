@@ -5,12 +5,7 @@ import { makeOverview } from "@overview/store-conformance";
 import { CURRENT_OVERVIEW_SCHEMA_VERSION, OverviewId, TopicId } from "@overview/domain";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { OVERVIEWS_STORE, OVERVIEW_STATES_STORE } from "./localDatabaseSchema.js";
-import {
-  openEnrolledDatabase,
-  openTestDatabase,
-  readOutbox,
-  readRaw,
-} from "./enrolledDatabase.testHelper.js";
+import { openEnrolledDatabase, openTestDatabase, readOutbox, readRaw, readRecordOutbox } from "./enrolledDatabase.testHelper.js";
 
 test("a library that was never enrolled journals nothing, whatever is written to it", async () => {
   const db = await openTestDatabase();
@@ -55,7 +50,7 @@ test("filing an overview journals the topic ids and nothing else about it", asyn
 
   await store.setOverviewTopics(overview.id, [topicId]);
 
-  const entries = await readOutbox(db);
+  const entries = await readRecordOutbox(db);
   assert.equal(entries.length, 2);
   assert.deepEqual(entries[1]?.change, { op: "topics", topicIds: [topicId] });
   assert.equal(entries[1]?.updatedAt, (await readRaw(db, OVERVIEWS_STORE, overview.id)).updatedAt);
@@ -69,7 +64,7 @@ test("a capture reason journals as its own field write", async () => {
 
   await store.setOverviewCaptureReason(overview.id, "Because");
 
-  assert.deepEqual((await readOutbox(db))[1]?.change, { op: "captureReason", captureReason: "Because" });
+  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "captureReason", captureReason: "Because" });
 });
 
 test("marking read journals only the fields the patch named", async () => {
@@ -122,7 +117,7 @@ test("the journal entry lands in the same transaction as the write, so the two c
 
   await Promise.all([store.saveOverview(first), store.saveOverview(second)]);
 
-  const entries = await readOutbox(db);
+  const entries = await readRecordOutbox(db);
   assert.deepEqual(
     entries.map((entry) => entry.id).sort(),
     [first.id, second.id].sort(),

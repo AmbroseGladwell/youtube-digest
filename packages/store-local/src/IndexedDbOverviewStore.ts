@@ -87,10 +87,30 @@ export class IndexedDbOverviewStore implements OverviewStore {
     ];
   }
 
+  // A note carries its video's transcript to the account; a transcript fetched only because
+  // a video was open stays on this device (docs/features/transcript-storage.md).
   async saveOverview(overview: Overview) {
     const now = new Date();
     const record = stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION, now);
-    await this.#write(OVERVIEWS_STORE, record, "overview", overview.id, now, { op: "replace", record });
+    const transaction = this.#db.transaction([OVERVIEWS_STORE, ...JOURNALLED_STORES], "readwrite");
+    transaction.objectStore(OVERVIEWS_STORE).put(record);
+    const updatedAt = now.toISOString();
+    const journaled = await appendPendingWrite(transaction, {
+      kind: "overview",
+      id: overview.id,
+      updatedAt,
+      change: { op: "replace", record },
+    });
+    if (journaled && overview.video.id !== null) {
+      await appendPendingWrite(transaction, {
+        kind: "transcript",
+        id: overview.video.id,
+        updatedAt,
+        change: { op: "transcript", overviewId: overview.id },
+      });
+    }
+    await promisifyTransaction(transaction);
+    if (journaled) this.#onJournaled?.();
   }
 
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {

@@ -19,7 +19,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   const settingsStore = new InMemorySettingsStore();
   const transcriptStore = new InMemoryTranscriptStore();
   const syncStorage =
-    hooksConfig?.syncAvailable === true ? new InMemorySyncStorage(overviewStore, settingsStore) : null;
+    hooksConfig?.syncAvailable === true ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore) : null;
 
   for (const overview of hooksConfig?.seedOverviews ?? []) overviewStore.seedOverview(overview);
   for (const state of hooksConfig?.seedStates ?? []) overviewStore.seedState(state);

@@ -2,14 +2,15 @@ import {
   rebasePendingChanges,
   type OutboxEntry,
   type OutboxFailure,
+  type OutboxKind,
   type PendingWrite,
   type RecordChange,
+  type StoredTranscript,
   type SyncStorage,
-  type SyncedRecordKind,
   type WriteAcknowledgement,
 } from "@overview/domain";
 
-const recordKey = (kind: SyncedRecordKind, id: string) => `${kind}/${id}`;
+const recordKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
 
 export class InMemorySyncStorage implements SyncStorage {
   enrolled = false;
@@ -17,6 +18,7 @@ export class InMemorySyncStorage implements SyncStorage {
   outbox: OutboxEntry[] = [];
   records = new Map<string, Record<string, unknown>>();
   revisions = new Map<string, number>();
+  transcripts = new Map<string, StoredTranscript>();
   applied: RecordChange[][] = [];
   #nextKey = 1;
   #listeners = new Set<() => void>();
@@ -60,14 +62,14 @@ export class InMemorySyncStorage implements SyncStorage {
     this.outbox = this.outbox.filter((candidate) => candidate.key !== key);
     if (!entry) return;
     if ("rev" in outcome) this.revisions.set(recordKey(entry.kind, entry.id), outcome.rev);
-    else this.revisions.delete(recordKey(entry.kind, entry.id));
+    else if ("tombstoned" in outcome) this.revisions.delete(recordKey(entry.kind, entry.id));
   }
 
   async park(key: number, failure: OutboxFailure) {
     this.outbox = this.outbox.map((entry) => (entry.key === key ? { ...entry, stuck: failure } : entry));
   }
 
-  async revisionOf(kind: SyncedRecordKind, id: string) {
+  async revisionOf(kind: OutboxKind, id: string) {
     return this.revisions.get(recordKey(kind, id)) ?? null;
   }
 
@@ -97,5 +99,16 @@ export class InMemorySyncStorage implements SyncStorage {
   onJournaled(listener: () => void) {
     this.#listeners.add(listener);
     return () => this.#listeners.delete(listener);
+  }
+
+  // Videos a note on this device uses; the tests that push a transcript add theirs.
+  notedVideoIds = new Set<string>();
+
+  async transcriptToPush(videoId: string) {
+    return this.notedVideoIds.has(videoId) ? (this.transcripts.get(videoId) ?? null) : null;
+  }
+
+  async keepTranscript(transcript: StoredTranscript) {
+    this.transcripts.set(transcript.videoId, transcript);
   }
 }

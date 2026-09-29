@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import type { VideoId } from "@overview/domain";
 import {
   createFetchAuthApi,
   createFetchSyncApi,
@@ -63,6 +64,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       connected,
       status,
       syncNow: () => void engine.current?.sync(),
+      fetchTranscript: connected
+        ? (videoId: VideoId) => engine.current?.fetchTranscript(videoId) ?? Promise.resolve(null)
+        : null,
       disconnect,
       // The server's answer does not decide the outcome: a session the server could not
       // be told about ends on its own, and this device is done with it either way.

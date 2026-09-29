@@ -14,4 +14,7 @@ export const OUTBOX_STORE = "outbox";
 export const SYNC_REVISIONS_STORE = "syncRevisions";
 export const SYNC_META_STORE = "syncMeta";
 export const SYNC_ENROLLED_KEY = "enrolled";
+// Separate from the records' flag so a library enrolled before transcripts were synced
+// still journals the ones it holds, once (docs/features/transcript-storage.md).
+export const SYNC_TRANSCRIPTS_ENROLLED_KEY = "transcriptsEnrolled";
 export const SYNC_CURSOR_KEY = "cursor";

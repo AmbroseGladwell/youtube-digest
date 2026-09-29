@@ -1,8 +1,8 @@
-import type { OutboxEntry, OutboxFailure } from "./OutboxEntry.js";
+import type { OutboxEntry, OutboxFailure, OutboxKind } from "./OutboxEntry.js";
 import type { RecordChange } from "./RecordChange.js";
-import type { SyncedRecordKind } from "./SchemaVersions.js";
+import type { StoredTranscript } from "./StoredTranscript.js";
 
-export type WriteAcknowledgement = { rev: number } | { tombstoned: true };
+export type WriteAcknowledgement = { rev: number } | { tombstoned: true } | { sent: true };
 
 // The durable client-side half of sync, which the engine drives and never bypasses: the
 // outbox, the revision known for each record, the feed cursor, and whether this library
@@ -18,8 +18,13 @@ export interface SyncStorage {
   listPending(): Promise<OutboxEntry[]>;
   acknowledge(key: number, outcome: WriteAcknowledgement): Promise<void>;
   park(key: number, failure: OutboxFailure): Promise<void>;
-  revisionOf(kind: SyncedRecordKind, id: string): Promise<number | null>;
+  revisionOf(kind: OutboxKind, id: string): Promise<number | null>;
   // One page of the feed, applied atomically with the cursor that follows it.
   applyChanges(changes: RecordChange[], next: number): Promise<void>;
   onJournaled(listener: () => void): () => void;
+  // What a transcript entry pushes, read when it is pushed rather than when it was journaled.
+  // Null once no note on this device uses the video, so a deleted note's transcript is not sent.
+  transcriptToPush(videoId: string): Promise<StoredTranscript | null>;
+  // A transcript fetched from the server, kept without journaling, as a pulled record is.
+  keepTranscript(transcript: StoredTranscript): Promise<void>;
 }
