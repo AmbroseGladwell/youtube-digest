@@ -31,6 +31,7 @@ tasks:
       - task: test:extension
       - task: test:api
       - task: test:tooling
+      - task: test:tts
       - task: iwft
 
   test:api:
@@ -38,6 +39,15 @@ tasks:
     dir: apps/api
     cmds:
       - npm test -- {{.CLI_ARGS}}
+
+  test:tts:
+    desc: 'Run the TTS service''s suite; the tests that need Kokoro skip until task tts:model has fetched it (e.g. task test:tts -- -m "not model")'
+    dir: services/tts
+    preconditions:
+      - sh: command -v uv
+        msg: 'uv is missing. Enter the dev shell first: direnv allow, or nix develop.'
+    cmds:
+      - uv run --frozen pytest {{.CLI_ARGS}}
 
   test:extension:
     desc: Run the extension's unit suite

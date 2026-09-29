@@ -8,7 +8,8 @@ or Task by hand, and nobody remembers which directory a command runs from.
 
 `flake.nix` declares one dev shell: Node 22 (the version CI uses), Postgres 17,
 `go-task`, and the three tools secrets need, `bws`, `gitleaks` and `jq`
-(`docs/conventions/secrets.md`). `.envrc` enters it through direnv, puts
+(`docs/conventions/secrets.md`), and Python 3.12, `uv`, `ffmpeg` and `espeak-ng` for the TTS
+service (`docs/conventions/tts-testing-guide.md`). `.envrc` enters it through direnv, puts
 `node_modules/.bin` on the path, and exports the Bitwarden token from the login keychain.
 
 ```
@@ -47,6 +48,7 @@ gitignored `Taskfiles/Taskfile-local.yml` for personal shortcuts.
 | `task build:packages` | the library packages, in dependency order |
 | `task run` | Postgres, then the API on :3000 and the web app on :5173 together |
 | `task run:extension` | a build to load unpacked at `chrome://extensions` |
+| `task tts:model` then `task run:tts` | Kokoro fetched and hash-checked, then the TTS service on :8000 (`docs/conventions/tts-testing-guide.md`) |
 | `task version` | the one version number every build carries |
 | `task version:bump -- patch` | move it, in the PR whose extension zip is going to the store; a web-only change needs none, and the size is `docs/conventions/versioning.md`'s call |
 | `task session -- you@example.com` | a bearer token with no mail involved, if one is wanted (`docs/architecture/api.md`) |

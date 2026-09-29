@@ -71,6 +71,27 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm run test:tooling
 
+  unit-tts:
+    name: unit (tts)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/tts
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: 0.12.17
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      # The model is 353 MB and pinned by hash, so it is cached by those hashes
+      # (docs/conventions/tts-testing-guide.md).
+      - uses: actions/cache@v6
+        with:
+          path: services/tts/models
+          key: kokoro-v1.0-${{ hashFiles('services/tts/download_model.sh') }}
+      - run: ./download_model.sh models
+      - run: uv run --frozen pytest
+
   iwft:
     name: iwft
     runs-on: ubuntu-latest
@@ -118,6 +139,13 @@ jobs:
       - uses: actions/checkout@v7
       - run: docker build --build-arg BUILD_COMMIT=${{ github.sha }} --tag overview:${{ github.sha }} .
 
+  image-tts:
+    name: image (tts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --tag overview-tts:${{ github.sha }} services/tts
+
   ci:
     name: ci
     runs-on: ubuntu-latest
@@ -129,9 +157,11 @@ jobs:
       - unit-extension
       - unit-api
       - unit-tooling
+      - unit-tts
       - iwft
       - build
       - image
+      - image-tts
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

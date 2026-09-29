@@ -79,6 +79,29 @@ The client sends the script; the server keys the audio on a hash of the script's
 
 `voices-v1.0.bin` holds 54 voices, of which 28 speak English: 20 American (`af_*`, `am_*`) and 8 British (`bf_*`, `bm_*`). The rest are Spanish, French, Hindi, Italian, Japanese, Portuguese and Chinese voices, and would mispronounce an English note, so `NarrationVoice` offers only the 28. Each carries its accent as data, and the accent picks the phonemiser's language: `en-us` or `en-gb`. The default is `af_heart`; readers will choose their own from a sample of each.
 
+## The service
+
+`services/tts` is the private half: a FastAPI app with one route that matters, `POST /render`.
+It takes `{ lines, voice, language, renderVersion }`, speaks each line with Kokoro, joins them
+with 0.4 s of silence, and returns the M4A (AAC, 32 kbps, `faststart` so playback can begin
+before the whole file arrives) as base64 beside `lineStartsSeconds`, `durationSeconds` and
+`synthesisSeconds`. `GET /health` names the render version and the voices.
+
+- **It holds nothing.** No database, no storage credentials: the API owns the job queue, its
+  priorities and R2, and hands this service one script at a time. That keeps the Python side
+  small enough to test without any of them.
+- **The render version is checked, not trusted.** The API keys audio on the script, the voice
+  and the render version it believes in, and sends that version with the request; the
+  service refuses a different one with `409 render_version_mismatch`. A deploy that changes how
+  audio is made (the gap, the encoder, how timings are cut) bumps `RENDER_VERSION`, and a
+  half-rolled-out pair fails loudly rather than storing new audio under an old key.
+- **It stops itself** after `IDLE_EXIT_SECONDS` without a render, because on
+  `performance-4x` a minute of idle costs about what rendering a note does. Deploying it as a
+  pool is `docs/architecture/deploy.md`, "The TTS service"; testing it is
+  `docs/conventions/tts-testing-guide.md`.
+
+Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s of audio.
+
 ## Where the audio lives
 
 *Superseded: `docs/architecture/v1-architecture-decisions.md` puts audio on Cloudflare R2 behind the API. What follows is the prototype's workaround, kept as the record of why.*

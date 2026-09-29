@@ -447,8 +447,8 @@ covers the other direction — the open that cannot start — and is likewise un
 - Server-side transcript retrieval and its YouTube-ToS exposure.
 - A headless capture-queue worker — the queue drains on next keyed-device-open.
 - ~~Backend testing conventions (Fastify API, the Python TTS service)~~ — decided with the
-  first backend slice: `docs/conventions/backend-testing-guide.md`. The TTS service is
-  still uncovered.
+  first backend slice: `docs/conventions/backend-testing-guide.md`. The TTS service's, with
+  the service itself: `docs/conventions/tts-testing-guide.md`.
 - A test harness for the extension's chrome.*-API surface (content-script injection,
   auto-grab-on-tab-open) — noted as a real gap in
   `docs/conventions/frontend-testing-guide.md`'s addendum, not designed yet.

@@ -265,6 +265,36 @@ task deploy:extension                      # apps/extension/release/the-overview
 4. Commit. The next merge deploys an API that vouches for the extension's origin, and the
    next `task run:extension` in any checkout loads with the store's id.
 
+## The TTS service
+
+*Built, not yet deployed.* `services/tts` has its own image (`services/tts/Dockerfile`, with
+the model baked in and hash-checked) and its own Fly app, `the-overview-tts`
+(`services/tts/fly.toml`), because it is a different machine size with a different life:
+`performance-4x`, chosen by measurement (`docs/features/tts-pre-rendered-speech.md`,
+"Measured on Fly.io").
+
+- **A pool, not a machine.** Every machine is identical and stopped until needed. The proxy
+  gives each one request at a time (`hard_limit = 1`) and starts another stopped one when all
+  running ones are busy, so the pool's size is the number of renders that can run at once. A
+  stopped machine costs only its image storage.
+- **It stops itself.** The process exits `IDLE_EXIT_SECONDS` (15) after its last render, and
+  Fly's default restart policy leaves a clean exit stopped. Health checks do not count as
+  work, so they never keep a machine up.
+- **Private.** The app gets a Flycast address and no public one; only the API, over Fly's
+  private network, can reach it.
+
+The first deploy, when the API side exists to call it:
+
+```
+cd services/tts
+fly apps create the-overview-tts
+fly ips allocate-v6 --private     # Flycast: reachable as the-overview-tts.flycast
+fly deploy --remote-only
+fly scale count 5                 # the pool; each stays stopped until the proxy starts it
+```
+
+CI builds this image on every push (the `image (tts)` job) but nothing deploys it yet.
+
 ## What this does not do
 
 - **Hold a deploy for approval.** A merge to `main` deploys without a pause. GitHub's

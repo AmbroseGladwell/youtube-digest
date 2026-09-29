@@ -73,5 +73,5 @@ cases get a record the current client could not have written.
 ## What is deliberately not covered
 
 The SPA served by this process, once it is; the Fly.io and Neon wiring; the Python TTS
-service, which has its own language and will have its own guide; and concurrency between
+service, which has its own language and its own guide, `tts-testing-guide.md`; and concurrency between
 two real connections, which is argued rather than tested.

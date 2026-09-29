@@ -19,6 +19,25 @@ tasks:
       - run:api
       - run:web
 
+  run:tts:
+    desc: Run the TTS service on :8000 with the local model (fetched by task tts:model); it stops itself after IDLE_EXIT_SECONDS without a render
+    dir: services/tts
+    deps: [tts:model]
+    env:
+      MODEL_DIR: models
+      IDLE_EXIT_SECONDS: '{{.IDLE_EXIT_SECONDS | default "600"}}'
+    cmds:
+      - uv run --frozen python -m overview_tts.serve
+
+  tts:model:
+    desc: Fetch Kokoro v1.0 into services/tts/models, checked against its pinned SHA-256
+    dir: services/tts
+    status:
+      - test -f models/kokoro-v1.0.onnx
+      - test -f models/voices-v1.0.bin
+    cmds:
+      - ./download_model.sh models
+
   run:db:
     desc: Start the local Postgres 17 under .local/pg (created on first run), then wait for it
     preconditions:

@@ -1,3 +1,5 @@
+# Built from a staged context, not the repo root, whose .dockerignore leaves out samples/
+# (docs/features/tts-pre-rendered-speech.md, "Measured on Fly.io").
 FROM python:3.12-slim
 
 RUN apt-get update \
