@@ -236,3 +236,34 @@ test("the sticky head is wider than the cards that pass under it", async ({
 
   await reader.verifyTranscriptHeadHidesTheBlocksPassingUnderIt();
 });
+
+// The block the video moves to used to be centred in the window, which on the panel is
+// behind the sticky stack: a tall block lost its time and its first line under the head.
+test("a block the video moves to comes to rest under the head, however tall it is", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const blocks = Array.from({ length: 16 }, (_, index) =>
+    makeCaptionRun(
+      index % 2 === 0
+        ? [`Short block ${index}.`]
+        : Array.from({ length: 12 }, (_, line) => `Long block ${index} line ${line} carries on for a while,`),
+      { startMs: index * 60_000, cueMs: 3500 },
+    ),
+  ).flat();
+  seedTranscript(backendSimulator, blocks);
+
+  const capture = await launcher.launchPanel({
+    apiKeys: API_KEYS,
+    activeVideoUrl: VIDEO_URL,
+    playback: playingAt(1000),
+  });
+  const reader = await capture.openStoredOverview();
+  await reader.clickTab("Transcript");
+
+  for (const block of [8, 9, 10, 11]) {
+    await launcher.movePlaybackTo(playingAt(block * 60_000 + 1000));
+    await reader.verifyCurrentTranscriptBlockReads(new RegExp(`block ${block}[ .]`));
+    await reader.verifyCurrentTranscriptBlockIsWhollyBelowTheHead();
+  }
+});

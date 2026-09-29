@@ -6,6 +6,8 @@ import {
 } from "../../../transcripts/readingPositionStorage.js";
 import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
+import { scrollToRestingLine } from "./scrollToRestingLine.js";
+import { transcriptRestingLine } from "./transcriptRestingLine.js";
 
 export interface ReadingPosition {
   // The block about to be scrolled back to, or -1: nothing remembered, the top, or a
@@ -22,7 +24,7 @@ export interface ReadingPosition {
 export function useReadingPosition(
   videoId: string | null,
   blocks: TranscriptBlock[],
-  { ignored }: { ignored: boolean },
+  { ignored, head }: { ignored: boolean; head: HTMLElement | null },
 ): ReadingPosition {
   const [remembered] = useState(() => (videoId === null ? null : readReadingPosition(videoId)));
   const [restoreDone, setRestoreDone] = useState(false);
@@ -34,12 +36,12 @@ export function useReadingPosition(
   const restoredBlockIndex = restoreDone || rememberedIndex <= 0 ? -1 : rememberedIndex;
 
   useEffect(() => {
-    if (restoredRow === null) {
+    if (restoredRow === null || head === null) {
       return;
     }
-    restoredRow.scrollIntoView({ block: "center" });
+    scrollToRestingLine(restoredRow, head);
     setRestoreDone(true);
-  }, [restoredRow]);
+  }, [restoredRow, head]);
 
   const setRemembering = useCallback(
     (remembering: boolean) => {
@@ -60,10 +62,10 @@ export function useReadingPosition(
     let frame = 0;
     const save = () => {
       frame = 0;
-      if (rows.current === null || !rememberingNow.current) {
+      if (rows.current === null || head === null || !rememberingNow.current) {
         return;
       }
-      const row = rowAtViewportCentre(rows.current);
+      const row = rowAtRestingLine(rows.current, transcriptRestingLine(head));
       if (row === null || row.index === 0) {
         forgetReadingPosition(videoId);
       } else {
@@ -82,7 +84,7 @@ export function useReadingPosition(
         cancelAnimationFrame(frame);
       }
     };
-  }, [videoId]);
+  }, [videoId, head]);
 
   return {
     restoredBlockIndex,
@@ -94,18 +96,18 @@ export function useReadingPosition(
   };
 }
 
-function rowAtViewportCentre(container: HTMLElement): { index: number; startMs: number } | null {
-  const centre = window.innerHeight / 2;
-  let nearest: { index: number; startMs: number } | null = null;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-
-  Array.from(container.children).forEach((child, index) => {
-    const rect = child.getBoundingClientRect();
-    const distance = rect.top > centre ? rect.top - centre : rect.bottom < centre ? centre - rect.bottom : 0;
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-      nearest = { index, startMs: Number((child as HTMLElement).dataset.startMs) };
-    }
-  });
-  return nearest;
+// The line a block is put back on is the line one is read off, so a restore does not then
+// remember a different block than the one it restored. The block you are on is the first
+// one to start at the line rather than the nearest to it: a block still half behind the
+// head is not the one being read. A pixel of tolerance, because the scroll that put it
+// there lands on whole device pixels.
+function rowAtRestingLine(
+  container: HTMLElement,
+  line: number,
+): { index: number; startMs: number } | null {
+  const rows = Array.from(container.children);
+  const found = rows.findIndex((child) => child.getBoundingClientRect().top >= line - 1);
+  const index = found === -1 ? rows.length - 1 : found;
+  const row = rows[index];
+  return row === undefined ? null : { index, startMs: Number((row as HTMLElement).dataset.startMs) };
 }

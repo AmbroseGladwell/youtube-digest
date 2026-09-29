@@ -41,13 +41,13 @@ test("coming back to a transcript opens it where you were, not at the top", asyn
   const reader = await library.nthCard(0).openReader();
   await reader.clickTab("Transcript");
   await reader.scrollDown(3000);
-  const wasReading = await reader.readTranscriptBlockAtCentre();
+  const wasReading = await reader.readTranscriptBlockAtTheRestingLine();
   expect(wasReading).not.toBeNull();
 
   await reader.clickTab("Chapters");
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptBlockAtCentreReads(wasReading!);
+  await reader.verifyTranscriptBlockAtTheRestingLineReads(wasReading!);
 });
 
 // The reference implementation's one improvement on ours, adopted: a position you were
@@ -64,12 +64,12 @@ test("in the panel the restored position wins over the player, and the following
   await reader.verifyIsFollowingTheVideo(true);
   await reader.scrollDown(3000);
   await reader.verifyIsFollowingTheVideo(false);
-  const wasReading = await reader.readTranscriptBlockAtCentre();
+  const wasReading = await reader.readTranscriptBlockAtTheRestingLine();
 
   await reader.clickTab("Chapters");
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptBlockAtCentreReads(wasReading!);
+  await reader.verifyTranscriptBlockAtTheRestingLineReads(wasReading!);
   await reader.verifyIsFollowingTheVideo(false);
   await reader.verifyOffersToFollowPlayback(true);
 });
