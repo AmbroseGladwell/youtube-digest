@@ -33,4 +33,13 @@ export abstract class PageObject {
   protected expectToBeVisible = (testId: string) => expect(this.get(testId)).toBeVisible();
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
   protected expectToHaveCount = (testId: string, count: number) => expect(this.get(testId)).toHaveCount(count);
+
+  verifyFieldFontSizes = (check: (sizesInPx: number[]) => void) =>
+    this.step("verifyFieldFontSizes", async () => {
+      const sizes = await this.locatorOrPage()
+        .locator("input, textarea, select")
+        .evaluateAll((fields) => fields.map((field) => parseFloat(getComputedStyle(field).fontSize)));
+      expect(sizes.length).toBeGreaterThan(0);
+      check(sizes);
+    });
 }
