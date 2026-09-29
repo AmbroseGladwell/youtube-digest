@@ -76,7 +76,8 @@ Read all four before adding a new file, folder, or pattern anywhere in the monor
 ## The backlog lives in Trello
 
 The board is **The Overview Backlog** (https://trello.com/b/yArQIL27/the-overview-backlog),
-reached through the Trello connector. Its lists, in order: **Backlog** (ordered do-it-next,
+reached through the Trello connector when it is attached, and by hand when it is not: the
+connector is optional, so check for it before promising a card. Its lists, in order: **Backlog** (ordered do-it-next,
 top first), **Sprint Backlog**, **In Progress**, **Done**. New cards start from the
 **Card template** card, which is a Trello template: its sections are Context, Requirement,
 Technical notes, Analytics & logging, Testing considerations, Accessibility,
