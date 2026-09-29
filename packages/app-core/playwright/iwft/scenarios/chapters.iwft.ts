@@ -1,7 +1,8 @@
 import type { Chapter, TranscriptSegment } from "@overview/domain";
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -194,7 +195,7 @@ test("opening the transcript from a chapter stands the following down", async ({
   await reader.verifyOffersToFollowPlayback(true);
 });
 
-test("a note with no transcript stored offers no way into one", async ({
+test("a note with no transcript stored shows the way into one disabled, and says why", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -205,6 +206,30 @@ test("a note with no transcript stored offers no way into one", async ({
 
   await reader.verifyChapterTitlesRead(CHAPTERS.map((chapter) => chapter.title));
   await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("No transcript was kept for this note");
+});
+
+test("signed in, the way into the transcript waits disabled while the account is asked, then opens it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator, { transcript: false });
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
+  backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_TRANSCRIPT);
+  const library = await launcher.launchExpectingLibrary({
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+  });
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Chapters");
+  await reader.verifyChaptersOfferTranscript(false);
+  await reader.verifyChapterTranscriptReasonIs("Looking for this note's transcript");
+
+  await backendSimulator.releaseEndpoint(EndpointKey.SYNC_TRANSCRIPT);
+
+  await reader.verifyChaptersOfferTranscript(true);
+  await reader.clickChapterTranscript("The end");
+  await reader.verifyActiveTabIs("Transcript");
 });
 
 test("a note made before chapters existed says so, rather than showing an empty list", async ({
