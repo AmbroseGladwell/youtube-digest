@@ -274,8 +274,23 @@ serves every weight; `fonts.css` declares `font-weight: 400 700` for it.
 
 ## The mark
 
-The design's mark has no ground: the ring and bar sit on whatever is behind them, and the
-web favicon now follows it. The extension's toolbar icon keeps its solid ground on purpose
-(`apps/extension/public/icons/README.md`): a thin orange stroke on nothing would vanish
-against Chrome's own chrome in one theme or the other, and a toolbar icon has no page
-behind it to sit on.
+The design's mark has no ground: the ring and bar sit on whatever is behind them. Both
+apps now follow it, from one source — the design project's `Logo Pack.dc.html`, whose
+files are all transparent.
+
+The web app serves the pack's favicon set from `apps/web/public/`: an SVG for browsers
+that take one, a three-size `.ico` for the rest, PNGs at 16, 32 and 48, and the 180px
+Apple touch icon, which is the one file with a ground, because iOS fills transparency with
+black. `icon-192.png` and `icon-512.png` are there for a web app manifest that does not
+exist yet, and nothing references them.
+
+The extension's toolbar icon **lost the dark square it used to carry**. The reason that
+square existed was that a thin orange stroke scaled down to 16px goes to nothing against
+Chrome's own chrome; the pack solves the same problem by thickening the stroke at 16 and
+32 rather than by painting a ground, so the icon can be transparent and still hold up. The
+128px icon carries the Web Store's 16px of padding. Each size is tuned on its own, so
+there is no render script any more: new icons come from the pack, not from scaling one
+file down (`apps/extension/public/icons/README.md`).
+
+Every PNG had its C2PA content credentials stripped on the way in — several kilobytes on a
+16px icon. The signed originals stay in the design project.

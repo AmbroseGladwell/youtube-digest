@@ -1,22 +1,24 @@
 # The extension's icon
 
-`icon.svg` is the source: the brand mark from the masthead, reversed out of a dark ground
-in the accent. The solid ground is what makes it work as a toolbar icon: the masthead's
-mark is a thin stroke on whatever is behind it, which would disappear against Chrome's
-own chrome in one theme or the other. The web app's favicon (`apps/web/index.html`) is
-the same geometry with no ground, as the stone design draws the mark
-(docs/features/stone-theme.md, "The mark").
+The mark is the ring and underline from the masthead, in the brand orange, **on a
+transparent ground**. Nothing is painted behind it: the ring sits directly on whatever
+Chrome puts behind it, in either theme.
 
-The PNGs beside it are generated, and committed because Chrome's manifest can only point
-at files that exist in the packaged extension — `icons` and `action.default_icon` take
-raster images, so an SVG can't be named there even though both extension documents
-reference `icon.svg` directly for their own favicon.
+These files come from the design project's logo pack (`Logo Pack.dc.html`, the
+`chrome-extension/` folder) and are not generated here. The 16 and 32 px icons carry a
+slightly heavier stroke than the others so the ring stays open at toolbar size, and
+`icon128.png` follows the Web Store's guidance of 96 px of artwork inside 16 px of
+transparent padding. That tuning is per size and cannot be recovered by scaling one
+source down, which is why there is no longer a render script: replacing these means
+exporting them again from the pack.
 
-Regenerate them after any change to `icon.svg`, from the repo root:
+`icon.svg` is the same mark at any size. Chrome's manifest takes raster icons only, so
+`icons` and `action.default_icon` name the PNGs, while both extension documents use the
+SVG directly for their own favicon.
 
-```
-node scripts/renderExtensionIcons.ts
-```
+The PNGs were stripped of their C2PA metadata on the way in — several kilobytes of
+content credentials on a 16 px icon, in a package where every kilobyte ships. The signed
+originals stay in the design project.
 
-Nothing enforces that. If the mark's geometry changes, `icon.svg`, these PNGs and the
-favicon data URI in `apps/web/index.html` all have to move together.
+The web app's favicon set is the same mark from the same pack, under
+`apps/web/public/` (docs/features/stone-theme.md, "The mark").
