@@ -1,0 +1,3 @@
+export const MAGIC_LINK_TTL_MINUTES = 15;
+export const MAGIC_LINK_COOLDOWN_SECONDS = 60;
+export const LINK_CODE_TTL_MINUTES = 10;

@@ -94,22 +94,23 @@
   @include controls.pill-sm;
 }
 
-// Design 2b's Sign in, beside + New. Until the bar has a sign-in of its own it lands on
-// the sync section of Settings, and it is hidden once signed in or where the shell cannot
-// sync at all (docs/features/stone-theme.md, "Placed but not wired").
-.signInLink {
-  @include controls.surface-pill;
-  @include controls.pill-sm;
-}
-
-// The panel's whole masthead is the mark and this: no + New and no list, because there
-// is only ever the one video it is beside (docs/features/extension-panel.md).
-.panelSettingsLink {
+// Design 9e: on a phone, a sign-in page is a step of its own with one way out. Wider,
+// the bar keeps its actions and the brand is the way home.
+.notNowLink {
   @include controls.ghost-pill;
   @include controls.pill-sm;
 
+  display: none;
   margin-left: auto;
+  min-height: 2.75rem;
   color: var(--muted);
+}
+
+// The panel's whole masthead is the mark and the account: no + New and no list, because
+// there is only ever the one video it is beside (docs/features/extension-panel.md).
+.panelActions {
+  margin-left: auto;
+  display: flex;
 }
 
 .pane {
@@ -126,20 +127,27 @@
     padding: 0.75rem 1.25rem;
   }
 
-  .newOverviewButton,
-  .signInLink {
+  .newOverviewButton {
     min-height: 2.75rem;
     padding-inline: 1rem;
   }
 }
 
+// Design 9m: no tabs to scroll on a phone, so the one tab goes and the name comes back.
 @media (max-width: 47.9375rem) {
-  .title {
+  .nav {
     display: none;
   }
 
   .titlePanel {
-    display: block;
     font-size: 1.125rem;
+  }
+
+  .actionsBesideNotNow {
+    display: none;
+  }
+
+  .notNowLink {
+    display: inline-flex;
   }
 }

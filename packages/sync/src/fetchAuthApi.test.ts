@@ -29,25 +29,31 @@ test("asking for a magic link posts the email and the surface, with the client v
   const { sent, fetch } = answering(202, { accepted: true });
   const api = createFetchAuthApi({ baseUrl: "https://overview.example/", fetch });
 
-  await api.requestMagicLink("reader@example.com", "extension");
+  await api.requestMagicLink({
+    email: "reader@example.com",
+    surface: "extension",
+    intent: "createAccount",
+    firstName: "Ada",
+  });
 
   assert.deepEqual(sent, [
     {
       url: "https://overview.example/api/auth/magic-link",
       method: "POST",
       headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), "content-type": "application/json" },
-      body: { email: "reader@example.com", surface: "extension" },
+      body: { email: "reader@example.com", surface: "extension", intent: "createAccount", firstName: "Ada" },
     },
   ]);
 });
 
-test("signing in with a web link answers what the cookie now carries", async () => {
+test("signing in with a web link answers what the cookie now carries, with no name from a server that sends none", async () => {
   const { fetch } = answering(200, { surface: "web", email: "reader@example.com", expiresAt: "2026-10-26T09:00:00.000Z" });
   const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
 
   assert.deepEqual(await api.signIn("t"), {
     surface: "web",
     email: "reader@example.com",
+    firstName: null,
     expiresAt: "2026-10-26T09:00:00.000Z",
   });
 });

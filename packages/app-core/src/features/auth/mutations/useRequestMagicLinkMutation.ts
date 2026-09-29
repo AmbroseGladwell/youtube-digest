@@ -1,16 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
-import type { AuthSurface } from "@overview/domain";
+import type { MagicLinkRequest } from "@overview/domain";
 import { createFetchAuthApi, type AuthApi } from "@overview/sync";
 
 export interface RequestMagicLinkVariables {
   apiUrl: string;
-  email: string;
-  surface: AuthSurface;
+  request: MagicLinkRequest;
 }
 
 export const useRequestMagicLinkMutation = (
   createApi: (baseUrl: string) => AuthApi = (baseUrl) => createFetchAuthApi({ baseUrl }),
 ) =>
   useMutation<void, Error, RequestMagicLinkVariables>({
-    mutationFn: ({ apiUrl, email, surface }) => createApi(apiUrl).requestMagicLink(email, surface),
+    mutationFn: ({ apiUrl, request }) => createApi(apiUrl).requestMagicLink(request),
   });

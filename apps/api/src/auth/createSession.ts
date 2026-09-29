@@ -37,5 +37,5 @@ export async function createSession(
   email: string,
   options: CreateSessionOptions,
 ): Promise<CreatedSession> {
-  return createSessionForAccount(sql, await findOrCreateAccount(sql, email), options);
+  return createSessionForAccount(sql, (await findOrCreateAccount(sql, email)).id, options);
 }

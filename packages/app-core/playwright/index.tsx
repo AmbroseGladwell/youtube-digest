@@ -2,7 +2,8 @@ import { beforeMount } from "@playwright/experimental-ct-react/hooks";
 import "../src/theme/global.scss";
 import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import { writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
-import { DEFAULT_SYNC_CONNECTION } from "../src/features/sync/types/SyncConnection.js";
+import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js";
+import { DEFAULT_SYNC_CONNECTION, SyncConnection } from "../src/features/sync/types/SyncConnection.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
@@ -30,7 +31,8 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);
   for (const read of hooksConfig?.failingReads ?? []) overviewStore.failOn(read);
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
-  writeSyncConnection(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION);
+  writeSyncConnection(SyncConnection.parse(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION));
+  writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
 
   window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore, syncStorage };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";

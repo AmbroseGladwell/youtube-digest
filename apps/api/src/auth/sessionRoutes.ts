@@ -6,8 +6,8 @@ import { clearedSessionCookie } from "./sessionCookie.js";
 
 export function sessionRoutes(app: FastifyInstance, sql: SqlClient, sessionCookieSecure: boolean): void {
   app.get("/session", async (request) => {
-    const { accountId, email, expiresAt } = request.session!;
-    const info: SessionInfo = { accountId, email, expiresAt };
+    const { accountId, email, firstName, expiresAt } = request.session!;
+    const info: SessionInfo = { accountId, email, firstName, expiresAt };
     return info;
   });
 

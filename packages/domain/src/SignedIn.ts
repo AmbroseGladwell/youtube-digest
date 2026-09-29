@@ -8,11 +8,13 @@ export const SignedIn = z.discriminatedUnion("surface", [
   z.object({
     surface: z.literal("web"),
     email: z.string(),
+    firstName: z.string().nullable().default(null),
     expiresAt: z.string(),
   }),
   z.object({
     surface: z.literal("extension"),
     email: z.string(),
+    firstName: z.string().nullable().default(null),
     linkCode: z.string(),
     linkCodeExpiresAt: z.string(),
   }),

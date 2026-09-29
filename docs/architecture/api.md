@@ -15,7 +15,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Postgres behind one small interface, `pg` in production and PGlite in tests | `src/db/SqlClient.ts`, `createPgSqlClient.ts`, `createPgliteSqlClient.ts` |
 | SQL migrations in Flyway's naming, applied by an in-repo runner | `migrations/V*.sql`, `src/db/runMigrations.ts` |
 | Accounts and sessions; bearer tokens, hashed | `migrations/V0001__accounts_and_sessions.sql`, `src/auth/` |
-| Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
+| Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `V0005__account_first_names_and_link_intents.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
 | Deny-by-default session plugin; routes opt out with `config: { public: true }` | `src/auth/sessionPlugin.ts` |
 | One client version on the wire, and the table that turns it into schema versions | `packages/domain`: `clientVersion.ts`, `clientSchemaVersions.ts` |
 | The handshake, and the write floor as a hook | `src/versions/handshakeRoutes.ts`, `writeFloorPlugin.ts` |

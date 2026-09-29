@@ -1,0 +1,10 @@
+@use "../../auth" as auth;
+
+.footer {
+  margin-top: auto;
+}
+
+.done {
+  @include auth.primary;
+  width: 100%;
+}

@@ -31,6 +31,16 @@ test.describe("on a touch screen", () => {
 
     await settings.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
+
+  test("the create-account page's fields are large enough that iOS does not zoom into them", async ({
+    launcher,
+  }) => {
+    await launcher.launch({ sync: true });
+    const menu = await launcher.appShell.accountMenu.open();
+    const createAccount = await menu.chooseCreateAccount();
+
+    await createAccount.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
+  });
 });
 
 test("a mouse keeps the design's smaller field sizes", async ({ launcher }) => {

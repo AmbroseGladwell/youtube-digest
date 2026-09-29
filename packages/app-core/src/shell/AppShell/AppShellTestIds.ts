@@ -3,7 +3,6 @@ export const appShellTestIds = {
   masthead: "AppShell.masthead",
   pane: "AppShell.pane",
   brand: "AppShell.brand",
-  settingsLink: "AppShell.settingsLink",
   newOverviewButton: "AppShell.newOverviewButton",
-  signInLink: "AppShell.signInLink",
+  notNowLink: "AppShell.notNowLink",
 };

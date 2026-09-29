@@ -1,0 +1,111 @@
+@use "../../auth" as auth;
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.625rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.labelText {
+  @include auth.field-label;
+}
+
+.labelHint {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.field {
+  @include auth.field;
+}
+
+.fieldInvalid,
+.fieldInvalid:focus-within {
+  @include auth.field-invalid;
+}
+
+.input {
+  @include auth.field-input;
+}
+
+.error {
+  @include auth.field-error;
+}
+
+.submit {
+  @include auth.primary;
+}
+
+.note {
+  @include auth.note;
+}
+
+.quiet {
+  @include controls.quiet-control;
+
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.switch {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+
+  a {
+    @include auth.inline-link;
+  }
+}
+
+// Design 10b: in the panel the action sits at the foot, under its note, full width.
+.panel {
+  flex: 1;
+  gap: 1.125rem;
+
+  .footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .submit {
+    width: 100%;
+  }
+
+  .note {
+    font-size: 0.8125rem;
+  }
+
+  .switch {
+    font-size: 0.84375rem;
+    text-align: center;
+  }
+}

@@ -9,12 +9,6 @@
   max-width: 35rem;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-
 .heading {
   @include controls.section-label;
 }
@@ -25,23 +19,6 @@
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--muted);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.input {
-  @include controls.field-solo;
-  background: var(--surface);
 }
 
 .status {
@@ -59,6 +36,12 @@
 
 .primaryButton {
   @include controls.action-pill;
+  @include controls.pill-md;
+  align-self: flex-start;
+}
+
+.secondaryButton {
+  @include controls.surface-pill;
   @include controls.pill-md;
   align-self: flex-start;
 }

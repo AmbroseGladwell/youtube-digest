@@ -1,0 +1,16 @@
+export const accountMenuTestIds = {
+  root: "AccountMenu.root",
+  trigger: "AccountMenu.trigger",
+  menu: "AccountMenu.menu",
+  who: "AccountMenu.who",
+  name: "AccountMenu.name",
+  syncStatus: "AccountMenu.syncStatus",
+  waiting: "AccountMenu.waiting",
+  signInItem: "AccountMenu.signInItem",
+  createAccountItem: "AccountMenu.createAccountItem",
+  enterCodeItem: "AccountMenu.enterCodeItem",
+  settingsItem: "AccountMenu.settingsItem",
+  signOutItem: "AccountMenu.signOutItem",
+  signInAgainItem: "AccountMenu.signInAgainItem",
+  noAccountsNote: "AccountMenu.noAccountsNote",
+};

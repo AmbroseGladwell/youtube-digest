@@ -50,6 +50,7 @@ test("a valid session resolves the account onto the request", async () => {
   assert.deepEqual(response.json(), {
     accountId: session.accountId,
     email: "reader@example.com",
+    firstName: null,
     expiresAt: "2026-10-26T09:00:00.000Z",
   });
   await close();

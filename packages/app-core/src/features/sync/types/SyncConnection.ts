@@ -9,11 +9,13 @@ export const SyncConnection = z.object({
   apiUrl: z.url().nullable(),
   token: z.string().min(1).nullable(),
   email: z.string().nullable().default(null),
+  firstName: z.string().nullable().default(null),
 });
 export type SyncConnection = z.infer<typeof SyncConnection>;
+export type SyncConnectionInput = z.input<typeof SyncConnection>;
 
-export const DEFAULT_SYNC_CONNECTION: SyncConnection = { apiUrl: null, token: null, email: null };
+export const DEFAULT_SYNC_CONNECTION: SyncConnection = { apiUrl: null, token: null, email: null, firstName: null };
 
 export const isConnected = (
   connection: SyncConnection,
-): connection is { apiUrl: string; token: string | null; email: string | null } => connection.apiUrl !== null;
+): connection is SyncConnection & { apiUrl: string } => connection.apiUrl !== null;

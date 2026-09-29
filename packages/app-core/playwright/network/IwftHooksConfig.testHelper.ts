@@ -11,7 +11,8 @@ import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
-import type { SyncConnection } from "../../src/features/sync/types/SyncConnection.js";
+import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
+import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
 import type { InMemoryStoreRead } from "./InMemoryOverviewStore.testHelper.js";
 
 // Playwright Component Testing serializes props/hooksConfig across the Node<->browser
@@ -35,7 +36,8 @@ export interface IwftHooksConfig {
   // Whether this shell can sync at all, and the server and token it was given, if any
   // (docs/features/sync-client.md).
   syncAvailable?: boolean;
-  syncConnection?: SyncConnection;
+  syncConnection?: SyncConnectionInput;
+  pendingSignIn?: PendingSignIn;
   surface?: Surface;
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.

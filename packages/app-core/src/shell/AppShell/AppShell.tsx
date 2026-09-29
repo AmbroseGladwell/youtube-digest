@@ -4,6 +4,7 @@ import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { Routes } from "../../app/Routes.js";
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
+import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
@@ -32,6 +33,7 @@ export function AppShell() {
   const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
   const animateNavigation = useShouldAnimateNavigation();
   const sync = useSync();
+  const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
@@ -98,14 +100,9 @@ export function AppShell() {
             </Link>
 
             {isPanel ? (
-              <Link
-                className={styles.panelSettingsLink}
-                to={Routes.settings()}
-                viewTransition={animateNavigation}
-                data-testid={appShellTestIds.settingsLink}
-              >
-                Settings
-              </Link>
+              <span className={styles.panelActions}>
+                <AccountMenu />
+              </span>
             ) : (
               <>
                 <nav className={styles.nav} aria-label="Sections">
@@ -119,19 +116,9 @@ export function AppShell() {
                   >
                     Overviews
                   </NavLink>
-                  <NavLink
-                    className={({ isActive }) =>
-                      `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-                    }
-                    to={Routes.settings()}
-                    viewTransition={animateNavigation}
-                    data-testid={appShellTestIds.settingsLink}
-                  >
-                    Settings
-                  </NavLink>
                 </nav>
 
-                <span className={styles.actions}>
+                <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
                   <button
                     type="button"
                     className={styles.newOverviewButton}
@@ -143,17 +130,18 @@ export function AppShell() {
                     <StrokeIcon name="plus" />
                     New
                   </button>
-                  {sync.available && !sync.connected && (
-                    <Link
-                      className={styles.signInLink}
-                      to={Routes.settingsSync()}
-                      viewTransition={animateNavigation}
-                      data-testid={appShellTestIds.signInLink}
-                    >
-                      Sign in
-                    </Link>
-                  )}
+                  <AccountMenu />
                 </span>
+                {onAuthPage && (
+                  <Link
+                    className={styles.notNowLink}
+                    to={Routes.home()}
+                    viewTransition={animateNavigation}
+                    data-testid={appShellTestIds.notNowLink}
+                  >
+                    Not now
+                  </Link>
+                )}
               </>
             )}
           </div>

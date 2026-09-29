@@ -14,7 +14,7 @@ export function authFailureMessage(error: unknown, whenSpent: string): string {
       case "link_invalid":
         return whenSpent;
       case "invalid_request":
-        return "That doesn't look like an email address.";
+        return "That doesn't look like a full email address.";
       default:
         return "The server had a problem. Try again in a moment.";
     }
