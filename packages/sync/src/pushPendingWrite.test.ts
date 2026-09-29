@@ -126,7 +126,7 @@ test("a transcript entry sends the transcript as it is stored when the entry is 
 
   const outcome = await pushPendingWrite(
     api,
-    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript" } }),
+    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript", overviewId: "a" } }),
     null,
     transcripts,
   );
@@ -142,7 +142,7 @@ test("a transcript no note uses any more when its entry is pushed is done with, 
 
   const outcome = await pushPendingWrite(
     api,
-    entry({ kind: "transcript", id: "a-video", change: { op: "transcript" } }),
+    entry({ kind: "transcript", id: "a-video", change: { op: "transcript", overviewId: "a" } }),
     null,
     transcripts,
   );
@@ -156,7 +156,7 @@ test("a transcript no longer held when its entry is pushed is done with, and not
 
   const outcome = await pushPendingWrite(
     api,
-    entry({ kind: "transcript", id: "gone-video", change: { op: "transcript" } }),
+    entry({ kind: "transcript", id: "gone-video", change: { op: "transcript", overviewId: "a" } }),
     null,
     storage,
   );
@@ -175,7 +175,7 @@ test("a transcript the server refuses is parked, not dropped", async () => {
 
   const outcome = await pushPendingWrite(
     api,
-    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript" } }),
+    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript", overviewId: "a" } }),
     null,
     transcripts,
   );
@@ -193,7 +193,7 @@ test("a transcript a server without the route answers 404 for is parked, not tak
 
   const outcome = await pushPendingWrite(
     api,
-    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript" } }),
+    entry({ kind: "transcript", id: transcript.videoId, change: { op: "transcript", overviewId: "a" } }),
     null,
     transcripts,
   );

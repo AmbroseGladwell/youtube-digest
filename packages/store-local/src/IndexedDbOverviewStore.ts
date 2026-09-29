@@ -106,7 +106,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
         kind: "transcript",
         id: overview.video.id,
         updatedAt,
-        change: { op: "transcript" },
+        change: { op: "transcript", overviewId: overview.id },
       });
     }
     await promisifyTransaction(transaction);

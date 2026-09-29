@@ -128,11 +128,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll()),
       promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
     ]);
-    const noted = new Set(overviews.flatMap(notedVideoId));
+    const noteOn = new Map(overviews.flatMap(notedVideo));
     const queued = new Set(pending.filter((entry) => entry.kind === "transcript").map((entry) => entry.id));
-    return transcripts
-      .flatMap(transcriptWrite)
-      .filter((write) => noted.has(write.id) && !queued.has(write.id));
+    return transcripts.flatMap((raw) => {
+      const transcript = readableTranscript(raw);
+      const overviewId = transcript === null ? undefined : noteOn.get(transcript.videoId);
+      if (transcript === null || overviewId === undefined || queued.has(transcript.videoId)) return [];
+      return [transcriptWrite(transcript, overviewId)];
+    });
   }
 
   async #libraryWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
@@ -205,7 +208,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
       promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
     ]);
-    if (raw === undefined || !overviews.flatMap(notedVideoId).includes(videoId)) return null;
+    if (raw === undefined || !overviews.flatMap(notedVideo).some(([noted]) => noted === videoId)) return null;
     return readableTranscript(raw);
   }
 
@@ -351,21 +354,19 @@ function readableTranscript(raw: unknown): StoredTranscript | null {
   return read.status === "read" ? read.record : null;
 }
 
-function notedVideoId(raw: unknown): string[] {
+function notedVideo(raw: unknown): Array<[videoId: string, overviewId: string]> {
   const overview = readable("overview", raw);
   const video = overview?.video;
-  return isObject(video) && typeof video.id === "string" ? [video.id] : [];
+  return isObject(video) && typeof video.id === "string" && typeof overview?.id === "string"
+    ? [[video.id, overview.id]]
+    : [];
 }
 
-function transcriptWrite(raw: unknown): PendingWrite[] {
-  const transcript = readableTranscript(raw);
-  if (transcript === null) return [];
-  return [
-    {
-      kind: "transcript",
-      id: transcript.videoId,
-      updatedAt: transcript.fetchedAt,
-      change: { op: "transcript" },
-    },
-  ];
+function transcriptWrite(transcript: StoredTranscript, overviewId: string): PendingWrite {
+  return {
+    kind: "transcript",
+    id: transcript.videoId,
+    updatedAt: transcript.fetchedAt,
+    change: { op: "transcript", overviewId },
+  };
 }

@@ -209,7 +209,7 @@ test("a journaled transcript is sent in the cycle and leaves the outbox without 
   const transcript = transcriptFor("v1");
   await storage.keepTranscript(transcript);
   storage.notedVideoIds.add("v1");
-  storage.journal({ kind: "transcript", id: "v1", updatedAt: AT, change: { op: "transcript" } });
+  storage.journal({ kind: "transcript", id: "v1", updatedAt: AT, change: { op: "transcript", overviewId: "a" } });
 
   const status = await engineOver(api, storage).sync();
 
@@ -245,4 +245,44 @@ test("a transcript that cannot be fetched fails loudly rather than reading as ne
   api.failOnce("getTranscript", "transport");
 
   await assert.rejects(engineOver(api, new InMemorySyncStorage()).fetchTranscript("v4"));
+});
+
+test("a note's transcript waits behind the note when the server refuses the note, instead of being sent and dropped", async () => {
+  const api = new ScriptedSyncApi();
+  api.failAlways("createOverview", { code: "invalid_request" });
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  await storage.keepTranscript(transcriptFor("v5"));
+  storage.notedVideoIds.add("v5");
+  storage.journal({ kind: "overview", id: "n5", updatedAt: AT, change: { op: "replace", record: { id: "n5" } } });
+  storage.journal({ kind: "transcript", id: "v5", updatedAt: AT, change: { op: "transcript", overviewId: "n5" } });
+
+  const status = await engineOver(api, storage).sync();
+
+  assert.deepEqual(api.callsTo("saveTranscript"), []);
+  assert.deepEqual(
+    storage.outbox.map((entry) => [entry.kind, entry.stuck === null]),
+    [
+      ["overview", false],
+      ["transcript", true],
+    ],
+  );
+  assert.equal(status.stuck, 1);
+  assert.equal(status.pending, 1);
+});
+
+test("a transcript whose note was parked in an earlier cycle still waits behind it", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  await storage.keepTranscript(transcriptFor("v6"));
+  storage.notedVideoIds.add("v6");
+  const note = storage.journal({ kind: "overview", id: "n6", updatedAt: AT, change: { op: "replace", record: { id: "n6" } } });
+  await storage.park(note.key, { code: "invalid_request", message: "no" });
+  storage.journal({ kind: "transcript", id: "v6", updatedAt: AT, change: { op: "transcript", overviewId: "n6" } });
+
+  await engineOver(api, storage).sync();
+
+  assert.deepEqual(api.callsTo("saveTranscript"), []);
+  assert.equal(storage.outbox.length, 2);
 });

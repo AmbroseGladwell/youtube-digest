@@ -25,17 +25,20 @@ export class TranscriptsRepository {
     return rows[0]?.body ?? null;
   }
 
-  // Both keep a transcript only while a live note on the account uses its video
-  // (docs/features/transcript-storage.md, "Kept only while a note uses it").
+  // Under the account's row lock, the one every note write takes to allocate its seq, so an
+  // upload and a delete of its note cannot interleave (docs/features/transcript-storage.md).
   async putIfNoted(accountId: AccountId, transcript: StoredTranscript): Promise<void> {
-    await this.#sql.query(
-      `insert into transcripts (account_id, video_id, stored_at, body)
-       select $1, $2, $3::timestamptz, $4::jsonb
-       where exists (${liveNoteOn("$2")})
-       on conflict (account_id, video_id) do update set
-         stored_at = excluded.stored_at, body = excluded.body`,
-      [accountId, transcript.videoId, this.#clock().toISOString(), JSON.stringify(transcript)],
-    );
+    await this.#sql.transaction(async (tx) => {
+      await tx.query("select id from accounts where id = $1 for update", [accountId]);
+      await tx.query(
+        `insert into transcripts (account_id, video_id, stored_at, body)
+         select $1, $2, $3::timestamptz, $4::jsonb
+         where exists (${liveNoteOn("$2")})
+         on conflict (account_id, video_id) do update set
+           stored_at = excluded.stored_at, body = excluded.body`,
+        [accountId, transcript.videoId, this.#clock().toISOString(), JSON.stringify(transcript)],
+      );
+    });
   }
 
   async forgetUnnoted(accountId: AccountId): Promise<void> {

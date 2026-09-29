@@ -285,9 +285,18 @@ lasts only as long as a note needs it, and the server enforces that at both ends
 - **Stored only if noted.** `PUT /api/transcripts/:videoId` keeps the transcript only if a
   live note on the account uses that video (`putIfNoted`, one `insert … where exists`).
   Otherwise it answers 204 and keeps nothing. That covers an upload from a device that
-  had not yet heard its note was deleted elsewhere, and a transcript whose note's own
-  write is parked. The cost, in the second case, is that if the parked note later lands,
-  its transcript is not sent again.
+  had not yet heard its note was deleted elsewhere.
+- **Sent after its note.** A transcript entry names the note that queued it, and the engine
+  holds it back while that note's write is parked, exactly as later writes to one record
+  wait behind a parked one (`docs/features/sync-client.md`). Without that, the transcript
+  would go up before the server had the note, be answered 204 and kept nowhere, and the
+  note would land later with no transcript behind it.
+- **Never interleaved with a delete.** The upload runs under the account's row lock, the
+  lock every note write takes to allocate its seq. If the upload locks first, it commits
+  before the delete, and the delete's sweep removes it. If the delete locks first, the
+  upload waits, then finds no live note and keeps nothing. As with the seq lock
+  (`docs/features/sync-api.md`), this is argued rather than tested: PGlite has no second
+  connection to race.
 - **Swept on every delete.** Every `DELETE /api/overviews/:id` removes every transcript on
   the account that no live note uses (`forgetUnnoted`, one statement). It runs even when
   the note was already deleted, so a retry heals a first attempt whose cleanup failed after

@@ -303,18 +303,19 @@ test("journal listeners hear a notification once per journaled write", async () 
 });
 
 
-const transcriptEntry = (videoId: string, fetchedAt: string) => ({
+const transcriptEntry = (videoId: string, fetchedAt: string, overviewId: string) => ({
   kind: "transcript",
   id: videoId,
   updatedAt: fetchedAt,
-  change: { op: "transcript" },
+  change: { op: "transcript", overviewId },
 });
 
 test("enrolling journals the transcript behind each note, by its video, without copying the segments", async () => {
   const db = await openTestDatabase();
   const transcript = makeStoredTranscript();
   await putRaw(db, TRANSCRIPTS_STORE, transcript);
-  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  const note = makeOverview({ video: transcript.video! });
+  await new IndexedDbOverviewStore(db).saveOverview(note);
   const storage = new IndexedDbSyncStorage(db, { now });
 
   await storage.enrol();
@@ -322,7 +323,7 @@ test("enrolling journals the transcript behind each note, by its video, without 
   const entry = (await storage.listPending()).find((pending) => pending.kind === "transcript");
   assert.deepEqual(
     { kind: entry?.kind, id: entry?.id, updatedAt: entry?.updatedAt, change: entry?.change },
-    transcriptEntry(transcript.videoId, transcript.fetchedAt),
+    transcriptEntry(transcript.videoId, transcript.fetchedAt, note.id),
   );
 });
 
@@ -393,6 +394,10 @@ test("saving a note on an enrolled library journals its video's transcript along
       ["overview", overview.id, "replace"],
       ["transcript", overview.video.id, "transcript"],
     ],
+  );
+  assert.deepEqual(
+    (await readOutbox(db)).find((entry) => entry.kind === "transcript")?.change,
+    { op: "transcript", overviewId: overview.id },
   );
   assert.equal(heard, 1);
 });

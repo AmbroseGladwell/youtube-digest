@@ -1,5 +1,6 @@
 import {
   CLIENT_VERSION,
+  type OutboxEntry,
   type OutboxKind,
   type RecordChange,
   type StoredTranscript,
@@ -159,7 +160,7 @@ export class SyncEngine {
         blocked.add(key);
         continue;
       }
-      if (blocked.has(key)) {
+      if (blocked.has(key) || this.#waitsBehindParkedNote(entry, blocked)) {
         continue;
       }
       const outcome = await pushPendingWrite(
@@ -187,6 +188,12 @@ export class SyncEngine {
       }
     }
     return null;
+  }
+
+  // A note's transcript is kept by the server only once the note is there, so it waits
+  // behind a note whose own write is parked (docs/features/transcript-storage.md).
+  #waitsBehindParkedNote({ change }: OutboxEntry, blocked: Set<string>): boolean {
+    return change.op === "transcript" && blocked.has(pendingKey("overview", change.overviewId));
   }
 
   async #pull(): Promise<{ reason: StopReason; detail: string } | null> {

@@ -12,8 +12,9 @@ export type OutboxChange =
   | { op: "settings"; patch: Record<string, unknown> }
   | { op: "delete" }
   // No body: the transcript is read from the store when the entry is pushed, so megabytes
-  // of segments are not copied into the journal (docs/features/transcript-storage.md).
-  | { op: "transcript" };
+  // of segments are not copied into the journal. The note that sent it, which it waits
+  // behind while that note's write is parked (docs/features/transcript-storage.md).
+  | { op: "transcript"; overviewId: string };
 
 // Transcripts are journaled and pushed like records, but never come down the feed.
 export type OutboxKind = SyncedRecordKind | "transcript";
