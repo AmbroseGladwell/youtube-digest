@@ -268,11 +268,13 @@ and overviews, never large blobs. Object storage for audio via **Cloudflare R2**
 S3-compatible, and critically zero egress fees, which matters because audio is
 fetched repeatedly on playback rather than written once.
 
-**Hosting: Fly.io.** Two Machines: the Fastify app (a `shared-cpu-1x`/256MB machine,
+**Hosting: Fly.io.** Two services: the Fastify app (a `shared-cpu-1x`/256MB machine,
 configured to auto-stop when idle and auto-start on request, so idle time genuinely
-costs nothing rather than just being cheap) and the private Kokoro service (a larger
-shared-cpu tier to hold the model in memory, same auto-stop/auto-start pattern,
-invoked only when a note actually needs audio). Both pinned to the same Fly region,
+costs nothing rather than just being cheap) and the private Kokoro service (a pool of
+stopped `performance-4x` machines, one job each, started only when a note actually
+needs audio — measured, not guessed: a shared-cpu tier renders at a tenth of real time
+once throttled, see `docs/features/tts-pre-rendered-speech.md`, "Measured on Fly.io").
+Both pinned to the same Fly region,
 so the private traffic between them is free. No Fly Volumes needed anywhere —
 Postgres is on Neon, audio is on R2, and the TTS worker's temp files during synthesis
 use the machine's ephemeral local disk.
