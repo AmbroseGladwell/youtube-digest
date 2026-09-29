@@ -1,5 +1,6 @@
 export const transcriptPanelTestIds = {
   root: "TranscriptPanel.root",
+  head: "TranscriptPanel.head",
   sourceNote: "TranscriptPanel.sourceNote",
   skeleton: "TranscriptPanel.skeleton",
   emptyNote: "TranscriptPanel.emptyNote",
