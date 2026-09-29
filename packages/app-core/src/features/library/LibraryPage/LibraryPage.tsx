@@ -11,7 +11,6 @@ import {
   readableEntries,
   type LibraryEntry,
 } from "../../overviews/types/LibraryEntry.js";
-import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
@@ -20,8 +19,14 @@ import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOv
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
-import { applyLibraryFilterPatch, parseLibraryFilters } from "../util/libraryFilterParams.js";
+import {
+  applyLibraryFilterPatch,
+  applyLibrarySort,
+  parseLibraryFilters,
+  parseLibrarySort,
+} from "../util/libraryFilterParams.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
+import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
 import { useFocusTrap } from "../../../util/useFocusTrap.js";
@@ -67,8 +72,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1]) =>
     setSearchParams(applyLibraryFilterPatch(searchParams, patch), { replace: true });
 
-  const visible = orderLibraryEntriesBySavedAt(
+  const sort = parseLibrarySort(searchParams);
+  const visible = orderLibraryEntries(
     entries.filter((entry) => matchesLibraryFilters(entry, filters)),
+    sort,
   );
 
   return (
@@ -158,7 +165,12 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
               </p>
             </div>
-            <SortPill />
+            <SortPill
+              sort={sort}
+              onChange={(next) =>
+                setSearchParams(applyLibrarySort(searchParams, next), { replace: true })
+              }
+            />
           </div>
 
           <div className={styles.search}>

@@ -2,17 +2,36 @@ import { expect } from "@playwright/experimental-ct-react";
 import { libraryPageTestIds } from "../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
+import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
+import { SortPillPageObject } from "./SortPillPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
   get filterPanel(): FilterPanelPageObject {
     return new FilterPanelPageObject(this.testContext);
   }
+
+  get sortPill(): SortPillPageObject {
+    return new SortPillPageObject(this.testContext);
+  }
+
+  // Both kinds of card, in the order the list lays them out, so a test can see where an
+  // unreadable record lands among the readable ones.
+  verifyCardOrder = (titles: string[]) =>
+    this.step(`verifyCardOrder ${titles.join(", ")}`, () =>
+      expect(
+        this.get(libraryPageTestIds.list).locator(
+          [libraryOverviewCardTestIds.root, libraryUnreadableCardTestIds.root]
+            .map((testId) => `[data-testid="${testId}"]`)
+            .join(", "),
+        ),
+      ).toHaveText(titles.map((title) => new RegExp(title))),
+    );
 
   get newTopicDialog(): NewTopicDialogPageObject {
     return new NewTopicDialogPageObject(this.testContext);

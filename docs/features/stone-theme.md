@@ -123,10 +123,6 @@ why, or a jump to where the thing lives today.
 - **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
   **To wire in:** an `href` to the Web Store listing once it is published
   (`chrome-web-store-account` in the project notes), and the button becomes a link.
-- **The sort pill** (`SortPill` in the library's head, design 2a). A disabled surface pill
-  reading `Newest saved first`. **To wire in:** a sort order in `LibraryFilters` and
-  `libraryFilterParams`, applied in `orderLibraryEntriesBySavedAt`'s place, and a menu on
-  the pill.
 - **`Open in web app`** in the panel's ⋯ menu (design 6h), disabled. **To wire in:** the
   web app's address for a note, which needs the note to exist there — that is sync's job.
 - **`MCP connection`** in the Plus plan's list of what the plan buys (`plusFeatures.ts`).

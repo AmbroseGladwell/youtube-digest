@@ -58,6 +58,9 @@ Five folders, five different questions.
 - `injected-button.md` — the Overview button in YouTube's own action row: why it wears
   their pill, where each of its four states gets its facts, and the three-document
   conversation behind it.
+- `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
+  record with no date or title lands, why the order is in the URL but isn't a filter, and
+  what doesn't follow it yet.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
 - `reading-position.md` — the transcript tab opening where you had got to, per video:

@@ -1,9 +1,9 @@
 import { libraryEntrySavedAt, type LibraryEntry } from "../types/LibraryEntry.js";
 
-// Newest saved first. The library list and the reader's Previous/Next share this so the
-// "4 of 31" the reader shows is the position in the list the reader was opened from. A
-// record whose saved date did not survive sorts last: an unknown date cannot claim a
-// position (docs/features/record-migrations.md).
+// Newest saved first: the library's default order and the reader's Previous/Next, which
+// does not follow a sort chosen in the library (docs/features/library-sort.md). A record
+// whose saved date did not survive sorts last: an unknown date cannot claim a position
+// (docs/features/record-migrations.md).
 export function orderLibraryEntriesBySavedAt<T extends LibraryEntry>(entries: T[]): T[] {
   return [...entries].sort((a, b) => {
     const left = libraryEntrySavedAt(a);
