@@ -9,126 +9,70 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .label {
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.urlInput {
-  width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--ink);
-  border-radius: 0;
-  background: transparent;
-  padding: 0.5rem 0.0625rem;
-  font-size: 0.95rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--ink);
 }
 
-.urlInput::placeholder {
-  color: var(--faint);
-}
+// On the dialog's own card the field takes the surface, one step down from what it
+// sits on (docs/features/stone-theme.md, "Fields").
+.urlInput {
+  @include controls.field-solo;
 
-.urlInput:focus-visible {
-  outline: none;
-  border-bottom-color: var(--accent);
-}
-
-.urlInput:disabled {
-  border-bottom-color: var(--edge);
-  color: var(--faint);
+  background: var(--surface);
+  padding: 0.6875rem 1.125rem;
 }
 
 .pasteButton {
-  align-self: flex-start;
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-badge);
-  background: transparent;
-  color: var(--muted);
-  padding: 0.35rem 0.85rem;
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  cursor: pointer;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
 
-  @include controls.outlined-control;
+  align-self: flex-start;
+  color: var(--muted);
 }
 
-// The accent marks the suggested path without taking the primary action's tint.
 .watchingButton {
   align-self: flex-start;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-badge);
-  background: transparent;
-  color: var(--accent-deep);
-  padding: 0.35rem 0.85rem;
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  cursor: pointer;
 
-  @include controls.outlined-control;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 }
 
-.provenance {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.6;
-  color: var(--faint);
-}
-
+.provenance,
 .note {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--muted);
 }
 
 .error {
   margin: 0;
-  font-size: 0.78rem;
-  color: var(--accent-strong);
+  font-size: 0.8125rem;
+  color: var(--accent);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--gap-control);
+  gap: 0.5rem;
   padding-top: 0.125rem;
 }
 
-.cancelButton,
-.generateButton {
-  border-radius: var(--radius-badge);
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  padding: 0.5rem 1.1rem;
-  cursor: pointer;
-}
-
 .cancelButton {
-  border: 1px solid var(--edge);
-  background: transparent;
-  color: var(--faint);
-
-  @include controls.outlined-control;
+  @include controls.surface-pill;
+  @include controls.pill-md;
 }
 
-// The soft tint marks the one action that takes you somewhere, as it does on a library
-// row's Listen (docs/features/overview-redesign.md).
 .generateButton {
-  border: 1px solid var(--accent);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding-inline: 1.25rem;
-
-  @include controls.tinted-control;
+  @include controls.action-pill;
+  @include controls.pill-md;
 }
 
-// On a phone the pair stacks full-width at the sheet's foot, on the design's 44px target.
 @media (max-width: 47.9375rem) {
   .pasteButton,
   .watchingButton {

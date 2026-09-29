@@ -1,6 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 4a/5a: a centred dialog on a desktop, the same panel as a bottom sheet on a
+// Design 3a/3b: a centred dialog on a desktop, the same panel as a bottom sheet on a
 // phone. The <dialog> element itself is the positioner, so it carries no paint — and it is
 // what the entrance animates, so that the sheet's travel is a percentage of its own height.
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
@@ -16,14 +16,13 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 }
 
 .dialog::backdrop {
-  background: color-mix(in srgb, #201f1d 44%, transparent);
+  background: var(--scrim);
 }
 
 // The scrim fades first and the panel arrives behind it, 80ms in, so the dim reads as the
 // cause and the dialog as the consequence. The opening is the only animated half: closing
 // is immediate, which is the asymmetry frontend-architecture-guide.md 2.4 asks for taken
-// to its end. Reduced motion drops both through theme/global.scss's blanket rule, leaving
-// the dialog in its end state.
+// to its end. Reduced motion drops both through theme/global.scss's blanket rule.
 .dialog[open] {
   animation: dialogFadeUp 480ms $enter-easing 80ms both;
 }
@@ -41,7 +40,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   }
 }
 
-// Desktop travel is 10px and mostly a fade: the dialog is not coming from anywhere.
 @keyframes dialogFadeUp {
   from {
     opacity: 0;
@@ -53,8 +51,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   }
 }
 
-// The sheet is coming from somewhere — the bottom edge — so it travels its own full height
-// and does not fade at all.
 @keyframes sheetTravel {
   from {
     transform: translateY(100%);
@@ -65,29 +61,28 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 }
 
 .panel {
-  width: min(31.25rem, calc(100vw - 2.5rem));
+  width: min(33.75rem, calc(100vw - 2.5rem));
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  background: var(--ground);
-  border: 1px solid var(--ink);
-  box-shadow: var(--shadow-lg);
-  padding: 1.5rem 1.625rem 1.375rem;
+  gap: 1.125rem;
+  background: var(--dialog);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  padding: 1.625rem 1.75rem 1.5rem;
 }
 
-// The sheet's grab handle: the design draws it only on the phone panel.
 .handle {
   display: none;
   width: 2.5rem;
   height: 0.25rem;
   border-radius: var(--radius-badge);
-  background: var(--edge);
+  background: var(--surface);
   align-self: center;
 }
 
 .head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
@@ -96,127 +91,99 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 1.625rem;
-  line-height: 1;
+  font-size: 1.75rem;
+  line-height: 1.12;
 }
 
 .close {
-  border: 0;
-  border-radius: var(--radius-btn);
-  background: transparent;
-  padding: 0.25rem 0.4rem;
-  margin: -0.25rem -0.4rem;
-  font-size: 1rem;
-  color: var(--faint);
-  cursor: pointer;
-
-  @include controls.icon-control;
+  @include controls.surface-pill;
+  @include controls.circle(2.25rem);
 }
 
 .source {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
+  display: flex;
+  align-items: center;
   gap: 0.875rem;
-  align-items: start;
 }
 
-.source:has(> .sourceText:first-child) {
-  grid-template-columns: 1fr;
+.thumbnail {
+  flex: none;
+  width: 6.5rem;
+  border-radius: 10px;
 }
 
 .sourceText {
+  flex: 1;
   min-width: 0;
 }
 
 .sourceTitle {
-  margin: 0 0 0.1875rem;
+  margin: 0;
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.125rem;
-  line-height: 1.22;
+  font-weight: 400;
+  font-size: 1.3125rem;
+  line-height: 1.12;
 }
 
 .sourceMeta {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--faint);
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
-.rule {
-  display: block;
-  height: 1px;
-  background: var(--ink);
-}
-
 .foot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.footRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.elapsed {
-  font-size: 0.72rem;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
+.footText {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 0.375rem;
+  min-width: 0;
+  font-size: 0.78125rem;
+  color: var(--muted);
 }
 
-.footActions {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-control);
+.elapsed {
+  font-variant-numeric: tabular-nums;
 }
 
 .footNote {
   margin: 0;
-  font-size: 0.75rem;
-  color: var(--muted);
 }
 
-.secondaryAction,
-.primaryAction {
-  border-radius: var(--radius-badge);
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  padding: 0.5rem 1.1rem;
-  cursor: pointer;
-  white-space: nowrap;
+.footNote::before {
+  content: "· ";
+}
+
+.footActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .secondaryAction {
-  border: 1px solid var(--edge);
-  background: transparent;
-  color: var(--faint);
-
-  @include controls.outlined-control;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 }
 
 .primaryAction {
-  border: 1px solid var(--accent);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding-inline: 1.25rem;
-
-  @include controls.tinted-control;
+  @include controls.action-pill;
+  @include controls.pill-sm;
 }
 
 .quietAction {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  color: var(--faint);
-  cursor: pointer;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
 
-  @include controls.quiet-control;
+  color: var(--muted);
 }
 
 @media (max-width: 47.9375rem) {
@@ -231,9 +198,8 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
   .panel {
     width: 100%;
-    border: 0;
-    border-top: 2px solid var(--ink);
-    padding: 0.875rem 1.25rem 1.25rem;
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    padding: 0.75rem 1.25rem 1.25rem;
   }
 
   .handle {
@@ -244,14 +210,15 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     font-size: 1.5rem;
   }
 
-  .source {
-    grid-template-columns: 5.75rem 1fr;
-  }
-
-  .footRow {
+  .foot {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .footText {
+    justify-content: center;
+    text-align: center;
   }
 
   // The phone stacks the pair with the action you are most likely to want on top, which
@@ -261,13 +228,9 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     align-items: stretch;
   }
 
-  .elapsed,
-  .footNote {
-    text-align: center;
-  }
-
   .secondaryAction,
-  .primaryAction {
+  .primaryAction,
+  .quietAction {
     min-height: 2.75rem;
   }
 }

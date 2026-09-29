@@ -70,8 +70,15 @@ test("the search box filters by a case-insensitive substring of the video title"
   backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "Compound interest" } }));
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.search("PLATYSMA");
+  await library.verifyOffersToClearTheSearch(false);
+  await library.search("PLATYSMA");
   await library.expectCardCountToBe(1);
+
+  await library.verifyOffersToClearTheSearch(true);
+  await library.clearTheSearch();
+
+  await library.verifySearchReads("");
+  await library.expectCardCountToBe(2);
 });
 
 test("filters combine with AND: a video matching only one active filter stays hidden", async ({

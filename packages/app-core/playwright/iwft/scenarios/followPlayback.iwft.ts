@@ -177,11 +177,13 @@ test("searching stands the following down and offers it back, rather than fighti
   await reader.searchTheTranscript("argument");
   await reader.verifyIsFollowingTheVideo(false);
   await reader.verifyOffersToFollowPlayback(true);
+  await reader.verifyFollowButtonReads("Back to 0:00");
 
   await reader.clickFollowPlayback();
   await reader.verifyIsFollowingTheVideo(true);
   await reader.verifyMatchCountIsHidden();
   await reader.verifyCurrentTranscriptBlockReads(/The opening claim/);
+  await reader.verifyCurrentBlockSaysPlaying();
 });
 
 test("scrolling away from the marked block hands the scroll back, until Follow playback is pressed", async ({

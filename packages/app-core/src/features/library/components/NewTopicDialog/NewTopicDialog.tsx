@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { OverviewId, type Overview } from "@overview/domain";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
 
@@ -87,7 +88,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onClose }: NewT
             aria-label="Close"
             data-testid={newTopicDialogTestIds.closeButton}
           >
-            ✕
+            <StrokeIcon name="close" size={16} />
           </button>
         </div>
 
@@ -131,7 +132,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onClose }: NewT
                     onChange={() => toggle(overview.id)}
                   />
                   <span className={styles.box} aria-hidden="true">
-                    ✓
+                    <StrokeIcon name="check" size={11} />
                   </span>
                   <span className={styles.optionText}>
                     {overview.video.title} <span className={styles.channel}>· {overview.video.channel}</span>

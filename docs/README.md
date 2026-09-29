@@ -40,6 +40,7 @@ Five folders, five different questions.
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
+- `stone-theme.md` — the stone reskin: two oranges and what each is for, three pills, the raised tile, the hero's own field, and what the design file draws that was left out.
 - `chapters.md` — the reader's third tab: chapters as a structural prompt section timed
   from the transcript, why the model names a segment and never a time, what a range does
   on each surface, and how a chapter opens the transcript at its start.

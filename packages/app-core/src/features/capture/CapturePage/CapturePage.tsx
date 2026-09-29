@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../app/Routes.js";
+import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
@@ -139,7 +140,7 @@ export function CapturePage() {
               to={Routes.settings()}
               data-testid={capturePageTestIds.settingsLink}
             >
-              Set up keys in Settings →
+              Set up keys in Settings <StrokeIcon name="arrowRight" size={14} />
             </Link>
           </div>
         )}

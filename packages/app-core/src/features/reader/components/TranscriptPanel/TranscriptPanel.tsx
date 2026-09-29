@@ -1,4 +1,12 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import type { VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
@@ -9,6 +17,8 @@ import { transcriptFileName } from "../../../transcripts/util/transcriptFileName
 import { transcriptPlainText } from "../../../transcripts/util/transcriptPlainText.js";
 import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { formatTimestamp } from "../../../../util/formatTimestamp.js";
+import { ClearFieldButton } from "../../../../components/shared/ClearFieldButton/ClearFieldButton.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useFollowPlayback, type FollowPlayback } from "./useFollowPlayback.js";
 import { useReadingPosition, type ReadingPosition } from "./useReadingPosition.js";
 import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearch.js";
@@ -19,16 +29,25 @@ const SKELETON_ROWS = 4;
 const COPIED_MS = 2000;
 const NOTHING_STORED = "No transcript was stored for this note. Generating it again keeps one.";
 
+export interface OpenedFromChapter {
+  number: number;
+  title: string;
+}
+
 export interface TranscriptPanelProps {
   video: VideoSource;
   // Where a chapter asked the transcript to open, or null when the reader chose the tab
   // themselves (docs/features/chapters.md).
   openAtMs: number | null;
+  // The chapter that asked, named on the block it opened at and offered a way back
+  // (design 2c).
+  openedFrom: OpenedFromChapter | null;
+  onBackToChapters: () => void;
 }
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
+export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters }: TranscriptPanelProps) {
   const transcriptQuery = useTranscriptQuery(video.id);
   const transcript = transcriptQuery.data ?? null;
   const blocks = useMemo(
@@ -99,12 +118,38 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
     blocks,
   });
 
+  const currentBlock = blocks[follow.currentBlockIndex] ?? null;
+
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
       <div className={styles.head}>
         <div className={styles.headingRow}>
+          {/* Design 2a–2c: what the row's left says is the transcript's relationship to
+              the video — the way back to the chapter that opened it, or whether it is
+              following — and only a transcript with no player to follow is labelled. */}
           <p className={styles.heading}>
-            Full transcript
+            {openedFrom !== null ? (
+              <button
+                type="button"
+                className={styles.backToChapters}
+                onClick={onBackToChapters}
+                data-testid={transcriptPanelTestIds.backToChaptersButton}
+              >
+                <StrokeIcon name="arrowLeft" size={14} />
+                Back to chapters
+              </button>
+            ) : follow.following ? (
+              <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
+                <span className={styles.followingMark} aria-hidden="true" />
+                Following the video
+              </span>
+            ) : follow.offered ? (
+              <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
+                Not following · you scrolled away
+              </span>
+            ) : (
+              <span className={styles.label}>Full transcript</span>
+            )}
             {transcript?.generated === true && (
               <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
                 Auto-generated
@@ -139,15 +184,6 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
         {unreadable === null && <TranscriptSearchBar search={search} onQueryChange={searchFor} />}
       </div>
 
-      {follow.following && (
-        <p className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
-          <span className={styles.followingMark} aria-hidden="true">
-            ●
-          </span>
-          Following the video
-        </p>
-      )}
-
       {unreadable ?? (
         <TranscriptRows
           blocks={blocks}
@@ -156,9 +192,12 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
           position={position}
           seek={seek}
           targetBlockIndex={targetBlockIndex}
+          openedFrom={openedFrom}
         />
       )}
 
+      {/* Design 2b: the way back names where the video is, and the dot is the same one
+          the following note carries. */}
       {follow.offered && (
         <button
           type="button"
@@ -166,7 +205,8 @@ export function TranscriptPanel({ video, openAtMs }: TranscriptPanelProps) {
           onClick={followPlayback}
           data-testid={transcriptPanelTestIds.followButton}
         >
-          ↓ Follow playback
+          <span className={styles.followButtonMark} aria-hidden="true" />
+          {currentBlock === null ? "Back to the video" : `Back to ${formatTimestamp(currentBlock.startMs)}`}
         </button>
       )}
     </div>
@@ -215,7 +255,10 @@ interface TranscriptRowsProps {
   position: ReadingPosition;
   seek: ((positionMs: number) => void) | null;
   targetBlockIndex: number;
+  openedFrom: OpenedFromChapter | null;
 }
+
+const chapterNumber = (number: number) => String(number).padStart(2, "0");
 
 function TranscriptRows({
   blocks,
@@ -224,6 +267,7 @@ function TranscriptRows({
   position,
   seek,
   targetBlockIndex,
+  openedFrom,
 }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
@@ -236,8 +280,12 @@ function TranscriptRows({
     targetRow?.scrollIntoView({ block: "center" });
   }, [targetRow]);
 
+  // Design 2a: paragraphs the video has already passed drop to the muted ink, so the
+  // eye finds the one being spoken by weight before it finds the card.
+  const past = (index: number) => follow.currentBlockIndex !== -1 && index < follow.currentBlockIndex;
+
   return (
-    <div ref={position.rows}>
+    <div className={styles.rows} ref={position.rows}>
       {blocks.map((block, index) => {
         const current = index === follow.currentBlockIndex;
         const target = index === targetBlockIndex;
@@ -245,7 +293,7 @@ function TranscriptRows({
         return (
           <div
             key={`${index}-${block.startMs}`}
-            className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""}`}
+            className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${past(index) ? styles.rowPast : ""}`}
             ref={
               target
                 ? setTargetRow
@@ -275,7 +323,19 @@ function TranscriptRows({
                 {formatTimestamp(block.startMs)}
               </button>
             )}
-            <span className={styles.text}>
+            <span className={styles.body}>
+              {current && (
+                <span className={styles.playingBadge} data-testid={transcriptPanelTestIds.playingBadge}>
+                  <span className={styles.playingMark} aria-hidden="true" />
+                  Playing on YouTube
+                </span>
+              )}
+              {target && openedFrom !== null && (
+                <span className={styles.chapterChip} data-testid={transcriptPanelTestIds.chapterChip}>
+                  Chapter {chapterNumber(openedFrom.number)} · {openedFrom.title}
+                </span>
+              )}
+              <span className={styles.text}>
               {block.speakerChange && (
                 <span
                   className={styles.speakerMark}
@@ -303,6 +363,7 @@ function TranscriptRows({
                   );
                 })}
               </span>
+              </span>
             </span>
           </div>
         );
@@ -316,54 +377,94 @@ interface TranscriptSearchBarProps {
   onQueryChange: (query: string) => void;
 }
 
+// The field's own clear button, in place of the browser's blue cancel glyph, so all
+// three round controls in the pill are the one size, colour and hover
+// (docs/features/stone-theme.md, "Transcript search").
 function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps) {
   const searching = search.query.trim() !== "";
+  const found = search.matches.length;
+  const input = useRef<HTMLInputElement | null>(null);
+
+  const clear = () => {
+    onQueryChange("");
+    input.current?.focus();
+  };
+
+  // Enter walks the hits the way a browser's own find does, and Escape empties the
+  // field before it gives the page back.
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && found > 0) {
+      event.preventDefault();
+      search.step(event.shiftKey ? -1 : 1);
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      if (search.query === "") {
+        input.current?.blur();
+        return;
+      }
+      onQueryChange("");
+    }
+  };
 
   return (
-    <div className={styles.search}>
-      <SearchIcon />
+    <div className={`${styles.search} ${search.query !== "" ? styles.searchFilled : ""}`}>
+      <span className={styles.searchIcon} aria-hidden="true">
+        <StrokeIcon name="search" size={16} />
+      </span>
       <input
+        ref={input}
         type="search"
         className={styles.searchInput}
         placeholder="Search words or phrases"
         aria-label="Search the transcript"
         value={search.query}
         onChange={(event) => onQueryChange(event.target.value)}
+        onKeyDown={onKeyDown}
         data-testid={transcriptPanelTestIds.searchInput}
       />
+      {search.query !== "" && (
+        <ClearFieldButton
+          label="Clear search"
+          onClick={clear}
+          testId={transcriptPanelTestIds.clearSearchButton}
+        />
+      )}
       {searching && (
-        <>
+        <span className={styles.searchResult}>
           <span
-            className={styles.matchCount}
+            className={`${styles.matchCount} ${found === 0 ? styles.matchCountEmpty : ""}`}
             role="status"
             data-testid={transcriptPanelTestIds.matchCount}
           >
-            {search.matches.length === 0
-              ? "No matches"
-              : `${search.currentIndex + 1}/${search.matches.length}`}
+            {found === 0 ? "No matches" : `${search.currentIndex + 1}/${found}`}
           </span>
-          <span className={styles.searchDivider} aria-hidden="true" />
+          <span className={styles.searchGap} aria-hidden="true" />
+          {/* The steppers stay in place with nothing to walk, disabled rather than gone,
+              so the field does not change width as you type (design 1a, "No matches").
+              They wrap rather than stopping at either end, which is why neither is
+              disabled at the first hit the way the design's frame shows. */}
           <button
             type="button"
             className={styles.stepMatch}
             onClick={() => search.step(-1)}
-            disabled={search.matches.length === 0}
+            disabled={found === 0}
             aria-label="Previous match"
             data-testid={transcriptPanelTestIds.previousMatchButton}
           >
-            ↑
+            <StrokeIcon name="chevronUp" size={16} />
           </button>
           <button
             type="button"
             className={styles.stepMatch}
             onClick={() => search.step(1)}
-            disabled={search.matches.length === 0}
+            disabled={found === 0}
             aria-label="Next match"
             data-testid={transcriptPanelTestIds.nextMatchButton}
           >
-            ↓
+            <StrokeIcon name="chevronDown" size={16} />
           </button>
-        </>
+        </span>
       )}
     </div>
   );
@@ -374,26 +475,6 @@ function TranscriptNote({ testId, children }: { testId: string; children: ReactN
     <p className={styles.note} data-testid={testId}>
       {children}
     </p>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      className={styles.searchIcon}
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <line x1="16.2" y1="16.2" x2="21" y2="21" />
-    </svg>
   );
 }
 

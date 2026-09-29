@@ -88,6 +88,47 @@ test("the steppers walk the hits and wrap round rather than stopping at the last
   await reader.verifyMatchCountReads("3/3");
 });
 
+test("the field clears from its own button, leaving the transcript whole again", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedTranscript(backendSimulator);
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+
+  await reader.verifyOffersToClearTheSearch(false);
+  await reader.searchTheTranscript("productivity");
+  await reader.verifyOffersToClearTheSearch(true);
+
+  await reader.clickClearSearch();
+
+  await reader.verifySearchReads("");
+  await reader.verifyMatchCountIsHidden();
+  await reader.verifyHighlightedMatchCountIs(0);
+});
+
+test("Enter walks the hits and Escape empties the field, as a browser's own find does", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedTranscript(backendSimulator);
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Transcript");
+  await reader.searchTheTranscript("productivity");
+
+  await reader.pressInTheSearchField("Enter");
+  await reader.verifyMatchCountReads("2/3");
+  await reader.pressInTheSearchField("Shift+Enter");
+  await reader.verifyMatchCountReads("1/3");
+
+  await reader.pressInTheSearchField("Escape");
+
+  await reader.verifySearchReads("");
+  await reader.verifyMatchCountIsHidden();
+});
+
 test("a search that finds nothing says so rather than leaving a count of zero", async ({
   launcher,
   backendSimulator,
@@ -101,6 +142,7 @@ test("a search that finds nothing says so rather than leaving a count of zero", 
 
   await reader.verifyMatchCountReads("No matches");
   await reader.verifyHighlightedMatchCountIs(0);
+  await reader.verifyMatchSteppersAreDisabled();
 });
 
 test("copying puts the whole transcript, and the video it came from, on the clipboard", async ({

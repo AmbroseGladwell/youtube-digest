@@ -1,99 +1,33 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// At rest a row carries no chrome at all — not even a rule. The tile exists only under the
-// pointer, on keyboard focus and under a press, so the list stays quiet to read and becomes
-// a set of targets when you go hunting.
-//
-// The inline padding is given straight back as a negative margin, so the tile bleeds out
-// past the text rather than the text moving in: at rest the row sits exactly where it did,
-// which is the whole point of chrome that isn't there yet.
+// Design 11c/12c: the row rests on a raised tile and never moves. Under the pointer the
+// shadow deepens and, on the dark ground, the surface lightens a step; on the light
+// ground the tile is already white and only the shadow answers
+// (docs/features/stone-theme.md, "The tile").
 .root {
-  border: 1px solid transparent;
-  border-radius: var(--radius-panel);
-  margin-inline: -0.875rem;
-  padding: 1rem 0.875rem;
-  transition:
-    background var(--motion-tile) ease-out,
-    border-color var(--motion-tile) ease-out,
-    box-shadow var(--motion-tile) ease-out;
+  padding: 0.875rem 1rem 0.875rem 0.875rem;
+
+  @include controls.tile;
 }
 
-// The row never translates. What reads as raised is the one-step surface lift to --raised;
-// --shadow-sm is the system's smallest step and is only there to soften the corners, at 1px
-// down and 2px blur. The frame the list sits in carries --shadow, three times the offset,
-// so a row never competes with its container.
-@mixin tile {
-  border-color: var(--line);
-  background: var(--raised);
-  box-shadow: var(--shadow-sm);
-}
-
-// Hover is gated behind a real pointer, or a tap would leave the last row you touched lit
-// until you touched another. Touch is served by :has(:active) instead — the press lands on
-// one of the row's own controls, which is the element a touch reliably gives :active to.
-// Keyboard focus goes through :has() for the same reason: the focus is on a control inside
-// the row, never on the row itself.
 @media (hover: hover) {
   .root:hover {
-    @include tile;
+    @include controls.tile-hover;
   }
 }
 
-.root:has(:focus-visible),
-.root:has(:active) {
-  @include tile;
+.root:has(:focus-visible) {
+  @include controls.tile-hover;
 }
 
-// Design 7a, "rule first": the hairline draws left to right in the accent and fades out,
-// and the kicker, title and meta fade up behind it in turn. It spans the text rather than
-// the tile's full bleed, since the text is what it is introducing. The global
-// prefers-reduced-motion rule in theme/global.scss collapses all four to their end state
-// (docs/features/overview-redesign.md, "How a new row arrives").
+// A tile arrives by fading up in place: a hairline drawing along its edge belonged to
+// the editorial theme's rules, and there are no rules here. The global
+// prefers-reduced-motion rule in theme/global.scss collapses it to its end state.
 .entering {
-  position: relative;
+  animation: tileArrive var(--motion-arrive) cubic-bezier(0.33, 0, 0.15, 1) both;
 }
 
-.entering::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--accent);
-  transform-origin: left;
-  animation: ruleDraw 0.9s cubic-bezier(0.33, 0, 0.15, 1) both;
-}
-
-.entering .kickerRow {
-  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.34s both;
-}
-
-.entering .title {
-  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.42s both;
-}
-
-.entering .meta,
-.entering .timing {
-  animation: lineInk 0.55s cubic-bezier(0.33, 0, 0.15, 1) 0.5s both;
-}
-
-@keyframes ruleDraw {
-  0% {
-    transform: scaleX(0);
-    opacity: 1;
-  }
-  55% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scaleX(1);
-    opacity: 0;
-  }
-}
-
-@keyframes lineInk {
+@keyframes tileArrive {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -106,14 +40,18 @@
 
 .row {
   display: grid;
-  grid-template-columns: 11.25rem 1fr auto;
-  gap: 1.25rem;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1.125rem;
   align-items: start;
 }
 
 // No thumbnail saved: the body is the first cell, and the text takes its column.
 .row:has(> .body:first-child) {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.thumbnail {
+  transition: opacity var(--motion-tile) var(--motion-ease);
 }
 
 .body {
@@ -127,35 +65,27 @@
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.6rem;
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  font-size: 0.75rem;
 }
 
-.topicPill {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-badge);
-  padding: 1px 0.45rem;
-  letter-spacing: 0.1em;
-  color: var(--ink);
+.topic {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--label);
 }
 
 .verdict {
-  color: var(--muted);
-}
-
-.verdictNovel {
-  color: var(--ink);
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 2px;
+  @include controls.chip;
 }
 
 .dubious {
-  color: var(--accent-strong);
-  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 .selling {
@@ -172,25 +102,20 @@
 }
 
 .title {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.375rem;
-  line-height: 1.2;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.28;
   color: var(--ink);
   transition: color var(--motion-state) ease-out;
 }
 
-// Design 9c marks the row under the pointer before it takes you anywhere. There the whole
-// row is one button and the mark is a tint across it; here the row carries three separate
-// controls, and a tint behind all of them swallows Listen's own. So the mark goes on the
-// title, which is the thing that is actually going to open.
 .titleLink:hover .title {
-  color: var(--accent-strong);
+  color: var(--accent);
 }
 
 .meta {
-  font-size: 0.84rem;
-  line-height: 1.6;
+  font-size: 0.84375rem;
+  line-height: 1.5;
   color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -200,16 +125,35 @@
 }
 
 .channel {
+  font-weight: 500;
   color: var(--ink);
 }
 
+// A row already read: its title recedes to the muted ink and its picture dims, so the
+// unread rows are what the eye lands on.
+.root[data-read] .title,
+.root[data-read] .channel {
+  color: var(--muted);
+}
+
+.root[data-read] .thumbnail {
+  opacity: 0.5;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
+
 // The same three numbers the reader prints, in the same treatment, so a row and the note it
-// opens read as one thing (design 2a/2c's row, under the text).
+// opens read as one thing.
 .timing {
-  margin: 0.125rem 0 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--faint);
+  margin: 0;
+  font-size: 0.78125rem;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -219,107 +163,66 @@
   gap: var(--gap-control);
 }
 
+// The pills and the circle share one 34px height, so the row of controls reads as one row.
 .action {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-badge);
-  background: transparent;
-  color: var(--muted);
-  padding: 0.3rem 0.75rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  white-space: nowrap;
-  cursor: pointer;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 
-  @include controls.outlined-control;
+  min-height: 2.125rem;
 }
 
-// The same circle the reader's player bar draws, so the control doesn't change shape
-// between the row and the note it opens. 1.875rem is the height of the Read pill beside
-// it, which is the thing it has to line up with here.
-//
-// Its outline is --edge rather than currentColor, which is what Read's is: derived from the
-// ink, it followed --muted around and ended up a different weight from the pill it sits
-// next to. What the two share is an edge, not an ink.
+.actionActive,
+.actionActive:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--ground);
+}
+
 .favouriteAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.875rem;
-  height: 1.875rem;
-  border-width: 1.5px;
-  border-color: var(--edge);
-  padding: 0;
-  font-size: 0.82rem;
+  @include controls.surface-pill;
+  @include controls.circle(2.125rem);
 
-  @include controls.icon-control;
+  font-size: 0.875rem;
 }
 
-.actionActive {
-  border-color: var(--accent);
-  color: var(--accent-strong);
-}
-
-.primaryAction {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-badge);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding: 0.3rem 0.8rem;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-
-  @include controls.tinted-control;
+.favouriteActive {
+  color: var(--brand);
 }
 
 // The phone row: one column, no thumbnail, and the three actions under the text.
 @media (max-width: 47.9375rem) {
+  .root {
+    padding: 0.875rem;
+  }
+
   // A phone row drops the thumbnail. At the width a phone can spare it is too small to
-  // tell one video from another, and it costs the title the column it needs. The title is
-  // the same way in to the reader, with the same words, so nothing is lost with it.
+  // tell one video from another, and it costs the title the column it needs.
   .thumbnail {
     display: none;
   }
 
-  // One column, thumbnail or not. Both selectors are needed: a hidden thumbnail is out of
-  // the grid but still the first child in the tree, so the :has() rule above doesn't fire
-  // for it — and on a row that never had one it does fire, and outranks a bare .row here.
   .row,
   .row:has(> .body:first-child) {
-    grid-template-columns: 1fr;
-    gap: 0.875rem;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .title {
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
 
-  // The three pills carry their desktop treatments here rather than falling back to plain
-  // type, so a row reads the same on a phone as it does on a desktop. The single column
-  // places them under the text on its left edge, and they wrap rather than overflow on a
-  // screen too narrow to hold all three on one line.
+  .foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
   .actions {
     flex-wrap: wrap;
-    gap: var(--gap-control);
-    padding-top: 0.25rem;
   }
 
-  // align-items is load-bearing rather than decorative, as it is on the masthead's + New:
-  // the touch size is a min-height, and a stretched anonymous text item would sit at the
-  // top of a pill taller than its own line box.
-  .action,
-  .primaryAction {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .action {
     min-height: 2.375rem;
   }
 
-  // The glyph grows with the circle, holding the ~47% ratio the 32px desktop pair has.
   .favouriteAction {
     width: 2.375rem;
     height: 2.375rem;

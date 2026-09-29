@@ -1,296 +1,224 @@
 @use "../../../../theme/controls.scss" as controls;
 
+// Design 4a: the back link and the actions on one bar in the page's own gutter, the
+// title block centred beneath on the 760px reading column. The areas are what let the
+// phone (5c) move the actions under the title and the panel (6d) put Listen beside ⋯
+// without a second head in the DOM.
 .root {
-  display: flex;
-  flex-direction: column;
-}
-
-// Design 15c's head is the title, the topics, the meta line and Listen — small enough
-// to hold the top of a 400px panel while the note scrolls under it, which the wide
-// reader's masthead is not (docs/features/extension-panel.md).
-.rootSticky {
-  position: sticky;
-  top: var(--masthead-height);
-  // Above the tab strip's 2. Sticking the head gives it a stacking context of its own,
-  // which the ⋯ menu cannot escape however high its own z-index goes — on the wide
-  // reader the masthead is unpositioned and the menu simply outranks the tabs.
-  z-index: 3;
-  background: var(--ground);
-}
-
-.topBar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "back . actions menu"
+    "head head head head";
   align-items: center;
-  gap: 1.25rem;
-  padding: 0.75rem 2.5rem;
-  border-bottom: 1px solid var(--divider);
+  column-gap: 0.5rem;
+  padding: 0.375rem 2rem 0;
 }
 
 .backLink {
-  flex: none;
-  font-size: 0.82rem;
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
-  transition: color var(--motion-state) ease-out;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  grid-area: back;
+  justify-self: start;
+  margin-left: -0.5rem;
+  gap: 0.25rem;
+  font-size: 0.84375rem;
 }
 
-.backLink:hover {
-  color: var(--accent-deep);
-}
-
-.breadcrumb {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.75rem;
-  color: var(--faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.breadcrumbLeaf {
-  color: var(--ink);
-}
-
-.stepper {
-  flex: none;
+.actions {
+  grid-area: actions;
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  font-size: 0.75rem;
-  color: var(--faint);
+  gap: 0.5rem;
 }
 
-.stepLink {
-  color: var(--faint);
-  text-decoration: none;
-  padding-bottom: 1px;
-
-  @include controls.quiet-control;
+.menu {
+  grid-area: menu;
+  display: inline-flex;
 }
 
-.position {
-  font-variant-numeric: tabular-nums;
+.favourite {
+  @include controls.surface-pill;
+  @include controls.circle(2.125rem);
+
+  font-size: 0.875rem;
+  color: var(--brand);
 }
 
-.titleRow {
+.favourite:hover:not(:disabled) {
+  color: var(--brand);
+}
+
+// The one action on the note that makes something happen, in action orange: the web's
+// Read aloud and the panel's Listen (docs/features/stone-theme.md).
+.listen {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+}
+
+.listenActive,
+.listenActive:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.head {
+  grid-area: head;
+  width: 100%;
+  max-width: 47.5rem;
+  margin: 0 auto;
+  padding: 1.125rem 0 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 1.25rem;
-  padding: 1.25rem 2.5rem 0.875rem;
-}
-
-// Sized here rather than in the shared component: the card and the reader sit it in
-// different columns.
-.thumbnail {
-  flex: none;
-  width: 9.25rem;
-}
-
-.titleBlock {
-  flex: 1 1 20rem;
-  min-width: 0;
-}
-
-.kickerRow {
-  margin: 0 0 0.375rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.625rem;
-  font-size: 0.69rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.topicPill {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-badge);
-  padding: 1px 0.56rem;
-  letter-spacing: 0.1em;
-  color: var(--ink);
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .byline {
-  color: var(--faint);
+  order: -1;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.625rem;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.channel {
+  color: var(--muted);
 }
 
 .verdict {
-  color: var(--ink);
-}
-
-.verdictNovel {
-  color: var(--ink);
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 2px;
+  @include controls.chip;
 }
 
 .dubious {
-  color: var(--accent-strong);
-  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+}
+
+.metaRow {
+  margin: 0;
+  font-size: 0.78125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .title {
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 2.125rem;
-  line-height: 1.1;
+  font-size: 2.875rem;
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
-.meta {
-  margin: 0.375rem 0 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
+// Design 6d: the panel's head sticks under the app's bar while the note scrolls under
+// it, with Listen and ⋯ on one row under the meta line (docs/features/extension-panel.md).
+.rootCompact {
+  position: sticky;
+  top: var(--masthead-height);
+  // Above the tab strip's 2. Sticking the head gives it a stacking context of its own,
+  // which the ⋯ menu cannot escape however high its own z-index goes.
+  z-index: 3;
+  background: var(--ground);
+  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head head head"
+    "actions menu .";
+  padding: 0.5rem 1.125rem 0.75rem;
+  row-gap: 0.5rem;
 }
 
-.actions {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--gap-control);
+.rootCompact .head {
+  max-width: none;
+  padding: 0;
+  gap: 0.5rem;
 }
 
-.action,
-.readAloud {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  border-radius: var(--radius-badge);
-  padding: 0.45rem 1.1rem;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  white-space: nowrap;
-  cursor: pointer;
+.rootCompact .byline {
+  order: 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
-.action {
-  border: 1px solid var(--edge);
-  background: transparent;
-  color: var(--muted);
-
-  @include controls.outlined-control;
-}
-
-.actionActive {
-  border-color: var(--accent);
-  color: var(--accent-strong);
-}
-
-.readAloud {
-  border: 1px solid var(--accent);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-
-  @include controls.tinted-control;
-}
-
-// Design 15c and 15d: one tinted pill that fills in while it is running, rather than the
-// pair the wide reader carries. It is the panel's only transport control until the
-// player docks under it (docs/features/extension-panel.md).
-.listen {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-badge);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding: 0.35rem 1rem;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  white-space: nowrap;
-  cursor: pointer;
-
-  @include controls.tinted-control;
-}
-
-.listenActive,
-.listenActive:hover {
-  background: var(--accent);
-  color: var(--surface);
-}
-
-// The panel is 400px and the meta stack already fills it, so the actions take their own
-// row under the title block rather than a column beside it.
-.titleRowCompact {
-  gap: 0.75rem;
-  padding: 1rem 1.125rem 0.75rem;
-}
-
-.titleRowCompact .title {
+.rootCompact .title {
   font-size: 1.375rem;
 }
 
-// Whose video this is, directly under what it is called. The same uppercase face the
-// design gives it in 15c, rather than the wide reader's run-on byline.
-.channel {
-  margin: 0.375rem 0 0;
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink);
+.rootCompact .menu {
+  justify-self: start;
 }
 
-.titleRowCompact .kickerRow {
-  margin: 0.5rem 0 0;
-}
-
-// A note filed nowhere, with no verdict and no warnings, renders none of them —
-// leaving a paragraph with no children and its margin still taking space.
-.titleRowCompact .kickerRow:empty {
-  display: none;
-}
-
-.titleRowCompact .actions {
-  flex: 1 0 100%;
-  justify-content: flex-start;
-}
-
-// The phone reader keeps the back link and drops the breadcrumb and the stepper: design
-// 2c's mobile header is "← All overviews · Read along · ⋯", not a trail.
+// Design 5c: back link and ⋯ on the bar, the title block, then Listen full width beside
+// a 42px favourite. The panel is narrower than this breakpoint and keeps its own areas.
 @media (max-width: 61.9375rem) {
-  .topBar {
-    padding: 0.875rem 1.25rem 0.625rem;
+  .root {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "back menu"
+      "head head"
+      "actions actions";
+    padding: 0.5rem 1.25rem 0;
+    row-gap: 0.25rem;
   }
 
-  .breadcrumb {
-    display: none;
+  .rootCompact {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head head head"
+      "actions menu .";
+    padding: 0.5rem 1.125rem 0.75rem;
   }
 
-  .stepper {
-    margin-left: auto;
+  .backLink {
+    margin-left: -0.75rem;
   }
 
-  .stepLink {
-    display: none;
-  }
-
-  .titleRow {
-    gap: 0.875rem;
-    padding: 1.125rem 1.25rem 0.875rem;
-  }
-
-  .thumbnail {
-    flex: 1 1 100%;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .titleBlock {
-    flex: 1 1 100%;
+  .head {
+    padding-top: 0.625rem;
   }
 
   .title {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 
+  // The row takes the head's own column, not the grid's full width: between 760px and
+  // the breakpoint the head is centred at the reading measure and this has to be too.
   .actions {
-    flex: 1 0 100%;
-    justify-content: flex-start;
+    justify-self: center;
+    width: 100%;
+    max-width: 47.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .rootCompact .actions {
+    justify-self: start;
+    width: auto;
+    max-width: none;
+    padding-top: 0;
+  }
+
+  .rootCompact .listen {
+    flex: none;
+    min-height: 0;
+    font-size: 0.8125rem;
+  }
+
+  .listen {
+    flex: 1;
+    min-height: 2.625rem;
+    font-size: 0.875rem;
+  }
+
+  .favourite {
+    order: 1;
+    width: 2.625rem;
+    height: 2.625rem;
   }
 }

@@ -4,29 +4,28 @@ import type { Overview } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
-import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
+import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
-import type { OverviewNeighbours } from "../../util/overviewNeighbours.js";
 import styles from "./ReaderMasthead.module.scss";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
 
 export interface ReaderMastheadProps {
   overview: Overview;
-  topicNames: string[];
   metaParts: string[];
-  neighbours: OverviewNeighbours;
   read: boolean;
+  favourite: boolean;
   playing: boolean;
   editingTopics: boolean;
-  // Design 15c: the side panel's head is the title, the topics, the meta line and one
-  // Listen — no breadcrumb, no stepper, no thumbnail, because there is no list behind it
-  // to have come from (docs/features/extension-panel.md).
+  // Design 6d: the side panel's head is the title, the channel, the meta line and one
+  // Listen — no back link, because there is no list behind it to have come from
+  // (docs/features/extension-panel.md).
   compact: boolean;
   listening: boolean;
   onToggleRead: () => void;
+  onToggleFavourite: () => void;
   onTogglePlaying: () => void;
   onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
@@ -40,17 +39,21 @@ export interface ReaderMastheadProps {
 const savedOn = (savedAt: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
+// Design 4a, 5c and 6d: one head, three arrangements. The back link, the actions, the
+// menu and the title block are laid out by grid area, so the desktop's top bar, the
+// phone's action row under the title and the panel's Listen beside ⋯ are one DOM order
+// (docs/features/stone-theme.md, "The single overview").
 export function ReaderMasthead({
   overview,
-  topicNames,
   metaParts,
-  neighbours,
   read,
+  favourite,
   playing,
   editingTopics,
   compact,
   listening,
   onToggleRead,
+  onToggleFavourite,
   onTogglePlaying,
   onListen,
   onEditingTopicsChange,
@@ -59,178 +62,121 @@ export function ReaderMasthead({
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
 
-  const topicLine = (
-    <TopicLine
-      overview={overview}
-      editing={editingTopics}
-      onEditingChange={onEditingTopicsChange}
-    />
-  );
-
   return (
     <header
-      className={`${styles.root} ${compact ? styles.rootSticky : ""}`}
+      className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
       ref={ref}
       data-testid={readerMastheadTestIds.root}
     >
       {!compact && (
-        <nav className={styles.topBar} aria-label="Overview navigation">
-          <Link
-            className={styles.backLink}
-            to={Routes.home()}
-            viewTransition={animateNavigation}
-            data-testid={readerMastheadTestIds.backLink}
-          >
-            ← All overviews
-          </Link>
-          <span className={styles.breadcrumb} data-testid={readerMastheadTestIds.breadcrumb}>
-            Overviews {topicNames[0] ? `/ ${topicNames[0]} ` : ""}/{" "}
-            <span className={styles.breadcrumbLeaf}>{overview.video.title}</span>
-          </span>
-          <span className={styles.stepper}>
-            {neighbours.previousId && (
-              <Link
-                className={styles.stepLink}
-                to={Routes.overview(neighbours.previousId)}
-                viewTransition={animateNavigation}
-                data-testid={readerMastheadTestIds.previousLink}
-              >
-                ↑ Previous
-              </Link>
-            )}
-            {neighbours.nextId && (
-              <Link
-                className={styles.stepLink}
-                to={Routes.overview(neighbours.nextId)}
-                viewTransition={animateNavigation}
-                data-testid={readerMastheadTestIds.nextLink}
-              >
-                Next ↓
-              </Link>
-            )}
-            {neighbours.position !== null && (
-              <span className={styles.position} data-testid={readerMastheadTestIds.position}>
-                {neighbours.position} of {neighbours.total}
-              </span>
-            )}
-          </span>
-        </nav>
+        <Link
+          className={styles.backLink}
+          to={Routes.home()}
+          viewTransition={animateNavigation}
+          data-testid={readerMastheadTestIds.backLink}
+        >
+          <StrokeIcon name="arrowLeft" size={15} />
+          All overviews
+        </Link>
       )}
 
-      <div className={`${styles.titleRow} ${compact ? styles.titleRowCompact : ""}`}>
-        {!compact && <OverviewThumbnail video={overview.video} className={styles.thumbnail} />}
-
-        <div className={styles.titleBlock}>
-          {/* The panel keeps the judgement and drops the dates: at 400px "published"
-              and "saved" are two facts about when, and what the head is for is what the
-              note says (docs/features/extension-panel.md). */}
-          {!compact && (
-            <p className={styles.kickerRow}>
-              {topicLine}
-              <span className={styles.byline}>
-                {overview.video.channel}
-                {Boolean(overview.video.publishedAt) && (
-                  <span data-testid={readerMastheadTestIds.published}>
-                    {" · published "}
-                    {formatPublishedDate(overview.video.publishedAt!)}
-                  </span>
-                )}
-                {" · saved "}
-                {savedOn(overview.savedAt)}
-                {overview.verdict && (
-                  <>
-                    {" · "}
-                    <span
-                      className={
-                        overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
-                      }
-                    >
-                      {NOVELTY_LABEL[overview.verdict.novelty]}
-                    </span>
-                  </>
-                )}
-                {overview.thin && <span className={styles.verdict}> · Thin · no clear claim</span>}
-              </span>
-              {overview.verdict?.dubious && <span className={styles.dubious}>⚠ Dubious claim</span>}
-            </p>
-          )}
-
-          <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
-            {overview.video.title}
-          </h2>
-
-          {compact && (
-            <>
-              <p className={styles.channel} data-testid={readerMastheadTestIds.channel}>
-                {overview.video.channel}
-              </p>
-              {/* One line with the topics: the filing and the verdict read together
-                  rather than as two bands of small caps. */}
-              <p className={styles.kickerRow}>
-                {topicLine}
-                {overview.verdict && (
-                  <span
-                    className={
-                      overview.verdict.novelty === "novel" ? styles.verdictNovel : styles.verdict
-                    }
-                  >
-                    {NOVELTY_LABEL[overview.verdict.novelty]}
-                  </span>
-                )}
-                {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
-                {overview.verdict?.dubious && (
-                  <span className={styles.dubious}>⚠ Dubious claim</span>
-                )}
-              </p>
-            </>
-          )}
-
-          <p className={styles.meta} data-testid={readerMastheadTestIds.meta}>
-            {metaParts.join(" · ")}
-          </p>
-        </div>
-
-        <div className={styles.actions}>
-          {compact ? (
+      <div className={styles.actions}>
+        {compact ? (
+          <button
+            type="button"
+            className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
+            onClick={onListen}
+            aria-pressed={listening}
+            data-testid={readerMastheadTestIds.listenButton}
+          >
+            <StrokeIcon name="headphones" />
+            {listening ? "Listening" : "Listen"}
+          </button>
+        ) : (
+          <>
             <button
               type="button"
-              className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
-              onClick={onListen}
-              aria-pressed={listening}
-              data-testid={readerMastheadTestIds.listenButton}
+              className={`${styles.favourite} ${favourite ? styles.favouriteActive : ""}`}
+              onClick={onToggleFavourite}
+              aria-pressed={favourite}
+              aria-label={favourite ? "Favourited" : "Favourite"}
+              data-testid={readerMastheadTestIds.favouriteButton}
             >
-              {listening ? "Listening" : "Listen"}
+              <FavouriteIcon filled={favourite} />
             </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                className={`${styles.action} ${read ? styles.actionActive : ""}`}
-                onClick={onToggleRead}
-                aria-pressed={read}
-                data-testid={readerMastheadTestIds.readButton}
-              >
-                {read ? "Read" : "Mark read"}
-              </button>
-              <button
-                type="button"
-                className={styles.readAloud}
-                onClick={onTogglePlaying}
-                aria-pressed={playing}
-                data-testid={readerMastheadTestIds.readAloudButton}
-              >
-                <PlayPauseIcon playing={playing} /> Read aloud
-              </button>
-            </>
+            <button
+              type="button"
+              className={`${styles.listen} ${playing ? styles.listenActive : ""}`}
+              onClick={onTogglePlaying}
+              aria-pressed={playing}
+              data-testid={readerMastheadTestIds.readAloudButton}
+            >
+              <StrokeIcon name="headphones" />
+              {playing ? "Listening" : "Listen"}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className={styles.menu}>
+        <OverviewActionsMenu
+          topicCount={overview.topicIds.length}
+          hasReason={overview.captureReason !== null}
+          read={read}
+          videoUrl={overview.video.url}
+          compact={compact}
+          align={compact ? "start" : "end"}
+          onEditTopics={() => onEditingTopicsChange(true)}
+          onEditReason={onEditReason}
+          onToggleRead={onToggleRead}
+        />
+      </div>
+
+      <div className={styles.head}>
+        <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
+          {overview.video.title}
+        </h2>
+
+        <p className={styles.byline}>
+          <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
+            {overview.video.channel}
+          </span>
+          {overview.verdict && (
+            <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
           )}
-          <OverviewActionsMenu
-            topicCount={overview.topicIds.length}
-            hasReason={overview.captureReason !== null}
-            align={compact ? "start" : "end"}
-            onEditTopics={() => onEditingTopicsChange(true)}
-            onEditReason={onEditReason}
-          />
-        </div>
+          {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
+          {overview.verdict?.dubious && (
+            <span className={styles.dubious}>
+              <StrokeIcon name="alert" size={13} />
+              Dubious claim
+            </span>
+          )}
+        </p>
+
+        <TopicLine
+          overview={overview}
+          editing={editingTopics}
+          onEditingChange={onEditingTopicsChange}
+        />
+
+        {/* The panel keeps the judgement and drops the dates: at 400px "published" and
+            "saved" are two facts about when, and what the head is for is what the note
+            says (docs/features/extension-panel.md). */}
+        <p className={styles.metaRow}>
+          <span data-testid={readerMastheadTestIds.meta}>{metaParts.join(" · ")}</span>
+          {!compact && Boolean(overview.video.publishedAt) && (
+            <span data-testid={readerMastheadTestIds.published}>
+              {" · published "}
+              {formatPublishedDate(overview.video.publishedAt!)}
+            </span>
+          )}
+          {!compact && (
+            <span>
+              {" · saved "}
+              {savedOn(overview.savedAt)}
+            </span>
+          )}
+        </p>
       </div>
     </header>
   );

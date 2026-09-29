@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type { Topic, TopicId } from "@overview/domain";
 import { creatableTopicName, topicMatches } from "../../../overviews/util/topicMatches.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./TopicPicker.module.scss";
 import { topicPickerTestIds } from "./TopicPickerTestIds.js";
 
@@ -80,7 +81,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
                 aria-label={`Remove ${topic.name}`}
                 data-testid={topicPickerTestIds.removeSheetChip(topic.name)}
               >
-                ×
+                <StrokeIcon name="close" size={12} />
               </button>
             </span>
           ))}
@@ -116,7 +117,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
             data-testid={topicPickerTestIds.createOption}
           >
             <span>
-              + Create “<strong>{creatable}</strong>”
+              <StrokeIcon name="plus" size={13} /> Create “<strong>{creatable}</strong>”
             </span>
             <span className={styles.newMark}>New</span>
           </button>
@@ -137,7 +138,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
             <span className={styles.optionName}>
               {selectedIds.has(topic.id) && (
                 <span className={styles.tick} aria-hidden="true">
-                  ✓
+                  <StrokeIcon name="check" size={13} />
                 </span>
               )}
               {before}

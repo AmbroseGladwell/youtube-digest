@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Novelty, Topic } from "@overview/domain";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { NOVELTY_LABEL, NOVELTY_ORDER } from "../../../overviews/noveltyLabel.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
 import type { LibraryFilters } from "../../types/LibraryFilters.js";
@@ -22,18 +23,8 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
 
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
-      <input
-        type="search"
-        className={styles.searchInput}
-        placeholder="Search claims, channels, tags"
-        value={filters.query}
-        onChange={(event) => onChange({ query: event.target.value })}
-        aria-label="Search overviews"
-        data-testid={filterPanelTestIds.searchInput}
-      />
-
-      <p className={styles.kicker}>Show</p>
-      <div className={styles.toggleRow}>
+      <div className={styles.group}>
+        <p className={styles.label}>Show</p>
         <Toggle
           active={filters.status === "unread"}
           count={counts.unread}
@@ -52,81 +43,85 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
         </Toggle>
       </div>
 
-      <p className={styles.kicker}>Topic</p>
-      {topics.length > 0 && (
-        <div className={styles.list} role="group" aria-label="Filter by topic">
-          <ListOption
-            active={filters.topicId === "all"}
-            count={counts.total}
-            onClick={() => onChange({ topicId: "all" })}
-            testId={filterPanelTestIds.topicChip("all")}
-          >
-            All topics
-          </ListOption>
-          {shownTopics.map((topic) => (
+      <div className={styles.group}>
+        <p className={styles.label}>Topic</p>
+        {topics.length > 0 && (
+          <div className={styles.list} role="group" aria-label="Filter by topic">
             <ListOption
-              key={topic.id}
-              active={filters.topicId === topic.id}
-              count={counts.byTopic[topic.id] ?? 0}
-              onClick={() => onChange({ topicId: topic.id })}
-              testId={filterPanelTestIds.topicChip(topic.id)}
+              active={filters.topicId === "all"}
+              count={counts.total}
+              onClick={() => onChange({ topicId: "all" })}
+              testId={filterPanelTestIds.topicChip("all")}
             >
-              {topic.name}
+              All topics
             </ListOption>
-          ))}
-        </div>
-      )}
-      {capped.hiddenCount > 0 && (
+            {shownTopics.map((topic) => (
+              <ListOption
+                key={topic.id}
+                active={filters.topicId === topic.id}
+                count={counts.byTopic[topic.id] ?? 0}
+                onClick={() => onChange({ topicId: topic.id })}
+                testId={filterPanelTestIds.topicChip(topic.id)}
+              >
+                {topic.name}
+              </ListOption>
+            ))}
+          </div>
+        )}
+        {capped.hiddenCount > 0 && (
+          <button
+            type="button"
+            className={styles.moreTopics}
+            onClick={() => setAllTopicsShown(!allTopicsShown)}
+            aria-expanded={allTopicsShown}
+            data-testid={filterPanelTestIds.showAllTopicsButton}
+          >
+            {allTopicsShown ? "Show fewer" : `Show all ${topics.length} topics`}
+          </button>
+        )}
         <button
           type="button"
-          className={styles.moreTopics}
-          onClick={() => setAllTopicsShown(!allTopicsShown)}
-          aria-expanded={allTopicsShown}
-          data-testid={filterPanelTestIds.showAllTopicsButton}
+          className={styles.newTopic}
+          onClick={onNewTopic}
+          data-testid={filterPanelTestIds.newTopicButton}
         >
-          {allTopicsShown ? "Show fewer" : `Show all ${topics.length} topics`}
+          <StrokeIcon name="plus" />
+          New topic
         </button>
-      )}
+      </div>
 
-      <button
-        type="button"
-        className={styles.newTopic}
-        onClick={onNewTopic}
-        data-testid={filterPanelTestIds.newTopicButton}
-      >
-        + New topic
-      </button>
-
-      <p className={styles.kicker}>Verdict</p>
-      <div className={styles.list} role="group" aria-label="Filter by verdict">
-        <ListOption
-          active={filters.novelty === "all"}
-          count={counts.total}
-          onClick={() => onChange({ novelty: "all" })}
-          testId={filterPanelTestIds.noveltyChip("all")}
-        >
-          Any verdict
-        </ListOption>
-        {NOVELTY_ORDER.map((novelty: Novelty) => (
+      <div className={styles.group}>
+        <p className={styles.label}>Verdict</p>
+        <div className={styles.list} role="group" aria-label="Filter by verdict">
           <ListOption
-            key={novelty}
-            active={filters.novelty === novelty}
-            count={counts.byNovelty[novelty] ?? 0}
-            onClick={() => onChange({ novelty })}
-            testId={filterPanelTestIds.noveltyChip(novelty)}
+            active={filters.novelty === "all"}
+            count={counts.total}
+            onClick={() => onChange({ novelty: "all" })}
+            testId={filterPanelTestIds.noveltyChip("all")}
           >
-            {NOVELTY_LABEL[novelty]}
+            Any verdict
           </ListOption>
-        ))}
-        <ListOption
-          active={filters.dubious}
-          count={counts.dubious}
-          accent
-          onClick={() => onChange({ dubious: !filters.dubious })}
-          testId={filterPanelTestIds.dubiousChip}
-        >
-          ⚠ Dubious only
-        </ListOption>
+          {NOVELTY_ORDER.map((novelty: Novelty) => (
+            <ListOption
+              key={novelty}
+              active={filters.novelty === novelty}
+              count={counts.byNovelty[novelty] ?? 0}
+              onClick={() => onChange({ novelty })}
+              testId={filterPanelTestIds.noveltyChip(novelty)}
+            >
+              {NOVELTY_LABEL[novelty]}
+            </ListOption>
+          ))}
+          <ListOption
+            active={filters.dubious}
+            count={counts.dubious}
+            accent
+            onClick={() => onChange({ dubious: !filters.dubious })}
+            testId={filterPanelTestIds.dubiousChip}
+          >
+            Dubious only
+          </ListOption>
+        </div>
       </div>
     </div>
   );
@@ -148,13 +143,17 @@ function Toggle({
   return (
     <button
       type="button"
-      className={`${styles.toggle} ${active ? styles.toggleActive : ""}`}
+      className={`${styles.option} ${styles.toggle}`}
       onClick={onClick}
       aria-pressed={active}
       data-testid={testId}
     >
-      {active && <span aria-hidden="true">✓</span>}
-      {children}
+      <span className={styles.optionLabel}>
+        <span className={`${styles.box} ${active ? styles.boxChecked : ""}`} aria-hidden="true">
+          {active && <StrokeIcon name="check" size={11} />}
+        </span>
+        {children}
+      </span>
       <span className={styles.count}>{count}</span>
     </button>
   );
@@ -178,12 +177,19 @@ function ListOption({
   return (
     <button
       type="button"
-      className={`${styles.option} ${active ? styles.optionActive : ""} ${accent ? styles.optionAccent : ""}`}
+      className={`${styles.option} ${active ? styles.optionActive : ""}`}
       onClick={onClick}
       aria-pressed={active}
       data-testid={testId}
     >
-      <span className={styles.optionLabel}>{children}</span>
+      <span className={styles.optionLabel}>
+        {accent && (
+          <span className={styles.accentMark} aria-hidden="true">
+            <StrokeIcon name="alert" size={13} />
+          </span>
+        )}
+        {children}
+      </span>
       <span className={styles.count}>{count}</span>
     </button>
   );

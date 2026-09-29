@@ -5,4 +5,5 @@ export const appShellTestIds = {
   brand: "AppShell.brand",
   settingsLink: "AppShell.settingsLink",
   newOverviewButton: "AppShell.newOverviewButton",
+  signInLink: "AppShell.signInLink",
 };

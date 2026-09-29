@@ -108,3 +108,26 @@ test("in the extension, a wrong code is said in place and the panel stays signed
   await settings.syncPanel.verifyFormErrorReads(/wrong, has expired, or was already used/);
   await settings.syncPanel.verifyAsksToSignIn();
 });
+
+// The bar's Sign in is design 2b's, placed ahead of a sign-in of its own: for now it lands
+// on the sync section of Settings (docs/features/stone-theme.md, "Placed but not wired").
+test("Sign in in the bar lands on Settings with the sync section in view", async ({ launcher }) => {
+  await launcher.launch({ sync: true });
+  await launcher.appShell.verifyOffersSignIn(true);
+
+  const settings = await launcher.appShell.clickSignIn();
+
+  await settings.syncPanel.verifyIsInView();
+});
+
+test("the bar offers no Sign in where the shell cannot sync, or once it is signed in", async ({
+  launcher,
+}) => {
+  await launcher.launch({ sync: false });
+  await launcher.appShell.verifyOffersSignIn(false);
+});
+
+test("a signed-in browser has no Sign in to press", async ({ launcher }) => {
+  await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+  await launcher.appShell.verifyOffersSignIn(false);
+});

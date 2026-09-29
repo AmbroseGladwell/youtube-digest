@@ -3,6 +3,7 @@ import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
@@ -101,7 +102,7 @@ export function NewOverviewDialog({
                 aria-label="Close"
                 data-testid={newOverviewDialogTestIds.closeButton}
               >
-                ✕
+                <StrokeIcon name="close" size={16} />
               </button>
             </div>
             <GenerateOverviewForm
@@ -181,8 +182,6 @@ function RunProgress({
         )}
       </div>
 
-      <span className={styles.rule} aria-hidden="true" />
-
       <GenerationSteps run={run} />
 
       {/* Design 21a: the field stays through the done state too, so a reason can still
@@ -194,56 +193,56 @@ function RunProgress({
       />
 
       <div className={styles.foot}>
-        {!isDone && (
-          <p className={styles.footNote} data-testid={newOverviewDialogTestIds.footNote}>
-            You can close this — it keeps going.
-            {surface === "extension" && " Closing the side panel does stop it."}
-          </p>
-        )}
-        <div className={styles.footRow}>
+        <span className={styles.footText}>
           <span className={styles.elapsed} data-testid={newOverviewDialogTestIds.elapsed}>
             {formatClock(elapsedSeconds)} elapsed
           </span>
-          {isDone ? (
-            <span className={styles.footActions}>
-              <button
-                type="button"
-                className={styles.secondaryAction}
-                onClick={onDismiss}
-                data-testid={newOverviewDialogTestIds.closeWhenDoneButton}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className={styles.primaryAction}
-                onClick={() => onReadOverview(run.overview!)}
-                data-testid={newOverviewDialogTestIds.readOverviewButton}
-              >
-                Read overview
-              </button>
-            </span>
-          ) : (
-            <span className={styles.footActions}>
-              <button
-                type="button"
-                className={styles.quietAction}
-                onClick={onDismiss}
-                data-testid={newOverviewDialogTestIds.cancelRunButton}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.secondaryAction}
-                onClick={onClose}
-                data-testid={newOverviewDialogTestIds.runInBackgroundButton}
-              >
-                Run in background
-              </button>
-            </span>
+          {!isDone && (
+            <p className={styles.footNote} data-testid={newOverviewDialogTestIds.footNote}>
+              You can close this — it keeps going.
+              {surface === "extension" && " Closing the side panel does stop it."}
+            </p>
           )}
-        </div>
+        </span>
+        {isDone ? (
+          <span className={styles.footActions}>
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              onClick={onDismiss}
+              data-testid={newOverviewDialogTestIds.closeWhenDoneButton}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={() => onReadOverview(run.overview!)}
+              data-testid={newOverviewDialogTestIds.readOverviewButton}
+            >
+              Read overview
+            </button>
+          </span>
+        ) : (
+          <span className={styles.footActions}>
+            <button
+              type="button"
+              className={styles.quietAction}
+              onClick={onDismiss}
+              data-testid={newOverviewDialogTestIds.cancelRunButton}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              onClick={onClose}
+              data-testid={newOverviewDialogTestIds.runInBackgroundButton}
+            >
+              Run in background
+            </button>
+          </span>
+        )}
       </div>
     </>
   );

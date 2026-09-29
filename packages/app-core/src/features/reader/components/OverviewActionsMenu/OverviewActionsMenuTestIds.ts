@@ -5,4 +5,9 @@ export const overviewActionsMenuTestIds = {
   editTopicsItem: "OverviewActionsMenu.editTopicsItem",
   topicCount: "OverviewActionsMenu.topicCount",
   reasonItem: "OverviewActionsMenu.reasonItem",
+  readItem: "OverviewActionsMenu.readItem",
+  watchItem: "OverviewActionsMenu.watchItem",
+  copyLinkItem: "OverviewActionsMenu.copyLinkItem",
+  openInWebItem: "OverviewActionsMenu.openInWebItem",
+  deleteItem: "OverviewActionsMenu.deleteItem",
 };

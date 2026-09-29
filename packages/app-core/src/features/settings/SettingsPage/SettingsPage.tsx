@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Routes } from "../../../app/Routes.js";
+import { Routes, SETTINGS_SYNC_ANCHOR } from "../../../app/Routes.js";
+import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
@@ -25,7 +26,7 @@ export function SettingsPage() {
         to={Routes.home()}
         data-testid={settingsPageTestIds.backLink}
       >
-        {isPanel ? "← Back" : "← All overviews"}
+        <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
       </Link>
       <h2 className={styles.title}>Settings</h2>
 
@@ -55,7 +56,9 @@ export function SettingsPage() {
         </p>
       )}
 
-      <SyncPanel />
+      <div id={SETTINGS_SYNC_ANCHOR} className={styles.syncAnchor}>
+        <SyncPanel />
+      </div>
 
       <BuildLine />
     </div>

@@ -106,10 +106,10 @@ test("a row's favourite and Read line up, and the note's favourite keeps the row
   await library.nthCard(0).verifyActionsAgreeOnHeightAndEdge();
 
   const reader = await library.nthCard(0).openReader();
-  await reader.verifyFavouriteMatchesTheRow(30);
+  await reader.verifyFavouriteMatchesTheRow(34);
 });
 
-test("a row carries no chrome until you point at it, and its text doesn't move when it does", async ({
+test("a row rests on its tile, lifts under the pointer, and its text doesn't move when it does", async ({
   launcher,
   backendSimulator,
   page,
@@ -120,22 +120,22 @@ test("a row carries no chrome until you point at it, and its text doesn't move w
   const library = await launcher.launchExpectingLibrary();
   const row = library.nthCard(0);
 
-  await row.verifyHasNoChrome();
+  await row.verifyRestsOnItsTile();
+  const restingShadow = await row.restingShadow();
   const atRest = await row.titleLeftEdge();
 
   await row.hoverTitle();
-  await row.verifyShowsItsTile();
-  await library.nthCard(1).verifyHasNoChrome();
+  await row.verifyLiftsAbove(restingShadow);
+  await library.nthCard(1).verifyRestsWith(restingShadow);
 
-  // The tile bleeds outwards rather than pushing the text in, so nothing reflows under the
-  // pointer — which is the whole reason the inline padding is given back as a margin.
+  // The lift is a shadow deepening and never a move, so nothing reflows under the pointer.
   expect(await row.titleLeftEdge()).toBe(atRest);
 
   await page.mouse.move(0, 0);
-  await row.verifyHasNoChrome();
+  await row.verifyRestsWith(restingShadow);
 });
 
-test("the tile follows keyboard focus, so a row hunted by tab looks the same as one pointed at", async ({
+test("the lift follows keyboard focus, so a row hunted by tab looks the same as one pointed at", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -143,11 +143,12 @@ test("the tile follows keyboard focus, so a row hunted by tab looks the same as 
   backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }));
 
   const library = await launcher.launchExpectingLibrary();
+  const restingShadow = await library.nthCard(0).restingShadow();
 
   await library.nthCard(1).focusFirstControl();
 
-  await library.nthCard(1).verifyShowsItsTile();
-  await library.nthCard(0).verifyHasNoChrome();
+  await library.nthCard(1).verifyLiftsAbove(restingShadow);
+  await library.nthCard(0).verifyRestsWith(restingShadow);
 });
 
 test("the row's title is the same way in to the reader as its Read along action", async ({

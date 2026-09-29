@@ -8,9 +8,9 @@ export interface CaptureReasonFieldProps {
   onCommit: () => void;
 }
 
-// Design 20a and 21a: an underline field under the steps, not a box, so it reads as a
-// margin note written while the overview is being made. It saves on blur or when the
-// overview lands; there is nothing to confirm (docs/features/capture-reason.md).
+// Design 3b: a stone-tint note under the steps with the question and its field, so it
+// reads as a margin note written while the overview is being made. It saves on blur or
+// when the overview lands; there is nothing to confirm (docs/features/capture-reason.md).
 export function CaptureReasonField({ value, onChange, onCommit }: CaptureReasonFieldProps) {
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {

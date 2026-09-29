@@ -18,6 +18,20 @@ export interface ChaptersPanelProps {
   onOpenTranscriptAt: (positionMs: number) => void;
 }
 
+const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
+
+// How far through the current chapter the player is, from the player's own position and
+// the chapter's own bounds — a measurement, not an estimate (docs/prototype/constraints.md).
+const throughChapter = (chapter: Chapter, positionMs: number): number => {
+  const length = chapter.endMs - chapter.startMs;
+  if (length <= 0) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, Math.round(((positionMs - chapter.startMs) / length) * 100)));
+};
+
+// Design 3a: the chapter the video is inside sits on the raised card with an orange
+// range and a thin bar through it; the chapters before it drop to the muted ink.
 export function ChaptersPanel({ chapters, video, onOpenTranscriptAt }: ChaptersPanelProps) {
   const isPanel = useIsPanel();
   const seek = useSeekPlayback(video.id);
@@ -41,42 +55,81 @@ export function ChaptersPanel({ chapters, video, onOpenTranscriptAt }: ChaptersP
   return (
     <div className={styles.root} data-testid={chaptersPanelTestIds.root}>
       <p className={styles.head}>
-        <span data-testid={chaptersPanelTestIds.count}>
-          {chapters.length} {chapters.length === 1 ? "chapter" : "chapters"}
-        </span>
+        {position !== null ? (
+          <span className={styles.following} data-testid={chaptersPanelTestIds.followingNote}>
+            <span className={styles.followingMark} aria-hidden="true" />
+            Following the video
+          </span>
+        ) : (
+          <span className={styles.label} data-testid={chaptersPanelTestIds.count}>
+            {chapters.length} {chapters.length === 1 ? "chapter" : "chapters"}
+          </span>
+        )}
       </p>
-      {chapters.map((chapter, index) => {
-        const current = index === currentIndex;
-        return (
-          <div
-            key={chapter.startMs}
-            className={`${styles.row} ${current ? styles.rowCurrent : ""}`}
-            data-current={current}
-            data-testid={chaptersPanelTestIds.row}
-          >
-            <span className={styles.meta}>
-              <ChapterRange chapter={chapter} video={video} seek={seek} linksOut={!isPanel} />
-              {hasTranscript && (
-                <button
-                  type="button"
-                  className={styles.transcriptButton}
-                  onClick={() => onOpenTranscriptAt(chapter.startMs)}
-                  aria-label={`Open the transcript at ${formatTimestamp(chapter.startMs)}`}
-                  data-testid={chaptersPanelTestIds.transcriptButton}
+      <div className={styles.rows}>
+        {chapters.map((chapter, index) => {
+          const current = index === currentIndex;
+          const past = currentIndex !== -1 && index < currentIndex;
+          return (
+            <div
+              key={chapter.startMs}
+              className={`${styles.row} ${current ? styles.rowCurrent : ""} ${past ? styles.rowPast : ""}`}
+              data-current={current}
+              data-testid={chaptersPanelTestIds.row}
+            >
+              <span className={styles.meta}>
+                <span className={styles.range}>
+                  <span className={styles.number} aria-hidden="true">
+                    {chapterNumber(index)} ·{" "}
+                  </span>
+                  <ChapterRange chapter={chapter} video={video} seek={seek} linksOut={!isPanel} />
+                </span>
+                <span className={styles.metaEnd}>
+                  {current && (
+                    <span className={styles.playingBadge} data-testid={chaptersPanelTestIds.playingBadge}>
+                      <span className={styles.playingMark} aria-hidden="true" />
+                      Playing on YouTube
+                    </span>
+                  )}
+                  {hasTranscript && (
+                    <button
+                      type="button"
+                      className={styles.transcriptButton}
+                      onClick={() => onOpenTranscriptAt(chapter.startMs)}
+                      aria-label={`Open the transcript at ${formatTimestamp(chapter.startMs)}`}
+                      data-testid={chaptersPanelTestIds.transcriptButton}
+                    >
+                      Transcript
+                    </button>
+                  )}
+                </span>
+              </span>
+              <span className={styles.title} data-testid={chaptersPanelTestIds.title}>
+                {chapter.title}
+              </span>
+              <span className={styles.summary} data-testid={chaptersPanelTestIds.summary}>
+                {chapter.summary}
+              </span>
+              {current && position !== null && (
+                <span
+                  className={styles.progress}
+                  role="progressbar"
+                  aria-label="Through this chapter"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={throughChapter(chapter, position.positionMs)}
+                  data-testid={chaptersPanelTestIds.progress}
                 >
-                  Transcript
-                </button>
+                  <span
+                    className={styles.progressFill}
+                    style={{ width: `${throughChapter(chapter, position.positionMs)}%` }}
+                  />
+                </span>
               )}
-            </span>
-            <span className={styles.title} data-testid={chaptersPanelTestIds.title}>
-              {chapter.title}
-            </span>
-            <span className={styles.summary} data-testid={chaptersPanelTestIds.summary}>
-              {chapter.summary}
-            </span>
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -89,8 +142,8 @@ interface ChapterRangeProps {
 }
 
 // The range is the control, as the transcript's times are: a player beside the panel
-// is moved, the wide reader links out to YouTube the way its rail does, and a panel
-// whose tab has moved on prints the range as plain text (docs/features/chapters.md).
+// is moved, the wide reader links out to YouTube, and a panel whose tab has moved on
+// prints the range as plain text (docs/features/chapters.md).
 function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
   const label = formatTimeRange(chapter.startMs, chapter.endMs);
 
@@ -98,7 +151,7 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
     return (
       <button
         type="button"
-        className={`${styles.range} ${styles.rangeControl}`}
+        className={styles.rangeControl}
         onClick={() => seek(chapter.startMs)}
         aria-label={`Play the video from ${formatTimestamp(chapter.startMs)}`}
         data-testid={chaptersPanelTestIds.range}
@@ -110,7 +163,7 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
   if (linksOut) {
     return (
       <a
-        className={`${styles.range} ${styles.rangeControl}`}
+        className={styles.rangeControl}
         href={youtubeTimestampUrl(video.url, chapter.startMs)}
         target="_blank"
         rel="noopener"
@@ -121,9 +174,5 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
       </a>
     );
   }
-  return (
-    <span className={styles.range} data-testid={chaptersPanelTestIds.range}>
-      {label}
-    </span>
-  );
+  return <span data-testid={chaptersPanelTestIds.range}>{label}</span>;
 }

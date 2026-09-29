@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAppUpdate } from "../../../../app/AppUpdateContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useUnreadableRecordsQuery } from "../../queries/unreadableRecordsQuery.js";
 import styles from "./StaleClientBanner.module.scss";
 import { staleClientBannerTestIds } from "./StaleClientBannerTestIds.js";
@@ -49,7 +50,7 @@ export function StaleClientBanner() {
           aria-label="Dismiss"
           data-testid={staleClientBannerTestIds.dismissButton}
         >
-          ×
+          <StrokeIcon name="close" size={14} />
         </button>
       </div>
     </div>

@@ -14,21 +14,11 @@
 // times use, so the three read as the same kind of number.
 .range {
   font-size: 0.78rem;
-  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .skip {
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-btn);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding: 0.28rem 0.875rem;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  white-space: nowrap;
-  cursor: pointer;
-
-  @include controls.tinted-control;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 }

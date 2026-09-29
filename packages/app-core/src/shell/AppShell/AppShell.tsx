@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } fr
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { Routes } from "../../app/Routes.js";
+import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
@@ -30,7 +31,8 @@ export function AppShell() {
   const isPanel = useIsPanel();
   const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
   const animateNavigation = useShouldAnimateNavigation();
-  const belowWriteFloor = useSync().status.phase === "unsupported";
+  const sync = useSync();
+  const belowWriteFloor = sync.status.phase === "unsupported";
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
   // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
@@ -75,8 +77,8 @@ export function AppShell() {
             <Link className={styles.brand} to={Routes.home()} data-testid={appShellTestIds.brand}>
               <svg
                 viewBox="0 0 32 32"
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 aria-hidden="true"
                 className={styles.mark}
               >
@@ -90,7 +92,9 @@ export function AppShell() {
                 />
                 <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
               </svg>
-              <h1 className={styles.title}>The Overview</h1>
+              <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
+                {isPanel ? "Overview" : "The Overview"}
+              </h1>
             </Link>
 
             {isPanel ? (
@@ -104,17 +108,6 @@ export function AppShell() {
               </Link>
             ) : (
               <>
-                <button
-                  type="button"
-                  className={styles.newOverviewButton}
-                  onClick={newOverview.open}
-                  aria-haspopup="dialog"
-                  aria-expanded={newOverview.dialogOpen}
-                  data-testid={appShellTestIds.newOverviewButton}
-                >
-                  + New
-                </button>
-
                 <nav className={styles.nav} aria-label="Sections">
                   <NavLink
                     className={({ isActive }) =>
@@ -137,6 +130,30 @@ export function AppShell() {
                     Settings
                   </NavLink>
                 </nav>
+
+                <span className={styles.actions}>
+                  <button
+                    type="button"
+                    className={styles.newOverviewButton}
+                    onClick={newOverview.open}
+                    aria-haspopup="dialog"
+                    aria-expanded={newOverview.dialogOpen}
+                    data-testid={appShellTestIds.newOverviewButton}
+                  >
+                    <StrokeIcon name="plus" />
+                    New
+                  </button>
+                  {sync.available && !sync.connected && (
+                    <Link
+                      className={styles.signInLink}
+                      to={Routes.settingsSync()}
+                      viewTransition={animateNavigation}
+                      data-testid={appShellTestIds.signInLink}
+                    >
+                      Sign in
+                    </Link>
+                  )}
+                </span>
               </>
             )}
           </div>

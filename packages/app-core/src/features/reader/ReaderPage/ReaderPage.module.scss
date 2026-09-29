@@ -1,29 +1,31 @@
+@use "../../../theme/controls.scss" as controls;
+
+// Design 4a: one 760px reading column, centred, with no rail beside it. The note's size
+// is a variable so the panel can take 14.5px and the phone 15.5px without a second
+// stylesheet (docs/features/stone-theme.md, "The single overview").
 .root {
+  --note-size: 1rem;
+  --reader-column: 47.5rem;
+  --reader-gutter: 2rem;
+
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 16.5rem;
+.panelRoot {
+  --note-size: 0.90625rem;
+  --reader-column: 100rem;
+  --reader-gutter: 1.125rem;
 }
 
-// The side panel is 400px with no rail beside the note, and it takes the masthead's own
-// gutter so the title, the tabs and the prose share one left edge
-// (docs/features/extension-panel.md).
-.panelRoot .grid {
-  grid-template-columns: 1fr;
-}
-
-.panelRoot .main {
-  padding: 1rem 1.125rem 1.5rem;
-}
 
 .main {
-  padding: 1.5rem 2.5rem 2rem;
+  width: 100%;
+  max-width: calc(var(--reader-column) + 2 * var(--reader-gutter));
+  margin: 0 auto;
+  padding: 1rem var(--reader-gutter) 2rem;
   min-width: 0;
 }
 
@@ -43,22 +45,45 @@
   }
 }
 
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 .tagRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  border-top: 1px solid var(--divider);
-  margin-top: 1.375rem;
-  padding-top: 1rem;
-  max-width: var(--measure);
+  gap: 0.375rem;
+  padding-top: 0.25rem;
 }
 
 .tag {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-badge);
-  padding: 0.19rem 0.7rem;
-  font-size: 0.72rem;
-  color: var(--faint);
+  @include controls.topic-chip;
+}
+
+.foot {
+  width: 100%;
+  max-width: calc(var(--reader-column) + 2 * var(--reader-gutter));
+  margin: 0 auto;
+  padding: 0 var(--reader-gutter) 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stepLink {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  color: var(--muted);
+}
+
+.position {
+  font-size: 0.78125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .state {
@@ -71,7 +96,8 @@
 
 .skeletonBar {
   height: 0.75rem;
-  background: var(--sunk);
+  border-radius: 999px;
+  background: var(--surface);
 }
 
 .error {
@@ -79,15 +105,15 @@
   color: var(--muted);
 }
 
-// Below the desktop breakpoint the rail stops being a column and falls under the note,
-// which is design 2c's phone reader: masthead, note, then the player pinned to the foot.
 @media (max-width: 61.9375rem) {
-  .grid {
-    grid-template-columns: 1fr;
+  .root {
+    --note-size: 0.96875rem;
+    --reader-gutter: 1.25rem;
   }
 
-  .main {
-    padding: 1rem 1.25rem 1.5rem;
+  .panelRoot {
+    --note-size: 0.90625rem;
+    --reader-gutter: 1.125rem;
   }
 
   .state {

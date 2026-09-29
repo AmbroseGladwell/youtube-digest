@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./PlusSavedLocallyNote.module.scss";
 import { plusSavedLocallyNoteTestIds } from "./PlusSavedLocallyNoteTestIds.js";
 
@@ -20,7 +21,7 @@ export function PlusSavedLocallyNote({ onDismiss }: PlusSavedLocallyNoteProps) {
           to={Routes.settings()}
           data-testid={plusSavedLocallyNoteTestIds.seePlusLink}
         >
-          See Plus →
+          See Plus <StrokeIcon name="arrowRight" size={13} />
         </Link>
         <button
           type="button"

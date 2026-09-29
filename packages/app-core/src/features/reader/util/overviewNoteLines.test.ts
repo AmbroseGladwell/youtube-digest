@@ -14,7 +14,7 @@ describe("overviewNoteLines", () => {
     );
 
     expect(lines.slice(0, 4)).toEqual([
-      { section: "Summary", heading: true, bullet: false, text: "In one line" },
+      { section: "Summary", heading: true, bullet: false, text: "Premise" },
       { section: "Summary", heading: false, bullet: false, text: "A short description." },
       { section: "Core claim", heading: true, bullet: false, text: "Core claim" },
       { section: "Core claim", heading: false, bullet: false, text: "The claim." },

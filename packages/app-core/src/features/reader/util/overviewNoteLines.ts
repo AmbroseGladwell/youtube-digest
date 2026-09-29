@@ -21,7 +21,7 @@ export function overviewNoteLines(overview: Overview): NoteLine[] {
     }
   };
 
-  section(SUMMARY_SECTION, "In one line", [overview.inOneLine]);
+  section(SUMMARY_SECTION, "Premise", [overview.inOneLine]);
   section("Core claim", overview.thin ? "No clear claim" : "Core claim", [overview.coreClaim]);
 
   if (overview.verdict) {
