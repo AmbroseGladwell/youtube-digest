@@ -6,6 +6,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { packExtension, storeManifest } from "./packExtension.mjs";
 
+const KEY = "MIIB…";
+
 function builtExtension(manifest) {
   const root = mkdtempSync(path.join(tmpdir(), "packExtension-test-"));
   const distDir = path.join(root, "dist");
@@ -17,17 +19,47 @@ function builtExtension(manifest) {
   return { root, distDir, releaseDir: path.join(root, "release") };
 }
 
-test("the zip holds the build at its root, named by its version, with the key stripped", () => {
-  const built = builtExtension({ name: "The Overview", version: "0.1.0", key: "MIIB…" });
+const manifestIn = (zipPath) => JSON.parse(execFileSync("unzip", ["-p", zipPath, "manifest.json"], { encoding: "utf8" }));
+
+test("the store's zip holds the build at its root, named by its version, with the key stripped", () => {
+  const built = builtExtension({ name: "The Overview", version: "0.1.0", key: KEY });
   try {
-    const { zipPath, version, files } = packExtension(built);
+    const { version, zips } = packExtension(built);
+    const [store] = zips;
 
     assert.equal(version, "0.1.0");
-    assert.equal(path.basename(zipPath), "the-overview-0.1.0.zip");
-    assert.ok(existsSync(zipPath));
-    assert.deepEqual(files.sort(), ["chunks/", "chunks/app-abc123.js", "manifest.json", "sidepanel.html"]);
-    const packed = JSON.parse(execFileSync("unzip", ["-p", zipPath, "manifest.json"], { encoding: "utf8" }));
-    assert.deepEqual(packed, { name: "The Overview", version: "0.1.0" });
+    assert.equal(store.keyed, false);
+    assert.equal(path.basename(store.zipPath), "the-overview-0.1.0.zip");
+    assert.ok(existsSync(store.zipPath));
+    assert.deepEqual(store.files.sort(), ["chunks/", "chunks/app-abc123.js", "manifest.json", "sidepanel.html"]);
+    assert.deepEqual(manifestIn(store.zipPath), { name: "The Overview", version: "0.1.0" });
+  } finally {
+    rmSync(built.root, { recursive: true, force: true });
+  }
+});
+
+test("a keyed zip is packed beside it, the same build with the store's key kept", () => {
+  const built = builtExtension({ name: "The Overview", version: "0.1.0", key: KEY });
+  try {
+    const { zips } = packExtension(built);
+    const keyed = zips.find((zip) => zip.keyed);
+
+    assert.equal(zips.length, 2);
+    assert.equal(path.basename(keyed.zipPath), "the-overview-0.1.0-unpacked.zip");
+    assert.deepEqual(manifestIn(keyed.zipPath), { name: "The Overview", version: "0.1.0", key: KEY });
+    assert.deepEqual(keyed.files.sort(), zips[0].files.sort());
+  } finally {
+    rmSync(built.root, { recursive: true, force: true });
+  }
+});
+
+test("a build whose manifest has no key yet packs the store's zip alone", () => {
+  const built = builtExtension({ name: "The Overview", version: "0.1.0" });
+  try {
+    const { zips } = packExtension(built);
+
+    assert.deepEqual(zips.map((zip) => zip.keyed), [false]);
+    assert.ok(!existsSync(path.join(built.releaseDir, "the-overview-0.1.0-unpacked.zip")));
   } finally {
     rmSync(built.root, { recursive: true, force: true });
   }

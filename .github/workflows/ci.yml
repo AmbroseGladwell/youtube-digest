@@ -154,8 +154,8 @@ jobs:
       url: https://theoverviewapp.com
     steps:
       - uses: actions/checkout@v7
-      # The zip the build job made from this same commit, read back before anything ships:
-      # a release is only ever tagged with a zip built from the commit it deployed.
+      # The zips the build job made from this same commit, read back before anything
+      # ships: a release is only ever tagged with zips built from the commit it deployed.
       - uses: actions/download-artifact@v7
         with:
           name: extension-${{ github.sha }}
@@ -176,6 +176,11 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
             echo "v$version is already tagged; this deploy of ${{ github.sha }} stays under it"
           else
-            gh release create "v$version" "apps/extension/release/the-overview-$version.zip" \
+            zips=("apps/extension/release/the-overview-$version.zip")
+            keyed="apps/extension/release/the-overview-$version-unpacked.zip"
+            if [ -f "$keyed" ]; then
+              zips+=("$keyed")
+            fi
+            gh release create "v$version" "${zips[@]}" \
               --target "${{ github.sha }}" --title "v$version" --generate-notes
           fi

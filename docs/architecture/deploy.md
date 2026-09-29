@@ -17,8 +17,8 @@ why; this is how they fit together and what a deploy actually does.
 | The extension's id fixed by the store's key, and its origin derived from it | `key` in `apps/extension/manifest.json`, `scripts/extensionId.mjs`, `task deploy:extension:id` |
 | The extension built knowing its server, with Settings still able to say otherwise | `apps/extension/src/productionApiUrl.ts`, `DefaultApiUrlContext` in `app-core` |
 | One version number for every build, from the root `package.json`, shown at the foot of Settings | `version` in `package.json`, `task version:bump`, `scripts/buildStamp.mjs`, `define` and the manifest plugin in each app's `vite.config.ts`, `BuildLine` in `app-core`, `BUILD_COMMIT` in the `Dockerfile` |
-| The store zip, named by that version, key stripped and read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
-| The first deploy of each version tagged `v<version>`, with a release holding that commit's zip | the `deploy` job's last two steps, `scripts/verifyRelease.mjs` |
+| Two zips, named by that version: the store's with the key stripped, and a keyed one that loads unpacked, both read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
+| The first deploy of each version tagged `v<version>`, with a release holding that commit's zips | the `deploy` job's last two steps, `scripts/verifyRelease.mjs` |
 
 ## The API serves the web app
 
@@ -174,6 +174,17 @@ the zip back to check. A library made under the old unpacked id does not follow 
 one, because it is a different origin; that is the free tier's shape, and sync is how a
 library moves.
 
+**So there are two zips, and the keyed one is the one to load.** The store's needs and a
+person's are opposite: the store refuses a manifest with a key, and a build loaded
+unpacked *without* one gets an id derived from the directory it sits in, which the API
+does not vouch for. That build reaches sign-in, fails the CORS preflight, and says
+"Couldn't reach the server. Check the address and try again." — with nothing wrong with
+the address. Until the listing is live, unpacked is the only way to install the extension,
+so a pack makes both from the same `dist`: `the-overview-<version>.zip` for the store, and
+`the-overview-<version>-unpacked.zip`, the same build with the key kept, to load at
+`chrome://extensions`. Both go on the release. A tree whose manifest has no key yet packs
+the store's zip alone and says so, which is the shape the bootstrap below starts in.
+
 **It knows its server.** `PRODUCTION_API_URL` in `apps/extension/src/productionApiUrl.ts`
 is what the panel's Settings shows as the server address before anything is typed, and it
 is `APP_URL`: one origin serves the web app, the API and the sign-in page. The field
@@ -205,11 +216,12 @@ intend to upload, and otherwise leave it. Which of patch, minor or major is
 release the deploy makes is skipped as already tagged, and the fix is a second PR with
 the bump alone.
 
-`task deploy:extension` builds and zips into
-`apps/extension/release/the-overview-<version>.zip`, and reads the zip back before
-reporting: the manifest at its root, the version it expected, no key. CI runs the same
-pack on every push and keeps the zip for fourteen days, so the file uploaded to the store
-can be the one CI built from the merge rather than a laptop's.
+`task deploy:extension` builds and zips into `apps/extension/release/`, and reads each zip
+back before reporting: the manifest at its root, and that manifest being the one written
+into it — the store's without a key, the keyed one with the store's own. CI runs the same
+pack on every push and keeps both for fourteen days, so the file uploaded to the store,
+and the one someone loads unpacked, can be what CI built from the merge rather than a
+laptop's.
 
 **What a build says it is.** The foot of Settings carries one line, `Version 0.1.0
 (30bb95a)`, the same in the web app, the extension's page and its panel, so the two can be
@@ -229,13 +241,14 @@ for the version it just shipped. If it is there, the deploy stays under it: the 
 deploys on every merge whether or not the number moved, and the commit beside the version
 in Settings is what tells same-version deploys apart. If it is not, the job creates it on
 the merge commit together with a GitHub release of the same name, notes generated from
-the merged pull requests since the last tag, and the extension's zip attached. That zip
-is the one the `build (extension)` job made from the same commit, downloaded from the
+the merged pull requests since the last tag, and the extension's zip attached. Those zips
+are the ones the `build (extension)` job made from the same commit, downloaded from the
 run's own artifact rather than rebuilt, and read back before the deploy starts by
-`scripts/verifyRelease.mjs`: the manifest inside is at the version being tagged with no
-key, and `build.json` beside it, emitted by the same plugin as the manifest, names that
-version, the short form of the commit being deployed, and a clean tree. Anything else
-fails the job before Fly is touched. So the file to upload to the store is the one on the
+`scripts/verifyRelease.mjs`: each manifest inside is at the version being tagged, the
+store's carrying no key and the keyed one carrying the store's own so the origin it loads
+as is the origin `CORS_ALLOWED_ORIGINS` names, and `build.json` beside it, emitted by the
+same plugin as the manifest, names that version, the short form of the commit being
+deployed, and a clean tree. Anything else fails the job before Fly is touched. So the file to upload to the store is the one on the
 release, and the store's number, the tag, the manifest and the bundle all agree. A
 `task deploy` from a laptop tags nothing; it is the escape hatch, not a release.
 
@@ -260,10 +273,11 @@ task deploy:extension                      # apps/extension/release/the-overview
   settings, not in the workflow.
 - **List the extension.** The mechanics above end at a zip and an id. The listing itself
   needs a privacy policy the web app does not yet serve, a justification for each
-  permission the manifest asks for, screenshots and the store copy, and the first draft
-  upload that fixes the id has not been made. Until it is, `CORS_ALLOWED_ORIGINS` in
-  `fly.toml` is empty and production vouches for no extension; the web app is the whole
-  product there, and that is a complete one.
+  permission the manifest asks for, screenshots and the store copy. The draft upload that
+  fixes the id has been made, so `CORS_ALLOWED_ORIGINS` in `fly.toml` names the store's
+  origin and production vouches for a build carrying the key — the keyed zip on each
+  release, or any local `task run:extension`. Nothing is installable from the store until
+  the listing is written.
 - **Sweep expired rows.** Sessions, magic links and codes are ignored when expired rather
   than deleted; the cron that would delete them has nowhere to run yet, and this machine
   stopping when idle is not it.

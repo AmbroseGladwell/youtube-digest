@@ -44,7 +44,7 @@ tasks:
       - fly logs
 
   deploy:extension:
-    desc: Build the extension and zip it for the Web Store into apps/extension/release, named by its manifest version
+    desc: Build the extension and zip it into apps/extension/release, twice: one for the Web Store, one keyed to load unpacked
     dir: apps/extension
     preconditions:
       - sh: command -v zip && command -v unzip

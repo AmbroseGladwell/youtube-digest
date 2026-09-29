@@ -8,6 +8,7 @@ import { verifyRelease } from "./verifyRelease.mjs";
 
 const FULL_SHA = "30bb95a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7";
 const GOOD_MANIFEST = { name: "The Overview", version: "0.1.0" };
+const KEY = "MIIB…";
 const GOOD_BUILD = { version: "0.1.0", commit: "30bb95a", dirty: false };
 
 function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
@@ -59,13 +60,26 @@ test("a version that differs in the manifest or the build is refused", () => {
 
 test("a dirty build, or one whose manifest kept the key, is refused", () => {
   const dirty = releaseZip({ build: { ...GOOD_BUILD, dirty: true } });
-  const keyed = releaseZip({ manifest: { ...GOOD_MANIFEST, key: "MIIB…" } });
+  const keyed = releaseZip({ manifest: { ...GOOD_MANIFEST, key: KEY } });
   try {
     assert.throws(() => check(dirty), /uncommitted changes/);
     assert.throws(() => check(keyed), /still carries the key/);
   } finally {
     rmSync(dirty.root, { recursive: true, force: true });
     rmSync(keyed.root, { recursive: true, force: true });
+  }
+});
+
+test("the keyed zip passes only when it carries the store's own key", () => {
+  const keyed = releaseZip({ manifest: { ...GOOD_MANIFEST, key: KEY } });
+  const stripped = releaseZip();
+  const wrong = releaseZip({ manifest: { ...GOOD_MANIFEST, key: "MIIBsomeoneelse" } });
+  try {
+    assert.deepEqual(check(keyed, { key: KEY }), { version: "0.1.0", commit: "30bb95a" });
+    assert.throws(() => check(stripped, { key: KEY }), /carries no key, so it would load under a directory-derived id/);
+    assert.throws(() => check(wrong, { key: KEY }), /a key that is not the store's/);
+  } finally {
+    for (const zip of [keyed, stripped, wrong]) rmSync(zip.root, { recursive: true, force: true });
   }
 });
 
