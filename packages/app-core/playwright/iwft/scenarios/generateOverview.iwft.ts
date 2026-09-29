@@ -22,6 +22,19 @@ test("a successful generation ends up in the library, and opens in the reader wh
   await library.cardWithTitle("The Simulated Video").verifyTitle("The Simulated Video");
 });
 
+test("a live link shared from the iOS app makes a note, stored under the plain watch link", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+
+  await form.submitUrl(`https://www.youtube.com/live/${IWFT_VIDEO_ID}?is=2_N5yomNqBmNf2yl`);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  const [overview] = await backendSimulator.overviewStore.listOverviews();
+  expect(overview?.video.url).toBe(VALID_URL);
+});
+
 test("the transcript-fetch phase surfaces its error, and generation never reaches Anthropic", async ({
   launcher,
   backendSimulator,

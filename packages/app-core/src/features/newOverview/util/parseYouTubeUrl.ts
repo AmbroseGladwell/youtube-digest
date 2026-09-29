@@ -1,4 +1,14 @@
-const YOUTUBE_HOSTS = new Set(["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]);
+const YOUTUBE_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "music.youtube.com",
+  "youtu.be",
+  "youtube-nocookie.com",
+  "www.youtube-nocookie.com",
+]);
+
+const VIDEO_PATH = /^\/(?:shorts|embed|live|v)\/([^/]+)/;
 
 function stripHostPrefix(host: string): string {
   return host.startsWith("www.") ? host.slice(4) : host;
@@ -26,15 +36,14 @@ export function extractYouTubeVideoId(input: string): string | null {
   const watchId = parsed.searchParams.get("v");
   if (watchId) return watchId;
 
-  const shortsMatch = /^\/shorts\/([^/]+)/.exec(parsed.pathname);
-  if (shortsMatch?.[1]) return shortsMatch[1];
-
-  const embedMatch = /^\/embed\/([^/]+)/.exec(parsed.pathname);
-  if (embedMatch?.[1]) return embedMatch[1];
-
-  return null;
+  return VIDEO_PATH.exec(parsed.pathname)?.[1] ?? null;
 }
 
 export function isYouTubeUrl(input: string): boolean {
   return extractYouTubeVideoId(input) !== null;
+}
+
+export function canonicalYouTubeUrl(input: string): string | null {
+  const id = extractYouTubeVideoId(input);
+  return id === null ? null : `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
 }
