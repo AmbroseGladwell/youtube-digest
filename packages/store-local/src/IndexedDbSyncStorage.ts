@@ -114,11 +114,25 @@ export class IndexedDbSyncStorage implements SyncStorage {
       meta.put(true, SYNC_ENROLLED_KEY);
     }
     if (transcriptsEnrolled !== true) {
-      const transcripts = await promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll());
-      for (const write of transcripts.flatMap(transcriptWrite)) outbox.add({ ...write, stuck: null });
+      for (const write of await this.#transcriptWrites(transaction)) outbox.add({ ...write, stuck: null });
       meta.put(true, SYNC_TRANSCRIPTS_ENROLLED_KEY);
     }
     await promisifyTransaction(transaction);
+  }
+
+  // Only the transcripts behind a note, and none already waiting to be sent: captions kept
+  // because a video was open stay on this device (docs/features/transcript-storage.md).
+  async #transcriptWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
+    const [overviews, transcripts, pending] = await Promise.all([
+      promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
+      promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll()),
+      promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
+    ]);
+    const noted = new Set(overviews.flatMap(notedVideoId));
+    const queued = new Set(pending.filter((entry) => entry.kind === "transcript").map((entry) => entry.id));
+    return transcripts
+      .flatMap(transcriptWrite)
+      .filter((write) => noted.has(write.id) && !queued.has(write.id));
   }
 
   async #libraryWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
@@ -331,6 +345,12 @@ function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
 function readableTranscript(raw: unknown): StoredTranscript | null {
   const read = readStoredRecord(raw, StoredTranscript, []);
   return read.status === "read" ? read.record : null;
+}
+
+function notedVideoId(raw: unknown): string[] {
+  const overview = readable("overview", raw);
+  const video = overview?.video;
+  return isObject(video) && typeof video.id === "string" ? [video.id] : [];
 }
 
 function transcriptWrite(raw: unknown): PendingWrite[] {

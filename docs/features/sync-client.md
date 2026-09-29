@@ -50,7 +50,7 @@ The ops and the routes they map onto:
 | `deleteOverview` | `delete` | `DELETE /overviews/:id` |
 | `createTopic` | `replace`, the stored topic | `POST /topics` |
 | `Settings.update` | `settings`, the patch as given | `PUT /settings` |
-| `saveTranscript` | `transcript`, the video only, read at push time | `PUT /transcripts/:videoId` |
+| `saveOverview`, with a video id | also `transcript`, the video only, read at push time | `PUT /transcripts/:videoId` |
 
 Every entry carries the same `updatedAt` the record was stamped with, from the same
 `Date`, so the server stores the time of the local write and nothing else (`sync-metadata.md`,

@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, CURRENT_SCHEMA_VERSIONS, DEFAULT_SETTINGS, TopicId, UnreadableRecordError } from "@overview/domain";
+import {
+  CLIENT_VERSION,
+  CURRENT_SCHEMA_VERSIONS,
+  DEFAULT_SETTINGS,
+  TopicId,
+  UnreadableRecordError,
+  VideoId,
+} from "@overview/domain";
 import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
@@ -243,7 +250,7 @@ test("the feed is pulled page by page, and the cursor ends where the feed does",
   await testApp.close();
 });
 
-test("a transcript one device fetched is read on another device, which then holds it without asking again", async () => {
+test("a note's transcript made on one device is read on another, which then holds it without asking again", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const laptop = await makeDevice(testApp, account);
@@ -251,6 +258,7 @@ test("a transcript one device fetched is read on another device, which then hold
   await laptop.sync();
   const transcript = makeStoredTranscript();
   await laptop.transcripts.saveTranscript(transcript);
+  await laptop.overviews.saveOverview(makeOverview({ video: transcript.video! }));
 
   const pushed = await laptop.sync();
   await phone.sync();
@@ -263,18 +271,41 @@ test("a transcript one device fetched is read on another device, which then hold
   await testApp.close();
 });
 
-test("transcripts a device held before sync was switched on reach the account on its first sync", async () => {
+test("the transcripts behind the notes a device held before sync was switched on reach the account on its first sync", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const transcript = makeStoredTranscript();
   const laptop = await makeDevice(testApp, account, {
-    before: ({ transcripts }) => transcripts.saveTranscript(transcript),
+    before: async ({ transcripts, overviews }) => {
+      await transcripts.saveTranscript(transcript);
+      await overviews.saveOverview(makeOverview({ video: transcript.video! }));
+    },
   });
   const phone = await makeDevice(testApp, account);
 
   await laptop.sync();
 
   assert.deepEqual(await phone.engine.fetchTranscript(transcript.videoId), transcript);
+  await testApp.close();
+});
+
+test("captions kept only because a video was open never leave the device, before or after sync is switched on", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const watchedBefore = makeStoredTranscript({ videoId: VideoId.parse("watched-before") });
+  const watchedAfter = makeStoredTranscript({ videoId: VideoId.parse("watched-after") });
+  const laptop = await makeDevice(testApp, account, {
+    before: ({ transcripts }) => transcripts.saveTranscript(watchedBefore),
+  });
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  await laptop.transcripts.saveTranscript(watchedAfter);
+
+  const status = await laptop.sync();
+
+  assert.equal(status.pending, 0);
+  assert.equal(await phone.engine.fetchTranscript(watchedBefore.videoId), null);
+  assert.equal(await phone.engine.fetchTranscript(watchedAfter.videoId), null);
   await testApp.close();
 });
 

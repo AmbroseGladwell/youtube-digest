@@ -65,7 +65,7 @@ export async function mountApp({
   const syncStorage = new IndexedDbSyncStorage(db);
   const overviewStore = new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled });
   const settingsStore = new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const transcriptStore = new IndexedDbTranscriptStore(db, { onJournaled: syncStorage.notifyJournaled });
+  const transcriptStore = new IndexedDbTranscriptStore(db);
 
   root.render(
     <StrictMode>

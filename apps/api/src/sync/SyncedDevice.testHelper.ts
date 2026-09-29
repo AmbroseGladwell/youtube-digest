@@ -67,7 +67,7 @@ export async function makeDevice(
   const storage = new IndexedDbSyncStorage(db, { now: () => testApp.clock.now });
   const overviews = new IndexedDbOverviewStore(db, { onJournaled: storage.notifyJournaled });
   const settings = new IndexedDbSettingsStore(db, { onJournaled: storage.notifyJournaled });
-  const transcripts = new IndexedDbTranscriptStore(db, { onJournaled: storage.notifyJournaled });
+  const transcripts = new IndexedDbTranscriptStore(db);
   await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),

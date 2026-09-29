@@ -257,19 +257,27 @@ keyed by `(account, video)` and not by video alone: the shared cross-account cac
 (OV-16) is still waiting on its gating decision, and it becomes a second place asked
 first behind the same `TranscriptStore` interface, not a replacement for this one.
 
-**Up, through the outbox.** `IndexedDbTranscriptStore.saveTranscript` journals a
-`transcript` entry in the same transaction as the write, exactly as the record stores do
-(`docs/features/sync-client.md`). So a transcript gets the same retries, parking and
-"waiting to send" count as any record, and there is no wrapper store. The entry names only
-the video. The engine reads the transcript when it pushes the entry, so megabytes of
-segments are never copied into the journal. A transcript that has gone by the time its
-entry is pushed is done with.
+**Only the transcripts behind a note go up.** The transcript store also holds captions
+fetched only because a video was open in the extension, so they are ready if the reader
+presses Overview (`docs/features/watching-detection.md`). Uploading every transcript saved
+would send the account the reader's viewing history, and megabytes nobody asked for. So
+`saveTranscript` journals nothing. `IndexedDbOverviewStore.saveOverview` journals a
+`transcript` entry for the note's video in the same transaction as the note, and captions
+for a video with no note stay on the device that fetched them.
 
-**Backfill, once, including for libraries already enrolled.** Enrolment journals every
-readable transcript the library holds. A library enrolled before transcripts were
-synced has its records flag set but not `transcriptsEnrolled`. `isEnrolled` is false until
-both are set, so the next cycle journals the transcripts that library holds, once, and
-touches nothing else.
+**Up, through the outbox.** That entry gets the same retries, parking and "waiting to
+send" count as any record, and there is no wrapper store (`docs/features/sync-client.md`).
+It names only the video. The engine reads the transcript when it pushes the entry, so
+megabytes of segments are never copied into the journal. That is also why the order works:
+the pipeline stores the transcript before it saves the note. A transcript that is not there
+by the time its entry is pushed (a note saved before transcripts were kept) is done with.
+Regenerating a note sends its transcript again, which harmlessly replaces the account's copy.
+
+**Backfill, once, including for libraries already enrolled.** Enrolment journals the
+readable transcript behind each note the library holds, skipping any video already
+waiting in the outbox. A library enrolled before transcripts were synced has its records
+flag set but not `transcriptsEnrolled`. `isEnrolled` is false until both are set, so the
+next cycle journals that library's note transcripts, once, and touches nothing else.
 
 **Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
 the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET
