@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
+import { ClearFieldButton } from "../../../components/shared/ClearFieldButton/ClearFieldButton.js";
+import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import {
   libraryEntryId,
@@ -13,6 +15,7 @@ import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryE
 import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
+import { SortPill } from "../components/SortPill/SortPill.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
@@ -20,6 +23,8 @@ import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
 import { applyLibraryFilterPatch, parseLibraryFilters } from "../util/libraryFilterParams.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
+import { useFocusTrap } from "../../../util/useFocusTrap.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
@@ -34,9 +39,16 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const setOverviewState = useSetOverviewStateMutation();
   const createTopic = useCreateTopicMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const rail = useRef<HTMLElement | null>(null);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
 
   const entering = useEnteringOverviewIds(entries.map(libraryEntryId));
+  // The rail is a sheet over the page only in the narrow layout, and only there does it
+  // hold the keyboard. On the wide one it is part of the page and `filtersOpen` is never
+  // set, the button that would set it being hidden.
+  const closeFilters = () => setFiltersOpen(false);
+  useFocusTrap(filtersOpen, rail);
+  useDismissOnOutside(filtersOpen, closeFilters, rail);
 
   if (topicsQuery.isError) {
     return (
@@ -70,11 +82,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           aria-expanded={filtersOpen}
           data-testid={libraryPageTestIds.filterButton}
         >
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 6h16" />
-            <path d="M7 12h10" />
-            <path d="M10 18h4" />
-          </svg>
+          <StrokeIcon name="filter" size={17} />
         </button>
         <div className={styles.appliedRow}>
           {applied.length === 0 ? (
@@ -88,7 +96,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 onClick={() => changeFilters(chip.clear)}
                 data-testid={libraryPageTestIds.appliedChip(chip.key)}
               >
-                {chip.label} <span aria-hidden="true">×</span>
+                {chip.label}
+                <StrokeIcon name="close" size={12} />
               </button>
             ))
           )}
@@ -97,7 +106,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
       <div className={styles.grid}>
         <aside
+          ref={rail}
           className={`${styles.rail} ${filtersOpen ? styles.railOpen : ""}`}
+          aria-label="Filters"
           data-testid={libraryPageTestIds.rail}
         >
           <div className={styles.sheetHead}>
@@ -105,7 +116,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             <button
               type="button"
               className={styles.sheetDone}
-              onClick={() => setFiltersOpen(false)}
+              onClick={closeFilters}
               data-testid={libraryPageTestIds.closeFiltersButton}
             >
               Done
@@ -141,10 +152,35 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
         <main className={styles.main}>
           <div className={styles.listHead}>
-            <p className={styles.listCount} data-testid={libraryPageTestIds.listCount}>
-              {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
-            </p>
-            <p className={styles.listOrder}>Newest saved first</p>
+            <div>
+              <h1 className={styles.title}>Overviews</h1>
+              <p className={styles.listCount} data-testid={libraryPageTestIds.listCount}>
+                {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
+              </p>
+            </div>
+            <SortPill />
+          </div>
+
+          <div className={styles.search}>
+            <span className={styles.searchIcon} aria-hidden="true">
+              <StrokeIcon name="search" size={16} />
+            </span>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search claims, channels, tags"
+              value={filters.query}
+              onChange={(event) => changeFilters({ query: event.target.value })}
+              aria-label="Search overviews"
+              data-testid={libraryPageTestIds.searchInput}
+            />
+            {filters.query !== "" && (
+              <ClearFieldButton
+                label="Clear search"
+                onClick={() => changeFilters({ query: "" })}
+                testId={libraryPageTestIds.clearSearchButton}
+              />
+            )}
           </div>
 
           {visible.length === 0 ? (
@@ -190,7 +226,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
       <div
         className={`${styles.scrim} ${filtersOpen ? styles.scrimOpen : ""}`}
-        onClick={() => setFiltersOpen(false)}
+        onClick={closeFilters}
         aria-hidden="true"
       />
 

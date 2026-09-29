@@ -1,5 +1,6 @@
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./ReaderPlayerBar.module.scss";
 import { readerPlayerBarTestIds } from "./ReaderPlayerBarTestIds.js";
 
@@ -10,12 +11,13 @@ export interface ReaderPlayerBarProps {
   progressPercent: number;
   rateLabel: string;
   currentSection: string;
-  favourite: boolean;
+  // Design 1b: the panel's bar carries the favourite, since its head has no room for it;
+  // the web's head has it and the bar does not (design 1a).
+  favourite: { on: boolean; onToggle: () => void } | null;
   onTogglePlaying: () => void;
   onPrevious: () => void;
   onNext: () => void;
   onCycleRate: () => void;
-  onToggleFavourite: () => void;
 }
 
 export function ReaderPlayerBar({
@@ -30,39 +32,9 @@ export function ReaderPlayerBar({
   onPrevious,
   onNext,
   onCycleRate,
-  onToggleFavourite,
 }: ReaderPlayerBarProps) {
   return (
     <div className={styles.root} data-testid={readerPlayerBarTestIds.root}>
-      <div className={styles.progress}>
-        <span className={styles.clock} data-testid={readerPlayerBarTestIds.elapsed}>
-          {elapsed}
-        </span>
-        <div
-          className={styles.track}
-          role="progressbar"
-          aria-label="Read-along progress"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={progressPercent}
-        >
-          <div className={styles.trackFill} style={{ width: `${progressPercent}%` }} />
-        </div>
-        <span className={styles.clock} data-testid={readerPlayerBarTestIds.total}>
-          {total}
-        </span>
-      </div>
-
-      <button
-        type="button"
-        className={styles.rate}
-        onClick={onCycleRate}
-        aria-label={`Reading speed ${rateLabel}`}
-        data-testid={readerPlayerBarTestIds.rateButton}
-      >
-        {rateLabel}
-      </button>
-
       <div className={styles.transport}>
         <button
           type="button"
@@ -71,7 +43,7 @@ export function ReaderPlayerBar({
           aria-label="Previous line"
           data-testid={readerPlayerBarTestIds.previousButton}
         >
-          ◀◀
+          <StrokeIcon name="skipBack" size={16} />
         </button>
         <button
           type="button"
@@ -90,24 +62,55 @@ export function ReaderPlayerBar({
           aria-label="Next line"
           data-testid={readerPlayerBarTestIds.nextButton}
         >
-          ▶▶
+          <StrokeIcon name="skipForward" size={16} />
         </button>
       </div>
 
+      <div className={styles.middle}>
+        <div className={styles.meta}>
+          <strong className={styles.nowReading} data-testid={readerPlayerBarTestIds.nowReading}>
+            Now reading · {currentSection}
+          </strong>
+          <span className={styles.clocks}>
+            <span data-testid={readerPlayerBarTestIds.elapsed}>{elapsed}</span>
+            <span className={styles.clockDivider}> / </span>
+            <span data-testid={readerPlayerBarTestIds.total}>{total}</span>
+          </span>
+        </div>
+        <div
+          className={styles.track}
+          role="progressbar"
+          aria-label="Read-along progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPercent}
+        >
+          <div className={styles.trackFill} style={{ width: `${progressPercent}%` }} />
+        </div>
+      </div>
+
+      {favourite !== null && (
+        <button
+          type="button"
+          className={styles.favourite}
+          onClick={favourite.onToggle}
+          aria-pressed={favourite.on}
+          aria-label={favourite.on ? "Favourited" : "Favourite"}
+          data-testid={readerPlayerBarTestIds.favouriteButton}
+        >
+          <FavouriteIcon filled={favourite.on} />
+        </button>
+      )}
+
       <button
         type="button"
-        className={styles.favourite}
-        onClick={onToggleFavourite}
-        aria-pressed={favourite}
-        aria-label={favourite ? "Favourited" : "Favourite"}
-        data-testid={readerPlayerBarTestIds.favouriteButton}
+        className={styles.rate}
+        onClick={onCycleRate}
+        aria-label={`Reading speed ${rateLabel}`}
+        data-testid={readerPlayerBarTestIds.rateButton}
       >
-        <FavouriteIcon filled={favourite} />
+        {rateLabel}
       </button>
-
-      <p className={styles.nowReading} data-testid={readerPlayerBarTestIds.nowReading}>
-        Now reading · {currentSection}
-      </p>
     </div>
   );
 }

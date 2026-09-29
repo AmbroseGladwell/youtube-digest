@@ -1,14 +1,12 @@
-// The four control treatments the app already paints, given the states design turn 9a
-// asks for. Each mixin carries only motion and state — the base paint stays at the call
-// site, because treatment is what varies between a primary and a secondary pill and the
-// mixins would otherwise have to know about all of it
-// (docs/features/overview-redesign.md, "The small movements").
+// The stone theme's controls (docs/features/stone-theme.md, "Three pills"). Unlike the
+// editorial theme's mixins, these carry the paint as well as the states: a stone pill
+// is the same pill everywhere, and what a call site adds is only its size.
 
 @mixin control-motion {
   transition:
     background var(--motion-state) var(--motion-ease),
-    border-color var(--motion-state) var(--motion-ease),
     color var(--motion-state) var(--motion-ease),
+    box-shadow var(--motion-state) var(--motion-ease),
     transform var(--motion-press) ease-out;
 }
 
@@ -21,59 +19,106 @@
   }
 }
 
-@mixin tinted-control {
+@mixin pill-shape {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  border: 0;
+  border-radius: var(--radius-btn);
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// Action orange with a white label: + New, Generate, Create overview, Save keys.
+@mixin action-control {
   @include control-motion;
   @include control-disabled;
 
   &:hover:not(:disabled) {
-    background: var(--accent-tint-hover);
-    border-color: var(--accent-strong);
+    background: var(--action-hover);
   }
 
   &:active:not(:disabled) {
-    background: var(--accent-tint-press);
+    background: var(--action-press);
     transform: translateY(1px);
   }
 }
 
-// Hover moves the ground under the control and nothing else: an outlined pill's border
-// and ink are how it reports being on (Read, Favourited, an applied filter), so a hover
-// that recoloured them would read as the state it is offering to set.
-@mixin outlined-control {
+@mixin action-pill {
+  @include pill-shape;
+  @include action-control;
+  background: var(--action);
+  color: var(--on-action);
+}
+
+// The surface pill: Mark read, Listen, Cancel, a filter option, the favourite circle.
+// Hover steps to the stone tint and nothing else moves.
+@mixin surface-control {
   @include control-motion;
   @include control-disabled;
 
   &:hover:not(:disabled) {
-    background: var(--ink-wash);
+    background: var(--stone-tint);
   }
 
   &:active:not(:disabled) {
-    background: var(--ink-wash-press);
+    background: var(--surface-press);
     transform: translateY(1px);
   }
 }
 
+@mixin surface-pill {
+  @include pill-shape;
+  @include surface-control;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+// The ghost: no fill until the pointer arrives, then the surface.
+@mixin ghost-control {
+  @include control-motion;
+  @include control-disabled;
+
+  &:hover:not(:disabled) {
+    background: var(--surface);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--stone-tint);
+    transform: translateY(1px);
+  }
+}
+
+@mixin ghost-pill {
+  @include pill-shape;
+  @include ghost-control;
+  background: transparent;
+  color: var(--ink);
+}
+
+// Inline text that acts: it darkens to the ink and never grows a fill.
 @mixin quiet-control {
-  border-bottom: 1px solid transparent;
-  transition:
-    color var(--motion-state) ease-out,
-    border-bottom-color var(--motion-state) ease-out;
+  transition: color var(--motion-state) ease-out;
 
   @include control-disabled;
 
   &:hover:not(:disabled) {
-    color: var(--accent-strong);
-    border-bottom-color: var(--accent);
+    color: var(--ink);
   }
 
   &:active:not(:disabled) {
-    color: var(--accent-deep);
+    color: var(--muted);
   }
 }
 
-// Round targets scale rather than shifting down — a 1px nudge on a circle reads as a
-// wobble. The wash is currentColor so one mixin serves a neutral circle on the ground and
-// an accent one inside the player bar.
+// Round targets on a coloured ground scale rather than shifting down — a 1px nudge on
+// a circle reads as a wobble. The wash is currentColor so one mixin serves a neutral
+// circle and an accent one.
 @mixin icon-control {
   @include control-motion;
   @include control-disabled;
@@ -86,4 +131,144 @@
     background: color-mix(in srgb, currentColor 18%, transparent);
     transform: scale(0.94);
   }
+}
+
+@mixin circle($size) {
+  width: $size;
+  height: $size;
+  padding: 0;
+  flex: none;
+}
+
+// The three sizes the design draws: the bar and a row's actions, a dialog's actions,
+// and the hero's one big button.
+@mixin pill-sm {
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+@mixin pill-md {
+  padding: 0.625rem 1.125rem;
+  font-size: 0.875rem;
+}
+
+@mixin pill-lg {
+  padding: 0.8125rem 1.375rem;
+  font-size: 0.9375rem;
+}
+
+// A text field is a pill too: a card-coloured track with a 2px border that lights in
+// the brand orange while it has focus.
+@mixin field-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border: 2px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--card);
+  padding: 0.5625rem 1rem;
+  color: var(--muted);
+  transition: border-color var(--motion-state) var(--motion-ease);
+
+  &:focus-within {
+    border-color: var(--brand);
+  }
+}
+
+@mixin field-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ink);
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+// The same field where the input has no wrapper of its own: the pill is the input.
+@mixin field-solo {
+  @include field-input;
+  border: 2px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--card);
+  padding: 0.5625rem 1rem;
+  transition: border-color var(--motion-state) var(--motion-ease);
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// What labels a section: Figtree 13 semibold in the stone ink, sentence case. It
+// replaces the editorial theme's uppercase letterspaced kicker everywhere.
+@mixin section-label {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--label);
+}
+
+// A verdict or a topic, as a stone-tint chip.
+@mixin chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 0.625rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// A topic or a tag on the reader (design 4a): the surface rather than the stone tint,
+// and medium weight, so it reads as a place the note is filed rather than a verdict.
+@mixin topic-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 0.75rem;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// The raised tile a library row sits on. It never moves: hover lightens the surface a
+// step on the dark ground and deepens the shadow on both.
+@mixin tile {
+  background: var(--card);
+  border-radius: var(--radius-tile);
+  box-shadow: var(--shadow-tile);
+  transition:
+    background var(--motion-tile) var(--motion-ease),
+    box-shadow var(--motion-tile) var(--motion-ease);
+}
+
+@mixin tile-hover {
+  background: var(--card-hover);
+  box-shadow: var(--shadow-tile-hover);
 }

@@ -69,4 +69,17 @@ export class AppShellPageObject extends PageObject {
       await this.click(appShellTestIds.settingsLink);
       return new SettingsPageObject(this.testContext).verifyIsShown();
     });
+
+  verifyOffersSignIn = (offers: boolean) =>
+    this.step(`verifyOffersSignIn ${offers}`, () =>
+      offers
+        ? this.expectToBeVisible(appShellTestIds.signInLink)
+        : this.expectToHaveCount(appShellTestIds.signInLink, 0),
+    );
+
+  clickSignIn = (): Promise<SettingsPageObject> =>
+    this.step("clickSignIn", async () => {
+      await this.click(appShellTestIds.signInLink);
+      return new SettingsPageObject(this.testContext).verifyIsShown();
+    });
 }

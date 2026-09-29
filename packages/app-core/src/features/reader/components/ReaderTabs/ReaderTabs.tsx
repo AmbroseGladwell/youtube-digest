@@ -23,33 +23,37 @@ export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabs
       aria-label="Note views"
       data-testid={readerTabsTestIds.root}
     >
-      {READER_TABS.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          role="tab"
-          id={tabId(tab)}
-          ref={indicator.tabRef[tab]}
-          aria-selected={tab === active}
-          aria-controls={panelId(tab)}
-          className={`${styles.tab} ${tab === active ? styles.tabActive : ""}`}
-          onClick={() => onChange(tab)}
-          data-testid={readerTabsTestIds.tab(tab)}
-        >
-          {tab}
-        </button>
-      ))}
-      <span
-        className={styles.indicator}
-        aria-hidden="true"
-        style={
-          {
-            "--tab-offset": `${indicator.offset}px`,
-            "--tab-width": `${indicator.width}px`,
-          } as CSSProperties
-        }
-        data-testid={readerTabsTestIds.indicator}
-      />
+      <div className={styles.column}>
+        <div className={styles.track}>
+          {READER_TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              id={tabId(tab)}
+              ref={indicator.tabRef[tab]}
+              aria-selected={tab === active}
+              aria-controls={panelId(tab)}
+              className={`${styles.tab} ${tab === active ? styles.tabActive : ""}`}
+              onClick={() => onChange(tab)}
+              data-testid={readerTabsTestIds.tab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+          <span
+            className={styles.indicator}
+            aria-hidden="true"
+            style={
+              {
+                "--tab-offset": `${indicator.offset}px`,
+                "--tab-width": `${indicator.width}px`,
+              } as CSSProperties
+            }
+            data-testid={readerTabsTestIds.indicator}
+          />
+        </div>
+      </div>
     </div>
   );
 }

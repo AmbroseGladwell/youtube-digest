@@ -6,36 +6,28 @@
 }
 
 .trigger {
-  width: 1.875rem;
-  height: 1.875rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--edge);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--faint);
-  font-size: 0.9375rem;
-  line-height: 1;
-  cursor: pointer;
-
-  @include controls.icon-control;
+  @include controls.surface-pill;
+  @include controls.circle(2.125rem);
 }
 
-// Which edge it hangs from is the caller's to say: in the wide reader the trigger is
-// at the right of the masthead and a menu growing rightwards would leave the window;
-// in the panel it sits at the left gutter and one growing leftwards does the same
-// (docs/features/extension-panel.md).
+.triggerOpen {
+  background: var(--stone-tint);
+}
+
+// Design 4b: the dialog's own surface, 16px corners, 6px of padding around 10px-cornered
+// items. Which edge it hangs from is the caller's to say: at the right of the bar a menu
+// growing rightwards would leave the window.
 .menu {
   position: absolute;
   top: calc(100% + 0.5rem);
   z-index: 3;
-  width: 13.5rem;
-  background: var(--ground);
-  border: 1px solid var(--edge);
+  min-width: 13.75rem;
+  background: var(--dialog);
   border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-lg);
-  padding: 0.375rem 0;
+  box-shadow: var(--shadow-menu);
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
   animation: menuRise var(--motion-arrive) var(--motion-ease) both;
 }
 
@@ -59,25 +51,25 @@
 }
 
 .item {
-  display: flex;
+  @include controls.ghost-pill;
+
   width: 100%;
-  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 0;
-  background: transparent;
-  padding: 0.5625rem 0.875rem;
-  font-family: var(--font-body);
-  font-size: 0.845rem;
-  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   text-align: left;
-  cursor: pointer;
+}
 
-  @include controls.outlined-control;
+.itemDanger {
+  margin-top: 0.375rem;
+  color: var(--accent);
 }
 
 .count {
-  font-size: 0.6875rem;
-  color: var(--faint);
+  font-size: 0.75rem;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }

@@ -34,6 +34,26 @@ export class LibraryPageObject extends PageObject {
       return this;
     });
 
+  // The search sits over the list rather than in the rail (design 2a), so it is the
+  // page's rather than the filter panel's.
+  search = (query: string) =>
+    this.step(`search ${query}`, () => this.get(libraryPageTestIds.searchInput).fill(query));
+
+  clearTheSearch = () =>
+    this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
+
+  verifyOffersToClearTheSearch = (offered: boolean) =>
+    this.step(`verifyOffersToClearTheSearch ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(libraryPageTestIds.clearSearchButton)
+        : this.expectNotToBeVisible(libraryPageTestIds.clearSearchButton),
+    );
+
+  verifySearchReads = (query: string) =>
+    this.step(`verifySearchReads ${query}`, () =>
+      expect(this.get(libraryPageTestIds.searchInput)).toHaveValue(query),
+    );
+
   scrollTheList = () =>
     this.step("scrollTheList", async () => {
       await this.page.mouse.wheel(0, 900);
@@ -58,6 +78,60 @@ export class LibraryPageObject extends PageObject {
       const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
+
+  // On a phone the rail is a sheet over the page, opened from the bar (design 2a).
+  openFilters = () =>
+    this.step("openFilters", async () => {
+      await this.click(libraryPageTestIds.filterButton);
+      await this.verifyFiltersAreOpen(true);
+    });
+
+  // The sheet slides off the side rather than unmounting, so what says it is open is the
+  // button's own state and where the sheet has come to rest.
+  verifyFiltersAreOpen = (open: boolean) =>
+    this.step(`verifyFiltersAreOpen ${open}`, () =>
+      expect(async () => {
+        await expect(this.get(libraryPageTestIds.filterButton)).toHaveAttribute(
+          "aria-expanded",
+          String(open),
+        );
+        const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
+        const width = this.page.viewportSize()!.width;
+        expect(rail.x < width - 40).toBe(open);
+      }).toPass({ timeout: 4_000 }),
+    );
+
+  verifyFilterSheetClearsTheBar = () =>
+    this.step("verifyFilterSheetClearsTheBar", async () => {
+      const masthead = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
+      const head = (await this.get(libraryPageTestIds.closeFiltersButton).boundingBox())!;
+      expect(head.y).toBeGreaterThanOrEqual(masthead.y + masthead.height);
+    });
+
+  // Tab all the way round the sheet's own controls and a little past them: every stop
+  // has to land back inside it, or the reader is lost behind a sheet they cannot see.
+  verifyTabbingStaysInTheFilterSheet = (stops: number) =>
+    this.step(`verifyTabbingStaysInTheFilterSheet ${stops}`, async () => {
+      for (let step = 0; step < stops; step += 1) {
+        await this.page.keyboard.press("Tab");
+        expect(
+          await this.get(libraryPageTestIds.rail).evaluate((rail) =>
+            rail.contains(document.activeElement),
+          ),
+        ).toBe(true);
+      }
+    });
+
+  closeFiltersWithEscape = () =>
+    this.step("closeFiltersWithEscape", async () => {
+      await this.page.keyboard.press("Escape");
+      await this.verifyFiltersAreOpen(false);
+    });
+
+  verifyFocusIsOnTheFilterButton = () =>
+    this.step("verifyFocusIsOnTheFilterButton", () =>
+      expect(this.get(libraryPageTestIds.filterButton)).toBeFocused(),
+    );
 
   verifyEmptyState = () => this.step("verifyEmptyState", () => this.expectToBeVisible(libraryPageTestIds.empty));
 

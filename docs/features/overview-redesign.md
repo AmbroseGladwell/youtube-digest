@@ -4,6 +4,14 @@ What was implemented from `Overview Redesign.dc.html` (Claude Design project
 `ae308669-1ef4-42d3-8085-8e2c69a928f9`, "Podcast screenshots design iteration"), what was
 deliberately left out, and where the implementation departs from the file.
 
+**The visual layer this describes — the serif pair, the hairline rules, the outlined and
+tinted pills, the uppercase kickers, the row with no chrome at rest — has since been
+replaced by the stone theme (`stone-theme.md`).** The structural decisions here (the
+dialog and the background run, the measured receipts, the one `FilterPanel`, the
+read-and-listen arithmetic) still stand and are not repeated there. The reader's rail and
+the two-column reader page did not survive: design 4 reads on one column, and
+`stone-theme.md`'s "The single overview" says where the rail's contents went.
+
 ## The visual argument
 
 The design replaces the prototype's card-and-badge look with an editorial one, and the

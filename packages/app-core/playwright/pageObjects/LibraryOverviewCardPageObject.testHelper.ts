@@ -84,15 +84,14 @@ export class LibraryOverviewCardPageObject extends PageObject {
       }
     });
 
-  // A row's chrome is its whole resting appearance, so it is read off the laid-out element
-  // rather than asserted as a class: the point is that nothing is painted, not that a
-  // particular rule is absent from a stylesheet.
+  // A row's tile is its whole resting appearance, so it is read off the laid-out element
+  // rather than asserted as a class: the point is what is painted, not which rule painted
+  // it (docs/features/stone-theme.md, "The tile").
   private chrome = () =>
     this.card.evaluate((row) => {
       const style = getComputedStyle(row);
       return {
         shadow: style.boxShadow,
-        border: style.borderTopColor,
         background: style.backgroundColor,
         transform: style.transform,
       };
@@ -100,28 +99,34 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   private static readonly TRANSPARENT = "rgba(0, 0, 0, 0)";
 
-  verifyHasNoChrome = () =>
-    this.step("verifyHasNoChrome", () =>
+  // At rest a row already sits on a surface with a shadow, and it is never transformed:
+  // the lift under the pointer is the shadow deepening, not the row moving.
+  verifyRestsOnItsTile = () =>
+    this.step("verifyRestsOnItsTile", () =>
       expect(async () => {
-        const { shadow, border, background } = await this.chrome();
-        expect(shadow).toBe("none");
-        expect(border).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
-        expect(background).toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        const { shadow, background, transform } = await this.chrome();
+        expect(shadow).not.toBe("none");
+        expect(background).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(transform).toBe("none");
       }).toPass({ timeout: 2_000 }),
     );
 
-  // The surface is asserted alongside the border and the shadow because it is what does the
-  // lifting: a dark row's shadow at half opacity over near-black is nearly invisible, so a
-  // tile that painted the ground back onto itself would look like no tile at all. The
-  // transform is asserted as absent because the lift is a surface, never a move.
-  verifyShowsItsTile = () =>
-    this.step("verifyShowsItsTile", () =>
+  restingShadow = async (): Promise<string> => (await this.chrome()).shadow;
+
+  verifyLiftsAbove = (restingShadow: string) =>
+    this.step("verifyLiftsAbove", () =>
       expect(async () => {
-        const { shadow, border, background, transform } = await this.chrome();
+        const { shadow, transform } = await this.chrome();
         expect(shadow).not.toBe("none");
-        expect(border).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
-        expect(background).not.toBe(LibraryOverviewCardPageObject.TRANSPARENT);
+        expect(shadow).not.toBe(restingShadow);
         expect(transform).toBe("none");
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyRestsWith = (restingShadow: string) =>
+    this.step("verifyRestsWith", () =>
+      expect(async () => {
+        expect((await this.chrome()).shadow).toBe(restingShadow);
       }).toPass({ timeout: 2_000 }),
     );
 

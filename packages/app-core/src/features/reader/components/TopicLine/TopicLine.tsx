@@ -9,6 +9,7 @@ import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import { topicCounts } from "../../../overviews/util/topicCounts.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { TopicPicker } from "../TopicPicker/TopicPicker.js";
 import styles from "./TopicLine.module.scss";
 import { topicLineTestIds } from "./TopicLineTestIds.js";
@@ -62,7 +63,11 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
   return (
     <span className={styles.root} ref={root} data-testid={topicLineTestIds.root}>
       {selected.map((topic) => (
-        <span key={topic.id} className={styles.chip} data-testid={topicLineTestIds.chip}>
+        <span
+          key={topic.id}
+          className={`${styles.chip} ${editing ? styles.chipEditing : ""}`}
+          data-testid={topicLineTestIds.chip}
+        >
           {topic.name}
           {editing && (
             <button
@@ -72,7 +77,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
               aria-label={`Remove ${topic.name}`}
               data-testid={topicLineTestIds.removeChip(topic.name)}
             >
-              ×
+              <StrokeIcon name="close" size={11} />
             </button>
           )}
         </span>
@@ -87,7 +92,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
             aria-expanded={true}
             data-testid={topicLineTestIds.addButton}
           >
-            + Add
+            <StrokeIcon name="plus" size={12} /> Add
           </button>
           {sheet(
             isPhone,

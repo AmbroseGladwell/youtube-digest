@@ -6,15 +6,49 @@
 }
 
 .head {
-  margin: 0 0 0.375rem;
+  margin: 0 0 0.5rem;
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.69rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+.label {
+  @include controls.section-label;
+}
+
+.following {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.followingMark,
+.playingMark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .followingMark,
+  .playingMark {
+    animation: followingPulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes followingPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .note {
@@ -24,34 +58,55 @@
   line-height: 1.6;
 }
 
+// Design 3a: the cards bleed into the gutter by their own padding, as the transcript's do.
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 -0.875rem;
+}
+
 .row {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--divider);
-  padding: 0.875rem 0 0.875rem 0.625rem;
+  gap: 0.3125rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 14px;
   transition: background var(--motion-state) var(--motion-ease);
 }
 
-// The chapter the player is inside, marked the way the transcript marks its block: an
-// accent edge and the faintest wash, and nothing heavier.
 .rowCurrent {
-  background: var(--accent-wash);
-  box-shadow: inset 2px 0 0 var(--accent);
+  background: var(--card);
+  box-shadow: var(--shadow-tile);
+}
+
+.rowPast .title,
+.rowPast .summary {
+  color: var(--muted);
 }
 
 .meta {
   display: flex;
-  align-items: baseline;
-  gap: var(--gap-control);
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+}
+
+.metaEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .range {
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--faint);
+  color: var(--muted);
+}
+
+.rowCurrent .range {
+  color: var(--accent);
 }
 
 .rangeControl {
@@ -60,10 +115,20 @@
   padding: 0;
   text-align: left;
   text-decoration: none;
-  font-family: inherit;
+  font: inherit;
+  color: inherit;
   cursor: pointer;
 
   @include controls.quiet-control;
+}
+
+.playingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 .transcriptButton {
@@ -71,35 +136,54 @@
   background: transparent;
   padding: 0;
   font-family: inherit;
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
   cursor: pointer;
 
   @include controls.quiet-control;
 }
 
 .title {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.125rem;
-  line-height: 1.25;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.3;
   color: var(--ink);
 }
 
 .summary {
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.84375rem;
+  line-height: 1.5;
   color: var(--muted);
 }
 
+.rowCurrent .summary {
+  color: var(--ink);
+}
+
+.progress {
+  display: block;
+  margin-top: 0.25rem;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 0.4s ease;
+}
+
 @media (max-width: 61.9375rem) {
-  .title {
-    font-size: 1rem;
+  .rows {
+    margin: 0 -0.75rem;
   }
 
-  .summary {
-    font-size: 0.82rem;
+  .row {
+    padding: 0.75rem 0.875rem;
   }
 }

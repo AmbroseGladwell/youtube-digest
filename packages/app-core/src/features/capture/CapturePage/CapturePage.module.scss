@@ -20,51 +20,32 @@
   margin: 0 0 0.625rem;
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 1.75rem;
-  line-height: 1.12;
+  font-size: 1.875rem;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
 }
 
 .em {
-  color: var(--accent-strong);
+  color: var(--accent);
   font-style: normal;
 }
 
 .standfirst {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.65;
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: var(--muted);
 }
 
 .primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
   width: 100%;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-btn);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding: 0.7rem 1rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-
-  @include controls.tinted-control;
-}
-
-.primary:disabled {
-  border-color: var(--edge);
-  background: transparent;
-  color: var(--ink);
 }
 
 .outlined {
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-btn);
-  background: transparent;
-  color: var(--faint);
-  padding: 0.35rem 0.875rem;
-  font-size: 0.78rem;
-  cursor: pointer;
-
-  @include controls.outlined-control;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 }
 
 .quiet {
@@ -72,7 +53,8 @@
   background: transparent;
   padding: 0;
   font-size: inherit;
-  color: var(--accent-strong);
+  font-weight: 600;
+  color: var(--accent);
   cursor: pointer;
 
   @include controls.quiet-control;
@@ -80,33 +62,40 @@
 
 .note {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .keys {
-  border-top: 1px solid var(--divider);
-  padding-top: 1rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  border-radius: var(--radius-tile);
+  padding: 1rem 1.125rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
+.keys .note {
+  color: inherit;
+}
+
 .keysLabel {
   margin: 0;
-  font-size: 0.66rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .keysLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   align-self: flex-start;
-  font-size: 0.82rem;
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
 }
 
 .working {
@@ -125,16 +114,12 @@
 
 .workingChannel {
   margin: 0;
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink);
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .rule {
-  display: block;
-  height: 1px;
-  background: var(--ink);
+  display: none;
 }
 
 .workingFoot {
@@ -145,17 +130,17 @@
 }
 
 .elapsed {
-  font-size: 0.72rem;
-  color: var(--faint);
+  font-size: 0.78rem;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .error {
   margin: 0;
-  border: 1px solid var(--accent);
+  background: var(--stone-tint);
   border-radius: var(--radius-panel);
-  padding: 0.625rem 0.75rem;
+  padding: 0.75rem 0.875rem;
   font-size: 0.84rem;
   line-height: 1.55;
-  color: var(--accent-strong);
+  color: var(--accent);
 }

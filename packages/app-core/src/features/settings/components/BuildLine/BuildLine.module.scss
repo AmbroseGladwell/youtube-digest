@@ -1,10 +1,8 @@
 .root {
-  margin: 1.5rem 0 0;
+  margin: 1rem 0 0;
   max-width: 35rem;
-  border-top: 1px solid var(--divider);
-  padding-top: 1rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--faint);
+  padding-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }

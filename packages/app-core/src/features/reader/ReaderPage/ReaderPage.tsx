@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from "react-router";
 import { OverviewId, isUnreadableRecordError } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
+import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";
 import { PlusPrompt } from "../../plus/components/PlusPrompt/PlusPrompt.js";
 import { PlusSavedLocallyNote } from "../../plus/components/PlusSavedLocallyNote/PlusSavedLocallyNote.js";
@@ -12,26 +13,23 @@ import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOve
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithStateQuery.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
-import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
-import { formatTimeRange } from "../../overviews/util/formatTimeRange.js";
 import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
-import { youtubeTimestampUrl } from "../../overviews/util/youtubeTimestampUrl.js";
 import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
-import { ReaderRail } from "../components/ReaderRail/ReaderRail.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
 import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
-import { noteSectionNames, overviewNoteLines } from "../util/overviewNoteLines.js";
+import { overviewNoteLines } from "../util/overviewNoteLines.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { overviewMetaParts } from "../../overviews/util/overviewMetaParts.js";
 import { useReadAlong } from "./useReadAlong.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
+import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 
@@ -54,8 +52,8 @@ export function ReaderPage() {
 function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
   const libraryQuery = useOverviewsWithStateQuery();
-  const topicsQuery = useTopicsQuery();
   const setOverviewState = useSetOverviewStateMutation();
+  const animateNavigation = useShouldAnimateNavigation();
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
   const [editingTopics, setEditingTopics] = useState(false);
@@ -154,16 +152,21 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }
 
   const { state } = overviewQuery.data;
-  const topicNameById = new Map((topicsQuery.data ?? []).map((topic) => [topic.id, topic.name]));
-  const topicNames = overview.topicIds
-    .map((topicId) => topicNameById.get(topicId))
-    .filter((name): name is string => name !== undefined);
-
+  const openedFromChapterIndex =
+    transcriptOpenAtMs === null || overview.chapters === null
+      ? -1
+      : overview.chapters.findIndex((chapter) => chapter.startMs === transcriptOpenAtMs);
+  const openedFromChapter = overview.chapters?.[openedFromChapterIndex];
+  const openedFrom =
+    openedFromChapter === undefined
+      ? null
+      : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
+  const toggleFavourite = () =>
+    setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
   const neighbours = overviewNeighbours(
     orderLibraryEntriesBySavedAt(libraryQuery.data ?? []),
     overviewId,
   );
-  const metaParts = overviewMetaParts(overview);
   const range = overview.watchAnyway?.range ?? null;
 
   return (
@@ -174,10 +177,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     >
       <ReaderMasthead
         overview={overview}
-        topicNames={topicNames}
-        metaParts={metaParts}
-        neighbours={neighbours}
+        metaParts={overviewMetaParts(overview)}
         read={state.read}
+        favourite={state.favourite}
         playing={readAlong.playing}
         editingTopics={editingTopics}
         compact={isPanel}
@@ -186,6 +188,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         // tab strip down by the height of a masthead that scrolls away.
         ref={isPanel ? readerMastheadHeight.measured : undefined}
         onToggleRead={() => setOverviewState.mutate({ overviewId, patch: { read: !state.read } })}
+        onToggleFavourite={toggleFavourite}
         onTogglePlaying={readAlong.togglePlaying}
         onListen={listen}
         onEditingTopicsChange={setEditingTopics}
@@ -202,71 +205,90 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         ref={tabsHeight.measured}
       />
 
-      <div className={styles.grid}>
-        <div
-          key={tab}
-          className={`${styles.main} ${styles.panel}`}
-          role="tabpanel"
-          id={panelId(tab)}
-          aria-labelledby={tabId(tab)}
-        >
-          {tab === "Overview" && (
-            <div data-testid={readerPageTestIds.overviewPanel}>
-              <CaptureReasonLine
-                overview={overview}
-                editing={editingReason}
-                compact={isPanel}
-                onEditingChange={setEditingReason}
-              />
-              <ReadAlongNote
-                lines={lines}
-                activeIndex={readAlong.activeIndex}
-                onSelectLine={readAlong.selectLine}
-              />
-              {range !== null && <WatchAnywayJump range={range} videoId={overview.video.id} />}
-              <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
-                {overview.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
+      <div
+        key={tab}
+        className={`${styles.main} ${styles.panel}`}
+        role="tabpanel"
+        id={panelId(tab)}
+        aria-labelledby={tabId(tab)}
+      >
+        {tab === "Overview" && (
+          <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
+            <CaptureReasonLine
+              overview={overview}
+              editing={editingReason}
+              compact={isPanel}
+              onEditingChange={setEditingReason}
+            />
+            <ReadAlongNote
+              lines={lines}
+              activeIndex={readAlong.activeIndex}
+              onSelectLine={readAlong.selectLine}
+            />
+            {range !== null && <WatchAnywayJump range={range} videoId={overview.video.id} />}
+            <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
+              {overview.tags.map((tag) => (
+                <span key={tag} className={styles.tag}>
+                  {tag}
+                </span>
+              ))}
             </div>
-          )}
-          {tab === "Transcript" && (
-            <TranscriptPanel
-              key={overview.video.id}
-              video={overview.video}
-              openAtMs={transcriptOpenAtMs}
-            />
-          )}
-          {tab === "Chapters" && (
-            <ChaptersPanel
-              chapters={overview.chapters}
-              video={overview.video}
-              onOpenTranscriptAt={openTranscriptAt}
-            />
-          )}
-        </div>
-
-        {!isPanel && (
-          <ReaderRail
-            sections={tab === "Overview" ? noteSectionNames(lines) : []}
-            currentSection={readAlong.currentSection}
-            onSelectSection={readAlong.selectSection}
-            videoUrl={overview.video.url}
-            sourceNote={overview.watchAnyway?.reason ?? null}
-            jump={
-              range
-                ? {
-                    label: `Jump to ${formatTimeRange(range.startMs, range.endMs)}`,
-                    href: youtubeTimestampUrl(overview.video.url, range.startMs),
-                  }
-                : null
-            }
+          </div>
+        )}
+        {tab === "Transcript" && (
+          <TranscriptPanel
+            key={overview.video.id}
+            video={overview.video}
+            openAtMs={transcriptOpenAtMs}
+            openedFrom={openedFrom}
+            onBackToChapters={() => changeTab("Chapters")}
+          />
+        )}
+        {tab === "Chapters" && (
+          <ChaptersPanel
+            chapters={overview.chapters}
+            video={overview.video}
+            onOpenTranscriptAt={openTranscriptAt}
           />
         )}
       </div>
+
+      {/* Where the library's order takes you next. At the foot rather than on the bar:
+          the next note is a thing to want once this one is read (design 4a has no
+          stepper, and the panel has no list to step through). */}
+      {!isPanel && neighbours.position !== null && (
+        <nav className={styles.foot} aria-label="Neighbouring overviews">
+          {neighbours.previousId ? (
+            <Link
+              className={styles.stepLink}
+              to={Routes.overview(neighbours.previousId)}
+              viewTransition={animateNavigation}
+              data-testid={readerPageTestIds.previousLink}
+            >
+              <StrokeIcon name="arrowLeft" />
+              Previous
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className={styles.position} data-testid={readerPageTestIds.position}>
+            {neighbours.position} of {neighbours.total}
+          </span>
+          {neighbours.nextId ? (
+            <Link
+              className={styles.stepLink}
+              to={Routes.overview(neighbours.nextId)}
+              viewTransition={animateNavigation}
+              data-testid={readerPageTestIds.nextLink}
+            >
+              Next
+              <StrokeIcon name="arrowRight" />
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
 
       {plusPromptOpen && <PlusPrompt onDismiss={() => setPlusPromptOpen(false)} />}
 
@@ -278,14 +300,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           progressPercent={readAlong.progressPercent}
           rateLabel={readAlong.rateLabel}
           currentSection={readAlong.currentSection}
-          favourite={state.favourite}
+          favourite={isPanel ? { on: state.favourite, onToggle: toggleFavourite } : null}
           onTogglePlaying={readAlong.togglePlaying}
           onPrevious={() => readAlong.step(-1)}
           onNext={() => readAlong.step(1)}
           onCycleRate={readAlong.cycleRate}
-          onToggleFavourite={() =>
-            setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } })
-          }
         />
       )}
     </article>

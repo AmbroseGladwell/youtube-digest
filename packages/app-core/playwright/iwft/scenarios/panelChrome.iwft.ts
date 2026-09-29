@@ -132,7 +132,7 @@ test("the panel keeps the judgement beside the topics and drops the dates", asyn
   await reader.verifyMastheadOmits(/saved/i);
 });
 
-test("the verdict and the warnings sit on the same line as the topics", async ({
+test("the verdict and the warnings sit on the channel's line", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -140,7 +140,7 @@ test("the verdict and the warnings sit on the same line as the topics", async ({
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyJudgementSharesTheTopicLine();
+  await reader.verifyJudgementSharesTheChannelLine();
 });
 
 test("the wide reader keeps all of it, having the width for it", async ({

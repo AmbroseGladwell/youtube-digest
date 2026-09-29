@@ -3,6 +3,11 @@ import { syncPanelTestIds } from "../../src/features/sync/components/SyncPanel/S
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class SyncPanelPageObject extends PageObject {
+  // In the viewport, not merely on the page: the bar's Sign in lands here by hash, and
+  // the assertion is that the scroll actually happened.
+  verifyIsInView = () =>
+    this.step("verifyIsInView", () => expect(this.get(syncPanelTestIds.root)).toBeInViewport());
+
   verifyIsShown = (): Promise<SyncPanelPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(syncPanelTestIds.root);

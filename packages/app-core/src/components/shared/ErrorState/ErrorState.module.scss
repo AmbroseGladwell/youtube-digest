@@ -3,10 +3,6 @@
 @mixin compact-metrics {
   padding: 1.75rem 1.5rem;
 
-  .rule {
-    width: 2.5rem;
-  }
-
   .title {
     font-size: 1.6rem;
     line-height: 1.18;
@@ -47,13 +43,8 @@
   }
 }
 
-// The only mark on the screen. Design turn 19 spends the accent here and on the actions
-// and nowhere else — there is no error colour in this palette, and none is added.
 .rule {
-  width: 3rem;
-  height: 1px;
-  background: var(--accent);
-  margin-bottom: 0.25rem;
+  display: none;
 }
 
 .title {
@@ -77,39 +68,21 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem;
   margin-top: 0.75rem;
 }
 
-// The same paint as + New and Listen, which is the system's accent control: a tint fill
-// rather than the design file's transparent outline, so a recovery action is one of the
-// three treatments controls.scss documents and not a fourth (docs/features/error-state.md).
-// The size is this screen's own, because it is a page-level action rather than masthead
-// furniture.
+// A recovery action is the one thing to do here, so it takes the action orange
+// (docs/features/error-state.md).
 .action {
-  display: inline-flex;
-  text-decoration: none;
-  align-items: center;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-badge);
-  background: var(--accent-tint);
-  color: var(--accent-deep);
-  padding: 0.7rem 1.4rem;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-
-  @include controls.tinted-control;
+  @include controls.action-pill;
+  @include controls.pill-md;
 }
 
 .back {
-  font-size: 0.82rem;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
   color: var(--muted);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
 }
 
 @media (prefers-reduced-motion: no-preference) {

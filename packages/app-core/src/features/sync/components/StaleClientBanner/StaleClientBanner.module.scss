@@ -1,9 +1,11 @@
-// The generation strip's slot, under the masthead's rule, with the same tint: the two can
+@use "../../../../theme/controls.scss" as controls;
+
+// The generation strip's slot, under the masthead, on the stone tint: the two can
 // stack, and this one carries the cause and the one global action while the cards carry
 // everything else (docs/features/record-migrations.md, "Where the banner lives").
 .root {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-bottom: 1px solid var(--divider);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
 }
 
 .row {
@@ -17,28 +19,17 @@
   flex: 1;
   min-width: 0;
   font-size: 0.84rem;
-  color: var(--accent-deep);
 }
 
 .updateButton {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  color: var(--accent-strong);
-  cursor: pointer;
-  border-bottom: 1px solid currentColor;
+  @include controls.surface-pill;
+  @include controls.pill-sm;
 }
 
 .dismissButton {
-  border: 0;
-  background: transparent;
-  padding: 0 0.25rem;
-  font-size: 1rem;
-  line-height: 1;
-  color: var(--faint);
-  cursor: pointer;
+  @include controls.ghost-pill;
+  @include controls.circle(1.875rem);
+  color: inherit;
 }
 
 @media (max-width: 47.9375rem) {

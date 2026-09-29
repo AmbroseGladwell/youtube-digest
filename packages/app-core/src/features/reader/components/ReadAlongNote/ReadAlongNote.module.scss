@@ -1,67 +1,91 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .root {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  max-width: var(--measure);
 }
 
+// The sticky chrome above and the player bar below are what a line scrolled to has to
+// clear; the 33vh is design 1a's top third, and the larger of the two wins.
 .line {
-  // The masthead and the tab strip stick to the head and the player bar to the foot, so a
-  // line scrolled to by the pacer has to clear all three or the mark lands under one.
-  scroll-margin-top: calc(var(--masthead-height) + 3rem);
+  scroll-margin-top: max(
+    calc(var(--masthead-height) + var(--reader-masthead-height) + var(--reader-tabs-height) + 1rem),
+    33vh
+  );
   scroll-margin-bottom: 6rem;
   border: 0;
-  border-left: 2px solid transparent;
+  border-radius: var(--radius-panel);
   background: transparent;
   padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  margin-left: -0.625rem;
   font-family: inherit;
   text-align: left;
-  line-height: 1.65;
+  line-height: 1.6;
   cursor: pointer;
   transition: background var(--motion-state) var(--motion-ease);
 }
 
 .line:hover:not(.lineActive) {
-  background: var(--ink-wash);
+  background: var(--surface);
 }
 
+// Design 4a's section label: 13 semibold in the stone ink, with the section's own
+// room above it.
 .headingLine {
+  @include controls.section-label;
+
+  margin-left: -0.625rem;
   padding-top: 1.25rem;
-  padding-bottom: 0.375rem;
-  font-size: 0.69rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
+  padding-bottom: 0.25rem;
+}
+
+.headingLine:first-child {
+  padding-top: 0;
 }
 
 .bodyLine {
-  padding-top: 0.1875rem;
-  padding-bottom: 0.1875rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
   margin-bottom: 0.125rem;
-  font-size: 1.0625rem;
-  color: var(--muted);
+  font-size: var(--note-size, 1rem);
+  line-height: 1.7;
+  color: var(--ink);
 }
 
-// Key points are the one section the note format sets as a list, so its lines carry the
-// design's accent bullet. It is decorative and aria-hidden: the line is read aloud and
-// counted from `text`, which never holds the mark.
+// Key points are the one section the note format sets as a list: the number is
+// decorative and aria-hidden, and the line is read aloud and counted from `text`.
 .bulletLine {
   display: flex;
   align-items: baseline;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
 .bullet {
   flex: none;
-  color: var(--accent);
+  min-width: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
 
-// The reading mark is the design's only moving accent: a rule down the left and a wash
-// behind the line being read (docs/features/overview-redesign.md).
-.lineActive {
-  border-left-color: var(--accent);
-  background: var(--accent-wash);
-  color: var(--ink);
+// Design 1a: the sentence being spoken takes a soft stone tint on its own words, and
+// nothing else changes weight, so the page stays readable at a glance. The tint clones
+// across a wrapped line rather than boxing the whole paragraph.
+.lineText {
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: 0 -4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease);
+}
+
+.lineActive .lineText {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
 }
 
 @media (max-width: 61.9375rem) {
@@ -71,10 +95,5 @@
 
   .headingLine {
     padding-top: 1rem;
-    padding-bottom: 0.25rem;
-  }
-
-  .bodyLine {
-    font-size: 0.97rem;
   }
 }

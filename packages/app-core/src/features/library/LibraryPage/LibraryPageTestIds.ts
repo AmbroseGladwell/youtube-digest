@@ -2,6 +2,8 @@ export const libraryPageTestIds = {
   root: "LibraryPage.root",
   list: "LibraryPage.list",
   listCount: "LibraryPage.listCount",
+  searchInput: "LibraryPage.searchInput",
+  clearSearchButton: "LibraryPage.clearSearchButton",
   empty: "LibraryPage.empty",
   rail: "LibraryPage.rail",
   railBody: "LibraryPage.railBody",

@@ -4,4 +4,7 @@ export const readerPageTestIds = {
   notFound: "ReaderPage.notFound",
   overviewPanel: "ReaderPage.overviewPanel",
   tagRow: "ReaderPage.tagRow",
+  previousLink: "ReaderPage.previousLink",
+  nextLink: "ReaderPage.nextLink",
+  position: "ReaderPage.position",
 };

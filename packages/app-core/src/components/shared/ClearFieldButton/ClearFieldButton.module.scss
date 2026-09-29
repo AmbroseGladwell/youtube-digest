@@ -1,0 +1,9 @@
+@use "../../../theme/controls.scss" as controls;
+
+.root {
+  @include controls.ghost-pill;
+  @include controls.circle(1.875rem);
+
+  flex: none;
+  color: var(--muted);
+}

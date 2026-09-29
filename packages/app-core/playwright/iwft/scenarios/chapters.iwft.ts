@@ -113,7 +113,9 @@ test("the chapter the video is inside is marked, and the mark moves with it", as
   const reader = await capture.openStoredOverview();
   await reader.clickTab("Chapters");
 
+  await reader.verifyChaptersAreFollowingTheVideo(true);
   await reader.verifyCurrentChapterReads("The opening claim");
+  await reader.verifyCurrentChapterShowsProgress();
 
   await launcher.movePlaybackTo(playingAt(70_000));
   await reader.verifyCurrentChapterReads("The argument");
@@ -150,6 +152,10 @@ test("Transcript opens the transcript at the chapter's start, marked and in view
 
   await reader.verifyActiveTabIs("Transcript");
   await reader.verifyTargetTranscriptBlockReads(/where the argument is/);
+  await reader.verifyTargetBlockNamesChapter("Chapter 02 · The argument");
+
+  await reader.clickBackToChapters();
+  await reader.verifyActiveTabIs("Chapters");
 });
 
 test("choosing the Transcript tab yourself opens it at the top, with nothing marked", async ({

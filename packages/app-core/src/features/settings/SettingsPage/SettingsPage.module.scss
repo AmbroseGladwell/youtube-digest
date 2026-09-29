@@ -1,45 +1,53 @@
+@use "../../../theme/controls.scss" as controls;
+
 .root {
   max-width: 44rem;
-  padding: 2rem 3rem 4rem;
+  padding: 1.5rem 3rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.875rem;
 }
 
+// Pulled back by its own padding so the label sits on the gutter the title uses.
 .backLink {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
   align-self: flex-start;
-  font-size: 0.82rem;
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
+  margin-left: -0.875rem;
+  color: var(--muted);
 }
 
 .title {
-  margin: 0.75rem 0 0;
+  margin: 0.5rem 0 0;
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 2.2rem;
-  line-height: 1.1;
+  font-size: 2.375rem;
+  line-height: 1.12;
 }
 
 .standfirst {
-  margin: 0 0 0.75rem;
+  margin: 0;
   max-width: 46ch;
-  font-size: 0.92rem;
-  line-height: 1.7;
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: var(--muted);
 }
 
 .saved {
   margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent-strong);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 @media (max-width: 47.9375rem) {
   .root {
-    padding: 1.5rem 1.25rem 4rem;
+    padding: 1.25rem 1.25rem 4rem;
   }
+}
+
+// The bar's Sign in lands here by hash, and the masthead is sticky, so the section has to
+// clear it when scrolled into view.
+.syncAnchor {
+  scroll-margin-top: calc(var(--masthead-height) + 1rem);
 }

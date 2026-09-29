@@ -2,6 +2,7 @@ import { useCallback, type ReactNode } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../app/Routes.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
+import { StrokeIcon } from "../StrokeIcon/StrokeIcon.js";
 import styles from "./ErrorState.module.scss";
 import { errorStateTestIds } from "./ErrorStateTestIds.js";
 
@@ -75,7 +76,7 @@ export function ErrorState({ title, body, action, back = false }: ErrorStateProp
               className={styles.back}
               data-testid={errorStateTestIds.back}
             >
-              {isPanel ? "← Back" : "← All overviews"}
+              <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
             </Link>
           )}
         </div>

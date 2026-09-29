@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import type { Novelty } from "@overview/domain";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
@@ -18,21 +18,15 @@ export interface LibraryOverviewCardProps {
   onToggleRead: () => void;
 }
 
-// Novel is the only verdict the design marks: it takes the accent rule under the word.
-// Everything else recedes to plain type, so a library that is three-quarters recycled
-// reads calm (docs/features/overview-redesign.md).
-const NOVELTY_CLASS: Record<Novelty, string | undefined> = {
-  novel: styles.verdictNovel,
-  established: undefined,
-  recycled: undefined,
-};
-
 const SELLING_LABEL: Record<string, string> = {
   own_paid_product: "Sells own paid product",
   own_free_promotion: "Promotes something of theirs",
   sponsor_or_affiliate: "Sponsored or affiliate",
 };
 
+// Design 10a: a thumbnail-first row on a raised tile. Every verdict is the same stone
+// chip, so a library that is three-quarters recycled reads calm; a row already read
+// recedes to the muted ink instead (docs/features/stone-theme.md).
 export function LibraryOverviewCard({
   overviewWithState,
   entering = false,
@@ -50,6 +44,7 @@ export function LibraryOverviewCard({
     <article
       className={`${styles.root} ${entering ? styles.entering : ""}`}
       data-entering={entering || undefined}
+      data-read={state.read || undefined}
       data-testid={libraryOverviewCardTestIds.root}
     >
       <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
@@ -57,17 +52,20 @@ export function LibraryOverviewCard({
         <div className={styles.body}>
           <p className={styles.kickerRow}>
             {topicNames.map((name) => (
-              <span key={name} className={styles.topicPill}>
+              <span key={name} className={styles.topic}>
                 {name}
               </span>
             ))}
             {overview.verdict && (
-              <span className={`${styles.verdict} ${NOVELTY_CLASS[overview.verdict.novelty] ?? ""}`}>
-                {NOVELTY_LABEL[overview.verdict.novelty]}
-              </span>
+              <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
             )}
             {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
-            {overview.verdict?.dubious && <span className={styles.dubious}>⚠ Dubious claim</span>}
+            {overview.verdict?.dubious && (
+              <span className={styles.dubious}>
+                <StrokeIcon name="alert" size={13} />
+                Dubious claim
+              </span>
+            )}
             {selling && <span className={styles.selling}>{selling}</span>}
           </p>
 
@@ -83,40 +81,44 @@ export function LibraryOverviewCard({
             </span>
           </Link>
 
-          <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
-            {metaParts.join(" · ")}
-          </p>
-        </div>
+          <div className={styles.foot}>
+            <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
+              {metaParts.join(" · ")}
+            </p>
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.action} ${styles.favouriteAction} ${state.favourite ? styles.actionActive : ""}`}
-            onClick={onToggleFavourite}
-            aria-pressed={state.favourite}
-            aria-label={state.favourite ? "Favourited" : "Favourite"}
-            title={state.favourite ? "Favourited" : "Favourite"}
-            data-testid={libraryOverviewCardTestIds.favouriteButton}
-          >
-            <FavouriteIcon filled={state.favourite} />
-          </button>
-          <button
-            type="button"
-            className={`${styles.action} ${state.read ? styles.actionActive : ""}`}
-            onClick={onToggleRead}
-            aria-pressed={state.read}
-            data-testid={libraryOverviewCardTestIds.readButton}
-          >
-            {state.read ? "Read" : "Mark read"}
-          </button>
-          <Link
-            className={styles.primaryAction}
-            to={readerPath}
-            viewTransition={animateNavigation}
-            data-testid={libraryOverviewCardTestIds.listenLink}
-          >
-            Listen
-          </Link>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={`${styles.favouriteAction} ${state.favourite ? styles.favouriteActive : ""}`}
+                onClick={onToggleFavourite}
+                aria-pressed={state.favourite}
+                aria-label={state.favourite ? "Favourited" : "Favourite"}
+                title={state.favourite ? "Favourited" : "Favourite"}
+                data-testid={libraryOverviewCardTestIds.favouriteButton}
+              >
+                <FavouriteIcon filled={state.favourite} />
+              </button>
+              <button
+                type="button"
+                className={`${styles.action} ${state.read ? styles.actionActive : ""}`}
+                onClick={onToggleRead}
+                aria-pressed={state.read}
+                data-testid={libraryOverviewCardTestIds.readButton}
+              >
+                {state.read && <StrokeIcon name="check" />}
+                {state.read ? "Read" : "Mark read"}
+              </button>
+              <Link
+                className={styles.action}
+                to={readerPath}
+                viewTransition={animateNavigation}
+                data-testid={libraryOverviewCardTestIds.listenLink}
+              >
+                <StrokeIcon name="headphones" />
+                Listen
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </article>

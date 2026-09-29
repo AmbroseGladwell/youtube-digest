@@ -20,7 +20,7 @@ test("the reader opens on the note's first line, with the player naming that sec
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
-  await reader.verifyActiveLineReads("In one line");
+  await reader.verifyActiveLineReads("Premise");
   await reader.verifyNowReading("Summary");
 });
 
@@ -62,21 +62,7 @@ test("the transport steps the reading mark forward and back a line at a time", a
   await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
 
   await reader.clickPreviousLine();
-  await reader.verifyActiveLineReads("In one line");
-});
-
-test("the rail jumps the reading mark to the section it names", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  backendSimulator.overviews.seed(NOTE);
-  const library = await launcher.launchExpectingLibrary();
-
-  const reader = await library.nthCard(0).openReader();
-  await reader.clickSection("Watch it anyway?");
-
-  await reader.verifyActiveLineReads("Watch it anyway?");
-  await reader.verifyNowReading("Watch it anyway?");
+  await reader.verifyActiveLineReads("Premise");
 });
 
 test("the speed control cycles the design's four rates and comes back round", async ({

@@ -1,15 +1,14 @@
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { generationRunSteps } from "../../util/generationRunSteps.js";
 import styles from "./GenerationSteps.module.scss";
 import { generationStepsTestIds } from "./GenerationStepsTestIds.js";
 
-const STEP_MARK: Record<string, string> = { done: "✓", running: "●", waiting: "" };
-
 export interface GenerationStepsProps {
   run: NewOverviewRun;
 }
 
-// The numbered progress list design 5a draws, shared by the dialog and the side panel's
+// The numbered progress list design 3b draws, shared by the dialog and the side panel's
 // own working screen so both report the same thing the same way
 // (docs/features/extension-panel.md).
 export function GenerationSteps({ run }: GenerationStepsProps) {
@@ -38,7 +37,7 @@ export function GenerationSteps({ run }: GenerationStepsProps) {
             </span>
           </span>
           <span className={styles.stepMark} aria-hidden="true">
-            {STEP_MARK[step.state]}
+            {step.state === "done" && <StrokeIcon name="check" size={15} />}
           </span>
         </li>
       ))}
