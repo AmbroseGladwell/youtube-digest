@@ -22,6 +22,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useFollowPlayback, type FollowPlayback } from "./useFollowPlayback.js";
 import { useReadingPosition, type ReadingPosition } from "./useReadingPosition.js";
 import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearch.js";
+import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
 
@@ -55,10 +56,16 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
     [transcript],
   );
 
+  // The head is state rather than a ref because every scroll below is measured off it,
+  // and those have to run again once it is there.
+  const [head, setHead] = useState<HTMLDivElement | null>(null);
   const search = useTranscriptSearch(blocks);
   const targetBlockIndex = openAtMs === null ? -1 : blockAtPosition(blocks, openAtMs);
-  const position = useReadingPosition(video.id, blocks, { ignored: openAtMs !== null });
-  const follow = useFollowPlayback(video.id, blocks, { held: position.restoredBlockIndex !== -1 });
+  const position = useReadingPosition(video.id, blocks, { ignored: openAtMs !== null, head });
+  const follow = useFollowPlayback(video.id, blocks, {
+    held: position.restoredBlockIndex !== -1,
+    head,
+  });
   const seek = useSeekPlayback(video.id);
   const [copied, setCopied] = useState(false);
 
@@ -122,7 +129,7 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
 
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
-      <div className={styles.head} data-testid={transcriptPanelTestIds.head}>
+      <div className={styles.head} ref={setHead} data-testid={transcriptPanelTestIds.head}>
         <div className={styles.headingRow}>
           {/* Design 2a–2c: what the row's left says is the transcript's relationship to
               the video — the way back to the chapter that opened it, or whether it is
@@ -193,6 +200,7 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
           seek={seek}
           targetBlockIndex={targetBlockIndex}
           openedFrom={openedFrom}
+          head={head}
         />
       )}
 
@@ -256,6 +264,7 @@ interface TranscriptRowsProps {
   seek: ((positionMs: number) => void) | null;
   targetBlockIndex: number;
   openedFrom: OpenedFromChapter | null;
+  head: HTMLElement | null;
 }
 
 const chapterNumber = (number: number) => String(number).padStart(2, "0");
@@ -268,17 +277,22 @@ function TranscriptRows({
   seek,
   targetBlockIndex,
   openedFrom,
+  head,
 }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    currentMatch?.scrollIntoView({ block: "center" });
-  }, [currentMatch]);
+    if (currentMatch !== null && head !== null) {
+      scrollToRestingLine(currentMatch, head);
+    }
+  }, [currentMatch, head]);
 
   useEffect(() => {
-    targetRow?.scrollIntoView({ block: "center" });
-  }, [targetRow]);
+    if (targetRow !== null && head !== null) {
+      scrollToRestingLine(targetRow, head);
+    }
+  }, [targetRow, head]);
 
   // Design 2a: paragraphs the video has already passed drop to the muted ink, so the
   // eye finds the one being spoken by weight before it finds the card.

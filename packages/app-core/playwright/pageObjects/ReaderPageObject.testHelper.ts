@@ -11,6 +11,7 @@ import { topicLineTestIds } from "../../src/features/reader/components/TopicLine
 import { overviewActionsMenuTestIds } from "../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
 import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
+import { TRANSCRIPT_REST_GAP } from "../../src/features/reader/components/TranscriptPanel/transcriptRestingLine.js";
 import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
 import { plusPromptTestIds } from "../../src/features/plus/components/PlusPrompt/PlusPromptTestIds.js";
 import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
@@ -718,12 +719,18 @@ export class ReaderPageObject extends PageObject {
   private targetTranscriptBlock = (): Locator =>
     this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-target="true"]'));
 
+  private currentTranscriptBlock = (): Locator =>
+    this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'));
+
   verifyTargetTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyTargetTranscriptBlockReads ${String(text)}`, async () => {
       await expect(
         this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText),
       ).toHaveText(text);
       await expect(this.targetTranscriptBlock()).toBeInViewport();
+      const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
+      const row = (await this.targetTranscriptBlock().boundingBox())!;
+      expect(row.y).toBeGreaterThanOrEqual(head.y + head.height);
     });
 
   verifyNoTranscriptBlockIsTargeted = () =>
@@ -762,25 +769,46 @@ export class ReaderPageObject extends PageObject {
 
   // The block across the middle of the window, which is what the reading position
   // remembers (docs/features/reading-position.md).
-  readTranscriptBlockAtCentre = (): Promise<string | null> =>
-    this.step("readTranscriptBlockAtCentre", () =>
+  // Where the transcript says you are: the first block that starts below the sticky head,
+  // which is the one a block scrolled to comes to rest as
+  // (`transcriptRestingLine.ts`).
+  readTranscriptBlockAtTheRestingLine = (): Promise<string | null> =>
+    this.step("readTranscriptBlockAtTheRestingLine", () =>
       this.page.evaluate(
-        ({ rowId, textId }) => {
-          const centre = window.innerHeight / 2;
-          const rows = Array.from(document.querySelectorAll(`[data-testid="${rowId}"]`));
-          const row = rows.find((candidate) => {
-            const rect = candidate.getBoundingClientRect();
-            return rect.top <= centre && rect.bottom >= centre;
-          });
+        ({ rowId, textId, headId, gap }) => {
+          const head = document.querySelector(`[data-testid="${headId}"]`);
+          if (head === null) {
+            return null;
+          }
+          const line = head.getBoundingClientRect().bottom + gap;
+          const row = Array.from(document.querySelectorAll(`[data-testid="${rowId}"]`)).find(
+            (candidate) => candidate.getBoundingClientRect().top >= line - 1,
+          );
           return row?.querySelector(`[data-testid="${textId}"]`)?.textContent ?? null;
         },
-        { rowId: transcriptPanelTestIds.row, textId: transcriptPanelTestIds.rowText },
+        {
+          rowId: transcriptPanelTestIds.row,
+          textId: transcriptPanelTestIds.rowText,
+          headId: transcriptPanelTestIds.head,
+          gap: TRANSCRIPT_REST_GAP,
+        },
       ),
     );
 
-  verifyTranscriptBlockAtCentreReads = (text: string) =>
-    this.step(`verifyTranscriptBlockAtCentreReads ${text}`, () =>
-      expect.poll(() => this.readTranscriptBlockAtCentre(), { timeout: 2_000 }).toBe(text),
+  verifyTranscriptBlockAtTheRestingLineReads = (text: string) =>
+    this.step(`verifyTranscriptBlockAtTheRestingLineReads ${text}`, () =>
+      expect.poll(() => this.readTranscriptBlockAtTheRestingLine(), { timeout: 2_000 }).toBe(text),
+    );
+
+  // What the reported bug was: a block the transcript scrolled to came to rest behind the
+  // sticky head, and the taller the block the more of it went.
+  verifyCurrentTranscriptBlockIsWhollyBelowTheHead = () =>
+    this.step("verifyCurrentTranscriptBlockIsWhollyBelowTheHead", () =>
+      expect(async () => {
+        const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
+        const row = (await this.currentTranscriptBlock().boundingBox())!;
+        expect(row.y).toBeGreaterThanOrEqual(head.y + head.height);
+      }).toPass({ timeout: 2_000 }),
     );
 
   verifyTranscriptIsAtTheTop = () =>

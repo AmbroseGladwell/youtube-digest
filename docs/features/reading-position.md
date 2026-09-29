@@ -18,17 +18,39 @@ feature, on both surfaces.
 
 ## What is remembered
 
-**A time, not a scroll offset.** The position is the `startMs` of the block that was
-across the middle of the window, and the same block is put back in the middle on return.
+**A time, not a scroll offset.** The position is the `startMs` of the block that was on
+the resting line, and the same block is put back on that line on return. The line is just
+under the panel's sticky head — the foot of the whole sticky stack — rather than the middle
+of the window, which on the panel is behind that stack: see "Where a block comes to rest"
+below.
 A pixel offset would only be right in the layout that wrote it: the panel and the wide
 reader set the same blocks at different heights, and a machine-heard transcript re-merges
 into different blocks if the merge rules move. A block's start time survives all of that,
 and `blockAtPosition` already answers "which block holds this time" for the follow.
 
 **Measured off the rows, not derived from the scroll.** On each scroll, at most once per
-frame, the hook reads the rows' own boxes and takes the one nearest the middle. Nothing
-estimates where the reader is from `scrollY` and an average row height, which is the
-kind of number `docs/prototype/constraints.md` exists to forbid.
+frame, the hook reads the rows' own boxes and takes the first one to start at the line — a
+block still half behind the head is not the one being read. Nothing estimates where the
+reader is from `scrollY` and an average row height, which is the kind of number
+`docs/prototype/constraints.md` exists to forbid.
+
+## Where a block comes to rest
+
+Every scroll the transcript makes for you — the follow moving to the block being spoken, a
+chapter opening at one, a search hit, this restore — puts that block on one line:
+`transcriptRestingLine.ts`, the sticky head's own `top` plus its height plus a 12px gap.
+
+It replaced `scrollIntoView({ block: "center" })`, which centred the block in the *window*.
+In the panel the sticky stack is 366px of a 720px window, so the middle of the window is
+behind it: every block scrolled to lost its time and its first line, and the taller the
+block the more of it went. Centring is right for a window that is all content, which this
+one has not been since the panel grew its chrome.
+
+**The head is measured at the moment of the scroll, not summed from the custom
+properties.** The head grows when the transcript arrives and its search box appears, and
+the measured height published for it lands a frame later than the follow's first scroll —
+a sum read before that put the first block 54px too high, which is the bug in the form it
+first came back as.
 
 **The top is nothing to remember.** If the first block is in the middle, the entry is
 removed rather than written. A transcript opened at the top is the default, and on the
@@ -89,5 +111,5 @@ which is what a different transcript deserves.
   the overview tab opens at the top as it did.
 - **Survive across the two libraries.** Two origins, two memories, by the same
   reasoning as two libraries.
-- **Restore the exact pixel.** The block goes back to the middle of the window, which is
-  within a paragraph of where the eye was and identical between layouts.
+- **Restore the exact pixel.** The block goes back onto the resting line, which is within
+  a paragraph of where the eye was and identical between layouts.

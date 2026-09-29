@@ -105,7 +105,8 @@ the tab opens — because a note whose captions were never kept would land on th
 ## Opening the transcript somewhere
 
 `TranscriptPanel` gained `openAtMs`. When set, the block the position falls inside
-(`blockAtPosition`, now over anything timed) is marked and scrolled to the centre, and the
+(`blockAtPosition`, now over anything timed) is marked and scrolled onto the transcript's
+resting line (`docs/features/reading-position.md`, "Where a block comes to rest"), and the
 following stands down, exactly as searching stands it down: opening the transcript at a
 chapter is scrolling away from the video, and two things fighting for the scroll was the
 failure `docs/features/following-playback.md` designed against. The reader gets
