@@ -16,12 +16,13 @@ export interface OverviewActionsMenuProps {
   onEditTopics: () => void;
   onEditReason: () => void;
   onToggleRead: () => void;
+  onDelete: () => void;
 }
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// Design 4b/6h: everything about the note that is not reading it. Delete and Open in
-// web app are placed but not wired (docs/features/stone-theme.md, "Placed but not wired").
+// Design 4b/6h: everything about the note that is not reading it. Open in web app is
+// placed but not wired (docs/features/stone-theme.md, "Placed but not wired").
 export function OverviewActionsMenu({
   topicCount,
   hasReason,
@@ -32,6 +33,7 @@ export function OverviewActionsMenu({
   onEditTopics,
   onEditReason,
   onToggleRead,
+  onDelete,
 }: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
@@ -133,8 +135,7 @@ export function OverviewActionsMenu({
               type="button"
               role="menuitem"
               className={`${styles.item} ${styles.itemDanger}`}
-              disabled
-              title="Deleting isn't wired up yet"
+              onClick={choose(onDelete)}
               data-testid={overviewActionsMenuTestIds.deleteItem}
             >
               Delete overview

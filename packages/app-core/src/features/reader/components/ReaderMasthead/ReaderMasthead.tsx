@@ -30,6 +30,7 @@ export interface ReaderMastheadProps {
   onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
   onEditReason: () => void;
+  onDelete: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
 
@@ -58,6 +59,7 @@ export function ReaderMasthead({
   onListen,
   onEditingTopicsChange,
   onEditReason,
+  onDelete,
   ref,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
@@ -129,6 +131,7 @@ export function ReaderMasthead({
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={onToggleRead}
+          onDelete={onDelete}
         />
       </div>
 
