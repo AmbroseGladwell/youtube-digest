@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION_HEADER, VideoId } from "@overview/domain";
+import { CLIENT_VERSION_HEADER, VideoId, type StoredTranscript } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -9,12 +9,21 @@ import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
 const LONG_TRANSCRIPT_SEGMENTS = 20_000;
 
+const noteOn = (account: TestAccount, transcript: StoredTranscript) =>
+  account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: transcript.video! }) });
+
 test("a transcript one device stores is read back exactly by another device on the same account", async () => {
   const testApp = await createTestApp();
   const email = "two-devices@example.com";
   const laptop = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const phone = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const transcript = makeStoredTranscript();
+  await testApp.app.inject({
+    method: "POST",
+    url: "/api/overviews",
+    headers: laptop.headers,
+    payload: storedOverview({ video: transcript.video! }),
+  });
 
   const stored = await testApp.app.inject({
     method: "PUT",
@@ -63,6 +72,7 @@ test("storing a video's transcript again replaces the one kept before", async ()
   const account = await makeAccount(testApp);
   const first = makeStoredTranscript({ fetchedAt: "2026-09-01T00:00:00.000Z" });
   const second = makeStoredTranscript({ fetchedAt: "2026-09-20T00:00:00.000Z", generated: true });
+  await noteOn(account, first);
   await account.inject({ method: "PUT", url: `/api/transcripts/${first.videoId}`, body: first });
   await account.inject({ method: "PUT", url: `/api/transcripts/${second.videoId}`, body: second });
 
@@ -82,6 +92,7 @@ test("a transcript far longer than the default body limit is still stored", asyn
       endMs: index * 1000 + 1000,
     })),
   });
+  await noteOn(account, transcript);
 
   const stored = await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   const read = await account.inject({ method: "GET", url: `/api/transcripts/${transcript.videoId}` });
@@ -198,5 +209,50 @@ test("deleting a note on one account leaves another account's transcript of the 
 
   assert.equal(await keptTranscriptOf(deleter, transcript.videoId), 404);
   assert.equal(await keptTranscriptOf(keeper, transcript.videoId), 200);
+  await testApp.close();
+});
+
+test("a transcript for a video no live note on the account uses is answered as done and not kept", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+
+  const stored = await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  assert.equal(stored.statusCode, 204);
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
+  await testApp.close();
+});
+
+test("an upload that arrives after its note was deleted elsewhere is not kept", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const note = storedOverview({ video: transcript.video! });
+  await account.inject({ method: "POST", url: "/api/overviews", body: note });
+  await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });
+
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
+  await testApp.close();
+});
+
+test("a delete retried after its first attempt left the transcript behind still forgets it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const note = storedOverview({ video: transcript.video! });
+  await account.inject({ method: "POST", url: "/api/overviews", body: note });
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+  await testApp.sql.query(
+    "update records set deleted = true, body = null where account_id = $1 and kind = 'overview' and id = $2",
+    [account.accountId, note.id],
+  );
+
+  const retried = await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}` });
+
+  assert.equal(retried.statusCode, 204);
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
   await testApp.close();
 });

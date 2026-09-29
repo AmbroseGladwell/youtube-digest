@@ -280,10 +280,20 @@ flag set but not `transcriptsEnrolled`. `isEnrolled` is false until both are set
 next cycle journals that library's note transcripts, once, and touches nothing else.
 
 **Kept only while a note uses it.** A transcript row ties the account to a video, so it
-lasts only as long as a note needs it. Deleting a note (`DELETE /api/overviews/:id`) also
-removes the account's transcript of that video, unless another live note on the account
-still uses it. That check and the delete are one statement
-(`TranscriptsRepository.forgetUnlessNoted`). On the client, `SyncStorage.transcriptToPush`
+lasts only as long as a note needs it, and the server enforces that at both ends:
+
+- **Stored only if noted.** `PUT /api/transcripts/:videoId` keeps the transcript only if a
+  live note on the account uses that video (`putIfNoted`, one `insert … where exists`).
+  Otherwise it answers 204 and keeps nothing. That covers an upload from a device that
+  had not yet heard its note was deleted elsewhere, and a transcript whose note's own
+  write is parked. The cost, in the second case, is that if the parked note later lands,
+  its transcript is not sent again.
+- **Swept on every delete.** Every `DELETE /api/overviews/:id` removes every transcript on
+  the account that no live note uses (`forgetUnnoted`, one statement). It runs even when
+  the note was already deleted, so a retry heals a first attempt whose cleanup failed after
+  the tombstone was committed. A note sharing its video with another keeps the transcript.
+
+On the client, `SyncStorage.transcriptToPush`
 returns nothing once no note on the device uses the video, so a note deleted before it
 synced sends no transcript at all. What is lost is small: a deleted note's transcript
 cannot seed OV-16's shared cache, and the next note on that video fetches it again for one

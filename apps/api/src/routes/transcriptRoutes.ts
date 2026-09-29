@@ -25,7 +25,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     if (transcript.videoId !== videoId) {
       throw new ApiError("invalid_request", "The transcript is for a different video than the path names");
     }
-    await transcripts.put(request.session!.accountId, transcript);
+    await transcripts.putIfNoted(request.session!.accountId, transcript);
     return reply.status(204).send();
   });
 }
