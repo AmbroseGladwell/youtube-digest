@@ -216,3 +216,23 @@ test("scrolling away from the marked block hands the scroll back, until Follow p
   await reader.verifyIsFollowingTheVideo(true);
   await reader.verifyOffersToFollowPlayback(false);
 });
+
+// The block being spoken sits on a card that bleeds into the column's gutter, and the
+// sticky head it scrolls under has to be at least that wide or the card's corners show
+// either side of it.
+test("the sticky head is wider than the cards that pass under it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedTranscript(backendSimulator);
+  const capture = await launcher.launchPanel({
+    apiKeys: API_KEYS,
+    activeVideoUrl: VIDEO_URL,
+    playback: playingAt(5000),
+  });
+  const reader = await capture.openStoredOverview();
+  await reader.clickTab("Transcript");
+  await reader.verifyCurrentBlockSaysPlaying();
+
+  await reader.verifyTranscriptHeadHidesTheBlocksPassingUnderIt();
+});

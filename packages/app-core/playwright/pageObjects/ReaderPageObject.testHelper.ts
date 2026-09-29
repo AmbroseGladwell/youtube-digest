@@ -467,6 +467,16 @@ export class ReaderPageObject extends PageObject {
       ).toHaveText(text),
     );
 
+  // The raised card bleeds past the paragraph it holds, so the sticky head has to be
+  // wider than the card it hides, not as wide as the text under it.
+  verifyTranscriptHeadHidesTheBlocksPassingUnderIt = () =>
+    this.step("verifyTranscriptHeadHidesTheBlocksPassingUnderIt", async () => {
+      const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
+      const card = (await this.get(transcriptPanelTestIds.row).first().boundingBox())!;
+      expect(head.x).toBeLessThanOrEqual(card.x);
+      expect(head.x + head.width).toBeGreaterThanOrEqual(card.x + card.width);
+    });
+
   verifyNoTranscriptBlockIsCurrent = () =>
     this.step("verifyNoTranscriptBlockIsCurrent", () =>
       expect(

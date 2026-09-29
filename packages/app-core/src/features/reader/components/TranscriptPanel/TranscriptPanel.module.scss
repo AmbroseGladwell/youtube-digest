@@ -7,14 +7,18 @@
 
 // The tools come to rest under the same sticky chrome the tab strip does, so a search
 // box stays reachable part-way down a long transcript
-// (docs/features/overview-redesign.md, "Chrome that stays put").
+// (docs/features/overview-redesign.md, "Chrome that stays put"). Its background runs out
+// to the column's gutter and its padding puts the contents back, because the raised card
+// under it bleeds past the text and would otherwise show its corners and its shadow
+// either side of a narrower band.
 .head {
   position: sticky;
   top: calc(var(--masthead-height) + var(--reader-masthead-height) + var(--reader-tabs-height));
   z-index: 1;
   background: var(--ground);
+  margin-inline: calc(-1 * var(--reader-gutter, 0px));
   margin-bottom: 0.25rem;
-  padding-block: 0.5rem 0.75rem;
+  padding: 0.5rem var(--reader-gutter, 0px) 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;

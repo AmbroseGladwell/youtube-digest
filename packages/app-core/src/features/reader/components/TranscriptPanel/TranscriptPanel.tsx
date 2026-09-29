@@ -122,7 +122,7 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
 
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
-      <div className={styles.head}>
+      <div className={styles.head} data-testid={transcriptPanelTestIds.head}>
         <div className={styles.headingRow}>
           {/* Design 2a–2c: what the row's left says is the transcript's relationship to
               the video — the way back to the chapter that opened it, or whether it is

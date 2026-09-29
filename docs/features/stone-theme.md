@@ -226,7 +226,9 @@ that **the raised card means the video, and a tint means the voice**.
   takes `--card` with a `Playing on YouTube` badge above its text and an accent time, the
   block a chapter opened at takes the same card with a `Chapter 02 · …` chip instead, and
   every block the video has already passed drops to the muted ink. The cards bleed into
-  the column's gutter by their own padding, so the text stays on the column's edge.
+  the column's gutter by their own padding, so the text stays on the column's edge — which
+  is why the sticky head's background runs the whole width of the gutter while its
+  contents keep to the text, or a card sliding under it would show its corners either side.
 - **Back to the time, not "follow playback"** (2b). The offer to re-join the video is a pill
   in the ink over the foot of the list, with the same brand dot, reading `Back to 1:05` —
   the time it would take you to. It is sticky rather than fixed, so it belongs to the
