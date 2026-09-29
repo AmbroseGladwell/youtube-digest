@@ -73,6 +73,35 @@ Read all four before adding a new file, folder, or pattern anywhere in the monor
   The repo holds references; `.env` is rendered and never read or printed whole. A hook
   refuses the calls that would, and says why.
 
+## The backlog lives in Trello
+
+The board is **The Overview Backlog** (https://trello.com/b/yArQIL27/the-overview-backlog),
+reached through the Trello connector. Its lists, in order: **Backlog** (ordered do-it-next,
+top first), **Sprint Backlog**, **In Progress**, **Done**. New cards start from the
+**Card template** card, which is a Trello template: its sections are Context, Requirement,
+Technical notes, Analytics & logging, Testing considerations, Accessibility,
+UX changes / designs, Definition of done, Other open questions. Leave out a section that
+has nothing to say. Label each card by area.
+
+**Every card is `OV-n`**, where `n` is Trello's own card number on the board: the `5` in
+`trello.com/c/jzBBw0A9/5-…`. Card titles start with it (`OV-5: Transcripts sometimes
+missing…`). Trello assigns the number when the card is created, so create the card first,
+then rename it with the number the result's URL shows.
+
+Keep the board true as you work:
+
+1. **Starting a card:** move it to **In Progress**, and name the branch `ov-n-short-slug`.
+2. **Opening a PR:** start the title with `OV-n:`, put the card's link in the
+   description, and comment the PR's link on the card.
+3. **Finding new work** (a bug, a gap, a follow-up out of scope): create a card in
+   **Backlog** from the template, give it its `OV-n`, place it by priority, and tell the
+   user you did.
+4. **Never move a card to Done yourself.** `.github/workflows/trello.yml` does it
+   when the PR merges, for every `OV-n` or card link in the PR's title, description or
+   branch (`scripts/moveCardsToDone.mjs`), and it only reports a card as moved once it
+   reads back in Done. It needs the `TRELLO_API_KEY` and `TRELLO_TOKEN` repository
+   secrets. Without them it warns on the run and moves nothing.
+
 ## Immediate suggestion
 
 Do not start by porting code. Start by reading `README.md`, `docs/prototype/decisions.md` and `prototype/summary-prompt.md`, then propose an architecture and argue with the open questions in `docs/prototype/open-questions.md`. The verdict scale in particular is not settled, and 77% of the existing library falls into a single bucket.
