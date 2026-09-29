@@ -104,8 +104,10 @@ could fetch a transcript from the account (`docs/features/transcript-storage.md`
 hidden control that appeared seconds later read as a glitch, and a missing one read as a
 chapter with no transcript. Disabled is the placed-but-not-working state `SortPill` already
 uses, painted by the shared `control-disabled` mixin. It says "Looking for this note's
-transcript" while the account is asked, and "No transcript was kept for this note" once
-nothing has been found.
+transcript" only while a request is in flight, "Couldn't load this note's transcript" when
+the account could not be asked, and "No transcript was kept for this note" otherwise. That
+includes a note with no video id, whose query never runs but which React Query still
+reports as pending.
 
 ## Opening the transcript somewhere
 

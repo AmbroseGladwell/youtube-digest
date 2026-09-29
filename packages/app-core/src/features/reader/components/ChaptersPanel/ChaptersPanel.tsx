@@ -13,6 +13,7 @@ const NOT_MADE = "Chapters weren't made for this note. Generating it again adds 
 const NOTHING_TO_SPLIT = "This video's transcript had nothing to split into chapters.";
 const LOOKING_FOR_TRANSCRIPT = "Looking for this note's transcript";
 const NO_TRANSCRIPT = "No transcript was kept for this note";
+const COULD_NOT_LOAD_TRANSCRIPT = "Couldn't load this note's transcript";
 
 export interface ChaptersPanelProps {
   chapters: Chapter[] | null;
@@ -40,7 +41,11 @@ export function ChaptersPanel({ chapters, video, onOpenTranscriptAt }: ChaptersP
   const position = usePlaybackPosition(video.id);
   const transcriptQuery = useTranscriptQuery(video.id);
   const hasTranscript = (transcriptQuery.data?.segments.length ?? 0) > 0;
-  const noTranscriptReason = transcriptQuery.isPending ? LOOKING_FOR_TRANSCRIPT : NO_TRANSCRIPT;
+  const noTranscriptReason = transcriptQuery.isError
+    ? COULD_NOT_LOAD_TRANSCRIPT
+    : transcriptQuery.fetchStatus === "fetching"
+      ? LOOKING_FOR_TRANSCRIPT
+      : NO_TRANSCRIPT;
 
   const currentIndex =
     chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
