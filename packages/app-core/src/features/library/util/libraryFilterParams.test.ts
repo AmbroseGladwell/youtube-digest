@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
-import { applyLibraryFilterPatch, parseLibraryFilters } from "./libraryFilterParams.js";
+import {
+  applyLibraryFilterPatch,
+  applyLibrarySort,
+  parseLibraryFilters,
+  parseLibrarySort,
+} from "./libraryFilterParams.js";
 
 const TOPIC = TopicId.parse("11111111-1111-4111-8111-111111111111");
 
@@ -69,5 +74,36 @@ describe("applyLibraryFilterPatch", () => {
     const next = applyLibraryFilterPatch(params, { novelty: "novel" });
     expect(next.get("status")).toBe("read");
     expect(next.get("verdict")).toBe("novel");
+  });
+
+  it("keeps the sort when every filter is cleared, since the order is not a filter", () => {
+    const params = new URLSearchParams({ sort: "title", verdict: "novel" });
+    const next = applyLibraryFilterPatch(params, DEFAULT_LIBRARY_FILTERS);
+    expect(next.get("sort")).toBe("title");
+  });
+});
+
+describe("parseLibrarySort", () => {
+  it("defaults to newest first with no param, and for a value it does not know", () => {
+    expect(parseLibrarySort(new URLSearchParams())).toBe("newest");
+    expect(parseLibrarySort(new URLSearchParams({ sort: "made-up" }))).toBe("newest");
+  });
+
+  it("reads a known sort", () => {
+    expect(parseLibrarySort(new URLSearchParams({ sort: "oldest" }))).toBe("oldest");
+    expect(parseLibrarySort(new URLSearchParams({ sort: "title" }))).toBe("title");
+  });
+});
+
+describe("applyLibrarySort", () => {
+  it("writes a non-default sort and leaves the filters alone", () => {
+    const next = applyLibrarySort(new URLSearchParams({ verdict: "novel" }), "title");
+    expect(next.get("sort")).toBe("title");
+    expect(next.get("verdict")).toBe("novel");
+  });
+
+  it("drops the param for the default order, rather than writing it", () => {
+    const next = applyLibrarySort(new URLSearchParams({ sort: "oldest" }), "newest");
+    expect(next.has("sort")).toBe(false);
   });
 });

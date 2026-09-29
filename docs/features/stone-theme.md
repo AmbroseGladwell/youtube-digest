@@ -123,10 +123,6 @@ why, or a jump to where the thing lives today.
 - **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
   **To wire in:** an `href` to the Web Store listing once it is published
   (`chrome-web-store-account` in the project notes), and the button becomes a link.
-- **The sort pill** (`SortPill` in the library's head, design 2a). A disabled surface pill
-  reading `Newest saved first`. **To wire in:** a sort order in `LibraryFilters` and
-  `libraryFilterParams`, applied in `orderLibraryEntriesBySavedAt`'s place, and a menu on
-  the pill.
 - **`Delete overview`** in the reader's ⋯ menu (design 4b), disabled. The store already has
   `deleteOverview` and the sync journal carries a delete. **To wire in:** a mutation with
   a confirm step, and the library's cache patched the way the state mutations patch it.
