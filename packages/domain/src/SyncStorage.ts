@@ -23,7 +23,8 @@ export interface SyncStorage {
   applyChanges(changes: RecordChange[], next: number): Promise<void>;
   onJournaled(listener: () => void): () => void;
   // What a transcript entry pushes, read when it is pushed rather than when it was journaled.
-  readTranscript(videoId: string): Promise<StoredTranscript | null>;
+  // Null once no note on this device uses the video, so a deleted note's transcript is not sent.
+  transcriptToPush(videoId: string): Promise<StoredTranscript | null>;
   // A transcript fetched from the server, kept without journaling, as a pulled record is.
   keepTranscript(transcript: StoredTranscript): Promise<void>;
 }

@@ -31,4 +31,18 @@ export class TranscriptsRepository {
       [accountId, transcript.videoId, this.#clock().toISOString(), JSON.stringify(transcript)],
     );
   }
+
+  // Kept only while a live note uses the video (docs/features/transcript-storage.md).
+  async forgetUnlessNoted(accountId: AccountId, videoId: string): Promise<void> {
+    await this.#sql.query(
+      `delete from transcripts
+       where account_id = $1 and video_id = $2
+         and not exists (
+           select 1 from records
+           where account_id = $1 and kind = 'overview' and not deleted
+             and body -> 'video' ->> 'id' = $2
+         )`,
+      [accountId, videoId],
+    );
+  }
 }

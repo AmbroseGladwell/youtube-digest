@@ -101,8 +101,11 @@ export class InMemorySyncStorage implements SyncStorage {
     return () => this.#listeners.delete(listener);
   }
 
-  async readTranscript(videoId: string) {
-    return this.transcripts.get(videoId) ?? null;
+  // Videos a note on this device uses; the tests that push a transcript add theirs.
+  notedVideoIds = new Set<string>();
+
+  async transcriptToPush(videoId: string) {
+    return this.notedVideoIds.has(videoId) ? (this.transcripts.get(videoId) ?? null) : null;
   }
 
   async keepTranscript(transcript: StoredTranscript) {

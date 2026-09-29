@@ -199,10 +199,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return known?.rev ?? null;
   }
 
-  async readTranscript(videoId: string): Promise<StoredTranscript | null> {
-    const store = this.#db.transaction(TRANSCRIPTS_STORE, "readonly").objectStore(TRANSCRIPTS_STORE);
-    const raw = await promisifyRequest<unknown>(store.get(videoId));
-    return raw === undefined ? null : readableTranscript(raw);
+  async transcriptToPush(videoId: string): Promise<StoredTranscript | null> {
+    const transaction = this.#db.transaction([TRANSCRIPTS_STORE, OVERVIEWS_STORE], "readonly");
+    const [raw, overviews] = await Promise.all([
+      promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
+      promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
+    ]);
+    if (raw === undefined || !overviews.flatMap(notedVideoId).includes(videoId)) return null;
+    return readableTranscript(raw);
   }
 
   async keepTranscript(transcript: StoredTranscript): Promise<void> {

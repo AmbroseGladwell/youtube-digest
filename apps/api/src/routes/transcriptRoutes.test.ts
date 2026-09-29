@@ -4,7 +4,8 @@ import { CLIENT_VERSION_HEADER, VideoId } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount } from "../testing/TestAccount.testHelper.js";
+import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
 const LONG_TRANSCRIPT_SEGMENTS = 20_000;
 
@@ -148,5 +149,54 @@ test("transcripts are refused without a session", async () => {
   });
 
   assert.equal(response.json().error.code, "unauthenticated");
+  await testApp.close();
+});
+
+const keptTranscriptOf = async (account: TestAccount, videoId: string) =>
+  (await account.inject({ method: "GET", url: `/api/transcripts/${videoId}` })).statusCode;
+
+test("deleting the last note on a video forgets the account's transcript of it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const note = storedOverview({ video: transcript.video! });
+  await account.inject({ method: "POST", url: "/api/overviews", body: note });
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });
+
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
+  await testApp.close();
+});
+
+test("deleting one of two notes on a video keeps the transcript the other still uses", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const [first, second] = [storedOverview({ video: transcript.video! }), storedOverview({ video: transcript.video! })];
+  await account.inject({ method: "POST", url: "/api/overviews", body: first });
+  await account.inject({ method: "POST", url: "/api/overviews", body: second });
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  await account.inject({ method: "DELETE", url: `/api/overviews/${first.id}`, ifMatch: 1 });
+
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 200);
+  await testApp.close();
+});
+
+test("deleting a note on one account leaves another account's transcript of the same video", async () => {
+  const testApp = await createTestApp();
+  const [deleter, keeper] = [await makeAccount(testApp), await makeAccount(testApp)];
+  const transcript = makeStoredTranscript();
+  const note = storedOverview({ video: transcript.video! });
+  for (const account of [deleter, keeper]) {
+    await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ id: note.id, video: transcript.video! }) });
+    await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+  }
+
+  await deleter.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });
+
+  assert.equal(await keptTranscriptOf(deleter, transcript.videoId), 404);
+  assert.equal(await keptTranscriptOf(keeper, transcript.videoId), 200);
   await testApp.close();
 });

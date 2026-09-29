@@ -422,7 +422,6 @@ test("a transcript kept from the server reads back, and is not journaled to be s
   await storage.keepTranscript(transcript);
 
   assert.deepEqual(await new IndexedDbTranscriptStore(db).getTranscript(transcript.videoId), transcript);
-  assert.deepEqual(await storage.readTranscript(transcript.videoId), transcript);
   assert.deepEqual(await readOutbox(db), []);
 });
 
@@ -438,4 +437,18 @@ test("acknowledging a sent transcript removes it and remembers no revision", asy
 
   assert.deepEqual((await storage.listPending()).map((pending) => pending.kind), ["overview"]);
   assert.equal(await storage.revisionOf("transcript", transcript.videoId), null);
+});
+
+test("a transcript is pushed while a note uses its video, and not once that note is deleted", async () => {
+  const db = await openEnrolledDatabase();
+  const transcript = makeStoredTranscript();
+  await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
+  const overviews = new IndexedDbOverviewStore(db);
+  const overview = makeOverview({ video: transcript.video! });
+  await overviews.saveOverview(overview);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  assert.deepEqual(await storage.transcriptToPush(transcript.videoId), transcript);
+  await overviews.deleteOverview(overview.id);
+  assert.equal(await storage.transcriptToPush(transcript.videoId), null);
 });

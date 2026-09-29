@@ -8,6 +8,8 @@ import { decideMerge } from "../records/decideMerge.js";
 import { decideReplace } from "../records/decideReplace.js";
 import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
+import type { StoredRecord } from "../records/StoredRecord.js";
+import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
@@ -17,7 +19,17 @@ const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: t
   .partial()
   .extend({ updatedAt: UpdatedAt });
 
-export function overviewRoutes(app: FastifyInstance, records: RecordsRepository): void {
+const videoIdOf = (record: StoredRecord | null): string | null => {
+  const video = record?.body?.video;
+  const id = typeof video === "object" && video !== null ? (video as { id?: unknown }).id : null;
+  return typeof id === "string" ? id : null;
+};
+
+export function overviewRoutes(
+  app: FastifyInstance,
+  records: RecordsRepository,
+  transcripts: TranscriptsRepository,
+): void {
   app.post("/overviews", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The overview");
     const id = parseOrThrow(OverviewId, body.id, "The overview's id");
@@ -101,10 +113,25 @@ export function overviewRoutes(app: FastifyInstance, records: RecordsRepository)
   app.delete("/overviews/:id", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
     const ifMatch = ifMatchOf(request);
-    const [overview] = await records.write(request.session!.accountId, [
-      { kind: "overview", id, decide: (current) => decideTombstone("overview", current, ifMatch, request.client!) },
+    const accountId = request.session!.accountId;
+    let videoId: string | null = null;
+    const [overview] = await records.write(accountId, [
+      {
+        kind: "overview",
+        id,
+        decide: (current) => {
+          videoId = videoIdOf(current);
+          return decideTombstone("overview", current, ifMatch, request.client!);
+        },
+      },
       { kind: "overviewState", id, decide: (current) => decideTombstone("overviewState", current, null, request.client!) },
     ]);
-    return overview === null || overview === undefined ? reply.status(204).send() : sendWritten(reply, overview);
+    if (overview === null || overview === undefined) {
+      return reply.status(204).send();
+    }
+    if (videoId !== null) {
+      await transcripts.forgetUnlessNoted(accountId, videoId);
+    }
+    return sendWritten(reply, overview);
   });
 }

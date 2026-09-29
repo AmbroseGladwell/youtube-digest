@@ -21,7 +21,7 @@ export async function pushPendingWrite(
   api: SyncApi,
   entry: OutboxEntry,
   knownRev: number | null,
-  storage: Pick<SyncStorage, "readTranscript">,
+  storage: Pick<SyncStorage, "transcriptToPush">,
 ): Promise<PushOutcome> {
   try {
     return await send(api, entry, knownRev, storage);
@@ -44,7 +44,7 @@ async function send(
   api: SyncApi,
   entry: OutboxEntry,
   knownRev: number | null,
-  storage: Pick<SyncStorage, "readTranscript">,
+  storage: Pick<SyncStorage, "transcriptToPush">,
 ): Promise<PushOutcome> {
   const { change } = entry;
   switch (change.op) {
@@ -65,7 +65,7 @@ async function send(
       return { result: "gone" };
     }
     case "transcript": {
-      const transcript = await storage.readTranscript(entry.id);
+      const transcript = await storage.transcriptToPush(entry.id);
       if (transcript !== null) await api.saveTranscript(transcript);
       return { result: "sent" };
     }

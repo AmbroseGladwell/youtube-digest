@@ -94,10 +94,11 @@ export async function buildApp({
 
       const records = new RecordsRepository(sql, clock);
       changesRoutes(api, records);
-      overviewRoutes(api, records);
+      const transcripts = new TranscriptsRepository(sql, clock);
+      overviewRoutes(api, records, transcripts);
       topicRoutes(api, records);
       settingsRoutes(api, records);
-      transcriptRoutes(api, new TranscriptsRepository(sql, clock));
+      transcriptRoutes(api, transcripts);
     },
     { prefix: "/api" },
   );

@@ -316,3 +316,42 @@ test("a transcript no device on the account has fetched is not found on the serv
   assert.equal(await phone.engine.fetchTranscript("never-fetched"), null);
   await testApp.close();
 });
+
+test("a note deleted before it was ever synced sends no transcript, and the account keeps none", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  const transcript = makeStoredTranscript();
+  const note = makeOverview({ video: transcript.video! });
+  await laptop.transcripts.saveTranscript(transcript);
+  await laptop.overviews.saveOverview(note);
+  await laptop.overviews.deleteOverview(note.id);
+
+  const status = await laptop.sync();
+
+  assert.equal(status.pending, 0);
+  assert.equal(status.stuck, 0);
+  assert.equal(await phone.engine.fetchTranscript(transcript.videoId), null);
+  await testApp.close();
+});
+
+test("deleting a synced note on one device leaves the account no transcript for another device to fetch", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  const transcript = makeStoredTranscript();
+  const note = makeOverview({ video: transcript.video! });
+  await laptop.transcripts.saveTranscript(transcript);
+  await laptop.overviews.saveOverview(note);
+  await laptop.sync();
+
+  await laptop.overviews.deleteOverview(note.id);
+  await laptop.sync();
+
+  assert.equal(await phone.engine.fetchTranscript(transcript.videoId), null);
+  await testApp.close();
+});

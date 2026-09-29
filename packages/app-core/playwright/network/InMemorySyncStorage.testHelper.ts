@@ -66,8 +66,9 @@ export class InMemorySyncStorage implements SyncStorage {
     return null;
   }
 
-  async readTranscript(videoId: string) {
-    return this.transcriptStore.getTranscript(videoId as never);
+  async transcriptToPush(videoId: string) {
+    const noted = (await this.overviewStore.listOverviews()).some((overview) => overview.video.id === videoId);
+    return noted ? this.transcriptStore.getTranscript(videoId as never) : null;
   }
 
   async keepTranscript(transcript: StoredTranscript) {

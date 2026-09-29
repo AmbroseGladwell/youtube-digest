@@ -122,6 +122,7 @@ test("a transcript entry sends the transcript as it is stored when the entry is 
   const transcripts = new InMemorySyncStorage();
   const transcript = makeStoredTranscript();
   await transcripts.keepTranscript(transcript);
+  transcripts.notedVideoIds.add(transcript.videoId);
 
   const outcome = await pushPendingWrite(
     api,
@@ -132,6 +133,22 @@ test("a transcript entry sends the transcript as it is stored when the entry is 
 
   assert.deepEqual(outcome, { result: "sent" });
   assert.deepEqual(api.calls, [{ method: "saveTranscript", args: [transcript] }]);
+});
+
+test("a transcript no note uses any more when its entry is pushed is done with, and nothing is sent", async () => {
+  const api = new ScriptedSyncApi();
+  const transcripts = new InMemorySyncStorage();
+  await transcripts.keepTranscript(makeStoredTranscript());
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "transcript", id: "a-video", change: { op: "transcript" } }),
+    null,
+    transcripts,
+  );
+
+  assert.deepEqual(outcome, { result: "sent" });
+  assert.deepEqual(api.calls, []);
 });
 
 test("a transcript no longer held when its entry is pushed is done with, and nothing is sent", async () => {
@@ -154,6 +171,7 @@ test("a transcript the server refuses is parked, not dropped", async () => {
   const transcripts = new InMemorySyncStorage();
   const transcript = makeStoredTranscript();
   await transcripts.keepTranscript(transcript);
+  transcripts.notedVideoIds.add(transcript.videoId);
 
   const outcome = await pushPendingWrite(
     api,
@@ -171,6 +189,7 @@ test("a transcript a server without the route answers 404 for is parked, not tak
   const transcripts = new InMemorySyncStorage();
   const transcript = makeStoredTranscript();
   await transcripts.keepTranscript(transcript);
+  transcripts.notedVideoIds.add(transcript.videoId);
 
   const outcome = await pushPendingWrite(
     api,

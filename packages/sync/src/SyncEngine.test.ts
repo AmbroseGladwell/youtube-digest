@@ -208,6 +208,7 @@ test("a journaled transcript is sent in the cycle and leaves the outbox without 
   storage.enrolled = true;
   const transcript = transcriptFor("v1");
   await storage.keepTranscript(transcript);
+  storage.notedVideoIds.add("v1");
   storage.journal({ kind: "transcript", id: "v1", updatedAt: AT, change: { op: "transcript" } });
 
   const status = await engineOver(api, storage).sync();
@@ -227,7 +228,7 @@ test("a transcript fetched from the server is kept on this device", async () => 
   const fetched = await engineOver(api, storage).fetchTranscript("v2");
 
   assert.deepEqual(fetched, transcript);
-  assert.deepEqual(await storage.readTranscript("v2"), transcript);
+  assert.deepEqual(storage.transcripts.get("v2"), transcript);
   assert.deepEqual(storage.outbox, []);
 });
 

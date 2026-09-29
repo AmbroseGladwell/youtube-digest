@@ -279,6 +279,18 @@ waiting in the outbox. A library enrolled before transcripts were synced has its
 flag set but not `transcriptsEnrolled`. `isEnrolled` is false until both are set, so the
 next cycle journals that library's note transcripts, once, and touches nothing else.
 
+**Kept only while a note uses it.** A transcript row ties the account to a video, so it
+lasts only as long as a note needs it. Deleting a note (`DELETE /api/overviews/:id`) also
+removes the account's transcript of that video, unless another live note on the account
+still uses it. That check and the delete are one statement
+(`TranscriptsRepository.forgetUnlessNoted`). On the client, `SyncStorage.transcriptToPush`
+returns nothing once no note on the device uses the video, so a note deleted before it
+synced sends no transcript at all. What is lost is small: a deleted note's transcript
+cannot seed OV-16's shared cache, and the next note on that video fetches it again for one
+free caption request. When that cache exists, a note delete should drop only the account's
+link to the video; the transcript content can live in the shared table, with no account
+attached.
+
 **Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
 the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET
 /api/transcripts/:videoId` and keeps the answer through `SyncStorage.keepTranscript`,
