@@ -43,7 +43,7 @@ Concretely:
 | 2a library desktop, top bar | `AppShell` — brand, `+ New` and the nav in one bar |
 | 2a rail: search, Show, Topic, Verdict | `FilterPanel` |
 | 2b first run, mobile and desktop | `HomePage` hero |
-| Keys, and the bar's `Settings` nav item | `SettingsPage` at `/settings`, with `ApiKeysPanel` |
+| Keys, and the bar's `Settings` nav item | `SettingsPage`, whose API keys section (`/settings/keys`) holds `ApiKeysPanel` (`docs/features/settings.md`) |
 | 2c library mobile, filter sheet | `LibraryPage` — one `FilterPanel`, styled as a column on desktop and a slide-over under 992px |
 | 2c/3a reader, mobile and desktop | `ReaderPage` at `/overviews/:overviewId`, with `ReaderMasthead`, `ReaderTabs`, `ReadAlongNote`, `ReaderRail` and `ReaderPlayerBar` |
 | 2a/2c row meta, `4 min read · 6 min listen · 11:38 video` | `overviewMetaParts`, shared by the row and the reader |
