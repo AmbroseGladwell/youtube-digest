@@ -128,3 +128,16 @@ tasks:
         msg: 'Postgres is not running. Start it with: task run:db'
     cmds:
       - npm run -s mint-session -- {{.CLI_ARGS}}
+
+  plan:
+    desc: 'Put a signed-up account on free or plus, until billing exists (e.g. task plan -- you@example.com plus)'
+    dir: apps/api
+    preconditions:
+      - sh: test -n "{{.CLI_ARGS}}"
+        msg: 'An email and a plan are needed: task plan -- you@example.com plus'
+      - sh: test -f "{{.ROOT_DIR}}/.env"
+        msg: 'No .env at the repo root. Render one with: task secrets'
+      - sh: pg_isready -q -h localhost -p {{.PGPORT}}
+        msg: 'Postgres is not running. Start it with: task run:db'
+    cmds:
+      - npm run -s set-plan -- {{.CLI_ARGS}}

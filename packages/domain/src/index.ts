@@ -68,3 +68,7 @@ export * from "./LinkCodeRequest.js";
 export * from "./LinkedSession.js";
 export * from "./SessionInfo.js";
 export * from "./signInLink.js";
+export * from "./ConnectionRequest.js";
+export * from "./ConnectionDecision.js";
+export * from "./ConnectionDecided.js";
+export * from "./Connection.js";

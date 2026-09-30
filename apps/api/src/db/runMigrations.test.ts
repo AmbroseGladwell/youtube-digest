@@ -36,7 +36,7 @@ test("the tables the migrations create are there to be used", async () => {
   );
   assert.deepEqual(
     tables.map((table) => table.table_name),
-    ["accounts", "audio_renders", "link_codes", "magic_links", "records", "schema_migrations", "sessions", "transcripts", "voice_samples"],
+    ["accounts", "audio_renders", "connection_tokens", "connections", "link_codes", "magic_links", "oauth_authorizations", "oauth_clients", "records", "schema_migrations", "sessions", "transcripts", "voice_samples"],
   );
   await sql.close();
 });

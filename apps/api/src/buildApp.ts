@@ -13,6 +13,11 @@ import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
+import { connectionRoutes } from "./oauth/connectionRoutes.js";
+import { oauthRoutes } from "./oauth/oauthRoutes.js";
+import { oauthUrls } from "./oauth/oauthUrls.js";
+import { registerFormBodyParser } from "./oauth/registerFormBodyParser.js";
+import { registerOAuthErrorHandler } from "./oauth/registerOAuthErrorHandler.js";
 import { clientAddressPlugin } from "./rateLimit/clientAddressPlugin.js";
 import { rateLimitHook } from "./rateLimit/rateLimitHook.js";
 import { rateLimits } from "./rateLimit/rateLimits.js";
@@ -79,6 +84,7 @@ export async function buildApp({
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
   const sessionCookieSecure = config.appUrl.startsWith("https://");
+  const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
   const audioQueue =
     audio === null
@@ -127,6 +133,7 @@ export async function buildApp({
         sessionTtlDays: config.sessionTtlDays,
         sessionCookieSecure,
       });
+      connectionRoutes(api, { sql, clock, urls });
 
       const records = new RecordsRepository(sql, clock);
       changesRoutes(api, records);
@@ -145,6 +152,14 @@ export async function buildApp({
     },
     { prefix: "/api" },
   );
+
+  await app.register(async (oauth) => {
+    registerOAuthErrorHandler(oauth);
+    registerFormBodyParser(oauth);
+    await oauth.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
+    oauth.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+    oauthRoutes(oauth, { sql, clock, urls });
+  });
 
   app.addHook("onReady", async () => {
     audioQueue?.kick();
