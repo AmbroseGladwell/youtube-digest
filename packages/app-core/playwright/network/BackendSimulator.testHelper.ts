@@ -8,6 +8,7 @@ import {
   spokenScript,
   type NarrationRender,
   type AuthSurface,
+  type Connection,
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
@@ -111,6 +112,8 @@ export class BackendSimulator {
   #accountPlan: Plan = "free";
   #connectionRequest: ConnectionRequest | null = null;
   #decisions: Array<{ requestId: string; approve: boolean }> = [];
+  #connections: Connection[] = [];
+  #revoked: string[] = [];
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
   #narrationPriorities: string[] = [];
@@ -524,6 +527,31 @@ export class BackendSimulator {
       });
     });
 
+    await this.#page.route("**/api/connections", (route) =>
+      this.#respond(route, EndpointKey.CONNECTIONS_LIST, {
+        onDefault: () => ({ status: 200, body: { connections: this.#connections } }),
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
+    await this.#page.route("**/api/connections/*", (route) => {
+      const connectionId = new URL(route.request().url()).pathname.split("/")[3] ?? "";
+      return this.#respond(route, EndpointKey.CONNECTION_REVOKE, {
+        onDefault: () => {
+          this.#connections = this.#connections.filter((connection) => connection.id !== connectionId);
+          this.#revoked.push(connectionId);
+          return { status: 204, body: undefined };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      });
+    });
+
     await this.#page.route(`${SIMULATED_ASSISTANT_CALLBACK}**`, (route) =>
       route.fulfill({ status: 200, contentType: "text/html", body: "<title>Back at the assistant</title>" }),
     );
@@ -656,6 +684,10 @@ export class BackendSimulator {
       this.#connectionRequest = request;
     },
     decisions: (): Array<{ requestId: string; approve: boolean }> => [...this.#decisions],
+    seed: (connection: Connection): void => {
+      this.#connections.push(connection);
+    },
+    revoked: (): string[] => [...this.#revoked],
   };
 
   transcripts = {

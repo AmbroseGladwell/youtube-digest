@@ -37,6 +37,7 @@ export interface LaunchOptions {
   build?: AppBuild;
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
+  // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
   runBridge?: boolean;
@@ -78,17 +79,12 @@ export class Launcher {
     });
 
   private mountApp = async (options: LaunchOptions): Promise<void> => {
+    if (options.plan !== undefined) this.backendSimulator.auth.accountIsOn(options.plan);
     await this.backendSimulator.handleNetworking();
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {
         ...this.backendSimulator.buildHooksConfig(),
-        seedSettings:
-          options.plan === undefined && options.narrationVoice === undefined
-            ? undefined
-            : {
-                ...(options.plan === undefined ? {} : { plan: options.plan }),
-                ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
-              },
+        seedSettings: options.narrationVoice === undefined ? undefined : { narrationVoice: options.narrationVoice },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,

@@ -68,3 +68,13 @@
   color: inherit;
   opacity: 0.8;
 }
+
+.featureLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: var(--accent);
+  }
+}

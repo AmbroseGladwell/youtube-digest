@@ -3,7 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { PLUS_FEATURES } from "../../../src/features/plus/plusFeatures.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
@@ -33,7 +33,12 @@ test("Settings names the plan, lists what Plus adds, and admits there is nothing
 });
 
 test("on Plus, Settings states the plan rather than pitching it", async ({ launcher }) => {
-  await launcher.launchPanel({ ...panel, plan: "plus" });
+  await launcher.launchPanel({
+    ...panel,
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+    plan: "plus",
+  });
   const settings = await (await launcher.appShell.openSettings()).openSection("plan");
 
   await settings.verifyPlanReads("Plus");

@@ -1,11 +1,23 @@
+import { Link } from "react-router";
+import { Routes } from "../../../../app/Routes.js";
+import { useSync } from "../../../sync/SyncContext.js";
 import { PLAN_LABEL } from "../../planLabel.js";
-import { PLUS_FEATURES } from "../../plusFeatures.js";
+import { MCP_FEATURE, PLUS_FEATURES } from "../../plusFeatures.js";
 import { usePlan } from "../../usePlan.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
 
 export function PlusPlanPanel() {
   const { plan, isPlus } = usePlan();
+  const sync = useSync();
+  const feature = (text: string) =>
+    text === MCP_FEATURE && sync.available ? (
+      <Link to={Routes.settingsSection("connections")} className={styles.featureLink} data-testid={plusPlanPanelTestIds.connectionsLink}>
+        {text}
+      </Link>
+    ) : (
+      text
+    );
 
   return (
     <section className={styles.root} data-testid={plusPlanPanelTestIds.root}>
@@ -17,9 +29,9 @@ export function PlusPlanPanel() {
       {isPlus ? (
         <>
           <ul className={styles.features}>
-            {PLUS_FEATURES.map((feature) => (
-              <li key={feature} data-testid={plusPlanPanelTestIds.feature}>
-                {feature}
+            {PLUS_FEATURES.map((text) => (
+              <li key={text} data-testid={plusPlanPanelTestIds.feature}>
+                {feature(text)}
               </li>
             ))}
           </ul>
@@ -31,9 +43,9 @@ export function PlusPlanPanel() {
         <div className={styles.offer} data-testid={plusPlanPanelTestIds.offer}>
           <p className={styles.offerName}>Plus</p>
           <ul className={styles.features}>
-            {PLUS_FEATURES.map((feature) => (
-              <li key={feature} data-testid={plusPlanPanelTestIds.feature}>
-                {feature}
+            {PLUS_FEATURES.map((text) => (
+              <li key={text} data-testid={plusPlanPanelTestIds.feature}>
+                {feature(text)}
               </li>
             ))}
           </ul>

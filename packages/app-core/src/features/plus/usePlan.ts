@@ -1,15 +1,14 @@
 import { DEFAULT_PLAN, type Plan } from "@overview/domain";
-import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
+import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 
 export interface PlanState {
   plan: Plan;
   isPlus: boolean;
 }
 
-// The fallback is here rather than left to DEFAULT_SETTINGS because a settings record
-// written before plan existed comes back with no such key at all — the unvalidated-read
-// trap in docs/architecture/v1-architecture-decisions.md.
+// The plan is the account's, as the server holds it, so a device with no session is on
+// Free (docs/features/mcp-connector.md, "Plus").
 export function usePlan(): PlanState {
-  const plan = useSettingsQuery().data?.plan ?? DEFAULT_PLAN;
+  const plan = useSessionQuery().data?.plan ?? DEFAULT_PLAN;
   return { plan, isPlus: plan === "plus" };
 }

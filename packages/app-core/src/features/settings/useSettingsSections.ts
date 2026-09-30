@@ -1,6 +1,8 @@
 import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
+import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
+import { connectionsRowValue } from "../connections/util/connectionsRowValue.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
 import { PLAN_LABEL } from "../plus/planLabel.js";
 import { usePlan } from "../plus/usePlan.js";
@@ -24,7 +26,8 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const narrationApi = useNarrationApi();
   const settings = useSettingsQuery().data;
   const { apiKeys } = useApiKeys();
-  const { plan } = usePlan();
+  const { plan, isPlus } = usePlan();
+  const connections = useConnectionsQuery();
   const build = useAppBuild();
 
   return [
@@ -41,6 +44,15 @@ export function useSettingsSections(): SettingsSectionSummary[] {
         ]
       : []),
     { id: "keys", title: "API keys", value: keysRowValue(apiKeys, settings?.model ?? DEFAULT_ANTHROPIC_MODEL) },
+    ...(sync.available
+      ? [
+          {
+            id: "connections" as const,
+            title: "Connections",
+            value: connectionsRowValue({ signedIn: sync.connected, isPlus, count: connections.data?.length }),
+          },
+        ]
+      : []),
     { id: "plan", title: "Plan", value: PLAN_LABEL[plan] },
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
