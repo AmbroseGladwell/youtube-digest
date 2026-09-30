@@ -1,4 +1,4 @@
-import type { SellingType } from "@overview/domain";
+import type { SellingType } from "./Selling.js";
 
 export const SELLING_LABEL: Record<SellingType, string> = {
   own_paid_product: "Sells their own paid product",

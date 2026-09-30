@@ -1,0 +1,25 @@
+[project]
+name = "overview-tts"
+version = "0.0.0"
+description = "The private narration service: Kokoro speaks a note's spoken script and returns an M4A with each line's start (docs/features/tts-pre-rendered-speech.md)."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.142",
+    "kokoro-onnx==0.6.1",
+    "onnxruntime==1.30.0",
+    "uvicorn>=0.54",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pytest>=9.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["model: needs the Kokoro model files in services/tts/models (task tts:model)"]

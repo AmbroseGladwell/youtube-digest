@@ -1,5 +1,5 @@
 import { countWords } from "../../../util/countWords.js";
-import type { NoteLine } from "../types/NoteLine.js";
+import type { NoteLine } from "@overview/domain";
 
 // The two rates the reader's "4 min read · 6 min listen" line and its pacer are built
 // from, and why they are arithmetic over the note's own words rather than an estimate

@@ -1,5 +1,4 @@
-import type { Topic } from "@overview/domain";
-import { NOVELTY_LABEL } from "../../overviews/noveltyLabel.js";
+import { NOVELTY_LABEL, type Topic } from "@overview/domain";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 
 export interface AppliedLibraryFilter {

@@ -1,0 +1,31 @@
+import { randomUUID } from "node:crypto";
+import { OverviewId, VideoId } from "./Brands.js";
+import type { Overview } from "./Overview.js";
+
+export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
+  id: OverviewId.parse(randomUUID()),
+  video: {
+    id: VideoId.parse("example"),
+    url: "https://www.youtube.com/watch?v=example",
+    title: "Example",
+    channel: "Example Channel",
+    description: null,
+    durationMs: null,
+    publishedAt: null,
+    thumbnailUrl: null,
+  },
+  savedAt: new Date().toISOString(),
+  captureReason: null,
+  inOneLine: "A short description of the video.",
+  coreClaim: "The single assertion this video makes.",
+  thin: false,
+  keyPoints: ["one", "two", "three"],
+  topicIds: [],
+  tags: ["one-tag", "two-tag", "three-tag"],
+  verdict: null,
+  selling: null,
+  howToApply: null,
+  watchAnyway: null,
+  chapters: null,
+  ...overrides,
+});

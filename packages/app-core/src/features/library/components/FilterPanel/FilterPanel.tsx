@@ -1,7 +1,6 @@
 import { useState } from "react";
-import type { Novelty, Topic } from "@overview/domain";
+import { NOVELTY_LABEL, NOVELTY_ORDER, type Novelty, type Topic } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { NOVELTY_LABEL, NOVELTY_ORDER } from "../../../overviews/noveltyLabel.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
 import type { LibraryFilters } from "../../types/LibraryFilters.js";
 import { cappedTopics } from "../../util/cappedTopics.js";

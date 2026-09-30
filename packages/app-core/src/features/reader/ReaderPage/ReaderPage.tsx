@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { OverviewId, isUnreadableRecordError } from "@overview/domain";
+import { OverviewId, isUnreadableRecordError, overviewNoteLines } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -26,7 +26,6 @@ import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableO
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
-import { overviewNoteLines } from "../util/overviewNoteLines.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { overviewMetaParts } from "../../overviews/util/overviewMetaParts.js";
 import { useReadAlong } from "./useReadAlong.js";

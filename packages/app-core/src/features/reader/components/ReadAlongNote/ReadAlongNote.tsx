@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { NoteLine } from "../../types/NoteLine.js";
+import type { NoteLine } from "@overview/domain";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 

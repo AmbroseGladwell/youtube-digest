@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { NoteLine } from "../types/NoteLine.js";
+import type { NoteLine } from "@overview/domain";
 import { formatClock } from "../../../util/formatClock.js";
 import { elapsedSecondsBefore, noteTiming } from "../util/noteTiming.js";
 

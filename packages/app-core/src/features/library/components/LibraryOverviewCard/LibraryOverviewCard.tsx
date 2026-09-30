@@ -4,7 +4,7 @@ import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js"
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { NOVELTY_LABEL } from "../../../overviews/noveltyLabel.js";
+import { NOVELTY_LABEL } from "@overview/domain";
 import { overviewMetaParts } from "../../../overviews/util/overviewMetaParts.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
 import styles from "./LibraryOverviewCard.module.scss";

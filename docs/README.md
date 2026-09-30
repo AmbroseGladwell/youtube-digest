@@ -25,6 +25,8 @@ Five folders, five different questions.
 - `naming-conventions.md` — file and folder naming, authoritative for this repo.
 - `backend-testing-guide.md` — the API's two test kinds, the in-process Postgres they run
   against, and the helpers that stand in for page objects.
+- `tts-testing-guide.md` — the Python TTS service's two test kinds, split by whether they
+  need the Kokoro model, and how CI caches the model rather than skipping them.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
 - `local-dev.md` — the Nix dev shell and the Task menu: how to run the stack and the
   suites locally, and which Taskfile conventions are used and why.

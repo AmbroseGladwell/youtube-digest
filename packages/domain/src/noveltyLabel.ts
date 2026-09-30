@@ -1,4 +1,4 @@
-import type { Novelty } from "@overview/domain";
+import type { Novelty } from "./Verdict.js";
 
 export const NOVELTY_LABEL: Record<Novelty, string> = {
   novel: "Novel",

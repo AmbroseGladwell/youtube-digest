@@ -29,7 +29,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
     buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
@@ -41,12 +41,13 @@ apps/api/
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
     transcripts/         the per-account transcript repository
-    routes/              changes, overviews, topics, settings, transcripts
+    audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores
+    routes/              changes, overviews, topics, settings, transcripts, audio
     scripts/             mintSession
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 
-`buildApp({ config, sql, mailer, clock })` takes everything it depends on, so a test
+`buildApp({ config, sql, mailer, audio, clock })` takes everything it depends on, so a test
 builds the same app over an in-process database with a clock it owns and a mailer that
 records, and `server.ts` is the only place the environment is read.
 
@@ -213,8 +214,9 @@ sends:
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |
+| `too_many_requests` | 429 | an account already has its limit of narration waiting to be rendered; `details.limit` says how many |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
-| `unavailable` | 503 | the health check cannot reach the database |
+| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service |
 
 **426 was considered for the floor and rejected.** RFC 9110 reserves it for a protocol
 upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated,
@@ -240,6 +242,10 @@ of the repository, is `docs/conventions/secrets.md`:
 | `BREVO_API_KEY` | | required with `brevo` |
 | `MAIL_FROM` | | the sender, e.g. `The Overview <signin@example.com>`; required with `brevo`, and with `brevo` `APP_URL` must be https |
 | `STATIC_ROOT` | unset | the built web app to serve outside `/api`; unset serves the API alone and says so at startup (`docs/architecture/deploy.md`) |
+| `TTS_URL` | unset | the TTS service narration renders through; unset leaves `/api/audio` answering `unavailable`, and says so at startup |
+| `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
+| `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |
+| `AUDIO_DIR` | | a directory to keep narration in instead, for working offline; `TTS_URL` needs this or R2 |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell

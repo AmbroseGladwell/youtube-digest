@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { NoteLine } from "../types/NoteLine.js";
+import type { NoteLine } from "@overview/domain";
 import { elapsedSecondsBefore, noteTiming } from "./noteTiming.js";
 
 const body = (text: string): NoteLine => ({

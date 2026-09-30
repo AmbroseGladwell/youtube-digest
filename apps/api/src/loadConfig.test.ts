@@ -5,7 +5,7 @@ import { ConfigError, loadConfig } from "./loadConfig.js";
 
 const DATABASE_URL = "postgres://overview:secret@localhost:5432/overview";
 
-test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, and mails to the log", () => {
+test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, and narrates nothing", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL }), {
     databaseUrl: DATABASE_URL,
     port: 3000,
@@ -15,6 +15,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     appUrl: "http://localhost:5173",
     mail: { transport: "log" },
     staticRoot: null,
+    audio: null,
   });
 });
 
@@ -70,6 +71,45 @@ test("an allowed origin that is a wildcard or carries a path is refused", () => 
 
 test("serves no web app unless told where one is", () => {
   assert.equal(loadConfig({ DATABASE_URL, STATIC_ROOT: "/srv/web" }).staticRoot, "/srv/web");
+});
+
+const R2 = {
+  R2_ACCOUNT_ID: "781691f32a5cf03b132121e499f510a4",
+  R2_BUCKET: "the-overview-audio-dev",
+  R2_ACCESS_KEY_ID: "access-key",
+  R2_SECRET_ACCESS_KEY: "secret-key",
+};
+
+test("narrates through the TTS service it is given into R2, five renders at a time unless told otherwise", () => {
+  assert.deepEqual(loadConfig({ DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2 }).audio, {
+    ttsUrl: "http://localhost:8000",
+    concurrency: 5,
+    store: {
+      kind: "r2",
+      accountId: R2.R2_ACCOUNT_ID,
+      bucket: R2.R2_BUCKET,
+      accessKeyId: R2.R2_ACCESS_KEY_ID,
+      secretAccessKey: R2.R2_SECRET_ACCESS_KEY,
+    },
+  });
+});
+
+test("keeps narration in a directory when there is no R2, and prefers R2 when there is both", () => {
+  const tts = { DATABASE_URL, TTS_URL: "http://localhost:8000", AUDIO_DIR: ".local/audio" };
+
+  assert.deepEqual(loadConfig(tts).audio?.store, { kind: "file", dir: ".local/audio" });
+  assert.equal(loadConfig({ ...tts, ...R2 }).audio?.store.kind, "r2");
+});
+
+test("refuses a TTS service with nowhere to keep what it renders, and a bucket without its keys", () => {
+  assert.throws(() => loadConfig({ DATABASE_URL, TTS_URL: "http://localhost:8000" }), ConfigError);
+  assert.throws(() => loadConfig({ DATABASE_URL, R2_BUCKET: "the-overview-audio-dev" }), ConfigError);
+});
+
+test("R2 keys imported ahead of the bucket they are for are held, not refused", () => {
+  const { R2_BUCKET, ...keysOnly } = R2;
+
+  assert.equal(loadConfig({ DATABASE_URL, ...keysOnly }).audio, null);
 });
 
 test("refuses to start without a database", () => {
