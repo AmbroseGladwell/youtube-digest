@@ -50,6 +50,9 @@ Five folders, five different questions.
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
   it retired.
+- `mcp-connector.md` — connecting Claude and other assistants to a reader's account: the
+  OAuth 2.1 server beside magic-link sign-in, why an assistant's tokens are never sessions,
+  the plan checked on every request, rotating refresh tokens, and the three slices.
 - `narration-voice.md` — choosing the voice notes are narrated in: the shortlist of 15, one
   sample of the same passage per voice made on deploy and cleared 30 days after it is
   superseded, the choice saved on pick, and older notes that keep their voice until

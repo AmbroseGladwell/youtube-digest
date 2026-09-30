@@ -16,6 +16,10 @@ except a test. That is not an oversight being papered over: a plan is a fact abo
 account, accounts do not exist yet, and a locally-writable plan would be a lie whichever
 way it was written.
 
+The server now has a plan of its own, `accounts.plan`, set by hand until OV-18 bills for it,
+and the MCP connector is gated on it (`mcp-connector.md`, "Plus"). The clients do not
+read it yet: `usePlan()` still reads `Settings.plan`.
+
 Two consequences worth being explicit about:
 
 - **Read through `usePlan()`, never off `Settings` directly.** A settings record written

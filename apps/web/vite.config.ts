@@ -22,8 +22,8 @@ export default defineConfig({
   // in dev the proxy stands in for that, so the sync client can talk to the API at this
   // page's own origin and the API needs no CORS.
   server: {
-    proxy: {
-      "/api": process.env.API_URL ?? "http://localhost:3000",
-    },
+    proxy: Object.fromEntries(
+      ["/api", "/oauth", "/.well-known/oauth-", "/mcp"].map((prefix) => [prefix, process.env.API_URL ?? "http://localhost:3000"]),
+    ),
   },
 });
