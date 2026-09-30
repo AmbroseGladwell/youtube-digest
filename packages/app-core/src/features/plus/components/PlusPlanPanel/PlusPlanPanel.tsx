@@ -8,7 +8,7 @@ import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
 
 export function PlusPlanPanel() {
-  const { plan, isPlus } = usePlan();
+  const { plan, isPlus, status, recheck } = usePlan();
   const sync = useSync();
   const feature = (text: string) =>
     text === MCP_FEATURE && sync.available ? (
@@ -18,6 +18,30 @@ export function PlusPlanPanel() {
     ) : (
       text
     );
+
+  if (status !== "known") {
+    return (
+      <section className={styles.root} aria-busy={status === "checking"} data-testid={plusPlanPanelTestIds.root}>
+        <p className={styles.eyebrow}>Plan</p>
+        <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
+          {status === "checking" ? "Checking…" : "Couldn't check your plan"}
+        </p>
+        {status === "unreachable" && (
+          <p className={styles.note}>
+            Your plan is kept with your account, and the server didn't answer.{" "}
+            <button
+              type="button"
+              className={styles.recheck}
+              onClick={recheck}
+              data-testid={plusPlanPanelTestIds.recheckButton}
+            >
+              Try again
+            </button>
+          </p>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className={styles.root} data-testid={plusPlanPanelTestIds.root}>

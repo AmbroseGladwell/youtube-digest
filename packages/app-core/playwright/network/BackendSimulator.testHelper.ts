@@ -520,6 +520,9 @@ export class BackendSimulator {
       const { approve } = route.request().postDataJSON() as { approve: boolean };
       return this.#respond(route, EndpointKey.CONNECTION_DECISION, {
         onDefault: () => {
+          if (this.#sessionLapsed) {
+            return { status: 401, body: { error: { code: "unauthenticated", message: "Simulated: no such session" } } };
+          }
           if (pending(requestId) === null) return notFound();
           if (approve && this.#accountPlan !== "plus") {
             return { status: 403, body: { error: { code: "plan_required", message: "Simulated: needs Plus" } } };

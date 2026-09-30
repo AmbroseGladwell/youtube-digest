@@ -123,7 +123,10 @@ leaving Plus cuts access off rather than waiting for a token to lapse:
 - **Every request** through `resolveAccessToken` joins the account and requires Plus.
 
 `GET /api/session` carries the plan, and the clients read it there through `usePlan()`. A
-device with no session is on Free: Plus belongs to an account.
+device with no session is on Free: Plus belongs to an account. A signed-in device that has
+not heard back, or could not ask, does not know its plan and says so ("Checking…",
+"Couldn't check your plan", with Try again) rather than calling it Free, so an offline
+Plus reader is never pitched Plus.
 
 ## Tokens
 

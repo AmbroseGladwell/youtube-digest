@@ -15,12 +15,12 @@ export interface PlusSavedLocallyNoteState {
 // (docs/features/plus-upsell.md).
 export function usePlusSavedLocallyNote(justGenerated: boolean): PlusSavedLocallyNoteState {
   const isPanel = useIsPanel();
-  const { isPlus } = usePlan();
+  const { isPlus, status } = usePlan();
   const settingsQuery = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
 
   return {
-    shown: isPanel && !isPlus && justGenerated && settingsQuery.data?.plusNoticeDismissed !== true,
+    shown: isPanel && status === "known" && !isPlus && justGenerated && settingsQuery.data?.plusNoticeDismissed !== true,
     dismiss: () => updateSettings.mutate({ plusNoticeDismissed: true }),
   };
 }

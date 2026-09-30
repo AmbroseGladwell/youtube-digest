@@ -147,6 +147,23 @@ test.describe("answering an assistant's request", () => {
     await consent.verifyOffersApprove(true);
   });
 
+  test("an answer refused because the session has since ended asks for an email again", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.connections.seedRequest(request());
+    backendSimulator.auth.accountIsOn("plus");
+    await launcher.launch(SIGNED_IN);
+    await launcher.openConsent(REQUEST_ID);
+    const consent = await launcher.consentPage.verifyIsShown();
+    await consent.verifyOffersApprove(true);
+    backendSimulator.auth.sessionHasLapsed();
+
+    await consent.approve();
+
+    await consent.verifyAsksToSignIn();
+  });
+
   test("a session the server no longer knows asks for an email", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.sessionHasLapsed();

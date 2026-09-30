@@ -94,6 +94,8 @@ export class SettingsPageObject extends PageObject {
   verifySavedConfirmation = () =>
     this.step("verifySavedConfirmation", () => this.expectToBeVisible(apiKeysSectionTestIds.savedConfirmation));
 
+  recheckPlan = () => this.step("recheckPlan", () => this.click(plusPlanPanelTestIds.recheckButton));
+
   verifyPlanReads = (plan: string) =>
     this.step(`verifyPlanReads ${plan}`, () =>
       expect(this.get(plusPlanPanelTestIds.planName)).toHaveText(plan),

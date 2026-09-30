@@ -109,7 +109,7 @@ export function ConsentPage() {
       {
         onError: (error) => {
           setDeciding(null);
-          if (isCode(error, "plan_required")) void session.refetch();
+          if (isCode(error, "plan_required") || isCode(error, "unauthenticated")) void session.refetch();
         },
       },
     );
@@ -276,7 +276,7 @@ export function ConsentPage() {
         ) : (
           <ConsentPlusCard minutesLeft={left} declining={deciding === "decline"} onDecline={() => answer("decline")} />
         )}
-        {decide.isError && !isCode(decide.error, "plan_required") && (
+        {decide.isError && !isCode(decide.error, "plan_required") && !isCode(decide.error, "unauthenticated") && (
           <p className={styles.error} role="alert" data-testid={consentPageTestIds.decisionError}>
             <StrokeIcon name="alertCircle" size={14} />
             That answer didn't reach the server. Try again.

@@ -18,7 +18,8 @@ way it was written.
 
 The server now has a plan of its own, `accounts.plan`, set by hand until OV-18 bills for it,
 and the MCP connector is gated on it (`mcp-connector.md`, "Plus"). The clients read it from
-`GET /api/session` through `usePlan()`, and a device with no session is on Free.
+`GET /api/session` through `usePlan()`, and a device with no session is on Free. Until a
+signed-in device has the answer its plan is unknown, and no prompt for Plus is shown.
 `Settings.plan` is no longer read.
 
 Two consequences worth being explicit about:
