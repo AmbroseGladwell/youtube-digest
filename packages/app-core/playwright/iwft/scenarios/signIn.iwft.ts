@@ -40,13 +40,15 @@ test.describe("the account menu", () => {
     await menu.verifyIsClosedWithFocusOnTrigger();
   });
 
-  test("signed in, it says who by name and offers Settings and signing out", async ({ launcher }) => {
+  test("signed in, it says who by name and offers connecting the extension, Settings and signing out", async ({
+    launcher,
+  }) => {
     await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
 
     const menu = await launcher.appShell.accountMenu.open();
 
     await menu.verifySignedInAs("Ada", SIMULATED_EMAIL);
-    await menu.verifyItemsRead(["Settings", "Sign out"]);
+    await menu.verifyItemsRead(["Connect the extension", "Settings", "Sign out"]);
     await menu.verifySyncStatusShown(false);
   });
 
@@ -401,5 +403,176 @@ test.describe("signing in from the extension", () => {
     await signIn.requestLink(SIMULATED_EMAIL);
 
     await signIn.verifyAsksForCode(SIMULATED_EMAIL);
+  });
+});
+
+// The web app already signed in mints the code itself, so the extension beside it signs
+// in without a second email (docs/features/sign-in.md).
+test.describe("connecting the extension from the web app", () => {
+  test("the menu leads to a code for the extension, and no email is sent", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+
+    const page = await (await launcher.appShell.accountMenu.open()).chooseConnectExtension();
+
+    await page.verifyShowsCodeForExtension(SIMULATED_LINK_CODE);
+    test.expect(backendSimulator.getCallCount(EndpointKey.SESSION_LINK_CODE)).toBe(1);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([]);
+  });
+
+  test("settings, signed in, leads to the same code", async ({ launcher }) => {
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+    const settings = await launcher.appShell.openSettings();
+
+    const page = await settings.syncPanel.clickConnectExtension();
+
+    await page.verifyShowsCodeForExtension(SIMULATED_LINK_CODE);
+  });
+
+  test("a new code can be asked for once the first has lapsed", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+    const page = await (await launcher.appShell.accountMenu.open()).chooseConnectExtension();
+    await page.verifyShowsCodeForExtension(SIMULATED_LINK_CODE);
+
+    await page.askForNewCode();
+
+    await test.expect.poll(() => backendSimulator.getCallCount(EndpointKey.SESSION_LINK_CODE)).toBe(2);
+  });
+
+  test("a code the server would not make says so, and tries again on request", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+
+    await (await launcher.appShell.accountMenu.open()).chooseConnectExtension();
+
+    const error = await launcher.errorState.verifyIsShown();
+    await error.verifyTitleReads("Couldn't make a code for the extension");
+    await error.takeAction();
+    await test.expect.poll(() => backendSimulator.getCallCount(EndpointKey.SESSION_LINK_CODE)).toBe(2);
+  });
+
+  // A web app is still connected once its session has ended, so sending it to /sign-in
+  // would only bounce it home. It signs out first, as the menu's Sign in again does.
+  test("a session that has ended says so, and signing in again leads to the email form", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.auth.sessionHasEnded();
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+
+    await (await launcher.appShell.accountMenu.open()).chooseConnectExtension();
+
+    const error = await launcher.errorState.verifyIsShown();
+    await error.verifyTitleReads("This browser's session has ended");
+    await error.takeAction();
+    await launcher.signInPage.verifyAsksForEmail("Sign in");
+    test.expect(backendSimulator.getCallCount(EndpointKey.SESSION_DELETE)).toBe(1);
+  });
+
+  test("signed out, settings offers no code to make", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+    const settings = await launcher.appShell.openSettings();
+
+    await settings.syncPanel.verifyOffersConnectingExtension(false);
+  });
+
+  test("the extension takes the web app's code with no email, and greets the reader by name", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.auth.accountIsNamed("Ada");
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+
+    await signIn.chooseCodeFromWebApp();
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in, Ada", /sync to your account/);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([]);
+    test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_LINK_CODE)).toBe(1);
+  });
+
+  test("in the extension, a wrong code from the web app is said in place", async ({ launcher, backendSimulator }) => {
+    backendSimulator.simulateEndpointError(EndpointKey.AUTH_LINK_CODE);
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+
+    await signIn.enterCode("WRONG-CODE");
+
+    await signIn.verifyCodeErrorReads(/wrong, has expired, or was already used/);
+  });
+
+  test("in the extension, choosing to be emailed instead goes back to the form", async ({ launcher }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+
+    await signIn.chooseEmailInstead();
+
+    await signIn.verifyAsksForEmail("Sign in");
+  });
+
+  test("the web app's code goes to the extension's own server, with the address tucked away", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+    await signIn.verifyCodeAsksForServer(false);
+
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in", /sync to your account/);
+    test.expect(backendSimulator.auth.linkCodeServers()).toEqual([SERVER]);
+  });
+
+  test("the web app's code can be sent to another server, as a link can", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+
+    await signIn.sendCodeToServer("http://localhost:3000");
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in", /sync to your account/);
+    test.expect(backendSimulator.auth.linkCodeServers()).toEqual(["http://localhost:3000"]);
+  });
+
+  test("an extension built without a server asks for one beside the code, and refuses one with no http:// in front", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension" });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+    await signIn.verifyCodeAsksForServer(true);
+
+    await signIn.sendCodeToServer("localhost:3000");
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyServerErrorShown();
+    test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_LINK_CODE)).toBe(0);
+  });
+
+  test("creating an account in the extension offers no web-app code, since no web app is signed in yet", async ({
+    launcher,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+
+    const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
+
+    await createAccount.verifyOffersCodeFromWebApp(false);
+  });
+
+  test("the web app's own sign-in page offers no code to type", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+
+    await signIn.verifyOffersCodeFromWebApp(false);
   });
 });

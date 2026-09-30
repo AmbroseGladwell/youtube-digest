@@ -106,7 +106,7 @@ export async function buildApp({
         return { ok: true };
       });
       handshakeRoutes(api, config.minSupportedClientVersion);
-      sessionRoutes(api, sql, sessionCookieSecure);
+      sessionRoutes(api, { sql, clock, sessionCookieSecure });
       authRoutes(api, {
         sql,
         clock,

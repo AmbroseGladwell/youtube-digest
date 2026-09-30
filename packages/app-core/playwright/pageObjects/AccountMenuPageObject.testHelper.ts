@@ -4,7 +4,14 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
-export type AccountMenuItem = "Sign in" | "Create account" | "Enter code" | "Settings" | "Sign out" | "Sign in again";
+export type AccountMenuItem =
+  | "Sign in"
+  | "Create account"
+  | "Enter code"
+  | "Connect the extension"
+  | "Settings"
+  | "Sign out"
+  | "Sign in again";
 
 export class AccountMenuPageObject extends PageObject {
   open = (): Promise<AccountMenuPageObject> =>
@@ -86,6 +93,12 @@ export class AccountMenuPageObject extends PageObject {
   chooseEnterCode = (): Promise<SignInPageObject> =>
     this.step("chooseEnterCode", async () => {
       await this.click(accountMenuTestIds.enterCodeItem);
+      return new SignInPageObject(this.testContext);
+    });
+
+  chooseConnectExtension = (): Promise<SignInPageObject> =>
+    this.step("chooseConnectExtension", async () => {
+      await this.click(accountMenuTestIds.connectExtensionItem);
       return new SignInPageObject(this.testContext);
     });
 

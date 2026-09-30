@@ -89,3 +89,20 @@
     font-size: 1.875rem !important;
   }
 }
+
+.field {
+  @include auth.field;
+}
+
+.fieldInvalid,
+.fieldInvalid:focus-within {
+  @include auth.field-invalid;
+}
+
+.input {
+  @include auth.field-input;
+}
+
+.quiet {
+  @include auth.quiet;
+}

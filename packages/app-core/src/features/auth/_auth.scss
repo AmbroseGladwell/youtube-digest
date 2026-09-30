@@ -62,3 +62,17 @@
     color: var(--accent-hover);
   }
 }
+
+@mixin quiet {
+  @include controls.quiet-control;
+
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}

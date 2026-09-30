@@ -60,6 +60,7 @@ export * from "./FirstName.js";
 export * from "./MagicLinkRequest.js";
 export * from "./SignInRequest.js";
 export * from "./SignedIn.js";
+export * from "./LinkCode.js";
 export * from "./LinkCodeRequest.js";
 export * from "./LinkedSession.js";
 export * from "./SessionInfo.js";

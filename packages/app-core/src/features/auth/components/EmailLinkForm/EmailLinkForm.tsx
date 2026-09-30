@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { FirstName, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { isUrl } from "../../util/isUrl.js";
 import { looksLikeEmail } from "../../util/looksLikeEmail.js";
 import styles from "./EmailLinkForm.module.scss";
 import { emailLinkFormTestIds } from "./EmailLinkFormTestIds.js";
@@ -27,15 +28,6 @@ export interface EmailLinkFormProps {
   refused: string | null;
   onSubmit: (values: EmailLinkFormValues) => void;
 }
-
-const isUrl = (value: string): boolean => {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 // Checked here before anything is sent (design 9i); what the server refuses is said in
 // the same place.

@@ -54,8 +54,10 @@ export class BackendSimulator {
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
+  #linkCodeServers: string[] = [];
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
+  #sessionHasEnded = false;
 
   constructor(page: Page) {
     this.#page = page;
@@ -221,11 +223,27 @@ export class BackendSimulator {
 
     await this.#page.route("**/api/auth/link-code", (route) =>
       this.#respond(route, EndpointKey.AUTH_LINK_CODE, {
+        onDefault: () => {
+          this.#linkCodeServers.push(new URL(route.request().url()).origin);
+          return {
+            status: 200,
+            body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+          };
+        },
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/session/link-code", (route) =>
+      this.#respond(route, EndpointKey.SESSION_LINK_CODE, {
         onDefault: () => ({
           status: 200,
-          body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+          body: { linkCode: SIMULATED_LINK_CODE, linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" },
         }),
-        onError: spent,
+        onError: () =>
+          this.#sessionHasEnded
+            ? unauthenticated()
+            : { status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } },
       }),
     );
 
@@ -354,11 +372,16 @@ export class BackendSimulator {
   auth = {
     magicLinkRequests: (): MagicLinkRequest[] => [...this.#magicLinkRequests],
     signInAttempts: (): string[] => [...this.#signInAttempts],
+    linkCodeServers: (): string[] => [...this.#linkCodeServers],
     linkWasAskedForFrom: (surface: AuthSurface): void => {
       this.#linkSurface = surface;
     },
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
+    },
+    sessionHasEnded: (): void => {
+      this.#sessionHasEnded = true;
+      this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
   };
 

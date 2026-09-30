@@ -9,6 +9,7 @@ export const accountMenuTestIds = {
   signInItem: "AccountMenu.signInItem",
   createAccountItem: "AccountMenu.createAccountItem",
   enterCodeItem: "AccountMenu.enterCodeItem",
+  connectExtensionItem: "AccountMenu.connectExtensionItem",
   settingsItem: "AccountMenu.settingsItem",
   signOutItem: "AccountMenu.signOutItem",
   signInAgainItem: "AccountMenu.signInAgainItem",

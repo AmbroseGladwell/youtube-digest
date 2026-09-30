@@ -35,6 +35,11 @@
   @include auth.note;
 }
 
+.newCode {
+  @include auth.secondary;
+  align-self: flex-start;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;

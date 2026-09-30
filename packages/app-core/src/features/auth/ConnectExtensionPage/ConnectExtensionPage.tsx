@@ -1,0 +1,81 @@
+import { useEffect, useRef, useState } from "react";
+import { Navigate, useNavigate } from "react-router";
+import { isSyncRequestError } from "@overview/sync";
+import { Routes } from "../../../app/Routes.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
+import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
+import { useSync } from "../../sync/SyncContext.js";
+import { useSyncConnection } from "../../sync/useSyncConnection.js";
+import { AuthScreen } from "../components/AuthScreen/AuthScreen.js";
+import { LinkCodeCard } from "../components/LinkCodeCard/LinkCodeCard.js";
+import { useIssueLinkCodeMutation } from "../mutations/useIssueLinkCodeMutation.js";
+import { authFailureMessage, CODE_SPENT } from "../util/authFailureMessage.js";
+import { connectExtensionPageTestIds } from "./ConnectExtensionPageTestIds.js";
+
+// The web app, already signed in, mints a code over its own session so the extension
+// beside it signs in without a second email (docs/features/sign-in.md).
+export function ConnectExtensionPage() {
+  const surface = useSurface();
+  const navigate = useNavigate();
+  const sync = useSync();
+  const { connection } = useSyncConnection();
+  const issue = useIssueLinkCodeMutation();
+  const apiUrl = connection.apiUrl ?? globalThis.location?.origin ?? "";
+  const sessionEnded =
+    sync.status.phase === "signedOut" ||
+    (issue.isError && isSyncRequestError(issue.error) && issue.error.code === "unauthenticated");
+  const canIssue = surface === "web" && sync.connected && !sessionEnded;
+  const started = useRef(false);
+  const [code, setCode] = useState<string | null>(null);
+  const makeCode = () => issue.mutate({ apiUrl }, { onSuccess: (issued) => setCode(issued.linkCode) });
+
+  useEffect(() => {
+    if (!canIssue || started.current) return;
+    started.current = true;
+    makeCode();
+  });
+
+  if (surface !== "web") {
+    return <Navigate to={Routes.home()} replace />;
+  }
+
+  if (!sync.connected) {
+    return <Navigate to={Routes.signIn()} replace />;
+  }
+
+  if (sessionEnded) {
+    return (
+      <ErrorState
+        title="This browser's session has ended"
+        body="Sign in again, then connect the extension."
+        action={{
+          label: "Sign in again",
+          onSelect: () => void sync.signOut().then(() => navigate(Routes.signIn())),
+        }}
+      />
+    );
+  }
+
+  if (issue.isError) {
+    return (
+      <ErrorState
+        title="Couldn't make a code for the extension"
+        body={authFailureMessage(issue.error, CODE_SPENT)}
+        action={{ label: "Try again", onSelect: makeCode }}
+      />
+    );
+  }
+
+  if (code !== null) {
+    return <LinkCodeCard code={code} from="webApp" renewing={issue.isPending} onNewCode={makeCode} />;
+  }
+
+  return (
+    <AuthScreen
+      testId={connectExtensionPageTestIds.working}
+      icon="puzzle"
+      title="Making your code…"
+      compactTitle
+    />
+  );
+}

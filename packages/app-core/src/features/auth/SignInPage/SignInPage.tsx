@@ -61,7 +61,7 @@ export function SignInPage() {
   }
 
   if (signIn.isSuccess && signIn.data.surface === "extension") {
-    return <LinkCodeCard code={signIn.data.linkCode} />;
+    return <LinkCodeCard code={signIn.data.linkCode} from="emailLink" />;
   }
 
   return (

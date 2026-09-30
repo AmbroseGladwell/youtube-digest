@@ -1,5 +1,4 @@
 @use "../../auth" as auth;
-@use "../../../../theme/controls.scss" as controls;
 
 .root {
   display: flex;
@@ -61,17 +60,7 @@
 }
 
 .quiet {
-  @include controls.quiet-control;
-
-  align-self: flex-start;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
+  @include auth.quiet;
 }
 
 .switch {
@@ -79,8 +68,17 @@
   font-size: 0.875rem;
   color: var(--muted);
 
-  a {
+  a,
+  button {
     @include auth.inline-link;
+  }
+
+  button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
   }
 }
 

@@ -16,6 +16,7 @@ the names that document gave them, it says so.
 | Three public routes: ask, sign in, exchange | `apps/api/src/auth/authRoutes.ts` |
 | The cookie transport, as a second way onto the same `sessions` row | `src/auth/sessionCookie.ts`, `sessionPlugin.ts`, `sessionRoutes.ts` |
 | Link codes: eight characters, no look-alikes, ten minutes, once | `src/auth/linkCode.ts`, `issueLinkCode.ts`, `consumeLinkCode.ts` |
+| A code minted by a signed-in session, for the extension beside it | `src/auth/sessionRoutes.ts`, `packages/domain/src/LinkCode.ts`, `features/auth/ConnectExtensionPage/` |
 | The mailer behind one interface: Brevo in production, the log in development | `src/mail/` |
 | The wire shapes the two sides share, and the one new error code | `packages/domain/src`: `AuthSurface.ts`, `MagicLinkRequest.ts`, `SignInRequest.ts`, `SignedIn.ts`, `LinkCodeRequest.ts`, `LinkedSession.ts`, `SessionInfo.ts`, `ApiErrorCode.ts` |
 | The auth client, beside the sync client, over one shared requester | `packages/sync/src`: `apiRequest.ts`, `fetchAuthApi.ts`, `AuthApi.ts` |
@@ -51,6 +52,45 @@ the cookie as well, and it was decided against: the web app being signed in enro
 pushes its whole local library to the account, which is a thing the reader did not ask
 for by clicking a link in their mail on behalf of the extension. One link signs in the
 one shell that asked. The page says so.
+
+## Connecting the extension from the web app
+
+A reader whose web app is already signed in should not need a second email to sign the
+extension in. So the signed-in web app can make the code itself: `POST
+/api/session/link-code` issues one for the session's own account, through the same
+`issueLinkCode` a consumed extension link uses, and the extension exchanges it through the
+same `POST /api/auth/link-code`. Same eight characters, same ten minutes, same once.
+
+**On the web**, the account menu and the Settings Sync section each offer `Connect the
+extension`, only when this browser is signed in and the server still knows its session.
+Both go to `/connect-extension`, which makes a code as it opens and shows it on the same
+card as design 9g, with `Get a new code` for when ten minutes have gone. Nothing about the
+web app's session changes, and no mail is sent. If the session has ended, the page
+says so and offers `Sign in again`, which signs this browser out first: a web app keeps
+its server once its session is gone, so it still counts as connected, and `/sign-in`
+would only send it back to the library.
+
+**In the extension**, the sign-in page's footer adds a second line under `New here?`:
+`Signed in on the web app? Enter a code`, styled as a link rather than a second pill, so
+the email stays the page's one action. It is a `<button>` underneath, since it changes the
+screen in place rather than going anywhere. It leads to the code field with no address and no resend, and
+`Email me a link instead` goes back. It is offered only on Sign in, since someone creating
+an account has no web app signed in yet. The web app's code only works on the server that
+made it, so the code screen carries the same server choice as the email form: the built-in
+server, tucked behind `Use a different server`, or a field asking for one in an extension
+built without it. An extension pointed at `localhost:3000` for development can then use a
+local web app's code rather than sending it to production.
+
+**Why a code, and not a message from the page to the extension.** The web app could hand
+the extension its code with no typing through `chrome.runtime.sendMessage` and
+`externally_connectable`, but that needs the extension's id pinned per environment and
+lets pages talk to the extension, all to save typing eight characters once. Typing the code
+reuses the whole exchange already built and tested.
+
+**Minting needs a session and a write's headers.** It is a `POST` under the session plugin
+like any other write, so it needs the cookie or a bearer and `X-Client-Version`, and a
+cross-site form can make none. Any session can mint, a bearer as well as a cookie; the
+extension has no screen for it, but a code only ever signs the same account in again.
 
 ## Creating an account
 
@@ -246,8 +286,7 @@ already forgotten would be a control with nothing behind it.
 
 Changing the name on an account, or giving one to an account made by signing in;
 rate limiting beyond the per-address cooldown; a sweep of spent links and codes, which
-is the same later cron as the session sweep; changing the email on an account; the web
-app minting a link code for an extension already signed in beside it, which would save
-one email and is a small addition to `authRoutes` when it is wanted. Serving the SPA
-from the API is built since (`docs/architecture/deploy.md`), so `/sign-in` in production
-is on the API's own origin, which `APP_URL` names.
+is the same later cron as the session sweep; changing the email on an account. Serving the SPA from the API is built since
+(`docs/architecture/deploy.md`), so `/sign-in` in production is on the API's own origin,
+which `APP_URL` names. So is the web app minting a code for the extension beside it
+("Connecting the extension from the web app", above).

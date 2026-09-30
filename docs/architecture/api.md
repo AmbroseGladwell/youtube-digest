@@ -36,7 +36,7 @@ apps/api/
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
-    auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, the three /api/auth routes
+    auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, POST /api/session/link-code, the three /api/auth routes
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
@@ -91,11 +91,14 @@ answering 202 whether or not the account exists, `GET /api/auth/callback?token=`
 the link and setting the cookie, an extension link-code exchange so the panel gets its
 bearer, and a transactional email provider, which is still unchosen.
 
-**Two routes belong to the session:** `GET /api/session` says who is signed in and when it
+**Three routes belong to the session:** `GET /api/session` says who is signed in and when it
 expires, which is the startup check both shells will make and where a plan will one day be
 read from instead of `Settings.plan`; `DELETE /api/session` deletes the row, clears the
 cookie when the cookie was the transport, and answers a second call with the same token
-`401`, which is right: the effect is idempotent, the status is not.
+`401`, which is right: the effect is idempotent, the status is not; `POST
+/api/session/link-code` mints a link code for the session's own account, so a signed-in
+web app can hand the extension beside it a way in with no second email
+(`docs/features/sign-in.md`).
 
 ## Origins
 

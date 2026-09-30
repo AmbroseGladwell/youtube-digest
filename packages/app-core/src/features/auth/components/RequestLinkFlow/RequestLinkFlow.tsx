@@ -45,6 +45,7 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
   const [welcomeName, setWelcomeName] = useState<string | null | undefined>(undefined);
   const [refused, setRefused] = useState<string | null>(null);
   const [codeRefused, setCodeRefused] = useState<string | null>(null);
+  const [codeFromWebApp, setCodeFromWebApp] = useState(false);
   const requestLink = useRequestMagicLinkMutation();
   const exchangeCode = useExchangeLinkCodeMutation();
   const library = useOverviewsWithStateQuery();
@@ -90,6 +91,21 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
     );
   };
 
+  const connectWithCode = (apiUrl: string, code: string) => {
+    setCodeRefused(null);
+    exchangeCode.mutate(
+      { apiUrl, code },
+      {
+        onSuccess: (linked) => {
+          setWelcomeName(linked.firstName);
+          setConnection({ apiUrl, token: linked.token, email: linked.email, firstName: linked.firstName });
+          setPending(null);
+        },
+        onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
+      },
+    );
+  };
+
   const startOver = () => {
     setLastEmail(sent?.email ?? "");
     requestLink.reset();
@@ -103,6 +119,8 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
     if (inExtension) {
       return (
         <EnterCode
+          key="emailLink"
+          from="emailLink"
           email={sent.email}
           sentAt={sent.sentAt}
           connecting={exchangeCode.isPending}
@@ -110,25 +128,7 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
           refused={codeRefused}
           onDifferentEmail={startOver}
           onResend={resend}
-          onConnect={(code) => {
-            setCodeRefused(null);
-            exchangeCode.mutate(
-              { apiUrl: sent.apiUrl, code },
-              {
-                onSuccess: (linked) => {
-                  setWelcomeName(linked.firstName);
-                  setConnection({
-                    apiUrl: sent.apiUrl,
-                    token: linked.token,
-                    email: linked.email,
-                    firstName: linked.firstName,
-                  });
-                  setPending(null);
-                },
-                onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
-              },
-            );
-          }}
+          onConnect={(code) => connectWithCode(sent.apiUrl, code)}
         />
       );
     }
@@ -141,6 +141,28 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
         resending={requestLink.isPending}
         onDifferentEmail={startOver}
         onResend={resend}
+      />
+    );
+  }
+
+  const offersWebAppCode = inExtension && intent === "signIn" && !expired;
+  if (offersWebAppCode && codeFromWebApp) {
+    return (
+      <EnterCode
+        key="webApp"
+        from="webApp"
+        connecting={exchangeCode.isPending}
+        refused={codeRefused}
+        onEmailInstead={() => {
+          exchangeCode.reset();
+          setCodeRefused(null);
+          setCodeFromWebApp(false);
+        }}
+        initialServerUrl={knownServer}
+        onConnect={(code, serverUrl) => {
+          const apiUrl = serverUrl ?? knownServer;
+          if (apiUrl !== null) connectWithCode(apiUrl, code);
+        }}
       />
     );
   }
@@ -186,6 +208,19 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
               <Link to={Routes.createAccount()} replace data-testid={requestLinkFlowTestIds.switchLink}>
                 Create an account
               </Link>
+              {offersWebAppCode && (
+                <>
+                  <br />
+                  Signed in on the web app?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setCodeFromWebApp(true)}
+                    data-testid={requestLinkFlowTestIds.webAppCodeButton}
+                  >
+                    Enter a code
+                  </button>
+                </>
+              )}
             </>
           )
         }
