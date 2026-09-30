@@ -15,6 +15,11 @@ const shared = (): Overview =>
     savedAt: "2026-09-20T00:00:00.000Z",
     captureReason: REASON,
     tags: ["energy-policy", "nuclear", "grids"],
+    watchAnyway: {
+      answer: "partial",
+      reason: "Worth it for the grid-load animations.",
+      range: { startMs: 365_000, endMs: 500_000 },
+    },
     video: {
       ...makeOverview().video,
       title: TITLE,
@@ -117,4 +122,27 @@ test("creating an account any other way promises nothing about a share", async (
 
   const createAccount = await launcher.signInPage.verifyAsksForEmail("Create your account");
   await createAccount.verifyPromisesNothingFromAShare();
+});
+
+// The page is the reader's layout, so the chrome that holds it together has to behave the
+// same way: the strip belongs to its text, and the head does not let the note past it.
+test("the tab strip lines up with the note, and the head stays above it", async ({ launcher }) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedPayload());
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+
+  await page.verifyTabsAlignWithTheNote();
+  await page.verifyHeaderStaysAboveTheTabs();
+});
+
+// Nothing on this page can move a video, so the stretch worth watching is a link to it
+// rather than a skip (docs/features/following-playback.md).
+test("the stretch worth watching offers a way into the video at that moment", async ({ launcher }) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedPayload());
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+
+  await page.verifyOffersToWatchFrom("Watch from 6:05", "https://www.youtube.com/watch?v=example&t=365");
 });

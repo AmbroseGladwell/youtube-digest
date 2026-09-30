@@ -683,6 +683,11 @@ export class ReaderPageObject extends PageObject {
       this.expectNotToBeVisible(watchAnywayJumpTestIds.root),
     );
 
+  verifyOffersToWatchFrom = (label: string) =>
+    this.step(`verifyOffersToWatchFrom ${label}`, () =>
+      expect(this.get(watchAnywayJumpTestIds.watchLink)).toHaveText(label),
+    );
+
   verifyOffersToSkipTheVideo = (offered: boolean) =>
     this.step(`verifyOffersToSkipTheVideo ${offered}`, () =>
       offered

@@ -274,6 +274,16 @@ the topic line and the capture reason. What it adds is the two things a visitor 
 — **Save to my overviews** and **Watch on YouTube** — and a head of its own, since there is
 no library behind them to wear the app's chrome.
 
+**The head is sticky and the tab strip rests against it**, as they do in the reader, and
+both heights are measured rather than assumed — the read-along's scroll margin is built
+from them. The strip takes this page's note column rather than centring itself on the
+reading column, because here the note is one column of a grid rather than the whole page;
+centred, it sat beside the text it belongs to.
+
+**The stretch worth watching is a link here**, since nothing on this page can move a video.
+That gap was the reader's too, and is fixed in the shared component
+(`docs/features/following-playback.md`).
+
 **The copy is read from the document, not fetched.** `readSharePayload` parses the JSON
 island the API inlined. Anything it cannot read — no element, unreadable JSON, a shape a
 newer server wrote — becomes "this link doesn't go anywhere" rather than a crash, because

@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { NOVELTY_LABEL, overviewNoteLines, formatClock, type SharePayload } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { ChaptersPanel } from "../../reader/components/ChaptersPanel/ChaptersPanel.js";
 import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
+import { WatchAnywayJump } from "../../reader/components/WatchAnywayJump/WatchAnywayJump.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import type { ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
@@ -21,6 +23,9 @@ import { rememberSharedPageIntent } from "../util/sharedPageIntent.js";
 import { sharedMetaParts } from "../util/sharedMetaParts.js";
 import styles from "./SharedOverviewPage.module.scss";
 import { sharedOverviewPageTestIds } from "./SharedOverviewPageTestIds.js";
+
+const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
+const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 
 const tabId = (tab: ReaderTab) => `shared-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `shared-panel-${tab.toLowerCase()}`;
@@ -57,6 +62,17 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const navigate = useNavigate();
+  // Both are measured rather than assumed, because the read-along's scroll margin and the
+  // tab strip's own offset are built from them (docs/features/overview-redesign.md).
+  const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(MASTHEAD_HEIGHT_PROPERTY);
+  const tabsHeight = useMeasuredHeight<HTMLDivElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
+  const publishHeightsOn = useCallback(
+    (element: HTMLDivElement | null) => {
+      mastheadHeight.host(element);
+      tabsHeight.host(element);
+    },
+    [mastheadHeight.host, tabsHeight.host],
+  );
 
   const changeTab = (next: ReaderTab) => {
     setTranscriptOpenAtMs(null);
@@ -83,8 +99,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const lineStartLabels = narrated ? notePlayer.snapshot.timings.lineStarts.map(formatClock) : null;
 
   return (
-    <div className={styles.page} data-testid={sharedOverviewPageTestIds.root}>
-      <SharedPageHeader />
+    <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
+      <SharedPageHeader ref={mastheadHeight.measured} />
 
       <div className={styles.body}>
         <main className={styles.main}>
@@ -142,7 +158,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             </a>
           </div>
 
-          <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} />
+          <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} ref={tabsHeight.measured} />
 
           <div id={panelId(tab)} role="tabpanel" aria-labelledby={tabId(tab)}>
             {tab === "Overview" && (
@@ -153,6 +169,16 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                   lineStartLabels={lineStartLabels}
                   onSelectLine={notePlayer.selectLine}
                 />
+                {note.watchAnyway?.range != null && (
+                  <WatchAnywayJump range={note.watchAnyway.range} video={note.video} />
+                )}
+                <div className={styles.tagRow}>
+                  {note.tags.map((tag) => (
+                    <span key={tag} className={styles.tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             {tab === "Transcript" && (
