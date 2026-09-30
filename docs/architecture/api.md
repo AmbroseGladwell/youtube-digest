@@ -26,6 +26,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
 | An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
+| The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
 
 ## Shape
 
@@ -34,7 +35,7 @@ apps/api/
   migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
-    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth scope beside it
+    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth and MCP scopes beside it
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
@@ -44,6 +45,7 @@ apps/api/
     records/             the repository and the three pure write decisions
     transcripts/         the per-account transcript repository
     oauth/               the authorization server's routes, the consent and connections routes, clients, codes, tokens and their lookups
+    mcp/                 /mcp: the access-token plugin, the JSON-RPC handler, the tools and prompt, reading and searching a library
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio
@@ -244,7 +246,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 
 | Limit | Counts | Per | Where |
 |---|---|---|---|
-| `address` | 1,200 | minute, per address | every `/api` request, before anything else runs |
+| `address` | 1,200 | minute, per address | every `/api`, `/oauth` and `/mcp` request, before anything else runs |
 | `account` | 600 | minute, per account | every request with a session, after the session is known |
 | `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
@@ -252,6 +254,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
 | `oauthRegisterAddress` | 20 | hour, per address | `POST /oauth/register` |
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
+| `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 
@@ -276,6 +279,10 @@ The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
   token is 256 bits and needs no limit; a link code is 40 bits and ten minutes, which
   `sign-in.md` argued was enough on its own, and thirty guesses an hour per address puts
 it further out of reach.
+- **`mcpAccount` is shared by all of a reader's assistants.** An assistant working through
+  a question calls a tool every few seconds, and paging a large topic is a burst of a few
+  dozen. Two a second held for a minute is well past that, and every call reads the
+  reader's whole library, so it is kept lower than the sync limit.
 - **A refused request does not count.** A caller hammering past the limit is let back in
   when its window ends, not held out while it keeps knocking.
 

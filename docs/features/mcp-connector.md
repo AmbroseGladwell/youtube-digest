@@ -7,16 +7,17 @@ sources.
 
 It is built in three slices, one card and one PR each:
 
-1. **OV-26, the authorization server** (this document, as built): client registration,
-   authorize and consent, the code exchange, refresh, revoke, the reader's plan, and the
-   API the consent screen and Settings will call.
+1. **OV-26, the authorization server**: client registration, authorize and consent, the
+   code exchange, refresh, revoke, the reader's plan, and the API the consent screen and
+   Settings will call.
 2. **OV-57, the MCP endpoint and its tools**, on `/mcp`, resolving each request's bearer
    through `resolveAccessToken`.
 3. **OV-58, the consent screen and the Settings section**, in the web app, once OV-51's
    Settings sections have landed.
 
-Until the second slice lands, a connection can be made but reads nothing. Until the third,
-the consent page an assistant is sent to (`/connect/<id>`) is not drawn yet.
+This document describes the first two as built. Until the third lands, the consent page an
+assistant is sent to (`/connect/<id>`) is not drawn yet, so a connection can only be
+approved by calling `POST /api/oauth/requests/:id/decision` by hand.
 
 ## Why OAuth, and why its own tokens
 
@@ -50,6 +51,7 @@ like any other route.
 | `GET /oauth/authorize` | reader's browser | checks the request and sends the reader to `/connect/<id>` |
 | `POST /oauth/token` | assistant | `authorization_code` with PKCE, and `refresh_token` |
 | `POST /oauth/revoke` | assistant | RFC 7009: either token ends the connection |
+| `POST /mcp` | assistant | the MCP endpoint, on the connection's access token ("The endpoint", below) |
 | `GET /api/oauth/requests/:id` | consent screen | who is asking, where they will send the reader, the reader's plan |
 | `POST /api/oauth/requests/:id/decision` | consent screen | `{ approve }` gives `{ redirectTo }` |
 | `GET /api/connections` | Settings | the reader's live connections |
@@ -148,19 +150,132 @@ the very next request. There is no revoked flag for a lookup to forget to check.
 `connections.last_used_at` is touched at most once an hour, as sessions are, so Settings
 can say when a connection was last used.
 
+## The endpoint
+
+`/mcp` speaks MCP's Streamable HTTP transport, **statelessly**: every message is a `POST`,
+every request is answered with one JSON body, and no session id is issued. The server has
+nothing to say unasked, so it opens no stream: `GET` and `DELETE` answer `405`, a
+notification or a client's response is accepted with `202`, and JSON-RPC batches are
+refused. It speaks protocol versions `2025-11-25`, `2025-06-18` and `2025-03-26`, agrees
+the client's at `initialize` when it knows it and offers its own latest otherwise, and
+answers `400` to an `MCP-Protocol-Version` header it does not speak.
+
+**There is no MCP SDK.** The official one brings Express, Hono and a dozen other packages
+to serve what here is six methods (`initialize`, `ping`, `tools/list`, `tools/call`,
+`prompts/list`, `prompts/get`). Written directly, the endpoint sits inside Fastify's own
+hooks, so the bearer check and the rate limits run the way they do everywhere else, and
+zod, already here, writes each tool's JSON Schema.
+
+In order, a request meets:
+
+1. **The per-address limit**, as on every route.
+2. **The bearer**, through `resolveAccessToken`, which also requires Plus. A missing,
+   unknown, expired or lapsed token is `401` with
+   `WWW-Authenticate: Bearer resource_metadata="<APP_URL>/.well-known/oauth-protected-resource/mcp", scope="overviews:read"`,
+   plus `error="invalid_token"` when a token was sent. A reader's session token is not an
+   access token and gets the same answer.
+3. **`mcpAccount`**, 120 a minute per account, shared by all of a reader's assistants.
+4. **The origin.** A request that carries an `Origin` other than `APP_URL` is `403`, which
+   is the DNS-rebinding check MCP asks of every server. Claude calls from its servers and
+   sends none.
+
+Errors outside a tool's own work are JSON-RPC errors: a malformed body is `-32700` or
+`-32600`, an unknown method `-32601`, and an unknown tool or prompt `-32602`. **A tool
+that is called with arguments that do not fit, or that finds nothing, answers as a failed
+call** (`isError: true`) with a sentence saying why, so the assistant reads it and tries
+again rather than seeing a protocol fault.
+
+## The tools
+
+All five read, and are marked `readOnlyHint`. Each reads the account's live records
+afresh, so what an assistant sees is what has reached the server through sync.
+
+| Tool | Returns |
+|---|---|
+| `search_overviews` | a light listing, newest saved first: title, channel, verdict, topics, saved date, id, and the one-line premise to choose by. 50 a page |
+| `list_topics` | every topic with how many overviews it holds, its id and description, and how many overviews are not filed |
+| `get_overview` | one note in full |
+| `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
+| `get_transcript` | one video's transcript, by its overview's id |
+
+**The filters** `search_overviews` and `get_overviews` share are `query`, `topic` (a name
+or an id), `tag` (the video's own or the reader's `userTags`), `verdict`, `dubious`,
+`favourite`, `read`, and `savedFrom`/`savedTo` as inclusive days. A topic that does not
+exist is a failed call that points at `list_topics`, rather than an empty result that
+looks like an answer.
+
+**A note is `overviewMarkdown(overview)`** from `@overview/domain`, behind two lines naming
+its id and topics: title, channel, length and dates, the link and tags, then the reader's
+own sections in their order, with "Why I saved it" first when there is one. Every chapter
+and the watch-anyway range link to their moment in the video through
+`youtubeTimestampUrl`, so an assistant can cite a point to the second it was made. The
+spoken narration script is never served. The same function is what a future
+copy-to-clipboard will use.
+
+**A transcript is `transcriptPlainText`**, the text the reader's Copy and Export produce,
+so a transcript reads the same wherever it is taken. It is the account's own copy, looked
+up under the reader's account, and never another reader's even when both saved the same
+video. A machine-heard transcript says so in its first line. `transcriptPlainText`,
+`transcriptBlocks`, `formatClock`, `formatTimestamp`, `youtubeTimestampUrl` and
+`buildSearchHaystack` moved from app-core to `@overview/domain` so the API could use them
+unchanged.
+
+**A record this server cannot read**, one written at a newer schema version or one that
+no longer parses, is left out, and the listing and `get_overviews` say how many were.
+
+The **`compare_topic` prompt** asks the assistant to read everything under one topic with
+`get_overviews`, following the cursor, and say where the videos agree, contradict each
+other, and stand alone, citing each point to its moment. It is there so the use the
+connector exists for can be found in a client that lists prompts.
+
+## Search
+
+**Filtering happens in memory, after each record is migrated and parsed.** A filter can
+only be trusted on a record in the current shape, and SQL over stored bodies at several
+schema versions would have to know every shape they have ever had. Each call reads the
+account's overviews, their state and topics in one query. At a few hundred notes that is
+cheap, and the card's `ILIKE` would only have narrowed what was then read anyway.
+
+**A query matches when every word in it appears**, in any order, in the same haystack the
+library's own search uses (`buildSearchHaystack`: title, channel, premise, claim, verdict
+reasoning, selling, actions, key points and tags). The library matches the whole phrase,
+because a reader types one. An assistant sends keywords.
+
+**Paging is by offset.** The cursor is the position of the next result in the list as it
+stands now, so a note saved between two calls can shift a page by one. For an assistant
+reading a library, that is acceptable.
+
+## The context budget
+
+`get_overviews` returns at most **10 notes a call**. The five sample notes, served as
+Markdown, measure 3.0–4.6 KB each (500–780 words, about 750–1,150 tokens), and none of
+them has chapters. A chapter adds at most about 50 words, so a note with ten comes to
+roughly 1.3–1.8k tokens. Claude Code warns when one tool result passes 10,000 tokens and
+refuses past 25,000 (`MAX_MCP_OUTPUT_TOKENS`), so twenty a call, the first guess, would
+break there. Ten sits near the warning with room to spare, and the cursor pages the rest.
+Re-measure once real notes with chapters exist. Transcripts are never included.
+
 ## Logging
 
 Logged, by id only: a client registered (its auth method), a connection made, a request
 decided (approved or not), and a connection revoked, with who revoked it (`reader`,
 `client`, or `replayed`). A client's name is set by the client and never logged, and no
-token, code or verifier is ever logged. The MCP endpoint's own logging (tool calls by name
-and how many overviews each returned) arrives with the second slice.
+token, code or verifier is ever logged.
 
-## Not built in this slice
+Every tool call is logged as `mcp tool called` with the connection's id, the tool's name,
+how many overviews it returned (for the three that return overviews) and whether it
+failed. A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
+told to try again. A query, a topic, a note's content and a transcript are never logged.
+
+## Not built yet
 
 - **CORS on the protocol routes.** Claude calls them from its servers. A browser-based
-  client such as the MCP Inspector would need `/oauth/token` and `/oauth/register` to
-  answer cross-origin, and that is a list of origins added when one is wanted.
+  client such as the MCP Inspector would need `/oauth/token`, `/oauth/register` and `/mcp`
+  to answer cross-origin, and `/mcp` to accept its `Origin`. That is a list of origins
+  added when one is wanted.
 - **A sweep** of unused clients, lapsed authorization requests and expired tokens, which
   waits for the same future job as expired sessions (`api.md`).
-- **The MCP endpoint, the consent page and Settings**: slices two and three.
+- **The consent page and Settings**: slice three.
+- **Write tools** (mark read, favourite, file under a topic). Every connection is read-only
+  because nothing that honours its token writes, and a write tool would end that.
+- **Audio.** Narration is not exposed, and would wait for sync to carry it.
