@@ -146,5 +146,23 @@ export class SignInPageObject extends PageObject {
       await this.expectToHaveCount(enterCodeTestIds.email, 0);
     });
 
+  verifyCodeAsksForServer = (asks: boolean) =>
+    this.step(`verifyCodeAsksForServer ${asks}`, () =>
+      asks
+        ? this.expectToBeVisible(enterCodeTestIds.serverInput)
+        : this.expectToHaveCount(enterCodeTestIds.serverInput, 0),
+    );
+
+  sendCodeToServer = (apiUrl: string) =>
+    this.step(`sendCodeToServer ${apiUrl}`, async () => {
+      if ((await this.get(enterCodeTestIds.serverInput).count()) === 0) {
+        await this.click(enterCodeTestIds.otherServerButton);
+      }
+      await this.get(enterCodeTestIds.serverInput).fill(apiUrl);
+    });
+
+  verifyServerErrorShown = () =>
+    this.step("verifyServerErrorShown", () => this.expectToBeVisible(enterCodeTestIds.serverError));
+
   chooseEmailInstead = () => this.step("chooseEmailInstead", () => this.click(enterCodeTestIds.emailInsteadButton));
 }

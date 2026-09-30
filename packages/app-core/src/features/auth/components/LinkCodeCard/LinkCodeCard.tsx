@@ -7,7 +7,7 @@ import { linkCodeCardTestIds } from "./LinkCodeCardTestIds.js";
 
 export type LinkCodeCardProps =
   | { code: string; from: "emailLink" }
-  | { code: string; from: "webApp"; onNewCode: () => void };
+  | { code: string; from: "webApp"; renewing: boolean; onNewCode: () => void };
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
@@ -22,10 +22,11 @@ const spokenCode = (code: string): string =>
 // app mints for the extension beside it (docs/features/sign-in.md).
 export function LinkCodeCard(props: LinkCodeCardProps) {
   const { code } = props;
-  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const copied = copiedCode === code;
 
   const copy = () => {
-    void navigator.clipboard.writeText(code).then(() => setCopied(true));
+    void navigator.clipboard.writeText(code).then(() => setCopiedCode(code));
   };
 
   return (
@@ -37,7 +38,7 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
       lead={
         props.from === "emailLink"
           ? "Type this into The Overview's panel, where you asked for the link."
-          : "In The Overview's panel, choose Sign in, then Enter a code from the web app, and type this in."
+          : "In The Overview's panel, choose Sign in, then Enter a code, and type this in."
       }
     >
       <div className={styles.card}>
@@ -66,6 +67,7 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
             type="button"
             className={styles.newCode}
             onClick={props.onNewCode}
+            disabled={props.renewing}
             data-testid={linkCodeCardTestIds.newCodeButton}
           >
             Get a new code

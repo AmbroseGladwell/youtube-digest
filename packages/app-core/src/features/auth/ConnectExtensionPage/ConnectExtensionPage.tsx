@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../app/Routes.js";
@@ -26,12 +26,14 @@ export function ConnectExtensionPage() {
     (issue.isError && isSyncRequestError(issue.error) && issue.error.code === "unauthenticated");
   const canIssue = surface === "web" && sync.connected && !sessionEnded;
   const started = useRef(false);
+  const [code, setCode] = useState<string | null>(null);
+  const makeCode = () => issue.mutate({ apiUrl }, { onSuccess: (issued) => setCode(issued.linkCode) });
 
   useEffect(() => {
     if (!canIssue || started.current) return;
     started.current = true;
-    issue.mutate({ apiUrl });
-  }, [canIssue, apiUrl, issue]);
+    makeCode();
+  });
 
   if (surface !== "web") {
     return <Navigate to={Routes.home()} replace />;
@@ -59,13 +61,13 @@ export function ConnectExtensionPage() {
       <ErrorState
         title="Couldn't make a code for the extension"
         body={authFailureMessage(issue.error, CODE_SPENT)}
-        action={{ label: "Try again", onSelect: () => issue.mutate({ apiUrl }) }}
+        action={{ label: "Try again", onSelect: makeCode }}
       />
     );
   }
 
-  if (issue.isSuccess) {
-    return <LinkCodeCard code={issue.data.linkCode} from="webApp" onNewCode={() => issue.mutate({ apiUrl })} />;
+  if (code !== null) {
+    return <LinkCodeCard code={code} from="webApp" renewing={issue.isPending} onNewCode={makeCode} />;
   }
 
   return (

@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent } from "react";
 import { LINK_CODE_TTL_MINUTES } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
+import { isUrl } from "../../util/isUrl.js";
 import { ResendLinkButton } from "../ResendLinkButton/ResendLinkButton.js";
 import styles from "./EnterCode.module.scss";
 import { enterCodeTestIds } from "./EnterCodeTestIds.js";
@@ -9,13 +10,13 @@ import { enterCodeTestIds } from "./EnterCodeTestIds.js";
 interface EnterCodeCommonProps {
   connecting: boolean;
   refused: string | null;
-  onConnect: (code: string) => void;
+  onConnect: (code: string, serverUrl: string | null) => void;
 }
 
 export type EnterCodeProps = EnterCodeCommonProps &
   (
     | { from: "emailLink"; email: string; sentAt: number; resending: boolean; onDifferentEmail: () => void; onResend: () => void }
-    | { from: "webApp"; onEmailInstead: () => void }
+    | { from: "webApp"; initialServerUrl: string | null; onEmailInstead: () => void }
   );
 
 // Design 10c/10d: the link opens a tab that shows a code, and the code comes back here.
@@ -28,6 +29,9 @@ export function EnterCode(props: EnterCodeProps) {
   const ids = useId();
   const [code, setCode] = useState("");
   const [empty, setEmpty] = useState(false);
+  const [serverUrl, setServerUrl] = useState(props.from === "webApp" ? (props.initialServerUrl ?? "") : "");
+  const [serverShown, setServerShown] = useState(props.from === "webApp" && props.initialServerUrl === null);
+  const [serverInvalid, setServerInvalid] = useState(false);
   const problem = empty
     ? fromEmail
       ? "Enter the code from the page the link opened."
@@ -36,12 +40,17 @@ export function EnterCode(props: EnterCodeProps) {
 
   const connect = (event: FormEvent) => {
     event.preventDefault();
+    if (serverShown && !isUrl(serverUrl.trim())) {
+      setServerInvalid(true);
+      return;
+    }
+    setServerInvalid(false);
     if (code.trim() === "") {
       setEmpty(true);
       return;
     }
     setEmpty(false);
-    onConnect(code.trim());
+    onConnect(code.trim(), serverShown ? serverUrl.trim() : null);
   };
 
   return (
@@ -60,6 +69,30 @@ export function EnterCode(props: EnterCodeProps) {
       }
     >
       <form className={styles.form} onSubmit={connect} noValidate>
+        {serverShown && (
+          <label className={styles.label}>
+            <span className={styles.labelText}>Server address</span>
+            <span className={`${styles.field} ${serverInvalid ? styles.fieldInvalid : ""}`}>
+              <StrokeIcon name="link" size={16} />
+              <input
+                className={styles.input}
+                type="url"
+                autoComplete="off"
+                value={serverUrl}
+                onChange={(event) => setServerUrl(event.target.value)}
+                aria-invalid={serverInvalid}
+                aria-describedby={serverInvalid ? `${ids}-server-error` : undefined}
+                data-testid={enterCodeTestIds.serverInput}
+              />
+            </span>
+            {serverInvalid && (
+              <span className={styles.error} id={`${ids}-server-error`} data-testid={enterCodeTestIds.serverError}>
+                <StrokeIcon name="alertCircle" size={14} />
+                The server address has to be a URL.
+              </span>
+            )}
+          </label>
+        )}
         <label className={styles.label}>
           <span className={styles.labelText}>{fromEmail ? "Code from the email link" : "Code from the web app"}</span>
           <input
@@ -84,6 +117,17 @@ export function EnterCode(props: EnterCodeProps) {
             </span>
           )}
         </label>
+
+        {!fromEmail && !serverShown && (
+          <button
+            type="button"
+            className={styles.quiet}
+            onClick={() => setServerShown(true)}
+            data-testid={enterCodeTestIds.otherServerButton}
+          >
+            Use a different server
+          </button>
+        )}
 
         <div className={styles.linkActions}>
           {fromEmail ? (

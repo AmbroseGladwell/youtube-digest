@@ -21,7 +21,6 @@ import { CheckEmail } from "../CheckEmail/CheckEmail.js";
 import { EmailLinkForm, type EmailLinkFormValues } from "../EmailLinkForm/EmailLinkForm.js";
 import { EnterCode } from "../EnterCode/EnterCode.js";
 import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
-import styles from "./RequestLinkFlow.module.scss";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 
 export interface RequestLinkFlowProps {
@@ -145,7 +144,7 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
     );
   }
 
-  const offersWebAppCode = inExtension && !expired && knownServer !== null;
+  const offersWebAppCode = inExtension && intent === "signIn" && !expired;
   if (offersWebAppCode && codeFromWebApp) {
     return (
       <EnterCode
@@ -157,7 +156,11 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
           setCodeRefused(null);
           setCodeFromWebApp(false);
         }}
-        onConnect={(code) => connectWithCode(knownServer, code)}
+        initialServerUrl={knownServer}
+        onConnect={(code, serverUrl) => {
+          const apiUrl = serverUrl ?? knownServer;
+          if (apiUrl !== null) connectWithCode(apiUrl, code);
+        }}
       />
     );
   }
@@ -203,6 +206,19 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
               <Link to={Routes.createAccount()} replace data-testid={requestLinkFlowTestIds.switchLink}>
                 Create an account
               </Link>
+              {offersWebAppCode && (
+                <>
+                  <br />
+                  Signed in on the web app?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setCodeFromWebApp(true)}
+                    data-testid={requestLinkFlowTestIds.webAppCodeButton}
+                  >
+                    Enter a code
+                  </button>
+                </>
+              )}
             </>
           )
         }
@@ -213,16 +229,6 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
           if (apiUrl !== null) ask(apiUrl, email, intent, firstName);
         }}
       />
-      {offersWebAppCode && (
-        <button
-          type="button"
-          className={styles.webAppCode}
-          onClick={() => setCodeFromWebApp(true)}
-          data-testid={requestLinkFlowTestIds.webAppCodeButton}
-        >
-          Signed in on the web app? Enter a code from it
-        </button>
-      )}
     </AuthScreen>
   );
 }

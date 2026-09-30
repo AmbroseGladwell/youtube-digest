@@ -515,12 +515,57 @@ test.describe("connecting the extension from the web app", () => {
     await signIn.verifyAsksForEmail("Sign in");
   });
 
-  test("an extension that doesn't yet know its server offers no web-app code", async ({ launcher }) => {
-    await launcher.launch({ sync: true, surface: "extension" });
-
+  test("the web app's code goes to the extension's own server, with the address tucked away", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+    await signIn.verifyCodeAsksForServer(false);
 
-    await signIn.verifyOffersCodeFromWebApp(false);
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in", /sync to your account/);
+    test.expect(backendSimulator.auth.linkCodeServers()).toEqual([SERVER]);
+  });
+
+  test("the web app's code can be sent to another server, as a link can", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+
+    await signIn.sendCodeToServer("http://localhost:3000");
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in", /sync to your account/);
+    test.expect(backendSimulator.auth.linkCodeServers()).toEqual(["http://localhost:3000"]);
+  });
+
+  test("an extension built without a server asks for one beside the code, and refuses one that isn't a URL", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension" });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.chooseCodeFromWebApp();
+    await signIn.verifyCodeAsksForServer(true);
+
+    await signIn.sendCodeToServer("not a server");
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyServerErrorShown();
+    test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_LINK_CODE)).toBe(0);
+  });
+
+  test("creating an account in the extension offers no web-app code, since no web app is signed in yet", async ({
+    launcher,
+  }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+
+    const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
+
+    await createAccount.verifyOffersCodeFromWebApp(false);
   });
 
   test("the web app's own sign-in page offers no code to type", async ({ launcher }) => {

@@ -54,6 +54,7 @@ export class BackendSimulator {
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
+  #linkCodeServers: string[] = [];
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
   #sessionHasEnded = false;
@@ -222,10 +223,13 @@ export class BackendSimulator {
 
     await this.#page.route("**/api/auth/link-code", (route) =>
       this.#respond(route, EndpointKey.AUTH_LINK_CODE, {
-        onDefault: () => ({
-          status: 200,
-          body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
-        }),
+        onDefault: () => {
+          this.#linkCodeServers.push(new URL(route.request().url()).origin);
+          return {
+            status: 200,
+            body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+          };
+        },
         onError: spent,
       }),
     );
@@ -368,6 +372,7 @@ export class BackendSimulator {
   auth = {
     magicLinkRequests: (): MagicLinkRequest[] => [...this.#magicLinkRequests],
     signInAttempts: (): string[] => [...this.#signInAttempts],
+    linkCodeServers: (): string[] => [...this.#linkCodeServers],
     linkWasAskedForFrom: (surface: AuthSurface): void => {
       this.#linkSurface = surface;
     },

@@ -70,11 +70,15 @@ says so and offers `Sign in again`, which signs this browser out first: a web ap
 its server once its session is gone, so it still counts as connected, and `/sign-in`
 would only send it back to the library.
 
-**In the extension**, the sign-in page offers `Signed in on the web app? Enter a code from
-it` below the email form. It leads to the code field with no address and no resend, and
-`Email me a link instead` goes back. It is offered only when the extension already knows
-its server, since the web app's code only works on the server that made it; an extension
-built without one asks for the server with an email first.
+**In the extension**, the sign-in page's footer adds a second line under `New here?`:
+`Signed in on the web app? Enter a code`, a link rather than a second button, so the email
+stays the page's one action. It leads to the code field with no address and no resend, and
+`Email me a link instead` goes back. It is offered only on Sign in, since someone creating
+an account has no web app signed in yet. The web app's code only works on the server that
+made it, so the code screen carries the same server choice as the email form: the built-in
+server, tucked behind `Use a different server`, or a field asking for one in an extension
+built without it. An extension pointed at `localhost:3000` for development can then use a
+local web app's code rather than sending it to production.
 
 **Why a code, and not a message from the page to the extension.** The web app could hand
 the extension its code with no typing through `chrome.runtime.sendMessage` and

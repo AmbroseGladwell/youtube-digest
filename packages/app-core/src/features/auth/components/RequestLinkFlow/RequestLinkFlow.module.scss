@@ -1,6 +1,0 @@
-@use "../../auth" as auth;
-
-.webAppCode {
-  @include auth.secondary;
-  align-self: flex-start;
-}
