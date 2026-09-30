@@ -5,11 +5,12 @@ import uvicorn
 
 from .create_app import create_app
 from .idle_exit import IdleExit
-from .kokoro_synthesiser import KokoroSynthesiser
+from .kokoro_synthesiser import KokoroSynthesiser, LoadingSynthesiser
 
 
 def main() -> None:
-    synthesiser = KokoroSynthesiser(Path(os.environ.get("MODEL_DIR", "models")))
+    model_dir = Path(os.environ.get("MODEL_DIR", "models"))
+    synthesiser = LoadingSynthesiser(lambda: KokoroSynthesiser(model_dir))
 
     def stop() -> None:
         server.should_exit = True

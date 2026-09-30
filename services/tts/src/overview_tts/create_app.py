@@ -58,7 +58,6 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
 
 def create_app(synthesiser: Synthesiser, idle_exit: IdleExit) -> FastAPI:
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-    voices = synthesiser.voices()
     one_render_at_a_time = threading.Lock()
 
     @app.exception_handler(ServiceError)
@@ -71,7 +70,7 @@ def create_app(synthesiser: Synthesiser, idle_exit: IdleExit) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict:
-        return {"renderVersion": RENDER_VERSION, "voices": sorted(voices)}
+        return {"renderVersion": RENDER_VERSION, "voices": sorted(synthesiser.voices())}
 
     @app.post("/render", response_model=RenderResponse, response_model_by_alias=True)
     def render(request: RenderRequest) -> RenderResponse:
@@ -82,7 +81,7 @@ def create_app(synthesiser: Synthesiser, idle_exit: IdleExit) -> FastAPI:
                     "render_version_mismatch",
                     f"This service renders version {RENDER_VERSION}, not {request.render_version}",
                 )
-            if request.voice not in voices:
+            if request.voice not in synthesiser.voices():
                 raise ServiceError(422, "unknown_voice", f"No voice named {request.voice}")
             with one_render_at_a_time:
                 started = time.perf_counter()

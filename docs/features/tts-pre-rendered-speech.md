@@ -138,8 +138,7 @@ one private bucket per environment (`the-overview-audio`, `the-overview-audio-de
 token scoped to that bucket alone. R2 is on exactly when `R2_BUCKET` is set, so keys imported
 into Fly ahead of the bucket's name are held rather than refused at startup. A directory
 (`AUDIO_DIR`) stands in for working offline; it never goes to production, where a machine's
-disk does not outlive a restart. Production leaves `TTS_URL` unset until the TTS pool is
-deployed, so narration there is visibly unavailable rather than half working.
+disk does not outlive a restart. Production has narration on since 2026-09-30, through the pool in `docs/architecture/deploy.md`, "The TTS service".
 
 ## Where the audio lives
 

@@ -25,12 +25,5 @@ primary_region = "lhr"
     port = 80
     handlers = ["http"]
 
-  [[services.http_checks]]
-    method = "get"
-    path = "/health"
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "30s"
-
 [[vm]]
   size = "performance-4x"

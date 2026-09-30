@@ -1,4 +1,5 @@
 import base64
+import threading
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,6 +7,7 @@ from fastapi.testclient import TestClient
 from fake_synthesiser import FakeSchedule, FakeSynthesiser
 from overview_tts.create_app import MAX_SCRIPT_CHARACTERS, create_app
 from overview_tts.idle_exit import IdleExit
+from overview_tts.kokoro_synthesiser import LoadingSynthesiser
 from overview_tts.render_script import RENDER_VERSION
 
 
@@ -103,3 +105,34 @@ def test_a_render_restarts_the_idle_grace(service):
     assert boot_timer.cancelled
     assert len(schedule.armed) == 1
     assert stops == []
+
+
+def test_a_request_that_arrives_while_the_model_loads_waits_for_it():
+    release = threading.Event()
+
+    def slow_load():
+        release.wait()
+        return FakeSynthesiser()
+
+    app = create_app(LoadingSynthesiser(slow_load), IdleExit(15, lambda: None, FakeSchedule()))
+    responses = []
+    request = threading.Thread(target=lambda: responses.append(TestClient(app).post("/render", json=render_body())))
+    request.start()
+    request.join(timeout=0.2)
+
+    assert responses == []
+    release.set()
+    request.join(timeout=5)
+    assert responses[0].status_code == 200
+    assert responses[0].json()["lineStartsSeconds"][1] == pytest.approx(0.47)
+
+
+def test_a_model_that_fails_to_load_fails_the_request_rather_than_hanging_it():
+    def broken_load():
+        raise FileNotFoundError("kokoro-v1.0.onnx")
+
+    app = create_app(LoadingSynthesiser(broken_load), IdleExit(15, lambda: None, FakeSchedule()))
+
+    response = TestClient(app, raise_server_exceptions=False).post("/render", json=render_body())
+
+    assert response.status_code == 500
