@@ -17,6 +17,9 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     if (Object.keys(patch).length === 0) {
       throw new ApiError("invalid_request", "The settings patch changes nothing");
     }
+    if (patch.narrationVoice !== undefined) {
+      request.log.info({ narrationVoice: patch.narrationVoice }, "narration voice chosen");
+    }
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {

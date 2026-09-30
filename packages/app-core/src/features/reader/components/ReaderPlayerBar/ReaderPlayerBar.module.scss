@@ -108,8 +108,41 @@
 
 .clockStart,
 .clockEnd,
-.note {
+.note,
+.reRecordInline {
   display: none;
+}
+
+// Design 43i: the voice the bar names is the way to choose another.
+.voiceLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  @include controls.quiet-control;
+}
+
+// Design 43j: on the web bar a pill beside the rate; in the panel and on a phone, a link
+// on the label line.
+.reRecord {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  flex: none;
+}
+
+.reRecordLink {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  @include controls.quiet-control;
 }
 
 .actions {
@@ -253,6 +286,14 @@
     text-align: center;
     font-size: 0.75rem;
     color: var(--muted);
+  }
+
+  .reRecord {
+    display: none;
+  }
+
+  .reRecordInline {
+    display: inline;
   }
 
   .actions {

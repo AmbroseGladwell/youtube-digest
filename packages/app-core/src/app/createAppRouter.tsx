@@ -3,6 +3,7 @@ import { AppShell } from "../shell/AppShell/AppShell.js";
 import { HomePage } from "../features/home/HomePage/HomePage.js";
 import { ReaderPage } from "../features/reader/ReaderPage/ReaderPage.js";
 import { SettingsPage } from "../features/settings/SettingsPage/SettingsPage.js";
+import { NarrationVoicePage } from "../features/settings/NarrationVoicePage/NarrationVoicePage.js";
 import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/ConnectExtensionPage.js";
 import { CreateAccountPage } from "../features/auth/CreateAccountPage/CreateAccountPage.js";
 import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
@@ -26,6 +27,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         { path: Routes.home(), element: <HomePage /> },
         { path: Routes.overview(`:${RouteParams.overviewId}`), element: <ReaderPage /> },
         { path: Routes.settings(), element: <SettingsPage /> },
+        { path: Routes.narrationVoice(), element: <NarrationVoicePage /> },
         { path: Routes.signIn(), element: <SignInPage /> },
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },

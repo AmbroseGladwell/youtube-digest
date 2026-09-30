@@ -39,5 +39,11 @@ export function createR2AudioStore(
       }
       return Buffer.from(await response.arrayBuffer());
     },
+    async delete(key) {
+      const response = await send(objectUrl(key), { method: "DELETE" });
+      if (!response.ok && response.status !== 404) {
+        throw new Error(`R2 refused to delete ${key}: ${response.status}`);
+      }
+    },
   };
 }

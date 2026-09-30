@@ -3,7 +3,10 @@ import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/Se
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
 import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { narrationVoiceRowTestIds } from "../../src/features/settings/components/NarrationVoiceRow/NarrationVoiceRowTestIds.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
+import { NarrationVoicePageObject } from "./NarrationVoicePageObject.testHelper.js";
+import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
 
 export class SettingsPageObject extends PageObject {
@@ -14,6 +17,21 @@ export class SettingsPageObject extends PageObject {
   get syncPanel(): SyncPanelPageObject {
     return new SyncPanelPageObject(this.testContext);
   }
+
+  get voicePicker(): NarrationVoicePickerPageObject {
+    return new NarrationVoicePickerPageObject(this.testContext);
+  }
+
+  verifyVoiceRowReads = (text: string | RegExp) =>
+    this.step(`verifyVoiceRowReads ${String(text)}`, () =>
+      expect(this.get(narrationVoiceRowTestIds.root)).toHaveText(text),
+    );
+
+  openVoiceList = (): Promise<NarrationVoicePageObject> =>
+    this.step("openVoiceList", async () => {
+      await this.click(narrationVoiceRowTestIds.root);
+      return new NarrationVoicePageObject(this.testContext).verifyIsShown();
+    });
 
   verifyIsShown = (): Promise<SettingsPageObject> =>
     this.step("verifyIsShown", async () => {

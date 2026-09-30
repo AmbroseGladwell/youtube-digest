@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MAX_SPOKEN_SCRIPT_CHARACTERS } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MAX_SPOKEN_SCRIPT_CHARACTERS, NarrationVoice } from "@overview/domain";
 import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import { MAX_RENDER_ATTEMPTS } from "../audio/AudioRenderQueue.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { MAX_OUTSTANDING_RENDERS_PER_ACCOUNT } from "./audioRoutes.js";
+import { MAX_KEYS_PER_LOOKUP, MAX_OUTSTANDING_RENDERS_PER_ACCOUNT } from "./audioRoutes.js";
 
 const LINES = ["Verdict", "Recycled.", "Standard advice."];
 const MINUTE_MS = 60 * 1000;
@@ -279,5 +279,115 @@ test("a key nobody asked for is not found, and one that is not a key is refused"
 
   assert.equal(unknown.json().error.code, "not_found");
   assert.equal(malformed.json().error.code, "invalid_request");
+  await testApp.close();
+});
+
+const listSamples = (testApp: TestApp) =>
+  testApp.app.inject({
+    method: "GET",
+    url: "/api/audio/samples",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+  });
+
+const keyOf = (fileUrl: string) => fileUrl.split("/")[3]!;
+
+const lookUp = (account: TestAccount, keys: string[]) =>
+  account.inject({ method: "POST", url: "/api/audio/lookup", body: { keys } });
+
+test("looking up several keys answers the renders that exist, in whatever state, and skips the rest", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const heart = (await ask(account, { lines: LINES })).json().key;
+  await testApp.drainAudio();
+  const george = (await ask(account, { lines: LINES, voice: "bm_george" })).json().key;
+
+  const found = await lookUp(account, [heart, george, "f".repeat(64)]);
+
+  assert.equal(found.statusCode, 200);
+  assert.deepEqual(
+    found.json().renders.map((render: { key: string; status: string }) => [render.key, render.status]).sort(),
+    [
+      [heart, "ready"],
+      [george, "queued"],
+    ].sort(),
+  );
+  await testApp.close();
+});
+
+test("a lookup of no keys, too many keys or something that is not a key is refused", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  const none = await lookUp(account, []);
+  const tooMany = await lookUp(account, Array.from({ length: MAX_KEYS_PER_LOOKUP + 1 }, () => "a".repeat(64)));
+  const notAKey = await lookUp(account, ["heart"]);
+
+  assert.equal(none.json().error.code, "invalid_request");
+  assert.equal(tooMany.json().error.code, "invalid_request");
+  assert.equal(notAKey.json().error.code, "invalid_request");
+  await testApp.close();
+});
+
+test("the account that asked for narration can delete it, and then neither it nor its file is found", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+  await testApp.drainAudio();
+
+  const deleted = await account.inject({ method: "DELETE", url: `/api/audio/${key}` });
+
+  assert.equal(deleted.statusCode, 204);
+  assert.equal((await poll(account, key)).json().error.code, "not_found");
+  assert.equal((await fileOf(testApp, key)).statusCode, 404);
+  await testApp.close();
+});
+
+test("another account cannot delete narration it did not ask for, even with the key", async () => {
+  const testApp = await createTestApp();
+  const owner = await makeAccount(testApp);
+  const other = await makeAccount(testApp);
+  const { key } = (await ask(owner, { lines: LINES })).json();
+  await testApp.drainAudio();
+
+  const refused = await other.inject({ method: "DELETE", url: `/api/audio/${key}` });
+
+  assert.equal(refused.json().error.code, "not_found");
+  assert.equal((await fileOf(testApp, key)).statusCode, 200);
+  await testApp.close();
+});
+
+test("the voice samples are listed without a session, one per voice once they are rendered", async () => {
+  const testApp = await createTestApp();
+
+  const beforeSeeding = await listSamples(testApp);
+  await testApp.seedVoiceSamples();
+  const beforeRendering = await listSamples(testApp);
+  await testApp.drainAudio();
+  const rendered = await listSamples(testApp);
+  const heart = rendered.json().samples.find((sample: { voice: string }) => sample.voice === "af_heart");
+
+  assert.deepEqual(beforeSeeding.json(), { samples: [] });
+  assert.deepEqual(beforeRendering.json(), { samples: [] });
+  assert.equal(rendered.statusCode, 200);
+  assert.deepEqual(
+    rendered.json().samples.map((sample: { voice: string }) => sample.voice).sort(),
+    [...NarrationVoice.options].sort(),
+  );
+  assert.equal(heart.durationSeconds, 2);
+  assert.equal((await fileOf(testApp, keyOf(heart.fileUrl))).statusCode, 200);
+  await testApp.close();
+});
+
+test("a voice sample cannot be deleted by any account", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  await testApp.seedVoiceSamples();
+  await testApp.drainAudio();
+  const key = keyOf((await listSamples(testApp)).json().samples[0].fileUrl);
+
+  const refused = await account.inject({ method: "DELETE", url: `/api/audio/${key}` });
+
+  assert.equal(refused.json().error.code, "not_found");
+  assert.equal((await fileOf(testApp, key)).statusCode, 200);
   await testApp.close();
 });

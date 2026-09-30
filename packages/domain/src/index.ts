@@ -32,6 +32,7 @@ export * from "./overviewNoteLines.js";
 export * from "./SpokenScript.js";
 export * from "./NarrationVoice.js";
 export * from "./narrationKey.js";
+export * from "./VoiceSample.js";
 export * from "./NarrationRender.js";
 export * from "./overviewMigrations.js";
 export * from "./overviewCorpus.js";

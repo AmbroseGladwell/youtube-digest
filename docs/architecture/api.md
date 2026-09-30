@@ -29,7 +29,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
     buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
@@ -41,9 +41,9 @@ apps/api/
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
     transcripts/         the per-account transcript repository
-    audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores
+    audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
     routes/              changes, overviews, topics, settings, transcripts, audio
-    scripts/             mintSession
+    scripts/             mintSession, seedVoiceSamples (the deploy's release step)
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 

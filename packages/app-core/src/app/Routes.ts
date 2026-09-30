@@ -6,6 +6,8 @@ import { SIGN_IN_PATH, type OverviewId } from "@overview/domain";
 export const Routes = {
   home: () => "/",
   settings: () => "/settings",
+  // Settings › Narration voice: the section on the full layout, its own page in the panel.
+  narrationVoice: () => "/settings/voice",
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,
   createAccount: () => "/create-account",

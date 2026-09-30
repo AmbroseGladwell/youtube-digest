@@ -302,6 +302,27 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(readerPlayerBarTestIds.pacerTag),
     );
 
+  // Design 43i: the voice the bar names opens the voice setting, wherever the bar is.
+  openVoiceSettingFromBar = (): Promise<SettingsPageObject> =>
+    this.step("openVoiceSettingFromBar", async () => {
+      await this.click(readerPlayerBarTestIds.voiceLink);
+      return new SettingsPageObject(this.testContext).verifyIsShown();
+    });
+
+  // Design 43j: a pill beside the rate on the web bar, a link on the label line in the panel.
+  clickReRecord = () =>
+    this.step("clickReRecord", async () => {
+      const pill = this.get(readerPlayerBarTestIds.reRecordButton);
+      await ((await pill.isVisible()) ? pill.click() : this.click(readerPlayerBarTestIds.reRecordInline));
+    });
+
+  verifyOffersReRecord = (label: string | null) =>
+    this.step(`verifyOffersReRecord ${String(label)}`, () =>
+      label === null
+        ? this.expectToHaveCount(readerPlayerBarTestIds.reRecordButton, 0)
+        : expect(this.get(readerPlayerBarTestIds.reRecordButton)).toHaveText(label),
+    );
+
   clickBarAction = (action: string) =>
     this.step(`clickBarAction ${action}`, () => this.click(readerPlayerBarTestIds.action(action)));
 

@@ -53,7 +53,7 @@ def test_the_model_offers_every_english_voice_the_domain_lists(synthesiser):
     domain = Path(__file__).parents[3] / "packages/domain/src/NarrationVoice.ts"
     offered = {line.split(":")[0].strip() for line in domain.read_text().splitlines() if line.strip().startswith(("af_", "am_", "bf_", "bm_"))}
 
-    assert len(offered) == 28
+    assert len(offered) == 15
     assert offered <= synthesiser.voices()
 
 

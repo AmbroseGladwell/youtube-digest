@@ -60,3 +60,18 @@ test("a settings patch that changes nothing, or names a setting that does not ex
   assert.equal(unknown.statusCode, 400);
   await testApp.close();
 });
+
+test("the chosen narration voice is kept in the synced settings, so it follows the reader to every device", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: { narrationVoice: "bm_george", updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal((await account.change("settings", "settings")).body?.narrationVoice, "bm_george");
+  await testApp.close();
+});

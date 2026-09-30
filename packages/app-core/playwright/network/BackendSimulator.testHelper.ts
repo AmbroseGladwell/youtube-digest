@@ -3,6 +3,7 @@ import type { Page, Route } from "@playwright/test";
 import {
   CLIENT_VERSION,
   DEFAULT_NARRATION_VOICE,
+  NarrationVoice,
   narrationKeySource,
   spokenScript,
   type NarrationRender,
@@ -39,14 +40,17 @@ export const SIMULATED_BEARER = "linked-session-token";
 // Every line of simulated narration lasts this long, so a test can say where a line starts.
 export const SIMULATED_SECONDS_PER_LINE = 2;
 
+// Long enough that a test can see a sample playing before it ends.
+const SAMPLE_SECONDS = 20;
+
 const keyFor = (lines: string[], voice: string) =>
   createHash("sha256").update(narrationKeySource(lines, voice)).digest("hex");
 
-const readyRender = (key: string, lineCount: number): NarrationRender => ({
+const readyRender = (key: string, lineCount: number, secondsPerLine = SIMULATED_SECONDS_PER_LINE): NarrationRender => ({
   key,
   status: "ready",
-  lineStartsSeconds: Array.from({ length: lineCount }, (_, index) => index * SIMULATED_SECONDS_PER_LINE),
-  durationSeconds: lineCount * SIMULATED_SECONDS_PER_LINE,
+  lineStartsSeconds: Array.from({ length: lineCount }, (_, index) => index * secondsPerLine),
+  durationSeconds: lineCount * secondsPerLine,
   fileUrl: `/api/audio/${key}/file`,
 });
 
@@ -101,6 +105,8 @@ export class BackendSimulator {
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
   #narrationPriorities: string[] = [];
+  #narrationVoices: string[] = [];
+  #samples: Array<{ voice: string; key: string }> = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -352,6 +358,7 @@ export class BackendSimulator {
             priority: string;
           };
           this.#narrationPriorities.push(priority);
+          this.#narrationVoices.push(voice);
           const key = keyFor(lines, voice);
           const held = this.#renders.get(key);
           if (held?.render.status === "ready") return { status: 200, body: held.render };
@@ -366,15 +373,52 @@ export class BackendSimulator {
       }),
     );
 
-    await this.#page.route("**/api/audio/*", (route) =>
-      this.#respond(route, EndpointKey.NARRATION_STATUS, {
+    const notFound = { status: 404, body: { error: { code: "not_found", message: "Simulated: never asked for" } } };
+
+    await this.#page.route("**/api/audio/*", (route) => {
+      const key = new URL(route.request().url()).pathname.split("/").at(-1)!;
+      if (route.request().method() === "DELETE") {
+        return this.#respond(route, EndpointKey.NARRATION_DELETE, {
+          onDefault: () => (this.#renders.delete(key) ? { status: 204, body: null } : notFound),
+          onError: unavailable,
+        });
+      }
+      return this.#respond(route, EndpointKey.NARRATION_STATUS, {
         onDefault: () => {
-          const key = new URL(route.request().url()).pathname.split("/").at(-1)!;
           const held = this.#renders.get(key);
-          return held === undefined
-            ? { status: 404, body: { error: { code: "not_found", message: "Simulated: never asked for" } } }
-            : { status: 200, body: held.render };
+          return held === undefined ? notFound : { status: 200, body: held.render };
         },
+        onError: unavailable,
+      });
+    });
+
+    // Registered after audio/*, which also matches them: Playwright tries the newest route first.
+    await this.#page.route("**/api/audio/lookup", (route) =>
+      this.#respond(route, EndpointKey.NARRATION_LOOKUP, {
+        onDefault: () => {
+          const { keys } = route.request().postDataJSON() as { keys: string[] };
+          const renders = keys.flatMap((key) => {
+            const held = this.#renders.get(key);
+            return held === undefined ? [] : [held.render];
+          });
+          return { status: 200, body: { renders } };
+        },
+        onError: unavailable,
+      }),
+    );
+
+    await this.#page.route("**/api/audio/samples", (route) =>
+      this.#respond(route, EndpointKey.NARRATION_SAMPLES, {
+        onDefault: () => ({
+          status: 200,
+          body: {
+            samples: this.#samples.map(({ voice, key }) => ({
+              voice,
+              fileUrl: `/api/audio/${key}/file`,
+              durationSeconds: SAMPLE_SECONDS,
+            })),
+          },
+        }),
         onError: unavailable,
       }),
     );
@@ -433,7 +477,7 @@ export class BackendSimulator {
 
     const { status, body } =
       behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
-    await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    await route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) });
   };
 
   // Seeding and inspection, grouped per domain (frontend-testing-guide.md 4.4). Seeding
@@ -495,11 +539,26 @@ export class BackendSimulator {
   // Narration as the server holds it: rendered already, still being made, given up on,
   // or refused because the account has too much waiting (docs/features/audio-player.md).
   narration = {
-    seedReady: (overview: Overview): void => {
+    seedReady: (overview: Overview, voice: NarrationVoice = DEFAULT_NARRATION_VOICE): void => {
       const lines = spokenScript(overview);
-      const key = keyFor(lines, DEFAULT_NARRATION_VOICE);
+      const key = keyFor(lines, voice);
       this.#renders.set(key, { render: readyRender(key, lines.length), lineCount: lines.length });
     },
+    isStored: (overview: Overview, voice: NarrationVoice): boolean =>
+      this.#renders.get(keyFor(spokenScript(overview), voice))?.render.status === "ready",
+    // One rendered sample per offered voice, as the deploy's release step leaves them.
+    seedSamples: (): void => {
+      this.#samples = NarrationVoice.options.map((voice) => {
+        const lines = ["Hello.", `A sample in ${voice}.`];
+        const key = keyFor(lines, voice);
+        this.#renders.set(key, {
+          render: readyRender(key, lines.length, SAMPLE_SECONDS / lines.length),
+          lineCount: lines.length,
+        });
+        return { voice, key };
+      });
+    },
+    requestedVoices: (): string[] => [...this.#narrationVoices],
     finishRenders: (): void => {
       for (const [key, held] of this.#renders) {
         if (held.render.status !== "ready") held.render = readyRender(key, held.lineCount);

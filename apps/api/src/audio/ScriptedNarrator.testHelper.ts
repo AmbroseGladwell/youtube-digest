@@ -45,5 +45,8 @@ export function makeMemoryAudioStore(): MemoryAudioStore {
     async get(key) {
       return files.get(key) ?? null;
     },
+    async delete(key) {
+      files.delete(key);
+    },
   };
 }

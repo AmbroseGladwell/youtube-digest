@@ -1,5 +1,5 @@
 import { DEFAULT_NARRATION_VOICE, type NarrationRender, type NarrationVoice, type ReadyNarration } from "@overview/domain";
-import { isSyncRequestError, type NarrationApi } from "@overview/sync";
+import { isSyncRequestError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import type {
   PacerReason,
   PlayerSnapshot,
@@ -40,6 +40,7 @@ const IDLE: PlayerSnapshot = {
   timings: { lineStarts: [], durationSeconds: 0 },
   rate: 1,
   voice: DEFAULT_NARRATION_VOICE,
+  narratedVoice: null,
 };
 
 const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) =>
@@ -62,6 +63,7 @@ export class PlayerEngine {
   #snapshot: PlayerSnapshot;
   #time = 0;
   #render: ReadyNarration | null = null;
+  #replacing: string | null = null;
   #generation = 0;
   #pollTimer: ReturnType<typeof setTimeout> | null = null;
   #longTimer: ReturnType<typeof setTimeout> | null = null;
@@ -104,6 +106,30 @@ export class PlayerEngine {
       this.#teardown();
       this.#begin(track, line);
     }
+  }
+
+  // The reader chose another voice. A note nobody has pressed play on is looked at again,
+  // so the bar can offer to re-record it; one already under way carries on as it is.
+  setVoice(voice: NarrationVoice): void {
+    if (voice === this.#snapshot.voice) return;
+    this.#set({ voice });
+    const { track, status, source } = this.#snapshot;
+    if (track !== null && status === "ready" && source === "audio" && this.#api !== null) {
+      const line = this.getLine();
+      this.#teardown();
+      this.#begin(track, line);
+    }
+  }
+
+  // Design 43j: the note in the reader's chosen voice, from the line they had reached, and
+  // only once it has landed is the narration in the older voice thrown away.
+  reRecord(): void {
+    const { track, narratedVoice, voice, status } = this.#snapshot;
+    if (track === null || narratedVoice === null || narratedVoice === voice || status === "preparing") return;
+    if (status === "playing" || status === "buffering") this.pause();
+    if (status === "ended") this.#time = 0;
+    this.#replacing = this.#render?.key ?? null;
+    this.#requestRender();
   }
 
   load(track: PlayerTrack, startLine = 0): void {
@@ -158,6 +184,7 @@ export class PlayerEngine {
   cancel(): void {
     if (this.#snapshot.status !== "preparing") return;
     this.#generation += 1;
+    this.#replacing = null;
     this.#clearPreparing();
     this.#set({ status: "ready", preparing: null });
     if (this.#api !== null && this.#snapshot.source === "audio") this.#peek(true);
@@ -232,6 +259,7 @@ export class PlayerEngine {
       availability: signedIn ? "checking" : "onFirstPlay",
       preparing: null,
       timings,
+      narratedVoice: null,
     });
     this.#emitTime();
     if (signedIn) this.#peek();
@@ -245,10 +273,10 @@ export class PlayerEngine {
     this.#watchChecks = 0;
     api
       .peek(this.#script(), this.#snapshot.voice)
-      .then((render) => {
+      .then((found) => {
         if (generation !== this.#generation) return;
         this.#pollFailures = 0;
-        this.#onPeeked(render, generation);
+        this.#onPeeked(found, generation);
       })
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
@@ -263,18 +291,19 @@ export class PlayerEngine {
 
   // A render somebody else asked for, usually the note's own background request (OV-41):
   // watched slowly, because nobody is waiting, and landing without playing.
-  #onPeeked(render: NarrationRender | null, generation: number): void {
+  #onPeeked(found: VoicedNarration | null, generation: number): void {
+    const render = found?.render ?? null;
     if (render?.status === "queued" || render?.status === "rendering") {
       if (this.#watchChecks * WATCH_INTERVAL_MS >= WATCH_GIVES_UP_AFTER_MS) {
         this.#set({ availability: "onFirstPlay", preparing: null });
         return;
       }
       this.#set({ availability: "preparing", preparing: { step: render.status, long: false } });
-      this.#pollTimer = setTimeout(() => this.#watch(render.key, generation), WATCH_INTERVAL_MS);
+      this.#pollTimer = setTimeout(() => this.#watch(found!, generation), WATCH_INTERVAL_MS);
       return;
     }
     if (render?.status === "ready" && this.#adopt(render)) {
-      this.#set({ availability: "ready", preparing: null });
+      this.#set({ availability: "ready", preparing: null, narratedVoice: found!.voice });
       return;
     }
     if (this.#snapshot.availability !== "ready") this.#set({ availability: "onFirstPlay", preparing: null });
@@ -283,15 +312,15 @@ export class PlayerEngine {
   // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few,
   // or after two minutes of the render not landing, the bar goes back to 1b, and pressing
   // play asks again.
-  #watch(key: string, generation: number): void {
+  #watch({ voice, render: watched }: VoicedNarration, generation: number): void {
     if (generation !== this.#generation || this.#api === null) return;
     this.#watchChecks += 1;
     this.#api
-      .status(key)
+      .status(watched.key)
       .then((render) => {
         if (generation !== this.#generation) return;
         this.#pollFailures = 0;
-        this.#onPeeked(render, generation);
+        this.#onPeeked({ voice, render }, generation);
       })
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
@@ -304,7 +333,7 @@ export class PlayerEngine {
           this.#set({ availability: "onFirstPlay", preparing: null });
           return;
         }
-        this.#pollTimer = setTimeout(() => this.#watch(key, generation), WATCH_INTERVAL_MS);
+        this.#pollTimer = setTimeout(() => this.#watch({ voice, render: watched }, generation), WATCH_INTERVAL_MS);
       });
   }
 
@@ -326,11 +355,13 @@ export class PlayerEngine {
       }
     }, PREPARING_LONG_AFTER_MS);
     this.#set({ status: "preparing", preparing: { step: "queued", long: false } });
+    const { voice } = this.#snapshot;
     api
-      .request(this.#script(), this.#snapshot.voice, "interactive")
-      .then((render) => this.#onRender(render, generation))
+      .request(this.#script(), voice, "interactive")
+      .then((render) => this.#onRender(render, generation, voice))
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
+        this.#replacing = null;
         this.#clearPreparing();
         if (isSyncRequestError(error) && error.code === "too_many_requests") {
           this.#set({ status: "busy", preparing: null });
@@ -340,13 +371,13 @@ export class PlayerEngine {
       });
   }
 
-  #onRender(render: NarrationRender, generation: number): void {
+  #onRender(render: NarrationRender, generation: number, voice: NarrationVoice): void {
     if (generation !== this.#generation) return;
     this.#pollFailures = 0;
     if (render.status === "queued" || render.status === "rendering") {
       const { preparing } = this.#snapshot;
       this.#set({ preparing: { step: render.status, long: preparing?.long ?? false } });
-      this.#pollTimer = setTimeout(() => this.#poll(render.key, generation), POLL_INTERVAL_MS);
+      this.#pollTimer = setTimeout(() => this.#poll(render.key, generation, voice), POLL_INTERVAL_MS);
       return;
     }
     this.#clearPreparing();
@@ -362,7 +393,8 @@ export class PlayerEngine {
       this.#fallBackToPacer("unavailable", pacerWasPlaying || !readingAlong);
       return;
     }
-    this.#set({ source: "audio", pacerReason: null, preparing: null, availability: "ready" });
+    this.#set({ source: "audio", pacerReason: null, preparing: null, availability: "ready", narratedVoice: voice });
+    this.#discardReplaced(render.key);
     if (readingAlong && !pacerWasPlaying) {
       this.#set({ status: "paused" });
       this.#loadMedia();
@@ -371,11 +403,11 @@ export class PlayerEngine {
     this.#playMedia();
   }
 
-  #poll(key: string, generation: number): void {
+  #poll(key: string, generation: number, voice: NarrationVoice): void {
     if (generation !== this.#generation || this.#api === null) return;
     this.#api
       .status(key)
-      .then((render) => this.#onRender(render, generation))
+      .then((render) => this.#onRender(render, generation, voice))
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
         if (isSyncRequestError(error) && error.code === "unauthenticated") {
@@ -389,11 +421,18 @@ export class PlayerEngine {
           this.#renderGaveUp();
           return;
         }
-        this.#pollTimer = setTimeout(() => this.#poll(key, generation), POLL_INTERVAL_MS * 2);
+        this.#pollTimer = setTimeout(() => this.#poll(key, generation, voice), POLL_INTERVAL_MS * 2);
       });
   }
 
+  #discardReplaced(key: string): void {
+    const replaced = this.#replacing;
+    this.#replacing = null;
+    if (replaced !== null && replaced !== key) this.#api?.discard(replaced).catch(() => undefined);
+  }
+
   #renderGaveUp(): void {
+    this.#replacing = null;
     if (this.#snapshot.source === "pacer") {
       this.#set({ pacerReason: "unavailable", preparing: null });
       return;
@@ -428,7 +467,7 @@ export class PlayerEngine {
     const line = this.getLine();
     this.#render = null;
     this.#usePacerTimings(line);
-    this.#set({ source: "pacer", pacerReason: reason, preparing: null, status: "ready" });
+    this.#set({ source: "pacer", pacerReason: reason, preparing: null, status: "ready", narratedVoice: null });
     if (start) this.#startPacer();
   }
 

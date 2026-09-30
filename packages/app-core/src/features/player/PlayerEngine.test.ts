@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OverviewId, type NarrationRender, type NoteLine } from "@overview/domain";
-import { SyncRequestError, SyncTransportError, type NarrationApi } from "@overview/sync";
+import { OverviewId, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
+import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import {
   PREPARING_LONG_AFTER_MS,
   POLL_INTERVAL_MS,
@@ -67,10 +67,24 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   };
 }
 
+const GEORGE_KEY = "b".repeat(64);
+
+const READY_IN_GEORGE: NarrationRender = {
+  key: GEORGE_KEY,
+  status: "ready",
+  lineStartsSeconds: [0, 1.2, 5.3, 6.9],
+  durationSeconds: 10.1,
+  fileUrl: `/api/audio/${GEORGE_KEY}/file`,
+};
+
+const inHeart = (render: NarrationRender): VoicedNarration => ({ voice: "af_heart", render });
+
 const scriptedApi = (overrides: Partial<NarrationApi> = {}): NarrationApi => ({
   peek: vi.fn(async () => null),
   request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "queued" })),
   status: vi.fn(async (): Promise<NarrationRender> => READY),
+  discard: vi.fn(async () => undefined),
+  samples: vi.fn(async () => []),
   fileUrl: (render) => `https://api.test${render.fileUrl}`,
   ...overrides,
 });
@@ -79,8 +93,8 @@ const settle = () => vi.advanceTimersByTimeAsync(0);
 
 describe("PlayerEngine", () => {
   let media: FakeMedia;
-  const engineWith = (api: NarrationApi | null) =>
-    new PlayerEngine({ api, createMedia: () => (media = new FakeMedia()) });
+  const engineWith = (api: NarrationApi | null, voice: NarrationVoice = "af_heart") =>
+    new PlayerEngine({ api, voice, createMedia: () => (media = new FakeMedia()) });
 
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
@@ -99,7 +113,7 @@ describe("PlayerEngine", () => {
   });
 
   it("narration that exists is known before the first press, and plays with its measured timings", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
 
@@ -220,7 +234,7 @@ describe("PlayerEngine", () => {
   });
 
   it("skipping moves fifteen seconds and stops at either end", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
     engine.play();
@@ -233,7 +247,7 @@ describe("PlayerEngine", () => {
   });
 
   it("the rate is real playback speed, and survives changing note", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
     engine.play();
@@ -245,7 +259,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a finished note plays again from the start", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
     engine.play();
@@ -258,7 +272,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a play the browser refuses rests as paused rather than claiming to play", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
     engine.seekLine(1);
@@ -272,7 +286,7 @@ describe("PlayerEngine", () => {
   });
 
   it("narration whose timings do not match the note's lines is not trusted", async () => {
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => ({ ...READY, lineStartsSeconds: [0, 1] })) }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart({ ...READY, lineStartsSeconds: [0, 1] })) }));
     engine.load(TRACK);
     await settle();
 
@@ -303,7 +317,7 @@ describe("PlayerEngine", () => {
       .fn<NarrationApi["status"]>()
       .mockResolvedValueOnce({ key: KEY, status: "rendering" })
       .mockResolvedValueOnce(READY);
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })), status }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })), status }));
     engine.load(TRACK);
     await settle();
     expect(engine.getSnapshot()).toMatchObject({
@@ -325,7 +339,7 @@ describe("PlayerEngine", () => {
 
   it("pressing play on a render already under way asks for it interactively, and plays when it lands", async () => {
     const api = scriptedApi({
-      peek: vi.fn(async () => ({ key: KEY, status: "rendering" as const })),
+      peek: vi.fn(async () => inHeart({ key: KEY, status: "rendering" })),
       request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "rendering" })),
     });
     const engine = engineWith(api);
@@ -343,7 +357,7 @@ describe("PlayerEngine", () => {
   });
 
   it("changing track stops watching the last one's render", async () => {
-    const api = scriptedApi({ peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })) });
+    const api = scriptedApi({ peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })) });
     const engine = engineWith(api);
     engine.load(TRACK);
     await settle();
@@ -358,7 +372,7 @@ describe("PlayerEngine", () => {
   it("a watched render that fails, or checks that keep failing, go quietly back to made on first play", async () => {
     const failed = engineWith(
       scriptedApi({
-        peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })),
+        peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })),
         status: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })),
       }),
     );
@@ -368,7 +382,7 @@ describe("PlayerEngine", () => {
 
     const offline = engineWith(
       scriptedApi({
-        peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })),
+        peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })),
         status: vi.fn(async () => Promise.reject(new SyncTransportError("Offline"))),
       }),
     );
@@ -380,7 +394,7 @@ describe("PlayerEngine", () => {
   });
 
   it("cancelling a first play goes back to watching the render it asked for", async () => {
-    const peek = vi.fn<NarrationApi["peek"]>().mockResolvedValueOnce(null).mockResolvedValue({ key: KEY, status: "queued" });
+    const peek = vi.fn<NarrationApi["peek"]>().mockResolvedValueOnce(null).mockResolvedValue(inHeart({ key: KEY, status: "queued" }));
     const engine = engineWith(scriptedApi({ peek }));
     engine.load(TRACK);
     await settle();
@@ -412,7 +426,7 @@ describe("PlayerEngine", () => {
 
   it("a render that never lands stops being watched after two minutes", async () => {
     const api = scriptedApi({
-      peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })),
+      peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })),
       status: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "queued" })),
     });
     const engine = engineWith(api);
@@ -438,7 +452,7 @@ describe("PlayerEngine", () => {
     const request = vi
       .fn<NarrationApi["request"]>()
       .mockRejectedValueOnce(new SyncRequestError("too_many_requests", 429, "Three waiting"));
-    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY), request }));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)), request }));
     engine.load(TRACK);
     await settle();
     engine.play();
@@ -449,5 +463,101 @@ describe("PlayerEngine", () => {
 
     expect(request).toHaveBeenCalledOnce();
     expect(engine.getSnapshot()).toBe(playing);
+  });
+
+  describe("old audio (43j)", () => {
+    it("a note narrated before the reader chose another voice plays in the voice it was narrated in", async () => {
+      const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }), "bm_george");
+      engine.load(TRACK);
+      await settle();
+
+      expect(engine.getSnapshot()).toMatchObject({
+        availability: "ready",
+        voice: "bm_george",
+        narratedVoice: "af_heart",
+      });
+      engine.play();
+      expect(media.src).toBe(`https://api.test/api/audio/${KEY}/file`);
+    });
+
+    it("re-recording plays the chosen voice from the line reached, then throws the older narration away", async () => {
+      const api = scriptedApi({
+        peek: vi.fn(async () => inHeart(READY)),
+        request: vi.fn(async () => READY_IN_GEORGE),
+      });
+      const engine = engineWith(api, "bm_george");
+      engine.load(TRACK);
+      await settle();
+      engine.play();
+      media.reachTime(5);
+      engine.pause();
+
+      engine.reRecord();
+      await settle();
+
+      expect(api.request).toHaveBeenCalledWith(TRACK.lines.map((noteLine) => noteLine.text), "bm_george", "interactive");
+      expect(engine.getSnapshot()).toMatchObject({ status: "playing", narratedVoice: "bm_george" });
+      expect(media.src).toBe(`https://api.test/api/audio/${GEORGE_KEY}/file`);
+      expect(engine.getTime()).toBe(5.3);
+      expect(api.discard).toHaveBeenCalledWith(KEY);
+    });
+
+    it("a re-record that is cancelled keeps the older narration", async () => {
+      const api = scriptedApi({
+        peek: vi.fn(async () => inHeart(READY)),
+        request: vi.fn(async (): Promise<NarrationRender> => ({ key: GEORGE_KEY, status: "queued" })),
+      });
+      const engine = engineWith(api, "bm_george");
+      engine.load(TRACK);
+      await settle();
+
+      engine.reRecord();
+      await settle();
+      expect(engine.getSnapshot().status).toBe("preparing");
+      engine.cancel();
+      await settle();
+
+      expect(engine.getSnapshot()).toMatchObject({ status: "ready", narratedVoice: "af_heart" });
+      expect(api.discard).not.toHaveBeenCalled();
+    });
+
+    it("re-recording in the voice the note is already narrated in does nothing", async () => {
+      const api = scriptedApi({ peek: vi.fn(async () => inHeart(READY)) });
+      const engine = engineWith(api, "af_heart");
+      engine.load(TRACK);
+      await settle();
+
+      engine.reRecord();
+      await settle();
+
+      expect(api.request).not.toHaveBeenCalled();
+    });
+
+    it("choosing another voice looks an unplayed note up again in it", async () => {
+      const api = scriptedApi({ peek: vi.fn(async () => inHeart(READY)) });
+      const engine = engineWith(api, "af_heart");
+      engine.load(TRACK);
+      await settle();
+
+      engine.setVoice("bf_emma");
+      await settle();
+
+      expect(api.peek).toHaveBeenLastCalledWith(TRACK.lines.map((noteLine) => noteLine.text), "bf_emma");
+      expect(engine.getSnapshot()).toMatchObject({ voice: "bf_emma", narratedVoice: "af_heart" });
+    });
+
+    it("choosing another voice while a note plays leaves it playing", async () => {
+      const api = scriptedApi({ peek: vi.fn(async () => inHeart(READY)) });
+      const engine = engineWith(api, "af_heart");
+      engine.load(TRACK);
+      await settle();
+      engine.play();
+
+      engine.setVoice("bf_emma");
+      await settle();
+
+      expect(api.peek).toHaveBeenCalledTimes(1);
+      expect(engine.getSnapshot()).toMatchObject({ status: "playing", voice: "bf_emma", narratedVoice: "af_heart" });
+    });
   });
 });

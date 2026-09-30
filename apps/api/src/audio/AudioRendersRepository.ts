@@ -54,7 +54,7 @@ export interface EnqueueAudio {
   renderVersion: number;
   lines: string[];
   priority: AudioPriority;
-  requestedBy: AccountId;
+  requestedBy: AccountId | null;
   now: Date;
 }
 
@@ -70,6 +70,28 @@ export class AudioRendersRepository {
   async get(key: string): Promise<AudioRender | null> {
     const rows = await this.#sql.query<AudioRenderRow>(`select ${COLUMNS} from audio_renders where key = $1`, [key]);
     return rows[0] === undefined ? null : fromRow(rows[0]);
+  }
+
+  async getMany(keys: readonly string[]): Promise<AudioRender[]> {
+    const rows = await this.#sql.query<AudioRenderRow>(
+      `select ${COLUMNS} from audio_renders where key in (select jsonb_array_elements_text($1::jsonb))`,
+      [JSON.stringify(keys)],
+    );
+    return rows.map(fromRow);
+  }
+
+  // Only the account that asked for a render can throw it away, and never a voice sample,
+  // which no account asked for.
+  async deleteRequestedBy(key: string, accountId: AccountId): Promise<boolean> {
+    const rows = await this.#sql.query<{ key: string }>(
+      "delete from audio_renders where key = $1 and requested_by = $2 returning key",
+      [key, accountId],
+    );
+    return rows.length > 0;
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.#sql.query("delete from audio_renders where key = $1", [key]);
   }
 
   async outstandingFor(accountId: AccountId, exceptKey: string): Promise<number> {

@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { AudioStore } from "./AudioStore.js";
 
@@ -20,6 +20,9 @@ export function createFileAudioStore(dir: string): AudioStore {
         }
         throw error;
       }
+    },
+    async delete(key) {
+      await rm(fileFor(key), { force: true });
     },
   };
 }
