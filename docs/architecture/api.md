@@ -23,6 +23,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Configuration from the environment, refused at startup when wrong | `src/loadConfig.ts` |
 | The extension's origin vouched for, from an allowlist in the environment | `src/http/corsPlugin.ts`, `allowedOriginsFromEnv.ts` |
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
+| Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
 
 ## Shape
@@ -32,7 +33,7 @@ apps/api/
   migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
-    buildApp.ts          the /api scope: error handler, CORS, then parse → floor → session, then routes
+    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
@@ -42,6 +43,7 @@ apps/api/
     records/             the repository and the three pure write decisions
     transcripts/         the per-account transcript repository
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
+    rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio
     scripts/             mintSession, seedVoiceSamples (the deploy's release step)
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
@@ -125,7 +127,7 @@ did: a preflight is the same 404 as any unknown route.
 
 **What is vouched for.** GET, POST, PUT and DELETE; the four headers a sync request
 carries, `Authorization`, `Content-Type`, `If-Match` and `X-Client-Version`; and `ETag`
-exposed, so the answer to a write can be read whole. The preflight is answered before the
+and `Retry-After` exposed, so the answer to a write, or to a throttle, can be read whole. The preflight is answered before the
 parse, floor and session hooks run, because it carries no token and a 401 on it would
 reach the client as an unreachable server rather than a sign-out. The origin is echoed
 on error responses for the same reason: an envelope the browser hides reaches the client
@@ -186,8 +188,9 @@ renamed here because there are four schema versions, and a number named after th
 thing gets used as that thing. The correction is recorded in that document's table.
 
 **The floor is a hook, and it has no exemptions.** In the `/api` scope the hooks run in
-the order parse, floor, session: a client below the floor is told to update before it is
-told to sign in, and without a database round trip. Reads are served below the floor, so
+the order address limit, parse, floor, session, account limit (the two limits are "Rate
+limits", below): a client below the floor is told to update before it is told to sign in,
+and without a database round trip. Reads are served below the floor, so
 the wall can still say who is signed in. `DELETE /api/session` is a write and is refused
 too: a walled client offers no logout and the token expires on its own. One rule with no
 exceptions cannot be misapplied.
@@ -217,7 +220,7 @@ sends:
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |
-| `too_many_requests` | 429 | an account already has its limit of narration waiting to be rendered; `details.limit` says how many |
+| `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
 | `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service |
 
@@ -226,6 +229,75 @@ upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated
 understood, and refused for a reason no resend from this client can change. The floor is
 about the client; `record_newer_than_client` is about the resource's state, which is what
 409 says.
+
+## Rate limits
+
+Every limit is a fixed window counted in this process's memory, and a request past it is
+`429 too_many_requests` with `Retry-After` in whole seconds and the same number in
+`details.retryAfterSeconds`, because the clients read the envelope rather than headers.
+Each throttle is logged at `warn` as `throttled` with the limit's name, the route and the
+wait, and never the address or the email, so the numbers can be tuned from real traffic.
+
+| Limit | Counts | Per | Where |
+|---|---|---|---|
+| `address` | 1,200 | minute, per address | every `/api` request, before anything else runs |
+| `account` | 600 | minute, per account | every request with a session, after the session is known |
+| `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
+| `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
+| `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |
+| `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
+
+The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
+
+- **`address` is refused before the session is looked up**, so a flood of made-up tokens
+  costs a map lookup rather than a database round trip, and it covers the public routes
+  as much as the private ones. It is high because a household or an office shares one
+  address.
+- **`account` is the sync limit.** The sync client pushes one request per outbox entry,
+  so a first sync of a large library is a burst: 600 a minute is ten a second held for a
+  minute, far past anything a reader does and well short of what would hurt one small
+  machine. A sync throttled mid-push stops the cycle as `failed` and carries on at the
+  next one, with nothing parked (`docs/features/sync-client.md`), so a very large first
+  sync takes a few cycles rather than failing.
+- **Asking for a link is limited both ways.** Per address stops one caller mailing many
+  inboxes and spending the mail provider's daily allowance; per email stops many callers
+  filling one inbox. They sit on top of the one-minute cooldown in `sign-in.md`, which
+  still answers `202` silently. The per-email limit is honest instead: someone flooding an
+  address can keep its owner from asking for an hour, and a `429` that says how long is a
+  better answer to the owner than a `202` for a mail that never comes. It says the same
+  whether or not the account exists, so it tells a prober nothing.
+- **Sign-in and link codes are limited per address** because both take a guess. A link
+  token is 256 bits and needs no limit; a link code is 40 bits and ten minutes, which
+  `sign-in.md` argued was enough on its own, and thirty guesses an hour per address puts
+it further out of reach.
+- **A refused request does not count.** A caller hammering past the limit is let back in
+  when its window ends, not held out while it keeps knocking.
+
+**The address.** Behind Fly the socket is Fly's proxy, so the caller is read from
+`Fly-Client-IP`, which the proxy sets and overwrites, named in `CLIENT_IP_HEADER`. Unset,
+the socket's address is used and any such header ignored, so a client talking to the
+process directly cannot choose its own address. `X-Forwarded-For` is not used: its first
+entry is whatever the client wrote. An IPv6 caller is counted by its `/64`, since one
+connection is usually given a whole `/64` and could otherwise take a fresh address per
+request; an IPv4 address mapped into IPv6 counts as the IPv4 address.
+
+**In memory, because there is one machine.** `deploy.md` runs one machine, and a limiter
+in its memory is exact, costs no round trip, and needs nothing new to run. Two things
+follow, and both are accepted. A deploy or a stop resets every window, which only
+forgives, and a stopped machine had no traffic to limit. With more than one machine each
+counts alone and the limits multiply by the count; the day `fly.toml` runs two, the
+windows move to Postgres (a row per key and window, `insert … on conflict do update`),
+behind the same `FixedWindowLimiter.take`. Redis was not considered: a second store to
+run for one counter.
+
+**Fixed windows, not a sliding log or a token bucket.** A caller can spend a limit at the
+end of one window and again at the start of the next, twice the rate for a moment. At
+these numbers that burst does no harm, and in exchange the limiter is a count and a start
+time per key, the wait it reports is exact, and moving it to Postgres later is one row.
+
+The static web app outside `/api` is not limited: it is files. Narration keeps its own
+limit of renders waiting per account, which is about the TTS pool rather than the rate of
+requests, and answers the same code without a `Retry-After`.
 
 ## Configuration and running
 
@@ -244,6 +316,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `MAIL_TRANSPORT` | `log` | `log` prints each magic link to the server's output; `brevo` sends it |
 | `BREVO_API_KEY` | | required with `brevo` |
 | `MAIL_FROM` | | the sender, e.g. `The Overview <signin@example.com>`; required with `brevo`, and with `brevo` `APP_URL` must be https |
+| `CLIENT_IP_HEADER` | unset | the header a trusted proxy puts the caller's address in, which the rate limits count by: `fly-client-ip` on Fly. Unset counts by the socket's address. Set it only behind a proxy that overwrites the header, or any client can name itself |
 | `STATIC_ROOT` | unset | the built web app to serve outside `/api`; unset serves the API alone and says so at startup (`docs/architecture/deploy.md`) |
 | `TTS_URL` | unset | the TTS service narration renders through; unset leaves `/api/audio` answering `unavailable`, and says so at startup |
 | `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
@@ -276,7 +349,7 @@ first, costs nothing.
 
 ## Not built in this slice
 
-Rate limiting beyond the magic link's per-address cooldown; a sweep of expired sessions,
-links and codes. Serving the SPA from this process, the image and the Fly.io configuration
+A sweep of expired sessions, links and codes; a rate limit shared between machines, which
+is wanted the day there is more than one ("Rate limits"). Serving the SPA from this process, the image and the Fly.io configuration
 are built: `docs/architecture/deploy.md`. The client half of the sync engine is built: `docs/features/sync-client.md`;
 sign-in is built: `docs/features/sign-in.md`.

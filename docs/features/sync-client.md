@@ -115,7 +115,7 @@ judgement:
 | The server said | The cycle | Because |
 |---|---|---|
 | nothing, or not the API | stops, `offline` | nothing later in the outbox would fare better, and a retry later might |
-| `internal_error`, `unavailable` | stops, `failed` | the same |
+| `internal_error`, `unavailable`, `too_many_requests` | stops, `failed` | the same: a throttle ends when its window does (`docs/architecture/api.md`, "Rate limits") |
 | `unauthenticated` | stops, `signedOut` | a token, not a retry, is the way out |
 | `client_unsupported` | stops, `unsupported` | the wall |
 | anything else | parks this one write | it is the write's own fault and no resend changes it |
