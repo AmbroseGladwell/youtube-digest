@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Overview } from "./Overview.js";
+import type { SharedNote } from "./SharedNote.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
 
 // One entry per NoteLine, headings included, so an audio timing is a line index
@@ -15,6 +15,6 @@ export const SpokenScript = z
   );
 export type SpokenScript = z.infer<typeof SpokenScript>;
 
-export function spokenScript(overview: Overview): SpokenScript {
+export function spokenScript(overview: SharedNote): SpokenScript {
   return overviewNoteLines(overview).map((line) => line.text);
 }

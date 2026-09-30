@@ -29,8 +29,11 @@ import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
+import { shareRoutes } from "./routes/shareRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
+import { sharePagePlugin } from "./shares/sharePagePlugin.js";
+import { SharesRepository } from "./shares/SharesRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
@@ -89,6 +92,7 @@ export async function buildApp({
   const sessionCookieSecure = config.appUrl.startsWith("https://");
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
+  const shares = new SharesRepository(sql, clock);
   const audioQueue =
     audio === null
       ? null
@@ -145,6 +149,7 @@ export async function buildApp({
       topicRoutes(api, records);
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
+      shareRoutes(api, shares, config.appUrl);
       audioRoutes(
         api,
         audio === null || audioQueue === null
@@ -179,6 +184,16 @@ export async function buildApp({
   app.addHook("onReady", async () => {
     audioQueue?.kick();
   });
+
+  await app.register(
+    async (page) => {
+      registerApiErrorHandler(page);
+      await page.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
+      page.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+      await sharePagePlugin(page, { shares, appUrl: config.appUrl, staticRoot: config.staticRoot, clock });
+    },
+    { prefix: "/s" },
+  );
 
   if (config.staticRoot !== null) {
     await app.register(webAppPlugin, { root: config.staticRoot });

@@ -1,6 +1,6 @@
 import type { NoteLine } from "./NoteLine.js";
 import { NOVELTY_LABEL } from "./noveltyLabel.js";
-import type { Overview } from "./Overview.js";
+import type { SharedNote } from "./SharedNote.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
@@ -8,7 +8,10 @@ export const SUMMARY_SECTION = "Summary";
 export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 
-export function overviewNoteLines(overview: Overview): NoteLine[] {
+// Takes SharedNote rather than Overview because a shared copy has to build the same body
+// from the same fields, and the three the copy leaves out are ones this never read
+// (docs/features/sharing.md). An Overview is a SharedNote with more on it.
+export function overviewNoteLines(overview: SharedNote): NoteLine[] {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: string, bodies: string[], bullet = false) => {

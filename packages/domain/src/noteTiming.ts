@@ -1,5 +1,5 @@
-import { countWords } from "../../../util/countWords.js";
-import type { NoteLine } from "@overview/domain";
+import type { NoteLine } from "./NoteLine.js";
+import { wordCount } from "./wordCount.js";
 
 // The two rates the reader's "4 min read · 6 min listen" line and its pacer are built
 // from, and why they are arithmetic over the note's own words rather than an estimate
@@ -17,9 +17,9 @@ export interface NoteTiming {
 
 export function noteTiming(lines: NoteLine[]): NoteTiming {
   const lineSeconds = lines.map((line) =>
-    Math.max(MINIMUM_LINE_SECONDS, (countWords(line.text) / SPOKEN_WORDS_PER_MINUTE) * 60),
+    Math.max(MINIMUM_LINE_SECONDS, (wordCount(line.text) / SPOKEN_WORDS_PER_MINUTE) * 60),
   );
-  const words = lines.reduce((total, line) => total + countWords(line.text), 0);
+  const words = lines.reduce((total, line) => total + wordCount(line.text), 0);
 
   return {
     lineSeconds,

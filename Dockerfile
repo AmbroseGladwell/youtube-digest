@@ -26,6 +26,7 @@ RUN npm ci --omit=dev --workspace apps/api --ignore-scripts && npm cache clean -
 COPY --from=build /app/packages/domain/dist packages/domain/dist
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/api/migrations apps/api/migrations
+COPY --from=build /app/apps/api/assets apps/api/assets
 COPY --from=build /app/apps/web/dist apps/web/dist
 USER node
 EXPOSE 3000

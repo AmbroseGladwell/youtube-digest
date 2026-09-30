@@ -54,6 +54,7 @@ test("the tables the migrations create are there to be used", async () => {
       "schema_migrations",
       "sessions",
       "shared_transcripts",
+    "shares",
       "transcript_contributions",
       "voice_samples",
     ],
