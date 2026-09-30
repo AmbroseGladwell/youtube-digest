@@ -11,4 +11,5 @@ export const rateLimits = {
   magicLinkPerEmail: { name: "magicLinkEmail", limit: 10, windowMs: HOUR_MS },
   signInPerAddress: { name: "signInAddress", limit: 30, windowMs: HOUR_MS },
   linkCodePerAddress: { name: "linkCodeAddress", limit: 30, windowMs: HOUR_MS },
+  sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimit>;

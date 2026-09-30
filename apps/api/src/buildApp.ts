@@ -134,7 +134,7 @@ export async function buildApp({
       overviewRoutes(api, records, transcripts);
       topicRoutes(api, records);
       settingsRoutes(api, records);
-      transcriptRoutes(api, transcripts);
+      transcriptRoutes(api, transcripts, clock);
       audioRoutes(
         api,
         audio === null || audioQueue === null

@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import { CLIENT_VERSION_HEADER, VideoId, type StoredTranscript } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
-import { createTestApp } from "../testing/createTestApp.testHelper.js";
+import { rateLimits } from "../rateLimit/rateLimits.js";
+import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
@@ -67,7 +69,7 @@ test("another account cannot read a transcript it did not store", async () => {
   await testApp.close();
 });
 
-test("storing a video's transcript again replaces the one kept before", async () => {
+test("storing a video's transcript again keeps the first copy when the second is no better", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const first = makeStoredTranscript({ fetchedAt: "2026-09-01T00:00:00.000Z" });
@@ -78,7 +80,22 @@ test("storing a video's transcript again replaces the one kept before", async ()
 
   const response = await account.inject({ method: "GET", url: `/api/transcripts/${first.videoId}` });
 
-  assert.deepEqual(response.json(), second);
+  assert.deepEqual(response.json(), first);
+  await testApp.close();
+});
+
+test("a transcript written by a person replaces a machine-heard one kept before", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const machineHeard = makeStoredTranscript({ generated: true });
+  const written = makeStoredTranscript({ generated: false, fetchedAt: "2026-09-20T00:00:00.000Z" });
+  await noteOn(account, machineHeard);
+  await account.inject({ method: "PUT", url: `/api/transcripts/${machineHeard.videoId}`, body: machineHeard });
+  await account.inject({ method: "PUT", url: `/api/transcripts/${written.videoId}`, body: written });
+
+  const response = await account.inject({ method: "GET", url: `/api/transcripts/${written.videoId}` });
+
+  assert.deepEqual(response.json(), written);
   await testApp.close();
 });
 
@@ -254,5 +271,177 @@ test("a delete retried after its first attempt left the transcript behind still 
 
   assert.equal(retried.statusCode, 204);
   assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
+  await testApp.close();
+});
+
+const readShared = (testApp: TestApp, videoId: string, remoteAddress = "198.51.100.7") =>
+  testApp.app.inject({
+    method: "GET",
+    url: `/api/shared-transcripts/${videoId}`,
+    remoteAddress,
+    headers: { [CLIENT_VERSION_HEADER]: "1" },
+  });
+
+const contribute = async (account: TestAccount, transcript: StoredTranscript) => {
+  await noteOn(account, transcript);
+  return account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+};
+
+test("a transcript one account stores is read from the shared cache by anyone, signed in or not", async () => {
+  const testApp = await createTestApp();
+  const contributor = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  await contribute(contributor, transcript);
+
+  const response = await readShared(testApp, transcript.videoId);
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), transcript);
+  await testApp.close();
+});
+
+test("a video nobody has stored a transcript of is not in the shared cache", async () => {
+  const testApp = await createTestApp();
+
+  const response = await readShared(testApp, "never-stored");
+
+  assert.equal(response.json().error.code, "not_found");
+  await testApp.close();
+});
+
+test("the shared copy keeps only the video's own address, not the url a reader pasted", async () => {
+  const testApp = await createTestApp();
+  const contributor = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const pasted = { ...transcript, video: { ...transcript.video!, url: `https://youtu.be/${transcript.videoId}?si=tracker` } };
+  await contribute(contributor, pasted);
+
+  const response = await readShared(testApp, transcript.videoId);
+
+  assert.equal(response.json().video.url, `https://www.youtube.com/watch?v=${transcript.videoId}`);
+  await testApp.close();
+});
+
+test("a second account storing a cached video keeps the first copy and gets it back as its own", async () => {
+  const testApp = await createTestApp();
+  const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
+  const original = makeStoredTranscript({ fetchedAt: "2026-09-01T00:00:00.000Z" });
+  const later = makeStoredTranscript({ fetchedAt: "2026-09-20T00:00:00.000Z" });
+  await contribute(first, original);
+  await contribute(second, later);
+
+  assert.deepEqual((await readShared(testApp, original.videoId)).json(), original);
+  assert.deepEqual((await second.inject({ method: "GET", url: `/api/transcripts/${original.videoId}` })).json(), original);
+  await testApp.close();
+});
+
+test("a machine-heard transcript never replaces one written by a person in the shared cache", async () => {
+  const testApp = await createTestApp();
+  const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
+  const written = makeStoredTranscript({ generated: false });
+  await contribute(first, written);
+  await contribute(second, makeStoredTranscript({ generated: true }));
+
+  assert.equal((await readShared(testApp, written.videoId)).json().generated, false);
+  await testApp.close();
+});
+
+test("a transcript with no segments is answered as done and kept nowhere", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const empty = makeStoredTranscript({ segments: [] });
+
+  const stored = await contribute(account, empty);
+
+  assert.equal(stored.statusCode, 204);
+  assert.equal((await readShared(testApp, empty.videoId)).statusCode, 404);
+  assert.equal(await keptTranscriptOf(account, empty.videoId), 404);
+  await testApp.close();
+});
+
+test("a transcript whose times run backwards is kept out of the shared cache", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const backwards = makeStoredTranscript({
+    segments: [
+      { text: "Second thing said.", startMs: 5000, endMs: 6000 },
+      { text: "First thing said.", startMs: 0, endMs: 1000 },
+    ],
+  });
+
+  await contribute(account, backwards);
+
+  assert.equal((await readShared(testApp, backwards.videoId)).statusCode, 404);
+  await testApp.close();
+});
+
+test("a transcript for a video no live note uses is not added to the shared cache", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  assert.equal((await readShared(testApp, transcript.videoId)).statusCode, 404);
+  await testApp.close();
+});
+
+test("deleting the last note on a video leaves its transcript in the shared cache", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const transcript = makeStoredTranscript();
+  const note = storedOverview({ video: transcript.video! });
+  await account.inject({ method: "POST", url: "/api/overviews", body: note });
+  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
+
+  await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });
+
+  assert.equal(await keptTranscriptOf(account, transcript.videoId), 404);
+  assert.equal((await readShared(testApp, transcript.videoId)).statusCode, 200);
+  await testApp.close();
+});
+
+test("reading the shared cache is limited per address", async () => {
+  const testApp = await createTestApp();
+  for (let read = 0; read < rateLimits.sharedTranscriptPerAddress.limit; read++) {
+    await readShared(testApp, "some-video", "203.0.113.9");
+  }
+
+  assert.equal((await readShared(testApp, "some-video", "203.0.113.9")).json().error.code, "too_many_requests");
+  assert.equal((await readShared(testApp, "some-video", "203.0.113.10")).json().error.code, "not_found");
+  await testApp.close();
+});
+
+test("forgetting a shared transcript takes it from the cache and from every account linked to it", async () => {
+  const testApp = await createTestApp();
+  const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
+  const transcript = makeStoredTranscript();
+  await contribute(first, transcript);
+  await contribute(second, transcript);
+  const transcripts = new TranscriptsRepository(testApp.sql, () => testApp.clock.now);
+
+  await transcripts.forgetShared(transcript.videoId);
+
+  assert.equal((await readShared(testApp, transcript.videoId)).statusCode, 404);
+  assert.equal(await keptTranscriptOf(second, transcript.videoId), 404);
+  await testApp.close();
+});
+
+test("forgetting an account's contributions takes every transcript it added and nothing else", async () => {
+  const testApp = await createTestApp();
+  const [poisoner, honest] = [await makeAccount(testApp), await makeAccount(testApp)];
+  const [bad, worse, fine] = ["bad-one", "worse-one", "fine-one"].map((id) =>
+    makeStoredTranscript({ videoId: VideoId.parse(id), video: { ...makeStoredTranscript().video!, id: VideoId.parse(id) } }),
+  );
+  await contribute(poisoner, bad!);
+  await contribute(poisoner, worse!);
+  await contribute(honest, fine!);
+  const transcripts = new TranscriptsRepository(testApp.sql, () => testApp.clock.now);
+
+  const forgotten = await transcripts.forgetContributionsOf((await transcripts.contributorOf(bad!.videoId))!);
+
+  assert.equal(forgotten, 2);
+  assert.equal((await readShared(testApp, worse!.videoId)).statusCode, 404);
+  assert.equal((await readShared(testApp, fine!.videoId)).statusCode, 200);
   await testApp.close();
 });
