@@ -6,6 +6,9 @@ import {
   type MemoryAudioStore,
   type ScriptedNarrator,
 } from "../audio/ScriptedNarrator.testHelper.js";
+import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
+import { seedVoiceSamples, type SeededVoiceSamples } from "../audio/seedVoiceSamples.js";
+import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { buildApp, type AppConfig } from "../buildApp.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
@@ -28,6 +31,8 @@ export interface TestApp {
   narrator: ScriptedNarrator;
   audioStore: MemoryAudioStore;
   drainAudio(): Promise<void>;
+  // The deploy's release step, at the test's clock.
+  seedVoiceSamples(): Promise<SeededVoiceSamples>;
   close(): Promise<void>;
 }
 
@@ -72,6 +77,13 @@ export async function createTestApp(
     drainAudio: async () => {
       await app.audioQueue?.drain();
     },
+    seedVoiceSamples: () =>
+      seedVoiceSamples({
+        renders: new AudioRendersRepository(sql),
+        samples: new VoiceSamplesRepository(sql),
+        store: audioStore,
+        now: clock.now,
+      }),
     close: async () => {
       await app.close();
       await sql.close();

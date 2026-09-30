@@ -44,3 +44,14 @@ test("any other refusal is an error, not an empty answer", async () => {
   await assert.rejects(createR2AudioStore(SETTINGS, answering(403).fetchImpl).get(KEY), /403/);
   await assert.rejects(createR2AudioStore(SETTINGS, answering(500).fetchImpl).put(KEY, Buffer.from("x")), /500/);
 });
+
+test("deletes the object with a signed DELETE, and a key already gone is not an error", async () => {
+  const { requests, fetchImpl } = answering(204);
+
+  await createR2AudioStore(SETTINGS, fetchImpl).delete(KEY);
+  await createR2AudioStore(SETTINGS, answering(404).fetchImpl).delete(KEY);
+
+  assert.equal(requests[0]!.method, "DELETE");
+  assert.equal(requests[0]!.url, `https://${SETTINGS.accountId}.r2.cloudflarestorage.com/${SETTINGS.bucket}/${KEY}.m4a`);
+  await assert.rejects(createR2AudioStore(SETTINGS, answering(403).fetchImpl).delete(KEY), /403/);
+});

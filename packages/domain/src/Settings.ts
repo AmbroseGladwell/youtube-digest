@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AnthropicModel, DEFAULT_ANTHROPIC_MODEL } from "./AnthropicModel.js";
+import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 
 export const SectionsEnabled = z.object({
@@ -26,6 +27,7 @@ export const Settings = z.object({
   model: AnthropicModel,
   plan: Plan,
   plusNoticeDismissed: z.boolean(),
+  narrationVoice: NarrationVoice.catch(DEFAULT_NARRATION_VOICE),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -35,4 +37,5 @@ export const DEFAULT_SETTINGS: Settings = {
   model: DEFAULT_ANTHROPIC_MODEL,
   plan: DEFAULT_PLAN,
   plusNoticeDismissed: false,
+  narrationVoice: DEFAULT_NARRATION_VOICE,
 };

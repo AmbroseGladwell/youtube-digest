@@ -25,6 +25,12 @@ primary_region = "lhr"
   R2_ACCOUNT_ID = "781691f32a5cf03b132121e499f510a4"
   R2_BUCKET = "the-overview-audio"
 
+# Renders any missing voice sample before the new version goes live
+# (docs/features/narration-voice.md, "The samples").
+[deploy]
+  release_command = "node apps/api/dist/scripts/seedVoiceSamples.js"
+  release_command_timeout = "10m"
+
 [http_service]
   internal_port = 3000
   force_https = true

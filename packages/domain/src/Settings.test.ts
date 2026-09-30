@@ -14,3 +14,14 @@ test("every section defaults to enabled, matching current behaviour", () => {
     watchAnyway: true,
   });
 });
+
+test("the narration voice starts as Heart", () => {
+  assert.equal(DEFAULT_SETTINGS.narrationVoice, "af_heart");
+});
+
+test("a voice this client does not offer reads as the default rather than taking the settings with it", () => {
+  const read = Settings.parse({ ...DEFAULT_SETTINGS, readerContext: "a parent", narrationVoice: "af_sky" });
+
+  assert.equal(read.narrationVoice, "af_heart");
+  assert.equal(read.readerContext, "a parent");
+});

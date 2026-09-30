@@ -5,16 +5,19 @@ import { AUDIO_KEY_PATTERN, TTS_RENDER_VERSION, audioKey } from "../audio/audioK
 import type { AudioRender, AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import type { AudioRenderQueue } from "../audio/AudioRenderQueue.js";
 import type { AudioStore } from "../audio/AudioStore.js";
+import type { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { byteRange } from "../audio/byteRange.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 
 export const MAX_OUTSTANDING_RENDERS_PER_ACCOUNT = 3;
+export const MAX_KEYS_PER_LOOKUP = 32;
 
 export interface AudioServices {
   renders: AudioRendersRepository;
   queue: AudioRenderQueue;
   store: AudioStore;
+  samples: VoiceSamplesRepository;
 }
 
 const AudioRequest = z.object({
@@ -25,6 +28,12 @@ const AudioRequest = z.object({
 
 const KeyParams = z.object({ key: z.string().regex(AUDIO_KEY_PATTERN) });
 
+const AudioLookup = z.object({
+  keys: z.array(z.string().regex(AUDIO_KEY_PATTERN)).min(1).max(MAX_KEYS_PER_LOOKUP),
+});
+
+const fileUrlOf = (key: string) => `/api/audio/${key}/file`;
+
 const describe = (render: AudioRender) => ({
   key: render.key,
   status: render.status,
@@ -32,7 +41,7 @@ const describe = (render: AudioRender) => ({
     ? {
         lineStartsSeconds: render.lineStartsSeconds,
         durationSeconds: render.durationSeconds,
-        fileUrl: `/api/audio/${render.key}/file`,
+        fileUrl: fileUrlOf(render.key),
       }
     : {}),
 });
@@ -84,6 +93,37 @@ export function audioRoutes(
     });
     queue.kick();
     return reply.status(202).send(describe(render));
+  });
+
+  // Whichever of these keys exist, in any state: how a note finds narration it was given in
+  // another voice (docs/features/narration-voice.md, "Old audio").
+  app.post("/audio/lookup", async (request) => {
+    const { renders } = services();
+    const { keys } = parseOrThrow(AudioLookup, request.body, "The audio lookup");
+    return { renders: (await renders.getMany(keys)).map(describe) };
+  });
+
+  app.get("/audio/samples", { config: { public: true } }, async (_request, reply) => {
+    const { samples } = services();
+    reply.header("cache-control", "no-cache");
+    return {
+      samples: (await samples.ready()).map(({ key, voice, durationSeconds }) => ({
+        voice,
+        fileUrl: fileUrlOf(key),
+        durationSeconds,
+      })),
+    };
+  });
+
+  app.delete("/audio/:key", async (request, reply) => {
+    const { renders, store } = services();
+    const { key } = parseOrThrow(KeyParams, request.params, "The audio key");
+    if (!(await renders.deleteRequestedBy(key, request.session!.accountId))) {
+      throw new ApiError("not_found", "No narration this account asked for has this key");
+    }
+    await store.delete(key);
+    request.log.info({ key }, "audio deleted");
+    return reply.status(204).send();
   });
 
   app.get("/audio/:key", async (request) => {

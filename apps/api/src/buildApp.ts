@@ -3,6 +3,7 @@ import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
 import type { Narrator } from "./audio/Narrator.js";
+import { VoiceSamplesRepository } from "./audio/VoiceSamplesRepository.js";
 import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
@@ -125,7 +126,9 @@ export async function buildApp({
       transcriptRoutes(api, transcripts);
       audioRoutes(
         api,
-        audio === null || audioQueue === null ? null : { renders: audioRenders, queue: audioQueue, store: audio.store },
+        audio === null || audioQueue === null
+          ? null
+          : { renders: audioRenders, queue: audioQueue, store: audio.store, samples: new VoiceSamplesRepository(sql) },
         clock,
       );
     },
