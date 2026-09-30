@@ -4,5 +4,6 @@ export const enterCodeTestIds = {
   codeInput: "EnterCode.codeInput",
   error: "EnterCode.error",
   differentEmailButton: "EnterCode.differentEmailButton",
+  emailInsteadButton: "EnterCode.emailInsteadButton",
   connectButton: "EnterCode.connectButton",
 };

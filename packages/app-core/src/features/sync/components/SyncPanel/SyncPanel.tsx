@@ -49,6 +49,15 @@ export function SyncPanel() {
               Sync now
             </button>
           )}
+          {surface === "web" && !signedOut && (
+            <Link
+              className={styles.secondaryButton}
+              to={Routes.connectExtension()}
+              data-testid={syncPanelTestIds.connectExtensionLink}
+            >
+              Connect the extension
+            </Link>
+          )}
           <button
             type="button"
             className={signedOut ? styles.primaryButton : styles.quietButton}

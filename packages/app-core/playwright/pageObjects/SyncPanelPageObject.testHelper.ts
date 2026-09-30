@@ -30,6 +30,19 @@ export class SyncPanelPageObject extends PageObject {
       return new SignInPageObject(this.testContext).verifyAsksForEmail("Create your account");
     });
 
+  verifyOffersConnectingExtension = (offers: boolean) =>
+    this.step(`verifyOffersConnectingExtension ${offers}`, () =>
+      offers
+        ? this.expectToBeVisible(syncPanelTestIds.connectExtensionLink)
+        : this.expectToHaveCount(syncPanelTestIds.connectExtensionLink, 0),
+    );
+
+  clickConnectExtension = (): Promise<SignInPageObject> =>
+    this.step("clickConnectExtension", async () => {
+      await this.click(syncPanelTestIds.connectExtensionLink);
+      return new SignInPageObject(this.testContext);
+    });
+
   verifySignedInAs = (who: string) =>
     this.step(`verifySignedInAs ${who}`, () =>
       expect(this.get(syncPanelTestIds.signedInAs)).toHaveText(`Signed in as ${who}`),

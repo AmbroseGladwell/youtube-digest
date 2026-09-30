@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LinkedSession, SessionInfo, SignedIn } from "@overview/domain";
+import { LinkCode, LinkedSession, SessionInfo, SignedIn } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { AuthApi } from "./AuthApi.js";
 
@@ -17,6 +17,7 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
     signIn: (token) => answered(request("POST", "/auth/sign-in", SignedIn, { body: { token } })),
     exchangeLinkCode: (code) => answered(request("POST", "/auth/link-code", LinkedSession, { body: { code } })),
     session: () => answered(request("GET", "/session", SessionInfo)),
+    issueLinkCode: () => answered(request("POST", "/session/link-code", LinkCode)),
     signOut: async () => {
       await request("DELETE", "/session", z.never());
     },

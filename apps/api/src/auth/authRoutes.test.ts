@@ -205,6 +205,53 @@ test("a code is read however the reader typed it, and refused once ten minutes h
   await fresh.close();
 });
 
+const mintCode = (testApp: TestApp, headers: Record<string, string>) =>
+  testApp.app.inject({ method: "POST", url: "/api/session/link-code", headers });
+
+test("a web app already signed in hands the extension a code that signs it in with no email", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+  const mailed = testApp.mailer.sent.length;
+
+  const minted = await mintCode(testApp, { cookie, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) });
+
+  assert.equal(minted.statusCode, 200);
+  const { linkCode, linkCodeExpiresAt } = minted.json();
+  assert.match(linkCode, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  assert.equal(linkCodeExpiresAt, "2026-09-26T09:10:00.000Z");
+  const exchanged = await exchange(testApp, linkCode);
+  assert.equal(exchanged.statusCode, 200);
+  assert.equal(exchanged.json().email, EMAIL);
+  const bearer = { authorization: `Bearer ${exchanged.json().token}` };
+  assert.equal((await whoAmI(testApp, bearer)).json().email, EMAIL);
+  assert.equal((await whoAmI(testApp, { cookie })).statusCode, 200);
+  assert.equal(testApp.mailer.sent.length, mailed);
+  await testApp.close();
+});
+
+test("a minted code works once and lapses after ten minutes, like an emailed one", async () => {
+  const testApp = await createTestApp();
+  const headers = { cookie: await signInOnTheWeb(testApp), [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
+  const first = (await mintCode(testApp, headers)).json().linkCode;
+  const second = (await mintCode(testApp, headers)).json().linkCode;
+
+  assert.equal((await exchange(testApp, first)).statusCode, 200);
+  assert.equal((await exchange(testApp, first)).json().error.code, "link_invalid");
+  testApp.clock.advance(11 * MINUTE_MS);
+  assert.equal((await exchange(testApp, second)).json().error.code, "link_invalid");
+  await testApp.close();
+});
+
+test("minting a code needs a session, and the client version a cross-site form cannot send", async () => {
+  const testApp = await createTestApp();
+  const cookie = await signInOnTheWeb(testApp);
+
+  assert.equal((await mintCode(testApp, { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) })).statusCode, 401);
+  assert.equal((await mintCode(testApp, { cookie })).statusCode, 400);
+  assert.deepEqual(await testApp.sql.query("select id from link_codes"), []);
+  await testApp.close();
+});
+
 test("signing out with the cookie deletes the session and clears the cookie", async () => {
   const testApp = await createTestApp();
   const cookie = await signInOnTheWeb(testApp);

@@ -9,6 +9,7 @@ export const Routes = {
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,
   createAccount: () => "/create-account",
+  connectExtension: () => "/connect-extension",
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,
 };
 

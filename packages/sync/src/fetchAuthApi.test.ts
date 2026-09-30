@@ -100,3 +100,18 @@ test("signing out sends the bearer it was given and takes no content for an answ
   assert.equal(sent[0]!.url, "https://overview.example/api/session");
   assert.equal(sent[0]!.headers.authorization, "Bearer bearer-token");
 });
+
+test("a signed-in shell mints a code for the extension over its own session, with no body", async () => {
+  const { sent, fetch } = answering(200, { linkCode: "ABCD-EFGH", linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
+
+  assert.deepEqual(await api.issueLinkCode(), { linkCode: "ABCD-EFGH", linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" });
+  assert.deepEqual(sent, [
+    {
+      url: "https://overview.example/api/session/link-code",
+      method: "POST",
+      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+      body: undefined,
+    },
+  ]);
+});

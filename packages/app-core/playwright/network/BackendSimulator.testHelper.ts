@@ -229,6 +229,16 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/session/link-code", (route) =>
+      this.#respond(route, EndpointKey.SESSION_LINK_CODE, {
+        onDefault: () => ({
+          status: 200,
+          body: { linkCode: SIMULATED_LINK_CODE, linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" },
+        }),
+        onError: unauthenticated,
+      }),
+    );
+
     await this.#page.route("**/api/session", (route) =>
       route.request().method() === "DELETE"
         ? this.#respond(route, EndpointKey.SESSION_DELETE, {

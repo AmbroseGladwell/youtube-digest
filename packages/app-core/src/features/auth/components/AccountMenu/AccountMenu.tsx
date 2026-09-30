@@ -12,7 +12,7 @@ import { usePendingSignIn } from "../../usePendingSignIn.js";
 import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 
-const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.settings()]);
+const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
 // Design 9j–9n and 10a: one person button in the bar in place of Settings and Sign in.
 // What it holds follows what this device can do and who it is signed in as
@@ -107,6 +107,9 @@ export function AccountMenu() {
           )}
         </div>
         <div role="separator" className={styles.separator} />
+        {surface === "web" &&
+          !signedOutAtServer &&
+          item("puzzle", "Connect the extension", go(Routes.connectExtension()), accountMenuTestIds.connectExtensionItem)}
         {settings}
         {signedOutAtServer
           ? item(

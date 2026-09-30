@@ -122,4 +122,29 @@ export class SignInPageObject extends PageObject {
       await expect(this.get(linkCodeCardTestIds.code)).toHaveText(code);
       await this.expectToBeVisible(linkCodeCardTestIds.staysSignedOutNote);
     });
+
+  verifyShowsCodeForExtension = (code: string) =>
+    this.step(`verifyShowsCodeForExtension ${code}`, async () => {
+      await expect(this.get(linkCodeCardTestIds.code)).toHaveText(code);
+      await this.expectToBeVisible(linkCodeCardTestIds.sameAccountNote);
+      await this.expectToHaveCount(linkCodeCardTestIds.staysSignedOutNote, 0);
+    });
+
+  askForNewCode = () => this.step("askForNewCode", () => this.click(linkCodeCardTestIds.newCodeButton));
+
+  verifyOffersCodeFromWebApp = (offers: boolean) =>
+    this.step(`verifyOffersCodeFromWebApp ${offers}`, () =>
+      offers
+        ? this.expectToBeVisible(requestLinkFlowTestIds.webAppCodeButton)
+        : this.expectToHaveCount(requestLinkFlowTestIds.webAppCodeButton, 0),
+    );
+
+  chooseCodeFromWebApp = () =>
+    this.step("chooseCodeFromWebApp", async () => {
+      await this.click(requestLinkFlowTestIds.webAppCodeButton);
+      await this.expectToBeVisible(enterCodeTestIds.root);
+      await this.expectToHaveCount(enterCodeTestIds.email, 0);
+    });
+
+  chooseEmailInstead = () => this.step("chooseEmailInstead", () => this.click(enterCodeTestIds.emailInsteadButton));
 }
