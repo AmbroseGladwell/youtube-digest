@@ -23,7 +23,7 @@ export function ConsentPlusCard({ minutesLeft, declining, onDecline }: ConsentPl
       </p>
       <p className={styles.openFor} data-testid={consentPlusCardTestIds.openFor}>
         <StrokeIcon name="clock" size={15} />
-        This request stays open for {minutesLeftPhrase(minutesLeft)}.
+        This request stays open for {minutesLeftPhrase(minutesLeft)}. Get Plus and you’ll come back here to approve it.
       </p>
       <div className={styles.actions}>
         <Link to={Routes.settingsSection("plan")} className={styles.seePlus} data-testid={consentPlusCardTestIds.seePlusLink}>

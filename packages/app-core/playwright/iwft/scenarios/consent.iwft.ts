@@ -120,7 +120,9 @@ test.describe("answering an assistant's request", () => {
     await launcher.openConsent(REQUEST_ID);
     const consent = await launcher.consentPage.verifyIsShown();
 
-    await consent.verifyOffersPlus("This request stays open for 26 more minutes.");
+    await consent.verifyOffersPlus(
+      "This request stays open for 26 more minutes. Get Plus and you’ll come back here to approve it.",
+    );
     await consent.verifyOffersApprove(false);
 
     await consent.declineOnFree();

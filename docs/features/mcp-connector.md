@@ -335,10 +335,11 @@ with focus on its Revoke.
   waits for the same future job as expired sessions (`api.md`).
 - **Events.** The design names `consent_shown`, `consent_approved`, `consent_declined`,
   `consent_plan_required` and `connection_revoked`. The app has no analytics to send them
-  to yet; the server already logs the decision and the revoke.
-- **Coming back after buying Plus.** The free consent state says how long the request stays
-  open and links to the Plan section. Design 58g also promises that buying Plus returns the
-  reader to the request, which waits for billing (OV-18) to have a purchase to return from.
+  to yet (OV-60); the server already logs the decision and the revoke.
+- **Coming back after buying Plus.** The free consent state says, as design 58g does, that
+  getting Plus brings the reader back to approve the request. See Plus opens the Plan
+  section, which has nothing to buy yet; carrying the request through a purchase and back
+  waits for billing (OV-18).
 - **Write tools** (mark read, favourite, file under a topic). Every connection is read-only
   because nothing that honours its token writes, and a write tool would end that.
 - **Audio.** Narration is not exposed, and would wait for sync to carry it.
