@@ -71,8 +71,9 @@ its server once its session is gone, so it still counts as connected, and `/sign
 would only send it back to the library.
 
 **In the extension**, the sign-in page's footer adds a second line under `New here?`:
-`Signed in on the web app? Enter a code`, a link rather than a second button, so the email
-stays the page's one action. It leads to the code field with no address and no resend, and
+`Signed in on the web app? Enter a code`, styled as a link rather than a second pill, so
+the email stays the page's one action. It is a `<button>` underneath, since it changes the
+screen in place rather than going anywhere. It leads to the code field with no address and no resend, and
 `Email me a link instead` goes back. It is offered only on Sign in, since someone creating
 an account has no web app signed in yet. The web app's code only works on the server that
 made it, so the code screen carries the same server choice as the email form: the built-in
