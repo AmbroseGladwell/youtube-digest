@@ -54,7 +54,7 @@ test("skipping moves the video to the start of that stretch, not to the end of i
 
 // The range is how someone gets there on their own, so it is printed whether or not
 // anything here can move a video.
-test("the web app prints the range and offers no skip, having no player to move", async ({
+test("the web app offers the video at that moment, having no player of its own to move", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -64,6 +64,7 @@ test("the web app prints the range and offers no skip, having no player to move"
 
   await reader.verifyWatchAnywayRangeReads("3:20–5:10");
   await reader.verifyOffersToSkipTheVideo(false);
+  await reader.verifyOffersToWatchFrom("Watch from 3:20");
 });
 
 test("a panel whose tab has moved to another video offers no skip either", async ({

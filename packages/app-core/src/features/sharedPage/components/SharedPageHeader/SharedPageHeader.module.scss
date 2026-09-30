@@ -1,6 +1,11 @@
 @use "../../../../theme/controls.scss" as controls;
 
 .root {
+  position: sticky;
+  top: 0;
+  // Above the tab strip's 2, so the strip slides under it rather than over.
+  z-index: 3;
+  background: var(--ground);
   display: flex;
   align-items: center;
   justify-content: space-between;

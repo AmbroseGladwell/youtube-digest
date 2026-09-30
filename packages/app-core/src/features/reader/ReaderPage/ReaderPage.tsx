@@ -268,7 +268,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               lineStartLabels={lineStartLabels}
               onSelectLine={notePlayer.selectLine}
             />
-            {range !== null && <WatchAnywayJump range={range} videoId={overview.video.id} />}
+            {range !== null && <WatchAnywayJump range={range} video={overview.video} />}
             <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
               {overview.tags.map((tag) => (
                 <span key={tag} className={styles.tag}>

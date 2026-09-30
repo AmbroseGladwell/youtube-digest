@@ -182,6 +182,13 @@ video would otherwise offer to skip the wrong one. The range beside it is printe
 regardless, because reading it is how someone gets to the moment on their own, and that
 is the half of this that works everywhere.
 
+**Where there is no player to move, the range carries a link to the video at that moment**
+instead of a skip, opening it the way a chapter and a transcript timestamp already do.
+The reader used to print the range and offer nothing, which left the one place the note
+says "watch this bit" as the one place with no way to get there; the shared page, which
+can never have a player, made that plain (`docs/features/sharing.md`). Only ever one of
+the two: a panel that can move the video it is reading still skips.
+
 It sits under the watch-it-anyway paragraph by sitting after the note, which holds only
 because that is the last section `overviewNoteLines` builds. A unit test pins that
 ordering rather than leaving the placement to depend on something nothing checks.

@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { makeYourOwnAsideTestIds } from "../../src/features/sharedPage/components/MakeYourOwnAside/MakeYourOwnAsideTestIds.js";
 import { sharedOverviewGoneTestIds } from "../../src/features/sharedPage/components/SharedOverviewGone/SharedOverviewGoneTestIds.js";
 import { sharedPageHeaderTestIds } from "../../src/features/sharedPage/components/SharedPageHeader/SharedPageHeaderTestIds.js";
+import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
 import { sharedOverviewPageTestIds } from "../../src/features/sharedPage/SharedOverviewPage/SharedOverviewPageTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -32,6 +33,34 @@ export class SharedOverviewPageObject extends PageObject {
       await this.expectToBeVisible(sharedPageHeaderTestIds.signInButton);
       await this.expectToBeVisible(sharedPageHeaderTestIds.makeButton);
       await this.expectToBeVisible(makeYourOwnAsideTestIds.root);
+    });
+
+  // The strip belongs to the text it switches, so its left edge is the note's left edge.
+  verifyTabsAlignWithTheNote = () =>
+    this.step("verifyTabsAlignWithTheNote", async () => {
+      const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
+      const note = (await this.get(sharedOverviewPageTestIds.title).boundingBox())!;
+      expect(Math.round(tabs.x)).toBe(Math.round(note.x));
+    });
+
+  // Scrolling must not put the note over the head: the head stays, and the strip rests
+  // against it rather than sliding past.
+  verifyHeaderStaysAboveTheTabs = () =>
+    this.step("verifyHeaderStaysAboveTheTabs", async () => {
+      await this.page.mouse.wheel(0, 600);
+      await expect(async () => {
+        const header = (await this.get(sharedPageHeaderTestIds.root).boundingBox())!;
+        const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
+        expect(Math.round(header.y)).toBe(0);
+        expect(tabs.y).toBeGreaterThanOrEqual(header.y + header.height - 1);
+      }).toPass({ timeout: 2_000 });
+    });
+
+  verifyOffersToWatchFrom = (label: string, url: string) =>
+    this.step(`verifyOffersToWatchFrom ${label}`, async () => {
+      const link = this.get(watchAnywayJumpTestIds.watchLink);
+      await expect(link).toHaveText(label);
+      await expect(link).toHaveAttribute("href", url);
     });
 
   clickTab = (tab: string) => this.step(`clickTab ${tab}`, () => this.click(readerTabsTestIds.tab(tab)));
