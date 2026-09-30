@@ -141,12 +141,20 @@ by running the same line again and revoking the old token with `fly tokens list`
 Migrations run when the new process starts, under the advisory lock, so a deploy is also
 a schema upgrade and needs no separate step.
 
+One step does run before the new machines start: `fly.toml`'s `release_command`,
+`seedVoiceSamples`, which applies the migrations itself and renders any voice sample that is
+missing, so the Settings picker has one per voice (`docs/features/narration-voice.md`, "The
+samples"). It never fails the deploy; its last log line says how many samples are ready and
+which voices are missing.
+
 What to verify afterwards, because a deploy that logged success is not one that was
 looked at:
 
 - `task deploy:status` shows one machine, started or stopped, and a passing check.
 - `https://theoverviewapp.com/api/handshake` answers with the floor and the version.
 - The root serves the web app, and Settings can ask for a magic link that arrives.
+- The release step's `voice samples ready` line says 15 of 15, and
+  `https://theoverviewapp.com/api/audio/samples` lists them.
 - Settings shows the version and commit that were merged, and if the version was new,
   the repo has a `v<version>` release with the extension's zip attached.
 

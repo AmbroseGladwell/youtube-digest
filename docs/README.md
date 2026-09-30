@@ -50,6 +50,10 @@ Five folders, five different questions.
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
   it retired.
+- `narration-voice.md` — choosing the voice notes are narrated in: the shortlist of 15, one
+  sample of the same passage per voice made on deploy and cleared 30 days after it is
+  superseded, the choice saved on pick, and older notes that keep their voice until
+  re-recorded.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.

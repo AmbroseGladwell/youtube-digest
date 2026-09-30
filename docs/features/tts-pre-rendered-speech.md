@@ -77,7 +77,7 @@ The client sends the script; the server keys the audio on a hash of the script's
 
 ## Voices
 
-`voices-v1.0.bin` holds 54 voices, of which 28 speak English: 20 American (`af_*`, `am_*`) and 8 British (`bf_*`, `bm_*`). The rest are Spanish, French, Hindi, Italian, Japanese, Portuguese and Chinese voices, and would mispronounce an English note, so `NarrationVoice` offers only the 28. Each carries its accent as data, and the accent picks the phonemiser's language: `en-us` or `en-gb`. The default is `af_heart`; readers will choose their own from a sample of each.
+`voices-v1.0.bin` holds 54 voices, of which 28 speak English: 20 American (`af_*`, `am_*`) and 8 British (`bf_*`, `bm_*`). The rest are Spanish, French, Hindi, Italian, Japanese, Portuguese and Chinese voices, and would mispronounce an English note. `NarrationVoice` offers a shortlist of 15 of the English ones. Each carries its accent as data, and the accent picks the phonemiser's language: `en-us` or `en-gb`. The default is `af_heart`, and readers choose their own from a sample of each: `narration-voice.md`.
 
 ## The service
 
@@ -104,13 +104,16 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
 
 ## The API side
 
-`apps/api/src/audio` and `routes/audioRoutes.ts`. Three routes:
+`apps/api/src/audio` and `routes/audioRoutes.ts`. The routes:
 
 | | |
 |---|---|
 | `POST /api/audio` | `{ lines, voice?, priority? }`, checked with `SpokenScript` and `NarrationVoice`. Ready audio answers `200` with its timings at once; anything else is queued and answers `202` |
 | `GET /api/audio/:key` | the status to poll: `queued`, `rendering`, `ready` with `lineStartsSeconds`, `durationSeconds` and `fileUrl`, or `failed` |
 | `GET /api/audio/:key/file` | the M4A, with single byte ranges answered `206`, which Safari needs before it will play media |
+| `POST /api/audio/lookup` | `{ keys }`, up to 32: every render that exists under them, in any state. How a note finds narration in a voice other than the chosen one (`narration-voice.md`, "Old audio") |
+| `DELETE /api/audio/:key` | the render and its file, for the account that asked for it and no other; `204`, or `404` for anyone else |
+| `GET /api/audio/samples` | public: the current voice samples that are ready, one per voice (`narration-voice.md`, "The samples") |
 
 - **The key is the content.** `audioKey` is SHA-256 over the render version, the voice and the
   lines, computed by the server from what it was sent. Two accounts asking for the same words
