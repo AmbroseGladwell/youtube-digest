@@ -24,3 +24,19 @@ describe("consentLinksAskedStorage", () => {
     expect(wasConsentLinkAskedHere("a")).toBe(false);
   });
 });
+
+describe("consentLinksAskedStorage, when the browser refuses storage", () => {
+  const refusing = {
+    getItem: () => {
+      throw new Error("blocked");
+    },
+    setItem: () => {
+      throw new Error("blocked");
+    },
+  } as unknown as Storage;
+
+  it("remembers nothing and says nothing was asked, without throwing", () => {
+    expect(() => rememberConsentLinkAsked("a", 0, refusing)).not.toThrow();
+    expect(wasConsentLinkAskedHere("a", refusing)).toBe(false);
+  });
+});

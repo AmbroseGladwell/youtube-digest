@@ -154,6 +154,11 @@
   @include auth.field-error;
 }
 
+.retry {
+  @include auth.quiet;
+  text-decoration: underline;
+}
+
 @media (max-width: 74.9375rem) {
   .root {
     padding: 2.5rem 2.5rem 3rem;

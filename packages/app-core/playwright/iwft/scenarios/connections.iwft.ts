@@ -121,6 +121,29 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyAsksToSignIn();
   });
 
+  test("an account that couldn't be checked says so and can be asked again", async ({ launcher, backendSimulator }) => {
+    backendSimulator.connections.seed(connection());
+    backendSimulator.simulateEndpointError(EndpointKey.SESSION_READ);
+    await launcher.launch(PLUS);
+    const settings = await (await launcher.appShell.openSettings()).openSection("connections");
+
+    await settings.connections.verifyErrorShown();
+    backendSimulator.simulateEndpointDefault(EndpointKey.SESSION_READ);
+    await settings.connections.tryAgain();
+
+    await settings.connections.verifyListsConnections(["Claude"]);
+  });
+
+  test("a session the server no longer knows asks to sign in first", async ({ launcher, backendSimulator }) => {
+    backendSimulator.auth.sessionHasLapsed();
+    await launcher.launch(PLUS);
+    const settings = await launcher.appShell.openSettings();
+    await settings.verifyRowReads("connections", "Sign in first");
+    await settings.openSection("connections");
+
+    await settings.connections.verifyAsksToSignIn();
+  });
+
   test("in a shell that cannot sync, there is no Connections section at all", async ({ launcher }) => {
     await launcher.launch({ sync: false });
     const settings = await launcher.appShell.openSettings();

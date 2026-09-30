@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router";
+import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useSessionQuery } from "../../../auth/queries/sessionQuery.js";
@@ -28,7 +29,9 @@ export function ConnectionsSection() {
   const setupLabel = useRef<HTMLParagraphElement>(null);
   const now = new Date();
 
-  if (!sync.connected) {
+  const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
+
+  if (!sync.connected || sessionEnded) {
     return (
       <div className={styles.card} data-testid={connectionsSectionTestIds.signInFirst}>
         <p className={styles.label}>Sign in first</p>
@@ -49,6 +52,18 @@ export function ConnectionsSection() {
           </Link>
         </div>
       </div>
+    );
+  }
+
+  if (session.isError) {
+    return (
+      <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
+        <StrokeIcon name="alertCircle" size={14} />
+        Your account couldn't be checked.{" "}
+        <button type="button" className={styles.retry} onClick={() => void session.refetch()}>
+          Try again
+        </button>
+      </p>
     );
   }
 

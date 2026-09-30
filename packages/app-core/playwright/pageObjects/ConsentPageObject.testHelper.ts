@@ -62,6 +62,12 @@ export class ConsentPageObject extends PageObject {
   verifyDecisionErrorShown = () =>
     this.step("verifyDecisionErrorShown", () => this.expectToBeVisible(consentPageTestIds.decisionError));
 
+  verifySessionErrorShown = () =>
+    this.step("verifySessionErrorShown", () => this.expectToBeVisible(consentPageTestIds.sessionError));
+
+  retrySession = () =>
+    this.step("retrySession", () => this.get(consentPageTestIds.sessionError).getByRole("button").click());
+
   verifyOffersPlus = (openFor: string) =>
     this.step(`verifyOffersPlus ${openFor}`, async () => {
       await this.expectToBeVisible(consentPlusCardTestIds.root);

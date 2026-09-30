@@ -11,5 +11,6 @@ export const consentPageTestIds = {
   differentEmailButton: "consent-page-different-email",
   waiting: "consent-page-waiting",
   decisionError: "consent-page-decision-error",
+  sessionError: "consent-page-session-error",
   waitingOpenFor: "consent-page-waiting-open-for",
 };

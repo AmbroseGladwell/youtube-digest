@@ -74,5 +74,8 @@ export class ConnectionsSectionPageObject extends PageObject {
 
   verifyErrorShown = () => this.step("verifyErrorShown", () => this.expectToBeVisible(connectionsSectionTestIds.error));
 
+  tryAgain = () =>
+    this.step("tryAgain", () => this.get(connectionsSectionTestIds.error).getByRole("button", { name: "Try again" }).click());
+
   openFromPlusPanel = () => this.step("openFromPlusPanel", () => this.click(plusPlanPanelTestIds.connectionsLink));
 }

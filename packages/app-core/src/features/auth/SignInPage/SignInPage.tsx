@@ -47,12 +47,12 @@ export function SignInPage() {
   }, [token, search, apiUrl, signIn, setConnection, navigate]);
 
   if (token === null) {
-    return <RequestLinkFlow intent="signIn" />;
+    return <RequestLinkFlow intent="signIn" returnTo={signInReturnFromSearch(search)} />;
   }
 
   if (signIn.isError) {
     if (isSyncRequestError(signIn.error) && signIn.error.code === "link_invalid") {
-      return <RequestLinkFlow intent="signIn" expired />;
+      return <RequestLinkFlow intent="signIn" expired returnTo={signInReturnFromSearch(search)} />;
     }
     return (
       <ErrorState

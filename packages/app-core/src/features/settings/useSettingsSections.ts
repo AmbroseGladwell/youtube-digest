@@ -1,6 +1,8 @@
 import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
+import { isSyncRequestError } from "@overview/sync";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
+import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
 import { connectionsRowValue } from "../connections/util/connectionsRowValue.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
@@ -28,6 +30,8 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const { apiKeys } = useApiKeys();
   const { plan, isPlus } = usePlan();
   const connections = useConnectionsQuery();
+  const session = useSessionQuery();
+  const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
   const build = useAppBuild();
 
   return [
@@ -49,7 +53,11 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           {
             id: "connections" as const,
             title: "Connections",
-            value: connectionsRowValue({ signedIn: sync.connected, isPlus, count: connections.data?.length }),
+            value: connectionsRowValue({
+              signedIn: sync.connected && !sessionEnded,
+              isPlus,
+              count: connections.data?.length,
+            }),
           },
         ]
       : []),

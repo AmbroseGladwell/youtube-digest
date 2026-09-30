@@ -129,6 +129,34 @@ test.describe("answering an assistant's request", () => {
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?error=access_denied&state=s`);
   });
 
+  test("an account that couldn't be checked says so and can be asked again, rather than waiting forever", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.connections.seedRequest(request());
+    backendSimulator.auth.accountIsOn("plus");
+    backendSimulator.simulateEndpointError(EndpointKey.SESSION_READ);
+    await launcher.launch(SIGNED_IN);
+    await launcher.openConsent(REQUEST_ID);
+    const consent = await launcher.consentPage.verifyIsShown();
+
+    await consent.verifySessionErrorShown();
+    backendSimulator.simulateEndpointDefault(EndpointKey.SESSION_READ);
+    await consent.retrySession();
+
+    await consent.verifyOffersApprove(true);
+  });
+
+  test("a session the server no longer knows asks for an email", async ({ launcher, backendSimulator }) => {
+    backendSimulator.connections.seedRequest(request());
+    backendSimulator.auth.sessionHasLapsed();
+    await launcher.launch(SIGNED_IN);
+
+    await launcher.openConsent(REQUEST_ID);
+
+    await (await launcher.consentPage.verifyIsShown()).verifyAsksToSignIn();
+  });
+
   test("an expired or answered request says to start again from the assistant", async ({ launcher }) => {
     await launcher.launch(SIGNED_IN);
 
@@ -226,6 +254,23 @@ test.describe("answering while signed out", () => {
     await launcher.openSignInLink("a-token", "/settings");
 
     await launcher.homePage.verifyIsShown();
+  });
+
+  test("an expired link asks for a new one that still comes back to the request", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.simulateEndpointError(EndpointKey.AUTH_SIGN_IN);
+    await launcher.launch({ sync: true });
+    await launcher.openSignInLink("a-link-already-used", consentPath(REQUEST_ID));
+    const signIn = await launcher.signInPage.verifyAsksForEmail("That link has expired");
+
+    await signIn.requestLink(SIMULATED_EMAIL);
+
+    await signIn.verifyChecksEmail(SIMULATED_EMAIL);
+    expect(backendSimulator.auth.magicLinkRequests()).toEqual([
+      { email: SIMULATED_EMAIL, surface: "web", intent: "signIn", returnTo: consentPath(REQUEST_ID) },
+    ]);
   });
 
   test("Not you? signs out and asks for an email", async ({ launcher, backendSimulator }) => {

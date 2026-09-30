@@ -110,6 +110,7 @@ export class BackendSimulator {
   #accountFirstName: string | null = null;
   #sessionHasEnded = false;
   #accountPlan: Plan = "free";
+  #sessionLapsed = false;
   #connectionRequest: ConnectionRequest | null = null;
   #decisions: Array<{ requestId: string; approve: boolean }> = [];
   #connections: Connection[] = [];
@@ -314,15 +315,23 @@ export class BackendSimulator {
             onDefault: () => ({ status: 204, body: undefined }),
             onError: unauthenticated,
           })
-        : route.fulfill({
-            status: 200,
-            contentType: "application/json",
-            body: JSON.stringify({
-              accountId: "account",
-              email: SIMULATED_EMAIL,
-              firstName: this.#accountFirstName,
-              expiresAt,
-              plan: this.#accountPlan,
+        : this.#respond(route, EndpointKey.SESSION_READ, {
+            onDefault: () =>
+              this.#sessionLapsed
+                ? unauthenticated()
+                : {
+                    status: 200,
+                    body: {
+                      accountId: "account",
+                      email: SIMULATED_EMAIL,
+                      firstName: this.#accountFirstName,
+                      expiresAt,
+                      plan: this.#accountPlan,
+                    },
+                  },
+            onError: () => ({
+              status: 503,
+              body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
             }),
           }),
     );
@@ -628,6 +637,10 @@ export class BackendSimulator {
     },
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
+    },
+    // The server no longer knows the session this device still holds.
+    sessionHasLapsed: (): void => {
+      this.#sessionLapsed = true;
     },
     accountIsOn: (plan: Plan): void => {
       this.#accountPlan = plan;

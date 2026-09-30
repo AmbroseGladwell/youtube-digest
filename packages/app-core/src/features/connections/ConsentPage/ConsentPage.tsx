@@ -261,6 +261,14 @@ export function ConsentPage() {
             refused={refused}
             onSubmit={askForLink}
           />
+        ) : session.isError ? (
+          <p className={styles.error} role="alert" data-testid={consentPageTestIds.sessionError}>
+            <StrokeIcon name="alertCircle" size={14} />
+            We couldn't check your account.{" "}
+            <button type="button" className={styles.retry} onClick={() => void session.refetch()}>
+              Try again
+            </button>
+          </p>
         ) : plan === undefined ? (
           <div className={styles.planPending} aria-busy="true" />
         ) : plan === "plus" ? (

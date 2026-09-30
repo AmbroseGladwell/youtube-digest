@@ -169,7 +169,8 @@ the token in a request line, a log, or a `Referer`. `signInLink` and
 there instead of the library. The return is outside the fragment because it is no secret.
 Only a consent path is accepted, by the server when the link is asked for and by the page
 when it is opened, so the link cannot be made into a redirect to anywhere else
-(`mcp-connector.md`, "The consent screen").
+(`mcp-connector.md`, "The consent screen"). A link that has expired keeps its return: the
+new link asked for from that page comes back to the same request.
 
 **Asking makes no account; only a consumed link does.** An address anyone can type into
 a public form is not evidence of anything. `magic_links` stores the address, and the
