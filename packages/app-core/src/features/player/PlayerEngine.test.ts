@@ -271,4 +271,46 @@ describe("PlayerEngine", () => {
 
     expect(engine.getSnapshot().availability).toBe("onFirstPlay");
   });
+
+  it("a note just made asks for its narration in the background, and leaves the player alone", async () => {
+    const api = scriptedApi();
+    const engine = engineWith(api);
+    const before = engine.getSnapshot();
+
+    engine.prepare(TRACK);
+    await settle();
+
+    expect(api.request).toHaveBeenCalledOnce();
+    expect(api.request).toHaveBeenCalledWith(
+      ["Premise", "Three grids are costing reactors back in.", "Key points", "Capacity prices drive the reversal."],
+      "af_heart",
+      "background",
+    );
+    expect(engine.getSnapshot()).toBe(before);
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 3);
+    expect(api.status).not.toHaveBeenCalled();
+  });
+
+  it("with nobody signed in, a note just made asks for nothing", async () => {
+    const engine = engineWith(null);
+
+    expect(() => engine.prepare(TRACK)).not.toThrow();
+  });
+
+  it("a background request that is refused changes nothing about what is playing", async () => {
+    const request = vi
+      .fn<NarrationApi["request"]>()
+      .mockRejectedValueOnce(new SyncRequestError("too_many_requests", 429, "Three waiting"));
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => READY), request }));
+    engine.load(TRACK);
+    await settle();
+    engine.play();
+    const playing = engine.getSnapshot();
+
+    engine.prepare({ ...TRACK, lines: TRACK.lines.slice(0, 2) });
+    await settle();
+
+    expect(request).toHaveBeenCalledOnce();
+    expect(engine.getSnapshot()).toBe(playing);
+  });
 });

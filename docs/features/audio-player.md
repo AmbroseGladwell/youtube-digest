@@ -72,6 +72,34 @@ then polls every 1.5 s. The server's only two facts while it waits are `queued` 
 `rendering`, so that is all the bar says (1c). There is no percentage, because nothing
 measures one (`docs/prototype/constraints.md`).
 
+## A note just made
+
+A note generated while signed in asks for its narration as soon as it is saved, so that by
+the time anybody opens it the audio is usually there (1a rather than 1b). Generation runs in
+the browser on the reader's own key, so "proactively" can only mean the client asking.
+
+- **The player asks, not the pipeline.** `useGenerateOverviewMutation` hands the saved note to
+  `PlayerEngine.prepare`, which posts the same script and voice the reader will later play,
+  with `background` priority. The engine is the one place that holds the account's narration
+  client and the voice, so the key it asks under is the key the reader will peek at.
+- **Nobody waits on it.** It is not polled, it changes nothing the bar shows, and the run's
+  steps have no audio step. A refusal of any kind — 429, 503, no connection, a session that
+  ended — is dropped: the note is already saved, and a first play will ask again.
+- **Signed out, nothing is asked.** The note renders lazily on its first play after signing in.
+- **Pressing play overtakes it.** An interactive request for the same key promotes the
+  waiting background render rather than queueing a second one
+  (`tts-pre-rendered-speech.md`, "The API side").
+
+The bar does not know a background render is under way, so a note opened before it lands
+still says "Audio is made on first play", and pressing play picks up the render in progress.
+
+**Measuring it.** The API logs every `POST /api/audio` as "audio requested", with its
+priority and what it found (`found`, `foundPriority`). A first play that caught a new note's
+render unfinished is an `interactive` request that found a `background` render `queued` or
+`rendering`; the new notes are the `background` requests that found nothing. A first play
+that found the audio ready never posts, so it is read as the difference, which also counts
+notes nobody has played yet as ready.
+
 ## The states
 
 | Design | When | What the bar does |

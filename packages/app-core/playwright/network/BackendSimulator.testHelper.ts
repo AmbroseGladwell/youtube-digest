@@ -100,7 +100,7 @@ export class BackendSimulator {
   #sessionHasEnded = false;
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
-  #narrationRequests = 0;
+  #narrationPriorities: string[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -346,8 +346,12 @@ export class BackendSimulator {
     await this.#page.route("**/api/audio", (route) =>
       this.#respond(route, EndpointKey.NARRATION_REQUEST, {
         onDefault: () => {
-          this.#narrationRequests += 1;
-          const { lines, voice } = route.request().postDataJSON() as { lines: string[]; voice: string };
+          const { lines, voice, priority } = route.request().postDataJSON() as {
+            lines: string[];
+            voice: string;
+            priority: string;
+          };
+          this.#narrationPriorities.push(priority);
           const key = keyFor(lines, voice);
           const held = this.#renders.get(key);
           if (held?.render.status === "ready") return { status: 200, body: held.render };
@@ -509,7 +513,8 @@ export class BackendSimulator {
     accountIsBusy: (): void => {
       this.#narrationBusy = true;
     },
-    requestCount: (): number => this.#narrationRequests,
+    requestCount: (): number => this.#narrationPriorities.length,
+    requestedPriorities: (): string[] => [...this.#narrationPriorities],
   };
 
   transcripts = {

@@ -46,6 +46,8 @@ const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) =>
   a.lines.length === b.lines.length &&
   a.lines.every((line, index) => line.text === b.lines[index]!.text);
 
+const scriptOf = (track: PlayerTrack) => track.lines.map((line) => line.text);
+
 // The one player for the whole app: narrated audio when there is some, the pacer when
 // there is not, and the states between (docs/features/audio-player.md). It lives above the
 // router so leaving a note does not stop it.
@@ -202,6 +204,13 @@ export class PlayerEngine {
     const next = PLAYER_RATES[(PLAYER_RATES.indexOf(this.#snapshot.rate) + 1) % PLAYER_RATES.length]!;
     if (this.#media !== null) this.#media.playbackRate = next;
     this.#set({ rate: next });
+  }
+
+  // A note that has just been made asks for its narration straight away, behind anything
+  // somebody is waiting to hear, so its first play finds it ready. Nothing waits on the
+  // answer and nothing about the player changes, whatever it is.
+  prepare(track: PlayerTrack): void {
+    this.#api?.request(scriptOf(track), this.#snapshot.voice, "background").catch(() => undefined);
   }
 
   #begin(track: PlayerTrack, startLine: number): void {
@@ -479,7 +488,7 @@ export class PlayerEngine {
   }
 
   #script(): string[] {
-    return this.#snapshot.track!.lines.map((line) => line.text);
+    return scriptOf(this.#snapshot.track!);
   }
 
   #set(patch: Partial<PlayerSnapshot>): void {

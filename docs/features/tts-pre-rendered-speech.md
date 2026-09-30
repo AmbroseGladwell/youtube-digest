@@ -132,6 +132,9 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
   fourth with `429 too_many_requests`; asking again for one already waiting is never refused.
 - **Every render is logged** with its voice, priority, attempt, time spent waiting, synthesis
   time and audio length, the numbers that say whether the pool is big enough.
+- **Every request is logged** with its priority and what it found under its key: nothing,
+  or a render in some state and at some priority. That is where "was a new note's audio
+  ready by its first play" is read from (`audio-player.md`, "A note just made").
 
 Storage is behind `AudioStore`: Cloudflare R2 through its S3 API, signed with `aws4fetch`,
 one private bucket per environment (`the-overview-audio`, `the-overview-audio-dev`) with a
@@ -185,4 +188,4 @@ Critically, the audio bytes never pass through the model's context: Python write
 2a. **Done.** Measure it where it will run: `performance-4x` ("Measured on Fly.io").
 3. ~~Prove the database storage path~~ — superseded by R2.
 4. Build the service, storage and API, then the player, keeping the existing read-along pacer as the fallback for any note without audio.
-5. **Decided** in `v1-architecture-decisions.md`: new notes proactively, old ones lazily on first play.
+5. **Done.** New notes proactively, old ones lazily on first play (`v1-architecture-decisions.md`). The client asks once a note is saved: `audio-player.md`, "A note just made".
