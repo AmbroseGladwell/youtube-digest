@@ -1,13 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { OverviewId, isUnreadableRecordError, overviewNoteLines } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";
-import { PlusPrompt } from "../../plus/components/PlusPrompt/PlusPrompt.js";
 import { PlusSavedLocallyNote } from "../../plus/components/PlusSavedLocallyNote/PlusSavedLocallyNote.js";
-import { usePlan } from "../../plus/usePlan.js";
 import { usePlusSavedLocallyNote } from "../../plus/usePlusSavedLocallyNote.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
@@ -28,7 +26,12 @@ import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.j
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { overviewMetaParts } from "../../overviews/util/overviewMetaParts.js";
-import { useReadAlong } from "./useReadAlong.js";
+import { useNotePlayer } from "./useNotePlayer.js";
+import { usePlayer } from "../../player/PlayerContext.js";
+import { playerTrackFor } from "../../player/types/PlayerTrack.js";
+import { playerBarView } from "../../player/util/playerBarView.js";
+import { formatClock } from "../../../util/formatClock.js";
+import { useSync } from "../../sync/SyncContext.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./ReaderPage.module.scss";
@@ -77,8 +80,6 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     },
     [tabsHeight.host, readerMastheadHeight.host],
   );
-  const { isPlus } = usePlan();
-  const [plusPromptOpen, setPlusPromptOpen] = useState(false);
   const [playerDocked, setPlayerDocked] = useState(false);
   const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(useLocation().state));
 
@@ -102,25 +103,38 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   const overview = overviewQuery.data?.overview ?? null;
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
-  const readAlong = useReadAlong(lines);
+  const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
+  const notePlayer = useNotePlayer(track);
+  const player = usePlayer();
+  const sync = useSync();
 
-  // Design 16a: Listen is where the panel asks. On Plus it docks the player; on Free it
-  // makes the case instead of playing, because playback is the thing being sold
-  // (docs/features/plus-upsell.md). Docking is its own state rather than a read of
-  // readAlong.playing: pausing from the bar must not take the bar away.
+  // Design 2d: the panel's Listen plays straight away and docks the bar; the Plus prompt
+  // it used to raise is retired, since audio is open to every account
+  // (docs/features/audio-player.md). Docking is its own state rather than a read of
+  // playing: pausing from the bar must not take the bar away.
   const listen = () => {
-    if (!isPlus) {
-      setPlusPromptOpen(true);
-      return;
-    }
     if (playerDocked) {
       setPlayerDocked(false);
-      if (readAlong.playing) readAlong.togglePlaying();
+      notePlayer.pause();
       return;
     }
     setPlayerDocked(true);
-    if (!readAlong.playing) readAlong.togglePlaying();
+    if (!notePlayer.playing) notePlayer.play();
   };
+
+  // Design 2: [ and ] step a line, now that the transport's arrows move fifteen seconds.
+  const { stepLine } = notePlayer;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "[" && event.key !== "]") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      stepLine(event.key === "]" ? 1 : -1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [stepLine]);
 
   if (overviewQuery.isPending) {
     return (
@@ -172,6 +186,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     overviewId,
   );
   const range = overview.watchAnyway?.range ?? null;
+  const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
+  const narrated =
+    notePlayer.current && notePlayer.snapshot.source === "audio" && notePlayer.snapshot.availability === "ready";
+  const lineStartLabels = narrated ? notePlayer.snapshot.timings.lineStarts.map(formatClock) : null;
   const confirmDelete = () => {
     setConfirmingDelete(false);
     deleteOverview.mutate({ overviewId });
@@ -189,7 +207,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         metaParts={overviewMetaParts(overview)}
         read={state.read}
         favourite={state.favourite}
-        playing={readAlong.playing}
+        playing={notePlayer.playing}
         editingTopics={editingTopics}
         compact={isPanel}
         listening={playerDocked}
@@ -198,7 +216,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         ref={isPanel ? readerMastheadHeight.measured : undefined}
         onToggleRead={() => setOverviewState.mutate({ overviewId, patch: { read: !state.read } })}
         onToggleFavourite={toggleFavourite}
-        onTogglePlaying={readAlong.togglePlaying}
+        onTogglePlaying={notePlayer.main}
         onListen={listen}
         onEditingTopicsChange={setEditingTopics}
         onEditReason={editReason}
@@ -232,8 +250,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             />
             <ReadAlongNote
               lines={lines}
-              activeIndex={readAlong.activeIndex}
-              onSelectLine={readAlong.selectLine}
+              activeIndex={notePlayer.activeIndex}
+              lineStartLabels={lineStartLabels}
+              onSelectLine={notePlayer.selectLine}
             />
             {range !== null && <WatchAnywayJump range={range} videoId={overview.video.id} />}
             <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
@@ -300,8 +319,6 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         </nav>
       )}
 
-      {plusPromptOpen && <PlusPrompt onDismiss={() => setPlusPromptOpen(false)} />}
-
       {confirmingDelete && (
         <DeleteOverviewDialog
           title={overview.video.title}
@@ -312,17 +329,26 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
       {(!isPanel || playerDocked) && (
         <ReaderPlayerBar
-          playing={readAlong.playing}
-          elapsed={readAlong.elapsed}
-          total={readAlong.total}
-          progressPercent={readAlong.progressPercent}
-          rateLabel={readAlong.rateLabel}
-          currentSection={readAlong.currentSection}
+          view={barView}
+          time={notePlayer.time}
+          lines={lines}
+          lineStarts={notePlayer.snapshot.timings.lineStarts}
+          durationSeconds={notePlayer.snapshot.timings.durationSeconds}
           favourite={isPanel ? { on: state.favourite, onToggle: toggleFavourite } : null}
-          onTogglePlaying={readAlong.togglePlaying}
-          onPrevious={() => readAlong.step(-1)}
-          onNext={() => readAlong.step(1)}
-          onCycleRate={readAlong.cycleRate}
+          canSignIn={sync.available}
+          onMain={notePlayer.main}
+          onSkip={(delta) => player.skip(delta)}
+          onSeek={(seconds) => player.seek(seconds)}
+          onCycleRate={() => player.cycleRate()}
+          onAction={(action) => {
+            if (action === "markRead") {
+              setOverviewState.mutate({ overviewId, patch: { read: true } });
+            } else if (action === "tryAgain") {
+              notePlayer.play();
+            } else {
+              player.readAlong();
+            }
+          }}
         />
       )}
     </article>

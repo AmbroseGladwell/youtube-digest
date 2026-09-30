@@ -171,6 +171,14 @@
   min-height: 2.125rem;
 }
 
+// Design 3a: the row whose note is playing turns its Listen to action orange and says so.
+.actionPlaying {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+
+  min-height: 2.125rem;
+}
+
 .actionActive,
 .actionActive:hover:not(:disabled) {
   background: var(--ink);
@@ -219,7 +227,8 @@
     flex-wrap: wrap;
   }
 
-  .action {
+  .action,
+  .actionPlaying {
     min-height: 2.375rem;
   }
 

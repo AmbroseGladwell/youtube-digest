@@ -1,0 +1,217 @@
+import type { NarrationVoice, NoteLine } from "@overview/domain";
+import { formatClock } from "../../../util/formatClock.js";
+import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
+import { sectionStartFractions } from "./estimatedLineStarts.js";
+import { lineAtTime } from "./lineAtTime.js";
+
+export type PlayerBarAction = "tryAgain" | "readAlongInstead" | "readAlong" | "readAlongMeanwhile" | "markRead" | "signIn";
+
+export type PlayerMainButton = "play" | "pause" | "cancel" | "buffering" | "replay";
+
+export interface PlayerBarView {
+  label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean };
+  clock: { inline: string; start: string; end: string };
+  main: { kind: PlayerMainButton; label: string; disabled: boolean };
+  skipEnabled: boolean;
+  track: { fill: "progress" | "sweep" | "none"; percent: number; tone: "brand" | "stone"; thumb: boolean };
+  notches: number[];
+  seekable: boolean;
+  actions: PlayerBarAction[];
+  note: string | null;
+  showRate: boolean;
+  rateLabel: string;
+}
+
+export interface PlayerBarContext {
+  read: boolean;
+}
+
+// "af_heart" is Kokoro's American female Heart: the bar names only the voice.
+export function voiceName(voice: NarrationVoice): string {
+  const name = voice.split("_")[1] ?? voice;
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+}
+
+// The name the note itself prints over the section, which is what a listener sees: the
+// Summary section is headed Premise.
+export function sectionHeadingAt(lines: NoteLine[], index: number): string {
+  for (let at = Math.min(index, lines.length - 1); at >= 0; at -= 1) {
+    if (lines[at]!.heading) return lines[at]!.text;
+  }
+  return lines[0]?.section ?? "";
+}
+
+const aboutMinutes = (seconds: number) => `~${Math.max(1, Math.round(seconds / 60))} min`;
+
+const rateLabelFor = (rate: number) => `${rate}×`;
+
+// Design Player.dc.html section 1, one state per branch: what the bar says, which button
+// sits in the middle, and what the track is doing. The label line is the live region.
+export function playerBarView(
+  snapshot: PlayerSnapshot,
+  time: number,
+  { read }: PlayerBarContext,
+): PlayerBarView {
+  const { track, status, source, pacerReason, availability, preparing, timings, rate, voice } = snapshot;
+  const lines = track?.lines ?? [];
+  const section = sectionHeadingAt(lines, lineAtTime(timings.lineStarts, time));
+  const duration = timings.durationSeconds;
+  const percent = duration > 0 ? Math.min(100, (time / duration) * 100) : 0;
+  const remaining = Math.max(0, duration - time);
+  const notches = sectionStartFractions(lines, timings);
+  const base: PlayerBarView = {
+    label: { lead: "", rest: null, tone: "ink", pacerTag: false },
+    clock: { inline: "", start: "", end: "" },
+    main: { kind: "play", label: "Play", disabled: false },
+    skipEnabled: true,
+    track: { fill: "progress", percent, tone: "brand", thumb: true },
+    notches,
+    seekable: true,
+    actions: [],
+    note: null,
+    showRate: true,
+    rateLabel: rateLabelFor(rate),
+  };
+
+  if (source === "pacer") {
+    const started = status !== "ready";
+    const rest =
+      pacerReason === "unavailable"
+        ? "narration is unavailable right now"
+        : status === "ended"
+          ? "finished"
+          : section;
+    return {
+      ...base,
+      label: { lead: "Read-along · no audio", rest, tone: "ink", pacerTag: true },
+      clock: started
+        ? {
+            inline: `~${formatClock(time)} · ${aboutMinutes(remaining)} left`,
+            start: `~${formatClock(time)}`,
+            end: aboutMinutes(remaining),
+          }
+        : { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
+      main: mainFor(status),
+      track: { fill: started ? "progress" : "none", percent, tone: "stone", thumb: false },
+      notches: [],
+      seekable: false,
+      actions: pacerReason === "signedOut" ? ["signIn"] : [],
+    };
+  }
+
+  switch (status) {
+    case "ready":
+      if (availability === "checking") {
+        return {
+          ...base,
+          label: { lead: "Listen", rest: `${voiceName(voice)} voice`, tone: "ink", pacerTag: false },
+          clock: { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
+          skipEnabled: false,
+          track: { ...base.track, fill: "none", thumb: false },
+          notches: [],
+          seekable: false,
+        };
+      }
+      return availability === "ready"
+        ? {
+            ...base,
+            label: { lead: "Narrated", rest: `${voiceName(voice)} voice`, tone: "ink", pacerTag: false },
+            clock: { inline: formatClock(duration), start: formatClock(0), end: formatClock(duration) },
+            skipEnabled: false,
+            track: { ...base.track, fill: "none", thumb: false },
+            seekable: false,
+          }
+        : {
+            ...base,
+            label: { lead: "Audio is made on first play", rest: "about 20 s", tone: "ink", pacerTag: false },
+            clock: { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
+            skipEnabled: false,
+            track: { ...base.track, fill: "none", thumb: false },
+            notches: [],
+            seekable: false,
+          };
+
+    case "preparing": {
+      const long = preparing?.long ?? false;
+      return {
+        ...base,
+        label: long
+          ? { lead: "Still preparing", rest: "taking longer than usual", tone: "ink", pacerTag: false }
+          : {
+              lead: "Preparing audio",
+              rest: preparing?.step === "rendering" ? "Rendering" : "Queued",
+              tone: "ink",
+              pacerTag: false,
+            },
+        clock: { inline: long ? "" : "Usually under 20 s", start: "", end: "" },
+        main: { kind: "cancel", label: "Cancel preparing audio", disabled: false },
+        skipEnabled: false,
+        track: { ...base.track, fill: "sweep", thumb: false },
+        notches: [],
+        seekable: false,
+        actions: long ? ["readAlongMeanwhile"] : [],
+        note: long ? "Audio takes over at your line when it's ready." : null,
+      };
+    }
+
+    case "failed":
+    case "busy":
+      return {
+        ...base,
+        label:
+          status === "failed"
+            ? { lead: "Couldn't prepare the audio", rest: null, tone: "warning", pacerTag: false }
+            : {
+                lead: "A few notes are already being prepared",
+                rest: "try again when one finishes",
+                tone: "ink",
+                pacerTag: false,
+              },
+        main: { kind: "play", label: "Play", disabled: true },
+        skipEnabled: false,
+        track: { ...base.track, fill: "none", thumb: false },
+        notches: [],
+        seekable: false,
+        actions: status === "failed" ? ["tryAgain", "readAlongInstead"] : ["readAlong"],
+        showRate: false,
+      };
+
+    case "ended":
+      return {
+        ...base,
+        label: { lead: "Finished", rest: null, tone: "ink", pacerTag: false },
+        clock: { inline: formatClock(duration), start: formatClock(duration), end: formatClock(0) },
+        main: mainFor(status),
+        track: { ...base.track, percent: 100, thumb: false },
+        actions: read ? [] : ["markRead"],
+      };
+
+    default: {
+      const lead =
+        status === "playing" ? `Now playing · ${section}` : status === "paused" ? "Paused" : "Buffering";
+      return {
+        ...base,
+        label: { lead, rest: status === "playing" ? null : section, tone: "ink", pacerTag: false },
+        clock: {
+          inline: `${formatClock(time)} · −${formatClock(remaining)}`,
+          start: formatClock(time),
+          end: `−${formatClock(remaining)}`,
+        },
+        main: mainFor(status),
+      };
+    }
+  }
+}
+
+function mainFor(status: PlayerSnapshot["status"]): PlayerBarView["main"] {
+  switch (status) {
+    case "playing":
+      return { kind: "pause", label: "Pause", disabled: false };
+    case "buffering":
+      return { kind: "buffering", label: "Pause, buffering", disabled: false };
+    case "ended":
+      return { kind: "replay", label: "Play again", disabled: false };
+    default:
+      return { kind: "play", label: "Play", disabled: false };
+  }
+}

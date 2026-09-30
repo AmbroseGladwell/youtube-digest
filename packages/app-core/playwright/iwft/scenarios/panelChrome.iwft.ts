@@ -97,9 +97,9 @@ test("on the transcript the tools stay up there with them", async ({
   await reader.verifyPanelChromeStacks(true);
 });
 
-// The case for Plus is made at the foot of the window, not at the end of the note where
-// it would need scrolling to (docs/features/plus-upsell.md).
-test("the Plus prompt holds the foot of the window rather than the end of the note", async ({
+// Listen docks the player at the foot of the window, not at the end of the note where it
+// would need scrolling to (docs/features/audio-player.md).
+test("Listen docks the player at the foot of the window rather than the end of the note", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -109,8 +109,8 @@ test("the Plus prompt holds the foot of the window rather than the end of the no
 
   await reader.clickListen();
 
-  await reader.verifyPlusPromptIsShown(true);
-  await reader.verifyPlusPromptHoldsTheWindowFoot();
+  await reader.verifyPlayerIsDocked(true);
+  await reader.verifyPlayerHoldsTheWindowFoot();
 });
 
 // The note this is seeded from carries all of these, so both what the panel keeps and

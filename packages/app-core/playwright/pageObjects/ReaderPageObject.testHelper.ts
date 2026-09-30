@@ -5,6 +5,7 @@ import { captureReasonLineTestIds } from "../../src/features/reader/components/C
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { readerMastheadTestIds } from "../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
 import { readerPlayerBarTestIds } from "../../src/features/reader/components/ReaderPlayerBar/ReaderPlayerBarTestIds.js";
+import { playerScrubberTestIds } from "../../src/features/player/components/PlayerScrubber/PlayerScrubberTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { chaptersPanelTestIds } from "../../src/features/reader/components/ChaptersPanel/ChaptersPanelTestIds.js";
 import { topicLineTestIds } from "../../src/features/reader/components/TopicLine/TopicLineTestIds.js";
@@ -13,7 +14,6 @@ import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
 import { TRANSCRIPT_REST_GAP } from "../../src/features/reader/components/TranscriptPanel/transcriptRestingLine.js";
 import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
-import { plusPromptTestIds } from "../../src/features/plus/components/PlusPrompt/PlusPromptTestIds.js";
 import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -262,12 +262,104 @@ export class ReaderPageObject extends PageObject {
       this.get(readAlongNoteTestIds.line).filter({ hasText: text }).first().click(),
     );
 
-  clickNextLine = () =>
-    this.step("clickNextLine", () => this.click(readerPlayerBarTestIds.nextButton));
   clickPlayPause = () =>
     this.step("clickPlayPause", () => this.click(readerPlayerBarTestIds.playButton));
-  clickPreviousLine = () =>
-    this.step("clickPreviousLine", () => this.click(readerPlayerBarTestIds.previousButton));
+  clickSkipForward = () =>
+    this.step("clickSkipForward", () => this.click(readerPlayerBarTestIds.skipForwardButton));
+  clickSkipBack = () => this.step("clickSkipBack", () => this.click(readerPlayerBarTestIds.skipBackButton));
+
+  // Design 2: [ and ] step the spoken line, from anywhere on the page but a field.
+  pressLineKey = (key: "[" | "]") =>
+    this.step(`pressLineKey ${key}`, () => this.page.keyboard.press(key === "[" ? "BracketLeft" : "BracketRight"));
+
+  verifyPlayButtonReads = (label: string) =>
+    this.step(`verifyPlayButtonReads ${label}`, () =>
+      expect(this.get(readerPlayerBarTestIds.playButton)).toHaveAttribute("aria-label", label),
+    );
+
+  verifySkipIsEnabled = (enabled: boolean) =>
+    this.step(`verifySkipIsEnabled ${enabled}`, async () => {
+      for (const testId of [readerPlayerBarTestIds.skipBackButton, readerPlayerBarTestIds.skipForwardButton]) {
+        await (enabled ? expect(this.get(testId)).toBeEnabled() : expect(this.get(testId)).toBeDisabled());
+      }
+    });
+
+  // The label line is the bar's live region: every state says itself there.
+  verifyBarSays = (text: string | RegExp) =>
+    this.step(`verifyBarSays ${String(text)}`, () =>
+      expect(this.get(readerPlayerBarTestIds.label)).toHaveText(text, { timeout: 10_000 }),
+    );
+
+  verifyBarClockReads = (text: string | RegExp) =>
+    this.step(`verifyBarClockReads ${String(text)}`, () =>
+      expect(this.get(readerPlayerBarTestIds.clock)).toHaveText(text),
+    );
+
+  verifyIsThePacer = (pacer: boolean) =>
+    this.step(`verifyIsThePacer ${pacer}`, () =>
+      pacer
+        ? this.expectToBeVisible(readerPlayerBarTestIds.pacerTag)
+        : this.expectNotToBeVisible(readerPlayerBarTestIds.pacerTag),
+    );
+
+  clickBarAction = (action: string) =>
+    this.step(`clickBarAction ${action}`, () => this.click(readerPlayerBarTestIds.action(action)));
+
+  verifyOffersBarAction = (action: string, offered: boolean) =>
+    this.step(`verifyOffersBarAction ${action} ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(readerPlayerBarTestIds.action(action))
+        : this.expectNotToBeVisible(readerPlayerBarTestIds.action(action)),
+    );
+
+  verifyOffersSignInForAudio = (offered: boolean) =>
+    this.step(`verifyOffersSignInForAudio ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(readerPlayerBarTestIds.signInLink)
+        : this.expectNotToBeVisible(readerPlayerBarTestIds.signInLink),
+    );
+
+  verifyShowsPreparingSweep = () =>
+    this.step("verifyShowsPreparingSweep", () => this.expectToBeVisible(playerScrubberTestIds.sweep));
+
+  // Where the scrubber says the clock is, read off the slider rather than the text so it
+  // holds on every surface.
+  readScrubberSeconds = (): Promise<number> =>
+    this.step("readScrubberSeconds", async () =>
+      Number(await this.get(playerScrubberTestIds.root).getAttribute("aria-valuenow")),
+    );
+
+  verifyScrubberSecondsAtLeast = (seconds: number) =>
+    this.step(`verifyScrubberSecondsAtLeast ${seconds}`, () =>
+      expect.poll(() => this.readScrubberSeconds(), { timeout: 10_000 }).toBeGreaterThanOrEqual(seconds),
+    );
+
+  // Design 2a: held partway along, the scrubber names where it will land, and letting go
+  // lands there.
+  dragScrubberTo = (fraction: number): Promise<string> =>
+    this.step(`dragScrubberTo ${fraction}`, async () => {
+      const box = (await this.get(playerScrubberTestIds.root).boundingBox())!;
+      const y = box.y + box.height / 2;
+      await this.page.mouse.move(box.x + 1, y);
+      await this.page.mouse.down();
+      await this.page.mouse.move(box.x + box.width * fraction, y, { steps: 4 });
+      const landing = (await this.get(playerScrubberTestIds.tooltip).textContent()) ?? "";
+      await this.page.mouse.up();
+      return landing;
+    });
+
+  pressOnScrubber = (key: string) =>
+    this.step(`pressOnScrubber ${key}`, async () => {
+      await this.get(playerScrubberTestIds.root).focus();
+      await this.page.keyboard.press(key);
+    });
+
+  verifyLineStartTimesAreShown = (shown: boolean) =>
+    this.step(`verifyLineStartTimesAreShown ${shown}`, () =>
+      shown
+        ? expect(this.get(readAlongNoteTestIds.startTime).first()).toBeAttached()
+        : this.expectToHaveCount(readAlongNoteTestIds.startTime, 0),
+    );
   clickRate = () => this.step("clickRate", () => this.click(readerPlayerBarTestIds.rateButton));
   clickFavourite = () =>
     this.step("clickFavourite", () => this.click(readerMastheadTestIds.favouriteButton));
@@ -317,11 +409,6 @@ export class ReaderPageObject extends PageObject {
   verifyRateReads = (rate: string) =>
     this.step(`verifyRateReads ${rate}`, () =>
       expect(this.get(readerPlayerBarTestIds.rateButton)).toHaveText(rate),
-    );
-
-  verifyNowReading = (section: string) =>
-    this.step(`verifyNowReading ${section}`, () =>
-      expect(this.get(readerPlayerBarTestIds.nowReading)).toHaveText(`Now reading · ${section}`),
     );
 
   verifyIsFavourited = (isFavourited: boolean) =>
@@ -580,27 +667,6 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(readerPlayerBarTestIds.root),
     );
 
-  verifyPlusPromptIsShown = (shown: boolean) =>
-    this.step(`verifyPlusPromptIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(plusPromptTestIds.root)
-        : this.expectNotToBeVisible(plusPromptTestIds.root),
-    );
-
-  verifyPlusPromptReads = (pattern: RegExp) =>
-    this.step(`verifyPlusPromptReads ${pattern.source}`, () =>
-      expect(this.get(plusPromptTestIds.body)).toHaveText(pattern),
-    );
-
-  dismissPlusPrompt = () =>
-    this.step("dismissPlusPrompt", () => this.click(plusPromptTestIds.notNowButton));
-
-  openPlusFromPrompt = (): Promise<SettingsPageObject> =>
-    this.step("openPlusFromPrompt", async () => {
-      await this.click(plusPromptTestIds.seePlusLink);
-      return new SettingsPageObject(this.testContext).verifyIsShown();
-    });
-
   verifySavedLocallyNoteIsShown = (shown: boolean) =>
     this.step(`verifySavedLocallyNoteIsShown ${shown}`, () =>
       shown
@@ -854,12 +920,15 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  verifyPlusPromptHoldsTheWindowFoot = () =>
-    this.step("verifyPlusPromptHoldsTheWindowFoot", () =>
+  // Flush on a narrow panel, a rem in from the foot where the bar floats as a card.
+  verifyPlayerHoldsTheWindowFoot = () =>
+    this.step("verifyPlayerHoldsTheWindowFoot", () =>
       expect(async () => {
-        const prompt = (await this.get(plusPromptTestIds.root).boundingBox())!;
+        const bar = (await this.get(readerPlayerBarTestIds.root).boundingBox())!;
         const viewport = this.page.viewportSize()!;
-        expect(Math.round(prompt.y + prompt.height)).toBe(viewport.height);
+        const gap = viewport.height - Math.round(bar.y + bar.height);
+        expect(gap).toBeGreaterThanOrEqual(0);
+        expect(gap).toBeLessThanOrEqual(16);
       }).toPass({ timeout: 2_000 }),
     );
 

@@ -1,6 +1,11 @@
+import { createHash } from "node:crypto";
 import type { Page, Route } from "@playwright/test";
 import {
   CLIENT_VERSION,
+  DEFAULT_NARRATION_VOICE,
+  narrationKeySource,
+  spokenScript,
+  type NarrationRender,
   type AuthSurface,
   type MagicLinkRequest,
   type Overview,
@@ -31,6 +36,41 @@ export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
 
+// Every line of simulated narration lasts this long, so a test can say where a line starts.
+export const SIMULATED_SECONDS_PER_LINE = 2;
+
+const keyFor = (lines: string[], voice: string) =>
+  createHash("sha256").update(narrationKeySource(lines, voice)).digest("hex");
+
+const readyRender = (key: string, lineCount: number): NarrationRender => ({
+  key,
+  status: "ready",
+  lineStartsSeconds: Array.from({ length: lineCount }, (_, index) => index * SIMULATED_SECONDS_PER_LINE),
+  durationSeconds: lineCount * SIMULATED_SECONDS_PER_LINE,
+  fileUrl: `/api/audio/${key}/file`,
+});
+
+// Headless Chromium cannot decode the M4A the real service makes, so the simulated file is
+// silence as 8-bit WAV, the length the render says it is.
+const silentWav = (seconds: number): Buffer => {
+  const sampleRate = 8000;
+  const samples = Math.round(seconds * sampleRate);
+  const wav = Buffer.alloc(44 + samples, 128);
+  wav.write("RIFF", 0, "ascii");
+  wav.writeUInt32LE(36 + samples, 4);
+  wav.write("WAVEfmt ", 8, "ascii");
+  wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20);
+  wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(sampleRate, 24);
+  wav.writeUInt32LE(sampleRate, 28);
+  wav.writeUInt16LE(1, 32);
+  wav.writeUInt16LE(8, 34);
+  wav.write("data", 36, "ascii");
+  wav.writeUInt32LE(samples, 40);
+  return wav;
+};
+
 export class BackendSimulator {
   #page: Page;
   #seedOverviews: Overview[] = [];
@@ -58,6 +98,9 @@ export class BackendSimulator {
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
   #sessionHasEnded = false;
+  #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
+  #narrationBusy = false;
+  #narrationRequests = 0;
 
   constructor(page: Page) {
     this.#page = page;
@@ -295,6 +338,66 @@ export class BackendSimulator {
       }),
     );
 
+    const unavailable = () => ({
+      status: 503,
+      body: { error: { code: "unavailable", message: "Simulated: narration is not set up" } },
+    });
+
+    await this.#page.route("**/api/audio", (route) =>
+      this.#respond(route, EndpointKey.NARRATION_REQUEST, {
+        onDefault: () => {
+          this.#narrationRequests += 1;
+          const { lines, voice } = route.request().postDataJSON() as { lines: string[]; voice: string };
+          const key = keyFor(lines, voice);
+          const held = this.#renders.get(key);
+          if (held?.render.status === "ready") return { status: 200, body: held.render };
+          if (this.#narrationBusy) {
+            return { status: 429, body: { error: { code: "too_many_requests", message: "Simulated: three waiting" } } };
+          }
+          const queued: NarrationRender = { key, status: "queued" };
+          this.#renders.set(key, { render: queued, lineCount: lines.length });
+          return { status: 202, body: queued };
+        },
+        onError: unavailable,
+      }),
+    );
+
+    await this.#page.route("**/api/audio/*", (route) =>
+      this.#respond(route, EndpointKey.NARRATION_STATUS, {
+        onDefault: () => {
+          const key = new URL(route.request().url()).pathname.split("/").at(-1)!;
+          const held = this.#renders.get(key);
+          return held === undefined
+            ? { status: 404, body: { error: { code: "not_found", message: "Simulated: never asked for" } } }
+            : { status: 200, body: held.render };
+        },
+        onError: unavailable,
+      }),
+    );
+
+    await this.#page.route("**/api/audio/*/file", (route) => {
+      const key = new URL(route.request().url()).pathname.split("/").at(-2)!;
+      const held = this.#renders.get(key);
+      if (held?.render.status !== "ready") {
+        return route.fulfill({ status: 404, body: "" });
+      }
+      // Byte ranges, as the real route answers them: a media element that cannot ask for a
+      // range cannot seek.
+      const file = silentWav(held.render.durationSeconds);
+      const range = /^bytes=(\d*)-(\d*)$/.exec(route.request().headers()["range"] ?? "");
+      if (range === null) {
+        return route.fulfill({ status: 200, contentType: "audio/wav", headers: { "accept-ranges": "bytes" }, body: file });
+      }
+      const start = range[1] === "" ? Math.max(0, file.length - Number(range[2])) : Number(range[1]);
+      const end = range[1] !== "" && range[2] !== "" ? Math.min(Number(range[2]), file.length - 1) : file.length - 1;
+      return route.fulfill({
+        status: 206,
+        contentType: "audio/wav",
+        headers: { "accept-ranges": "bytes", "content-range": `bytes ${start}-${end}/${file.length}` },
+        body: file.subarray(start, end + 1),
+      });
+    });
+
     await this.#page.route("**/api/changes**", (route) =>
       this.#respond(route, EndpointKey.SYNC_CHANGES, {
         onDefault: () => {
@@ -383,6 +486,30 @@ export class BackendSimulator {
       this.#sessionHasEnded = true;
       this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
+  };
+
+  // Narration as the server holds it: rendered already, still being made, given up on,
+  // or refused because the account has too much waiting (docs/features/audio-player.md).
+  narration = {
+    seedReady: (overview: Overview): void => {
+      const lines = spokenScript(overview);
+      const key = keyFor(lines, DEFAULT_NARRATION_VOICE);
+      this.#renders.set(key, { render: readyRender(key, lines.length), lineCount: lines.length });
+    },
+    finishRenders: (): void => {
+      for (const [key, held] of this.#renders) {
+        if (held.render.status !== "ready") held.render = readyRender(key, held.lineCount);
+      }
+    },
+    failRenders: (): void => {
+      for (const [key, held] of this.#renders) {
+        if (held.render.status !== "ready") held.render = { key, status: "failed" };
+      }
+    },
+    accountIsBusy: (): void => {
+      this.#narrationBusy = true;
+    },
+    requestCount: (): number => this.#narrationRequests,
   };
 
   transcripts = {

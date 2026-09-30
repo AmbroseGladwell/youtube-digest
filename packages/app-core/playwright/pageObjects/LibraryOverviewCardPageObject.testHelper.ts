@@ -25,9 +25,16 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   openReader = (): Promise<ReaderPageObject> =>
     this.step("openReader", async () => {
-      await this.click(libraryOverviewCardTestIds.listenLink);
+      await this.click(libraryOverviewCardTestIds.titleLink);
       return new ReaderPageObject(this.testContext).verifyIsShown();
     });
+
+  clickListen = () => this.step("clickListen", () => this.click(libraryOverviewCardTestIds.listenButton));
+
+  verifyListenReads = (label: string) =>
+    this.step(`verifyListenReads ${label}`, () =>
+      expect(this.get(libraryOverviewCardTestIds.listenButton)).toHaveText(label),
+    );
 
   openReaderFromTitle = (): Promise<ReaderPageObject> =>
     this.step("openReaderFromTitle", async () => {
@@ -65,7 +72,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
     this.step("verifyActionsLineUpWithTheTitle", async () => {
       const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
       const favourite = (await this.get(libraryOverviewCardTestIds.favouriteButton).boundingBox())!;
-      const listen = (await this.get(libraryOverviewCardTestIds.listenLink).boundingBox())!;
+      const listen = (await this.get(libraryOverviewCardTestIds.listenButton).boundingBox())!;
 
       expect(Math.round(favourite.x)).toBe(Math.round(title.x));
       expect(favourite.y).toBeGreaterThan(title.y);
@@ -77,7 +84,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
       for (const testId of [
         libraryOverviewCardTestIds.favouriteButton,
         libraryOverviewCardTestIds.readButton,
-        libraryOverviewCardTestIds.listenLink,
+        libraryOverviewCardTestIds.listenButton,
       ]) {
         const box = (await this.get(testId).boundingBox())!;
         expect(Math.round(box.height)).toBe(38);

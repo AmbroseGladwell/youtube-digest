@@ -31,7 +31,11 @@ export type StrokeIconName =
   | "copy"
   | "alertCircle"
   | "refresh"
-  | "puzzle";
+  | "puzzle"
+  | "rotateCcw"
+  | "rotateCw"
+  | "loader"
+  | "circlePlay";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -205,6 +209,25 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   ),
   puzzle: (
     <path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" />
+  ),
+  rotateCcw: (
+    <>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </>
+  ),
+  rotateCw: (
+    <>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </>
+  ),
+  loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
+  circlePlay: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M10 8.5v7l5.5-3.5z" />
+    </>
   ),
 };
 

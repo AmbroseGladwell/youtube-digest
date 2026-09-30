@@ -3,7 +3,7 @@ export const libraryOverviewCardTestIds = {
   row: "LibraryOverviewCard.row",
   titleLink: "LibraryOverviewCard.titleLink",
   meta: "LibraryOverviewCard.meta",
-  listenLink: "LibraryOverviewCard.listenLink",
+  listenButton: "LibraryOverviewCard.listenButton",
   favouriteButton: "LibraryOverviewCard.favouriteButton",
   readButton: "LibraryOverviewCard.readButton",
 };

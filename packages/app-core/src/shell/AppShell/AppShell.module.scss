@@ -118,6 +118,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  padding-bottom: var(--mini-player-clearance, 0px);
   view-transition-name: pane;
 }
 

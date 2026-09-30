@@ -1,0 +1,95 @@
+// Design 1e: a 4px track the stone surface colour, the elapsed part in brand orange (stone
+// for the pacer, 1k), a 2px notch in the bar's own colour where each section starts. The
+// hit area is taller than the track so a thumb can find it.
+.hitArea {
+  position: relative;
+  padding: 0.5rem 0;
+  margin: -0.5rem 0;
+  touch-action: none;
+}
+
+.seekable {
+  cursor: pointer;
+}
+
+.track {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+.fillStone {
+  background: var(--label);
+}
+
+.notch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--card);
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 999px;
+  background: var(--brand);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+// Design 2a: the thumb grows while it is held.
+.thumbDragging {
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 0.3125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+// Design 1c: no invented percentage, a slow band crossing the track. Under reduced motion
+// the global rule stops it where the design draws it.
+.sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 36%;
+  width: 16%;
+  border-radius: 999px;
+  background: var(--brand);
+  animation: sweep 1800ms ease-in-out infinite alternate;
+}
+
+@keyframes sweep {
+  from {
+    left: 0;
+  }
+
+  to {
+    left: 84%;
+  }
+}

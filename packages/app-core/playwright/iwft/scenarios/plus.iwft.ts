@@ -39,7 +39,9 @@ test("on Plus, Settings states the plan rather than pitching it", async ({ launc
   await settings.verifyPlusFeaturesRead(PLUS_FEATURES);
 });
 
-test("pressing Listen on a free plan makes the case for Plus instead of playing", async ({
+// Design 2d: the Plus prompt on Listen is retired, since audio is open to every account
+// (docs/features/audio-player.md).
+test("Listen on a free plan docks the player and plays, with no case for Plus", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -50,65 +52,18 @@ test("pressing Listen on a free plan makes the case for Plus instead of playing"
   await reader.verifyPlayerIsDocked(false);
   await reader.clickListen();
 
-  await reader.verifyPlusPromptIsShown(true);
-  await reader.verifyPlusPromptReads(/Listening is part of Plus/);
-  await reader.verifyPlayerIsDocked(false);
-  await reader.verifyListenReads("Listen");
-});
-
-test("Not now puts the prompt away and leaves the note where it was", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  seedHeldOverview(backendSimulator);
-  const capture = await launcher.launchPanel(panel);
-  const reader = await capture.openStoredOverview();
-
-  await reader.clickListen();
-  await reader.dismissPlusPrompt();
-
-  await reader.verifyPlusPromptIsShown(false);
-  await reader.verifyPlayerIsDocked(false);
-});
-
-test("the prompt's own link is the way to the plan, not a button with nothing behind it", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  seedHeldOverview(backendSimulator);
-  const capture = await launcher.launchPanel(panel);
-  const reader = await capture.openStoredOverview();
-
-  await reader.clickListen();
-  const settings = await reader.openPlusFromPrompt();
-
-  await settings.verifyOffersPlus(true);
-});
-
-test("on Plus, Listen docks the player and says it is listening", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  seedHeldOverview(backendSimulator);
-  const capture = await launcher.launchPanel({ ...panel, plan: "plus" });
-  const reader = await capture.openStoredOverview();
-
-  await reader.verifyPlayerIsDocked(false);
-  await reader.clickListen();
-
-  await reader.verifyPlusPromptIsShown(false);
   await reader.verifyPlayerIsDocked(true);
   await reader.verifyListenReads("Listening");
 });
 
-// The bar is the only place a Plus listener can pause, so pausing from it must not be
+// The bar is the only place a panel listener can pause, so pausing from it must not be
 // the thing that takes it away.
 test("pausing from the docked player leaves it docked, and Listening puts it away", async ({
   launcher,
   backendSimulator,
 }) => {
   seedHeldOverview(backendSimulator);
-  const capture = await launcher.launchPanel({ ...panel, plan: "plus" });
+  const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
   await reader.clickListen();
 
@@ -156,7 +111,7 @@ test("a reader opened from the library, rather than just written, says nothing a
   await reader.verifySavedLocallyNoteIsShown(false);
 });
 
-test("the web reader is untouched by any of it: no Listen, and the player is always there", async ({
+test("the web reader is untouched by any of it: the player is always there, and nothing is sold", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -165,6 +120,5 @@ test("the web reader is untouched by any of it: no Listen, and the player is alw
   const reader = await library.nthCard(0).openReader();
 
   await reader.verifyPlayerIsDocked(true);
-  await reader.verifyPlusPromptIsShown(false);
   await reader.verifySavedLocallyNoteIsShown(false);
 });

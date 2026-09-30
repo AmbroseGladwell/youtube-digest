@@ -1,7 +1,8 @@
 // Generation talks to providers straight from the browser, and the extension's shell lends
 // it a fetch that reaches YouTube (docs/features/transcript-retrieval.md) — so these are
 // the endpoints the IWFT network layer intercepts. The rest are our own API: the sync
-// server's read side (docs/features/sync-client.md) and sign-in (docs/features/sign-in.md).
+// server's read side (docs/features/sync-client.md), sign-in (docs/features/sign-in.md)
+// and narration (docs/features/audio-player.md).
 export enum EndpointKey {
   INNERTUBE_PLAYER = "INNERTUBE_PLAYER",
   YOUTUBE_TIMEDTEXT = "YOUTUBE_TIMEDTEXT",
@@ -16,6 +17,8 @@ export enum EndpointKey {
   AUTH_LINK_CODE = "AUTH_LINK_CODE",
   SESSION_LINK_CODE = "SESSION_LINK_CODE",
   SESSION_DELETE = "SESSION_DELETE",
+  NARRATION_REQUEST = "NARRATION_REQUEST",
+  NARRATION_STATUS = "NARRATION_STATUS",
 }
 
 export enum EndpointBehaviour {

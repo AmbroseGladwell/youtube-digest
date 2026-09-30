@@ -1,11 +1,13 @@
 export const readerPlayerBarTestIds = {
   root: "ReaderPlayerBar.root",
-  previousButton: "ReaderPlayerBar.previousButton",
+  skipBackButton: "ReaderPlayerBar.skipBackButton",
   playButton: "ReaderPlayerBar.playButton",
-  nextButton: "ReaderPlayerBar.nextButton",
+  skipForwardButton: "ReaderPlayerBar.skipForwardButton",
   rateButton: "ReaderPlayerBar.rateButton",
   favouriteButton: "ReaderPlayerBar.favouriteButton",
-  elapsed: "ReaderPlayerBar.elapsed",
-  total: "ReaderPlayerBar.total",
-  nowReading: "ReaderPlayerBar.nowReading",
+  label: "ReaderPlayerBar.label",
+  pacerTag: "ReaderPlayerBar.pacerTag",
+  clock: "ReaderPlayerBar.clock",
+  signInLink: "ReaderPlayerBar.signInLink",
+  action: (action: string) => `ReaderPlayerBar.action.${action}`,
 };

@@ -4,6 +4,7 @@ import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { Routes } from "../../app/Routes.js";
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
+import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
@@ -161,6 +162,8 @@ export function AppShell() {
         <div className={styles.pane} data-testid={appShellTestIds.pane}>
           {belowWriteFloor ? <WriteFloorWall generating={newOverview.run !== null} /> : <Outlet />}
         </div>
+
+        <MiniPlayer />
 
         <ScrollRestoration />
 
