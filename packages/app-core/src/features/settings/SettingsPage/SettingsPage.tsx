@@ -6,6 +6,10 @@ import { useIsPhone } from "../../../util/useIsPhone.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
+import {
+  SHARED_LINKS_STANDFIRST,
+  SharedLinksPanel,
+} from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
@@ -29,6 +33,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   voice: NARRATION_VOICE_STANDFIRST,
   keys: BYO_KEY_NOTE,
   connections: null,
+  shared: SHARED_LINKS_STANDFIRST,
   plan: null,
   about: null,
 };
@@ -43,6 +48,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <ApiKeysSection />;
     case "connections":
       return <ConnectionsSection />;
+    case "shared":
+      return <SharedLinksPanel />;
     case "plan":
       return <PlusPlanPanel />;
     case "about":

@@ -12,11 +12,19 @@ import {
 import { useNarrationApi } from "../player/NarrationApiContext.js";
 import { PLAN_LABEL } from "../plus/planLabel.js";
 import { usePlan } from "../plus/usePlan.js";
+import { useSharesQuery } from "../shares/queries/sharesQuery.js";
+import { useShareApi } from "../shares/ShareApiContext.js";
 import { useSync } from "../sync/SyncContext.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useSettingsQuery } from "./queries/settingsQuery.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
-import { aboutRowValue, accountRowValue, keysRowValue, voiceRowValue } from "./util/settingsRowValues.js";
+import {
+  aboutRowValue,
+  accountRowValue,
+  keysRowValue,
+  sharedLinksRowValue,
+  voiceRowValue,
+} from "./util/settingsRowValues.js";
 
 export interface SettingsSectionSummary {
   id: SettingsSectionId;
@@ -36,6 +44,8 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const connections = useConnectionsQuery();
   const session = useSessionQuery();
   const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
+  const shareApi = useShareApi();
+  const shares = useSharesQuery().data;
   const build = useAppBuild();
 
   return [
@@ -66,6 +76,9 @@ export function useSettingsSections(): SettingsSectionSummary[] {
             }),
           },
         ]
+      : []),
+    ...(shareApi !== null
+      ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }]
       : []),
     {
       id: "plan",

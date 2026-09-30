@@ -1,5 +1,4 @@
-import type { NoteLine } from "@overview/domain";
-import { noteTiming } from "../../reader/util/noteTiming.js";
+import { noteTiming, type NoteLine } from "@overview/domain";
 
 export interface LineTimings {
   lineStarts: number[];

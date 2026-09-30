@@ -74,6 +74,11 @@ Five folders, five different questions.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.
+- `sharing.md` — sharing an overview with a link: why it is a snapshot rather than a live
+  view, what a shared copy carries and what it never does, why the server rebuilds the copy
+  rather than trusting the client's, the link that stays stopped once stopped, why Fastify
+  writes the document and the app renders it, and the card image drawn per request and
+  measured by the renderer that draws it.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.

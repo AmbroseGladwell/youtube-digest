@@ -29,6 +29,7 @@ export interface ReaderMastheadProps {
   onListen: () => void;
   onEditingTopicsChange: (editing: boolean) => void;
   onEditReason: () => void;
+  onShare: (() => void) | null;
   onDelete: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
@@ -58,6 +59,7 @@ export function ReaderMasthead({
   onListen,
   onEditingTopicsChange,
   onEditReason,
+  onShare,
   onDelete,
   ref,
 }: ReaderMastheadProps) {
@@ -127,6 +129,7 @@ export function ReaderMasthead({
           videoUrl={overview.video.url}
           compact={compact}
           align={compact ? "start" : "end"}
+          onShare={onShare}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={onToggleRead}

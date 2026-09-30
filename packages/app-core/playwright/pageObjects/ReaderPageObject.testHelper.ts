@@ -19,6 +19,7 @@ import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
+import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
 export class ReaderPageObject extends PageObject {
@@ -399,6 +400,25 @@ export class ReaderPageObject extends PageObject {
     this.step("clickMarkRead", async () => {
       await this.openActionsMenu();
       await this.click(overviewActionsMenuTestIds.readItem);
+    });
+
+  clickShare = (): Promise<ShareOverviewDialogPageObject> =>
+    this.step("clickShare", async () => {
+      await this.openActionsMenu();
+      await this.click(overviewActionsMenuTestIds.shareItem);
+      return new ShareOverviewDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyMenuHasNoShare = () =>
+    this.step("verifyMenuHasNoShare", async () => {
+      await this.openActionsMenu();
+      await this.expectNotToBeVisible(overviewActionsMenuTestIds.shareItem);
+    });
+
+  verifyCopyLinkItemReads = (label: string) =>
+    this.step(`verifyCopyLinkItemReads ${label}`, async () => {
+      await this.openActionsMenu();
+      await expect(this.get(overviewActionsMenuTestIds.copyLinkItem)).toHaveText(label);
     });
 
   clickDeleteOverview = (): Promise<DeleteOverviewDialogPageObject> =>

@@ -28,15 +28,17 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
 | The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
 | Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
+| A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
 
 ## Shape
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql
+  assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
-    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth and MCP scopes beside it
+    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth, MCP and /s scopes beside it
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
@@ -47,9 +49,10 @@ apps/api/
     transcripts/         the shared copies per video, each account's link to its own, who fetched what, and what a contribution must be
     oauth/               the authorization server's routes, the consent and connections routes, clients, codes, tokens and their lookups
     mcp/                 /mcp: the access-token plugin, the JSON-RPC handler, the tools and prompt, reading and searching a library
+    shares/              /s/<token>: the repository, the document and its Open Graph head, the card image and the text measuring it is laid out with
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
-    routes/              changes, overviews, topics, settings, transcripts, audio
+    routes/              changes, overviews, topics, settings, transcripts, audio, shares
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
@@ -65,8 +68,10 @@ records, and `server.ts` is the only place the environment is read.
 a session unless it says otherwise; seven do: `GET /api/health`, `GET /api/handshake`, the
 three `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
 which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
-and anything outside `/api`: the web app's files, and the OAuth routes MCP clients call,
-which have their own tokens and never resolve a session (`docs/features/mcp-connector.md`).
+and anything outside `/api`: the web app's files, the OAuth routes MCP clients call,
+which have their own tokens and never resolve a session (`docs/features/mcp-connector.md`),
+and `/s/<token>`, the shared copy of an overview, which is read by the people the reader
+sent the link to and by whatever unfurls it in their chat app (`docs/features/sharing.md`).
 
 **The mechanism is a session row, and the transport is a bearer token or a cookie.** An
 opaque 32-byte token is minted once, handed back once, and only its SHA-256 hex is stored,
@@ -258,6 +263,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
+| `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 
@@ -292,6 +298,10 @@ it further out of reach.
   copying the cache out one video at a time into a slow job. It is not meant to stop a
   determined scraper with many addresses: what it guards is public captions, and
   `docs/features/shared-transcript-cache.md` says why that is enough.
+- **The shared page is limited per address** for the same reason as the shared transcript
+  cache: it has no session, so the account limit never reaches it. An account is also held
+  to fifty live links at once, which is about this not becoming somewhere to host a
+  library rather than about the rate of anything (`docs/features/sharing.md`).
 - **A refused request does not count.** A caller hammering past the limit is let back in
   when its window ends, not held out while it keeps knocking.
 
