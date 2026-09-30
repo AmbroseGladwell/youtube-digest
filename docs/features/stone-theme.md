@@ -119,10 +119,6 @@ why, or a jump to where the thing lives today.
   (`chrome-web-store-account` in the project notes), and the button becomes a link.
 - **`Open in web app`** in the panel's ⋯ menu (design 6h), disabled. **To wire in:** the
   web app's address for a note, which needs the note to exist there — that is sync's job.
-- **`MCP connection`** in the Plus plan's list of what the plan buys (`plusFeatures.ts`).
-  The line is a promise the product has not kept yet: nothing in the app serves an MCP
-  endpoint. **To wire in:** a server that speaks MCP over the sync API's notes, and a
-  connection string on the Settings page for the reader to paste into their assistant.
 
 ## The single overview
 

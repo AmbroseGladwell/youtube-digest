@@ -1,6 +1,14 @@
 import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
+import { isSyncRequestError } from "@overview/sync";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
+import { useSessionQuery } from "../auth/queries/sessionQuery.js";
+import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
+import {
+  CHECKING_ROW_VALUE,
+  connectionsRowValue,
+  UNREACHABLE_ROW_VALUE,
+} from "../connections/util/connectionsRowValue.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
 import { PLAN_LABEL } from "../plus/planLabel.js";
 import { usePlan } from "../plus/usePlan.js";
@@ -24,7 +32,10 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const narrationApi = useNarrationApi();
   const settings = useSettingsQuery().data;
   const { apiKeys } = useApiKeys();
-  const { plan } = usePlan();
+  const { plan, isPlus, status: planStatus } = usePlan();
+  const connections = useConnectionsQuery();
+  const session = useSessionQuery();
+  const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
   const build = useAppBuild();
 
   return [
@@ -41,7 +52,31 @@ export function useSettingsSections(): SettingsSectionSummary[] {
         ]
       : []),
     { id: "keys", title: "API keys", value: keysRowValue(apiKeys, settings?.model ?? DEFAULT_ANTHROPIC_MODEL) },
-    { id: "plan", title: "Plan", value: PLAN_LABEL[plan] },
+    ...(sync.available
+      ? [
+          {
+            id: "connections" as const,
+            title: "Connections",
+            value: connectionsRowValue({
+              signedIn: sync.connected && !sessionEnded,
+              planStatus,
+              isPlus,
+              count: connections.data?.length,
+              countFailed: connections.isError,
+            }),
+          },
+        ]
+      : []),
+    {
+      id: "plan",
+      title: "Plan",
+      value:
+        planStatus === "known"
+          ? PLAN_LABEL[plan]
+          : planStatus === "checking"
+            ? CHECKING_ROW_VALUE
+            : UNREACHABLE_ROW_VALUE,
+    },
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
 }

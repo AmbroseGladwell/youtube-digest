@@ -3,7 +3,8 @@
 // the endpoints the IWFT network layer intercepts. The rest are our own API: the sync
 // server's read side (docs/features/sync-client.md), the shared transcript cache
 // (docs/features/shared-transcript-cache.md), sign-in (docs/features/sign-in.md)
-// and narration (docs/features/audio-player.md).
+// narration (docs/features/audio-player.md) and connecting an assistant
+// (docs/features/mcp-connector.md).
 export enum EndpointKey {
   INNERTUBE_PLAYER = "INNERTUBE_PLAYER",
   YOUTUBE_TIMEDTEXT = "YOUTUBE_TIMEDTEXT",
@@ -19,11 +20,16 @@ export enum EndpointKey {
   AUTH_LINK_CODE = "AUTH_LINK_CODE",
   SESSION_LINK_CODE = "SESSION_LINK_CODE",
   SESSION_DELETE = "SESSION_DELETE",
+  SESSION_READ = "SESSION_READ",
   NARRATION_REQUEST = "NARRATION_REQUEST",
   NARRATION_STATUS = "NARRATION_STATUS",
   NARRATION_LOOKUP = "NARRATION_LOOKUP",
   NARRATION_DELETE = "NARRATION_DELETE",
   NARRATION_SAMPLES = "NARRATION_SAMPLES",
+  CONNECTION_REQUEST = "CONNECTION_REQUEST",
+  CONNECTION_DECISION = "CONNECTION_DECISION",
+  CONNECTIONS_LIST = "CONNECTIONS_LIST",
+  CONNECTION_REVOKE = "CONNECTION_REVOKE",
 }
 
 export enum EndpointBehaviour {

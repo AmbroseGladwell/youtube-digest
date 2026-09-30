@@ -1,4 +1,4 @@
-import { SIGN_IN_PATH, type OverviewId } from "@overview/domain";
+import { consentPath, SIGN_IN_PATH, type OverviewId } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
@@ -12,9 +12,11 @@ export const Routes = {
   signIn: () => SIGN_IN_PATH,
   createAccount: () => "/create-account",
   connectExtension: () => "/connect-extension",
+  connect: (requestId: string) => consentPath(requestId),
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,
 };
 
 export const RouteParams = {
   overviewId: "overviewId",
+  requestId: "requestId",
 } as const;

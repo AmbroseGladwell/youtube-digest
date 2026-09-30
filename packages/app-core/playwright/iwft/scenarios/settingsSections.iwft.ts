@@ -19,12 +19,13 @@ test("on a wide screen, Settings opens beside its first section, and every row c
   await launcher.launch(EVERYTHING);
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyRowsAre(["account", "voice", "keys", "plan", "about"]);
+  await settings.verifyRowsAre(["account", "voice", "keys", "connections", "plan", "about"]);
   await settings.verifyCurrentRow("account");
   await settings.verifySectionIsShown("account");
   await settings.verifyRowReads("account", /^Ada · (Synced|Connected)/);
   await settings.verifyRowReads("voice", "George · British English");
   await settings.verifyRowReads("keys", /^Anthropic key set · /);
+  await settings.verifyRowReads("connections", "None");
   await settings.verifyRowReads("plan", "Plus");
   await settings.verifyRowReads("about", "Version 0.14.2");
 });
