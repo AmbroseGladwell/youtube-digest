@@ -47,6 +47,17 @@ describe("playerBarView", () => {
     expect(bar.clock.inline).toBe("~6 min");
   });
 
+  it("44a and 44b: a render nobody here asked for borrows 1c's label and sweep, but offers Play", () => {
+    const bar = view({ availability: "preparing", preparing: { step: "rendering", long: false } });
+    expect(bar.label).toMatchObject({ lead: "Preparing audio", rest: "Rendering" });
+    expect(bar.main).toEqual({ kind: "play", label: "Play", disabled: false });
+    expect(bar.track.fill).toBe("sweep");
+    expect(bar.clock.inline).toBe("~6 min");
+    expect(bar).toMatchObject({ skipEnabled: false, seekable: false, actions: [] });
+
+    expect(view({ availability: "preparing", preparing: { step: "queued", long: false } }).label.rest).toBe("Queued");
+  });
+
   it("1c and 1d: preparing names the server's step, and after a long wait offers the pacer", () => {
     const quick = view({ status: "preparing", preparing: { step: "rendering", long: false } });
     expect(quick.label).toMatchObject({ lead: "Preparing audio", rest: "Rendering" });

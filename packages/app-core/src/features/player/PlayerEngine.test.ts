@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OverviewId, type NarrationRender, type NoteLine } from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi } from "@overview/sync";
-import { PREPARING_LONG_AFTER_MS, POLL_INTERVAL_MS, PlayerEngine, type PlayerMedia } from "./PlayerEngine.js";
+import {
+  PREPARING_LONG_AFTER_MS,
+  POLL_INTERVAL_MS,
+  PlayerEngine,
+  WATCH_INTERVAL_MS,
+  type PlayerMedia,
+} from "./PlayerEngine.js";
 import type { PlayerTrack } from "./types/PlayerTrack.js";
 
 const KEY = "a".repeat(64);
@@ -289,6 +295,101 @@ describe("PlayerEngine", () => {
     expect(engine.getSnapshot()).toBe(before);
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 3);
     expect(api.status).not.toHaveBeenCalled();
+  });
+
+  it("a render already under way is shown preparing, and lands as ready without playing", async () => {
+    const status = vi
+      .fn<NarrationApi["status"]>()
+      .mockResolvedValueOnce({ key: KEY, status: "rendering" })
+      .mockResolvedValueOnce(READY);
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })), status }));
+    engine.load(TRACK);
+    await settle();
+    expect(engine.getSnapshot()).toMatchObject({
+      status: "ready",
+      availability: "preparing",
+      preparing: { step: "queued", long: false },
+    });
+
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+    expect(status).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS - POLL_INTERVAL_MS);
+    expect(engine.getSnapshot().preparing?.step).toBe("rendering");
+
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS);
+    expect(engine.getSnapshot()).toMatchObject({ status: "ready", availability: "ready", preparing: null });
+    expect(engine.getSnapshot().timings.durationSeconds).toBe(9.4);
+  });
+
+  it("pressing play on a render already under way asks for it interactively, and plays when it lands", async () => {
+    const api = scriptedApi({
+      peek: vi.fn(async () => ({ key: KEY, status: "rendering" as const })),
+      request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "rendering" })),
+    });
+    const engine = engineWith(api);
+    engine.load(TRACK);
+    await settle();
+
+    engine.play();
+    await settle();
+    expect(api.request).toHaveBeenCalledWith(expect.any(Array), "af_heart", "interactive");
+    expect(engine.getSnapshot()).toMatchObject({ status: "preparing", preparing: { step: "rendering" } });
+
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+    expect(engine.getSnapshot()).toMatchObject({ status: "playing", source: "audio" });
+    expect(api.status).toHaveBeenCalledOnce();
+  });
+
+  it("changing track stops watching the last one's render", async () => {
+    const api = scriptedApi({ peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })) });
+    const engine = engineWith(api);
+    engine.load(TRACK);
+    await settle();
+
+    engine.stop();
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS * 3);
+
+    expect(api.status).not.toHaveBeenCalled();
+    expect(engine.getSnapshot().availability).toBe("checking");
+  });
+
+  it("a watched render that fails, or checks that keep failing, go quietly back to made on first play", async () => {
+    const failed = engineWith(
+      scriptedApi({
+        peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })),
+        status: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })),
+      }),
+    );
+    failed.load(TRACK);
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS);
+    expect(failed.getSnapshot()).toMatchObject({ status: "ready", availability: "onFirstPlay", preparing: null });
+
+    const offline = engineWith(
+      scriptedApi({
+        peek: vi.fn(async () => ({ key: KEY, status: "queued" as const })),
+        status: vi.fn(async () => Promise.reject(new SyncTransportError("Offline"))),
+      }),
+    );
+    offline.load(TRACK);
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS * 2);
+    expect(offline.getSnapshot().availability).toBe("preparing");
+    await vi.advanceTimersByTimeAsync(WATCH_INTERVAL_MS);
+    expect(offline.getSnapshot()).toMatchObject({ status: "ready", source: "audio", availability: "onFirstPlay" });
+  });
+
+  it("cancelling a first play goes back to watching the render it asked for", async () => {
+    const peek = vi.fn<NarrationApi["peek"]>().mockResolvedValueOnce(null).mockResolvedValue({ key: KEY, status: "queued" });
+    const engine = engineWith(scriptedApi({ peek }));
+    engine.load(TRACK);
+    await settle();
+    engine.play();
+    await settle();
+
+    engine.cancel();
+    await settle();
+
+    expect(engine.getSnapshot()).toMatchObject({ status: "ready", availability: "preparing" });
   });
 
   it("with nobody signed in, a note just made asks for nothing", async () => {

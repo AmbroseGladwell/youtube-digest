@@ -13,6 +13,7 @@ import { silentWavDataUri } from "./util/silentWavDataUri.js";
 export const PLAYER_RATES = [1, 1.25, 1.5, 2];
 export const SKIP_SECONDS = 15;
 export const POLL_INTERVAL_MS = 1500;
+export const WATCH_INTERVAL_MS = 5000;
 export const PREPARING_LONG_AFTER_MS = 45_000;
 export const PACER_TICK_MS = 250;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
@@ -150,11 +151,14 @@ export class PlayerEngine {
     this.#set({ status: "paused" });
   }
 
+  // The render carries on without anyone waiting for it, so the bar goes back to saying
+  // what the server has, which is usually that it is still on its way.
   cancel(): void {
     if (this.#snapshot.status !== "preparing") return;
     this.#generation += 1;
     this.#clearPreparing();
     this.#set({ status: "ready", preparing: null });
+    if (this.#api !== null && this.#snapshot.source === "audio") this.#peek();
   }
 
   // The pacer, chosen: meanwhile while audio is still being made (1d), instead once it has
@@ -238,15 +242,53 @@ export class PlayerEngine {
       .peek(this.#script(), this.#snapshot.voice)
       .then((render) => {
         if (generation !== this.#generation) return;
-        if (render?.status === "ready" && this.#adopt(render)) {
-          this.#set({ availability: "ready" });
-        } else if (this.#snapshot.availability === "checking") {
-          this.#set({ availability: "onFirstPlay" });
-        }
+        this.#pollFailures = 0;
+        this.#onPeeked(render, generation);
       })
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
         this.#fallBackToPacer(this.#pacerReasonFor(error), false);
+      });
+  }
+
+  // A render somebody else asked for, usually the note's own background request (OV-41):
+  // watched slowly, because nobody is waiting, and landing without playing.
+  #onPeeked(render: NarrationRender | null, generation: number): void {
+    if (render?.status === "queued" || render?.status === "rendering") {
+      this.#set({ availability: "preparing", preparing: { step: render.status, long: false } });
+      this.#pollTimer = setTimeout(() => this.#watch(render.key, generation), WATCH_INTERVAL_MS);
+      return;
+    }
+    if (render?.status === "ready" && this.#adopt(render)) {
+      this.#set({ availability: "ready", preparing: null });
+      return;
+    }
+    if (this.#snapshot.availability !== "ready") this.#set({ availability: "onFirstPlay", preparing: null });
+  }
+
+  // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few
+  // the bar goes back to 1b, and pressing play asks again.
+  #watch(key: string, generation: number): void {
+    if (generation !== this.#generation || this.#api === null) return;
+    this.#api
+      .status(key)
+      .then((render) => {
+        if (generation !== this.#generation) return;
+        this.#pollFailures = 0;
+        this.#onPeeked(render, generation);
+      })
+      .catch((error: unknown) => {
+        if (generation !== this.#generation) return;
+        if (isSyncRequestError(error) && error.code === "unauthenticated") {
+          this.#fallBackToPacer("signedOut", false);
+          return;
+        }
+        this.#pollFailures += 1;
+        if (this.#pollFailures >= POLL_FAILURES_BEFORE_GIVING_UP) {
+          this.#set({ availability: "onFirstPlay", preparing: null });
+          return;
+        }
+        this.#pollTimer = setTimeout(() => this.#watch(key, generation), WATCH_INTERVAL_MS);
       });
   }
 
