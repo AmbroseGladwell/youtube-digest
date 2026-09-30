@@ -16,9 +16,10 @@ A transcript belongs to the video, not to the note taken from it. Two things fol
 - **The shared cache.** `docs/architecture/architecture-options.md` §Ideas 2 already
   decided transcripts are "their own resource which we could use again if another user
   requests the same video… saved with a date, youtube video id". `TranscriptStore` keyed
-  by `VideoId` is the local-only shadow of exactly that interface. When the paid tier's
-  shared cache arrives, it is a second implementation of this interface rather than a
-  migration.
+  by `VideoId` is the local-only shadow of exactly that interface. The shared cache,
+  when it arrived, keyed its table the same way. It became a rung of the retrieval ladder
+  rather than a second `TranscriptStore`, because what asks it is the resolve and not the
+  store (`docs/features/shared-transcript-cache.md`).
 
 So a transcript gets its own interface (`packages/domain/src/TranscriptStore.ts`), its own
 IndexedDB object store, and its own conformance suite — a third store alongside
@@ -252,10 +253,11 @@ sits **outside the records feed** on purpose:
   costs one refetch, not a quarantine. Deploying the API first, as
   `docs/architecture/api.md` asks, keeps it from ever dropping a field a newer client wrote.
 
-The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. It is
-keyed by `(account, video)` and not by video alone: the shared cross-account cache
-(OV-16) is still waiting on its gating decision, and it becomes a second place asked
-first behind the same `TranscriptStore` interface, not a replacement for this one.
+The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. Since
+the shared cache (`docs/features/shared-transcript-cache.md`), what an account keeps is a
+link, `(account, video)`, to the copy it sent, which sits in the shared table beside other
+accounts' copies of the same video. A read joins through the link, so an account reads
+back exactly what it sent.
 
 **Only the transcripts behind a note go up.** The transcript store also holds captions
 fetched only because a video was open in the extension, so they are ready if the reader
@@ -279,8 +281,9 @@ waiting in the outbox. A library enrolled before transcripts were synced has its
 flag set but not `transcriptsEnrolled`. `isEnrolled` is false until both are set, so the
 next cycle journals that library's note transcripts, once, and touches nothing else.
 
-**Kept only while a note uses it.** A transcript row ties the account to a video, so it
-lasts only as long as a note needs it, and the server enforces that at both ends:
+**Kept only while a note uses it.** An account's link ties the account to a video, so it
+lasts only as long as a note needs it, and the server enforces that at both ends. The
+shared copy the link points at is not the account's and outlives it:
 
 - **Stored only if noted.** `PUT /api/transcripts/:videoId` keeps the transcript only if a
   live note on the account uses that video (`putIfNoted`, one `insert … where exists`).
@@ -305,10 +308,9 @@ lasts only as long as a note needs it, and the server enforces that at both ends
 On the client, `SyncStorage.transcriptToPush`
 returns nothing once no note on the device uses the video, so a note deleted before it
 synced sends no transcript at all. What is lost is small: a deleted note's transcript
-cannot seed OV-16's shared cache, and the next note on that video fetches it again for one
-free caption request. When that cache exists, a note delete should drop only the account's
-link to the video; the transcript content can live in the shared table, with no account
-attached.
+never seeds the shared cache, and the next note on that video fetches it again. A note
+deleted after it synced drops only the account's link. A confirmed shared copy stays, with
+no account on it.
 
 **Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
 the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET

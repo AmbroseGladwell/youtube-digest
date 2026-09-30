@@ -155,7 +155,7 @@ export function AccountMenu() {
     );
   }
 
-  const current = open || ACCOUNT_PATHS.has(pathname);
+  const current = open || ACCOUNT_PATHS.has(pathname) || pathname.startsWith(`${Routes.settings()}/`);
 
   return (
     <div className={styles.root} ref={root} data-testid={accountMenuTestIds.root}>

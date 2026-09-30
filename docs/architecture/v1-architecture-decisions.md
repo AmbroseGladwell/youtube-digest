@@ -29,6 +29,14 @@ infrastructure itself: cross-device sync, the shared transcript cache, phone cap
 via the share-sheet PWA queue, and TTS. Anything that inherently needs a server is
 naturally paid-only, because free users never talk to one.
 
+**The shared transcript cache turned out not to be one of those things.** Built on
+2026-09-30 (OV-16), it is read by anyone with no session and added to only by signed-in
+accounts, through their own notes. A copy is served only once two accounts have fetched
+the same words. That follows this paragraph's own test: the write is
+the part that touches shared infrastructure, so the write is what needs an identity.
+Reading public captions gates nothing. So free users do now talk to our server, once per
+note, and `BYO_KEY_NOTE` says so. See `docs/features/shared-transcript-cache.md`.
+
 **The extension is not one of those things, and this line originally said it was.** It
 listed "the extension UX-parity features" among the paid-gated infrastructure, which was
 wrong by the paragraph's own test: a BYO-key extension contacts no server of ours, so

@@ -12,7 +12,8 @@
     "dev": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/server.js",
     "mint-session": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/mintSession.js",
     "set-plan": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/setPlan.js",
-    "seed-voice-samples": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/seedVoiceSamples.js"
+    "seed-voice-samples": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/seedVoiceSamples.js",
+    "forget-shared-transcript": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/forgetSharedTranscript.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

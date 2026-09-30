@@ -74,6 +74,9 @@ Five folders, five different questions.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.
+- `settings.md` — Settings as a short list of sections: which sections exist and when each
+  is hidden, the value each row shows, two panes on a wide screen and a list then a page on
+  a phone or in the panel, and where new sections go.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
 - `reading-position.md` — the transcript tab opening where you had got to, per video:
@@ -83,6 +86,10 @@ Five folders, five different questions.
   unvalidated: two version numbers doing two jobs, why migration happens on read rather than
   in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
   Built, apart from the screens that need a server to fire them.
+- `shared-transcript-cache.md` — the first rung of transcript retrieval: read by anyone,
+  added to only by accounts through their notes, served only once two accounts fetched
+  the same words, who-fetched-what kept apart for a year, why the background prefetch
+  never asks it, and how a bad copy is removed.
 - `sync-api.md` — the server half of the sync engine: one table over every kind, the four
   numbers on a row and who owns each, why a merge migrates first, tombstones, and the feed.
 - `sync-client.md` — the client half: the outbox written in the same transaction as each

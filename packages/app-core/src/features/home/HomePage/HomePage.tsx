@@ -137,7 +137,7 @@ function FirstRunHero() {
           <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
             <StrokeIcon name="check" />
             Using your saved API keys ·{" "}
-            <Link to={Routes.settings()} data-testid={homePageTestIds.settingsLink}>
+            <Link to={Routes.settingsSection("keys")} data-testid={homePageTestIds.settingsLink}>
               Change keys
             </Link>
           </p>
@@ -151,7 +151,7 @@ function FirstRunHero() {
               <p className={styles.keysBody}>{transcriptSourceNote(readiness)}</p>
               <Link
                 className={styles.keysLink}
-                to={Routes.settings()}
+                to={Routes.settingsSection("keys")}
                 data-testid={homePageTestIds.settingsLink}
               >
                 {settingsLinkLabel(readiness).replace(/\s*→$/, "")}

@@ -113,14 +113,14 @@ asked for the render, never for a sample. A re-record that is cancelled or fails
 older narration.
 
 The voice the bar names is a link to the voice setting (43i). It goes to `/settings/voice`,
-which on the full layout is Settings scrolled to the picker, and in the panel is the list on
-its own page. The player lives above the router, so following the link does not stop the
-note.
+Settings' Narration voice section (`docs/features/settings.md`), with the reader's voice
+scrolled into view. The player lives above the router, so following the link does not stop
+the note.
 
 ## Signed out
 
 Narration needs an account, so without one there is nothing to choose a voice for. The picker
-and the panel's row hide themselves (`CLAUDE.md`, "degrade visibly"). If the samples fail to
+and its Settings section hide themselves (`CLAUDE.md`, "degrade visibly"). If the samples fail to
 load, the play buttons go, the voices stay choosable, and "Try again" asks again (43d).
 
 ## Logging
@@ -132,9 +132,7 @@ which get chosen.
 
 ## Where the build departs from the design
 
-- **Settings is wider**, 53.5rem rather than 44rem, so the three columns fit "Playing · 0:07
-  of 0:20" without wrapping, as they do at the design's 760.
-- **The panel's back link sticks** under the masthead while the list scrolls, as the frame
-  draws it (43h). The list is otherwise the full picker in one column.
+- **Two columns, not three.** Since OV-51 the picker sits in Settings' 600px section pane,
+  so it uses the two columns 51c draws. On a phone and in the panel it uses one column.
 - **The design file was read only up to 256 KiB.** Its last frame, 43j's panel label line, was
   cut off in the source and taken from the screenshot instead.

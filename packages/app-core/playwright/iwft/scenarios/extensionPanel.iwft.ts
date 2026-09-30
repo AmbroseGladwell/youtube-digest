@@ -53,8 +53,9 @@ test("without keys the panel asks for them rather than offering a button that wo
   await capture.verifyOffersToCreate(false);
   await capture.verifyAsksForKeys(true);
 
-  const settings = await capture.openSettings();
-  await settings.verifyIsShown();
+  const settings = await capture.openKeysSettings();
+  await settings.verifyListIsShown(false);
+  await settings.clickBackToSettings();
 });
 
 test("creating turns the whole panel into the run, which reports the same steps the dialog does", async ({

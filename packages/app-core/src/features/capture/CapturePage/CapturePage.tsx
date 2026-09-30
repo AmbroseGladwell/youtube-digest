@@ -137,7 +137,7 @@ export function CapturePage() {
             <p className={styles.note}>{BYO_KEY_NOTE}</p>
             <Link
               className={styles.keysLink}
-              to={Routes.settings()}
+              to={Routes.settingsSection("keys")}
               data-testid={capturePageTestIds.settingsLink}
             >
               Set up keys in Settings <StrokeIcon name="arrowRight" size={14} />

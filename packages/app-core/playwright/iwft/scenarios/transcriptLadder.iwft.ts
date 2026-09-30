@@ -116,3 +116,72 @@ test("captions already held are read back, whichever rung could have fetched the
   expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(0);
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(0);
 });
+
+const sharedTranscript = () =>
+  makeStoredTranscript({
+    videoId: VideoId.parse(IWFT_VIDEO_ID),
+    segments: makeCaptionRun(["Stored by another account.", "Read here for nothing."], { startMs: 0, cueMs: 2000 }),
+  });
+
+test("a video another account already stored is read from the shared cache, and nothing is bought", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedShared(sharedTranscript());
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: BOTH_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(1);
+  expect(supadataCalls(backendSimulator)).toBe(0);
+  expect(await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID))).toMatchObject({
+    segments: sharedTranscript().segments,
+  });
+});
+
+test("the side panel reads a cached video from the shared cache rather than contacting YouTube", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedShared(sharedTranscript());
+  const form = await launcher.launchExpectingFirstRun({
+    apiKeys: ANTHROPIC_ONLY,
+    youTubeFetch: true,
+    surface: "extension",
+    defaultApiUrl: "https://overview.test",
+  });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(0);
+});
+
+test("a video the shared cache has never seen falls through to the next rung", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: BOTH_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+});
+
+test("a shared cache that cannot be reached counts as a miss, not as a failed run", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.simulateEndpointError(EndpointKey.SHARED_TRANSCRIPT);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: BOTH_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
+});

@@ -128,7 +128,7 @@ export function ReaderPlayerBar({
                 {view.label.voiceLink ? (
                   <Link
                     className={styles.voiceLink}
-                    to={Routes.narrationVoice()}
+                    to={Routes.settingsSection("voice")}
                     data-testid={readerPlayerBarTestIds.voiceLink}
                   >
                     {view.label.rest}

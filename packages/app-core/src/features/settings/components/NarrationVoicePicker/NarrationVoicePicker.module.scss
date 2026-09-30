@@ -1,6 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design OV-43 43a: pill rows in the card tone. The chosen row takes the stone tint with a
+// Design OV-43 43a, at two columns in the Settings pane (OV-51 51c): pill rows in the card tone. The chosen row takes the stone tint with a
 // stone ring and a filled radio; orange appears only on the sample that is playing.
 .root {
   display: flex;
@@ -90,7 +90,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 

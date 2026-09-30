@@ -1,9 +1,0 @@
-// Design 43h: the way back stays under the masthead while the list scrolls beneath it.
-.back {
-  position: sticky;
-  top: var(--masthead-height);
-  z-index: 1;
-  margin: -0.5rem -1.25rem 0;
-  padding: 0.5rem 1.25rem;
-  background: var(--ground);
-}
