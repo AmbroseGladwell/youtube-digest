@@ -5,14 +5,14 @@ the assistant reads their overviews and transcripts. The synthesis across many o
 happens in the reader's own assistant, on their own plan. This server only serves the
 sources.
 
-It is built in three slices, one PR each:
+It is built in three slices, one card and one PR each:
 
-1. **The authorization server** (this document, as built): client registration, authorize
-   and consent, the code exchange, refresh, revoke, the reader's plan, and the API
-   the consent screen and Settings will call.
-2. **The MCP endpoint and its tools**, on `/mcp`, resolving each request's bearer through
-   `resolveAccessToken`.
-3. **The consent screen and the Settings section**, in the web app, once OV-51's
+1. **OV-26, the authorization server** (this document, as built): client registration,
+   authorize and consent, the code exchange, refresh, revoke, the reader's plan, and the
+   API the consent screen and Settings will call.
+2. **OV-57, the MCP endpoint and its tools**, on `/mcp`, resolving each request's bearer
+   through `resolveAccessToken`.
+3. **OV-58, the consent screen and the Settings section**, in the web app, once OV-51's
    Settings sections have landed.
 
 Until the second slice lands, a connection can be made but reads nothing. Until the third,
