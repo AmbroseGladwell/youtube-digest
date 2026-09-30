@@ -47,6 +47,7 @@ test("skipping moves the video to the start of that stretch, not to the end of i
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
 
+  await reader.verifyOffersToWatchOnYouTube(false);
   await reader.clickSkipToWatchAnyway();
 
   await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([RANGE.startMs]);
@@ -64,10 +65,10 @@ test("the web app offers the video at that moment, having no player of its own t
 
   await reader.verifyWatchAnywayRangeReads("3:20–5:10");
   await reader.verifyOffersToSkipTheVideo(false);
-  await reader.verifyOffersToWatchFrom("Watch from 3:20");
+  await reader.verifyOffersToWatchFrom("Watch from 3:20", `${VIDEO_URL}&t=200`);
 });
 
-test("a panel whose tab has moved to another video offers no skip either", async ({
+test("a panel whose tab has moved to another video offers the video at that moment instead of a skip", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -80,6 +81,7 @@ test("a panel whose tab has moved to another video offers no skip either", async
 
   await reader.verifyWatchAnywayRangeReads("3:20–5:10");
   await reader.verifyOffersToSkipTheVideo(false);
+  await reader.verifyOffersToWatchFrom("Watch from 3:20", `${VIDEO_URL}&t=200`);
 });
 
 test("a note with no stretch to point at shows none of it", async ({
