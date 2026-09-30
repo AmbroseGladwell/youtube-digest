@@ -37,7 +37,10 @@ export type StrokeIconName =
   | "rotateCcw"
   | "rotateCw"
   | "loader"
-  | "circlePlay";
+  | "circlePlay"
+  | "circleMinus"
+  | "monitor"
+  | "smartphone";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -237,6 +240,25 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="10" />
       <path d="M10 8.5v7l5.5-3.5z" />
+    </>
+  ),
+  circleMinus: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8" />
+    </>
+  ),
+  monitor: (
+    <>
+      <rect width="20" height="14" x="2" y="3" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+    </>
+  ),
+  smartphone: (
+    <>
+      <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+      <path d="M12 18h.01" />
     </>
   ),
 };

@@ -1,0 +1,109 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../consent" as consent;
+
+.root {
+  @include consent.card;
+  gap: 0.875rem;
+}
+
+.label {
+  @include consent.label;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.addressGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.addressLabel {
+  margin: 0;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.addressField {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0.3125rem 0.3125rem 0.3125rem 1rem;
+  border-radius: 999px;
+  background: var(--ground);
+  box-shadow: inset 0 0 0 1.5px var(--surface);
+}
+
+.address {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: all;
+}
+
+.copy {
+  @include controls.surface-pill;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.copied {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5625rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.number {
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 999px;
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepText {
+  padding-top: 1px;
+}
+
+.note {
+  @include consent.note;
+  font-size: 0.78125rem;
+}

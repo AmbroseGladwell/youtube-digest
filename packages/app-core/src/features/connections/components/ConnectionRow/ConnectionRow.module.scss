@@ -1,0 +1,88 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-radius: 16px;
+  background: var(--ground);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.name {
+  font-size: 0.90625rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.unnamed {
+  color: var(--muted);
+}
+
+.useLine {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.revoke {
+  @include controls.surface-pill;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: 16px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.confirmTitle {
+  margin: 0;
+  font-size: 0.90625rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.confirmBody {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.revokeAccess {
+  @include controls.action-pill;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.keep {
+  @include controls.surface-pill;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  background: var(--card);
+}

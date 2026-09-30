@@ -1,0 +1,31 @@
+@use "../../consent" as consent;
+
+.root {
+  @include consent.tint-card;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 1rem 1.125rem;
+}
+
+.icon {
+  padding-top: 0.125rem;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}

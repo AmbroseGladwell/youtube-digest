@@ -7,6 +7,7 @@ import { SETTINGS_SECTION_IDS } from "../features/settings/SettingsSectionId.js"
 import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/ConnectExtensionPage.js";
 import { CreateAccountPage } from "../features/auth/CreateAccountPage/CreateAccountPage.js";
 import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
+import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js";
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 import { RouterErrorBoundary } from "./RouterErrorBoundary.js";
 import { RouteParams, Routes } from "./Routes.js";
@@ -34,6 +35,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         { path: Routes.signIn(), element: <SignInPage /> },
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },
+        { path: Routes.connect(`:${RouteParams.requestId}`), element: <ConsentPage /> },
         { path: "*", element: <ErrorState title="There's nothing at this address" back /> },
       ],
     },

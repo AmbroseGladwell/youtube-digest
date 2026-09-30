@@ -5,4 +5,6 @@ export const plusPlanPanelTestIds = {
   feature: "PlusPlanPanel.feature",
   notOnSaleNote: "PlusPlanPanel.notOnSaleNote",
   includedNote: "PlusPlanPanel.includedNote",
+  connectionsLink: "PlusPlanPanel.connectionsLink",
+  recheckButton: "PlusPlanPanel.recheckButton",
 };

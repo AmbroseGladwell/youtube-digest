@@ -1,0 +1,49 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../consent" as consent;
+
+.root {
+  @include consent.tint-card;
+  padding: 1.25rem 1.375rem;
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.openFor {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  @include consent.actions;
+  padding-top: 0.125rem;
+}
+
+.seePlus {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.decline {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+  background: var(--card);
+}
