@@ -14,7 +14,7 @@ const plusAccount = async (testApp: TestApp): Promise<TestAccount> => {
 
 const reads = (testApp: TestApp, accessToken: string) => resolveAccessToken(testApp.sql, accessToken, testApp.clock.now);
 
-test("the consent screen is told which app is asking, where it will send the reader, and the reader's plan", async () => {
+test("the consent screen is told which app is asking and where it will send the reader", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
@@ -25,16 +25,31 @@ test("the consent screen is told which app is asking, where it will send the rea
   assert.equal(response.statusCode, 200);
   assert.equal(response.json().clientName, "Claude");
   assert.equal(response.json().redirectHost, "assistant.test");
-  assert.equal(response.json().plan, "free");
   await testApp.close();
 });
 
-test("the consent screen needs the reader to be signed in", async () => {
+test("a signed-out reader can read the request they are signing in to answer", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const { consentId } = await assistant.startAuthorization();
 
   const response = await testApp.app.inject({ method: "GET", url: `/api/oauth/requests/${consentId}` });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json().redirectHost, "assistant.test");
+  await testApp.close();
+});
+
+test("a signed-out reader cannot answer a request", async () => {
+  const testApp = await createTestApp();
+  const assistant = await makeConnectingAssistant(testApp);
+  const { consentId } = await assistant.startAuthorization();
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: `/api/oauth/requests/${consentId}/decision`,
+    payload: { approve: false },
+  });
 
   assert.equal(response.statusCode, 401);
   await testApp.close();

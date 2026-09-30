@@ -3,6 +3,7 @@ import type { LinkCode, SessionInfo } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { deleteSession } from "./deleteSession.js";
 import { issueLinkCode } from "./issueLinkCode.js";
+import { accountPlan } from "./accountPlan.js";
 import { clearedSessionCookie } from "./sessionCookie.js";
 
 export interface SessionRoutesOptions {
@@ -14,7 +15,7 @@ export interface SessionRoutesOptions {
 export function sessionRoutes(app: FastifyInstance, { sql, clock, sessionCookieSecure }: SessionRoutesOptions): void {
   app.get("/session", async (request) => {
     const { accountId, email, firstName, expiresAt } = request.session!;
-    const info: SessionInfo = { accountId, email, firstName, expiresAt };
+    const info: SessionInfo = { accountId, email, firstName, expiresAt, plan: await accountPlan(sql, accountId) };
     return info;
   });
 

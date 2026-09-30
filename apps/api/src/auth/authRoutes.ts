@@ -52,7 +52,7 @@ export function authRoutes(
   const magicLinkLimits = [perAddress(rateLimits.magicLinkPerAddress), rateLimitHook(rateLimits.magicLinkPerEmail, emailOf, clock)];
 
   app.post("/auth/magic-link", { ...PUBLIC, preHandler: magicLinkLimits }, async (request, reply) => {
-    const { email, surface, intent, firstName = null } = parseOrThrow(
+    const { email, surface, intent, firstName = null, returnTo = null } = parseOrThrow(
       MagicLinkRequest,
       request.body,
       "The sign-in request",
@@ -62,7 +62,7 @@ export function authRoutes(
       const creating = intent === "createAccount" && !(await accountExists(sql, issued.email));
       await mailer.sendMagicLink({
         to: issued.email,
-        link: signInLink(appUrl, issued.token),
+        link: signInLink(appUrl, issued.token, surface === "web" ? returnTo : null),
         surface,
         purpose: creating ? "createAccount" : "signIn",
         firstName: creating ? firstName : null,
