@@ -123,10 +123,18 @@ export function playerBarView(
           }
         : {
             ...base,
-            label: { lead: "Audio is made on first play", rest: "about 20 s", tone: "ink", pacerTag: false },
+            label:
+              availability === "preparing"
+                ? {
+                    lead: "Preparing audio",
+                    rest: preparing?.step === "rendering" ? "Rendering" : "Queued",
+                    tone: "ink",
+                    pacerTag: false,
+                  }
+                : { lead: "Audio is made on first play", rest: "about 20 s", tone: "ink", pacerTag: false },
             clock: { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
             skipEnabled: false,
-            track: { ...base.track, fill: "none", thumb: false },
+            track: { ...base.track, fill: availability === "preparing" ? "sweep" : "none", thumb: false },
             notches: [],
             seekable: false,
           };

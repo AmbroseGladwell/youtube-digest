@@ -245,7 +245,51 @@ test("a note made while signed in asks for its narration in the background, and 
   expect(backendSimulator.narration.requestCount()).toBe(1);
 });
 
-test("a note made while signed out asks for no narration", async ({ launcher, backendSimulator }) => {
+test("a note opened before its background render lands says it is preparing, and becomes narrated without playing", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  await form.submitUrl(VIDEO_URL);
+  const dialog = launcher.appShell.newOverviewDialog;
+  await dialog.verifyStepState("02", "done");
+  await expect.poll(() => backendSimulator.narration.requestedPriorities()).toEqual(["background"]);
+
+  await dialog.clickReadOverview();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyBarSays("Preparing audio · Queued");
+  await reader.verifyShowsPreparingSweep();
+  await reader.verifyPlayButtonReads("Play");
+
+  backendSimulator.narration.finishRenders();
+
+  await reader.verifyBarSays("Narrated · Heart voice");
+  await reader.verifyPlayButtonReads("Play");
+  expect(backendSimulator.narration.requestCount()).toBe(1);
+});
+
+test("pressing play while a background render is under way asks for it at the front, and plays when it lands", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  await form.submitUrl(VIDEO_URL);
+  const dialog = launcher.appShell.newOverviewDialog;
+  await dialog.verifyStepState("02", "done");
+  await expect.poll(() => backendSimulator.narration.requestedPriorities()).toEqual(["background"]);
+  await dialog.clickReadOverview();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyBarSays("Preparing audio · Queued");
+
+  await reader.clickPlayPause();
+
+  await reader.verifyPlayButtonReads("Cancel preparing audio");
+  expect(backendSimulator.narration.requestedPriorities()).toEqual(["background", "interactive"]);
+  backendSimulator.narration.finishRenders();
+  await reader.verifyBarSays(/^Now playing · /);
+});
+
+test("a note made while signed out asks for no narration",async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl(VIDEO_URL);
