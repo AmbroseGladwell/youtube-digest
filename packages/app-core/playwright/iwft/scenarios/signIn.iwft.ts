@@ -453,6 +453,24 @@ test.describe("connecting the extension from the web app", () => {
     await test.expect.poll(() => backendSimulator.getCallCount(EndpointKey.SESSION_LINK_CODE)).toBe(2);
   });
 
+  // A web app is still connected once its session has ended, so sending it to /sign-in
+  // would only bounce it home. It signs out first, as the menu's Sign in again does.
+  test("a session that has ended says so, and signing in again leads to the email form", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.auth.sessionHasEnded();
+    await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
+
+    await (await launcher.appShell.accountMenu.open()).chooseConnectExtension();
+
+    const error = await launcher.errorState.verifyIsShown();
+    await error.verifyTitleReads("This browser's session has ended");
+    await error.takeAction();
+    await launcher.signInPage.verifyAsksForEmail("Sign in");
+    test.expect(backendSimulator.getCallCount(EndpointKey.SESSION_DELETE)).toBe(1);
+  });
+
   test("signed out, settings offers no code to make", async ({ launcher }) => {
     await launcher.launch({ sync: true });
     const settings = await launcher.appShell.openSettings();

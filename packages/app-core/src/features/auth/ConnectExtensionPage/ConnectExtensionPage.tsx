@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Navigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -16,11 +16,15 @@ import { connectExtensionPageTestIds } from "./ConnectExtensionPageTestIds.js";
 // beside it signs in without a second email (docs/features/sign-in.md).
 export function ConnectExtensionPage() {
   const surface = useSurface();
+  const navigate = useNavigate();
   const sync = useSync();
   const { connection } = useSyncConnection();
   const issue = useIssueLinkCodeMutation();
   const apiUrl = connection.apiUrl ?? globalThis.location?.origin ?? "";
-  const canIssue = surface === "web" && sync.connected && sync.status.phase !== "signedOut";
+  const sessionEnded =
+    sync.status.phase === "signedOut" ||
+    (issue.isError && isSyncRequestError(issue.error) && issue.error.code === "unauthenticated");
+  const canIssue = surface === "web" && sync.connected && !sessionEnded;
   const started = useRef(false);
 
   useEffect(() => {
@@ -33,19 +37,28 @@ export function ConnectExtensionPage() {
     return <Navigate to={Routes.home()} replace />;
   }
 
-  if (!canIssue) {
+  if (!sync.connected) {
     return <Navigate to={Routes.signIn()} replace />;
+  }
+
+  if (sessionEnded) {
+    return (
+      <ErrorState
+        title="This browser's session has ended"
+        body="Sign in again, then connect the extension."
+        action={{
+          label: "Sign in again",
+          onSelect: () => void sync.signOut().then(() => navigate(Routes.signIn())),
+        }}
+      />
+    );
   }
 
   if (issue.isError) {
     return (
       <ErrorState
         title="Couldn't make a code for the extension"
-        body={
-          isSyncRequestError(issue.error) && issue.error.code === "unauthenticated"
-            ? "This browser's session has ended. Sign in again, then try once more."
-            : authFailureMessage(issue.error, CODE_SPENT)
-        }
+        body={authFailureMessage(issue.error, CODE_SPENT)}
         action={{ label: "Try again", onSelect: () => issue.mutate({ apiUrl }) }}
       />
     );

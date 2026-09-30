@@ -56,6 +56,7 @@ export class BackendSimulator {
   #signInAttempts: string[] = [];
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
+  #sessionHasEnded = false;
 
   constructor(page: Page) {
     this.#page = page;
@@ -235,7 +236,10 @@ export class BackendSimulator {
           status: 200,
           body: { linkCode: SIMULATED_LINK_CODE, linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" },
         }),
-        onError: unauthenticated,
+        onError: () =>
+          this.#sessionHasEnded
+            ? unauthenticated()
+            : { status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } },
       }),
     );
 
@@ -369,6 +373,10 @@ export class BackendSimulator {
     },
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
+    },
+    sessionHasEnded: (): void => {
+      this.#sessionHasEnded = true;
+      this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
   };
 

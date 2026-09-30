@@ -65,7 +65,10 @@ same `POST /api/auth/link-code`. Same eight characters, same ten minutes, same o
 extension`, only when this browser is signed in and the server still knows its session.
 Both go to `/connect-extension`, which makes a code as it opens and shows it on the same
 card as design 9g, with `Get a new code` for when ten minutes have gone. Nothing about the
-web app's session changes, and no mail is sent.
+web app's session changes, and no mail is sent. If the session has ended, the page
+says so and offers `Sign in again`, which signs this browser out first: a web app keeps
+its server once its session is gone, so it still counts as connected, and `/sign-in`
+would only send it back to the library.
 
 **In the extension**, the sign-in page offers `Signed in on the web app? Enter a code from
 it` below the email form. It leads to the code field with no address and no resend, and
