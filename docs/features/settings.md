@@ -16,6 +16,7 @@ In order, each with the value its row shows:
 | Account & sync | `/settings/account` | first name (or email) · the sync status line; signed out, "Not signed in · this library stays here" | the shell can sync |
 | Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
 | API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
+| Connections | `/settings/connections` | "N connected" or "None" on Plus, "Needs Plus", or "Sign in first" | the shell can sync |
 | Plan | `/settings/plan` | Free or Plus | always |
 | About | `/settings/about` | the version | the shell knows its build |
 
@@ -25,10 +26,11 @@ address then opens Settings as `/settings` would (`CLAUDE.md`, "degrade visibly"
 each panel already reads.
 
 Plan is its own section rather than part of Account, so a Free reader with no account still
-finds it. It comes fourth: below the things people change, above About.
+finds it. It comes after Connections: below the things people change, above About.
 
-New sections go here: Personalisation (OV-46) after Narration voice, Connections (OV-26,
-OV-27) and Shared links (OV-30) after API keys. About stays last.
+New sections go here: Personalisation (OV-46) after Narration voice, YouTube playlists
+(OV-27) and Shared links (OV-30) beside Connections. About stays last. Connections is
+described in `mcp-connector.md`.
 
 ## Two panes, or a list then a page
 

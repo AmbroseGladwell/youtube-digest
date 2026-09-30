@@ -15,9 +15,7 @@ It is built in three slices, one card and one PR each:
 3. **OV-58, the consent screen and the Settings section**, in the web app, once OV-51's
    Settings sections have landed.
 
-This document describes the first two as built. Until the third lands, the consent page an
-assistant is sent to (`/connect/<id>`) is not drawn yet, so a connection can only be
-approved by calling `POST /api/oauth/requests/:id/decision` by hand.
+This document describes all three as built.
 
 ## Why OAuth, and why its own tokens
 
@@ -41,7 +39,8 @@ The protocol's routes sit at the root, outside `/api`. The callers are third-par
 assistants that send none of our clients' headers (`X-Client-Version`, the session), and
 they expect OAuth's own error shape, `{ "error": "invalid_grant", "error_description": … }`,
 rather than our envelope. The reader's side lives under `/api` on the reader's own session,
-like any other route.
+like any other route, except reading a request, which a signed-out reader needs
+("The consent screen", below).
 
 | Route | Who calls it | What it does |
 |---|---|---|
@@ -52,7 +51,7 @@ like any other route.
 | `POST /oauth/token` | assistant | `authorization_code` with PKCE, and `refresh_token` |
 | `POST /oauth/revoke` | assistant | RFC 7009: either token ends the connection |
 | `POST /mcp` | assistant | the MCP endpoint, on the connection's access token ("The endpoint", below) |
-| `GET /api/oauth/requests/:id` | consent screen | who is asking, where they will send the reader, the reader's plan |
+| `GET /api/oauth/requests/:id` | consent screen | who is asking and where they will send the reader. Public |
 | `POST /api/oauth/requests/:id/decision` | consent screen | `{ approve }` gives `{ redirectTo }` |
 | `GET /api/connections` | Settings | the reader's live connections |
 | `DELETE /api/connections/:id` | Settings | revokes one, at once |
@@ -116,15 +115,15 @@ OV-18's billing will write the same column. It is checked at three points, so th
 leaving Plus cuts access off rather than waiting for a token to lapse:
 
 - **Approving** answers `403 plan_required` to a free reader. The request stays open, so a
-  reader who upgrades can come back and approve it. The consent screen is told the plan
-  up front, so it can show the free-tier state rather than a button that fails.
+  reader who upgrades can come back and approve it. The consent screen knows the plan
+  up front, from the session, so it can show the free-tier state rather than a button
+  that fails.
 - **The code exchange and every refresh** refuse with `invalid_grant` once the account is
   not Plus.
 - **Every request** through `resolveAccessToken` joins the account and requires Plus.
 
-The web app still reads its plan from `Settings.plan` through `usePlan()`. Moving that to
-`GET /api/session` belongs to the Settings slice, where the consent screen and the
-connection section first need it.
+`GET /api/session` carries the plan, and the clients read it there through `usePlan()`. A
+device with no session is on Free: Plus belongs to an account.
 
 ## Tokens
 
@@ -267,6 +266,65 @@ how many overviews it returned (for the three that return overviews) and whether
 failed. A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
 told to try again. A query, a topic, a note's content and a transcript are never logged.
 
+## The consent screen
+
+`/connect/<id>` in the web app (`ConsentPage`, design 58a–58h), where `/oauth/authorize`
+sends the reader's browser.
+
+**The name is a claim and the address is the proof.** Registration is open, so a client
+calls itself whatever it likes, and may give no name at all. The heading quotes the name
+beside a line saying it is unchecked, or drops it ("An assistant wants to read your
+overviews"), and never shows a logo or a tick. The redirect host gets its own card above
+the permissions and the buttons, because it is the one thing on the screen the assistant
+cannot make up. A long name is cut at 60 characters on screen and kept whole in the
+heading's accessible name, and it is always a text node, never markup.
+
+**Reading a request needs no session.** A reader who arrives signed out sees who is asking
+and where they would be sent before they sign in, so they know what the email is for. The
+request id is an unguessable UUID, and what it shows (a name the assistant chose and the
+host the assistant registered) is already the assistant's. Answering still needs the
+session and `X-Client-Version`.
+
+**Signing in comes back to the request.** The page asks for a magic link with
+`returnTo: /connect/<id>`, and the link is `/sign-in?return=/connect/<id>#token=…`. Both ends
+accept only a consent path (`isConsentPath`): the server refuses anything else with a 400,
+and `SignInPage` ignores anything else and goes to the library as before. The request lasts
+30 minutes and the link 15, so a reader who asks straight away has time to use it.
+
+**A link opened on another device says so.** The device that answers is the one sent back to
+the assistant, so a reader who starts in Claude on a laptop and opens the email on a phone
+would connect the phone's browser. The waiting screen says to open the link on this device.
+The page remembers, in this browser, which requests it asked a link for
+(`consentLinksAskedStorage`); a sign-in link that lands on a request this browser never
+asked about shows "Started on another device?" above the heading. That needs nothing from
+the server.
+
+**Both answers leave.** Approve and Decline each get `{ redirectTo }` and go there by a full
+page load, so there is no result screen: the pressed button says where it is going
+("Sending you back to claude.ai…"), both lock, and a status region reads the same. A free
+reader has no Approve at all, only what Plus would do, how long the request stays open,
+See Plus and Decline. An expired or answered request (`404 not_found`) is the error state
+with no retry, since the only way forward is from the assistant.
+
+## Settings › Connections
+
+`/settings/connections` (`ConnectionsSection`, design 58i–58r), after API keys, shown
+wherever the shell can sync. Its row reads "N connected" or "None" on Plus, "Needs Plus" on
+Free, and "Sign in first" signed out, which is its own state rather than the Free one
+because a connection belongs to an account.
+
+On Plus it lists each connection by name ("No name given" when there is none), when it
+connected and when it was last used. `last_used_at` is touched at most once an hour, so the
+line says "Used in the last hour", "Used today" or "Last used 14 September", never minutes.
+Below is the connector address (`<server>/mcp`, with Copy where the clipboard can be
+written), three steps for Claude, and with nothing connected, three questions to try, one
+of them across overviews. The Plus panel's MCP line links here.
+
+**Revoke asks once.** It cannot be undone, so the row turns into a confirmation that says
+so. Revoke access removes the row at once, sends the delete, and moves focus to the
+Connected label; a refused delete puts the row back and says so. Keep it restores the row
+with focus on its Revoke.
+
 ## Not built yet
 
 - **CORS on the protocol routes.** Claude calls them from its servers. A browser-based
@@ -275,7 +333,12 @@ told to try again. A query, a topic, a note's content and a transcript are never
   added when one is wanted.
 - **A sweep** of unused clients, lapsed authorization requests and expired tokens, which
   waits for the same future job as expired sessions (`api.md`).
-- **The consent page and Settings**: slice three.
+- **Events.** The design names `consent_shown`, `consent_approved`, `consent_declined`,
+  `consent_plan_required` and `connection_revoked`. The app has no analytics to send them
+  to yet; the server already logs the decision and the revoke.
+- **Coming back after buying Plus.** The free consent state says how long the request stays
+  open and links to the Plan section. Design 58g also promises that buying Plus returns the
+  reader to the request, which waits for billing (OV-18) to have a purchase to return from.
 - **Write tools** (mark read, favourite, file under a topic). Every connection is read-only
   because nothing that honours its token writes, and a write tool would end that.
 - **Audio.** Narration is not exposed, and would wait for sync to carry it.
