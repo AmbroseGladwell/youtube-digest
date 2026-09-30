@@ -1,4 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
+import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
+import type { AudioStore } from "./audio/AudioStore.js";
+import type { Narrator } from "./audio/Narrator.js";
 import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
@@ -9,6 +13,7 @@ import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
+import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
@@ -29,10 +34,19 @@ export interface AppConfig {
   staticRoot: string | null;
 }
 
+export interface AudioSetup {
+  narrator: Narrator;
+  store: AudioStore;
+  concurrency: number;
+  // Off in tests, which drain the queue themselves rather than race a background worker.
+  runWorkers: boolean;
+}
+
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
   mailer: Mailer;
+  audio?: AudioSetup | null;
   clock?: () => Date;
   logger?: boolean;
 }
@@ -40,6 +54,9 @@ export interface BuildAppOptions {
 declare module "fastify" {
   interface FastifyContextConfig {
     public?: boolean;
+  }
+  interface FastifyInstance {
+    audioQueue: AudioRenderQueue | null;
   }
 }
 
@@ -50,11 +67,18 @@ export async function buildApp({
   config,
   sql,
   mailer,
+  audio = null,
   clock = () => new Date(),
   logger = false,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
   const sessionCookieSecure = config.appUrl.startsWith("https://");
+  const audioRenders = new AudioRendersRepository(sql);
+  const audioQueue =
+    audio === null
+      ? null
+      : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
+  app.decorate("audioQueue", audioQueue);
 
   await app.register(
     async (api) => {
@@ -99,9 +123,18 @@ export async function buildApp({
       topicRoutes(api, records);
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts);
+      audioRoutes(
+        api,
+        audio === null || audioQueue === null ? null : { renders: audioRenders, queue: audioQueue, store: audio.store },
+        clock,
+      );
     },
     { prefix: "/api" },
   );
+
+  app.addHook("onReady", async () => {
+    audioQueue?.kick();
+  });
 
   if (config.staticRoot !== null) {
     await app.register(webAppPlugin, { root: config.staticRoot });

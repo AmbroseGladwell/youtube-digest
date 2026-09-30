@@ -102,6 +102,41 @@ before the whole file arrives) as base64 beside `lineStartsSeconds`, `durationSe
 
 Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s of audio.
 
+## The API side
+
+`apps/api/src/audio` and `routes/audioRoutes.ts`. Three routes:
+
+| | |
+|---|---|
+| `POST /api/audio` | `{ lines, voice?, priority? }`, checked with `SpokenScript` and `NarrationVoice`. Ready audio answers `200` with its timings at once; anything else is queued and answers `202` |
+| `GET /api/audio/:key` | the status to poll: `queued`, `rendering`, `ready` with `lineStartsSeconds`, `durationSeconds` and `fileUrl`, or `failed` |
+| `GET /api/audio/:key/file` | the M4A, with single byte ranges answered `206`, which Safari needs before it will play media |
+
+- **The key is the content.** `audioKey` is SHA-256 over the render version, the voice and the
+  lines, computed by the server from what it was sent. Two accounts asking for the same words
+  in the same voice share one render and one file.
+- **The file is public; the status is not.** An `<audio>` element sends no bearer, so the
+  extension could not play a file behind one, and nor could a lock screen resuming playback.
+  The key is only computable by someone who already holds the words, so it serves as its own
+  capability, and the file is immutable and cached for a year.
+- **The queue is a table.** `audio_renders` holds each job's lines, voice, priority, attempts
+  and a `not_before`. Workers claim the most urgent, oldest job with `for update skip locked`,
+  up to `TTS_CONCURRENCY` at once, one per machine the pool can start. Someone pressing play
+  is `interactive` and goes ahead of every `background` render, and asking for a waiting
+  background render interactively promotes it.
+- **Failures wait, then give up.** A failed attempt is retried after 30 s, then 2 minutes;
+  the third failure marks the job `failed`, and asking for it again starts it from nothing. A
+  job whose worker vanished (the API machine stopped mid-render) is taken up again after 15
+  minutes.
+- **Three waiting per account.** An account with three renders queued or running is refused a
+  fourth with `429 too_many_requests`; asking again for one already waiting is never refused.
+- **Every render is logged** with its voice, priority, attempt, time spent waiting, synthesis
+  time and audio length, the numbers that say whether the pool is big enough.
+
+Storage is behind `AudioStore`. Until R2 is wired it is a directory (`AUDIO_DIR`), which is
+also why production leaves `TTS_URL` unset for now: a Fly machine's disk does not outlive a
+restart, so narration stays visibly unavailable rather than quietly losing what it made.
+
 ## Where the audio lives
 
 *Superseded: `docs/architecture/v1-architecture-decisions.md` puts audio on Cloudflare R2 behind the API. What follows is the prototype's workaround, kept as the record of why.*

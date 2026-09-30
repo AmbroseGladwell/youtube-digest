@@ -1,5 +1,11 @@
 import { PGlite } from "@electric-sql/pglite";
 import type { FastifyInstance } from "fastify";
+import {
+  makeMemoryAudioStore,
+  makeScriptedNarrator,
+  type MemoryAudioStore,
+  type ScriptedNarrator,
+} from "../audio/ScriptedNarrator.testHelper.js";
 import { buildApp, type AppConfig } from "../buildApp.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
@@ -17,14 +23,26 @@ export interface TestApp {
   clock: TestClock;
   // Every magic link the app sent, as the reader would receive it.
   mailer: RecordingMailer;
+  // The TTS service and the audio store narration goes through, and the queue a test drains
+  // itself rather than race a background worker.
+  narrator: ScriptedNarrator;
+  audioStore: MemoryAudioStore;
+  drainAudio(): Promise<void>;
   close(): Promise<void>;
+}
+
+export interface TestAppOptions {
+  narration?: boolean;
 }
 
 export const TEST_APP_URL = "https://overview.test";
 
 // The whole API against a real Postgres in process, with a clock the test owns
 // (docs/conventions/backend-testing-guide.md).
-export async function createTestApp(config: Partial<AppConfig> = {}): Promise<TestApp> {
+export async function createTestApp(
+  config: Partial<AppConfig> = {},
+  { narration = true }: TestAppOptions = {},
+): Promise<TestApp> {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql);
   const clock: TestClock = {
@@ -34,10 +52,13 @@ export async function createTestApp(config: Partial<AppConfig> = {}): Promise<Te
     },
   };
   const mailer = makeRecordingMailer();
+  const narrator = makeScriptedNarrator();
+  const audioStore = makeMemoryAudioStore();
   const app = await buildApp({
     config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, ...config },
     sql,
     mailer,
+    audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
     clock: () => clock.now,
   });
   await app.ready();
@@ -46,6 +67,11 @@ export async function createTestApp(config: Partial<AppConfig> = {}): Promise<Te
     sql,
     clock,
     mailer,
+    narrator,
+    audioStore,
+    drainAudio: async () => {
+      await app.audioQueue?.drain();
+    },
     close: async () => {
       await app.close();
       await sql.close();

@@ -16,3 +16,7 @@ APP_URL=http://localhost:5173
 MAIL_TRANSPORT=log
 BREVO_API_KEY=${BREVO_API_KEY}
 MAIL_FROM=The Overview <hello@theoverviewapp.com>
+# The TTS service `task run:tts` starts, and where its narration is kept until R2 is wired;
+# relative to apps/api, where the API runs (docs/features/tts-pre-rendered-speech.md, The API side).
+TTS_URL=http://localhost:8000
+AUDIO_DIR=../../.local/audio
