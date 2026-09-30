@@ -1,6 +1,7 @@
 import { expect, test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const NOTE = makeOverview({
@@ -19,6 +20,9 @@ const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
 };
+
+const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
+const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
 
 test("narration that exists says so before the first press, and plays on its own timings", async ({
   launcher,
@@ -220,4 +224,50 @@ test("pausing from the mini-player pauses the row too, and × stops and puts it 
 
   await launcher.miniPlayer.clickClose();
   await launcher.miniPlayer.verifyIsShown(false);
+});
+
+test("a note made while signed in asks for its narration in the background, and has it by the time it is opened", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  const dialog = launcher.appShell.newOverviewDialog;
+  await dialog.verifyStepState("02", "done");
+  await expect.poll(() => backendSimulator.narration.requestedPriorities()).toEqual(["background"]);
+
+  backendSimulator.narration.finishRenders();
+  await dialog.clickReadOverview();
+  const reader = await launcher.readerPage.verifyIsShown();
+
+  await reader.verifyBarSays("Narrated · Heart voice");
+  expect(backendSimulator.narration.requestCount()).toBe(1);
+});
+
+test("a note made while signed out asks for no narration", async ({ launcher, backendSimulator }) => {
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.NARRATION_REQUEST)).toBe(0);
+});
+
+test("a narration request that fails leaves the note it was made for saved and readable", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.simulateEndpointError(EndpointKey.NARRATION_REQUEST);
+  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  const dialog = launcher.appShell.newOverviewDialog;
+  await dialog.verifyStepState("02", "done");
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.NARRATION_REQUEST)).toBe(1);
+
+  await dialog.clickReadOverview();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle("The Simulated Video");
+  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });

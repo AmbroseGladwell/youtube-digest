@@ -5,6 +5,8 @@ import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
 import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
+import { usePlayer } from "../../player/PlayerContext.js";
+import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
 import { createGenerationClient, createTranscriptSources } from "../api/generationClients.js";
 import { runOverviewGeneration, type RunOverviewGenerationOptions } from "../api/generationPipeline.js";
@@ -21,6 +23,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
   const queryClient = useQueryClient();
   const settingsQuery = useSettingsQuery();
   const youTubeFetch = useYouTubeFetch();
+  const player = usePlayer();
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
@@ -45,7 +48,8 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
         { onProgress, isCancelled, overviewId, captureReason },
       );
     },
-    onSuccess: () => {
+    onSuccess: (overview) => {
+      player.prepare(playerTrackFor(overview));
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
     },

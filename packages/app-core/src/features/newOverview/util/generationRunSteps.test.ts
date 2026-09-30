@@ -4,7 +4,7 @@ import { makeNewOverviewRun } from "../types/NewOverviewRunFactory.testHelper.js
 import { generationRunSteps } from "./generationRunSteps.js";
 
 describe("generationRunSteps", () => {
-  it("has no audio step, because there is no narrated audio to render", () => {
+  it("has no audio step, because narration is asked for without anyone waiting on it", () => {
     expect(generationRunSteps(makeNewOverviewRun()).map((step) => step.label)).toEqual([
       "Fetching transcript",
       "Creating overview",

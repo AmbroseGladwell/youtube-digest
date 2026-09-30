@@ -32,7 +32,7 @@ for (const [name, viewport] of [
   });
 }
 
-test("each step reports what it produced, and there is no audio step because there is no audio", async ({
+test("each step reports what it produced, and there is no audio step because nobody waits on the audio", async ({
   launcher,
   backendSimulator,
 }) => {
