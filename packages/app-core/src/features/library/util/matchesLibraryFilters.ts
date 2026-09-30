@@ -1,6 +1,6 @@
+import { buildSearchHaystack } from "@overview/domain";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
-import { buildSearchHaystack } from "./buildSearchHaystack.js";
 
 // Read and favourite are answerable for an unreadable record, because they live in their
 // own store. Everything else reads a field of the overview, so including it would pollute

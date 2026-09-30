@@ -153,10 +153,9 @@ Rather than make everything classic, `vite.content.config.ts` is a second build 
 form with the content script as its only entry, and the page build keeps owning
 `dist/`. The bundle is around 7 kB and imports nothing at runtime.
 
-That boundary is also why `elapsedLabel` exists here instead of app-core's `formatClock`:
-everything in that package reaches the page through an index that starts at React, and
-four lines on this side beats pulling React into every YouTube page — or a shared package
-for one clock.
+That boundary is also why `elapsedLabel` exists here instead of `@overview/domain`'s
+`formatClock`: that package reaches the page through an index that carries zod and every
+record schema, and four lines on this side beats pulling those into every YouTube page.
 
 ## A correctness fix this pulled in
 

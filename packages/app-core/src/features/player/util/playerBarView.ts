@@ -1,5 +1,4 @@
-import { narrationVoiceName, type NoteLine } from "@overview/domain";
-import { formatClock } from "../../../util/formatClock.js";
+import { narrationVoiceName, type NoteLine, formatClock } from "@overview/domain";
 import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
 import { sectionStartFractions } from "./estimatedLineStarts.js";
 import { lineAtTime } from "./lineAtTime.js";

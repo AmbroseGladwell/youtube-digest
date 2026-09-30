@@ -1,11 +1,10 @@
+import { youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
 import type { Chapter, VideoSource } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { usePlaybackPosition, useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
-import { youtubeTimestampUrl } from "../../../overviews/util/youtubeTimestampUrl.js";
-import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import styles from "./ChaptersPanel.module.scss";
 import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
 

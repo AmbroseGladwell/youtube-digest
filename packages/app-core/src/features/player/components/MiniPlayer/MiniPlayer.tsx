@@ -1,9 +1,9 @@
+import { formatClock } from "@overview/domain";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { formatClock } from "../../../../util/formatClock.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { usePlayer, usePlayerSnapshot, usePlayerTime } from "../../PlayerContext.js";
 import { SKIP_SECONDS } from "../../PlayerEngine.js";

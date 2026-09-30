@@ -1,5 +1,5 @@
-import type { TranscriptSegment } from "@overview/domain";
-import type { TranscriptBlock } from "../types/TranscriptBlock.js";
+import type { TranscriptSegment } from "./TranscriptSegment.js";
+import type { TranscriptBlock } from "./TranscriptBlock.js";
 
 // Ported from zarazhangrui/youtube-digest's groupTranscriptEntries, logic not file
 // (CLAUDE.md). The limits, and what this drops from it, are in docs/features/transcript-storage.md.

@@ -1,10 +1,10 @@
+import type { TranscriptBlock } from "@overview/domain";
 import { useCallback, useEffect, useRef, useState, type RefCallback } from "react";
 import {
   forgetReadingPosition,
   readReadingPosition,
   writeReadingPosition,
 } from "../../../transcripts/readingPositionStorage.js";
-import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import { transcriptRestingLine } from "./transcriptRestingLine.js";

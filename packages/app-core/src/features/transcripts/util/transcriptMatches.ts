@@ -1,4 +1,4 @@
-import type { TranscriptBlock } from "../types/TranscriptBlock.js";
+import type { TranscriptBlock } from "@overview/domain";
 import type { TranscriptMatch } from "../types/TranscriptMatch.js";
 
 // A literal, case-insensitive substring search over the merged blocks, not a regular

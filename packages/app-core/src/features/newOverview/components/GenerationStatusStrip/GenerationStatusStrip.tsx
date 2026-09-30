@@ -1,7 +1,7 @@
+import { formatClock } from "@overview/domain";
 import { useEffect } from "react";
 import type { Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { generationRunStatus } from "../../util/generationRunStatus.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";

@@ -1,6 +1,6 @@
+import type { TranscriptBlock } from "@overview/domain";
 import { useEffect, useState, type RefCallback } from "react";
 import { useCanFollowPlayback, usePlaybackPosition } from "../../../../app/PlaybackContext.js";
-import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 

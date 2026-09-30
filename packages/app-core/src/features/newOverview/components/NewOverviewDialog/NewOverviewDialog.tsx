@@ -1,10 +1,10 @@
+import { formatClock } from "@overview/domain";
 import { useEffect, useRef, useState } from "react";
 import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { formatClock } from "../../../../util/formatClock.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { CaptureReasonField } from "../CaptureReasonField/CaptureReasonField.js";
