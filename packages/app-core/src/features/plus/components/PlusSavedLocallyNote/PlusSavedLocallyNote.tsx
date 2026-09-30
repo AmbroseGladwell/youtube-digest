@@ -13,7 +13,7 @@ export function PlusSavedLocallyNote({ onDismiss }: PlusSavedLocallyNoteProps) {
     <div className={styles.root} role="note" data-testid={plusSavedLocallyNoteTestIds.root}>
       <p className={styles.body}>
         <strong className={styles.lede}>Saved on this browser only.</strong> Plus syncs your
-        overviews to the web app and your other devices, and unlocks audio overviews.
+        overviews to the web app and your other devices.
       </p>
       <div className={styles.actions}>
         <Link

@@ -12,7 +12,8 @@ const NOTE = makeOverview({
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
-test("the reader opens on the note's first line, with the player naming that section", async ({
+// Nobody is signed in here, so the bar is the pacer and says so (design 1k).
+test("the reader opens on the note's first line, with the pacer naming that section", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -21,7 +22,8 @@ test("the reader opens on the note's first line, with the player naming that sec
 
   const reader = await library.nthCard(0).openReader();
   await reader.verifyActiveLineReads("Premise");
-  await reader.verifyNowReading("Summary");
+  await reader.verifyBarSays("Read-along · no audio · Premise");
+  await reader.verifyIsThePacer(true);
 });
 
 test("tapping a line moves the reading mark to it and renames what is being read", async ({
@@ -35,7 +37,7 @@ test("tapping a line moves the reading mark to it and renames what is being read
   await reader.clickLineWithText("Productivity is moving.");
 
   await reader.verifyActiveLineReads("Productivity is moving.");
-  await reader.verifyNowReading("Key points");
+  await reader.verifyBarSays("Read-along · no audio · Key points");
 });
 
 test("the note's two lists carry bullets, and the prose sections do not", async ({
@@ -50,7 +52,7 @@ test("the note's two lists carry bullets, and the prose sections do not", async 
   await reader.verifyBulletedLinesRead([...NOTE.keyPoints, ...NOTE.howToApply!.items]);
 });
 
-test("the transport steps the reading mark forward and back a line at a time", async ({
+test("[ and ] step the reading mark forward and back a line at a time", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -58,11 +60,37 @@ test("the transport steps the reading mark forward and back a line at a time", a
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
-  await reader.clickNextLine();
+  await reader.pressLineKey("]");
   await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
 
-  await reader.clickPreviousLine();
+  await reader.pressLineKey("[");
   await reader.verifyActiveLineReads("Premise");
+});
+
+test("signed out, play walks the note as the pacer, with a way to sign in for audio", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  const library = await launcher.launchExpectingLibrary({ sync: true });
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyOffersSignInForAudio(true);
+  await reader.clickPlayPause();
+
+  await reader.verifyPlayButtonReads("Pause");
+  await reader.verifyBarClockReads(/^~\d+:\d{2} · ~\d+ min left$/);
+  await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
+});
+
+// A shell that cannot sign in at all is not offered a link that could not work (CLAUDE.md).
+test("a shell with no way to sign in is not offered sign-in for audio", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(NOTE);
+  const library = await launcher.launchExpectingLibrary();
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyIsThePacer(true);
+  await reader.verifyOffersSignInForAudio(false);
 });
 
 test("the speed control cycles the design's four rates and comes back round", async ({
@@ -73,14 +101,14 @@ test("the speed control cycles the design's four rates and comes back round", as
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
-  await reader.verifyRateReads("1x");
+  await reader.verifyRateReads("1×");
   await reader.clickRate();
-  await reader.verifyRateReads("1.25x");
+  await reader.verifyRateReads("1.25×");
   await reader.clickRate();
   await reader.clickRate();
-  await reader.verifyRateReads("2x");
+  await reader.verifyRateReads("2×");
   await reader.clickRate();
-  await reader.verifyRateReads("1x");
+  await reader.verifyRateReads("1×");
 });
 
 test("favouriting from the player bar is reflected immediately and written to the store", async ({

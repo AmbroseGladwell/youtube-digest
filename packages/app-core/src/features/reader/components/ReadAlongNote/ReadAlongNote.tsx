@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 import type { NoteLine } from "@overview/domain";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
 export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
+  // Design 2b: where each line starts in the narration, shown beside a line under the
+  // pointer. Null when there is no narration to seek, which is the pacer's case.
+  lineStartLabels?: string[] | null;
   onSelectLine: (index: number) => void;
 }
 
@@ -45,7 +49,7 @@ const keepInTopThird = (line: HTMLElement) => {
   line.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-export function ReadAlongNote({ lines, activeIndex, onSelectLine }: ReadAlongNoteProps) {
+export function ReadAlongNote({ lines, activeIndex, lineStartLabels = null, onSelectLine }: ReadAlongNoteProps) {
   const activeLine = useRef<HTMLButtonElement | null>(null);
   const numbers = numberListLines(lines);
 
@@ -71,6 +75,12 @@ export function ReadAlongNote({ lines, activeIndex, onSelectLine }: ReadAlongNot
             onClick={() => onSelectLine(index)}
             data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
           >
+            {lineStartLabels?.[index] !== undefined && (
+              <span className={styles.startTime} aria-hidden="true" data-testid={readAlongNoteTestIds.startTime}>
+                <StrokeIcon name="circlePlay" size={13} />
+                {lineStartLabels[index]}
+              </span>
+            )}
             {line.bullet && (
               <span
                 className={styles.bullet}

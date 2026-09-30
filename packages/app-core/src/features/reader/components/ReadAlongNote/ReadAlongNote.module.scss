@@ -23,6 +23,7 @@
   font-family: inherit;
   text-align: left;
   line-height: 1.6;
+  position: relative;
   cursor: pointer;
   transition: background var(--motion-state) var(--motion-ease);
 }
@@ -86,6 +87,33 @@
 .lineActive .lineText {
   background: var(--stone-tint);
   color: var(--on-stone-tint);
+}
+
+// Design 2b: under the pointer a narrated line shows where it starts, hung in the margin
+// in the warning ink, so a click reads as "seek here". Only where there is a pointer to
+// hover with and a margin to hang it in.
+.startTime {
+  display: none;
+}
+
+@media (hover: hover) and (min-width: 62rem) {
+  .startTime {
+    position: absolute;
+    left: -3.625rem;
+    top: 0.3rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    visibility: hidden;
+  }
+
+  .line:hover .startTime {
+    visibility: visible;
+  }
 }
 
 @media (max-width: 61.9375rem) {

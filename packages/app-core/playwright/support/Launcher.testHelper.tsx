@@ -17,6 +17,7 @@ import { ErrorStatePageObject } from "../pageObjects/ErrorStatePageObject.testHe
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
+import { MiniPlayerPageObject } from "../pageObjects/MiniPlayerPageObject.testHelper.js";
 import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
 import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper.js";
@@ -169,6 +170,10 @@ export class Launcher {
 
   get capturePage(): CapturePageObject {
     return new CapturePageObject(this.testContext);
+  }
+
+  get miniPlayer(): MiniPlayerPageObject {
+    return new MiniPlayerPageObject(this.testContext);
   }
 
   get appShell(): AppShellPageObject {

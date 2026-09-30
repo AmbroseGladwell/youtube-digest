@@ -7,3 +7,5 @@ export * from "./fetchAuthApi.js";
 export * from "./SyncStatus.js";
 export * from "./pushPendingWrite.js";
 export * from "./SyncEngine.js";
+export * from "./NarrationApi.js";
+export * from "./fetchNarrationApi.js";

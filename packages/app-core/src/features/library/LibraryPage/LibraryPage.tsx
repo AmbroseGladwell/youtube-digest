@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
+import type { Overview, OverviewId } from "@overview/domain";
+import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
+import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
@@ -42,6 +45,22 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const [searchParams, setSearchParams] = useSearchParams();
   const setOverviewState = useSetOverviewStateMutation();
+  const player = usePlayer();
+  const playerSnapshot = usePlayerSnapshot();
+
+  // Design 3a: Listen plays in place and docks the mini-player; the row that is playing
+  // says so, and pressing it again pauses (docs/features/audio-player.md).
+  const isPlaying = (overviewId: OverviewId) =>
+    playerSnapshot.track?.overviewId === overviewId &&
+    ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
+  const listen = (overview: Overview) => {
+    if (playerSnapshot.track?.overviewId === overview.id) {
+      player.toggle();
+      return;
+    }
+    player.load(playerTrackFor(overview));
+    player.play();
+  };
   const createTopic = useCreateTopicMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const rail = useRef<HTMLElement | null>(null);
@@ -228,6 +247,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                         patch: { read: !entry.state.read },
                       })
                     }
+                    playing={isPlaying(entry.overview.id)}
+                    onListen={() => listen(entry.overview)}
                   />
                 ),
               )}

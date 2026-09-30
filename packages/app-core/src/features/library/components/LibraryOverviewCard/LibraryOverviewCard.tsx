@@ -16,6 +16,8 @@ export interface LibraryOverviewCardProps {
   topicNames: string[];
   onToggleFavourite: () => void;
   onToggleRead: () => void;
+  playing: boolean;
+  onListen: () => void;
 }
 
 const SELLING_LABEL: Record<string, string> = {
@@ -33,6 +35,8 @@ export function LibraryOverviewCard({
   topicNames,
   onToggleFavourite,
   onToggleRead,
+  playing,
+  onListen,
 }: LibraryOverviewCardProps) {
   const animateNavigation = useShouldAnimateNavigation();
   const { overview, state } = overviewWithState;
@@ -108,15 +112,16 @@ export function LibraryOverviewCard({
                 {state.read && <StrokeIcon name="check" />}
                 {state.read ? "Read" : "Mark read"}
               </button>
-              <Link
-                className={styles.action}
-                to={readerPath}
-                viewTransition={animateNavigation}
-                data-testid={libraryOverviewCardTestIds.listenLink}
+              <button
+                type="button"
+                className={playing ? styles.actionPlaying : styles.action}
+                onClick={onListen}
+                aria-pressed={playing}
+                data-testid={libraryOverviewCardTestIds.listenButton}
               >
                 <StrokeIcon name="headphones" />
-                Listen
-              </Link>
+                {playing ? "Playing" : "Listen"}
+              </button>
             </div>
           </div>
         </div>

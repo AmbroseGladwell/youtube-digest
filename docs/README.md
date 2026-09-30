@@ -46,6 +46,10 @@ Five folders, five different questions.
 - `chapters.md` — the reader's third tab: chapters as a structural prompt section timed
   from the transcript, why the model names a segment and never a time, what a range does
   on each surface, and how a chapter opens the transcript at its start.
+- `audio-player.md` — the reader's bar playing narration: one player in the app shell,
+  asking whether narration exists without making any, every state the design draws, the
+  pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
+  it retired.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.
