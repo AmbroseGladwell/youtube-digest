@@ -11,5 +11,7 @@ export const rateLimits = {
   magicLinkPerEmail: { name: "magicLinkEmail", limit: 10, windowMs: HOUR_MS },
   signInPerAddress: { name: "signInAddress", limit: 30, windowMs: HOUR_MS },
   linkCodePerAddress: { name: "linkCodeAddress", limit: 30, windowMs: HOUR_MS },
+  oauthRegisterPerAddress: { name: "oauthRegisterAddress", limit: 20, windowMs: HOUR_MS },
+  oauthTokenPerAddress: { name: "oauthTokenAddress", limit: 60, windowMs: MINUTE_MS },
   sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimit>;

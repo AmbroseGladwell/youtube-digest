@@ -12,6 +12,9 @@ export class SyncPanelPageObject extends PageObject {
 
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectToHaveCount(syncPanelTestIds.root, 0));
 
+  verifyHintReads = (pattern: RegExp) =>
+    this.step(`verifyHintReads ${String(pattern)}`, () => expect(this.get(syncPanelTestIds.hint)).toHaveText(pattern));
+
   verifyAsksToSignIn = () =>
     this.step("verifyAsksToSignIn", async () => {
       await this.expectToBeVisible(syncPanelTestIds.signInLink);
@@ -45,7 +48,7 @@ export class SyncPanelPageObject extends PageObject {
 
   verifySignedInAs = (who: string) =>
     this.step(`verifySignedInAs ${who}`, () =>
-      expect(this.get(syncPanelTestIds.signedInAs)).toHaveText(`Signed in as ${who}`),
+      expect(this.get(syncPanelTestIds.signedInAs)).toHaveText(who),
     );
 
   verifyStatusReads = (pattern: RegExp) =>

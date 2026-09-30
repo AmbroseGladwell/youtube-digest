@@ -50,6 +50,9 @@ Five folders, five different questions.
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
   it retired.
+- `mcp-connector.md` — connecting Claude and other assistants to a reader's account: the
+  OAuth 2.1 server beside magic-link sign-in, why an assistant's tokens are never sessions,
+  the plan checked on every request, rotating refresh tokens, and the three slices.
 - `narration-voice.md` — choosing the voice notes are narrated in: the shortlist of 15, one
   sample of the same passage per voice made on deploy and cleared 30 days after it is
   superseded, the choice saved on pick, and older notes that keep their voice until
@@ -71,6 +74,9 @@ Five folders, five different questions.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.
+- `settings.md` — Settings as a short list of sections: which sections exist and when each
+  is hidden, the value each row shows, two panes on a wide screen and a list then a page on
+  a phone or in the panel, and where new sections go.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
 - `reading-position.md` — the transcript tab opening where you had got to, per video:

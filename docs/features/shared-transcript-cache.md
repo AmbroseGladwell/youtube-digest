@@ -19,9 +19,9 @@ described it as the first rung for everyone. It was settled on 2026-09-30 (OV-16
 | **Reading** | Anyone, with no session: `GET /api/shared-transcripts/:videoId` | What it serves is public captions of a public video. A signed-out web reader is exactly who a free transcript helps most. |
 | **Adding** | A signed-in account, only through `PUT /api/transcripts/:videoId` for a video one of its live notes uses | Adding writes to shared infrastructure, which is what `v1-architecture-decisions.md` says auth exists to gate. Every contribution has an account to trace it to and to limit. |
 
-Plus gating is not part of this. The server has no idea which plan an account is on
-(`Plan` is a local placeholder, `docs/features/plus-upsell.md`), and a cache that only
-some readers could hit would save less for everyone.
+Plus gating is not part of this. The server does now know each account's plan
+(`accounts.plan`, `docs/features/mcp-connector.md`), but reading needs no account at all,
+and a cache that only some readers could hit would save less for everyone.
 
 **Contributions come only from notes.** The transcript store also holds captions the
 extension fetched just because a video was open (`docs/features/watching-detection.md`).
@@ -116,7 +116,7 @@ Each upload's outcome is logged as `transcriptContributed`: `pending`, `confirme
 
 ## Storage: copies, links and contributions, kept apart
 
-`V0008__shared_transcripts.sql` replaces the per-account table with three:
+`V0009__shared_transcripts.sql` replaces the per-account table with three:
 
 | Table | One row per | Holds an account? |
 |---|---|---|

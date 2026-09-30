@@ -25,16 +25,17 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
 | Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
-| Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0008__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
+| An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
+| Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
 
 ## Shape
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__shared_transcripts.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
-    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes
+    buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth scope beside it
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
@@ -42,11 +43,12 @@ apps/api/
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
-    transcripts/         the shared copy per video, each account's link to it, and what a contribution must be
+    transcripts/         the shared copies per video, each account's link to its own, who fetched what, and what a contribution must be
+    oauth/               the authorization server's routes, the consent and connections routes, clients, codes, tokens and their lookups
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio
-    scripts/             mintSession, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
+    scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 
@@ -58,9 +60,11 @@ records, and `server.ts` is the only place the environment is read.
 
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
-a session unless it says otherwise; six do: `GET /api/health`, `GET /api/handshake`, the
-three `/api/auth` routes that exist to make a session, and `GET /api/shared-transcripts/:videoId`,
-which only reads what accounts have added (`docs/features/shared-transcript-cache.md`).
+a session unless it says otherwise; seven do: `GET /api/health`, `GET /api/handshake`, the
+three `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
+which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
+and anything outside `/api`: the web app's files, and the OAuth routes MCP clients call,
+which have their own tokens and never resolve a session (`docs/features/mcp-connector.md`).
 
 **The mechanism is a session row, and the transport is a bearer token or a cookie.** An
 opaque 32-byte token is minted once, handed back once, and only its SHA-256 hex is stored,
@@ -216,6 +220,7 @@ sends:
 | `invalid_request` | 400 | body, header or query fails validation; malformed JSON; a body written at a version other than the client's own |
 | `unauthenticated` | 401 | no, unknown or expired bearer |
 | `client_unsupported` | 403 | a write from below `minSupportedClientVersion`; `details` carry both numbers |
+| `plan_required` | 403 | the account is not on the plan the action needs: approving an assistant's connection needs Plus |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
@@ -247,6 +252,8 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
 | `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |
 | `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
+| `oauthRegisterAddress` | 20 | hour, per address | `POST /oauth/register` |
+| `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
@@ -303,7 +310,10 @@ end of one window and again at the start of the next, twice the rate for a momen
 these numbers that burst does no harm, and in exchange the limiter is a count and a start
 time per key, the wait it reports is exact, and moving it to Postgres later is one row.
 
-The static web app outside `/api` is not limited: it is files. Narration keeps its own
+The OAuth routes outside `/api` are counted per address too, with their own `address` window, and
+registration and the token endpoint also have their own limits above. Registration is open and makes a row, so it is
+limited like asking for a link; codes and tokens are 256 bits and need no guessing limit, so the token limit only
+keeps one caller from hammering the database. The static web app outside `/api` is not limited: it is files. Narration keeps its own
 limit of renders waiting per account, which is about the TTS pool rather than the rate of
 requests, and answers the same code without a `Retry-After`.
 

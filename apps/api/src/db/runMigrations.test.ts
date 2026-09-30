@@ -44,8 +44,12 @@ test("the tables the migrations create are there to be used", async () => {
       "account_transcripts",
       "accounts",
       "audio_renders",
+      "connection_tokens",
+      "connections",
       "link_codes",
       "magic_links",
+      "oauth_authorizations",
+      "oauth_clients",
       "records",
       "schema_migrations",
       "sessions",
@@ -68,7 +72,7 @@ const migrationsBefore = async (version: number): Promise<URL> => {
 
 test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
   const sql = createPgliteSqlClient(new PGlite());
-  await runMigrations(sql, await migrationsBefore(8));
+  await runMigrations(sql, await migrationsBefore(9));
   const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
   for (const id of [first, second]) {
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
