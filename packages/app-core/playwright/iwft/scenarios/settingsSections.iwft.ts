@@ -71,3 +71,18 @@ test("on a phone the list is the page, and each row opens its section with the w
   await settings.clickBackToOverviews();
   await launcher.homePage.verifyIsShown();
 });
+
+test("arriving on the voice section keeps the reader's voice in view, even far down the list", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.narration.seedSamples();
+  await page.setViewportSize({ width: 1200, height: 500 });
+  await launcher.launch({ ...EVERYTHING, narrationVoice: "af_sarah" });
+  await launcher.openPage(Routes.settingsSection("voice"));
+
+  const settings = await launcher.settingsPage.verifyIsShown();
+  await settings.verifySectionHeadingIsFocused("voice");
+  await settings.voicePicker.verifyChosenRowIsInView("af_sarah");
+});

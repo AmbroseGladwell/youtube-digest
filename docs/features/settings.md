@@ -68,6 +68,10 @@ beside it), leads back to the library: "All overviews", or "Back" in the panel. 
 its own page, on a phone or in the panel, leads back to the list: "Settings", kept under the
 masthead.
 
+Going from the list into a section uses the forward transition, and going back to the list
+uses the back one. Switching between two sections, which on a wide screen swaps only the
+pane, uses neither.
+
 ## Where the build departs from the design
 
 - **"All overviews" stays on the main page.** The design draws no way back to the library,
