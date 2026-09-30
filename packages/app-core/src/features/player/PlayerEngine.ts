@@ -14,6 +14,7 @@ export const PLAYER_RATES = [1, 1.25, 1.5, 2];
 export const SKIP_SECONDS = 15;
 export const POLL_INTERVAL_MS = 1500;
 export const WATCH_INTERVAL_MS = 5000;
+export const WATCH_GIVES_UP_AFTER_MS = 120_000;
 export const PREPARING_LONG_AFTER_MS = 45_000;
 export const PACER_TICK_MS = 250;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
@@ -66,6 +67,7 @@ export class PlayerEngine {
   #longTimer: ReturnType<typeof setTimeout> | null = null;
   #pacerTimer: ReturnType<typeof setInterval> | null = null;
   #pollFailures = 0;
+  #watchChecks = 0;
   #listeners = new Set<() => void>();
   #timeListeners = new Set<() => void>();
 
@@ -158,7 +160,7 @@ export class PlayerEngine {
     this.#generation += 1;
     this.#clearPreparing();
     this.#set({ status: "ready", preparing: null });
-    if (this.#api !== null && this.#snapshot.source === "audio") this.#peek();
+    if (this.#api !== null && this.#snapshot.source === "audio") this.#peek(true);
   }
 
   // The pacer, chosen: meanwhile while audio is still being made (1d), instead once it has
@@ -235,9 +237,12 @@ export class PlayerEngine {
     if (signedIn) this.#peek();
   }
 
-  #peek(): void {
+  // After a cancel the bar already knows the audio can be asked for, so a peek that fails
+  // there leaves it at 1b rather than declaring narration unavailable.
+  #peek(quiet = false): void {
     const api = this.#api!;
     const generation = this.#generation;
+    this.#watchChecks = 0;
     api
       .peek(this.#script(), this.#snapshot.voice)
       .then((render) => {
@@ -247,7 +252,12 @@ export class PlayerEngine {
       })
       .catch((error: unknown) => {
         if (generation !== this.#generation) return;
-        this.#fallBackToPacer(this.#pacerReasonFor(error), false);
+        const reason = this.#pacerReasonFor(error);
+        if (quiet && reason !== "signedOut") {
+          this.#set({ availability: "onFirstPlay", preparing: null });
+          return;
+        }
+        this.#fallBackToPacer(reason, false);
       });
   }
 
@@ -255,6 +265,10 @@ export class PlayerEngine {
   // watched slowly, because nobody is waiting, and landing without playing.
   #onPeeked(render: NarrationRender | null, generation: number): void {
     if (render?.status === "queued" || render?.status === "rendering") {
+      if (this.#watchChecks * WATCH_INTERVAL_MS >= WATCH_GIVES_UP_AFTER_MS) {
+        this.#set({ availability: "onFirstPlay", preparing: null });
+        return;
+      }
       this.#set({ availability: "preparing", preparing: { step: render.status, long: false } });
       this.#pollTimer = setTimeout(() => this.#watch(render.key, generation), WATCH_INTERVAL_MS);
       return;
@@ -266,10 +280,12 @@ export class PlayerEngine {
     if (this.#snapshot.availability !== "ready") this.#set({ availability: "onFirstPlay", preparing: null });
   }
 
-  // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few
-  // the bar goes back to 1b, and pressing play asks again.
+  // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few,
+  // or after two minutes of the render not landing, the bar goes back to 1b, and pressing
+  // play asks again.
   #watch(key: string, generation: number): void {
     if (generation !== this.#generation || this.#api === null) return;
+    this.#watchChecks += 1;
     this.#api
       .status(key)
       .then((render) => {

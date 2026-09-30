@@ -103,16 +103,20 @@ nobody has asked to hear it.
   right-hand figure is the estimated length ("~6 min"), as in 1b, not 1c's "Usually under
   20 s". Nobody is waiting yet, so a wait estimate would read as a promise.
 - **The engine watches it slowly**, every `WATCH_INTERVAL_MS` (5 s) rather than the 1.5 s of
-  an interactive wait, until the render is `ready` or `failed`, or the track changes.
+  an interactive wait, until the render is `ready` or `failed`, or the track changes. It
+  gives up after two minutes (`WATCH_GIVES_UP_AFTER_MS`), because the player keeps its track
+  when the reader leaves the note, and nobody should be polling on a render forever.
 - **It lands quietly.** A `ready` render is adopted and the bar becomes 1a, "Narrated · Heart
   voice". Nothing plays by itself.
 - **Play at any point is 1c exactly.** The request goes out `interactive`, which promotes the
   waiting render, the button becomes Cancel, and the audio plays when it lands.
-- **Failure is quiet.** A `failed` render, or three checks in a row that could not reach the
-  server, drop back to 1b without a message, and a press then asks again. These checks never
+- **Failure is quiet.** A `failed` render, three checks in a row that could not reach the
+  server, or two minutes without it landing, drop back to 1b without a message, and a press then asks again. These checks never
   count towards 1i, which is for a wait somebody chose.
 - **Cancelling a 1c wait peeks again.** The render carries on without anybody waiting for it,
-  so the bar goes back to saying what the server has, usually 44a, rather than 1b.
+  so the bar goes back to saying what the server has, usually 44a, rather than 1b. If that
+  peek fails, the bar rests at 1b rather than declaring narration unavailable (1l); only a
+  401 turns it into the signed-out pacer.
 
 **A departure from `Player.dc.html`:** OV-40's design never pairs "Preparing" with Play as
 the main button. OV-44's design does, on purpose, for the render nobody here asked for.
