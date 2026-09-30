@@ -6,6 +6,7 @@ import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import styles from "./ReaderMasthead.module.scss";
@@ -22,6 +23,7 @@ export interface ReaderMastheadProps {
   // Listen — no back link, because there is no list behind it to have come from
   // (docs/features/extension-panel.md).
   compact: boolean;
+  webApp: OverviewInWebApp;
   listening: boolean;
   onToggleRead: () => void;
   onToggleFavourite: () => void;
@@ -52,6 +54,7 @@ export function ReaderMasthead({
   playing,
   editingTopics,
   compact,
+  webApp,
   listening,
   onToggleRead,
   onToggleFavourite,
@@ -128,6 +131,7 @@ export function ReaderMasthead({
           read={read}
           videoUrl={overview.video.url}
           compact={compact}
+          webApp={webApp}
           align={compact ? "start" : "end"}
           onShare={onShare}
           onEditTopics={() => onEditingTopicsChange(true)}

@@ -6,4 +6,5 @@ export const overviewKeys = {
   list: () => [...overviewKeys.lists] as const,
   detail: (overviewId: OverviewId) => [...overviewKeys.all, "detail", overviewId] as const,
   unreadable: () => [...overviewKeys.all, "unreadable"] as const,
+  synced: (overviewId: OverviewId) => [...overviewKeys.all, "synced", overviewId] as const,
 };

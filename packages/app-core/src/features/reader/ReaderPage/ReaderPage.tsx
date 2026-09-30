@@ -34,6 +34,7 @@ import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
+import { useOverviewInWebApp } from "../../sync/useOverviewInWebApp.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./ReaderPage.module.scss";
@@ -110,6 +111,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const sync = useSync();
+  const webApp = useOverviewInWebApp(overviewId);
   const overviewShare = useOverviewShare(overview);
   const shareOverview = useShareOverviewMutation();
   const stopSharing = useStopSharingMutation();
@@ -216,6 +218,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         playing={notePlayer.playing}
         editingTopics={editingTopics}
         compact={isPanel}
+        webApp={webApp}
         listening={playerDocked}
         // Measured only where it sticks: published on the wide reader it would push the
         // tab strip down by the height of a masthead that scrolls away.

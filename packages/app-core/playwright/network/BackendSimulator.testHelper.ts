@@ -692,6 +692,8 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
+    // The browser saying the network is back, which is one of the things that starts a cycle.
+    simulateBackOnline: () => this.#page.evaluate(() => window.dispatchEvent(new Event("online"))),
   };
 
   // The links the reader has given out, as the server holds them (docs/features/sharing.md).

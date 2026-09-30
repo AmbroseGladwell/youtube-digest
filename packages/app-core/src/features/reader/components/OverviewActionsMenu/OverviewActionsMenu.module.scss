@@ -84,3 +84,17 @@
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+
+// An item that cannot work yet says why under its label, since a disabled item cannot be
+// focused to read a title.
+.itemWithReason {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.reason {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+}
