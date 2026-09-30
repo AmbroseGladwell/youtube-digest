@@ -13,6 +13,9 @@ import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
+import { clientAddressPlugin } from "./rateLimit/clientAddressPlugin.js";
+import { rateLimitHook } from "./rateLimit/rateLimitHook.js";
+import { rateLimits } from "./rateLimit/rateLimits.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
@@ -33,6 +36,8 @@ export interface AppConfig {
   // session cookie is Secure on when it is https (docs/features/sign-in.md).
   appUrl: string;
   staticRoot: string | null;
+  // The header a trusted proxy puts the caller's address in, or null to use the socket's.
+  clientIpHeader: string | null;
 }
 
 export interface AudioSetup {
@@ -61,9 +66,9 @@ declare module "fastify" {
   }
 }
 
-// Hook order inside /api is parse, floor, session: a client below the floor is told to
-// update before it is told to sign in, and without a database round trip
-// (docs/architecture/api.md).
+// Hook order inside /api is address limit, parse, floor, session, account limit: a flood is
+// refused before it costs a database round trip, and a client below the floor is told to
+// update before it is told to sign in (docs/architecture/api.md).
 export async function buildApp({
   config,
   sql,
@@ -87,6 +92,8 @@ export async function buildApp({
       if (config.allowedOrigins.length > 0) {
         await api.register(corsPlugin, { allowedOrigins: config.allowedOrigins });
       }
+      await api.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
+      api.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
       await api.register(clientVersionPlugin);
       await api.register(writeFloorPlugin, {
         minSupportedClientVersion: config.minSupportedClientVersion,
@@ -97,6 +104,10 @@ export async function buildApp({
         sessionTtlDays: config.sessionTtlDays,
         sessionCookieSecure,
       });
+      api.addHook(
+        "onRequest",
+        rateLimitHook(rateLimits.perAccount, (request) => request.session?.accountId ?? null, clock),
+      );
 
       api.get("/health", { config: { public: true } }, async () => {
         try {

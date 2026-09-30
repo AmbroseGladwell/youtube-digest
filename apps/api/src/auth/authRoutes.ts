@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import {
   LinkCodeRequest,
   MagicLinkRequest,
@@ -11,6 +11,9 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { Mailer } from "../mail/Mailer.js";
+import type { RateLimit } from "../rateLimit/RateLimit.js";
+import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
+import { rateLimits } from "../rateLimit/rateLimits.js";
 import { accountExists } from "./accountExists.js";
 import { consumeLinkCode } from "./consumeLinkCode.js";
 import { consumeMagicLink } from "./consumeMagicLink.js";
@@ -18,6 +21,7 @@ import { createSessionForAccount } from "./createSession.js";
 import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { issueLinkCode } from "./issueLinkCode.js";
 import { issueMagicLink } from "./issueMagicLink.js";
+import { normaliseEmail } from "./normaliseEmail.js";
 import { sessionCookie } from "./sessionCookie.js";
 
 export interface AuthRoutesOptions {
@@ -31,6 +35,11 @@ export interface AuthRoutesOptions {
 
 const PUBLIC = { config: { public: true } };
 
+const emailOf = (request: FastifyRequest): string | null => {
+  const parsed = MagicLinkRequest.safeParse(request.body);
+  return parsed.success ? normaliseEmail(parsed.data.email) : null;
+};
+
 // Every answer here is the same whether or not the address has an account, and an account
 // is only ever made by a consumed link, never by asking for one. Only the mail differs: an
 // address that asks to create an account it already has is sent a sign-in link
@@ -39,7 +48,10 @@ export function authRoutes(
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure }: AuthRoutesOptions,
 ): void {
-  app.post("/auth/magic-link", PUBLIC, async (request, reply) => {
+  const perAddress = (rateLimit: RateLimit) => rateLimitHook(rateLimit, (request) => request.clientAddress, clock);
+  const magicLinkLimits = [perAddress(rateLimits.magicLinkPerAddress), rateLimitHook(rateLimits.magicLinkPerEmail, emailOf, clock)];
+
+  app.post("/auth/magic-link", { ...PUBLIC, preHandler: magicLinkLimits }, async (request, reply) => {
     const { email, surface, intent, firstName = null } = parseOrThrow(
       MagicLinkRequest,
       request.body,
@@ -60,7 +72,7 @@ export function authRoutes(
     return reply.status(202).send({ accepted: true });
   });
 
-  app.post("/auth/sign-in", PUBLIC, async (request, reply) => {
+  app.post("/auth/sign-in", { ...PUBLIC, preHandler: perAddress(rateLimits.signInPerAddress) }, async (request, reply) => {
     const { token } = parseOrThrow(SignInRequest, request.body, "The sign-in");
     const now = clock();
     const link = await consumeMagicLink(sql, token, now);
@@ -97,7 +109,7 @@ export function authRoutes(
     return signedIn;
   });
 
-  app.post("/auth/link-code", PUBLIC, async (request) => {
+  app.post("/auth/link-code", { ...PUBLIC, preHandler: perAddress(rateLimits.linkCodePerAddress) }, async (request) => {
     const { code } = parseOrThrow(LinkCodeRequest, request.body, "The link code");
     const now = clock();
     const accountId = await consumeLinkCode(sql, code, now);

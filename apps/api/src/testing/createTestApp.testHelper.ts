@@ -60,7 +60,7 @@ export async function createTestApp(
   const narrator = makeScriptedNarrator();
   const audioStore = makeMemoryAudioStore();
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, ...config },
+    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, ...config },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
