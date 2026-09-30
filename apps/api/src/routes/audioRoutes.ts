@@ -60,6 +60,10 @@ export function audioRoutes(
     const key = audioKey(lines, voice);
 
     const existing = await renders.get(key);
+    request.log.info(
+      { key, priority, found: existing?.status ?? null, foundPriority: existing?.priority ?? null },
+      "audio requested",
+    );
     if (existing?.status === "ready") {
       return describe(existing);
     }
