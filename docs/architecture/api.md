@@ -41,7 +41,7 @@ apps/api/
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
     transcripts/         the per-account transcript repository
-    audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams
+    audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores
     routes/              changes, overviews, topics, settings, transcripts, audio
     scripts/             mintSession
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
@@ -244,7 +244,8 @@ of the repository, is `docs/conventions/secrets.md`:
 | `STATIC_ROOT` | unset | the built web app to serve outside `/api`; unset serves the API alone and says so at startup (`docs/architecture/deploy.md`) |
 | `TTS_URL` | unset | the TTS service narration renders through; unset leaves `/api/audio` answering `unavailable`, and says so at startup |
 | `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
-| `AUDIO_DIR` | | where rendered narration is kept until R2 is wired; required with `TTS_URL` |
+| `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |
+| `AUDIO_DIR` | | a directory to keep narration in instead, for working offline; `TTS_URL` needs this or R2 |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell

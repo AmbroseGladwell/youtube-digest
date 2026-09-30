@@ -295,6 +295,12 @@ fly scale count 5                 # the pool; each stays stopped until the proxy
 
 CI builds this image on every push (the `image (tts)` job) but nothing deploys it yet.
 
+Narration is kept in the private R2 bucket `the-overview-audio`, in Cloudflare account
+`781691f32a5cf03b132121e499f510a4`, through a token scoped to that bucket only.
+`.env.prod.tpl` carries its two keys, so `task deploy:secrets` imports them; turning narration
+on is then `R2_ACCOUNT_ID`, `R2_BUCKET` and `TTS_URL=http://the-overview-tts.flycast` in
+`fly.toml`'s `[env]`, in the same change, once the pool above is running.
+
 ## What this does not do
 
 - **Hold a deploy for approval.** A merge to `main` deploys without a pause. GitHub's

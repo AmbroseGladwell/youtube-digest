@@ -133,9 +133,13 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
 - **Every render is logged** with its voice, priority, attempt, time spent waiting, synthesis
   time and audio length, the numbers that say whether the pool is big enough.
 
-Storage is behind `AudioStore`. Until R2 is wired it is a directory (`AUDIO_DIR`), which is
-also why production leaves `TTS_URL` unset for now: a Fly machine's disk does not outlive a
-restart, so narration stays visibly unavailable rather than quietly losing what it made.
+Storage is behind `AudioStore`: Cloudflare R2 through its S3 API, signed with `aws4fetch`,
+one private bucket per environment (`the-overview-audio`, `the-overview-audio-dev`) with a
+token scoped to that bucket alone. R2 is on exactly when `R2_BUCKET` is set, so keys imported
+into Fly ahead of the bucket's name are held rather than refused at startup. A directory
+(`AUDIO_DIR`) stands in for working offline; it never goes to production, where a machine's
+disk does not outlive a restart. Production leaves `TTS_URL` unset until the TTS pool is
+deployed, so narration there is visibly unavailable rather than half working.
 
 ## Where the audio lives
 

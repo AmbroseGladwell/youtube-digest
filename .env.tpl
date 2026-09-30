@@ -16,7 +16,11 @@ APP_URL=http://localhost:5173
 MAIL_TRANSPORT=log
 BREVO_API_KEY=${BREVO_API_KEY}
 MAIL_FROM=The Overview <hello@theoverviewapp.com>
-# The TTS service `task run:tts` starts, and where its narration is kept until R2 is wired;
-# relative to apps/api, where the API runs (docs/features/tts-pre-rendered-speech.md, The API side).
+# The TTS service `task run:tts` starts, and the dev bucket its narration is kept in; the account id and
+# bucket are not secrets. Offline, drop the R2_ lines for AUDIO_DIR=../../.local/audio, relative to apps/api
+# (docs/features/tts-pre-rendered-speech.md, The API side).
 TTS_URL=http://localhost:8000
-AUDIO_DIR=../../.local/audio
+R2_ACCOUNT_ID=781691f32a5cf03b132121e499f510a4
+R2_BUCKET=the-overview-audio-dev
+R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}

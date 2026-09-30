@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CLIENT_VERSION } from "@overview/domain";
+import type { R2Settings } from "./audio/r2AudioStore.js";
 import { allowedOriginsFromEnv } from "./http/allowedOriginsFromEnv.js";
 
 const DEV_APP_URL = "http://localhost:5173";
@@ -26,6 +27,10 @@ const ConfigEnv = z
     TTS_URL: z.url().optional(),
     TTS_CONCURRENCY: z.coerce.number().int().positive().default(5),
     AUDIO_DIR: z.string().min(1).optional(),
+    R2_ACCOUNT_ID: z.string().regex(/^[0-9a-f]{32}$/).optional(),
+    R2_BUCKET: z.string().min(3).optional(),
+    R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
@@ -39,9 +44,15 @@ const ConfigEnv = z
     path: ["MAIL_FROM"],
     message: "required when MAIL_TRANSPORT is brevo",
   })
-  .refine((env) => env.TTS_URL === undefined || env.AUDIO_DIR !== undefined, {
-    path: ["AUDIO_DIR"],
-    message: "required when TTS_URL is set: rendered narration has to be kept somewhere",
+  .refine(
+    (env) =>
+      env.R2_BUCKET === undefined ||
+      [env.R2_ACCOUNT_ID, env.R2_ACCESS_KEY_ID, env.R2_SECRET_ACCESS_KEY].every((value) => value !== undefined),
+    { path: ["R2_BUCKET"], message: "requires R2_ACCOUNT_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY" },
+  )
+  .refine((env) => env.TTS_URL === undefined || env.R2_BUCKET !== undefined || env.AUDIO_DIR !== undefined, {
+    path: ["R2_BUCKET"],
+    message: "R2 or AUDIO_DIR is required when TTS_URL is set: rendered narration has to be kept somewhere",
   })
   .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.APP_URL.startsWith("https://"), {
     path: ["APP_URL"],
@@ -54,7 +65,9 @@ export type MailConfig =
 
 // Narration is on only when there is a TTS service to call and somewhere to keep what it
 // makes; otherwise /api/audio says it is unavailable (docs/features/tts-pre-rendered-speech.md).
-export type AudioConfig = { ttsUrl: string; concurrency: number; audioDir: string } | null;
+export type AudioStoreConfig = ({ kind: "r2" } & R2Settings) | { kind: "file"; dir: string };
+
+export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
 export interface Config {
   databaseUrl: string;
@@ -92,6 +105,19 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     audio:
       data.TTS_URL === undefined
         ? null
-        : { ttsUrl: data.TTS_URL, concurrency: data.TTS_CONCURRENCY, audioDir: data.AUDIO_DIR! },
+        : {
+            ttsUrl: data.TTS_URL,
+            concurrency: data.TTS_CONCURRENCY,
+            store:
+              data.R2_BUCKET === undefined
+                ? { kind: "file", dir: data.AUDIO_DIR! }
+                : {
+                    kind: "r2",
+                    accountId: data.R2_ACCOUNT_ID!,
+                    bucket: data.R2_BUCKET,
+                    accessKeyId: data.R2_ACCESS_KEY_ID!,
+                    secretAccessKey: data.R2_SECRET_ACCESS_KEY!,
+                  },
+          },
   };
 }

@@ -1,6 +1,7 @@
 import pg from "pg";
 import { createFileAudioStore } from "./audio/fileAudioStore.js";
 import { createHttpNarrator } from "./audio/httpNarrator.js";
+import { createR2AudioStore } from "./audio/r2AudioStore.js";
 import { buildApp } from "./buildApp.js";
 import { createPgSqlClient } from "./db/createPgSqlClient.js";
 import { runMigrations } from "./db/runMigrations.js";
@@ -22,7 +23,10 @@ const audio =
     ? null
     : {
         narrator: createHttpNarrator(config.audio.ttsUrl),
-        store: createFileAudioStore(config.audio.audioDir),
+        store:
+          config.audio.store.kind === "r2"
+            ? createR2AudioStore(config.audio.store)
+            : createFileAudioStore(config.audio.store.dir),
         concurrency: config.audio.concurrency,
         runWorkers: true,
       };
@@ -30,7 +34,12 @@ const app = await buildApp({ config, sql, mailer: createMailer(config.mail), aud
 app.log.info({ applied }, "migrations applied");
 app.log.info({ transport: config.mail.transport, appUrl: config.appUrl }, "magic links");
 app.log.info(
-  config.audio === null ? "TTS_URL is not set: narration is unavailable" : { tts: config.audio.ttsUrl, audioDir: config.audio.audioDir },
+  config.audio === null
+    ? "TTS_URL is not set: narration is unavailable"
+    : {
+        tts: config.audio.ttsUrl,
+        store: config.audio.store.kind === "r2" ? `r2:${config.audio.store.bucket}` : config.audio.store.dir,
+      },
   "narration",
 );
 app.log.info(
