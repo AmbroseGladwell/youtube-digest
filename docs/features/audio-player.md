@@ -1,0 +1,168 @@
+# The audio player
+
+What was built from `Player.dc.html` (Claude Design project, OV-40): the reader's bar plays
+a note's narration, the highlight follows the renderer's measured timings, and the pacer
+remains for every case where there is no narration, marked as the pacer. The narration
+itself — Kokoro, the queue, R2 — is `tts-pre-rendered-speech.md`.
+
+## The calls the design made first
+
+The card left five questions open, and the design answered them before drawing any state:
+
+- **The player lives in the app shell.** Leaving a note keeps it playing, and a mini-player
+  docks at the foot of every other page (3a). Listen on another note replaces what is
+  playing; × stops.
+- **◀◀ and ▶▶ are ±15 s**, matching the lock screen and headphones. Line stepping moved to
+  the text: tap a line, or press `[` and `]`.
+- **Listen plays in place everywhere.** The library row plays and brings up the
+  mini-player; the reader's Listen and the panel's Listen play without navigating.
+- **Signed out, Listen still does something:** it starts the pacer, tagged, with a
+  "Sign in for audio" link. Nothing is blocked.
+- **The Plus prompt on the panel's Listen (16a) is retired.** Audio needs an account, not a
+  plan. See "What changed about Plus" below.
+
+## Where it lives
+
+`packages/app-core/src/features/player/`:
+
+- **`PlayerEngine`** is one plain class for the whole app: the `<audio>` element, the pacer's
+  clock, asking for and polling a render, and every fallback. It has no React in it, which
+  is what lets `PlayerEngine.test.ts` drive every state with a fake element and fake timers.
+- **`PlayerRuntime`** builds it once, above the router and inside the sync runtime, because
+  narration needs the account's session and a note has to outlive navigation. It hands the
+  engine a new narration client when the reader signs in or out.
+- **Two subscriptions, split by frequency** (`frontend-architecture-guide.md` 4.2): the
+  snapshot changes a few times a note, the clock several times a second. `usePlayerLine`
+  subscribes to both but only re-renders when the line changes, so the note's tint does not
+  repaint on every tick.
+- **`playerBarView`** is a pure function from the snapshot and the clock to what the bar
+  says: the label, the clocks, the middle button, the track, the ways out. Every state in
+  the design is one branch of it, and each has a unit test.
+
+The bar itself is still `ReaderPlayerBar`, rewritten to draw that view. The web reader's
+floating card and the panel and phone layout are one DOM order with two sets of grid areas,
+as before.
+
+## Which note the bar is about
+
+The reader's bar is always about the note on screen, while the player holds at most one
+note. `useNotePlayer` reconciles the two:
+
+- **Nothing is playing:** opening a note loads it straight away, idle. That is what lets the
+  bar say whether its audio exists before anybody presses play (1a against 1b).
+- **Another note is playing, preparing or paused:** opening a note does not take the
+  player over, and the other note stays in the mini-player. This note's bar shows a preview
+  ("Listen · Heart voice", with an estimated length), and keeps its own reading mark.
+  Pressing play here loads this note from that mark, replacing the other.
+
+The mini-player is absent on the playing note's own reader, whose bar says all of it. It
+publishes how much of the window's foot it covers as `--mini-player-clearance`, and the
+reader's bar and the shell's pane sit above that, so neither is hidden under it.
+
+## Asking whether narration exists without making any
+
+The key a render is stored under is SHA-256 over `[renderVersion, voice, lines]`. That
+recipe moved into `@overview/domain` (`narrationKeySource`, `narrationKey`) so the client
+can compute it with WebCrypto and ask `GET /api/audio/:key`. A 404 means nobody has asked
+for it, and nothing is queued by asking. `apps/api`'s `audioKey` hashes the same source with
+`node:crypto`, and `audioKey.test.ts` fails if the two ever disagree.
+
+Pressing play on a note with no narration posts the script with `interactive` priority,
+then polls every 1.5 s. The server's only two facts while it waits are `queued` and
+`rendering`, so that is all the bar says (1c). There is no percentage, because nothing
+measures one (`docs/prototype/constraints.md`).
+
+## The states
+
+| Design | When | What the bar does |
+|---|---|---|
+| 1a | narration exists, nothing pressed | "Narrated · Heart voice", its real length, skip and seek off |
+| 1b | narration not made yet | "Audio is made on first play · about 20 s", an estimated length |
+| 1c | asked for, waiting | "Preparing audio · Queued/Rendering", a sweep; the main button cancels |
+| 1d | still waiting after 45 s | "Still preparing", and "Read along meanwhile" |
+| 1e/1f | playing, paused | the section, elapsed and time left, a thumb, notches at section starts |
+| 1g | the network stalls mid-play | "Buffering", the clock holds, the main button still pauses |
+| 1h | the end | "Finished", Play again, Mark read unless it already is |
+| 1i | the render gave up | warning ink, Try again, Read along instead |
+| 1j | 429: three renders already waiting | the reason, and Read along; nothing was queued |
+| 1k | signed out | the pacer, tagged, "Sign in for audio" |
+| 1l | 503, or no connection | the pacer, tagged, "narration is unavailable right now" |
+
+"Read along meanwhile" (1d) starts the pacer and keeps polling. When the narration lands it
+takes over at the line the pacer reached, playing if the pacer was playing and paused if it
+was not.
+
+The failed state is only declared when the server says `failed`, after its own three
+attempts. Three polls in a row that fail to reach the server count as a failure too, rather
+than preparing forever. A 401 at any point is signed out, not a failure.
+
+## The pacer
+
+It is the read-along that existed before, now built on the same clock: line starts
+estimated from the words (`estimatedLineStarts`, the same arithmetic as the reader's
+"6 min listen"), advanced four times a second at the chosen rate. It says so wherever it
+shows: a stone-tint "Read-along · no audio" tag, a stone fill rather than orange, and every
+time written with a ~. It has no thumb or notches, because its times are not somewhere a
+listener can seek to.
+
+## iOS and the lock screen
+
+- **Starting sound after a wait.** iOS only lets a page start audio inside a tap, and a
+  render lands after the tap is over. On the first press the engine starts the element on a
+  tenth of a second of generated silence (`silentWavDataUri`), and swaps in the narration
+  when it arrives. If the browser refuses anyway, the bar rests as paused rather than
+  claiming to play.
+- **MediaSession** (`bindMediaSession`): title, channel, "The Overview" as album, and the
+  video thumbnail as artwork. Play, pause, stop, seek to, and seek backward or forward by
+  15 s. The previous and next track handlers are cleared on purpose: iOS shows skip buttons
+  only when there are no track buttons to show instead. The position is reported on every
+  state change and every five seconds while playing. The pacer has no media element, so it
+  never appears on the lock screen.
+
+**Not yet verified on a device.** Playing with an iPhone locked is the card's first line of
+done, and nothing automated can show it.
+
+## What changed about Plus
+
+The panel's Listen made the case for Plus instead of playing (`plus-upsell.md`, 16a). The
+design retires that prompt, and `PlusPrompt` is deleted. Audio now needs an account rather
+than a plan, so two pieces of copy that sold it as Plus were corrected:
+
+- `PLUS_FEATURES` no longer lists "Audio playback of any overview".
+- The saved-locally note (16b) no longer says Plus "unlocks audio overviews".
+
+Settings still sells Plus on sync and MCP.
+
+## Accessibility
+
+- The label line is the bar's only live region. The clock beside it is deliberately
+  outside it, or a screen reader would announce the time four times a second.
+- The scrubber is a slider while something plays: arrows move five seconds, Home and End go
+  to either end, and its value text names the time and the section. It is a progress bar
+  when it cannot seek, and an unvalued one while preparing.
+- The middle button's name follows its job: Play, Pause, "Pause, buffering",
+  "Cancel preparing audio", Play again.
+- `[` and `]` are ignored while focus is in a field.
+- Reduced motion stops the sweep where the design draws it, and stops the spinners.
+
+## Testing
+
+- **Unit:** `lineAtTime.test.ts` (time to line, and the drag's snap), `playerBarView.test.ts`
+  (every state's words), and `PlayerEngine.test.ts` (every path between them, on fake
+  timers). The timings in the first are shaped the way `services/tts` renders a note. They
+  are not a capture of a real note from production, and swapping one in would be worth it.
+- **IWFT:** `audioPlayback.iwft.ts`, against narration routes in `BackendSimulator`. Headless
+  Chromium cannot decode the M4A the service makes, so the simulated file is silent 8-bit
+  WAV of the render's length, served with byte ranges. Without ranges the element cannot
+  seek, which the first run of these scenarios showed. `narration.finishRenders()`,
+  `failRenders()` and `accountIsBusy()` move a render between states from the test.
+
+## Left out, or not yet read
+
+- **The design file was read only to 3a.** The design tool returns a file up to 256 KiB, and
+  `Player.dc.html` is larger, so the rest of section 3 (the mini-player on other surfaces)
+  and the lock-screen frame were not seen. The mini-player follows 3a and the decisions in
+  the project's `DECISIONS.md`. On a narrow screen it keeps play and × and drops the skips.
+- **The voice is named, not chosen.** The ready state says "Heart voice". It becomes a link
+  when the voice setting exists.
+- **Starting before the whole note is rendered** is OV-42.

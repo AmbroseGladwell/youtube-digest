@@ -31,6 +31,10 @@ Two consequences worth being explicit about:
 
 ## 16a — on Listen
 
+*Retired by OV-40: audio needs an account rather than a plan, so the panel's Listen now
+plays (`audio-player.md`, "What changed about Plus"). What follows is kept as the record of
+why it existed.*
+
 The moment of want. In the panel, pressing `Listen` on a free plan opens a prompt docked
 under the same 2px rule the masthead uses: *Listening is part of Plus. It also syncs
 every overview to the web app and your other devices.* `See what Plus adds` goes to

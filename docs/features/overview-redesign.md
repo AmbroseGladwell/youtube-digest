@@ -269,6 +269,9 @@ stored duration exactly as the reader does.
 
 ### The player bar without audio
 
+*Superseded by `audio-player.md`: the bar now plays narration, and what is described here
+survives as the pacer for notes with none.*
+
 There is no narrated audio, so the bar does what the design file's own prototype does: it
 holds each line for as long as that line would take to say, divided by the chosen rate,
 and moves the reading mark on. Play/pause, ◀◀/▶▶, the four rates and the progress bar are
