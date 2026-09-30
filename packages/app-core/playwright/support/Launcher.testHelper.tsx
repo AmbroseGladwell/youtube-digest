@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import type { NarrationVoice, Plan } from "@overview/domain";
+import { SHARE_PAYLOAD_ELEMENT_ID, type NarrationVoice, type Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -22,6 +22,7 @@ import { MiniPlayerPageObject } from "../pageObjects/MiniPlayerPageObject.testHe
 import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
 import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper.js";
+import { SharedOverviewPageObject } from "../pageObjects/SharedOverviewPageObject.testHelper.js";
 import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js";
 import { Routes } from "../../src/app/Routes.js";
 
@@ -207,6 +208,26 @@ export class Launcher {
   get settingsPage(): SettingsPageObject {
     return new SettingsPageObject(this.testContext);
   }
+
+  get sharedOverviewPage(): SharedOverviewPageObject {
+    return new SharedOverviewPageObject(this.testContext);
+  }
+
+  // The copy the API inlines in the document a shared link opens, put there the same way
+  // (docs/features/sharing.md).
+  inlineSharePayload = (payload: unknown): Promise<void> =>
+    test.step("Launcher.inlineSharePayload", () =>
+      this.page.evaluate(
+        ({ id, json }) => {
+          document.getElementById(id)?.remove();
+          const script = document.createElement("script");
+          script.id = id;
+          script.type = "application/json";
+          script.textContent = json;
+          document.body.append(script);
+        },
+        { id: SHARE_PAYLOAD_ELEMENT_ID, json: JSON.stringify(payload) },
+      ));
 
   launchExpectingLibrary = (options: LaunchOptions = {}): Promise<LibraryPageObject> =>
     test.step("Launcher.launchExpectingLibrary", async () => {

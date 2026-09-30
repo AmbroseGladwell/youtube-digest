@@ -83,9 +83,11 @@ test("nothing the reader wrote for themselves is in the page", async () => {
   const payload = payloadOf(response.body);
 
   assert.equal(response.body.includes("Read before the Thursday review."), false);
-  assert.equal(response.body.includes("energy-policy"), false);
   assert.equal(JSON.stringify(payload).includes("captureReason"), false);
   assert.equal(JSON.stringify(payload).includes("topicIds"), false);
+  // Tags travel with the note rather than with the reader: the design's own "Kept private"
+  // list does not claim otherwise, and a copy without them could not be saved at all.
+  assert.match(JSON.stringify(payload), /energy-policy/);
   await app.close();
 });
 

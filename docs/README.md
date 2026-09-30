@@ -77,8 +77,9 @@ Five folders, five different questions.
 - `sharing.md` — sharing an overview with a link: why it is a snapshot rather than a live
   view, what a shared copy carries and what it never does, why the server rebuilds the copy
   rather than trusting the client's, the link that stays stopped once stopped, why Fastify
-  writes the document and the app renders it, and the card image drawn per request and
-  measured by the renderer that draws it.
+  writes the document and the app renders it, the card image drawn per request and measured
+  by the renderer that draws it, how a visitor hears the copy's own narration without an
+  account, and the intent that survives making one.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.

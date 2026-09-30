@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } fr
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { Routes } from "../../app/Routes.js";
+import { OverviewMark } from "../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
@@ -78,23 +79,7 @@ export function AppShell() {
         >
           <div className={styles.bar}>
             <Link className={styles.brand} to={Routes.home()} data-testid={appShellTestIds.brand}>
-              <svg
-                viewBox="0 0 32 32"
-                width="22"
-                height="22"
-                aria-hidden="true"
-                className={styles.mark}
-              >
-                <circle
-                  cx="16"
-                  cy="14.5"
-                  r="7.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                />
-                <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
-              </svg>
+              <OverviewMark />
               <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
                 {isPanel ? "Overview" : "The Overview"}
               </h1>

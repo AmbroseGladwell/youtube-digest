@@ -1,3 +1,4 @@
+import { sharedPageIntentCardTestIds } from "../../src/features/sharedPage/components/SharedPageIntentCard/SharedPageIntentCardTestIds.js";
 import { expect } from "@playwright/experimental-ct-react";
 import { authScreenTestIds } from "../../src/features/auth/components/AuthScreen/AuthScreenTestIds.js";
 import { checkEmailTestIds } from "../../src/features/auth/components/CheckEmail/CheckEmailTestIds.js";
@@ -22,6 +23,17 @@ export class SignInPageObject extends PageObject {
 
   verifyLeadReads = (pattern: RegExp) =>
     this.step(`verifyLeadReads ${pattern.source}`, () => expect(this.get(authScreenTestIds.lead)).toHaveText(pattern));
+
+  verifyIsSavingFromShare = (title: string) =>
+    this.step(`verifyIsSavingFromShare ${title}`, async () => {
+      await expect(this.get(sharedPageIntentCardTestIds.label)).toHaveText("Saving");
+      await expect(this.get(sharedPageIntentCardTestIds.body)).toContainText(title);
+    });
+
+  verifyPromisesNothingFromAShare = () =>
+    this.step("verifyPromisesNothingFromAShare", () =>
+      expect(this.get(sharedPageIntentCardTestIds.root)).toHaveCount(0),
+    );
 
   verifySavedOverviewsNoteReads = (text: string | null) =>
     this.step(`verifySavedOverviewsNoteReads ${text}`, () =>

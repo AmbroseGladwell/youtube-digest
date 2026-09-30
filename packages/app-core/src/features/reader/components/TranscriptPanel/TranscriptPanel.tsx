@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import type { VideoSource, TranscriptBlock } from "@overview/domain";
+import type { StoredTranscript, VideoSource, TranscriptBlock } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
@@ -34,6 +34,10 @@ export interface OpenedFromChapter {
 
 export interface TranscriptPanelProps {
   video: VideoSource;
+  // A transcript the caller already holds — the shared page's own copy, which travels with
+// the shared overview rather than being read out of a store the visitor has not got
+// (docs/features/sharing.md). Absent, the panel reads the reader's own store.
+  held?: StoredTranscript | null;
   // Where a chapter asked the transcript to open, or null when the reader chose the tab
   // themselves (docs/features/chapters.md).
   openAtMs: number | null;
@@ -45,9 +49,9 @@ export interface TranscriptPanelProps {
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters }: TranscriptPanelProps) {
-  const transcriptQuery = useTranscriptQuery(video.id);
-  const transcript = transcriptQuery.data ?? null;
+export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToChapters }: TranscriptPanelProps) {
+  const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
+  const transcript = held ?? transcriptQuery.data ?? null;
   const blocks = useMemo(
     () => (transcript === null ? [] : transcriptBlocks(transcript.segments)),
     [transcript],
@@ -117,8 +121,8 @@ export function TranscriptPanel({ video, openAtMs, openedFrom, onBackToChapters 
   };
 
   const unreadable = unreadableTranscript(video, {
-    isPending: transcriptQuery.isPending,
-    error: transcriptQuery.isError ? transcriptQuery.error : null,
+    isPending: held === undefined && transcriptQuery.isPending,
+    error: held === undefined && transcriptQuery.isError ? transcriptQuery.error : null,
     blocks,
     retry: () => void transcriptQuery.refetch(),
   });

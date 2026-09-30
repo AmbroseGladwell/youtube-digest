@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { SHARE_TOKEN_PATTERN } from "@overview/domain";
+import { ShareToken } from "@overview/domain";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { shareCardPng } from "./shareCard.js";
@@ -23,9 +23,9 @@ const GONE = {
 
 type Missing = keyof typeof GONE;
 
-const tokenOf = (request: FastifyRequest): string | null => {
+const tokenOf = (request: FastifyRequest): ShareToken | null => {
   const { token } = request.params as { token?: string };
-  return token !== undefined && SHARE_TOKEN_PATTERN.test(token) ? token : null;
+  return ShareToken.safeParse(token).data ?? null;
 };
 
 // The shared copy's own document, outside /api and outside the session plugin. The head is

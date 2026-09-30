@@ -7,6 +7,7 @@ import { useSurface } from "../../../../app/SurfaceContext.js";
 import { ErrorState } from "../../../../components/shared/ErrorState/ErrorState.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
+import { SharedPageIntentCard } from "../../../sharedPage/components/SharedPageIntentCard/SharedPageIntentCard.js";
 import { useSync } from "../../../sync/SyncContext.js";
 import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
@@ -195,6 +196,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
       title={expired ? "That link has expired" : creating ? "Create your account" : "Sign in"}
       lead={lead}
     >
+      <SharedPageIntentCard />
       <EmailLinkForm
         intent={intent}
         submitLabel={expired ? "Email me a new link" : creating ? "Create account" : "Email me a link"}

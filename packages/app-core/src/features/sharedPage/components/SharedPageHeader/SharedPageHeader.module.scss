@@ -1,0 +1,53 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1.75rem;
+}
+
+.home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mark);
+  text-decoration: none;
+}
+
+.wordmark {
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quietAction {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+}
+
+.action {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+}
+
+// On a phone the two actions take the width, and a wrapped wordmark reads as a mistake:
+// the mark alone still says whose page this is (design 30k).
+@media (max-width: 29.9375rem) {
+  .root {
+    padding: 0.875rem 1.25rem;
+  }
+
+  .wordmark {
+    display: none;
+  }
+}

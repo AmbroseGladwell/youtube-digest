@@ -21,6 +21,7 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     coreClaim: overview.coreClaim,
     thin: overview.thin,
     keyPoints: overview.keyPoints,
+    tags: overview.tags,
     // Similar overviews are the reader's other notes: their titles are not the visitor's to
     // read, and the ids would be dead links off a page with no library behind it.
     verdict: overview.verdict === null ? null : { ...overview.verdict, similarTo: [] },

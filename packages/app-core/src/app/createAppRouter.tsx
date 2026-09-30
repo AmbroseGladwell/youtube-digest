@@ -8,6 +8,7 @@ import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/Conn
 import { CreateAccountPage } from "../features/auth/CreateAccountPage/CreateAccountPage.js";
 import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
 import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js";
+import { SharedOverviewRoute } from "../features/sharedPage/SharedOverviewRoute.js";
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 import { RouterErrorBoundary } from "./RouterErrorBoundary.js";
 import { RouteParams, Routes } from "./Routes.js";
@@ -21,6 +22,13 @@ export type AppRouter = ReturnType<RouterFactory>;
 // (docs/architecture/v1-architecture-decisions.md's one-core-two-shells model).
 export function createAppRouter(createRouter: RouterFactory): AppRouter {
   return createRouter([
+    // Outside the shell: a visitor opening a shared link has no library behind them, so
+    // the page brings its own head (docs/features/sharing.md).
+    {
+      path: Routes.sharedOverview(`:${RouteParams.shareToken}`),
+      element: <SharedOverviewRoute />,
+      errorElement: <RouterErrorBoundary />,
+    },
     {
       element: <AppShell />,
       errorElement: <RouterErrorBoundary />,
