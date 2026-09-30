@@ -85,6 +85,16 @@ test("generating from a video whose captions are already held doesn't buy them a
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });
 
+test("the video in front of the panel is never looked up in the shared cache, so watching tells our server nothing", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launch({ ...PANEL, defaultApiUrl: "https://overview.test" });
+
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(0);
+});
+
 test("moving to another video goes and gets that one's captions too", async ({
   launcher,
   backendSimulator,

@@ -95,6 +95,7 @@ export class BackendSimulator {
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
+  #sharedTranscripts = new Map<string, StoredTranscript>();
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
@@ -344,6 +345,22 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/shared-transcripts/*", (route) =>
+      this.#respond(route, EndpointKey.SHARED_TRANSCRIPT, {
+        onDefault: () => {
+          const videoId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          const held = this.#sharedTranscripts.get(videoId);
+          return held === undefined
+            ? { status: 404, body: { error: { code: "not_found", message: "Simulated: not in the shared cache" } } }
+            : { status: 200, body: held };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
     const unavailable = () => ({
       status: 503,
       body: { error: { code: "unavailable", message: "Simulated: narration is not set up" } },
@@ -579,6 +596,10 @@ export class BackendSimulator {
   transcripts = {
     seed: (transcript: StoredTranscript): void => {
       this.#seedTranscripts.push(transcript);
+    },
+    // In the cross-account cache, as though another account had stored it.
+    seedShared: (transcript: StoredTranscript): void => {
+      this.#sharedTranscripts.set(transcript.videoId, transcript);
     },
   };
 

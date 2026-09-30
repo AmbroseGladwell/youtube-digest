@@ -9,3 +9,5 @@ export * from "./pushPendingWrite.js";
 export * from "./SyncEngine.js";
 export * from "./NarrationApi.js";
 export * from "./fetchNarrationApi.js";
+export * from "./SharedTranscriptApi.js";
+export * from "./fetchSharedTranscriptApi.js";

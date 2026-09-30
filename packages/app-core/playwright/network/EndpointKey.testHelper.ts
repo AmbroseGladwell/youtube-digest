@@ -1,7 +1,8 @@
 // Generation talks to providers straight from the browser, and the extension's shell lends
 // it a fetch that reaches YouTube (docs/features/transcript-retrieval.md) — so these are
 // the endpoints the IWFT network layer intercepts. The rest are our own API: the sync
-// server's read side (docs/features/sync-client.md), sign-in (docs/features/sign-in.md)
+// server's read side (docs/features/sync-client.md), the shared transcript cache
+// (docs/features/shared-transcript-cache.md), sign-in (docs/features/sign-in.md)
 // and narration (docs/features/audio-player.md).
 export enum EndpointKey {
   INNERTUBE_PLAYER = "INNERTUBE_PLAYER",
@@ -12,6 +13,7 @@ export enum EndpointKey {
   SYNC_HANDSHAKE = "SYNC_HANDSHAKE",
   SYNC_CHANGES = "SYNC_CHANGES",
   SYNC_TRANSCRIPT = "SYNC_TRANSCRIPT",
+  SHARED_TRANSCRIPT = "SHARED_TRANSCRIPT",
   AUTH_MAGIC_LINK = "AUTH_MAGIC_LINK",
   AUTH_SIGN_IN = "AUTH_SIGN_IN",
   AUTH_LINK_CODE = "AUTH_LINK_CODE",
