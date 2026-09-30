@@ -53,7 +53,7 @@ test("without keys the press goes to Settings rather than starting a run that ca
 
   await launcher.pressInjectedButton(WATCHED_URL);
 
-  await launcher.settingsPage.verifyIsShown();
+  await launcher.settingsPage.verifySectionIsShown("keys");
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(0);
 

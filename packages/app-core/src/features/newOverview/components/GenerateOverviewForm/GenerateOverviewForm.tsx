@@ -111,7 +111,7 @@ export function GenerateOverviewForm({
         <p className={styles.note}>
           {transcriptSourceNote(readiness)}{" "}
           <Link
-            to={Routes.settings()}
+            to={Routes.settingsSection("keys")}
             onClick={onCancel}
             data-testid={generateOverviewFormTestIds.settingsLink}
           >

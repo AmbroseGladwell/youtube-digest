@@ -8,22 +8,24 @@ const BUILD = { version: "0.1.0", commit: "30bb95a", dirty: false };
 test("settings say which version this is, and the commit it was built from", async ({ launcher }) => {
   await launcher.launch({ build: BUILD });
   const settings = await launcher.appShell.openSettings();
+  await settings.verifyRowReads("about", "Version 0.1.0");
+  await settings.openSection("about");
 
   await settings.verifyBuildLineReads("Version 0.1.0 (30bb95a)");
 });
 
 test("the extension's panel carries the same line", async ({ launcher }) => {
-  const capture = await launcher.launchPanel({ activeVideoUrl: null, build: BUILD });
-  const settings = await capture.openSettings();
+  await launcher.launchPanel({ activeVideoUrl: null, build: BUILD });
+  const settings = await (await launcher.appShell.openSettings()).openSection("about");
 
   await settings.verifyBuildLineReads("Version 0.1.0 (30bb95a)");
 });
 
-test("a shell that was told nothing about its build shows no line rather than an empty one", async ({
+test("a shell that was told nothing about its build has no About section rather than an empty one", async ({
   launcher,
 }) => {
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyHasNoBuildLine();
+  await settings.verifyRowsAre(["keys", "plan"]);
 });

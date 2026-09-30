@@ -58,7 +58,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
 
       if (readiness !== "ready") {
         restateCurrentRun();
-        void navigate(Routes.settings());
+        void navigate(Routes.settingsSection("keys"));
         return;
       }
 

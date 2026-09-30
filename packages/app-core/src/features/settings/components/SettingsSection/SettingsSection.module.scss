@@ -1,0 +1,36 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  max-width: 37.5rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  scroll-margin-top: calc(var(--masthead-height) + 3rem);
+
+  // Focused on arrival for screen readers (docs/features/settings.md); not a control.
+  &:focus {
+    outline: none;
+  }
+}
+
+.intro {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+@media (max-width: 47.9375rem) {
+  .heading {
+    font-size: 1.875rem;
+  }
+}
