@@ -110,6 +110,32 @@ Matched on the video's own id rather than on the URL, because `youtu.be/X` and
 `watch?v=X&t=30` are the same video — the same reasoning
 `docs/features/transcript-storage.md` gives for keying captions that way.
 
+## Open in web app
+
+Design 6h puts `Open in web app` in the panel's ⋯ menu where the wide reader has read
+state and deletion. The note's address in the web app is `/overviews/<id>` on the server
+this device syncs with, because that one origin serves the API and the web app
+(`docs/architecture/deploy.md`). But the address exists only once the note does, so the
+item asks sync before it offers the link: a note the server holds a revision of, whether
+pushed from here or pulled from another device (`SyncStorage.revisionOf`), opens in a new
+tab. A note written in the panel and not yet pushed would open on "That overview isn't in
+your library".
+
+So there are three answers, one per reason the page might not be there, and each says it
+under the label. A disabled item cannot be focused, so a `title` would reach nobody using
+a keyboard:
+
+- **Synced.** A link to the note in the web app.
+- **Signed in, not yet synced.** Disabled: "Not in the web app until it syncs". The check
+  sits under the overview query keys, so the pull that follows a push, which carries this
+  device's own write back, re-asks it and the item enables without reopening the note.
+- **Signed out.** Disabled: "Sign in to see it in the web app". A free library in the
+  extension is its own, and signing in is what joins it to the web app. Sharing makes
+  the same call: the control shows and says what it needs.
+
+A shell that cannot sync at all has no web app to open, so the item is not there.
+`openInWebApp.iwft.ts` covers all four.
+
 ## Where this departs from the file
 
 - **The panel's head keeps the judgement and drops the dates.** The wide reader runs

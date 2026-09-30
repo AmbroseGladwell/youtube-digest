@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
+import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import styles from "./OverviewActionsMenu.module.scss";
 import { overviewActionsMenuTestIds } from "./OverviewActionsMenuTestIds.js";
 
@@ -14,6 +15,7 @@ export interface OverviewActionsMenuProps {
   onShare: (() => void) | null;
   // Design 6h: the panel's menu offers the web app instead of read state and deletion.
   compact: boolean;
+  webApp: OverviewInWebApp;
   // Which edge of the trigger the menu hangs from, so it opens into the space there is.
   align: "start" | "end";
   onEditTopics: () => void;
@@ -24,14 +26,14 @@ export interface OverviewActionsMenuProps {
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// Design 4b/6h: everything about the note that is not reading it. Open in web app is
-// placed but not wired (docs/features/stone-theme.md, "Placed but not wired").
+// Design 4b/6h: everything about the note that is not reading it.
 export function OverviewActionsMenu({
   topicCount,
   hasReason,
   read,
   videoUrl,
   compact,
+  webApp,
   align,
   onShare,
   onEditTopics,
@@ -139,16 +141,33 @@ export function OverviewActionsMenu({
             </button>
           )}
           {compact ? (
-            <button
-              type="button"
-              role="menuitem"
-              className={styles.item}
-              disabled
-              title="The web app has no address for this note yet"
-              data-testid={overviewActionsMenuTestIds.openInWebItem}
-            >
-              Open in web app
-            </button>
+            webApp !== null &&
+            ("href" in webApp ? (
+              <a
+                role="menuitem"
+                className={styles.item}
+                href={webApp.href}
+                target="_blank"
+                rel="noopener"
+                onClick={() => setOpen(false)}
+                data-testid={overviewActionsMenuTestIds.openInWebItem}
+              >
+                Open in web app
+              </a>
+            ) : (
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.item} ${styles.itemWithReason}`}
+                disabled
+                data-testid={overviewActionsMenuTestIds.openInWebItem}
+              >
+                Open in web app
+                <span className={styles.reason} data-testid={overviewActionsMenuTestIds.openInWebReason}>
+                  {webApp.reason}
+                </span>
+              </button>
+            ))
           ) : (
             <button
               type="button"

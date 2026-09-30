@@ -117,8 +117,6 @@ why, or a jump to where the thing lives today.
 - **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
   **To wire in:** an `href` to the Web Store listing once it is published
   (`chrome-web-store-account` in the project notes), and the button becomes a link.
-- **`Open in web app`** in the panel's ⋯ menu (design 6h), disabled. **To wire in:** the
-  web app's address for a note, which needs the note to exist there — that is sync's job.
 
 ## The single overview
 
@@ -143,8 +141,8 @@ warnings against the channel's row.
 row's 34px circle. **Mark read moved into the ⋯ menu** as `Mark as read` / `Mark as
 unread` (4b), so `ReaderPageObject` reads the state off what the menu offers next. The
 menu also carries `Watch on YouTube`, `Copy link` (the video's link, on either surface)
-`Delete overview` on the web, and, placed but not wired, `Open in web app` in the panel
-(see "Placed but not wired").
+`Delete overview` on the web, and `Open in web app` in the panel, which opens the note in
+the web app once it has synced (`docs/features/extension-panel.md`, "Open in web app").
 
 **Deleting asks once.** `Delete overview` opens `DeleteOverviewDialog`, the New topic
 dialog cut down to a question, with focus on `Cancel`. There is no undo: the store's delete

@@ -10,5 +10,6 @@ export const overviewActionsMenuTestIds = {
   shareItem: "OverviewActionsMenu.shareItem",
   copyLinkItem: "OverviewActionsMenu.copyLinkItem",
   openInWebItem: "OverviewActionsMenu.openInWebItem",
+  openInWebReason: "OverviewActionsMenu.openInWebReason",
   deleteItem: "OverviewActionsMenu.deleteItem",
 };

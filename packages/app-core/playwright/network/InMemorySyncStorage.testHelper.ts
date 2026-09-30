@@ -24,6 +24,7 @@ export class InMemorySyncStorage implements SyncStorage {
   cursorValue = 0;
   outbox: OutboxEntry[] = [];
   applied: RecordChange[][] = [];
+  revisions = new Map<string, number>();
   #listeners = new Set<() => void>();
 
   constructor(
@@ -44,6 +45,7 @@ export class InMemorySyncStorage implements SyncStorage {
     this.enrolled = false;
     this.cursorValue = 0;
     this.outbox = [];
+    this.revisions.clear();
   }
 
   async cursor() {
@@ -62,8 +64,8 @@ export class InMemorySyncStorage implements SyncStorage {
     this.outbox = this.outbox.map((entry) => (entry.key === key ? { ...entry, stuck: failure } : entry));
   }
 
-  async revisionOf(_kind: OutboxKind, _id: string) {
-    return null;
+  async revisionOf(kind: OutboxKind, id: string) {
+    return this.revisions.get(`${kind}/${id}`) ?? null;
   }
 
   async transcriptToPush(videoId: string) {
@@ -77,6 +79,11 @@ export class InMemorySyncStorage implements SyncStorage {
 
   async applyChanges(changes: RecordChange[], next: number) {
     for (const change of changes) {
+      if (change.deleted) {
+        this.revisions.delete(`${change.kind}/${change.id}`);
+      } else {
+        this.revisions.set(`${change.kind}/${change.id}`, change.rev);
+      }
       if (change.deleted || change.body === undefined) {
         if (change.kind === "overview") await this.overviewStore.deleteOverview(change.id as never);
         continue;

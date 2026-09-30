@@ -64,7 +64,7 @@ Five folders, five different questions.
   way out is the caller's to name rather than a fixed pair, and where the build departs from
   the design file.
 - `extension-panel.md` — why the side panel is one video rather than a small library:
-  the layout seam, its three screens, and what it drops.
+  the layout seam, its three screens, what it drops, and what `Open in web app` waits for.
 - `following-playback.md` — how the transcript follows the video, what now touches the
   YouTube page and how little, and why the follow scroll is the one movement that isn't
   eased.

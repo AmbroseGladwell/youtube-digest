@@ -73,6 +73,8 @@ export class ReaderPageObject extends PageObject {
   openActionsMenu = () =>
     this.step("openActionsMenu", () => this.click(overviewActionsMenuTestIds.trigger));
 
+  closeActionsMenu = () => this.step("closeActionsMenu", () => this.page.keyboard.press("Escape"));
+
   verifyChannelReads = (channel: string) =>
     this.step(`verifyChannelReads ${channel}`, () =>
       expect(this.get(readerMastheadTestIds.channel)).toHaveText(channel),
@@ -413,6 +415,26 @@ export class ReaderPageObject extends PageObject {
     this.step("verifyMenuHasNoShare", async () => {
       await this.openActionsMenu();
       await this.expectNotToBeVisible(overviewActionsMenuTestIds.shareItem);
+    });
+
+  verifyOpensInWebAppAt = (href: string) =>
+    this.step(`verifyOpensInWebAppAt ${href}`, async () => {
+      await this.openActionsMenu();
+      await expect(this.get(overviewActionsMenuTestIds.openInWebItem)).toHaveAttribute("href", href);
+      await expect(this.get(overviewActionsMenuTestIds.openInWebItem)).toBeEnabled();
+    });
+
+  verifyCannotOpenInWebApp = (reason: string) =>
+    this.step(`verifyCannotOpenInWebApp ${reason}`, async () => {
+      await this.openActionsMenu();
+      await expect(this.get(overviewActionsMenuTestIds.openInWebItem)).toBeDisabled();
+      await expect(this.get(overviewActionsMenuTestIds.openInWebReason)).toHaveText(reason);
+    });
+
+  verifyMenuHasNoOpenInWebApp = () =>
+    this.step("verifyMenuHasNoOpenInWebApp", async () => {
+      await this.openActionsMenu();
+      await this.expectNotToBeVisible(overviewActionsMenuTestIds.openInWebItem);
     });
 
   verifyCopyLinkItemReads = (label: string) =>
