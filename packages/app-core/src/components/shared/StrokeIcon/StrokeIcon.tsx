@@ -17,6 +17,7 @@ export type StrokeIconName =
   | "alert"
   | "chevronDown"
   | "chevronUp"
+  | "chevronRight"
   | "play"
   | "skipBack"
   | "skipForward"
@@ -120,6 +121,7 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronUp: <path d="m18 15-6-6-6 6" />,
+  chevronRight: <path d="m9 18 6-6-6-6" />,
   play: <polygon points="6 3 20 12 6 21 6 3" />,
   skipBack: (
     <>

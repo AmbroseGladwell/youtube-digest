@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import type { Plan } from "@overview/domain";
+import type { NarrationVoice, Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -37,6 +37,7 @@ export interface LaunchOptions {
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
   plan?: Plan;
+  narrationVoice?: NarrationVoice;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -80,7 +81,13 @@ export class Launcher {
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {
         ...this.backendSimulator.buildHooksConfig(),
-        seedSettings: options.plan === undefined ? undefined : { plan: options.plan },
+        seedSettings:
+          options.plan === undefined && options.narrationVoice === undefined
+            ? undefined
+            : {
+                ...(options.plan === undefined ? {} : { plan: options.plan }),
+                ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
+              },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,

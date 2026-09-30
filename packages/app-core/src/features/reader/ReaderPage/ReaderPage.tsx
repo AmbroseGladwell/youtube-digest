@@ -349,6 +349,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               player.readAlong();
             }
           }}
+          onReRecord={() => player.reRecord()}
         />
       )}
     </article>

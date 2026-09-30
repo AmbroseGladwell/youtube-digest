@@ -10,10 +10,16 @@ import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { ApiKeysPanel } from "../components/ApiKeysPanel/ApiKeysPanel.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
+import { NarrationVoicePicker } from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
+import { NarrationVoiceRow } from "../components/NarrationVoiceRow/NarrationVoiceRow.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
 
-export function SettingsPage() {
+export interface SettingsPageProps {
+  scrollToVoice?: boolean;
+}
+
+export function SettingsPage({ scrollToVoice = false }: SettingsPageProps) {
   const { apiKeys, setApiKeys } = useApiKeys();
   const surface = useSurface();
   const isPanel = useIsPanel();
@@ -29,6 +35,8 @@ export function SettingsPage() {
         <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
       </Link>
       <h2 className={styles.title}>Settings</h2>
+
+      {isPanel ? <NarrationVoiceRow /> : <NarrationVoicePicker scrollToChosen={scrollToVoice} />}
 
       <PlusPlanPanel />
 

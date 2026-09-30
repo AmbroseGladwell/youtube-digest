@@ -1,4 +1,4 @@
-import type { NarrationVoice, NoteLine } from "@overview/domain";
+import { narrationVoiceName, type NoteLine } from "@overview/domain";
 import { formatClock } from "../../../util/formatClock.js";
 import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
 import { sectionStartFractions } from "./estimatedLineStarts.js";
@@ -9,7 +9,8 @@ export type PlayerBarAction = "tryAgain" | "readAlongInstead" | "readAlong" | "r
 export type PlayerMainButton = "play" | "pause" | "cancel" | "buffering" | "replay";
 
 export interface PlayerBarView {
-  label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean };
+  // voiceLink: the rest names the voice, and is a way to Settings › Narration voice (43i).
+  label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean; voiceLink?: boolean };
   clock: { inline: string; start: string; end: string };
   main: { kind: PlayerMainButton; label: string; disabled: boolean };
   skipEnabled: boolean;
@@ -20,16 +21,12 @@ export interface PlayerBarView {
   note: string | null;
   showRate: boolean;
   rateLabel: string;
+  // Design 43j: "Re-record in Emma", for a note narrated before the reader chose Emma.
+  reRecord: string | null;
 }
 
 export interface PlayerBarContext {
   read: boolean;
-}
-
-// "af_heart" is Kokoro's American female Heart: the bar names only the voice.
-export function voiceName(voice: NarrationVoice): string {
-  const name = voice.split("_")[1] ?? voice;
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 }
 
 // The name the note itself prints over the section, which is what a listener sees: the
@@ -52,7 +49,7 @@ export function playerBarView(
   time: number,
   { read }: PlayerBarContext,
 ): PlayerBarView {
-  const { track, status, source, pacerReason, availability, preparing, timings, rate, voice } = snapshot;
+  const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];
   const section = sectionHeadingAt(lines, lineAtTime(timings.lineStarts, time));
   const duration = timings.durationSeconds;
@@ -71,7 +68,10 @@ export function playerBarView(
     note: null,
     showRate: true,
     rateLabel: rateLabelFor(rate),
+    reRecord: null,
   };
+  const reRecord =
+    narratedVoice !== null && narratedVoice !== voice ? `Re-record in ${narrationVoiceName(voice)}` : null;
 
   if (source === "pacer") {
     const started = status !== "ready";
@@ -104,7 +104,7 @@ export function playerBarView(
       if (availability === "checking") {
         return {
           ...base,
-          label: { lead: "Listen", rest: `${voiceName(voice)} voice`, tone: "ink", pacerTag: false },
+          label: { lead: "Listen", rest: `${narrationVoiceName(voice)} voice`, tone: "ink", pacerTag: false, voiceLink: true },
           clock: { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
           skipEnabled: false,
           track: { ...base.track, fill: "none", thumb: false },
@@ -115,11 +115,18 @@ export function playerBarView(
       return availability === "ready"
         ? {
             ...base,
-            label: { lead: "Narrated", rest: `${voiceName(voice)} voice`, tone: "ink", pacerTag: false },
+            label: {
+              lead: "Narrated",
+              rest: `${narrationVoiceName(narratedVoice ?? voice)} voice`,
+              tone: "ink",
+              pacerTag: false,
+              voiceLink: true,
+            },
             clock: { inline: formatClock(duration), start: formatClock(0), end: formatClock(duration) },
             skipEnabled: false,
             track: { ...base.track, fill: "none", thumb: false },
             seekable: false,
+            reRecord,
           }
         : {
             ...base,
@@ -192,6 +199,7 @@ export function playerBarView(
         main: mainFor(status),
         track: { ...base.track, percent: 100, thumb: false },
         actions: read ? [] : ["markRead"],
+        reRecord,
       };
 
     default: {
@@ -206,6 +214,7 @@ export function playerBarView(
           end: `−${formatClock(remaining)}`,
         },
         main: mainFor(status),
+        reRecord: status === "paused" ? reRecord : null,
       };
     }
   }

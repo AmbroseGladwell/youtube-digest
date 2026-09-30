@@ -26,6 +26,7 @@ export interface ReaderPlayerBarProps {
   onSeek: (seconds: number) => void;
   onCycleRate: () => void;
   onAction: (action: Exclude<PlayerBarAction, "signIn">) => void;
+  onReRecord: () => void;
 }
 
 const ACTION_LABELS: Record<PlayerBarAction, string> = {
@@ -69,6 +70,7 @@ export function ReaderPlayerBar({
   onSeek,
   onCycleRate,
   onAction,
+  onReRecord,
 }: ReaderPlayerBarProps) {
   const actions = view.actions.filter((action) => action !== "signIn" || canSignIn);
 
@@ -120,7 +122,35 @@ export function ReaderPlayerBar({
                 {view.label.lead}
               </strong>
             )}
-            {view.label.rest !== null && <span className={styles.rest}> · {view.label.rest}</span>}
+            {view.label.rest !== null && (
+              <span className={styles.rest}>
+                {" · "}
+                {view.label.voiceLink ? (
+                  <Link
+                    className={styles.voiceLink}
+                    to={Routes.narrationVoice()}
+                    data-testid={readerPlayerBarTestIds.voiceLink}
+                  >
+                    {view.label.rest}
+                  </Link>
+                ) : (
+                  view.label.rest
+                )}
+              </span>
+            )}
+            {view.reRecord !== null && (
+              <span className={styles.reRecordInline}>
+                {" · "}
+                <button
+                  type="button"
+                  className={styles.reRecordLink}
+                  onClick={onReRecord}
+                  data-testid={readerPlayerBarTestIds.reRecordInline}
+                >
+                  {view.reRecord}
+                </button>
+              </span>
+            )}
           </p>
           <span className={styles.clocks}>
             <span className={styles.clockInline} data-testid={readerPlayerBarTestIds.clock}>
@@ -143,6 +173,18 @@ export function ReaderPlayerBar({
       </div>
 
       {view.note !== null && <p className={styles.note}>{view.note}</p>}
+
+      {view.reRecord !== null && (
+        <button
+          type="button"
+          className={styles.reRecord}
+          onClick={onReRecord}
+          data-testid={readerPlayerBarTestIds.reRecordButton}
+        >
+          <StrokeIcon name="rotateCw" size={14} />
+          {view.reRecord}
+        </button>
+      )}
 
       {actions.length > 0 && (
         <div className={styles.actions}>

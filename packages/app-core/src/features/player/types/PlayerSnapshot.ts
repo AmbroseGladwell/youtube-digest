@@ -30,5 +30,9 @@ export interface PlayerSnapshot {
   // pacer and for audio that does not exist yet.
   timings: LineTimings;
   rate: number;
+  // The reader's chosen voice, and the voice of the narration the bar has found, which is
+  // an older one when the note was narrated before the reader chose another
+  // (docs/features/narration-voice.md, "Old audio").
   voice: NarrationVoice;
+  narratedVoice: NarrationVoice | null;
 }

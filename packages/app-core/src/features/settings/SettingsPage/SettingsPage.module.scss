@@ -1,7 +1,8 @@
 @use "../../../theme/controls.scss" as controls;
 
+// Wide enough for the voice picker's three columns at the design's 760 (OV-43 43a).
 .root {
-  max-width: 44rem;
+  max-width: 53.5rem;
   padding: 1.5rem 3rem 4rem;
   display: flex;
   flex-direction: column;

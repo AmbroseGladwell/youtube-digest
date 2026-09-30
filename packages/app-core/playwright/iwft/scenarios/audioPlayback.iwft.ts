@@ -153,7 +153,7 @@ test("a server with no narration is the pacer, marked as such and saying why", a
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(NOTE);
-  backendSimulator.simulateEndpointError(EndpointKey.NARRATION_STATUS);
+  backendSimulator.simulateEndpointError(EndpointKey.NARRATION_LOOKUP);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 

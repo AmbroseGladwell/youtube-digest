@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { OverviewId, type NoteLine } from "@overview/domain";
 import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
-import { playerBarView, sectionHeadingAt, voiceName } from "./playerBarView.js";
+import { playerBarView, sectionHeadingAt } from "./playerBarView.js";
 
 const line = (section: string, text: string, heading = false): NoteLine => ({ section, heading, bullet: false, text });
 
@@ -28,6 +28,7 @@ const snapshot = (patch: Partial<PlayerSnapshot> = {}): PlayerSnapshot => ({
   timings: { lineStarts: [0, 60, 120, 180], durationSeconds: 364 },
   rate: 1,
   voice: "af_heart",
+  narratedVoice: "af_heart",
   ...patch,
 });
 
@@ -125,16 +126,38 @@ describe("playerBarView", () => {
   });
 });
 
+describe("43i and 43j: the voice", () => {
+  it("names the voice as a way to the voice setting before the first press", () => {
+    expect(view({}).label).toMatchObject({ rest: "Heart voice", voiceLink: true });
+    expect(view({ availability: "checking", narratedVoice: null, voice: "bf_emma" }).label).toMatchObject({
+      lead: "Listen",
+      rest: "Emma voice",
+      voiceLink: true,
+    });
+  });
+
+  it("a note narrated in an older voice names that voice and offers the chosen one", () => {
+    const bar = view({ voice: "bf_emma", narratedVoice: "af_heart" });
+    expect(bar.label).toMatchObject({ lead: "Narrated", rest: "Heart voice" });
+    expect(bar.reRecord).toBe("Re-record in Emma");
+  });
+
+  it("the offer shows while stopped or paused, not while playing", () => {
+    const older = { voice: "bm_george" as const, narratedVoice: "af_heart" as const };
+    expect(view({ ...older, status: "paused" }, 30).reRecord).toBe("Re-record in George");
+    expect(view({ ...older, status: "ended" }, 364).reRecord).toBe("Re-record in George");
+    expect(view({ ...older, status: "playing" }, 30).reRecord).toBeNull();
+  });
+
+  it("a note already in the chosen voice offers nothing", () => {
+    expect(view({ status: "paused" }, 30).reRecord).toBeNull();
+    expect(view({}).reRecord).toBeNull();
+  });
+});
+
 describe("sectionHeadingAt", () => {
   it("is the heading printed over the line, which for the summary is Premise", () => {
     expect(sectionHeadingAt(LINES, 1)).toBe("Premise");
     expect(sectionHeadingAt(LINES, 3)).toBe("Key points");
-  });
-});
-
-describe("voiceName", () => {
-  it("names a Kokoro voice by its given name alone", () => {
-    expect(voiceName("af_heart")).toBe("Heart");
-    expect(voiceName("bm_george")).toBe("George");
   });
 });

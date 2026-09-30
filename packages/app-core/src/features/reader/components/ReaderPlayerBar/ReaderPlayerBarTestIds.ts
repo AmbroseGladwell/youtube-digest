@@ -9,5 +9,8 @@ export const readerPlayerBarTestIds = {
   pacerTag: "ReaderPlayerBar.pacerTag",
   clock: "ReaderPlayerBar.clock",
   signInLink: "ReaderPlayerBar.signInLink",
+  voiceLink: "ReaderPlayerBar.voiceLink",
+  reRecordButton: "ReaderPlayerBar.reRecordButton",
+  reRecordInline: "ReaderPlayerBar.reRecordInline",
   action: (action: string) => `ReaderPlayerBar.action.${action}`,
 };
