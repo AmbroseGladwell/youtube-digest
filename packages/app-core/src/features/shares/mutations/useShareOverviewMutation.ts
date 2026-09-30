@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_NARRATION_VOICE, spokenScript, type Overview, type Share } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
+import { useSync } from "../../sync/SyncContext.js";
+import { transcriptQueryOptions } from "../../transcripts/queries/transcriptQuery.js";
 import { useNarrationApi } from "../../player/NarrationApiContext.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { shareKeys } from "../shareKeys.js";
 import { useShareApi } from "../ShareApiContext.js";
 import { narrationForShare } from "../util/narrationForShare.js";
-import { transcriptForShare } from "../util/transcriptForShare.js";
 
 export interface ShareOverviewVariables {
   overview: Overview;
@@ -19,6 +20,7 @@ export function useShareOverviewMutation() {
   const api = useShareApi();
   const narrationApi = useNarrationApi();
   const { transcriptStore } = useStores();
+  const { fetchTranscript } = useSync();
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
   const queryClient = useQueryClient();
 
@@ -30,7 +32,14 @@ export function useShareOverviewMutation() {
       }
       return api.share({
         overview,
-        transcript: await transcriptForShare(transcriptStore, overview),
+        // Through the reader's own query, not the local store alone: a transcript this
+        // device never fetched but the account holds is one the reader is already showing,
+        // and a copy that leaves it behind has a Transcript tab with nothing in it. Going
+        // through the query also means the copy is usually already in hand
+        // (docs/features/sharing.md).
+        transcript: await queryClient.fetchQuery(
+          transcriptQueryOptions(transcriptStore, overview.video.id, fetchTranscript),
+        ),
         narration: await narrationForShare(narrationApi, spokenScript(overview), voice),
       });
     },

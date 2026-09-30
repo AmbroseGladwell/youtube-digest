@@ -20,6 +20,8 @@ import {
   type OverviewState,
   type RecordChange,
   type Share,
+  type SharedOverview,
+  type ShareRequest,
   type StoredTranscript,
   type Topic,
   type UnreadableRecord,
@@ -98,6 +100,7 @@ export class BackendSimulator {
   );
   #callCounts = new Map<EndpointKey, number>();
   #shares = new Map<string, Share>();
+  #shareSnapshots = new Map<string, SharedOverview>();
   #nextShareToken = 0;
   #stalled: Array<{
     endpoint: EndpointKey;
@@ -377,7 +380,7 @@ export class BackendSimulator {
     await this.#page.route("**/api/shares", (route) =>
       route.request().method() === "POST"
         ? this.#respond(route, EndpointKey.SHARE_CREATE, {
-            onDefault: () => this.#putShare(route.request().postDataJSON() as { overview: Overview }),
+            onDefault: () => this.#putShare(route.request().postDataJSON() as ShareRequest),
             onError: () => ({
               status: 503,
               body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
@@ -537,10 +540,14 @@ export class BackendSimulator {
   // The server's own job, done here so an IWFT sees what a reader would: the copy is built
   // from the overview that was posted, and a link keeps its token, its share date and its
   // view count when the copy behind it is replaced (docs/features/sharing.md).
-  #putShare = ({ overview }: { overview: Overview }): { status: number; body: unknown } => {
+  #putShare = ({ overview, transcript, narration }: ShareRequest): { status: number; body: unknown } => {
     const existing = [...this.#shares.values()].find((share) => share.overviewId === overview.id);
     const token = existing?.token ?? `iwftShareToken${this.#nextShareToken++}`.slice(0, 16).padEnd(16, "0");
-    const { note } = shareSnapshot({ overview, transcript: null, narration: null });
+    // The whole copy is kept, not just the note: a simulator that dropped what was posted
+    // could not tell a share that carries its transcript from one that does not, which is
+    // how a real one shipped without (docs/features/sharing.md).
+    const snapshot = shareSnapshot({ overview, transcript: transcript ?? null, narration: narration ?? null });
+    const { note } = snapshot;
     const share: Share = {
       token: ShareToken.parse(token),
       url: `https://overview.test/s/${token}`,
@@ -552,6 +559,7 @@ export class BackendSimulator {
       contentHash: createHash("sha256").update(shareContentSource(note)).digest("hex"),
     };
     this.#shares.set(token, share);
+    this.#shareSnapshots.set(token, snapshot);
     return { status: existing === undefined ? 201 : 200, body: share };
   };
 
@@ -689,6 +697,9 @@ export class BackendSimulator {
   // The links the reader has given out, as the server holds them (docs/features/sharing.md).
   shares = {
     live: (): Share[] => [...this.#shares.values()],
+    // What was actually uploaded behind a link, which is the only way to see that the copy
+    // carries everything the reader could see.
+    snapshot: (token: string): SharedOverview | null => this.#shareSnapshots.get(token) ?? null,
     // The copy behind the link was made from an earlier note, which is what the stored
     // hash disagreeing with the reader's own means (docs/features/sharing.md).
     simulateCopyIsStale: (): void => {

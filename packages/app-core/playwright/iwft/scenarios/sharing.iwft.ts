@@ -1,4 +1,5 @@
 import type { Overview } from "@overview/domain";
+import { makeStoredTranscript } from "@overview/store-conformance";
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
@@ -171,4 +172,43 @@ test("Settings says plainly when nothing is shared", async ({ launcher, backendS
   const panel = await settings.sharedLinks.verifyIsShown();
 
   await panel.verifySaysNothingIsShared();
+});
+
+// The whole point of sharing a transcript is that the recipient gets the one the sharer
+// was looking at. The reader reads its own store first and the account's copy after, so
+// the copy has to be built the same way — a share built from the local store alone leaves
+// the tab empty for every reader whose device never fetched it (docs/features/sharing.md).
+test("the transcript the reader is looking at travels with the copy", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = titled();
+  backendSimulator.overviews.seed(overview);
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: overview.video.id! }));
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  const dialog = await reader.clickShare();
+  await dialog.clickCreateLink();
+  await dialog.verifyStatusReads("0 views");
+
+  const [made] = backendSimulator.shares.live();
+  const snapshot = backendSimulator.shares.snapshot(made!.token);
+  test.expect(snapshot?.transcript?.segments?.length ?? 0).toBeGreaterThan(0);
+});
+
+test("an overview whose transcript nobody holds is shared without one, rather than refused", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(titled());
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  const dialog = await reader.clickShare();
+  await dialog.clickCreateLink();
+  await dialog.verifyStatusReads("0 views");
+
+  const [made] = backendSimulator.shares.live();
+  test.expect(backendSimulator.shares.snapshot(made!.token)?.transcript).toBeNull();
 });

@@ -44,6 +44,18 @@ working. The design is the later decision and it wins. What is being shared is a
 public captions, which `docs/features/shared-transcript-cache.md` already argues is not the
 reader's to keep private.
 
+**The transcript that is shared is the one the reader can see.** The reader reads its own
+store first and the account's copy on the server after, so a copy built from the local
+store alone left the Transcript tab empty for every reader whose device had never fetched
+it — which is any second device, and the web app whenever the overview was made in the
+extension. The share goes through the reader's own query, so the two cannot disagree, and
+the copy is usually already in hand.
+
+It shipped that way because the IWFT backend simulator discarded the transcript a share
+posted and rebuilt the copy from the overview alone. A test against it could not tell a
+share that carried its transcript from one that did not. The simulator now keeps what was
+posted, and `shares.snapshot(token)` is what a test asserts against.
+
 **Tags are shared, and were briefly not.** The first cut of this treated them as filing and
 left them out. They are not: the dialog's own "Kept private" list says reason, topics and
 read state and does not mention them, the reader's own Overview tab prints them, and they
