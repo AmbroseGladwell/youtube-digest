@@ -6,10 +6,10 @@ browser without an account; the reader turns the link off again. The designs are
 the recipient sees), both in the Claude Design project named in
 `docs/features/overview-redesign.md`.
 
-This document is the whole feature. **The API and the reader's half are built**: the table,
-the four routes, the snapshot builder, the public page and its link preview; the ⋯ menu's
-Share…, its dialog and phone sheet, and Settings › Shared links. The read-only reader the
-public page boots into is named in "Not built yet" at the end.
+This document is the whole feature, and all of it is built: the table, the four routes, the
+snapshot builder, the public document and its link preview; the ⋯ menu's Share…, its dialog
+and phone sheet, and Settings › Shared links; and the page the recipient reads, with the
+way in that it offers them.
 
 ## A copy, not a view
 
@@ -31,8 +31,8 @@ would have given for free:
 
 | In | Out |
 |---|---|
-| The whole note: premise, core claim, verdict, key points, How to apply, What it sells, Watch it anyway?, chapters | The capture reason — the reader's own words about why they saved it |
-| The video's title, channel, link, duration, publish date and thumbnail | Topics and tags — the reader's filing |
+| The whole note: premise, core claim, verdict, key points, How to apply, What it sells, Watch it anyway?, chapters, tags | The capture reason — the reader's own words about why they saved it |
+| The video's title, channel, link, duration, publish date and thumbnail | Topics — the reader's filing |
 | The transcript | Read and favourite state, which was never on this record anyway (`docs/prototype/decisions.md`) |
 | The narration: its key, voice, duration and line starts | The reader's name, anywhere on the page or in its head |
 | | The verdict's "similar to" list |
@@ -43,6 +43,13 @@ dialog's own "Shared" column, and the shared page draws the Transcript tab with 
 working. The design is the later decision and it wins. What is being shared is a video's
 public captions, which `docs/features/shared-transcript-cache.md` already argues is not the
 reader's to keep private.
+
+**Tags are shared, and were briefly not.** The first cut of this treated them as filing and
+left them out. They are not: the dialog's own "Kept private" list says reason, topics and
+read state and does not mention them, the reader's own Overview tab prints them, and they
+are written with the note rather than by the reader. A copy without them is not a whole
+overview — `Filing` requires at least three, so such a copy could not even be saved into a
+library, which is how the mistake was found.
 
 **The verdict's `similarTo` is dropped** even though the rest of the verdict is shared. It
 names the titles of the reader's *other* overviews, which the recipient has no business
@@ -258,14 +265,62 @@ re-generated, or edited on another device and pulled down by sync. It is built n
 the comparison belongs with the rest of sharing, and because the day an overview becomes
 editable it must already be right.
 
-## Not built yet
+## The page the recipient reads
 
-The read-only reader the public page boots into, the "Watch Less, with The Overview" aside,
-and the "Save to my overviews" and "Make an overview" paths through Create account — all of
-`OV-30 Shared Page.dc.html`. Until that reader exists, a process serving the built web app
-hands the app a document it has no route for; a process without one serves a plain readable
-document instead, which is what the route tests assert against.
+**It is the reader, in read-only.** The same tabs, the same note, the same transcript with
+its search, the same chapters, the same player bar. None of it is a second implementation,
+which is the whole reason the API writes only the document and the app renders the page.
+
+What it drops is everything that belongs to an owner: the favourite, the ⋯ menu, Mark read,
+the topic line and the capture reason. What it adds is the two things a visitor might want
+— **Save to my overviews** and **Watch on YouTube** — and a head of its own, since there is
+no library behind them to wear the app's chrome.
+
+**The copy is read from the document, not fetched.** `readSharePayload` parses the JSON
+island the API inlined. Anything it cannot read — no element, unreadable JSON, a shape a
+newer server wrote — becomes "this link doesn't go anywhere" rather than a crash, because
+the person holding the link can do nothing about either.
+
+**Two reader components learned to be given a transcript.** `TranscriptPanel` and
+`ChaptersPanel` each fetched their own from the reader's store; both now take an optional
+`held` transcript, which is the copy that travelled with the share. Absent, they behave
+exactly as before.
+
+### Audio without an account
+
+`sharedNarrationApi` presents the copy's own render *as* the narration API the player
+already speaks: `peek` answers with it, nothing can be queued, and the file is the public,
+content-addressed one every other player uses. The player engine is unchanged.
+
+This is design 30f's deliberate departure from OV-40 1k, where a signed-out reader gets the
+pacer: the audio belongs to the shared copy, so the visitor hears it. A copy shared without
+narration gets no API at all, and falls back to the pacer exactly as a signed-out reader
+does.
+
+## The way in
+
+The page is also how new people arrive, so both of its doors lead to Create account and
+**both remember what they were doing**.
+
+- **Save to my overviews** stores the copy itself.
+- **The aside's paste-a-link** stores the link.
+
+The intent lives in `localStorage`, validated on read, because the magic link opens a fresh
+tab and a shape written by an older build must not break the account it is confirming. The
+Create account page reads it and says what confirming will finish (design 30l's stone
+note); `SignInPage` acts on it the moment the session exists, and **forgets it first**, so a
+failure cannot leave one to fire again on the next sign-in.
+
+A saved copy becomes the new reader's own overview with `captureReason: null` and no
+topics: the sharer's reason and filing were never theirs to inherit.
+
+## Not built
+
+A manual check of how the link previews in Messages, Slack and WhatsApp, which wants a
+deployed URL rather than a test.
 
 Design 30e labels the block holding the longer text "Premise" and a shorter closing line
 "In one line", where the build's `overviewNoteLines` maps `inOneLine` to "Premise" and
-`coreClaim` to "Core claim". That disagreement is the read-only reader's to settle.
+`coreClaim` to "Core claim". The shared page renders whatever the reader renders, so the two
+still agree with each other; settling which is right is the note format's question, not
+this feature's.

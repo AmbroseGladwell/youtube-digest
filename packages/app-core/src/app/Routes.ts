@@ -1,4 +1,4 @@
-import { SIGN_IN_PATH, type OverviewId } from "@overview/domain";
+import { SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
@@ -13,8 +13,12 @@ export const Routes = {
   createAccount: () => "/create-account",
   connectExtension: () => "/connect-extension",
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,
+  // The address the API writes into every shared link, so the two cannot drift
+  // (docs/features/sharing.md).
+  sharedOverview: (token: ShareToken | string) => sharePath(token),
 };
 
 export const RouteParams = {
   overviewId: "overviewId",
+  shareToken: "token",
 } as const;

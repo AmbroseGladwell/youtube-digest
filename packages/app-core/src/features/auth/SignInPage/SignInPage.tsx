@@ -4,6 +4,7 @@ import { signInTokenFromHash } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { Routes } from "../../../app/Routes.js";
+import { useSharedPageIntent } from "../../sharedPage/useSharedPageIntent.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { AuthScreen } from "../components/AuthScreen/AuthScreen.js";
 import { LinkCodeCard } from "../components/LinkCodeCard/LinkCodeCard.js";
@@ -23,6 +24,7 @@ export function SignInPage() {
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();
   const signIn = useSignInMutation();
+  const finishSharedPageIntent = useSharedPageIntent();
   const token = signInTokenFromHash(hash);
   const apiUrl = globalThis.location?.origin ?? "";
   const started = useRef<string | null>(null);
@@ -36,12 +38,14 @@ export function SignInPage() {
         onSuccess: (signedIn) => {
           if (signedIn.surface === "web") {
             setConnection({ apiUrl, token: null, email: signedIn.email, firstName: signedIn.firstName });
-            void navigate(Routes.home(), { replace: true });
+            // Whatever the visitor was doing on a shared page before they were asked for an
+            // account decides where they land (docs/features/sharing.md).
+            void finishSharedPageIntent().then((to) => navigate(to, { replace: true }));
           }
         },
       },
     );
-  }, [token, apiUrl, signIn, setConnection, navigate]);
+  }, [token, apiUrl, signIn, setConnection, navigate, finishSharedPageIntent]);
 
   if (token === null) {
     return <RequestLinkFlow intent="signIn" />;
