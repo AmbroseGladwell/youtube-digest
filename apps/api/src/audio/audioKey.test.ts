@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { narrationKey } from "@overview/domain";
 import { AUDIO_KEY_PATTERN, audioKey } from "./audioKey.js";
 
 const LINES = ["Verdict", "Recycled.", "Standard advice."];
@@ -15,4 +16,8 @@ test("another voice, another render version or other words make another key", ()
   assert.notEqual(audioKey(LINES, "bf_emma", 1), key);
   assert.notEqual(audioKey(LINES, "af_heart", 2), key);
   assert.notEqual(audioKey(["Verdict", "Recycled. Standard advice."], "af_heart", 1), key);
+});
+
+test("a client computes the same key from the same words, so it can ask without queueing", async () => {
+  assert.equal(await narrationKey(LINES, "af_heart"), audioKey(LINES, "af_heart"));
 });
