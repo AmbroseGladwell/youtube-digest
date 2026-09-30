@@ -1,7 +1,7 @@
 export const isUrl = (value: string): boolean => {
   try {
-    new URL(value);
-    return true;
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
   } catch {
     return false;
   }

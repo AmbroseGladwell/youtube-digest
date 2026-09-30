@@ -119,6 +119,7 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
     if (inExtension) {
       return (
         <EnterCode
+          key="emailLink"
           from="emailLink"
           email={sent.email}
           sentAt={sent.sentAt}
@@ -148,6 +149,7 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
   if (offersWebAppCode && codeFromWebApp) {
     return (
       <EnterCode
+        key="webApp"
         from="webApp"
         connecting={exchangeCode.isPending}
         refused={codeRefused}

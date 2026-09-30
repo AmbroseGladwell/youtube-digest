@@ -542,7 +542,7 @@ test.describe("connecting the extension from the web app", () => {
     test.expect(backendSimulator.auth.linkCodeServers()).toEqual(["http://localhost:3000"]);
   });
 
-  test("an extension built without a server asks for one beside the code, and refuses one that isn't a URL", async ({
+  test("an extension built without a server asks for one beside the code, and refuses one with no http:// in front", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -551,7 +551,7 @@ test.describe("connecting the extension from the web app", () => {
     await signIn.chooseCodeFromWebApp();
     await signIn.verifyCodeAsksForServer(true);
 
-    await signIn.sendCodeToServer("not a server");
+    await signIn.sendCodeToServer("localhost:3000");
     await signIn.enterCode(SIMULATED_LINK_CODE);
 
     await signIn.verifyServerErrorShown();
