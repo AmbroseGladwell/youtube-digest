@@ -255,9 +255,9 @@ sits **outside the records feed** on purpose:
 
 The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. Since
 the shared cache (`docs/features/shared-transcript-cache.md`), what an account keeps is a
-link, `(account, video)`, to the one shared copy of that video's captions. An upload
-adds to that copy under first-valid-wins, and a read joins through the link, so an
-account may read back a better copy than the one it sent.
+link, `(account, video)`, to the copy it sent, which sits in the shared table beside other
+accounts' copies of the same video. A read joins through the link, so an account reads
+back exactly what it sent.
 
 **Only the transcripts behind a note go up.** The transcript store also holds captions
 fetched only because a video was open in the extension, so they are ready if the reader
@@ -309,8 +309,8 @@ On the client, `SyncStorage.transcriptToPush`
 returns nothing once no note on the device uses the video, so a note deleted before it
 synced sends no transcript at all. What is lost is small: a deleted note's transcript
 never seeds the shared cache, and the next note on that video fetches it again. A note
-deleted after it synced drops only the account's link, and the shared copy stays with no
-account attached apart from its contributor.
+deleted after it synced drops only the account's link. A confirmed shared copy stays, with
+no account on it.
 
 **Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
 the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET

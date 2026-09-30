@@ -50,6 +50,7 @@ test("the tables the migrations create are there to be used", async () => {
       "schema_migrations",
       "sessions",
       "shared_transcripts",
+      "transcript_contributions",
       "voice_samples",
     ],
   );
@@ -65,38 +66,36 @@ const migrationsBefore = async (version: number): Promise<URL> => {
   return pathToFileURL(`${dir}/`);
 };
 
-test("each account's transcripts become one shared copy per video, the best of them, linked back to every account", async () => {
+test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql, await migrationsBefore(8));
   const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
   for (const id of [first, second]) {
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
   }
-  const transcript = (videoId: string, generated: boolean, segments = [{ text: "Said.", startMs: 0, endMs: 1 }]) =>
-    JSON.stringify({ videoId, segments, generated, fetchedAt: "2026-09-01T00:00:00.000Z" });
-  const store = (accountId: string, videoId: string, body: string, storedAt: string) =>
-    sql.query("insert into transcripts (account_id, video_id, stored_at, body) values ($1, $2, $3, $4::jsonb)", [
+  const transcript = (generated: boolean) =>
+    JSON.stringify({ videoId: "shared", segments: [{ text: "Said.", startMs: 0, endMs: 1 }], generated, fetchedAt: "2026-09-01T00:00:00.000Z" });
+  for (const [accountId, generated] of [[first, true], [second, false]] as const) {
+    await sql.query("insert into transcripts (account_id, video_id, stored_at, body) values ($1, 'shared', now(), $2::jsonb)", [
       accountId,
-      videoId,
-      storedAt,
-      body,
+      transcript(generated),
     ]);
-  await store(first, "shared", transcript("shared", true), "2026-09-01T00:00:00.000Z");
-  await store(second, "shared", transcript("shared", false), "2026-09-02T00:00:00.000Z");
-  await store(first, "empty", transcript("empty", false, []), "2026-09-01T00:00:00.000Z");
+  }
 
   await runMigrations(sql);
 
-  const shared = await sql.query<{ video_id: string; contributed_by: string; generated: boolean }>(
-    "select video_id, contributed_by, (body ->> 'generated')::boolean as generated from shared_transcripts",
+  const kept = await sql.query<{ account_id: string; generated: boolean }>(
+    `select a.account_id, (s.body ->> 'generated')::boolean as generated
+     from account_transcripts a join shared_transcripts s using (video_id, words_hash) order by a.account_id`,
   );
-  const links = await sql.query<{ account_id: string; video_id: string }>(
-    "select account_id, video_id from account_transcripts order by account_id",
+  const [counts] = await sql.query<{ confirmed: number; contributions: number }>(
+    `select (select count(*)::int from shared_transcripts where confirmed_at is not null) as confirmed,
+            (select count(*)::int from transcript_contributions) as contributions`,
   );
-  assert.deepEqual(shared, [{ video_id: "shared", contributed_by: second, generated: false }]);
-  assert.deepEqual(links, [
-    { account_id: first, video_id: "shared" },
-    { account_id: second, video_id: "shared" },
+  assert.deepEqual(kept, [
+    { account_id: first, generated: true },
+    { account_id: second, generated: false },
   ]);
+  assert.deepEqual(counts, { confirmed: 0, contributions: 0 });
   await sql.close();
 });

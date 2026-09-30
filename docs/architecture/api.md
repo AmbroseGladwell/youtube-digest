@@ -25,7 +25,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
 | Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
-| One shared transcript per video, read by anyone and added to by accounts; the script that removes a bad one | `migrations/V0008__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
+| Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0008__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
 
 ## Shape
 

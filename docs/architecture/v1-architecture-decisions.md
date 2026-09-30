@@ -31,7 +31,8 @@ naturally paid-only, because free users never talk to one.
 
 **The shared transcript cache turned out not to be one of those things.** Built on
 2026-09-30 (OV-16), it is read by anyone with no session and added to only by signed-in
-accounts, through their own notes. That follows this paragraph's own test: the write is
+accounts, through their own notes. A copy is served only once two accounts have fetched
+the same words. That follows this paragraph's own test: the write is
 the part that touches shared infrastructure, so the write is what needs an identity.
 Reading public captions gates nothing. So free users do now talk to our server, once per
 note, and `BYO_KEY_NOTE` says so. See `docs/features/shared-transcript-cache.md`.

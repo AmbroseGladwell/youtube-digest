@@ -1,8 +1,9 @@
 # The shared transcript cache
 
 The first rung of the ladder in `docs/features/transcript-retrieval.md`. A video's captions
-are the same for every reader, so once any account has stored them, nobody needs to fetch
-them again. A hit costs one row read, and nobody contacts YouTube or Supadata.
+are the same for every reader, so once two accounts have each fetched the same words,
+nobody needs to fetch them again. A hit costs one row read, and nobody contacts YouTube or
+Supadata. So a video's third reader onward benefits, and its first two never do.
 
 Only transcripts are shared. An overview is personal to the reader it was written for
 (`docs/architecture/architecture-options.md`), and nothing about one goes near this.
@@ -68,72 +69,109 @@ Before it is shared, the copy's `video.url` is rewritten to the video's own
 which is about them rather than the video. Each client puts its own url back when it
 reads the copy.
 
-## First valid copy wins
+## Two accounts have to agree
 
-The first copy that passes is kept, and a later upload replaces it only if it is strictly
-better (`outranks`):
+The server can't see YouTube, so it can't check an upload against the real captions. A
+modified client could upload anything for a video nobody has cached yet: spam, a false
+claim, or instructions aimed at the model that writes every later reader's overview.
+Checking a hash of "what the client fetched" wouldn't help, because the client that fakes
+the text would fake the hash too. The only independent evidence the server can get is
+another account fetching the same video itself.
 
-1. written by a person, over machine-heard, then
-2. carrying the video's metadata, over a copy stored before metadata was kept.
+So a copy is served only once **two different accounts** have uploaded the same words.
+The words are compared by `wordsHash`: the segments' text joined, lower-cased, stripped of
+everything but letters and digits, then SHA-256 along with whether a person wrote them.
+Two fetches of one track agree however their captions were cut into segments, and a
+written track and a machine-heard one never agree.
 
-Anything else leaves the held copy alone. So a machine-heard track never overwrites a
-written one, and an account that uploads second can't swap in its own version of a video
-someone else already contributed. Each outcome is logged as `transcriptContributed`:
-`added`, `upgraded`, `kept` or `not-noted`.
+**Why only fetches can confirm a copy.** A reader served from the cache uploads that same
+copy back with their note. That's an echo, not a second opinion, and it's why "serve at
+once and pull it when someone disagrees" can't work: after the first hit, nobody fetches
+independently again. An unconfirmed copy is never served, so every upload that counts
+towards confirming one must have come from that account's own fetch.
 
-The contributing account is recorded on the row (`contributed_by`) and moves with an
-upgrade. It is the only link from the shared table back to an account. It exists so that
-abuse can be cleaned up, and it goes back to null if the account is deleted.
+What this does and doesn't stop:
+
+- **One account can't poison the cache.** Its copy stays unconfirmed however often it
+  sends it: the key is the account and the video, so a second device or a resend counts
+  once.
+- **Two accounts working together can.** Magic-link accounts are cheap, so this raises
+  the bar rather than closing the door. Counting only accounts of some age is the next
+  step if that is ever seen.
+- **A rival copy doesn't displace a confirmed one.** A third account uploading different
+  words starts its own unconfirmed copy beside it. If a written copy and a machine-heard
+  one are both confirmed, the written one is served.
+
+**Unverified: that InnerTube and Supadata give the same words for one track.** Supadata's
+native mode returns YouTube's own track, so they should match, but that hasn't been
+compared on a real video. If they differ, a mixed pair never confirms. That fails safe:
+the copy waits for two fetches from the same kind of source.
 
 **Two readers get the same track.** InnerTube is always asked with `hl: "en"`, and
-`selectCaptionTrack` is deterministic, so one copy per video is the copy either reader
-would have fetched. That rests on nothing but those two facts. A rung that picks a track
-by the reader's language would need the language in the key.
+`selectCaptionTrack` is deterministic, so two readers' fetches can agree at all. A rung
+that picked a track by the reader's language would split them.
 
-## Storage: one copy, and a link per account
+Each upload's outcome is logged as `transcriptContributed`: `pending`, `confirmed`,
+`already-confirmed` or `not-noted`.
 
-`V0008__shared_transcripts.sql` splits what used to be one per-account table:
+## Storage: copies, links and contributions, kept apart
 
-- `shared_transcripts`: one row per video, holding the body, the contributor and when.
-- `account_transcripts` (the old `transcripts`, with no body): a link from an account to
-  a video, which only lasts while one of its notes uses that video.
+`V0008__shared_transcripts.sql` replaces the per-account table with three:
 
-Under this split:
+| Table | One row per | Holds an account? |
+|---|---|---|
+| `shared_transcripts` | video and words hash, so rival copies sit side by side | no |
+| `account_transcripts` (the old `transcripts`, with no body) | account and video, pointing at the copy that account sent | yes, while one of its notes uses the video |
+| `transcript_contributions` | account and video: which words that account fetched | yes, for a year |
 
-- **`GET /api/transcripts/:videoId`** joins through the link, so an account reads the
-  shared copy. That may not be byte-for-byte what it uploaded, but it is the same video's
-  captions, and a better copy if someone contributed one.
-- **Deleting a note** drops only the account's link (`forgetUnnoted`). The shared copy
-  stays, with no account attached apart from its contributor. That's the change
-  `transcript-storage.md` asked for when this cache arrived.
-- **The migration** keeps the best copy of each video already stored, using the same
-  order as `outranks` and then the oldest, credits its uploader, and links every account
-  that had stored one. Rows with no segments were never usable and are dropped, links
-  and all. The migration does not run the other fault checks: those rows predate them,
-  and they were already on the server.
+- **An account reads back its own copy.** `GET /api/transcripts/:videoId` joins through its
+  link, so an account's other devices get exactly what it sent, confirmed or not. Sending
+  again replaces it, as before this cache existed.
+- **Deleting a note** drops only the account's link (`forgetUnnoted`). A confirmed copy
+  stays. An unconfirmed copy that no account links to any more is deleted, because only
+  linked accounts could ever read it. Its contributions stay, so a later matching fetch
+  still confirms it.
+- **Confirmation is kept on the copy.** `confirmed_at` is set once the second account
+  agrees and is never unset. The contributions that confirmed it can then age out without
+  taking the copy out of the cache.
+
+**Who fetched what is kept apart from the transcripts themselves.**
+`transcript_contributions` is the only place an account is tied to a video it no longer
+has a note on. It serves two purposes: counting agreement, and removal when something
+goes wrong. Two rules keep it from becoming a history of what people watched:
+
+- **A year, then gone.** A contribution older than 365 days is deleted, and after that it
+  no longer counts towards confirming anything. Nothing can run a scheduled job yet
+  (`docs/architecture/deploy.md`), so the sweep runs inside every upload. It's one indexed
+  delete.
+- **It outlives the account.** `account_id` has no foreign key, so deleting an account
+  (not built yet) will leave its contributions until the year is up. Once the account row
+  is gone, the id leads to no email. The contributions still count, because the fetches
+  happened, and a copy that account vouched for can still be removed along with
+  everything else it vouched for. The privacy policy the store listing needs should say
+  so.
+
+**The migration keeps what each account had and shares none of it.** Existing rows become
+copies keyed `legacy:<md5 of the body>`, each linked to the account that stored it, with
+no contributions and nothing confirmed. The words hash can't be reproduced in SQL with
+confidence of matching the TypeScript, and an old row isn't evidence of anything anyway.
+So the cache starts empty.
 
 ## Removing one
 
-A wrong or poisoned transcript is found by a reader reporting it, not by the server. The
-server has no way to fetch the captions and compare. Then, in `apps/api`:
+A wrong or poisoned transcript is found by a reader reporting it, not by the server. Then,
+in `apps/api`:
 
 ```
-npm run forget-shared-transcript -- <video-id>                 # that video's copy
-npm run forget-shared-transcript -- <video-id> --contributor   # everything its contributor added
+npm run forget-shared-transcript -- <video-id>                  # every copy of that video
+npm run forget-shared-transcript -- <video-id> --contributors   # and everything its vouchers vouched for
 ```
 
-Removing a shared copy removes every account's link to it (`on delete cascade`). Nothing
-is lost that can't be fetched again. Readers keep their device's own copy, and the next
-upload of that video, from any account, contributes afresh. Each run prints the
-contributor, so it is visible whose contributions were taken.
-
-**Why this is enough for now.** What a poisoner can change is a transcript that other
-readers' overviews are then written from. That is real, but it is bounded: each
-contribution needs a signed-in account with a live note on that video, it only wins where
-nothing was cached before, one command undoes a whole account's contributions, and a
-written track displaces a machine-heard one. Requiring two accounts to agree before a
-copy is served was considered and not built, because the cache would then help nobody
-until a video's second reader arrived.
+Removing copies removes every account's link to them (`on delete cascade`), along with
+the contributions behind them, so the same copy can't confirm again straight away.
+Nothing is lost that can't be fetched again: readers keep their device's own copy, and
+the next upload contributes afresh. Each run prints the accounts that vouched for the
+video's served copy.
 
 ## Logs
 
@@ -142,7 +180,7 @@ The hit rate comes from the server's own logs, since no client analytics exist:
 | Event | Fields | Answers |
 |---|---|---|
 | `sharedTranscriptRead` | `hit` | how often the cache spares a fetch |
-| `transcriptContributed` | `contribution`, `generated` | how often the cache grows, and how often a written track upgrades a machine-heard one |
+| `transcriptContributed` | `contribution`, `generated` | how often copies wait, and how often a second account confirms one |
 | `transcriptRefused` | `fault` | what bad uploads look like |
 | `throttled` | `limit: sharedTranscriptAddress` | whether 300 an hour is ever reached (`docs/architecture/api.md`) |
 
