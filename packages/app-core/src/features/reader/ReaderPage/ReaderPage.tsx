@@ -20,6 +20,10 @@ import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
+import { ShareOverviewDialog } from "../../shares/components/ShareOverviewDialog/ShareOverviewDialog.js";
+import { useShareOverviewMutation } from "../../shares/mutations/useShareOverviewMutation.js";
+import { useStopSharingMutation } from "../../shares/mutations/useStopSharingMutation.js";
+import { useOverviewShare } from "../../shares/useOverviewShare.js";
 import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
@@ -63,6 +67,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [editingTopics, setEditingTopics] = useState(false);
   const [editingReason, setEditingReason] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
     READER_MASTHEAD_HEIGHT_PROPERTY,
@@ -105,6 +110,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const sync = useSync();
+  const overviewShare = useOverviewShare(overview);
+  const shareOverview = useShareOverviewMutation();
+  const stopSharing = useStopSharingMutation();
 
   // Design 2d: the panel's Listen plays straight away and docks the bar; the Plus prompt
   // it used to raise is retired, since audio is open to every account
@@ -218,6 +226,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         onListen={listen}
         onEditingTopicsChange={setEditingTopics}
         onEditReason={editReason}
+        onShare={
+          overviewShare.available
+            ? () => {
+                overviewShare.refresh();
+                setSharing(true);
+              }
+            : null
+        }
         onDelete={() => setConfirmingDelete(true)}
       />
 
@@ -322,6 +338,24 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           title={overview.video.title}
           onDelete={confirmDelete}
           onClose={() => setConfirmingDelete(false)}
+        />
+      )}
+
+      {sharing && (
+        <ShareOverviewDialog
+          share={overviewShare.share}
+          edited={overviewShare.edited}
+          signedIn={sync.connected}
+          busy={shareOverview.isPending || stopSharing.isPending}
+          failed={shareOverview.isError || stopSharing.isError}
+          onCreate={() => shareOverview.mutate({ overview })}
+          onStop={() => {
+            if (overviewShare.share !== null) {
+              stopSharing.mutate({ token: overviewShare.share.token });
+            }
+          }}
+          onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
+          onClose={() => setSharing(false)}
         />
       )}
 

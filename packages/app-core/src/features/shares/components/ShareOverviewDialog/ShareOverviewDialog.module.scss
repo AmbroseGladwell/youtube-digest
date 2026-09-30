@@ -1,0 +1,294 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// The dialog DeleteOverviewDialog draws, widened for the link row: a centred card on a
+// desktop and a bottom sheet on a phone (OV-30 Sharing, 30b–30d).
+$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
+
+.dialog {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: var(--scrim);
+}
+
+.dialog[open] {
+  animation: shareDialogFadeUp var(--motion-arrive) $enter-easing 60ms both;
+}
+
+.dialog[open]::backdrop {
+  animation: shareScrimFade var(--motion-travel) ease both;
+}
+
+@keyframes shareScrimFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shareDialogFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shareSheetTravel {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.panel {
+  width: min(33.75rem, calc(100vw - 2.5rem));
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  background: var(--dialog);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  padding: 1.625rem 1.75rem 1.5rem;
+}
+
+.handle {
+  display: none;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  align-self: center;
+  margin: 0 0 0.25rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.12;
+}
+
+.closeButton {
+  @include controls.surface-pill;
+  @include controls.circle(2.25rem);
+}
+
+.body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.failure {
+  @include controls.section-label;
+
+  margin: 0;
+  color: var(--accent);
+}
+
+.status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.liveDot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: var(--radius-badge);
+  background: var(--brand);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-panel);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.cardLabel {
+  @include controls.section-label;
+
+  margin: 0;
+}
+
+.cardList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// On the surface rather than the card, because the panel itself is the card: a white
+// field on a white dialog has no edge in the light theme.
+.linkField {
+  @include controls.field-pill;
+
+  min-width: 0;
+  flex: 1;
+  background: var(--surface);
+}
+
+.linkField input {
+  @include controls.field-input;
+}
+
+.editedNotice {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  border-radius: var(--radius-panel);
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.875rem;
+}
+
+.editedNotice p {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+}
+
+.noticeAction {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  flex: none;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.footSplit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.quietAction {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.secondaryAction {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.primaryAction {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+// Quiet until the pointer arrives, and in the accent rather than the ink: stopping is
+// destructive but it is not the thing the reader came here to do (design 30c).
+.dangerAction {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+
+  color: var(--accent);
+}
+
+@media (max-width: 47.9375rem) {
+  .dialog {
+    margin: auto 0 0;
+    width: 100%;
+  }
+
+  .dialog[open] {
+    animation-name: shareSheetTravel;
+  }
+
+  .panel {
+    width: 100%;
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    padding: 0.75rem 1.25rem 1.25rem;
+  }
+
+  .handle {
+    display: block;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  // Design 30d: the sheet stacks its actions, Share… above Copy link, with the link
+  // itself readable above both.
+  .linkRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editedNotice {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .foot,
+  .footSplit {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .quietAction,
+  .secondaryAction,
+  .primaryAction,
+  .dangerAction,
+  .noticeAction {
+    min-height: 3rem;
+  }
+}

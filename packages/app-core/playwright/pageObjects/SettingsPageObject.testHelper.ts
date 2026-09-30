@@ -9,6 +9,7 @@ import { settingsSectionListTestIds } from "../../src/features/settings/componen
 import { PageObject } from "./PageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
+import { SharedLinksPanelPageObject } from "./SharedLinksPanelPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
 
 export class SettingsPageObject extends PageObject {
@@ -22,6 +23,10 @@ export class SettingsPageObject extends PageObject {
 
   get voicePicker(): NarrationVoicePickerPageObject {
     return new NarrationVoicePickerPageObject(this.testContext);
+  }
+
+  get sharedLinks(): SharedLinksPanelPageObject {
+    return new SharedLinksPanelPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<SettingsPageObject> =>

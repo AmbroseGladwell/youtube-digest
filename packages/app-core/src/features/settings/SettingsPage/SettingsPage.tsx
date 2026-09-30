@@ -5,6 +5,10 @@ import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js"
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
+import {
+  SHARED_LINKS_STANDFIRST,
+  SharedLinksPanel,
+} from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
@@ -27,6 +31,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   account: "Who is signed in, and whether this device is in step.",
   voice: NARRATION_VOICE_STANDFIRST,
   keys: BYO_KEY_NOTE,
+  shared: SHARED_LINKS_STANDFIRST,
   plan: null,
   about: null,
 };
@@ -39,6 +44,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <NarrationVoicePicker scrollToChosen labelledBy={settingsSectionHeadingId("voice")} />;
     case "keys":
       return <ApiKeysSection />;
+    case "shared":
+      return <SharedLinksPanel />;
     case "plan":
       return <PlusPlanPanel />;
     case "about":

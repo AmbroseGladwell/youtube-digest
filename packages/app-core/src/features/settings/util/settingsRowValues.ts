@@ -35,6 +35,13 @@ export function keysRowValue(apiKeys: ApiKeys, model: AnthropicModel): string {
   return modelLabel === undefined ? key : `${key} · ${modelLabel}`;
 }
 
+// "3 shared" or "None": the row says how many links are live without opening the section
+// (docs/features/sharing.md).
+export function sharedLinksRowValue(count: number): string {
+  if (count === 0) return "None";
+  return count === 1 ? "1 shared" : `${count} shared`;
+}
+
 export function aboutRowValue(build: AppBuild): string {
   return `Version ${build.version}`;
 }

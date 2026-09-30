@@ -5,6 +5,9 @@ import {
   DEFAULT_NARRATION_VOICE,
   NarrationVoice,
   narrationKeySource,
+  shareContentSource,
+  shareSnapshot,
+  ShareToken,
   spokenScript,
   type NarrationRender,
   type AuthSurface,
@@ -13,6 +16,7 @@ import {
   type OverviewId,
   type OverviewState,
   type RecordChange,
+  type Share,
   type StoredTranscript,
   type Topic,
   type UnreadableRecord,
@@ -87,6 +91,8 @@ export class BackendSimulator {
     Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
   );
   #callCounts = new Map<EndpointKey, number>();
+  #shares = new Map<string, Share>();
+  #nextShareToken = 0;
   #stalled: Array<{
     endpoint: EndpointKey;
     route: Route;
@@ -345,6 +351,36 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/shares", (route) =>
+      route.request().method() === "POST"
+        ? this.#respond(route, EndpointKey.SHARE_CREATE, {
+            onDefault: () => this.#putShare(route.request().postDataJSON() as { overview: Overview }),
+            onError: () => ({
+              status: 503,
+              body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+            }),
+          })
+        : this.#respond(route, EndpointKey.SHARE_LIST, {
+            onDefault: () => ({ status: 200, body: { shares: [...this.#shares.values()] } }),
+            onError: unauthenticated,
+          }),
+    );
+
+    await this.#page.route("**/api/shares/*", (route) =>
+      this.#respond(route, EndpointKey.SHARE_STOP, {
+        onDefault: () => {
+          const token = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          return this.#shares.delete(token)
+            ? { status: 204, body: undefined }
+            : { status: 404, body: { error: { code: "not_found", message: "Simulated: no live link" } } };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
     await this.#page.route("**/api/shared-transcripts/*", (route) =>
       this.#respond(route, EndpointKey.SHARED_TRANSCRIPT, {
         onDefault: () => {
@@ -475,6 +511,27 @@ export class BackendSimulator {
     );
   };
 
+  // The server's own job, done here so an IWFT sees what a reader would: the copy is built
+  // from the overview that was posted, and a link keeps its token, its share date and its
+  // view count when the copy behind it is replaced (docs/features/sharing.md).
+  #putShare = ({ overview }: { overview: Overview }): { status: number; body: unknown } => {
+    const existing = [...this.#shares.values()].find((share) => share.overviewId === overview.id);
+    const token = existing?.token ?? `iwftShareToken${this.#nextShareToken++}`.slice(0, 16).padEnd(16, "0");
+    const { note } = shareSnapshot({ overview, transcript: null, narration: null });
+    const share: Share = {
+      token: ShareToken.parse(token),
+      url: `https://overview.test/s/${token}`,
+      overviewId: overview.id,
+      title: overview.video.title,
+      sharedAt: existing?.sharedAt ?? "2026-09-30T11:00:00.000Z",
+      updatedAt: "2026-09-30T11:00:00.000Z",
+      views: existing?.views ?? 0,
+      contentHash: createHash("sha256").update(shareContentSource(note)).digest("hex"),
+    };
+    this.#shares.set(token, share);
+    return { status: existing === undefined ? 201 : 200, body: share };
+  };
+
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
@@ -533,6 +590,18 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
+  };
+
+  // The links the reader has given out, as the server holds them (docs/features/sharing.md).
+  shares = {
+    live: (): Share[] => [...this.#shares.values()],
+    // The copy behind the link was made from an earlier note, which is what the stored
+    // hash disagreeing with the reader's own means (docs/features/sharing.md).
+    simulateCopyIsStale: (): void => {
+      for (const [token, share] of this.#shares) {
+        this.#shares.set(token, { ...share, contentHash: "stale".padEnd(64, "0") });
+      }
+    },
   };
 
   // Sign-in as the server sees it: what was asked for, what was presented, and which

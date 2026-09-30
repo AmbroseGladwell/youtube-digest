@@ -6,10 +6,10 @@ browser without an account; the reader turns the link off again. The designs are
 the recipient sees), both in the Claude Design project named in
 `docs/features/overview-redesign.md`.
 
-This document is the whole feature. **The API slice is built**: the table, the four routes,
-the snapshot builder, the public page and its link preview. The reader's dialog, Settings ›
-Shared links, and the read-only reader the page boots into are named in "Not built in this
-slice" at the end.
+This document is the whole feature. **The API and the reader's half are built**: the table,
+the four routes, the snapshot builder, the public page and its link preview; the ⋯ menu's
+Share…, its dialog and phone sheet, and Settings › Shared links. The read-only reader the
+public page boots into is named in "Not built yet" at the end.
 
 ## A copy, not a view
 
@@ -201,17 +201,71 @@ be the wrong thing to charge for.
 Settings, and never on a timer the reader did not set. An expiry date would have a place in
 the dialog's status line and in the Shared links list if it is ever wanted.
 
-## Not built in this slice
+## Making and managing a link
 
-The reader's ⋯ menu item and its dialog, the phone share sheet, and Settings › Shared links
-— all of `OV-30 Sharing.dc.html` above the API. The read-only reader the page boots into,
-the "Watch Less, with The Overview" aside, and the "Save to my overviews" and "Make an
-overview" paths through Create account — all of `OV-30 Shared Page.dc.html`. Until that
-reader exists, a process serving the built web app hands the app a document it has no route
-for; a process without one serves a plain readable document instead, which is what the
-route tests assert against.
+**Share… sits in the ⋯ menu**, set apart from the editing items above it, and the menu's
+existing Copy link becomes **Copy YouTube link** so the two links cannot be mistaken for
+each other once a share exists (design 30a).
+
+**The item is absent without an account**, rather than present and refusing. Everything
+sharing offers reads `ShareApiContext`, which is null in a shell with no session, and hides
+itself — the same rule as narration and sync. Signed out but able to sign in, the dialog
+says why an account is needed and offers the way to one (30b·2).
+
+**The dialog has one shape and five states** (30b, 30c, 30c·2, 30c·3, 30c·4). Before a link
+exists it lists what is shared and what is kept private, so the reader reads that before
+they decide rather than after. Once it exists it shows when it was shared, how many times
+it has been opened, the link itself, and the two things they might now do.
+
+**It is a bottom sheet on a phone** through the same CSS the delete dialog uses, and
+**Share… hands the link to `navigator.share`** where that exists, with Copy link beside it;
+where it does not, Copy link takes the primary slot and Share… is not drawn (30d).
+Dismissing the system sheet is not a failure and is swallowed.
+
+**Copied is the button's own label for two seconds**, and no toast: the reader is looking
+at the button they pressed.
+
+**The list is never served stale.** The view count and whether the copy is still current
+are the two things the dialog is opened to find out, so the query's `staleTime` is zero and
+opening the dialog asks again.
+
+**Stopping asks first**, and stopping is optimistic — the reader has already decided, so
+the row goes at once and comes back only if the server refuses.
+
+## Settings › Shared links
+
+Every live link in one list, with its title, when it was shared, how often it has been
+opened, and a badge when the copy behind it is no longer the note this device holds
+(30h). Stopping from here asks **inline, replacing the row**, the way revoking an
+assistant's connection does, rather than raising a dialog over a list (30h·2). Nothing
+shared says so plainly (30h·3), and on a phone each row becomes a card with its actions
+under it at a full tap target (30h·4).
+
+**The section is absent without an account**, and its row reads "3 shared" or "None".
+
+The design puts it after Connections; Connections is not built in Settings yet, so it sits
+after API keys until it is.
+
+## What can actually make a copy stale today
+
+Nothing in the reader edits a field that is shared. The three things a reader can change
+about an overview — the capture reason, its topics, and read state — are exactly the three
+a shared copy leaves out, and an IWFT holds that line: editing the reason does **not** say
+the link has gone stale.
+
+So the notice is reached today only by a change arriving from somewhere else: a record
+re-generated, or edited on another device and pulled down by sync. It is built now because
+the comparison belongs with the rest of sharing, and because the day an overview becomes
+editable it must already be right.
+
+## Not built yet
+
+The read-only reader the public page boots into, the "Watch Less, with The Overview" aside,
+and the "Save to my overviews" and "Make an overview" paths through Create account — all of
+`OV-30 Shared Page.dc.html`. Until that reader exists, a process serving the built web app
+hands the app a document it has no route for; a process without one serves a plain readable
+document instead, which is what the route tests assert against.
 
 Design 30e labels the block holding the longer text "Premise" and a shorter closing line
 "In one line", where the build's `overviewNoteLines` maps `inOneLine` to "Premise" and
-`coreClaim` to "Core claim". That disagreement is the read-only reader's to settle, not
-this slice's.
+`coreClaim` to "Core claim". That disagreement is the read-only reader's to settle.

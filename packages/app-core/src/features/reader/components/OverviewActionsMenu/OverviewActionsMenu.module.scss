@@ -68,6 +68,17 @@
   color: var(--accent);
 }
 
+// Design 30a: Share… is set apart from the editing items above it and sits on the
+// surface, so the menu's one outward-facing action reads as its own thing.
+.rule {
+  display: block;
+  height: 0.375rem;
+}
+
+.itemStandout {
+  background: var(--surface);
+}
+
 .count {
   font-size: 0.75rem;
   color: var(--muted);
