@@ -17,7 +17,9 @@ def main() -> None:
 
     idle_exit = IdleExit(float(os.environ.get("IDLE_EXIT_SECONDS", "15")), stop)
     app = create_app(synthesiser, idle_exit)
-    server = uvicorn.Server(uvicorn.Config(app, host="::", port=int(os.environ.get("PORT", "8000"))))
+    # Fly's proxy connects over IPv4, and asyncio makes a "::" socket IPv6-only
+    # (docs/architecture/deploy.md, "The TTS service").
+    server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000"))))
     server.run()
 
 
