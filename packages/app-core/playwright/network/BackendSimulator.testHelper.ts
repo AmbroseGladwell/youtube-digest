@@ -8,6 +8,8 @@ import {
   spokenScript,
   type NarrationRender,
   type AuthSurface,
+  type ConnectionRequest,
+  type Plan,
   type MagicLinkRequest,
   type Overview,
   type OverviewId,
@@ -36,6 +38,9 @@ import type {} from "./iwftWindow.testHelper.js";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
+
+// Where a simulated assistant is sent back to once the reader has answered.
+export const SIMULATED_ASSISTANT_CALLBACK = "https://assistant.test/callback";
 
 // Every line of simulated narration lasts this long, so a test can say where a line starts.
 export const SIMULATED_SECONDS_PER_LINE = 2;
@@ -103,6 +108,9 @@ export class BackendSimulator {
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
   #sessionHasEnded = false;
+  #accountPlan: Plan = "free";
+  #connectionRequest: ConnectionRequest | null = null;
+  #decisions: Array<{ requestId: string; approve: boolean }> = [];
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
   #narrationPriorities: string[] = [];
@@ -311,9 +319,12 @@ export class BackendSimulator {
               email: SIMULATED_EMAIL,
               firstName: this.#accountFirstName,
               expiresAt,
+              plan: this.#accountPlan,
             }),
           }),
     );
+
+    await this.#handleConnectionNetworking();
 
     await this.#page.route("**/api/handshake", (route) =>
       this.#respond(route, EndpointKey.SYNC_HANDSHAKE, {
@@ -475,6 +486,49 @@ export class BackendSimulator {
     );
   };
 
+  #handleConnectionNetworking = async (): Promise<void> => {
+    const notFound = () => ({
+      status: 404,
+      body: { error: { code: "not_found", message: "Simulated: this request has expired or was already answered" } },
+    });
+    const requestIdOf = (route: Route) => new URL(route.request().url()).pathname.split("/")[4] ?? "";
+    const pending = (requestId: string) =>
+      this.#connectionRequest !== null && this.#connectionRequest.id === requestId ? this.#connectionRequest : null;
+
+    await this.#page.route("**/api/oauth/requests/*", (route) => {
+      const found = pending(requestIdOf(route));
+      return this.#respond(route, EndpointKey.CONNECTION_REQUEST, {
+        onDefault: () => (found === null ? notFound() : { status: 200, body: found }),
+        onError: notFound,
+      });
+    });
+
+    await this.#page.route("**/api/oauth/requests/*/decision", (route) => {
+      const requestId = requestIdOf(route);
+      const { approve } = route.request().postDataJSON() as { approve: boolean };
+      return this.#respond(route, EndpointKey.CONNECTION_DECISION, {
+        onDefault: () => {
+          if (pending(requestId) === null) return notFound();
+          if (approve && this.#accountPlan !== "plus") {
+            return { status: 403, body: { error: { code: "plan_required", message: "Simulated: needs Plus" } } };
+          }
+          this.#decisions.push({ requestId, approve });
+          this.#connectionRequest = null;
+          const answer = approve ? "code=simulated-code" : "error=access_denied";
+          return { status: 200, body: { redirectTo: `${SIMULATED_ASSISTANT_CALLBACK}?${answer}&state=s` } };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      });
+    });
+
+    await this.#page.route(`${SIMULATED_ASSISTANT_CALLBACK}**`, (route) =>
+      route.fulfill({ status: 200, contentType: "text/html", body: "<title>Back at the assistant</title>" }),
+    );
+  };
+
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
@@ -547,6 +601,9 @@ export class BackendSimulator {
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
     },
+    accountIsOn: (plan: Plan): void => {
+      this.#accountPlan = plan;
+    },
     sessionHasEnded: (): void => {
       this.#sessionHasEnded = true;
       this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
@@ -591,6 +648,14 @@ export class BackendSimulator {
     },
     requestCount: (): number => this.#narrationPriorities.length,
     requestedPriorities: (): string[] => [...this.#narrationPriorities],
+  };
+
+  // An assistant waiting on the reader's answer (docs/features/mcp-connector.md).
+  connections = {
+    seedRequest: (request: ConnectionRequest): void => {
+      this.#connectionRequest = request;
+    },
+    decisions: (): Array<{ requestId: string; approve: boolean }> => [...this.#decisions],
   };
 
   transcripts = {

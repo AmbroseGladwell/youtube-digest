@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { signInTokenFromHash } from "@overview/domain";
+import { signInReturnFromSearch, signInTokenFromHash } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
+import type { ConsentPageLocationState } from "../../connections/ConsentPage/ConsentPage.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
@@ -19,7 +20,7 @@ import { signInPageTestIds } from "./SignInPageTestIds.js";
 // the library; an extension link shows the code and signs nothing in here
 // (docs/features/sign-in.md).
 export function SignInPage() {
-  const { hash } = useLocation();
+  const { hash, search } = useLocation();
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();
   const signIn = useSignInMutation();
@@ -36,12 +37,14 @@ export function SignInPage() {
         onSuccess: (signedIn) => {
           if (signedIn.surface === "web") {
             setConnection({ apiUrl, token: null, email: signedIn.email, firstName: signedIn.firstName });
-            void navigate(Routes.home(), { replace: true });
+            const returnTo = signInReturnFromSearch(search);
+            const state: ConsentPageLocationState = { fromSignInLink: true };
+            void navigate(returnTo ?? Routes.home(), returnTo === null ? { replace: true } : { replace: true, state });
           }
         },
       },
     );
-  }, [token, apiUrl, signIn, setConnection, navigate]);
+  }, [token, search, apiUrl, signIn, setConnection, navigate]);
 
   if (token === null) {
     return <RequestLinkFlow intent="signIn" />;

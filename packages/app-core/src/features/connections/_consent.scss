@@ -1,0 +1,63 @@
+@use "../../theme/controls.scss" as controls;
+
+// The pieces the consent screen is built from (design 58).
+
+@mixin card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 1px 2px rgba(20, 20, 20, 0.06);
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & {
+      box-shadow: none;
+    }
+  }
+
+  :root[data-theme="dark"] & {
+    box-shadow: none;
+  }
+}
+
+@mixin tint-card {
+  @include card;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+@mixin label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+@mixin note {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+@mixin actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+@mixin primary {
+  @include controls.action-pill;
+  padding: 0.75rem 1.375rem;
+  font-size: 0.875rem;
+}
+
+@mixin secondary {
+  @include controls.surface-pill;
+  padding: 0.75rem 1.375rem;
+  font-size: 0.875rem;
+}

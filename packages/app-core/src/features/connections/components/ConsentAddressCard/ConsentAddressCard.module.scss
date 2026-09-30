@@ -1,0 +1,48 @@
+@use "../../consent" as consent;
+
+.root {
+  @include consent.card;
+}
+
+.address {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.badge {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.lead {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.host {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  @include consent.note;
+}

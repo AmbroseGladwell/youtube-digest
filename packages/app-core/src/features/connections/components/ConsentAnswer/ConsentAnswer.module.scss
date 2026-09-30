@@ -1,0 +1,96 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../consent" as consent;
+
+.card {
+  @include consent.card;
+}
+
+.label {
+  @include consent.label;
+}
+
+.permissions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.permission {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.granted,
+.withheld {
+  padding-top: 1px;
+}
+
+.granted {
+  color: var(--ink);
+}
+
+.withheld {
+  color: var(--muted);
+}
+
+.footnote {
+  @include consent.note;
+  font-size: 0.78125rem;
+}
+
+.actions {
+  @include consent.actions;
+}
+
+.approve {
+  @include consent.primary;
+
+  &:disabled {
+    opacity: 1;
+    cursor: default;
+  }
+}
+
+.decline {
+  @include consent.secondary;
+}
+
+.dimmed:disabled {
+  opacity: 0.45;
+}
+
+.approve:disabled:not(.dimmed),
+.decline:disabled:not(.dimmed) {
+  opacity: 1;
+  cursor: default;
+}
+
+.spinner {
+  display: inline-flex;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

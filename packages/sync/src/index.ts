@@ -11,3 +11,5 @@ export * from "./NarrationApi.js";
 export * from "./fetchNarrationApi.js";
 export * from "./SharedTranscriptApi.js";
 export * from "./fetchSharedTranscriptApi.js";
+export * from "./ConnectionsApi.js";
+export * from "./fetchConnectionsApi.js";
