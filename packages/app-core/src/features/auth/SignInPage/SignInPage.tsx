@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { signInTokenFromHash } from "@overview/domain";
+import { signInReturnFromSearch, signInTokenFromHash } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
+import type { ConsentPageLocationState } from "../../connections/ConsentPage/ConsentPage.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSharedPageIntent } from "../../sharedPage/useSharedPageIntent.js";
@@ -20,7 +21,7 @@ import { signInPageTestIds } from "./SignInPageTestIds.js";
 // the library; an extension link shows the code and signs nothing in here
 // (docs/features/sign-in.md).
 export function SignInPage() {
-  const { hash } = useLocation();
+  const { hash, search } = useLocation();
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();
   const signIn = useSignInMutation();
@@ -38,22 +39,29 @@ export function SignInPage() {
         onSuccess: (signedIn) => {
           if (signedIn.surface === "web") {
             setConnection({ apiUrl, token: null, email: signedIn.email, firstName: signedIn.firstName });
-            // Whatever the visitor was doing on a shared page before they were asked for an
-            // account decides where they land (docs/features/sharing.md).
-            void finishSharedPageIntent().then((to) => navigate(to, { replace: true }));
+            const returnTo = signInReturnFromSearch(search);
+            const state: ConsentPageLocationState = { fromSignInLink: true };
+            // Whatever the visitor was doing on a shared page is finished either way; a
+            // link that names where to come back to still decides where they land
+            // (docs/features/sharing.md, docs/features/mcp-connector.md).
+            void finishSharedPageIntent().then((afterIntent) =>
+              returnTo === null
+                ? navigate(afterIntent, { replace: true })
+                : navigate(returnTo, { replace: true, state }),
+            );
           }
         },
       },
     );
-  }, [token, apiUrl, signIn, setConnection, navigate, finishSharedPageIntent]);
+  }, [token, search, apiUrl, signIn, setConnection, navigate, finishSharedPageIntent]);
 
   if (token === null) {
-    return <RequestLinkFlow intent="signIn" />;
+    return <RequestLinkFlow intent="signIn" returnTo={signInReturnFromSearch(search)} />;
   }
 
   if (signIn.isError) {
     if (isSyncRequestError(signIn.error) && signIn.error.code === "link_invalid") {
-      return <RequestLinkFlow intent="signIn" expired />;
+      return <RequestLinkFlow intent="signIn" expired returnTo={signInReturnFromSearch(search)} />;
     }
     return (
       <ErrorState

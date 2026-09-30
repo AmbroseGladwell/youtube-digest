@@ -13,3 +13,5 @@ export * from "./ShareApi.js";
 export * from "./fetchShareApi.js";
 export * from "./SharedTranscriptApi.js";
 export * from "./fetchSharedTranscriptApi.js";
+export * from "./ConnectionsApi.js";
+export * from "./fetchConnectionsApi.js";

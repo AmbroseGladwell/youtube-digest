@@ -248,10 +248,8 @@ assistant's connection does, rather than raising a dialog over a list (30h·2). 
 shared says so plainly (30h·3), and on a phone each row becomes a card with its actions
 under it at a full tap target (30h·4).
 
-**The section is absent without an account**, and its row reads "3 shared" or "None".
-
-The design puts it after Connections; Connections is not built in Settings yet, so it sits
-after API keys until it is.
+**The section is absent without an account**, and its row reads "3 shared" or "None". It
+sits after Connections, where the design puts it.
 
 ## What can actually make a copy stale today
 

@@ -12,6 +12,7 @@ import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
 import { IwftAppRoot } from "./IwftAppRoot.testHelper.js";
+import { ConsentPageObject } from "../pageObjects/ConsentPageObject.testHelper.js";
 import { CapturePageObject } from "../pageObjects/CapturePageObject.testHelper.js";
 import { ErrorStatePageObject } from "../pageObjects/ErrorStatePageObject.testHelper.js";
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
@@ -37,6 +38,7 @@ export interface LaunchOptions {
   build?: AppBuild;
   activeVideoUrl?: string | null;
   playback?: PlaybackPosition | null;
+  // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
   runBridge?: boolean;
@@ -78,17 +80,12 @@ export class Launcher {
     });
 
   private mountApp = async (options: LaunchOptions): Promise<void> => {
+    if (options.plan !== undefined) this.backendSimulator.auth.accountIsOn(options.plan);
     await this.backendSimulator.handleNetworking();
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {
         ...this.backendSimulator.buildHooksConfig(),
-        seedSettings:
-          options.plan === undefined && options.narrationVoice === undefined
-            ? undefined
-            : {
-                ...(options.plan === undefined ? {} : { plan: options.plan }),
-                ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
-              },
+        seedSettings: options.narrationVoice === undefined ? undefined : { narrationVoice: options.narrationVoice },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,
@@ -156,17 +153,29 @@ export class Launcher {
 
   // Opening the link from the email: the sign-in path with the token in the hash, or with
   // no token at all (docs/features/sign-in.md).
-  openSignInLink = (token: string | null): Promise<void> =>
+  openSignInLink = (token: string | null, returnTo: string | null = null): Promise<void> =>
     test.step(`Launcher.openSignInLink ${token ?? "without a token"}`, () =>
       this.page.evaluate(
-        ({ path, hash }) => window.__iwftRouter__.navigate({ pathname: path, hash }),
-        { path: Routes.signIn(), hash: token === null ? "" : `#token=${encodeURIComponent(token)}` },
+        ({ path, search, hash }) => window.__iwftRouter__.navigate({ pathname: path, search, hash }),
+        {
+          path: Routes.signIn(),
+          search: returnTo === null ? "" : `?return=${encodeURIComponent(returnTo)}`,
+          hash: token === null ? "" : `#token=${encodeURIComponent(token)}`,
+        },
       ));
+
+  // Arriving from an assistant: it sends the reader's browser to the consent screen.
+  openConsent = (requestId: string): Promise<void> =>
+    this.openPage(Routes.connect(requestId));
 
   // Going to a page by its address, the way a typed or bookmarked URL arrives.
   openPage = (path: string): Promise<void> =>
     test.step(`Launcher.openPage ${path}`, () =>
       this.page.evaluate((pathname) => window.__iwftRouter__.navigate(pathname), path));
+
+  get consentPage(): ConsentPageObject {
+    return new ConsentPageObject(this.testContext);
+  }
 
   get signInPage(): SignInPageObject {
     return new SignInPageObject(this.testContext);

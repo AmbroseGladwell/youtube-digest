@@ -1,0 +1,189 @@
+@use "../../auth/auth" as auth;
+@use "../consent" as consent;
+
+.root {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 27.5rem) minmax(0, 28.75rem);
+  gap: 4rem;
+  align-items: start;
+  padding: 2.75rem 4rem 2.5rem 7.5rem;
+}
+
+.question,
+.answer {
+  display: flex;
+  flex-direction: column;
+}
+
+.question {
+  gap: 1.125rem;
+  padding-top: 0.5rem;
+}
+
+.answer {
+  gap: 1rem;
+}
+
+.kicker {
+  @include consent.label;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 3rem;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.checkEmailHeading {
+  font-size: 3.25rem;
+}
+
+.sub {
+  margin: 0;
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink);
+  text-wrap: pretty;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.signedInAs {
+  @include consent.note;
+  font-size: 0.8125rem;
+}
+
+.email {
+  color: var(--ink);
+}
+
+.notYou {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--ink);
+  }
+}
+
+.mailBadge {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actions {
+  @include consent.actions;
+}
+
+.secondary {
+  @include auth.secondary;
+}
+
+.waiting {
+  @include consent.card;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.waitingTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.waitingMeta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.waitingHost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--ink);
+}
+
+.planPending {
+  @include consent.card;
+  min-height: 12rem;
+}
+
+.error {
+  @include auth.field-error;
+}
+
+.retry {
+  @include auth.quiet;
+  text-decoration: underline;
+}
+
+@media (max-width: 74.9375rem) {
+  .root {
+    padding: 2.5rem 2.5rem 3rem;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.875rem 1.25rem 1.5rem;
+  }
+
+  .question,
+  .answer {
+    display: contents;
+  }
+
+  .heading {
+    font-size: 2rem;
+  }
+
+  .checkEmailHeading {
+    font-size: 2.125rem;
+  }
+}

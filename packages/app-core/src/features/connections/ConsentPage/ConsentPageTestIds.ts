@@ -1,0 +1,16 @@
+export const consentPageTestIds = {
+  root: "consent-page",
+  loading: "consent-page-loading",
+  kicker: "consent-page-kicker",
+  heading: "consent-page-heading",
+  sub: "consent-page-sub",
+  signedInAs: "consent-page-signed-in-as",
+  notYouButton: "consent-page-not-you",
+  checkEmail: "consent-page-check-email",
+  checkEmailAddress: "consent-page-check-email-address",
+  differentEmailButton: "consent-page-different-email",
+  waiting: "consent-page-waiting",
+  decisionError: "consent-page-decision-error",
+  sessionError: "consent-page-session-error",
+  waitingOpenFor: "consent-page-waiting-open-for",
+};

@@ -1,9 +1,10 @@
 import { VideoId } from "@overview/domain";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { PLUS_FEATURES } from "../../../src/features/plus/plusFeatures.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
@@ -33,7 +34,12 @@ test("Settings names the plan, lists what Plus adds, and admits there is nothing
 });
 
 test("on Plus, Settings states the plan rather than pitching it", async ({ launcher }) => {
-  await launcher.launchPanel({ ...panel, plan: "plus" });
+  await launcher.launchPanel({
+    ...panel,
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+    plan: "plus",
+  });
   const settings = await (await launcher.appShell.openSettings()).openSection("plan");
 
   await settings.verifyPlanReads("Plus");
@@ -123,4 +129,28 @@ test("the web reader is untouched by any of it: the player is always there, and 
 
   await reader.verifyPlayerIsDocked(true);
   await reader.verifySavedLocallyNoteIsShown(false);
+});
+
+test("a plan the server couldn't be asked for is said as unknown, not as Free, and can be asked again", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.simulateEndpointError(EndpointKey.SESSION_READ);
+  await launcher.launch({
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+    plan: "plus",
+  });
+  const settings = await launcher.appShell.openSettings();
+  await settings.verifyRowReads("plan", "Couldn't check");
+  await settings.verifyRowReads("connections", "Couldn't check");
+  await settings.openSection("plan");
+  await settings.verifyPlanReads("Couldn't check your plan");
+  await settings.verifyOffersPlus(false);
+
+  backendSimulator.simulateEndpointDefault(EndpointKey.SESSION_READ);
+  await settings.recheckPlan();
+
+  await settings.verifyPlanReads("Plus");
+  await settings.verifyRowReads("plan", "Plus");
 });

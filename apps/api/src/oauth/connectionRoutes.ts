@@ -16,12 +16,14 @@ export interface ConnectionRoutesOptions {
   urls: OAuthUrls;
 }
 
+const PUBLIC = { config: { public: true } };
+
 const notPending = () => new ApiError("not_found", "This request has expired or was already answered");
 
-// The reader's half of connecting an assistant: the consent screen and Settings, on the
-// reader's own session (docs/features/mcp-connector.md).
+// The reader's half of connecting an assistant: the consent screen and Settings. Everything
+// but reading a request is on the reader's own session (docs/features/mcp-connector.md).
 export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: ConnectionRoutesOptions): void {
-  app.get<{ Params: { id: string } }>("/oauth/requests/:id", async (request) => {
+  app.get<{ Params: { id: string } }>("/oauth/requests/:id", PUBLIC, async (request) => {
     const pending = await findPendingAuthorization(sql, request.params.id, clock());
     if (pending === null) {
       throw notPending();
@@ -30,7 +32,6 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
       id: pending.id,
       clientName: pending.clientName,
       redirectHost: new URL(pending.redirectUri).host,
-      plan: await accountPlan(sql, request.session!.accountId),
       expiresAt: pending.expiresAt,
     };
     return connectionRequest;

@@ -27,12 +27,15 @@ import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 export interface RequestLinkFlowProps {
   intent: AuthIntent;
   expired?: boolean;
+  // Where a web link should land once it has signed in: a consent screen whose link
+  // expired is asked for again without losing the request (docs/features/sign-in.md).
+  returnTo?: string | null;
 }
 
 // Asking for a link, then waiting for it: design 9a–9e and 9h on the web, 10b–10e in the
 // extension, where the wait is for a code and outlives the panel being closed
 // (docs/features/sign-in.md).
-export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProps) {
+export function RequestLinkFlow({ intent, expired = false, returnTo = null }: RequestLinkFlowProps) {
   const surface = useSurface();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -79,7 +82,13 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
     requestLink.mutate(
       {
         apiUrl,
-        request: { email, surface, intent: askedIntent, ...(firstName === null ? {} : { firstName }) },
+        request: {
+          email,
+          surface,
+          intent: askedIntent,
+          ...(firstName === null ? {} : { firstName }),
+          ...(returnTo === null || inExtension ? {} : { returnTo }),
+        },
       },
       {
         onSuccess: () => {

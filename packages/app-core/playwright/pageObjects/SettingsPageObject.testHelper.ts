@@ -7,6 +7,7 @@ import { buildLineTestIds } from "../../src/features/settings/components/BuildLi
 import { settingsSectionTestIds } from "../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
 import { settingsSectionListTestIds } from "../../src/features/settings/components/SettingsSectionList/SettingsSectionListTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ConnectionsSectionPageObject } from "./ConnectionsSectionPageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SharedLinksPanelPageObject } from "./SharedLinksPanelPageObject.testHelper.js";
@@ -15,6 +16,10 @@ import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
 export class SettingsPageObject extends PageObject {
   get apiKeysPanel(): ApiKeysPanelPageObject {
     return new ApiKeysPanelPageObject(this.testContext);
+  }
+
+  get connections(): ConnectionsSectionPageObject {
+    return new ConnectionsSectionPageObject(this.testContext);
   }
 
   get syncPanel(): SyncPanelPageObject {
@@ -93,6 +98,8 @@ export class SettingsPageObject extends PageObject {
 
   verifySavedConfirmation = () =>
     this.step("verifySavedConfirmation", () => this.expectToBeVisible(apiKeysSectionTestIds.savedConfirmation));
+
+  recheckPlan = () => this.step("recheckPlan", () => this.click(plusPlanPanelTestIds.recheckButton));
 
   verifyPlanReads = (plan: string) =>
     this.step(`verifyPlanReads ${plan}`, () =>

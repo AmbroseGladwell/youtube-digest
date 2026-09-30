@@ -52,6 +52,7 @@ test("a valid session resolves the account onto the request", async () => {
     email: "reader@example.com",
     firstName: null,
     expiresAt: "2026-10-26T09:00:00.000Z",
+    plan: "free",
   });
   await close();
 });

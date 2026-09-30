@@ -1,0 +1,14 @@
+@use "../../consent" as consent;
+
+.root {
+  @include consent.card;
+  gap: 0.875rem;
+
+  form {
+    gap: 0.875rem;
+  }
+}
+
+.label {
+  @include consent.label;
+}

@@ -56,6 +56,42 @@ test("asking for a link mails one that points at the app, and keeps only the tok
   await testApp.close();
 });
 
+const CONSENT = "/connect/0b8f5f7e-3c1d-4a8e-9b2a-6f1e2d3c4b5a";
+
+const askForLinkBack = (testApp: TestApp, surface: "web" | "extension", returnTo: string) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/magic-link", payload: { email: EMAIL, surface, returnTo } });
+
+test("a link asked for from the consent screen returns there once it has signed in", async () => {
+  const testApp = await createTestApp();
+
+  const response = await askForLinkBack(testApp, "web", CONSENT);
+
+  assert.equal(response.statusCode, 202);
+  const link = new URL(testApp.mailer.sent[0]!.link);
+  assert.equal(link.pathname, "/sign-in");
+  assert.equal(link.searchParams.get("return"), CONSENT);
+  await testApp.close();
+});
+
+test("a link can be asked to return only to a consent screen", async () => {
+  const testApp = await createTestApp();
+
+  const response = await askForLinkBack(testApp, "web", "https://evil.example/");
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(testApp.mailer.sent.length, 0);
+  await testApp.close();
+});
+
+test("an extension link returns nowhere, since it signs in the panel and not the tab", async () => {
+  const testApp = await createTestApp();
+
+  await askForLinkBack(testApp, "extension", CONSENT);
+
+  assert.equal(new URL(testApp.mailer.sent[0]!.link).search, "");
+  await testApp.close();
+});
+
 test("asking for a link makes no account: only a consumed link does", async () => {
   const testApp = await createTestApp();
 
