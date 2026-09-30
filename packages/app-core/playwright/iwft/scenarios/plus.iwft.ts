@@ -23,6 +23,8 @@ test("Settings names the plan, lists what Plus adds, and admits there is nothing
 }) => {
   await launcher.launchPanel(panel);
   const settings = await launcher.appShell.openSettings();
+  await settings.verifyRowReads("plan", "Free");
+  await settings.openSection("plan");
 
   await settings.verifyPlanReads("Free");
   await settings.verifyOffersPlus(true);
@@ -32,7 +34,7 @@ test("Settings names the plan, lists what Plus adds, and admits there is nothing
 
 test("on Plus, Settings states the plan rather than pitching it", async ({ launcher }) => {
   await launcher.launchPanel({ ...panel, plan: "plus" });
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("plan");
 
   await settings.verifyPlanReads("Plus");
   await settings.verifyOffersPlus(false);

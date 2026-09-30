@@ -1,5 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { copyFile, mkdtemp, readdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { createPgliteSqlClient } from "./createPgliteSqlClient.js";
 import { runMigrations } from "./runMigrations.js";
@@ -36,7 +40,66 @@ test("the tables the migrations create are there to be used", async () => {
   );
   assert.deepEqual(
     tables.map((table) => table.table_name),
-    ["accounts", "audio_renders", "connection_tokens", "connections", "link_codes", "magic_links", "oauth_authorizations", "oauth_clients", "records", "schema_migrations", "sessions", "transcripts", "voice_samples"],
+    [
+      "account_transcripts",
+      "accounts",
+      "audio_renders",
+      "connection_tokens",
+      "connections",
+      "link_codes",
+      "magic_links",
+      "oauth_authorizations",
+      "oauth_clients",
+      "records",
+      "schema_migrations",
+      "sessions",
+      "shared_transcripts",
+      "transcript_contributions",
+      "voice_samples",
+    ],
   );
+  await sql.close();
+});
+
+const migrationsBefore = async (version: number): Promise<URL> => {
+  const source = fileURLToPath(new URL("../../migrations/", import.meta.url));
+  const dir = await mkdtemp(join(tmpdir(), "migrations-"));
+  for (const file of await readdir(source)) {
+    if (Number(file.slice(1, 5)) < version) await copyFile(join(source, file), join(dir, file));
+  }
+  return pathToFileURL(`${dir}/`);
+};
+
+test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
+  const sql = createPgliteSqlClient(new PGlite());
+  await runMigrations(sql, await migrationsBefore(9));
+  const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
+  for (const id of [first, second]) {
+    await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
+  }
+  const transcript = (generated: boolean) =>
+    JSON.stringify({ videoId: "shared", segments: [{ text: "Said.", startMs: 0, endMs: 1 }], generated, fetchedAt: "2026-09-01T00:00:00.000Z" });
+  for (const [accountId, generated] of [[first, true], [second, false]] as const) {
+    await sql.query("insert into transcripts (account_id, video_id, stored_at, body) values ($1, 'shared', now(), $2::jsonb)", [
+      accountId,
+      transcript(generated),
+    ]);
+  }
+
+  await runMigrations(sql);
+
+  const kept = await sql.query<{ account_id: string; generated: boolean }>(
+    `select a.account_id, (s.body ->> 'generated')::boolean as generated
+     from account_transcripts a join shared_transcripts s using (video_id, words_hash) order by a.account_id`,
+  );
+  const [counts] = await sql.query<{ confirmed: number; contributions: number }>(
+    `select (select count(*)::int from shared_transcripts where confirmed_at is not null) as confirmed,
+            (select count(*)::int from transcript_contributions) as contributions`,
+  );
+  assert.deepEqual(kept, [
+    { account_id: first, generated: true },
+    { account_id: second, generated: false },
+  ]);
+  assert.deepEqual(counts, { confirmed: 0, contributions: 0 });
   await sql.close();
 });

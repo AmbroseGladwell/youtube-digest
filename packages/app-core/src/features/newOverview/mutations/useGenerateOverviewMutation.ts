@@ -4,6 +4,7 @@ import { useStores } from "../../../stores/StoresContext.js";
 import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
 import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
+import { useKnownApiUrl } from "../../sync/useKnownApiUrl.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
@@ -23,6 +24,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
   const queryClient = useQueryClient();
   const settingsQuery = useSettingsQuery();
   const youTubeFetch = useYouTubeFetch();
+  const knownApiUrl = useKnownApiUrl();
   const player = usePlayer();
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
@@ -35,6 +37,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
         url,
         {
           sources: createTranscriptSources({
+            sharedCacheApiUrl: knownApiUrl,
             youTubeFetch,
             supadataApiKey: apiKeys.supadataApiKey,
           }),

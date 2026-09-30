@@ -1,12 +1,48 @@
 @use "../../../theme/controls.scss" as controls;
 
-// Wide enough for the voice picker's three columns at the design's 760 (OV-43 43a).
 .root {
-  max-width: 53.5rem;
-  padding: 1.5rem 3rem 4rem;
+  max-width: 65rem;
+  padding: 1.75rem 3rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1.75rem;
+}
+
+.rootStacked {
+  padding: 0.5rem 1.25rem 4rem;
+  gap: 1.125rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 2.5rem;
+  line-height: 1.05;
+}
+
+.rootStacked .title {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+// Design 51a: the list is wide enough for eight rows without wrapping.
+.panes {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+// Design 43h, reused for every section: the way back stays under the masthead while the
+// section scrolls beneath it.
+.back {
+  position: sticky;
+  top: var(--masthead-height);
+  z-index: 1;
+  margin: 0 -1.25rem -0.5rem;
+  padding: 0.25rem 1.25rem;
+  background: var(--ground);
 }
 
 // Pulled back by its own padding so the label sits on the gutter the title uses.
@@ -15,37 +51,13 @@
   @include controls.pill-sm;
   align-self: flex-start;
   margin-left: -0.875rem;
+}
+
+.root > .backLink {
+  margin-bottom: -1rem;
   color: var(--muted);
 }
 
-.title {
-  margin: 0.5rem 0 0;
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: 2.375rem;
-  line-height: 1.12;
+.rootStacked > .backLink {
+  margin-bottom: -0.5rem;
 }
-
-.standfirst {
-  margin: 0;
-  max-width: 46ch;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.saved {
-  margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-@media (max-width: 47.9375rem) {
-  .root {
-    padding: 1.25rem 1.25rem 4rem;
-  }
-}
-
-// The bar's Sign in lands here by hash, and the masthead is sticky, so the section has to
-// clear it when scrolled into view.

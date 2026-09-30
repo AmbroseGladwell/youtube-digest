@@ -1,5 +1,6 @@
 export const syncPanelTestIds = {
   root: "SyncPanel.root",
+  hint: "SyncPanel.hint",
   signInLink: "SyncPanel.signInLink",
   createAccountLink: "SyncPanel.createAccountLink",
   signedInAs: "SyncPanel.signedInAs",

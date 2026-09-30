@@ -1,0 +1,84 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.beside,
+.stacked {
+  display: flex;
+  flex-direction: column;
+}
+
+.beside {
+  gap: 0.25rem;
+}
+
+.stacked {
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+
+  @include controls.control-motion;
+}
+
+// Design 51a: the current row takes the stone tint with a stone ring.
+.beside .row {
+  padding: 0.6875rem 0.875rem 0.6875rem 1rem;
+  border-radius: var(--radius-panel);
+  background: transparent;
+
+  &:hover {
+    background: var(--card);
+  }
+
+  &[aria-current="page"] {
+    background: var(--stone-tint);
+    box-shadow: inset 0 0 0 1.5px var(--label);
+    color: var(--on-stone-tint);
+  }
+}
+
+// Design 51d: full-width tiles, each a link to its section's own page.
+.stacked .row {
+  @include controls.tile;
+  min-height: 3.75rem;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem 0.75rem 1rem;
+
+  &:hover {
+    @include controls.tile-hover;
+  }
+}
+
+.names {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 0.78125rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row[aria-current="page"] .value {
+  color: inherit;
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--muted);
+}

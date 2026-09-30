@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createAnthropicGenerationClient, type GenerationClient } from "@overview/generation";
 import type { AnthropicModel } from "@overview/domain";
+import { createFetchSharedTranscriptApi } from "@overview/sync";
 import { createSupadataClient, type YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
+import { sharedCacheTranscriptSource } from "../../transcripts/api/sharedCacheTranscriptSource.js";
 import { supadataTranscriptSource } from "../../transcripts/api/supadataTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 
@@ -18,15 +20,20 @@ export function createGenerationClient(anthropicApiKey: string, model: Anthropic
 }
 
 export interface TranscriptSourceOptions {
+  // Where the shared cache is asked. Null keeps the video id on this device.
+  sharedCacheApiUrl: string | null;
   youTubeFetch: YouTubeFetch | null;
   supadataApiKey: string | null;
 }
 
-// The rungs this surface can actually reach, in the order they are asked. The free one
-// goes first: a key holder's experience is unchanged except that it stops spending
+// The rungs this surface can actually reach, in the order they are asked. The free ones
+// go first: a key holder's experience is unchanged except that it stops spending
 // credits when there was a free path (docs/features/transcript-retrieval.md).
 export function createTranscriptSources(options: TranscriptSourceOptions): TranscriptSource[] {
   return [
+    ...(options.sharedCacheApiUrl === null
+      ? []
+      : [sharedCacheTranscriptSource(createFetchSharedTranscriptApi({ baseUrl: options.sharedCacheApiUrl }))]),
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),
     ...(options.supadataApiKey === null
       ? []

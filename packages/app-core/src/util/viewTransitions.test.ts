@@ -61,4 +61,13 @@ describe("navigationDirection", () => {
   it("has no direction for a navigation that doesn't move", () => {
     expect(navigationDirection(Routes.home(), Routes.home())).toBe("none");
   });
+
+  it("goes into a Settings section and comes back out of it to the list", () => {
+    expect(navigationDirection(Routes.settings(), Routes.settingsSection("keys"))).toBe("forward");
+    expect(navigationDirection(Routes.settingsSection("keys"), Routes.settings())).toBe("back");
+  });
+
+  it("has no direction between two Settings sections, which swap in place", () => {
+    expect(navigationDirection(Routes.settingsSection("account"), Routes.settingsSection("voice"))).toBe("none");
+  });
 });

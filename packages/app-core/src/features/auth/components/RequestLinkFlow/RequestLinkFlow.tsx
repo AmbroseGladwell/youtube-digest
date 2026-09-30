@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
-import { useDefaultApiUrl } from "../../../../app/DefaultApiUrlContext.js";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
@@ -9,6 +8,7 @@ import { ErrorState } from "../../../../components/shared/ErrorState/ErrorState.
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useSync } from "../../../sync/SyncContext.js";
+import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { useExchangeLinkCodeMutation } from "../../mutations/useExchangeLinkCodeMutation.js";
 import { useRequestMagicLinkMutation } from "../../mutations/useRequestMagicLinkMutation.js";
@@ -37,8 +37,8 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
   const isPhone = useIsPhone();
   const navigate = useNavigate();
   const sync = useSync();
-  const defaultApiUrl = useDefaultApiUrl();
-  const { connection, setConnection } = useSyncConnection();
+  const knownServer = useKnownApiUrl();
+  const { setConnection } = useSyncConnection();
   const { pending, setPending } = usePendingSignIn();
   const [sentHere, setSentHere] = useState<PendingSignIn | null>(null);
   const [lastEmail, setLastEmail] = useState("");
@@ -54,7 +54,6 @@ export function RequestLinkFlow({ intent, expired = false }: RequestLinkFlowProp
   const inExtension = surface === "extension";
   const sent = inExtension ? pending : sentHere;
   const setSent = inExtension ? setPending : setSentHere;
-  const knownServer = inExtension ? (connection.apiUrl ?? defaultApiUrl) : (globalThis.location?.origin ?? null);
 
   if (!sync.available) {
     return <ErrorState title="Accounts need the web app or the extension" back />;

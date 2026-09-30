@@ -27,7 +27,7 @@ test.describe("on a touch screen", () => {
     launcher,
   }) => {
     await launcher.launch();
-    const settings = await launcher.appShell.openSettings();
+    const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
     await settings.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
@@ -45,7 +45,7 @@ test.describe("on a touch screen", () => {
 
 test("a mouse keeps the design's smaller field sizes", async ({ launcher }) => {
   await launcher.launch();
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
   await settings.verifyFieldFontSizes((sizes) =>
     expect(sizes.some((size) => size < IOS_ZOOM_THRESHOLD_PX)).toBe(true),

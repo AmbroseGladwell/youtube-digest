@@ -41,8 +41,10 @@ Two properties follow, and both are the point:
   users who will never contribute to it, so the bill tracks the rate at which new videos
   enter the corpus rather than users times videos.
 
-Only the Supadata rung is built today. The others are named here because the shape of the
-interface is what makes them additive rather than a rewrite.
+The shared cache (`docs/features/shared-transcript-cache.md`), the extension's own
+InnerTube fetch and Supadata are built. The web app asking the extension, and our own
+service, are not, and the shape of the interface is what makes them additive rather than
+a rewrite.
 
 ### Why the rung is one method
 
@@ -312,9 +314,8 @@ Two consequences, both deliberate:
 Supadata stopped being required, so three surfaces had to stop implying it was.
 
 `byoKeyNote.ts` was wrong twice — "both keys", and "never through our servers", the second
-of which stays true only until the shared cache lands. The replacement says so, and the
-file carries a note naming the clause that will need changing, so it is not discovered
-wrong a second time.
+of which stayed true only until the shared cache landed. It now says both halves: the key
+never passes through us, and the video is looked up in the shared cache first.
 
 `transcriptSourceNote.ts` holds what is missing in the words of the thing that is missing,
 in one module, because the same three states are rendered by the dialog and by the empty
@@ -378,5 +379,6 @@ inert, and what is missing costs money rather than function.
 
 ## What is not built
 
-- The shared-cache and service rungs.
-- The web app's own free path, above.
+- The service rung.
+- The web app's own free path, above. Its prerequisite is now met: the extension has the
+  store's id (`docs/architecture/deploy.md`, "The extension").
