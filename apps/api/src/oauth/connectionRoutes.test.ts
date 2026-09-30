@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeConnectingAssistant, putOnPlan } from "./ConnectingAssistant.testHelper.js";
@@ -48,6 +49,7 @@ test("a signed-out reader cannot answer a request", async () => {
   const response = await testApp.app.inject({
     method: "POST",
     url: `/api/oauth/requests/${consentId}/decision`,
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
     payload: { approve: false },
   });
 
