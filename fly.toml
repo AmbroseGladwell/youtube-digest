@@ -18,6 +18,9 @@ primary_region = "lhr"
   MAIL_FROM = "The Overview <hello@theoverviewapp.com>"
   MIN_SUPPORTED_CLIENT_VERSION = "1"
   SESSION_TTL_DAYS = "30"
+  # Fly's proxy sets this and overwrites any a client sends; rate limits count by it
+  # (docs/architecture/api.md, "Rate limits").
+  CLIENT_IP_HEADER = "fly-client-ip"
   # Narration: the private TTS pool over Flycast, one render per machine, into the private R2
   # bucket (docs/architecture/deploy.md, "The TTS service"; the two R2 keys are secrets).
   TTS_URL = "http://the-overview-tts.flycast"

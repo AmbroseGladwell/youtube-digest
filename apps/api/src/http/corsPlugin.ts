@@ -14,7 +14,7 @@ export const corsPlugin = fp<CorsPluginOptions>(async (app, { allowedOrigins }) 
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["authorization", "content-type", "if-match", CLIENT_VERSION_HEADER],
-    exposedHeaders: ["etag"],
+    exposedHeaders: ["etag", "retry-after"],
     maxAge: 3600,
   });
 });

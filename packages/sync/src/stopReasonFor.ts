@@ -20,6 +20,7 @@ export function stopReasonFor(error: unknown): StopReason | null {
       return "unsupported";
     case "internal_error":
     case "unavailable":
+    case "too_many_requests":
       return "failed";
     default:
       return null;

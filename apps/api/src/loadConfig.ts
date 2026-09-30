@@ -24,6 +24,11 @@ const ConfigEnv = z
     BREVO_API_KEY: z.string().min(1).optional(),
     MAIL_FROM: z.string().min(1).optional(),
     STATIC_ROOT: z.string().min(1).optional(),
+    CLIENT_IP_HEADER: z
+      .string()
+      .regex(/^[A-Za-z0-9-]+$/, "must be a header name")
+      .transform((name) => name.toLowerCase())
+      .optional(),
     TTS_URL: z.url().optional(),
     TTS_CONCURRENCY: z.coerce.number().int().positive().default(5),
     AUDIO_DIR: z.string().min(1).optional(),
@@ -79,6 +84,7 @@ export interface Config {
   mail: MailConfig;
   // The built web app to serve outside /api, or null to serve none (docs/architecture/deploy.md).
   staticRoot: string | null;
+  clientIpHeader: string | null;
   audio: AudioConfig;
 }
 
@@ -102,6 +108,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
         ? { transport: "brevo", brevoApiKey: data.BREVO_API_KEY!, from: data.MAIL_FROM! }
         : { transport: "log" },
     staticRoot: data.STATIC_ROOT ?? null,
+    clientIpHeader: data.CLIENT_IP_HEADER ?? null,
     audio:
       data.TTS_URL === undefined
         ? null

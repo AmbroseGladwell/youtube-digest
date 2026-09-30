@@ -169,10 +169,13 @@ a public form is not evidence of anything. `magic_links` stores the address, and
 account row is created by the sign-in that proved it, through the same
 `findOrCreateAccount` the CLI uses.
 
-**One link per address per minute, and the answer does not change.** There is no rate
-limiter yet, and a public endpoint that sends mail is otherwise a way to fill someone's
-inbox. Inside the cooldown the request is answered `202` exactly as if a link had gone,
-and nothing is sent. The first link is still live, so the reader loses nothing.
+**One link per address per minute, and the answer does not change.** A public endpoint
+that sends mail is otherwise a way to fill someone's inbox. Inside the cooldown the
+request is answered `202` exactly as if a link had gone, and nothing is sent. The first
+link is still live, so the reader loses nothing. The rate limits came later and sit on
+top: past ten asks an hour for one email, or twenty from one caller, the answer is an
+honest `429` saying how long to wait (`docs/architecture/api.md`, "Rate limits"), and
+the form says so in minutes.
 
 **Only hashes are stored**, for the link token and for the code, the same way as for
 the session token, and by the same `hashToken`. A database read is not a sign-in.
@@ -207,7 +210,7 @@ and this is that day.
 with no `0`, `O`, `1`, `I` or `L`, shown as `XXXX-XXXX`, accepted in any case with any
 separators or none. Ten minutes and once. Forty bits, one-time and short-lived, is
 enough with no rate limiter: a guess is one HTTP request and the code is dead in ten
-minutes either way.
+minutes either way. There is one now anyway, thirty guesses an hour per address.
 
 **The mailer is one interface with three implementations.** Brevo in production over
 its one HTTP call, with no SDK to depend on; the server's own log in development, so a
@@ -285,7 +288,7 @@ already forgotten would be a control with nothing behind it.
 ## Not built
 
 Changing the name on an account, or giving one to an account made by signing in;
-rate limiting beyond the per-address cooldown; a sweep of spent links and codes, which
+a sweep of spent links and codes, which
 is the same later cron as the session sweep; changing the email on an account. Serving the SPA from the API is built since
 (`docs/architecture/deploy.md`), so `/sign-in` in production is on the API's own origin,
 which `APP_URL` names. So is the web app minting a code for the extension beside it

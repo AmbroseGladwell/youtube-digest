@@ -15,9 +15,20 @@ export function authFailureMessage(error: unknown, whenSpent: string): string {
         return whenSpent;
       case "invalid_request":
         return "That doesn't look like a full email address.";
+      case "too_many_requests":
+        return `Too many tries. Try again ${waitFrom(error.details)}.`;
       default:
         return "The server had a problem. Try again in a moment.";
     }
   }
   return "Something went wrong. Try again.";
+}
+
+function waitFrom(details: Record<string, unknown> | undefined): string {
+  const seconds = details?.retryAfterSeconds;
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) {
+    return "later";
+  }
+  const minutes = Math.ceil(seconds / 60);
+  return minutes === 1 ? "in a minute" : `in ${minutes} minutes`;
 }

@@ -17,6 +17,15 @@ describe("authFailureMessage", () => {
     expect(authFailureMessage(new SyncTransportError("no"), LINK_SPENT)).toMatch(/reach the server/);
   });
 
+  it("says how long to wait when the server is throttling, in whole minutes", () => {
+    const throttled = (retryAfterSeconds?: unknown) =>
+      new SyncRequestError("too_many_requests", 429, "slow down", retryAfterSeconds === undefined ? undefined : { retryAfterSeconds });
+    expect(authFailureMessage(throttled(1_500), LINK_SPENT)).toBe("Too many tries. Try again in 25 minutes.");
+    expect(authFailureMessage(throttled(61), LINK_SPENT)).toBe("Too many tries. Try again in 2 minutes.");
+    expect(authFailureMessage(throttled(12), LINK_SPENT)).toBe("Too many tries. Try again in a minute.");
+    expect(authFailureMessage(throttled(), LINK_SPENT)).toBe("Too many tries. Try again later.");
+  });
+
   it("does not pretend to know about anything else", () => {
     expect(authFailureMessage(new SyncRequestError("internal_error", 500, "x"), LINK_SPENT)).toMatch(/server had a problem/);
     expect(authFailureMessage(new Error("?"), LINK_SPENT)).toMatch(/Something went wrong/);

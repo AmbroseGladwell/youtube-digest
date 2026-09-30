@@ -5,7 +5,7 @@ import { ConfigError, loadConfig } from "./loadConfig.js";
 
 const DATABASE_URL = "postgres://overview:secret@localhost:5432/overview";
 
-test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, and narrates nothing", () => {
+test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, trusts the socket's address, and narrates nothing", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL }), {
     databaseUrl: DATABASE_URL,
     port: 3000,
@@ -15,8 +15,14 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     appUrl: "http://localhost:5173",
     mail: { transport: "log" },
     staticRoot: null,
+    clientIpHeader: null,
     audio: null,
   });
+});
+
+test("the header naming the caller's address is read in any case, and anything that is not a header name is refused", () => {
+  assert.equal(loadConfig({ DATABASE_URL, CLIENT_IP_HEADER: "Fly-Client-IP" }).clientIpHeader, "fly-client-ip");
+  assert.throws(() => loadConfig({ DATABASE_URL, CLIENT_IP_HEADER: "fly-client-ip: 1.2.3.4" }), ConfigError);
 });
 
 test("real mail needs a key, a sender, and an https address for the links to point at", () => {

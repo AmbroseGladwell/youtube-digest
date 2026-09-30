@@ -101,12 +101,13 @@ test("a write the server refuses for what it is gets parked with the server's re
   assert.equal(outcome.result === "stuck" && outcome.failure.code, "record_newer_than_client");
 });
 
-test("no network, no session, an unsupported client and a server failure each stop the push instead of parking the write", async () => {
+test("no network, no session, an unsupported client, a server failure and a throttle each stop the push instead of parking the write", async () => {
   const cases = [
     ["transport", "offline"],
     [{ code: "unauthenticated" }, "signedOut"],
     [{ code: "client_unsupported" }, "unsupported"],
     [{ code: "internal_error" }, "failed"],
+    [{ code: "too_many_requests" }, "failed"],
   ] as const;
   for (const [failure, reason] of cases) {
     const api = new ScriptedSyncApi();
