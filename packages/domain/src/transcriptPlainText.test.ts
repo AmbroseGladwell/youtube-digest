@@ -1,7 +1,8 @@
-import type { VideoSource } from "@overview/domain";
-import { describe, expect, it } from "vitest";
-import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
-import { makeTranscriptBlock } from "../types/TranscriptBlockFactory.testHelper.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import type { VideoSource } from "./VideoSource.js";
+import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { makeTranscriptBlock } from "./TranscriptBlockFactory.testHelper.js";
 import { transcriptPlainText } from "./transcriptPlainText.js";
 
 const VIDEO: VideoSource = {
@@ -17,13 +18,11 @@ describe("transcriptPlainText", () => {
       makeTranscriptBlock({ text: "The first paragraph." }),
     ]);
 
-    expect(text).toBe(
-      "The Quiet Return of Nuclear Baseload\n" +
+    assert.equal(text, "The Quiet Return of Nuclear Baseload\n" +
         "Practical Engineering\n" +
         "https://www.youtube.com/watch?v=example\n" +
         "\n" +
-        "0:00\tThe first paragraph.\n",
-    );
+        "0:00\tThe first paragraph.\n");
   });
 
   it("prints each block against the time its first words were said", () => {
@@ -33,7 +32,7 @@ describe("transcriptPlainText", () => {
       makeTranscriptBlock({ text: "Third.", startMs: 3_661_000 }),
     ]);
 
-    expect(text.split("\n\n").slice(1)).toEqual([
+    assert.deepEqual(text.split("\n\n").slice(1), [
       "0:00\tFirst.",
       "1:05\tSecond.",
       "1:01:01\tThird.\n",
@@ -45,12 +44,10 @@ describe("transcriptPlainText", () => {
       makeTranscriptBlock({ text: "Thank you.", speakerChange: true }),
     ]);
 
-    expect(text).toContain("0:00\t— Thank you.");
+    assert.ok(text.includes("0:00\t— Thank you."));
   });
 
   it("writes only the heading for a video whose transcript has no blocks", () => {
-    expect(transcriptPlainText(VIDEO, [])).toBe(
-      "The Quiet Return of Nuclear Baseload\nPractical Engineering\nhttps://www.youtube.com/watch?v=example\n\n\n",
-    );
+    assert.equal(transcriptPlainText(VIDEO, []), "The Quiet Return of Nuclear Baseload\nPractical Engineering\nhttps://www.youtube.com/watch?v=example\n\n\n");
   });
 });

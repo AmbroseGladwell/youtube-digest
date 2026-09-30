@@ -1,3 +1,4 @@
+import { transcriptBlocks, transcriptPlainText, formatTimestamp } from "@overview/domain";
 import {
   Fragment,
   useEffect,
@@ -7,16 +8,12 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import type { VideoSource } from "@overview/domain";
+import type { VideoSource, TranscriptBlock } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { blockParts } from "../../../transcripts/util/blockParts.js";
-import { transcriptBlocks } from "../../../transcripts/util/transcriptBlocks.js";
 import { transcriptFileName } from "../../../transcripts/util/transcriptFileName.js";
-import { transcriptPlainText } from "../../../transcripts/util/transcriptPlainText.js";
-import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
-import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import { ClearFieldButton } from "../../../../components/shared/ClearFieldButton/ClearFieldButton.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useFollowPlayback, type FollowPlayback } from "./useFollowPlayback.js";

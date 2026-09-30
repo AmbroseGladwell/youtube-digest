@@ -1,6 +1,6 @@
-import type { VideoSource } from "@overview/domain";
-import { formatTimestamp } from "../../../util/formatTimestamp.js";
-import type { TranscriptBlock } from "../types/TranscriptBlock.js";
+import type { VideoSource } from "./VideoSource.js";
+import { formatTimestamp } from "./formatTimestamp.js";
+import type { TranscriptBlock } from "./TranscriptBlock.js";
 
 // What Copy puts on the clipboard and what Export writes to the file — one function, so
 // the two can't disagree about what a transcript looks like outside the app. The blocks

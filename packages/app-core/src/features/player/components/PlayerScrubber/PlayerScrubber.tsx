@@ -1,6 +1,6 @@
+import { formatClock } from "@overview/domain";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { NoteLine } from "@overview/domain";
-import { formatClock } from "../../../../util/formatClock.js";
 import { lineAtTime, nearestLineStart } from "../../util/lineAtTime.js";
 import { sectionHeadingAt, type PlayerBarView } from "../../util/playerBarView.js";
 import styles from "./PlayerScrubber.module.scss";

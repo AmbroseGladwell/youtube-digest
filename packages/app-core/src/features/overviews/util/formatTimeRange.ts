@@ -1,4 +1,4 @@
-import { formatTimestamp } from "../../../util/formatTimestamp.js";
+import { formatTimestamp } from "@overview/domain";
 
 // startMs/endMs come straight from YouTube's own caption timing (docs/architecture/v1-architecture-decisions.md:
 // "the model reads an offset already present in its input"), never a model-estimated

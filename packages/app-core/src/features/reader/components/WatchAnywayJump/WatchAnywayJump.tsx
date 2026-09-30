@@ -1,7 +1,7 @@
+import { formatTimestamp } from "@overview/domain";
 import type { TimeRange, VideoId } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
-import { formatTimestamp } from "../../../../util/formatTimestamp.js";
 import styles from "./WatchAnywayJump.module.scss";
 import { watchAnywayJumpTestIds } from "./WatchAnywayJumpTestIds.js";
 

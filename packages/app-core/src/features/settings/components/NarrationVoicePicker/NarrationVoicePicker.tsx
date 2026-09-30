@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type Ref } from "react";
 import {
   DEFAULT_NARRATION_VOICE,
+  formatClock,
   NarrationVoice,
   narrationAccent,
   narrationVoiceName,
@@ -8,7 +9,6 @@ import {
   type VoiceSample,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { formatClock } from "../../../../util/formatClock.js";
 import { useNarrationApi } from "../../../player/NarrationApiContext.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";

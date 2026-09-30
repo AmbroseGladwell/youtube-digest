@@ -1,5 +1,5 @@
+import type { TranscriptBlock } from "@overview/domain";
 import { useMemo, useState } from "react";
-import type { TranscriptBlock } from "../../../transcripts/types/TranscriptBlock.js";
 import type { TranscriptMatch } from "../../../transcripts/types/TranscriptMatch.js";
 import { transcriptMatches } from "../../../transcripts/util/transcriptMatches.js";
 

@@ -1,3 +1,4 @@
+import { formatClock } from "@overview/domain";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
@@ -14,7 +15,6 @@ import type { NewOverviewRun } from "../../newOverview/types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
-import { formatClock } from "../../../util/formatClock.js";
 import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { OverviewId, isUnreadableRecordError, overviewNoteLines } from "@overview/domain";
+import { OverviewId, isUnreadableRecordError, overviewNoteLines, formatClock } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -30,7 +30,6 @@ import { useNotePlayer } from "./useNotePlayer.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
-import { formatClock } from "../../../util/formatClock.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";

@@ -1,6 +1,7 @@
-import { VideoId } from "@overview/domain";
-import { describe, expect, it } from "vitest";
-import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { VideoId } from "./Brands.js";
+import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { buildSearchHaystack } from "./buildSearchHaystack.js";
 
 describe("buildSearchHaystack", () => {
@@ -22,10 +23,10 @@ describe("buildSearchHaystack", () => {
 
     const haystack = buildSearchHaystack(overview);
 
-    expect(haystack).toContain("the platysma trick");
-    expect(haystack).toContain("soloma");
-    expect(haystack).toContain("jaw strain warning");
-    expect(haystack).toContain("face-yoga");
+    assert.ok(haystack.includes("the platysma trick"));
+    assert.ok(haystack.includes("soloma"));
+    assert.ok(haystack.includes("jaw strain warning"));
+    assert.ok(haystack.includes("face-yoga"));
   });
 
   it("includes verdict reasoning and selling detail when present", () => {
@@ -36,12 +37,12 @@ describe("buildSearchHaystack", () => {
 
     const haystack = buildSearchHaystack(overview);
 
-    expect(haystack).toContain("contradicts settled anatomy");
-    expect(haystack).toContain("pitches a patreon course");
+    assert.ok(haystack.includes("contradicts settled anatomy"));
+    assert.ok(haystack.includes("pitches a patreon course"));
   });
 
   it("degrades cleanly when verdict and selling are absent", () => {
     const overview = makeOverview({ verdict: null, selling: null, howToApply: null });
-    expect(() => buildSearchHaystack(overview)).not.toThrow();
+    assert.doesNotThrow(() => buildSearchHaystack(overview));
   });
 });

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { MAGIC_LINK_COOLDOWN_SECONDS } from "@overview/domain";
+import { MAGIC_LINK_COOLDOWN_SECONDS, formatClock } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { formatClock } from "../../../../util/formatClock.js";
 import styles from "./ResendLinkButton.module.scss";
 import { resendLinkButtonTestIds } from "./ResendLinkButtonTestIds.js";
 

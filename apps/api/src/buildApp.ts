@@ -13,6 +13,9 @@ import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
+import { connectionAccessPlugin } from "./mcp/connectionAccessPlugin.js";
+import { mcpRoutes } from "./mcp/mcpRoutes.js";
+import { registerMcpErrorHandler } from "./mcp/registerMcpErrorHandler.js";
 import { connectionRoutes } from "./oauth/connectionRoutes.js";
 import { oauthRoutes } from "./oauth/oauthRoutes.js";
 import { oauthUrls } from "./oauth/oauthUrls.js";
@@ -159,6 +162,18 @@ export async function buildApp({
     await oauth.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
     oauth.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
     oauthRoutes(oauth, { sql, clock, urls });
+  });
+
+  await app.register(async (mcp) => {
+    registerMcpErrorHandler(mcp);
+    await mcp.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
+    mcp.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+    await mcp.register(connectionAccessPlugin, { sql, clock, urls });
+    mcp.addHook(
+      "onRequest",
+      rateLimitHook(rateLimits.mcpPerAccount, (request) => request.connectionAccess?.accountId ?? null, clock),
+    );
+    mcpRoutes(mcp, { sql, transcripts: new TranscriptsRepository(sql, clock), appOrigin: new URL(config.appUrl).origin });
   });
 
   app.addHook("onReady", async () => {
