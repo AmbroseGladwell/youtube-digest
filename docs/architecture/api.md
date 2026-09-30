@@ -25,12 +25,13 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
 | Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
+| One shared transcript per video, read by anyone and added to by accounts; the script that removes a bad one | `migrations/V0008__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
 
 ## Shape
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__shared_transcripts.sql
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
     buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes
@@ -41,11 +42,11 @@ apps/api/
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
-    transcripts/         the per-account transcript repository
+    transcripts/         the shared copy per video, each account's link to it, and what a contribution must be
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio
-    scripts/             mintSession, seedVoiceSamples (the deploy's release step)
+    scripts/             mintSession, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 
@@ -58,8 +59,8 @@ records, and `server.ts` is the only place the environment is read.
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
 a session unless it says otherwise; six do: `GET /api/health`, `GET /api/handshake`, the
-three `/api/auth` routes that exist to make a session, and anything outside `/api`, which
-is not registered yet.
+three `/api/auth` routes that exist to make a session, and `GET /api/shared-transcripts/:videoId`,
+which only reads what accounts have added (`docs/features/shared-transcript-cache.md`).
 
 **The mechanism is a session row, and the transport is a bearer token or a cookie.** An
 opaque 32-byte token is minted once, handed back once, and only its SHA-256 hex is stored,
@@ -246,6 +247,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
 | `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |
 | `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
+| `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 
@@ -270,6 +272,12 @@ The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
   token is 256 bits and needs no limit; a link code is 40 bits and ten minutes, which
   `sign-in.md` argued was enough on its own, and thirty guesses an hour per address puts
 it further out of reach.
+- **The shared transcript cache is limited per address** because it is read without a
+  session, so the account limit never applies to it. Each read is one note being made or
+  one transcript being refilled, so 300 an hour is far past a household's use and turns
+  copying the cache out one video at a time into a slow job. It is not meant to stop a
+  determined scraper with many addresses: what it guards is public captions, and
+  `docs/features/shared-transcript-cache.md` says why that is enough.
 - **A refused request does not count.** A caller hammering past the limit is let back in
   when its window ends, not held out while it keeps knocking.
 
