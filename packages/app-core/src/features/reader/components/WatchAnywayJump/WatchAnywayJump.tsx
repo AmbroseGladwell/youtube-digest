@@ -1,6 +1,7 @@
 import { formatTimestamp, youtubeTimestampUrl } from "@overview/domain";
 import type { TimeRange, VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
 import styles from "./WatchAnywayJump.module.scss";
 import { watchAnywayJumpTestIds } from "./WatchAnywayJumpTestIds.js";
@@ -29,9 +30,11 @@ export function WatchAnywayJump({ range, video }: WatchAnywayJumpProps) {
           href={youtubeTimestampUrl(video.url, range.startMs)}
           target="_blank"
           rel="noopener"
+          aria-label={`Watch from ${formatTimestamp(range.startMs)} on YouTube, opens in a new tab`}
           data-testid={watchAnywayJumpTestIds.watchLink}
         >
           Watch from {formatTimestamp(range.startMs)}
+          <StrokeIcon name="openOut" size={12} />
         </a>
       ) : (
         <button

@@ -705,9 +705,20 @@ export class ReaderPageObject extends PageObject {
       this.expectNotToBeVisible(watchAnywayJumpTestIds.root),
     );
 
-  verifyOffersToWatchFrom = (label: string) =>
-    this.step(`verifyOffersToWatchFrom ${label}`, () =>
-      expect(this.get(watchAnywayJumpTestIds.watchLink)).toHaveText(label),
+  verifyOffersToWatchFrom = (label: string, url: string) =>
+    this.step(`verifyOffersToWatchFrom ${label}`, async () => {
+      const link = this.get(watchAnywayJumpTestIds.watchLink);
+      await expect(link).toHaveText(label);
+      await expect(link).toHaveAttribute("href", url);
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAccessibleName(`${label} on YouTube, opens in a new tab`);
+    });
+
+  verifyOffersToWatchOnYouTube = (offered: boolean) =>
+    this.step(`verifyOffersToWatchOnYouTube ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(watchAnywayJumpTestIds.watchLink)
+        : this.expectNotToBeVisible(watchAnywayJumpTestIds.watchLink),
     );
 
   verifyOffersToSkipTheVideo = (offered: boolean) =>
