@@ -33,6 +33,7 @@ test("a shell that cannot sync shows no sync controls", async ({ launcher }) => 
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 
+  await settings.verifySectionIsAbsent("account");
   await settings.syncPanel.verifyIsAbsent();
 });
 

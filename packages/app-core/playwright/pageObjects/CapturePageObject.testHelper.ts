@@ -100,10 +100,12 @@ export class CapturePageObject extends PageObject {
   clickStartAgain = () =>
     this.step("clickStartAgain", () => this.click(capturePageTestIds.startAgainButton));
 
-  openSettings = (): Promise<SettingsPageObject> =>
-    this.step("openSettings", async () => {
+  openKeysSettings = (): Promise<SettingsPageObject> =>
+    this.step("openKeysSettings", async () => {
       await this.click(capturePageTestIds.settingsLink);
-      return new SettingsPageObject(this.testContext).verifyIsShown();
+      const settings = await new SettingsPageObject(this.testContext).verifyIsShown();
+      await settings.verifySectionIsShown("keys");
+      return settings;
     });
 
   waitForReader = (): Promise<ReaderPageObject> =>

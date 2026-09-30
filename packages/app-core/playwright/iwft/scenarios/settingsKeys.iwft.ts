@@ -5,22 +5,24 @@ test("keys saved on the settings page unlock the dialog's generate form", async 
   await form.verifyUrlInputDisabled();
   await form.clickCancel();
 
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
   await settings.apiKeysPanel.saveKeys("sk-ant-test", "sd-test");
   await settings.verifySavedConfirmation();
+  await settings.verifyRowReads("keys", /^Anthropic key set · /);
 
   await settings.clickBackToOverviews();
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.verifyGenerateButtonEnabled();
 });
 
-test("the form's own settings link reaches the same page, and closes the dialog behind it", async ({
+test("the form's own settings link lands on the keys section, and closes the dialog behind it", async ({
   launcher,
 }) => {
   const form = await launcher.launchExpectingFirstRun();
   await form.clickSettingsLink();
 
-  await launcher.settingsPage.verifyIsShown();
+  await launcher.settingsPage.verifySectionIsShown("keys");
+  await launcher.settingsPage.verifyCurrentRow("keys");
   await launcher.appShell.newOverviewDialog.verifyIsHidden();
 });
 
@@ -31,7 +33,7 @@ test("a browser that fetches its own captions says the transcript key is not nee
   launcher,
 }) => {
   await launcher.launch({ youTubeFetch: true });
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
   await settings.apiKeysPanel.verifySupadataNoteReads(/Not needed here/);
 });
@@ -43,7 +45,7 @@ test("a key saved on a browser that does not need it is reported as saved but un
     apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
     youTubeFetch: true,
   });
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
   await settings.apiKeysPanel.verifySupadataNoteReads(/Saved, but not in use/);
 });
@@ -52,7 +54,7 @@ test("a browser that cannot reach YouTube is told when the key is the thing that
   launcher,
 }) => {
   await launcher.launch();
-  const settings = await launcher.appShell.openSettings();
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
   await settings.apiKeysPanel.verifySupadataNoteReads(/Only needed where nothing else/);
 });

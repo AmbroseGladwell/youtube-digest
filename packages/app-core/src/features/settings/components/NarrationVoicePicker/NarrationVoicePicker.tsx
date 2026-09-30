@@ -35,15 +35,18 @@ const spokenName = (voice: NarrationVoice) => `${narrationVoiceName(voice)}, ${A
 const RING_RADIUS = 16.5;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
+export const NARRATION_VOICE_STANDFIRST =
+  "New audio is read in this voice on every device. Have a listen and see which one you prefer.";
+
 export interface NarrationVoicePickerProps {
-  // The extension's own page and a link from the player bar open it with the reader's voice
-  // in view (43f, 43h).
   scrollToChosen?: boolean;
+  // A page that already heads the picker names it by that heading instead.
+  labelledBy?: string;
 }
 
 // Design OV-43, 43a–43d and 43f: a radio group of voices by accent, each with a sample of
 // the same passage. Choosing saves at once; there is no Save button.
-export function NarrationVoicePicker({ scrollToChosen = false }: NarrationVoicePickerProps) {
+export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) {
   const api = useNarrationApi();
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
@@ -77,17 +80,17 @@ export function NarrationVoicePicker({ scrollToChosen = false }: NarrationVoiceP
     <section
       className={styles.root}
       role="radiogroup"
-      aria-labelledby={headingId}
+      aria-labelledby={labelledBy ?? headingId}
       data-testid={narrationVoicePickerTestIds.root}
     >
-      <div className={styles.intro}>
-        <h2 id={headingId} className={styles.heading}>
-          Narration voice
-        </h2>
-        <p className={styles.standfirst}>
-          New audio is read in this voice on every device. Have a listen and see which one you prefer.
-        </p>
-      </div>
+      {labelledBy === undefined && (
+        <div className={styles.intro}>
+          <h2 id={headingId} className={styles.heading}>
+            Narration voice
+          </h2>
+          <p className={styles.standfirst}>{NARRATION_VOICE_STANDFIRST}</p>
+        </div>
+      )}
 
       {samples.isError ? (
         <div className={styles.unavailable} aria-live="polite">

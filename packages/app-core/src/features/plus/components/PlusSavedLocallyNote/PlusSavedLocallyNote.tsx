@@ -18,7 +18,7 @@ export function PlusSavedLocallyNote({ onDismiss }: PlusSavedLocallyNoteProps) {
       <div className={styles.actions}>
         <Link
           className={styles.link}
-          to={Routes.settings()}
+          to={Routes.settingsSection("plan")}
           data-testid={plusSavedLocallyNoteTestIds.seePlusLink}
         >
           See Plus <StrokeIcon name="arrowRight" size={13} />

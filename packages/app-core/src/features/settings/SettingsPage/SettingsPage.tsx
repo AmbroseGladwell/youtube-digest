@@ -1,72 +1,100 @@
-import { useState } from "react";
 import { Link } from "react-router";
+import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useIsPanel } from "../../../app/LayoutContext.js";
-import { useSurface } from "../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
-import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
-import { ApiKeysPanel } from "../components/ApiKeysPanel/ApiKeysPanel.js";
+import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
-import { NarrationVoicePicker } from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
-import { NarrationVoiceRow } from "../components/NarrationVoiceRow/NarrationVoiceRow.js";
+import {
+  NARRATION_VOICE_STANDFIRST,
+  NarrationVoicePicker,
+} from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
+import { SettingsSection, settingsSectionHeadingId } from "../components/SettingsSection/SettingsSection.js";
+import { SettingsSectionList } from "../components/SettingsSectionList/SettingsSectionList.js";
+import type { SettingsSectionId } from "../SettingsSectionId.js";
+import { useSettingsSections, type SettingsSectionSummary } from "../useSettingsSections.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
 
 export interface SettingsPageProps {
-  scrollToVoice?: boolean;
+  section?: SettingsSectionId;
 }
 
-export function SettingsPage({ scrollToVoice = false }: SettingsPageProps) {
-  const { apiKeys, setApiKeys } = useApiKeys();
-  const surface = useSurface();
+const INTROS: Record<SettingsSectionId, string | null> = {
+  account: "Who is signed in, and whether this device is in step.",
+  voice: NARRATION_VOICE_STANDFIRST,
+  keys: BYO_KEY_NOTE,
+  plan: null,
+  about: null,
+};
+
+function SectionBody({ id }: { id: SettingsSectionId }) {
+  switch (id) {
+    case "account":
+      return <SyncPanel />;
+    case "voice":
+      return <NarrationVoicePicker scrollToChosen labelledBy={settingsSectionHeadingId("voice")} />;
+    case "keys":
+      return <ApiKeysSection />;
+    case "plan":
+      return <PlusPlanPanel />;
+    case "about":
+      return <BuildLine />;
+  }
+}
+
+// Design OV-51 (docs/features/settings.md): two panes on a wide screen, and on a phone or in
+// the panel the list is the page and each section is a page of its own.
+export function SettingsPage({ section }: SettingsPageProps) {
+  const sections = useSettingsSections();
   const isPanel = useIsPanel();
-  const [saved, setSaved] = useState(false);
+  const isPhone = useIsPhone();
+  const stacked = isPanel || isPhone;
+  const requested = sections.find((summary) => summary.id === section);
+  const current = requested ?? (stacked ? undefined : sections[0]);
+
+  const renderSection = (summary: SettingsSectionSummary) => (
+    <SettingsSection
+      key={summary.id}
+      id={summary.id}
+      title={summary.title}
+      intro={INTROS[summary.id]}
+      focusOnArrival={requested !== undefined}
+    >
+      <SectionBody id={summary.id} />
+    </SettingsSection>
+  );
+
+  if (stacked && current !== undefined) {
+    return (
+      <div className={`${styles.root} ${styles.rootStacked}`} data-testid={settingsPageTestIds.root}>
+        <div className={styles.back}>
+          <Link className={styles.backLink} to={Routes.settings()} data-testid={settingsPageTestIds.settingsLink}>
+            <StrokeIcon name="arrowLeft" /> Settings
+          </Link>
+        </div>
+        {renderSection(current)}
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.root} data-testid={settingsPageTestIds.root}>
-      <Link
-        className={styles.backLink}
-        to={Routes.home()}
-        data-testid={settingsPageTestIds.backLink}
-      >
+    <div className={`${styles.root} ${stacked ? styles.rootStacked : ""}`} data-testid={settingsPageTestIds.root}>
+      <Link className={styles.backLink} to={Routes.home()} data-testid={settingsPageTestIds.overviewsLink}>
         <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
       </Link>
-      <h2 className={styles.title}>Settings</h2>
-
-      {isPanel ? <NarrationVoiceRow /> : <NarrationVoicePicker scrollToChosen={scrollToVoice} />}
-
-      <PlusPlanPanel />
-
-      <p className={styles.standfirst}>{BYO_KEY_NOTE}</p>
-
-      {surface === "extension" && (
-        <p className={styles.standfirst} data-testid={settingsPageTestIds.separateLibraryNote}>
-          This is the extension's own library. The browser keeps it separate from the one on the web
-          app, so an overview made here won't appear there. Syncing the two is what an account will
-          be for.
-        </p>
+      <h1 className={styles.title}>Settings</h1>
+      {stacked ? (
+        <SettingsSectionList sections={sections} current={null} stacked />
+      ) : (
+        <div className={styles.panes}>
+          <SettingsSectionList sections={sections} current={current?.id ?? null} stacked={false} />
+          {current !== undefined && renderSection(current)}
+        </div>
       )}
-
-      <ApiKeysPanel
-        apiKeys={apiKeys}
-        onSave={(patch) => {
-          setApiKeys(patch);
-          setSaved(true);
-        }}
-      />
-
-      {saved && (
-        <p className={styles.saved} data-testid={settingsPageTestIds.savedConfirmation}>
-          Saved on this device.
-        </p>
-      )}
-
-      <SyncPanel />
-
-      <BuildLine />
     </div>
   );
 }

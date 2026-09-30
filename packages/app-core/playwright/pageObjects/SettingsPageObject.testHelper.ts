@@ -1,11 +1,13 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
+import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
+import { apiKeysSectionTestIds } from "../../src/features/settings/components/ApiKeysSection/ApiKeysSectionTestIds.js";
 import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
+import { settingsSectionTestIds } from "../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
+import { settingsSectionListTestIds } from "../../src/features/settings/components/SettingsSectionList/SettingsSectionListTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
-import { narrationVoiceRowTestIds } from "../../src/features/settings/components/NarrationVoiceRow/NarrationVoiceRowTestIds.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
-import { NarrationVoicePageObject } from "./NarrationVoicePageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
 
@@ -22,37 +24,70 @@ export class SettingsPageObject extends PageObject {
     return new NarrationVoicePickerPageObject(this.testContext);
   }
 
-  verifyVoiceRowReads = (text: string | RegExp) =>
-    this.step(`verifyVoiceRowReads ${String(text)}`, () =>
-      expect(this.get(narrationVoiceRowTestIds.root)).toHaveText(text),
-    );
-
-  openVoiceList = (): Promise<NarrationVoicePageObject> =>
-    this.step("openVoiceList", async () => {
-      await this.click(narrationVoiceRowTestIds.root);
-      return new NarrationVoicePageObject(this.testContext).verifyIsShown();
-    });
-
   verifyIsShown = (): Promise<SettingsPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(settingsPageTestIds.root);
       return this;
     });
 
+  openSection = (section: SettingsSectionId): Promise<SettingsPageObject> =>
+    this.step(`openSection ${section}`, async () => {
+      await this.click(settingsSectionListTestIds.row(section));
+      await this.verifySectionIsShown(section);
+      return this;
+    });
+
+  verifySectionIsShown = (section: SettingsSectionId) =>
+    this.step(`verifySectionIsShown ${section}`, () => this.expectToBeVisible(settingsSectionTestIds.root(section)));
+
+  verifySectionIsAbsent = (section: SettingsSectionId) =>
+    this.step(`verifySectionIsAbsent ${section}`, () => this.expectToHaveCount(settingsSectionTestIds.root(section), 0));
+
+  verifySectionHeadingIsFocused = (section: SettingsSectionId) =>
+    this.step(`verifySectionHeadingIsFocused ${section}`, () =>
+      expect(this.get(settingsSectionTestIds.heading(section))).toBeFocused(),
+    );
+
+  verifyRowsAre = (sections: SettingsSectionId[]) =>
+    this.step(`verifyRowsAre ${sections.join(", ")}`, () =>
+      expect
+        .poll(() =>
+          this.get(settingsSectionListTestIds.root)
+            .getByRole("link")
+            .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-testid"))),
+        )
+        .toEqual(sections.map((section) => settingsSectionListTestIds.row(section))),
+    );
+
+  verifyRowReads = (section: SettingsSectionId, text: string | RegExp) =>
+    this.step(`verifyRowReads ${section} ${String(text)}`, () =>
+      expect(this.get(settingsSectionListTestIds.rowValue(section))).toHaveText(text),
+    );
+
+  verifyCurrentRow = (section: SettingsSectionId) =>
+    this.step(`verifyCurrentRow ${section}`, () =>
+      expect(this.get(settingsSectionListTestIds.row(section))).toHaveAttribute("aria-current", "page"),
+    );
+
+  verifyListIsShown = (shown: boolean) =>
+    this.step(`verifyListIsShown ${shown}`, () =>
+      shown
+        ? this.expectToBeVisible(settingsSectionListTestIds.root)
+        : this.expectToHaveCount(settingsSectionListTestIds.root, 0),
+    );
+
+  clickBackToSettings = (): Promise<SettingsPageObject> =>
+    this.step("clickBackToSettings", async () => {
+      await this.click(settingsPageTestIds.settingsLink);
+      await this.verifyListIsShown(true);
+      return this;
+    });
+
+  clickBackToOverviews = () =>
+    this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.overviewsLink));
+
   verifySavedConfirmation = () =>
-    this.step("verifySavedConfirmation", () =>
-      this.expectToBeVisible(settingsPageTestIds.savedConfirmation),
-    );
-
-  verifySeparateLibraryNote = () =>
-    this.step("verifySeparateLibraryNote", () =>
-      this.expectToBeVisible(settingsPageTestIds.separateLibraryNote),
-    );
-
-  verifyHasNoSeparateLibraryNote = () =>
-    this.step("verifyHasNoSeparateLibraryNote", () =>
-      this.expectNotToBeVisible(settingsPageTestIds.separateLibraryNote),
-    );
+    this.step("verifySavedConfirmation", () => this.expectToBeVisible(apiKeysSectionTestIds.savedConfirmation));
 
   verifyPlanReads = (plan: string) =>
     this.step(`verifyPlanReads ${plan}`, () =>
@@ -78,10 +113,4 @@ export class SettingsPageObject extends PageObject {
 
   verifyBuildLineReads = (text: string) =>
     this.step(`verifyBuildLineReads ${text}`, () => expect(this.get(buildLineTestIds.root)).toHaveText(text));
-
-  verifyHasNoBuildLine = () =>
-    this.step("verifyHasNoBuildLine", () => this.expectToHaveCount(buildLineTestIds.root, 0));
-
-  clickBackToOverviews = () =>
-    this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.backLink));
 }
