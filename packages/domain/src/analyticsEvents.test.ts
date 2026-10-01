@@ -1,15 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
-import {
-  analyticsEventDefinitions,
-  flattenCatalogue,
-  isAnalyticsEventName,
-  serverAnalyticsEvents,
-} from "./analyticsEvents.js";
+import { analyticsEventDefinitions, isAnalyticsEventName } from "./analyticsEvents.js";
 
-const serverEventDefinitions = flattenCatalogue(serverAnalyticsEvents);
-const everyEvent = [...analyticsEventDefinitions, ...serverEventDefinitions];
+const everyEvent = [...analyticsEventDefinitions];
 
 test("every event is named feature.screen.action in camelCase and says what it means", () => {
   for (const [name, definition] of everyEvent) {
@@ -34,10 +28,4 @@ test("a name is only ever a whole feature, screen and action", () => {
   assert.ok(!isAnalyticsEventName("mcp.consentScreen"));
   assert.ok(!isAnalyticsEventName("consentScreen.approved"));
   assert.ok(!isAnalyticsEventName("mcp.consentScreen.approved.extra"));
-});
-
-test("the server's own events are not ones a client can send", () => {
-  for (const [name] of serverEventDefinitions) {
-    assert.ok(!isAnalyticsEventName(name), `${name} must not be accepted from a client`);
-  }
 });

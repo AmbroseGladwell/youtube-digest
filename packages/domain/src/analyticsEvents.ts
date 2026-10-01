@@ -19,10 +19,11 @@ function event(description: string, props: AnalyticsProps = {}): AnalyticsEventD
   return { description, props };
 }
 
-// Every event the app can send, named feature.screen.action: the feature as a reader would
-// name it, the screen or region of the app it happens on, and what the reader did there, so
-// a name says where it came from without a lookup (docs/architecture/analytics.md, "Naming").
-// The description is the catalogue: what someone reading the numbers is told it means.
+// Every event is something the reader did in the app: a click, a choice, a thing they made.
+// What the app or the server did on its own is logged, never an event
+// (docs/architecture/analytics.md, "Actions, not logs"). Each is named feature.screen.action
+// so a name says where it happened without a lookup ("Naming"), and its description is
+// what someone reading the numbers is told it means.
 export const analyticsEvents = {
   mcp: {
     consentScreen: {
@@ -33,36 +34,6 @@ export const analyticsEvents = {
     },
     settingsConnections: {
       revoked: event("The reader revokes an assistant's access in Settings › Connections"),
-    },
-  },
-  analytics: {
-    queue: {
-      dropped: event("The app dropped events it could not send or hold, sent with the next batch that got through", {
-        count: z.number().int().min(1).max(100_000),
-      }),
-    },
-  },
-} as const satisfies AnalyticsCatalogueShape;
-
-// Events the server records itself, from things that never pass through the app: an
-// assistant reading the library over /mcp. Not in analyticsEventDefinitions, so /api/events
-// refuses them from a client (docs/architecture/analytics.md, "Events the server sends").
-export const McpToolName = z.enum(["search_overviews", "list_topics", "get_overview", "get_overviews", "get_transcript"]);
-export type McpToolName = z.infer<typeof McpToolName>;
-
-export const McpAssistant = z.enum(["claude", "chatgpt", "other"]);
-export type McpAssistant = z.infer<typeof McpAssistant>;
-
-export const serverAnalyticsEvents = {
-  mcp: {
-    tools: {
-      called: event("An assistant connected to the reader's account called one of the library's MCP tools", {
-        tool: McpToolName,
-        assistant: McpAssistant,
-        failed: z.boolean(),
-        overviews: z.number().int().min(0).max(1_000),
-        durationMs: z.number().int().min(0).max(600_000),
-      }),
     },
   },
 } as const satisfies AnalyticsCatalogueShape;
@@ -78,7 +49,7 @@ export type AnalyticsEventName = {
 export type AnalyticsEventPropsOf<D> =
   D extends AnalyticsEventDefinition<infer P> ? { [Key in keyof P]: z.infer<P[Key]> } : never;
 
-export const flattenCatalogue = (catalogue: AnalyticsCatalogueShape): Map<string, AnalyticsEventDefinition> =>
+const flattenCatalogue = (catalogue: AnalyticsCatalogueShape): Map<string, AnalyticsEventDefinition> =>
   new Map(
     Object.entries(catalogue).flatMap(([feature, screens]) =>
       Object.entries(screens).flatMap(([screen, events]) =>

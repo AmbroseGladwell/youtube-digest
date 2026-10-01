@@ -42,7 +42,7 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
     () =>
       new AnalyticsQueue({
         canSend: () => latest.current.api !== null,
-        send: (events, options) => latest.current.api!.send({ context: latest.current.context, events }, options),
+        send: (batch, options) => latest.current.api!.send({ context: latest.current.context, ...batch }, options),
       }),
   );
 

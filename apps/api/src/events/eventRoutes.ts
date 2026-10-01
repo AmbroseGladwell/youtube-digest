@@ -18,12 +18,15 @@ export function eventRoutes(app: FastifyInstance, sink: EventSink | null, clock:
       preHandler: rateLimitHook(rateLimits.eventsPerAccount, (request) => request.session?.accountId ?? null, clock),
     },
     async (request, reply) => {
-      const { context, events } = parseOrThrow(AnalyticsEventBatch, request.body, "The events");
+      const { context, events, dropped } = parseOrThrow(AnalyticsEventBatch, request.body, "The events");
       const accepted = events.map(parseAnalyticsEvent).filter((event): event is AnalyticsEvent => event !== null);
       const refused = events.length - accepted.length;
 
       for (const { name, props } of accepted) {
         request.log.info({ event: name, props, ...context }, "client event");
+      }
+      if (dropped !== undefined) {
+        request.log.warn({ dropped, surface: context.surface, appVersion: context.appVersion }, "client events dropped");
       }
       if (refused > 0) {
         request.log.warn({ refused, surface: context.surface, appVersion: context.appVersion }, "client events refused");
@@ -31,7 +34,7 @@ export function eventRoutes(app: FastifyInstance, sink: EventSink | null, clock:
       if (sink !== null && accepted.length > 0) {
         const source = {
           accountId: request.session!.accountId,
-          origin: { kind: "app", context },
+          context,
           geoAddress: geoAddress(request.clientAddress),
         } as const;
         void sink

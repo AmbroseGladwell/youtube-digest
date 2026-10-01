@@ -36,7 +36,7 @@ describe("createAnalytics", () => {
       analytics.mcp.consentScreen.declined({ plan: "https://evil.test/" });
       // @ts-expect-error declined says which plan the reader was on
       analytics.mcp.consentScreen.declined();
-      // @ts-expect-error the queue's own bookkeeping is not the app's to send
+      // @ts-expect-error what the queue drops is logged, never an event
       analytics.analytics.queue.dropped({ count: 1 });
     };
     expect(refusedByTypes).toBeTypeOf("function");

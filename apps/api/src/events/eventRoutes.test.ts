@@ -30,7 +30,7 @@ test("a signed-in reader's events are passed on under their account id, with wha
         { name: "mcp.consentScreen.shown", props: {}, at: AT },
         { name: "mcp.consentScreen.declined", props: { plan: "free" }, at: AT },
       ],
-      source: { accountId: account.accountId, origin: { kind: "app", context }, geoAddress: "127.0.0.0" },
+      source: { accountId: account.accountId, context, geoAddress: "127.0.0.0" },
     },
   ]);
   await testApp.close();
@@ -77,26 +77,21 @@ test("an event the catalogue doesn't have, or carrying text it doesn't declare, 
   await testApp.close();
 });
 
-test("an event only the server records can't be sent by a client", async () => {
+test("what the app dropped is logged, not passed on as an event", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
 
-  await account.inject({
+  const response = await account.inject({
     method: "POST",
     url: "/api/events",
-    body: {
-      context,
-      events: [
-        {
-          name: "mcp.tools.called",
-          props: { tool: "get_overview", assistant: "claude", failed: false, overviews: 1, durationMs: 5 },
-          at: AT,
-        },
-      ],
-    },
+    body: { context, events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }], dropped: 4 },
   });
 
-  assert.deepEqual(testApp.eventSink.captured, []);
+  assert.equal(response.statusCode, 204);
+  assert.deepEqual(
+    testApp.eventSink.captured.flatMap(({ events }) => events.map(({ name }) => name)),
+    ["mcp.consentScreen.shown"],
+  );
   await testApp.close();
 });
 

@@ -6,7 +6,7 @@ import { createPostHogEventSink, EventDeliveryError } from "./postHogEventSink.j
 const ACCOUNT_ID = "6f1e2d3c-4b5a-4a8e-9b2a-0b8f5f7e3c1d" as AccountId;
 const source = {
   accountId: ACCOUNT_ID,
-  origin: { kind: "app", context: { surface: "web", layout: "full", appVersion: "0.4.1", platform: "windows" } },
+  context: { surface: "web", layout: "full", appVersion: "0.4.1", platform: "windows" },
   geoAddress: "81.2.69.0",
 } as const;
 
@@ -81,20 +81,6 @@ test("with no address to place the caller by, none is sent, so PostHog doesn't p
 
   const [event] = (sent[0]!.body as { batch: Array<{ properties: Record<string, unknown> }> }).batch;
   assert.ok(!("$ip" in event!.properties));
-});
-
-test("an assistant's call is tagged as coming from MCP, with none of the app's context", async () => {
-  const { sent, fetch } = answering(200);
-  const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
-
-  await sink.capture([{ name: "mcp.tools.called", props: { tool: "get_overview" }, at: "2026-10-01T09:00:00.000Z" }], {
-    accountId: ACCOUNT_ID,
-    origin: { kind: "mcp" },
-    geoAddress: null,
-  });
-
-  const [event] = (sent[0]!.body as { batch: Array<{ properties: Record<string, unknown> }> }).batch;
-  assert.deepEqual(event!.properties, { tool: "get_overview", surface: "mcp", environment: "production" });
 });
 
 test("a refusal is an error, for the route to log", async () => {

@@ -95,4 +95,3 @@ export * from "./overviewMarkdown.js";
 export * from "./analyticsEvents.js";
 export * from "./AnalyticsEventBatch.js";
 export * from "./RequestId.js";
-export * from "./mcpAssistant.js";

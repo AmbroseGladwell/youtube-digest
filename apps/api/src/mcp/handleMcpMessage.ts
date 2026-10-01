@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
+import type { McpAssistant } from "./mcpAssistant.js";
 import { mcpPrompts } from "./mcpPrompts.js";
 import type { McpToolContext } from "./McpTool.js";
 import { mcpTools } from "./mcpTools.js";
@@ -34,17 +35,10 @@ export type JsonRpcResponse =
 
 export type McpReply = { kind: "accepted" } | { kind: "response"; body: JsonRpcResponse };
 
-export interface McpToolCall {
-  tool: string;
-  failed: boolean;
-  overviews: number | null;
-  durationMs: number;
-}
-
 export interface McpCallContext extends McpToolContext {
   connectionId: string;
+  assistant: McpAssistant;
   log: FastifyBaseLogger;
-  onToolCalled?: (call: McpToolCall) => void;
 }
 
 const INSTRUCTIONS =
@@ -81,18 +75,18 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
   if (tool === undefined) {
     throw new JsonRpcError(JSON_RPC_ERRORS.invalidParams, `Unknown tool: ${name}`);
   }
-  const logged = { connectionId: context.connectionId, tool: name };
+  const logged = { connectionId: context.connectionId, assistant: context.assistant, tool: name };
   const startedAt = performance.now();
-  const called = (failed: boolean, overviews: number | null) =>
-    context.onToolCalled?.({ tool: name, failed, overviews, durationMs: Math.round(performance.now() - startedAt) });
+  const durationMs = () => Math.round(performance.now() - startedAt);
   try {
     const outcome = await tool.call(args, context);
-    context.log.info({ ...logged, overviews: outcome.overviews ?? null, failed: outcome.isError === true }, "mcp tool called");
-    called(outcome.isError === true, outcome.overviews ?? null);
+    context.log.info(
+      { ...logged, overviews: outcome.overviews ?? null, failed: outcome.isError === true, durationMs: durationMs() },
+      "mcp tool called",
+    );
     return { content: [{ type: "text", text: outcome.text }], isError: outcome.isError === true };
   } catch (error) {
-    context.log.error({ ...logged, err: error }, "mcp tool failed");
-    called(true, null);
+    context.log.error({ ...logged, err: error, durationMs: durationMs() }, "mcp tool failed");
     return { content: [{ type: "text", text: "Something went wrong reading the library. Try again shortly." }], isError: true };
   }
 }

@@ -11,9 +11,7 @@ type EventMethod<Definition> =
     ? () => void
     : (props: AnalyticsEventPropsOf<Definition>) => void;
 
-// The queue's own bookkeeping is in the catalogue so the server can check it, but only the
-// queue sends it.
-type Feature = Exclude<keyof AnalyticsCatalogue, "analytics">;
+type Feature = keyof AnalyticsCatalogue;
 
 export type Analytics = {
   [F in Feature]: {
@@ -40,12 +38,10 @@ export function createAnalytics(recorder: AnalyticsRecorder): Analytics {
         (props: Props = {}) => recorder.record(`${feature}.${screen}.${action}` as AnalyticsEventName, props),
       ]),
     );
-  const features = Object.entries(analyticsEvents)
-    .filter(([feature]) => feature !== "analytics")
-    .map(([feature, screens]) => [
-      feature,
-      Object.fromEntries(Object.entries(screens).map(([screen, events]) => [screen, methodsFor(feature, screen, events)])),
-    ]);
+  const features = Object.entries(analyticsEvents).map(([feature, screens]) => [
+    feature,
+    Object.fromEntries(Object.entries(screens).map(([screen, events]) => [screen, methodsFor(feature, screen, events)])),
+  ]);
   return {
     ...(Object.fromEntries(features) as Omit<Analytics, "flush">),
     flush: (options) => recorder.flush(options),

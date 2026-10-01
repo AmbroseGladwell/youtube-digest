@@ -197,8 +197,6 @@ export async function buildApp({
       sql,
       transcripts: new TranscriptsRepository(sql, clock),
       appOrigin: new URL(config.appUrl).origin,
-      eventSink,
-      clock,
     });
   });
 
