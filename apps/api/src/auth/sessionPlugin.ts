@@ -19,7 +19,7 @@ declare module "fastify" {
   }
 }
 
-// Deny by default: a route is public only by saying so. Missing, unknown and expired
+// Deny by default: a route is public, or takes a session only if there is one, by saying so. Missing, unknown and expired
 // tokens get one answer, because the client has one response to all three and a prober
 // learns nothing. A bearer is looked at first and the cookie only in its absence: two
 // transports onto the same row, one of them chosen per request (docs/architecture/api.md).
@@ -38,6 +38,7 @@ export const sessionPlugin = fp<SessionPluginOptions>(
           ? null
           : await resolveSession(sql, token, bearer === null ? "cookie" : "bearer", { now, sessionTtlDays });
       if (resolved === null) {
+        if (request.routeOptions.config.optionalSession) return;
         reply.header("www-authenticate", 'Bearer realm="api"');
         throw new ApiError("unauthenticated", "Sign in to use the API");
       }

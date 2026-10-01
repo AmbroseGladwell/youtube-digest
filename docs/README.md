@@ -18,6 +18,10 @@ Five folders, five different questions.
   apart, why events go through our own API to PostHog, who is counted and what an event may
   carry, why only reader actions are events and everything else is a log, adding one, the
   client's queue, and turning it on.
+- `errors-and-logs.md` — what went wrong for a reader: `POST /api/errors` beside events, with
+  or without an account, what an error may carry and how its message is redacted twice, the
+  failing call's request id, and what is still to come (the client's reporter, the
+  extension's worker, shipping the server's logs).
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
   how the extension gets its id, its server and its store zip.

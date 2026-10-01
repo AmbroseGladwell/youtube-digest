@@ -11,6 +11,8 @@ import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { eventRoutes } from "./events/eventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
+import { errorRoutes } from "./errors/errorRoutes.js";
+import type { ErrorSink } from "./errors/ErrorSink.js";
 import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { requestIdFor } from "./http/requestIdFor.js";
@@ -70,6 +72,8 @@ export interface BuildAppOptions {
   audio?: AudioSetup | null;
   // Where checked analytics events are passed on to; absent, they are only logged.
   eventSink?: EventSink | null;
+  // Where checked client errors are passed on to; absent, they are only logged.
+  errorSink?: ErrorSink | null;
   clock?: () => Date;
   logger?: boolean;
 }
@@ -77,6 +81,7 @@ export interface BuildAppOptions {
 declare module "fastify" {
   interface FastifyContextConfig {
     public?: boolean;
+    optionalSession?: boolean;
   }
   interface FastifyInstance {
     audioQueue: AudioRenderQueue | null;
@@ -92,6 +97,7 @@ export async function buildApp({
   mailer,
   audio = null,
   eventSink = null,
+  errorSink = null,
   clock = () => new Date(),
   logger = false,
 }: BuildAppOptions): Promise<FastifyInstance> {
@@ -165,6 +171,7 @@ export async function buildApp({
       transcriptRoutes(api, transcripts, clock);
       shareRoutes(api, shares, config.appUrl);
       eventRoutes(api, eventSink, clock);
+      errorRoutes(api, errorSink, clock);
       audioRoutes(
         api,
         audio === null || audioQueue === null

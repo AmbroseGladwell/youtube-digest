@@ -4,6 +4,7 @@ import { buildApp } from "./buildApp.js";
 import { createPgSqlClient } from "./db/createPgSqlClient.js";
 import { runMigrations } from "./db/runMigrations.js";
 import { ConfigError, loadConfig } from "./loadConfig.js";
+import { createPostHogErrorSink } from "./errors/postHogErrorSink.js";
 import { createPostHogEventSink } from "./events/postHogEventSink.js";
 import { createMailer } from "./mail/createMailer.js";
 
@@ -20,7 +21,8 @@ const applied = await runMigrations(sql);
 const audio = config.audio === null ? null : createAudioSetup(config.audio, true);
 const { postHog, environment } = config.analytics;
 const eventSink = postHog === null ? null : createPostHogEventSink({ ...postHog, environment });
-const app = await buildApp({ config, sql, mailer: createMailer(config.mail), audio, eventSink, logger: true });
+const errorSink = postHog === null ? null : createPostHogErrorSink({ ...postHog, environment });
+const app = await buildApp({ config, sql, mailer: createMailer(config.mail), audio, eventSink, errorSink, logger: true });
 app.log.info({ applied }, "migrations applied");
 app.log.info({ transport: config.mail.transport, appUrl: config.appUrl }, "magic links");
 app.log.info(
@@ -33,7 +35,7 @@ app.log.info(
   "narration",
 );
 app.log.info(
-  postHog === null ? "POSTHOG_API_KEY is not set: client events are logged only" : { host: postHog.host, environment },
+  postHog === null ? "POSTHOG_API_KEY is not set: client events and errors are logged only" : { host: postHog.host, environment },
   "analytics",
 );
 app.log.info(
