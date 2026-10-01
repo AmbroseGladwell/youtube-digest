@@ -17,3 +17,5 @@ export * from "./ConnectionsApi.js";
 export * from "./fetchConnectionsApi.js";
 export * from "./EventsApi.js";
 export * from "./fetchEventsApi.js";
+export * from "./ErrorsApi.js";
+export * from "./fetchErrorsApi.js";

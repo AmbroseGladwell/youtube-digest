@@ -69,7 +69,7 @@ export function createApiRequester({
         ...(keepalive ? { keepalive } : {}),
       });
     } catch (error) {
-      throw new SyncTransportError("The sync server could not be reached", { cause: error });
+      throw new SyncTransportError("The sync server could not be reached", { cause: error, requestId });
     }
 
     if (response.status === 204) {
@@ -82,13 +82,16 @@ export function createApiRequester({
     } catch (error) {
       throw new SyncTransportError(`The sync server answered ${response.status} without a readable body`, {
         cause: error,
+        requestId,
       });
     }
 
     if (!response.ok) {
       const envelope = ApiErrorEnvelope.safeParse(json);
       if (!envelope.success) {
-        throw new SyncTransportError(`The sync server answered ${response.status} with something other than an API error`);
+        throw new SyncTransportError(`The sync server answered ${response.status} with something other than an API error`, {
+          requestId,
+        });
       }
       const { code, message, details } = envelope.data.error;
       throw new SyncRequestError(
@@ -104,6 +107,7 @@ export function createApiRequester({
     if (!parsed.success) {
       throw new SyncTransportError(`The sync server's answer to ${method} ${path} did not have the expected shape`, {
         cause: parsed.error,
+        requestId,
       });
     }
     return parsed.data;

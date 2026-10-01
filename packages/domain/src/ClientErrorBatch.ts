@@ -10,7 +10,14 @@ export const MAX_ERROR_FRAMES = 30;
 export const MAX_ERROR_TRAIL = 20;
 
 // Where the app caught it, which says as much about a failure as its stack does.
-export const ClientErrorSource = z.enum(["uncaught", "unhandledRejection", "routeBoundary", "failedRequest", "serviceWorker"]);
+export const ClientErrorSource = z.enum([
+  "uncaught",
+  "unhandledRejection",
+  "routeBoundary",
+  "errorState",
+  "failedRequest",
+  "serviceWorker",
+]);
 export type ClientErrorSource = z.infer<typeof ClientErrorSource>;
 
 // A stack frame cut down to the app's own code: a function name and a path inside the

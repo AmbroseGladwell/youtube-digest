@@ -60,6 +60,7 @@ export function ConnectExtensionPage() {
     return (
       <ErrorState
         title="Couldn't make a code for the extension"
+        error={issue.error}
         body={authFailureMessage(issue.error, CODE_SPENT)}
         action={{ label: "Try again", onSelect: makeCode }}
       />

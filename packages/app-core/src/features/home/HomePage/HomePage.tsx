@@ -44,6 +44,7 @@ function LibraryHome() {
       <div className={styles.root} data-testid={homePageTestIds.root}>
         <ErrorState
           title="Couldn't load your library"
+          error={overviewsQuery.error}
           body="Something went wrong reading your saved overviews. Nothing has been lost."
           action={{ label: "Try again", onSelect: () => void overviewsQuery.refetch() }}
         />

@@ -4,8 +4,8 @@
 // server's read side (docs/features/sync-client.md), the shared transcript cache
 // (docs/features/shared-transcript-cache.md), sign-in (docs/features/sign-in.md)
 // narration (docs/features/audio-player.md), connecting an assistant
-// (docs/features/mcp-connector.md), sharing (docs/features/sharing.md) and analytics
-// (docs/architecture/analytics.md).
+// (docs/features/mcp-connector.md), sharing (docs/features/sharing.md), analytics
+// (docs/architecture/analytics.md) and errors (docs/architecture/errors-and-logs.md).
 export enum EndpointKey {
   INNERTUBE_PLAYER = "INNERTUBE_PLAYER",
   YOUTUBE_TIMEDTEXT = "YOUTUBE_TIMEDTEXT",
@@ -35,6 +35,7 @@ export enum EndpointKey {
   SHARE_CREATE = "SHARE_CREATE",
   SHARE_STOP = "SHARE_STOP",
   EVENTS = "EVENTS",
+  ERRORS = "ERRORS",
 }
 
 export enum EndpointBehaviour {

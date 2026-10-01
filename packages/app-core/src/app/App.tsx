@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { AnalyticsRuntime } from "../features/analytics/AnalyticsRuntime.js";
+import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.js";
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
@@ -59,13 +60,15 @@ export function App({
                       <AppBuildProvider value={build}>
                         <QueryClientProvider client={queryClient}>
                           <SyncRuntime>
-                            <AnalyticsRuntime>
-                              <PlayerRuntime>
-                                <ShareRuntime>
-                                  <RouterProvider router={router} />
-                                </ShareRuntime>
-                              </PlayerRuntime>
-                            </AnalyticsRuntime>
+                            <ErrorReportingRuntime>
+                              <AnalyticsRuntime>
+                                <PlayerRuntime>
+                                  <ShareRuntime>
+                                    <RouterProvider router={router} />
+                                  </ShareRuntime>
+                                </PlayerRuntime>
+                              </AnalyticsRuntime>
+                            </ErrorReportingRuntime>
                           </SyncRuntime>
                         </QueryClientProvider>
                       </AppBuildProvider>
