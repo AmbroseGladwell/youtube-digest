@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MilestoneId } from "./Milestone.js";
 import { Plan } from "./Plan.js";
 
 // A property can only be a choice, a flag or a number: nothing that could carry a URL,
@@ -28,6 +29,11 @@ export const analyticsEvents = {
   },
   connections: {
     revoked: event("The reader revokes an assistant's access in Settings › Connections"),
+  },
+  timeSaved: {
+    opened: event("The reader opens the time-saved breakdown from the library's total"),
+    milestoneShown: event("A time-saved milestone card is shown to the reader", { milestone: MilestoneId }),
+    milestoneDismissed: event("The reader dismisses a time-saved milestone card", { milestone: MilestoneId }),
   },
   analytics: {
     dropped: event("The app dropped events it could not send or hold, sent with the next batch that got through", {

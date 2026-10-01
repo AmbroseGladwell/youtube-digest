@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { OverviewId, isUnreadableRecordError, overviewMetaParts, overviewNoteLines, formatClock } from "@overview/domain";
+import {
+  OverviewId,
+  isUnreadableRecordError,
+  overviewMetaParts,
+  overviewNoteLines,
+  overviewTimeSaved,
+  formatClock,
+} from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -30,6 +37,7 @@ import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.j
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
+import { useSavedOnRead } from "./useSavedOnRead.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
@@ -86,6 +94,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   );
   const [playerDocked, setPlayerDocked] = useState(false);
   const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(useLocation().state));
+  const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
 
   // A chapter opens the transcript at its start; choosing the tab yourself opens it at
   // the top, so the target is cleared by every other route to it.
@@ -194,6 +203,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     overviewId,
   );
   const range = overview.watchAnyway?.range ?? null;
+  const timeSaved = overviewTimeSaved(overview);
+  const savedChip =
+    savedPhase !== "hidden" && timeSaved.kind === "counted" && timeSaved.minutes > 0
+      ? { minutes: timeSaved.minutes, leaving: savedPhase === "leaving" }
+      : null;
   const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
   const narrated =
     notePlayer.current && notePlayer.snapshot.source === "audio" && notePlayer.snapshot.availability === "ready";
@@ -213,6 +227,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       <ReaderMasthead
         overview={overview}
         metaParts={overviewMetaParts(overview)}
+        savedChip={savedChip}
         read={state.read}
         favourite={state.favourite}
         playing={notePlayer.playing}

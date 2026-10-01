@@ -7,4 +7,6 @@ export const filterPanelTestIds = {
   newTopicButton: "FilterPanel.newTopicButton",
   showAllTopicsButton: "FilterPanel.showAllTopicsButton",
   dubiousChip: "FilterPanel.dubiousChip",
+  moreFiltersButton: "FilterPanel.moreFiltersButton",
+  moreFiltersSummary: "FilterPanel.moreFiltersSummary",
 };

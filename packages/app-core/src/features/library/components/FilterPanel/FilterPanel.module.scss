@@ -102,7 +102,79 @@
   color: var(--muted);
 }
 
+// Verdict folds into one row at the foot of the filters ("OV-34 2 Milestones" 34ab). The
+// panel opens by growing its grid row, so its height never has to be measured.
+.more {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.moreButton {
+  @include controls.ghost-pill;
+
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--label);
+}
+
+.moreSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.chevron {
+  display: inline-flex;
+  transition: transform 300ms var(--motion-ease);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.morePanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 340ms var(--motion-ease),
+    opacity 240ms var(--motion-ease),
+    visibility 0s linear 340ms;
+}
+
+.morePanelOpen {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 340ms var(--motion-ease),
+    opacity 240ms var(--motion-ease),
+    visibility 0s;
+}
+
+.morePanelInner {
+  min-height: 0;
+  overflow: hidden;
+
+  .label {
+    padding-top: 0.375rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
 @media (max-width: 47.9375rem) {
+  .moreButton {
+    min-height: 2.75rem;
+  }
+
   .option {
     min-height: 2.75rem;
     font-size: 0.9rem;

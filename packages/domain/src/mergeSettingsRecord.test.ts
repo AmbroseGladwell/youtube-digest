@@ -17,3 +17,14 @@ test("a patch that does not mention sectionsEnabled leaves it exactly as it was"
   const merged = mergeSettingsRecord({ sectionsEnabled: { verdict: false }, readerContext: null }, { readerContext: "y" });
   assert.deepEqual(merged, { sectionsEnabled: { verdict: false }, readerContext: "y" });
 });
+
+test("a patch to one milestone leaves the others, so two devices can each record their own", () => {
+  const crossed = { crossedAt: "2026-10-01T09:00:00.000Z", dismissedAt: null };
+  const merged = mergeSettingsRecord(
+    { milestones: { "30m": crossed, "1h": crossed } },
+    { milestones: { "30m": { ...crossed, dismissedAt: "2026-10-01T10:00:00.000Z" } } },
+  );
+  assert.deepEqual(merged, {
+    milestones: { "30m": { ...crossed, dismissedAt: "2026-10-01T10:00:00.000Z" }, "1h": crossed },
+  });
+});

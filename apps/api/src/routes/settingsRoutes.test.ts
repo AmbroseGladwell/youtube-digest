@@ -45,6 +45,26 @@ test("patching one toggle keeps the others, including one a newer client added",
   await testApp.close();
 });
 
+test("dismissing one milestone keeps the ones another device crossed", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const crossed = { crossedAt: "2026-10-01T09:00:00.000Z", dismissedAt: null };
+  await account.seedRaw("settings", "settings", 1, { ...DEFAULT_SETTINGS, milestones: { "30m": crossed, "1h": crossed } });
+
+  const response = await account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: { milestones: { "30m": { ...crossed, dismissedAt: "2026-10-01T10:00:00.000Z" } }, updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual((await account.change("settings", "settings")).body!.milestones, {
+    "30m": { ...crossed, dismissedAt: "2026-10-01T10:00:00.000Z" },
+    "1h": crossed,
+  });
+  await testApp.close();
+});
+
 test("a settings patch that changes nothing, or names a setting that does not exist, is refused", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

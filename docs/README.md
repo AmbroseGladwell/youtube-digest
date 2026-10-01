@@ -84,6 +84,9 @@ Five folders, five different questions.
   writes the document and the app renders it, the card image drawn per request and measured
   by the renderer that draws it, how a visitor hears the copy's own narration without an
   account, and the intent that survives making one.
+- `time-saved.md` — the running total of time saved by reading instead of watching: how it
+  is counted and what it leaves out, the rolling figure and its breakdown, the "Saved you"
+  moment, and the ten milestones with the rules for when each shows, stored on the account.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.

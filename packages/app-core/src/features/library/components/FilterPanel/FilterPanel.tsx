@@ -15,8 +15,21 @@ export interface FilterPanelProps {
   onNewTopic: () => void;
 }
 
+const MORE_PANEL_ID = "FilterPanel-more";
+
+// Closed, the row still says what is set, so a hidden filter is never a surprise
+// ("OV-34 2 Milestones" 34ab).
+const verdictSummary = (filters: LibraryFilters): string => {
+  const parts = [
+    ...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]),
+    ...(filters.dubious ? ["Dubious only"] : []),
+  ];
+  return parts.length === 0 ? "Any verdict" : parts.join(" · ");
+};
+
 export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: FilterPanelProps) {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
+  const [moreShown, setMoreShown] = useState(false);
   const capped = cappedTopics(topics, filters.topicId);
   const shownTopics = allTopicsShown ? topics : capped.shown;
 
@@ -89,37 +102,57 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
         </button>
       </div>
 
-      <div className={styles.group}>
-        <p className={styles.label}>Verdict</p>
-        <div className={styles.list} role="group" aria-label="Filter by verdict">
-          <ListOption
-            active={filters.novelty === "all"}
-            count={counts.total}
-            onClick={() => onChange({ novelty: "all" })}
-            testId={filterPanelTestIds.noveltyChip("all")}
-          >
-            Any verdict
-          </ListOption>
-          {NOVELTY_ORDER.map((novelty: Novelty) => (
-            <ListOption
-              key={novelty}
-              active={filters.novelty === novelty}
-              count={counts.byNovelty[novelty] ?? 0}
-              onClick={() => onChange({ novelty })}
-              testId={filterPanelTestIds.noveltyChip(novelty)}
-            >
-              {NOVELTY_LABEL[novelty]}
-            </ListOption>
-          ))}
-          <ListOption
-            active={filters.dubious}
-            count={counts.dubious}
-            accent
-            onClick={() => onChange({ dubious: !filters.dubious })}
-            testId={filterPanelTestIds.dubiousChip}
-          >
-            Dubious only
-          </ListOption>
+      <div className={styles.more}>
+        <button
+          type="button"
+          className={styles.moreButton}
+          onClick={() => setMoreShown(!moreShown)}
+          aria-expanded={moreShown}
+          aria-controls={MORE_PANEL_ID}
+          data-testid={filterPanelTestIds.moreFiltersButton}
+        >
+          <span>More filters</span>
+          <span className={styles.moreSummary}>
+            <span data-testid={filterPanelTestIds.moreFiltersSummary}>{verdictSummary(filters)}</span>
+            <span className={`${styles.chevron} ${moreShown ? styles.chevronOpen : ""}`} aria-hidden="true">
+              <StrokeIcon name="chevronDown" size={14} />
+            </span>
+          </span>
+        </button>
+        <div id={MORE_PANEL_ID} className={`${styles.morePanel} ${moreShown ? styles.morePanelOpen : ""}`} inert={!moreShown}>
+          <div className={styles.morePanelInner}>
+            <p className={styles.label}>Verdict</p>
+            <div className={styles.list} role="group" aria-label="Filter by verdict">
+              <ListOption
+                active={filters.novelty === "all"}
+                count={counts.total}
+                onClick={() => onChange({ novelty: "all" })}
+                testId={filterPanelTestIds.noveltyChip("all")}
+              >
+                Any verdict
+              </ListOption>
+              {NOVELTY_ORDER.map((novelty: Novelty) => (
+                <ListOption
+                  key={novelty}
+                  active={filters.novelty === novelty}
+                  count={counts.byNovelty[novelty] ?? 0}
+                  onClick={() => onChange({ novelty })}
+                  testId={filterPanelTestIds.noveltyChip(novelty)}
+                >
+                  {NOVELTY_LABEL[novelty]}
+                </ListOption>
+              ))}
+              <ListOption
+                active={filters.dubious}
+                count={counts.dubious}
+                accent
+                onClick={() => onChange({ dubious: !filters.dubious })}
+                testId={filterPanelTestIds.dubiousChip}
+              >
+                Dubious only
+              </ListOption>
+            </div>
+          </div>
         </div>
       </div>
     </div>
