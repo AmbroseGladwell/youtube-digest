@@ -6,7 +6,7 @@ import { isSyncRequestError } from "./SyncRequestError.js";
 
 const batch: AnalyticsEventBatch = {
   context: { surface: "extension", layout: "panel", appVersion: "0.4.1", platform: "macos" },
-  events: [{ name: "consent.approved", props: {}, at: "2026-10-01T09:00:00.000Z" }],
+  events: [{ name: "mcp.consentScreen.approved", props: {}, at: "2026-10-01T09:00:00.000Z" }],
 };
 
 const answering = (status: number, body: unknown = null) => {

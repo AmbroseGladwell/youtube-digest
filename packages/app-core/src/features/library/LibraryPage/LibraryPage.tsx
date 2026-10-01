@@ -84,7 +84,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
     <MilestoneStack
       milestones={milestones.visible}
       minutes={timeSaved.minutes}
-      onShown={milestones.shown}
+      onLineChosen={milestones.lineChosen}
       onDismiss={milestones.dismiss}
       onUndo={milestones.undo}
     />
@@ -215,7 +215,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                   className={styles.timeSaved}
                   onClick={() => {
                     setTimeSavedOpen(true);
-                    analytics.timeSaved.opened();
+                    analytics.timeSaved.library.breakdownOpened();
                   }}
                   aria-haspopup="dialog"
                   aria-expanded={timeSavedOpen}

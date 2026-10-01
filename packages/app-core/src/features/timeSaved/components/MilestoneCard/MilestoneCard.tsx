@@ -1,5 +1,5 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { spokenTimeSaved, type Milestone } from "@overview/domain";
+import { spokenTimeSaved, type Milestone, type MilestoneLineControl } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MILESTONE_LINES } from "../../util/milestoneLines.js";
 import { milestoneColourStyle } from "../../util/milestoneColourStyle.js";
@@ -13,6 +13,7 @@ export interface MilestoneCardProps {
   minutes: number;
   dismissLabel: string;
   onDismiss: () => void;
+  onLineChosen: (by: MilestoneLineControl) => void;
   // Staggers the light that passes over the card, so a stack's cards never sweep together.
   shimmerIndex?: number;
 }
@@ -31,7 +32,7 @@ interface Drag {
 // Design 34za: a tile tinted in the milestone's colour, its pill, the total rolling in,
 // and five lines that cycle, swipe and step with the arrow keys
 // (docs/features/time-saved.md).
-export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, shimmerIndex = 0 }: MilestoneCardProps) {
+export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, onLineChosen, shimmerIndex = 0 }: MilestoneCardProps) {
   const lines = MILESTONE_LINES[milestone.id];
   const [held, setHeld] = useState({ hover: false, focus: false, drag: false });
   const paused = held.hover || held.focus || held.drag;
@@ -83,6 +84,7 @@ export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, shi
     }
     if (Math.abs(current.dx) > SWIPE_DISTANCE) {
       step(current.dx < 0 ? 1 : -1);
+      onLineChosen("swipe");
     }
     hold("drag", false);
   };
@@ -104,6 +106,7 @@ export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, shi
         if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
           event.preventDefault();
           step(event.key === "ArrowRight" ? 1 : -1);
+          onLineChosen("keys");
         }
       }}
       onMouseEnter={() => hold("hover", true)}
@@ -168,7 +171,12 @@ export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, shi
             key={index}
             type="button"
             className={`${styles.dot} ${index === line.index ? styles.dotCurrent : ""}`}
-            onClick={() => jumpTo(index)}
+            onClick={() => {
+              if (index !== line.index) {
+                jumpTo(index);
+                onLineChosen("dot");
+              }
+            }}
             aria-label={`Line ${index + 1} of ${lines.length}`}
             aria-current={index === line.index}
             data-testid={milestoneCardTestIds.dot(index)}

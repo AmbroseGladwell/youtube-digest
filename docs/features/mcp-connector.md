@@ -264,9 +264,12 @@ decided (approved or not), and a connection revoked, with who revoked it (`reade
 `client`, or `replayed`). A client's name is set by the client and never logged, and no
 token, code or verifier is ever logged.
 
-Every tool call is logged as `mcp tool called` with the connection's id, the tool's name,
-how many overviews it returned (for the three that return overviews) and whether it
-failed. A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
+Every tool call is logged as `mcp tool called` with the connection's id, the assistant
+(`claude`, `chatgpt` or `other`, from the name it registered with by `mcpAssistant`, never
+the name itself), the tool's name, how many overviews it returned (for the three that
+return overviews), whether it failed, and how long it took. These are logs, not analytics
+events: the reader didn't do anything in the app (`docs/architecture/analytics.md`,
+"Actions, not logs"). A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
 told to try again. A query, a topic, a note's content and a transcript are never logged.
 
 ## The consent screen
@@ -331,17 +334,13 @@ with focus on its Revoke.
 ## Events
 
 The design's five events are in the analytics catalogue under the app's own naming
-(`docs/architecture/analytics.md`): `consent.shown` once a request has loaded,
-`consent.planRequired` once a reader on Free is shown the Plus card, `consent.approved`,
-and `consent.declined` with the plan the reader was on, both sent as the page is left so
-they outlive it, and `connections.revoked` once the server has taken the revoke. Only a
+(`docs/architecture/analytics.md`, "Naming"): `mcp.consentScreen.shown` once a request
+has loaded, `mcp.consentScreen.plusRequired` once a reader on Free is shown the Plus card,
+`mcp.consentScreen.approved`, and `mcp.consentScreen.declined` with the plan the reader was
+on, both sent as the page is left so they outlive it, and `mcp.settingsConnections.revoked`
+once the server has taken the revoke. Only a
 signed-in reader is counted, so a request looked at before signing in is not; the server
 still logs every decision and revoke itself, as above.
-
-Each tool call is also counted, by the server, as `mcp.toolCalled`: the tool, which of
-Claude, ChatGPT or another assistant made it, whether it failed, how many overviews it
-returned and how long it took. That is the same line the logs draw: never the query, a
-topic or anything read (`docs/architecture/analytics.md`, "Events the server sends").
 
 ## Not built yet
 

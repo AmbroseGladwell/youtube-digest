@@ -34,3 +34,7 @@ export type MilestoneMark = z.infer<typeof MilestoneMark>;
 // survives this one reading and writing the record back.
 export const MilestoneMarks = z.record(z.string(), MilestoneMark);
 export type MilestoneMarks = z.infer<typeof MilestoneMarks>;
+
+// How a reader moved a milestone card to another line, for analytics.
+export const MilestoneLineControl = z.enum(["swipe", "keys", "dot"]);
+export type MilestoneLineControl = z.infer<typeof MilestoneLineControl>;

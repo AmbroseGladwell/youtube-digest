@@ -245,21 +245,29 @@ test.describe("milestones", () => {
     await library.milestones.verifyShowsNothing();
   });
 
-  test("opening the breakdown and seeing a milestone are counted", async ({ launcher, backendSimulator }) => {
+  test("opening the breakdown, stepping a card's lines, dismissing and undoing are counted", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     seedRead(backendSimulator, lasting(40));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
 
     await library.milestones.verifyFrontCardIs("30 minutes");
-    await library.openTimeSaved();
+    await library.milestones.clickDot(2);
+    await library.milestones.pressArrow("ArrowRight");
+    await library.milestones.dismiss();
+    await library.milestones.undo();
+    await (await library.openTimeSaved()).close();
 
     await expect
       .poll(() => backendSimulator.analytics.events())
-      .toEqual(
-        expect.arrayContaining([
-          { name: "timeSaved.milestoneShown", props: { milestone: "30m" } },
-          { name: "timeSaved.opened", props: {} },
-        ]),
-      );
+      .toEqual([
+        { name: "timeSaved.milestoneCard.lineChosen", props: { milestone: "30m", by: "dot" } },
+        { name: "timeSaved.milestoneCard.lineChosen", props: { milestone: "30m", by: "keys" } },
+        { name: "timeSaved.milestoneCard.dismissed", props: { milestone: "30m" } },
+        { name: "timeSaved.milestoneCard.dismissalUndone", props: { milestone: "30m" } },
+        { name: "timeSaved.library.breakdownOpened", props: {} },
+      ]);
   });
 });
 

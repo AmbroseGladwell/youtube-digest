@@ -4,6 +4,7 @@ import {
   visibleMilestones,
   type Milestone,
   type MilestoneId,
+  type MilestoneLineControl,
   type MilestoneMarks,
 } from "@overview/domain";
 import { useNow } from "../../util/useNow.js";
@@ -16,7 +17,7 @@ const NO_MARKS: MilestoneMarks = {};
 
 export interface Milestones {
   visible: Milestone[];
-  shown: (id: MilestoneId) => void;
+  lineChosen: (id: MilestoneId, by: MilestoneLineControl) => void;
   dismiss: (id: MilestoneId) => void;
   undo: (id: MilestoneId) => void;
 }
@@ -63,11 +64,14 @@ export function useMilestones(minutes: number, libraryLoaded: boolean): Mileston
 
   return {
     visible: settled ? visibleMilestones(marks, minutes, new Date()) : [],
-    shown: (id) => analytics.timeSaved.milestoneShown({ milestone: id }),
+    lineChosen: (id, by) => analytics.timeSaved.milestoneCard.lineChosen({ milestone: id, by }),
     dismiss: (id) => {
       mark(id, new Date().toISOString());
-      analytics.timeSaved.milestoneDismissed({ milestone: id });
+      analytics.timeSaved.milestoneCard.dismissed({ milestone: id });
     },
-    undo: (id) => mark(id, null),
+    undo: (id) => {
+      mark(id, null);
+      analytics.timeSaved.milestoneCard.dismissalUndone({ milestone: id });
+    },
   };
 }

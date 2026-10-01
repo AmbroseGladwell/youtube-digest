@@ -108,9 +108,20 @@ hold on hover and focus.
 
 ## What is counted
 
-`timeSaved.opened` when the breakdown opens, `timeSaved.milestoneShown` each time a
-milestone comes to the front, and `timeSaved.milestoneDismissed` on ×, the last two with the
-milestone's id (`docs/architecture/analytics.md`).
+Analytics holds only what the reader did (`docs/architecture/analytics.md`, "Actions, not
+logs"):
+
+- `timeSaved.library.breakdownOpened`: the total pressed to open the breakdown.
+- `timeSaved.milestoneCard.dismissed` and `timeSaved.milestoneCard.dismissalUndone`, with
+  the milestone.
+- `timeSaved.milestoneCard.lineChosen`, with the milestone and whether it was a swipe, the
+  arrow keys or a dot: whether anyone reads past the first line.
+
+A milestone being crossed, and so shown, is the app acting rather than the reader, so it is
+a log line instead. The API logs `time-saved milestones changed` whenever a settings patch
+crosses, dismisses or restores a milestone, with each milestone's change
+(`milestoneChanges`). That covers signed-in readers; a device that is not signed in has no
+server to log to, and nothing from the client is shipped anywhere until OV-61.
 
 ## Not built yet
 

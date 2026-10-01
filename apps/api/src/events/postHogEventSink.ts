@@ -21,16 +21,7 @@ export function createPostHogEventSink({
 }: PostHogEventSinkOptions): EventSink {
   const url = `${host.replace(/\/+$/, "")}/batch/`;
   return {
-    capture: async (events, { accountId, origin, geoAddress }) => {
-      const originProps =
-        origin.kind === "mcp"
-          ? { surface: "mcp" }
-          : {
-              surface: origin.context.surface,
-              layout: origin.context.layout,
-              app_version: origin.context.appVersion,
-              platform: origin.context.platform,
-            };
+    capture: async (events, { accountId, context, geoAddress }) => {
       const response = await fetchImpl(url, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -42,7 +33,10 @@ export function createPostHogEventSink({
             timestamp: at,
             properties: {
               ...props,
-              ...originProps,
+              surface: context.surface,
+              layout: context.layout,
+              app_version: context.appVersion,
+              platform: context.platform,
               environment,
               ...(geoAddress === null ? {} : { $ip: geoAddress }),
             },

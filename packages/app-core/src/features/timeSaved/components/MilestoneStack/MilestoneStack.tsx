@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Milestone, MilestoneId } from "@overview/domain";
+import type { Milestone, MilestoneId, MilestoneLineControl } from "@overview/domain";
 import { milestoneColourStyle } from "../../util/milestoneColourStyle.js";
 import { MilestoneCard } from "../MilestoneCard/MilestoneCard.js";
 import styles from "./MilestoneStack.module.scss";
@@ -8,7 +8,7 @@ import { milestoneStackTestIds } from "./MilestoneStackTestIds.js";
 export interface MilestoneStackProps {
   milestones: Milestone[];
   minutes: number;
-  onShown: (id: MilestoneId) => void;
+  onLineChosen: (id: MilestoneId, by: MilestoneLineControl) => void;
   onDismiss: (id: MilestoneId) => void;
   onUndo: (id: MilestoneId) => void;
 }
@@ -20,18 +20,12 @@ const PLATES = 2;
 // a stack shortest first with the next ones peeking out underneath in their own colours.
 // × brings the next forward; the last × leaves a moment to undo it
 // (docs/features/time-saved.md, "When a milestone shows").
-export function MilestoneStack({ milestones, minutes, onShown, onDismiss, onUndo }: MilestoneStackProps) {
+export function MilestoneStack({ milestones, minutes, onLineChosen, onDismiss, onUndo }: MilestoneStackProps) {
   const [dismissedHere, setDismissedHere] = useState(0);
   const [undoable, setUndoable] = useState<MilestoneId | null>(null);
   const front = milestones[0];
   const behind = milestones.slice(1, 1 + PLATES);
   const total = dismissedHere + milestones.length;
-
-  useEffect(() => {
-    if (front !== undefined) {
-      onShown(front.id);
-    }
-  }, [front?.id]);
 
   useEffect(() => {
     if (milestones.length === 0 && undoable === null) {
@@ -102,6 +96,7 @@ export function MilestoneStack({ milestones, minutes, onShown, onDismiss, onUndo
           minutes={minutes}
           dismissLabel={several ? "Hide this milestone" : "Hide until your next milestone"}
           onDismiss={dismiss}
+          onLineChosen={(by) => onLineChosen(front.id, by)}
           shimmerIndex={dismissedHere}
         />
       </div>

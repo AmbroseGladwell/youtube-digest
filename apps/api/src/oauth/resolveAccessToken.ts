@@ -7,7 +7,8 @@ export interface ConnectionAccess {
   connectionId: string;
   accountId: AccountId;
   scope: string;
-  // The name the assistant registered with, which it chose: counted, never logged.
+  // The name the assistant registered with, which it chose: logged only as one of a few
+  // assistants (mcpAssistant), never as written.
   clientName: string | null;
 }
 
