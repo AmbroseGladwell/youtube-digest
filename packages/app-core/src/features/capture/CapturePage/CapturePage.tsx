@@ -136,13 +136,15 @@ export function CapturePage() {
           </p>
         )}
 
-        <MilestoneStack
-          milestones={milestones.visible}
-          minutes={timeSaved.minutes}
-          onLineChosen={milestones.lineChosen}
-          onDismiss={milestones.dismiss}
-          onUndo={milestones.undo}
-        />
+        <div className={styles.milestones}>
+          <MilestoneStack
+            milestones={milestones.visible}
+            minutes={timeSaved.minutes}
+            onLineChosen={milestones.lineChosen}
+            onDismiss={milestones.dismiss}
+            onUndo={milestones.undo}
+          />
+        </div>
 
         {!keysReady && (
           <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>

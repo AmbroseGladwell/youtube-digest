@@ -63,6 +63,19 @@
   color: var(--ground);
 }
 
+// "Mark read" and "Read" share one width, so marking it moves nothing beside it.
+.read {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  min-width: 6.5rem;
+}
+
+.readActive,
+.readActive:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--ground);
+}
+
 .head {
   grid-area: head;
   width: 100%;
