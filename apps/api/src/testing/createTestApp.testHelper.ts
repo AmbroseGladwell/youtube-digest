@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
-import type { FastifyInstance } from "fastify";
+import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import {
   makeMemoryAudioStore,
   makeScriptedNarrator,
@@ -44,6 +44,7 @@ export interface TestApp {
 
 export interface TestAppOptions {
   narration?: boolean;
+  logger?: FastifyBaseLogger;
 }
 
 export const TEST_APP_URL = "https://overview.test";
@@ -52,7 +53,7 @@ export const TEST_APP_URL = "https://overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true }: TestAppOptions = {},
+  { narration = true, logger }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql);
@@ -75,6 +76,7 @@ export async function createTestApp(
     eventSink,
     errorSink,
     clock: () => clock.now,
+    ...(logger === undefined ? {} : { logger }),
   });
   await app.ready();
   return {

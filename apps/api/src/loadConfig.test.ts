@@ -18,7 +18,13 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     clientIpHeader: null,
     audio: null,
     analytics: { environment: "development", postHog: null },
+    logs: null,
   });
+});
+
+test("logs are shipped to PostHog under the analytics key, and a bad OTEL variable stops the server starting", () => {
+  assert.equal(loadConfig({ DATABASE_URL, POSTHOG_API_KEY: "phc_test" }).logs?.endpoint, "https://eu.i.posthog.com/i/v1/logs");
+  assert.throws(() => loadConfig({ DATABASE_URL, OTEL_EXPORTER_OTLP_LOGS_PROTOCOL: "grpc" }), ConfigError);
 });
 
 test("analytics are forwarded to PostHog's EU host once there is a project key, tagged with the environment", () => {

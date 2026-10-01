@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
 import { REQUEST_ID_HEADER } from "@overview/domain";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
@@ -75,7 +75,8 @@ export interface BuildAppOptions {
   // Where checked client errors are passed on to; absent, they are only logged.
   errorSink?: ErrorSink | null;
   clock?: () => Date;
-  logger?: boolean;
+  // The server's pino instance (createLogger); absent, nothing is logged, which is what tests want.
+  logger?: FastifyBaseLogger | null;
 }
 
 declare module "fastify" {
@@ -99,10 +100,10 @@ export async function buildApp({
   eventSink = null,
   errorSink = null,
   clock = () => new Date(),
-  logger = false,
+  logger = null,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
-    logger,
+    ...(logger === null ? { logger: false } : { loggerInstance: logger }),
     requestIdHeader: false,
     genReqId: requestIdFor,
   });

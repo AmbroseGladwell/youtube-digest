@@ -6,13 +6,12 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-Built so far:
+It has four parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
 - the reporter in the app that both shells mount
 - the extension's service worker
-
-Shipping the server's logs comes later ("Not built yet").
+- shipping the server's own logs
 
 ## Where errors go
 
@@ -176,18 +175,95 @@ This is a second copy of the reader's bearer token. It is safe for these reasons
   was somehow stale would be harmless: the server answers an unknown token on
   `/api/errors` by treating the report as anonymous.
 
+## Shipping the server's logs
+
+**Why ship them.** `fly logs` keeps a short tail, and a reader's support request arrives
+days later. So the server writes every log line twice: to stdout, as before, and to an
+OTLP log endpoint, which by default is PostHog's log ingest. PostHog keeps logs for 14 days
+on the free plan, and its free allowance was 10 GB a month when OV-61 was researched.
+
+**How it works.** `createLogger` (`src/logs/`) builds pino with two destinations.
+`OtlpLogExporter` is one of them. It turns each line into an OpenTelemetry log record:
+
+- pino's level becomes a severity
+- its message becomes the body
+- every other field becomes an attribute, with nested fields named by dotted path, such as
+  `req.route` or `clientError.status`
+
+The exporter holds records for two seconds, or until it has 500, then posts them as
+OTLP/HTTP JSON in one call.
+
+It uses no OpenTelemetry SDK and no pino transport, for two reasons:
+
+- A transport runs in a worker thread and brings an exporter for every protocol, on a
+  256 MB machine.
+- OTLP/HTTP JSON is one `fetch`, the same choice made for PostHog's events. PostHog's
+  ingest reads JSON as well as protobuf (`rust/capture-logs` in PostHog's repository), with
+  a 2 MB limit on a request.
+
+**What it can never do is fail or slow a request.**
+
+- A batch the destination refuses is dropped, not retried, and a line goes to stderr.
+- Past 5,000 held records, new lines are dropped.
+- Either way, the next batch that gets through starts with a `log records dropped` record
+  that carries the count, so a gap reads as lost lines rather than a quiet hour.
+- On `SIGINT` or `SIGTERM`, which is how Fly stops an idle machine, the server closes and
+  ships what it still holds.
+
+**Where they go** is set only by the standard OpenTelemetry variables, so moving to Grafana
+Cloud or Better Stack is a change of secrets, not of code:
+
+| Variable | Effect |
+|---|---|
+| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT`, or `OTEL_EXPORTER_OTLP_ENDPOINT` with `/v1/logs` added | the destination |
+| `OTEL_EXPORTER_OTLP_LOGS_HEADERS`, or `OTEL_EXPORTER_OTLP_HEADERS` | its headers, as `key=value` pairs, values percent-encoded. A token in here is a secret |
+| `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL`, or `OTEL_EXPORTER_OTLP_PROTOCOL` | only `http/json`. Anything else stops the server starting rather than shipping nowhere |
+| `OTEL_SERVICE_NAME` | `service.name`, which PostHog groups logs by. Default `overview-api` |
+| `OTEL_RESOURCE_ATTRIBUTES` | more resource attributes. `deployment.environment.name` is always `ANALYTICS_ENVIRONMENT` |
+| `OTEL_LOGS_EXPORTER=none` | stdout only |
+
+With none of them set and `POSTHOG_API_KEY` set, logs go to `<POSTHOG_HOST>/i/v1/logs`
+under the same project token, so production needs no new secret. A destination named
+without headers is never handed that token.
+
+## What a log line may carry
+
+A request is logged by its **route**, `{ method, route }`, never by its URL or the
+caller's address. A path can hold a share token (`/s/:token`, `/api/shares/:token`) or a
+video id, and a query can hold an OAuth `state` or an address someone typed. Fastify's
+default request log carried all of that, and the caller's IP address too. That had
+already broken the rate limits' promise never to log an address, and shipping would have
+copied it all to a third party. A request no route matched is logged with `route: null`.
+The response is logged by its status. `createLogger.test.ts` fails if a token, a query or
+an address appears in a line.
+
+Otherwise the logs are what they were: ids, never names or content
+(`docs/architecture/api.md`).
+
+## Finding what happened
+
+PostHog's error tracking has an error's `request_id`, the id of the call that failed. In
+PostHog's Logs, filter on `reqId` equal to that id to see the server's lines for the call.
+Filter on `failedRequestId` to find the server's `client error` line for the report
+itself.
+
 ## Turning it on
 
-There's nothing more to set up than `analytics.md`'s "Turning it on". The same project and
-token carry errors, and error tracking is on by default in a new PostHog project. After the
-deploy, the startup line reads `analytics` with the EU host rather than "client events and
-errors are logged only".
+Errors and logs both ride on `analytics.md`'s "Turning it on". The same project and token
+carry them. Error tracking is on by default in a new PostHog project, and logs ship as soon
+as `POSTHOG_API_KEY` is set. After the deploy, check three things:
+
+- the `analytics` startup line names the EU host rather than "client events and errors are
+  logged only"
+- the `log shipping` startup line names `https://eu.i.posthog.com` rather than "logs go to
+  stdout only"
+- the deploy's own lines appear in PostHog's Logs under `overview-api`, and no
+  `logs not shipped` line appears on stderr
 
 ## Not built yet
 
-- **Shipping the server's logs** (slice 4): pino through OpenTelemetry to PostHog's log
-  ingest, configured with the standard `OTEL_EXPORTER_OTLP_*` variables, so another
-  destination needs no code change.
+- **Traces.** Logs are joined by request id, not by a trace. If a request ever spans more
+  than this one process, OpenTelemetry tracing is the next step.
 - **Errors before the app mounts.** A shell that can't open its database renders
   `StartupFailure` outside `App`, so that failure isn't reported yet.
 - **One copy of the extension's session.** Keeping the connection in `chrome.storage`

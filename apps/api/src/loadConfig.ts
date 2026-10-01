@@ -2,6 +2,7 @@ import { z } from "zod";
 import { CLIENT_VERSION } from "@overview/domain";
 import type { R2Settings } from "./audio/r2AudioStore.js";
 import { allowedOriginsFromEnv } from "./http/allowedOriginsFromEnv.js";
+import { OtlpLogsConfigError, otlpLogsConfig, type OtlpLogsConfig } from "./logs/otlpLogsConfig.js";
 
 const DEV_APP_URL = "http://localhost:5173";
 
@@ -39,6 +40,15 @@ const ConfigEnv = z
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
+    OTEL_LOGS_EXPORTER: z.string().optional(),
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: z.string().min(1).optional(),
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().min(1).optional(),
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS: z.string().optional(),
+    OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
+    OTEL_EXPORTER_OTLP_LOGS_PROTOCOL: z.string().optional(),
+    OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
+    OTEL_SERVICE_NAME: z.string().min(1).optional(),
+    OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
@@ -97,6 +107,8 @@ export interface Config {
   clientIpHeader: string | null;
   audio: AudioConfig;
   analytics: AnalyticsConfig;
+  // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
+  logs: OtlpLogsConfig | null;
 }
 
 export class ConfigError extends Error {}
@@ -107,6 +119,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     throw new ConfigError(z.prettifyError(parsed.error));
   }
   const { data } = parsed;
+  const postHog = data.POSTHOG_API_KEY === undefined ? null : { apiKey: data.POSTHOG_API_KEY, host: data.POSTHOG_HOST };
+  let logs: OtlpLogsConfig | null;
+  try {
+    logs = otlpLogsConfig(data, { postHog, environment: data.ANALYTICS_ENVIRONMENT });
+  } catch (error) {
+    if (error instanceof OtlpLogsConfigError) throw new ConfigError(error.message);
+    throw error;
+  }
   return {
     databaseUrl: data.DATABASE_URL,
     port: data.PORT,
@@ -139,7 +159,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
           },
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
-      postHog: data.POSTHOG_API_KEY === undefined ? null : { apiKey: data.POSTHOG_API_KEY, host: data.POSTHOG_HOST },
+      postHog,
     },
+    logs,
   };
 }
