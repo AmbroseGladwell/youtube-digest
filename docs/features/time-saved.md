@@ -3,8 +3,7 @@
 OV-34. The product's promise is to watch less and learn more, and until now nothing showed
 the reader what that adds up to. The agreed designs are four pages in the design project:
 *OV-34 1 Every Day*, *2 Milestones*, *3 Phone and Panel* and *4 Lines and Motion*. This
-build covers parts 1 and 2, the breakdown sheet and phone list from part 3, and part 4's
-lines. It is free for everyone.
+build covers parts 1, 2 and 3, and part 4's lines. It is free for everyone.
 
 ## Counted honestly
 
@@ -46,7 +45,9 @@ desktop opens the same panel.
 **The moment (34q, 34r).** *Mark read* brings in *Saved you N min* beside the reading line.
 On a library row it leaves after about three seconds and nothing stays on the row; *Mark
 read* and *Read* share one width so nothing shifts. In an overview it counts up from nought
-and stays until the reader leaves, whichever control marked it read. An overview with no
+and stays until the reader leaves, whichever control marked it read. The panel's overview
+has its own *Mark read* beside *Listen* for this (34v), and the chip starts the next line
+when the reading line has no room for it. An overview with no
 length, a watch verdict or nothing saved shows no chip.
 
 ## Milestones

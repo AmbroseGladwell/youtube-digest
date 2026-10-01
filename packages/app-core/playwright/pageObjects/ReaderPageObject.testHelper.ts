@@ -745,6 +745,14 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.listenButton)).toHaveText(label),
     );
 
+  clickPanelMarkRead = () =>
+    this.step("clickPanelMarkRead", () => this.click(readerMastheadTestIds.readButton));
+
+  verifyPanelReadButtonReads = (label: string) =>
+    this.step(`verifyPanelReadButtonReads ${label}`, () =>
+      expect(this.get(readerMastheadTestIds.readButton)).toHaveText(label),
+    );
+
   verifyPlayerIsDocked = (docked: boolean) =>
     this.step(`verifyPlayerIsDocked ${docked}`, () =>
       docked

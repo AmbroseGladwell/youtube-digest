@@ -1,5 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
-import type { Overview } from "@overview/domain";
+import { VideoId, type Overview } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
@@ -7,6 +7,7 @@ import {
   makeOverview,
   makeOverviewState,
 } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { MILESTONE_LINES } from "../../../src/features/timeSaved/util/milestoneLines.js";
 
 const SIGNED_IN = {
@@ -324,6 +325,48 @@ test.describe("in an overview", () => {
 
     const reader = await library.nthCard(0).openReader();
 
+    await reader.verifyNoSavedChip();
+  });
+});
+
+test.describe("in the panel's overview", () => {
+  const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
+  const watched = (minutes: number) => {
+    const overview = lasting(minutes);
+    return { ...overview, video: { ...overview.video, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL } };
+  };
+
+  test("Mark read beside Listen brings in what it saved, and the button says it is read", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const overview = watched(11);
+    backendSimulator.overviews.seed(overview);
+    const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
+    const reader = await capture.openStoredOverview();
+    await reader.verifyPanelReadButtonReads("Mark read");
+    await reader.verifyNoSavedChip();
+
+    await reader.clickPanelMarkRead();
+
+    await reader.verifyPanelReadButtonReads("Read");
+    await reader.verifySavedChipSays("Saved you 10 min");
+    await expect(async () => {
+      const state = await backendSimulator.overviews.getState(overview.id);
+      expect(state.read).toBe(true);
+    }).toPass();
+  });
+
+  test("pressing it again marks the overview unread", async ({ launcher, backendSimulator }) => {
+    const overview = watched(11);
+    seedRead(backendSimulator, overview);
+    const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
+    const reader = await capture.openStoredOverview();
+    await reader.verifyPanelReadButtonReads("Read");
+
+    await reader.clickPanelMarkRead();
+
+    await reader.verifyPanelReadButtonReads("Mark read");
     await reader.verifyNoSavedChip();
   });
 });

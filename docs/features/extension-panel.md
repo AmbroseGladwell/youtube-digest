@@ -57,7 +57,7 @@ does not exist here.
 **Ready (15c/15d).** The finished run navigates to the reader, and the panel's reader is
 the wide one with everything it has nothing to point at removed: no breadcrumb, no
 `↑ Previous` / `Next ↓`, no thumbnail, no rail. What is left is title, channel, topics,
-the meta line, `Listen`, `⋯`, the three tabs and the tags at the foot.
+the meta line, `Listen`, `Mark read`, `⋯`, the three tabs and the tags at the foot.
 
 **And in the panel that head holds still.** The wide reader sticks its app bar and its
 tab strip and lets the note's own masthead scroll away, which is right there — it
@@ -149,14 +149,18 @@ A shell that cannot sync at all has no web app to open, so the item is not there
   an empty note. That the three share a line is measured as overlapping rows rather than
   a shared top edge: a topic chip has a border and padding that plain text beside it
   does not.
-- **The ⋯ menu hangs from the trigger's leading edge in the panel** and its trailing edge
-  on the wide reader, because the trigger sits at opposite ends of the two. A menu fixed
-  to one edge leaves the window on the other layout. Sticking the panel's head also gave
-  it a stacking context, which the menu cannot escape however high its own z-index goes,
-  so the head outranks the tab strip rather than the menu trying to.
-- **`Mark read` is gone from the panel's reader.** 15c draws `Listen` and `⋯` and nothing
-  else, and read state is a property of a list the panel does not have. It is still
-  there on every other surface, and still settable from a library row.
+- **The ⋯ menu ends the panel's action row**, after `Listen` and `Mark read`, and hangs
+  from its trailing edge as it does on the wide reader. 15c puts it straight after
+  `Listen`, hanging from its leading edge; with `Mark read` between them a menu hung that
+  way would leave the window. Sticking the panel's head also gave it a stacking context,
+  which the menu cannot escape however high its own z-index goes, so the head outranks
+  the tab strip rather than the menu trying to.
+- **`Mark read` sits beside `Listen` in the panel's head.** 15c drew `Listen` and `⋯` and
+  nothing else, and the panel left read state out. *OV-34 3 Phone and Panel* (34v) puts it
+  back, because reading the note in front of the video is the one time saved the panel can
+  see. 34v draws the pair at the foot of a reader without tabs or ⋯. The built panel keeps
+  its head, its tabs and the docked player at the foot, so the button joins `Listen` where
+  `Listen` already is. The ⋯ menu still leaves read state out, since the button says it.
 - **The keys block shows only when a key is missing.** 15a draws it on both of its
   screens, but both of those are first-run states; once the keys are in, the block is a
   paragraph about a solved problem. This follows the empty-library hero, which already

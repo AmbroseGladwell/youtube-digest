@@ -148,7 +148,6 @@ export function ReaderMasthead({
           videoUrl={overview.video.url}
           compact={compact}
           webApp={webApp}
-          align={compact ? "start" : "end"}
           onShare={onShare}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
