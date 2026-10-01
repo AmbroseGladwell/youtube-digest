@@ -12,6 +12,7 @@ import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SharedLinksPanelPageObject } from "./SharedLinksPanelPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
+import { MilestonesSectionPageObject } from "./MilestonesSectionPageObject.testHelper.js";
 
 export class SettingsPageObject extends PageObject {
   get apiKeysPanel(): ApiKeysPanelPageObject {
@@ -28,6 +29,10 @@ export class SettingsPageObject extends PageObject {
 
   get voicePicker(): NarrationVoicePickerPageObject {
     return new NarrationVoicePickerPageObject(this.testContext);
+  }
+
+  get milestones(): MilestonesSectionPageObject {
+    return new MilestonesSectionPageObject(this.testContext);
   }
 
   get sharedLinks(): SharedLinksPanelPageObject {

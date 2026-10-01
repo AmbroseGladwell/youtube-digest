@@ -32,6 +32,8 @@ export const Settings = z.object({
   // When each time-saved milestone was crossed and dismissed, on the account so both hold
   // on every device (docs/features/time-saved.md).
   milestones: MilestoneMarks.catch({}),
+  // Off hides the milestone cards on every device; Settings › Milestones still lists them.
+  showMilestoneCards: z.boolean().catch(true),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -43,4 +45,5 @@ export const DEFAULT_SETTINGS: Settings = {
   plusNoticeDismissed: false,
   narrationVoice: DEFAULT_NARRATION_VOICE,
   milestones: {},
+  showMilestoneCards: true,
 };

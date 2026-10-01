@@ -49,6 +49,15 @@ export const analyticsEvents = {
         by: MilestoneLineControl,
       }),
     },
+    settingsMilestones: {
+      opened: event("The reader opens Settings › Milestones"),
+      milestonePicked: event("The reader picks a reached milestone in Settings › Milestones to see its card again", {
+        milestone: MilestoneId,
+      }),
+      cardsSwitched: event("The reader turns the milestone cards on or off in Settings › Milestones", {
+        shown: z.boolean(),
+      }),
+    },
   },
 } as const satisfies AnalyticsCatalogueShape;
 
