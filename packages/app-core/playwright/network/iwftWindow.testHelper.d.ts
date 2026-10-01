@@ -1,4 +1,5 @@
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
+import type { ErrorDestination } from "../../src/app/ErrorDestinationMirrorContext.js";
 import type { AppRouter } from "../../src/app/createAppRouter.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
@@ -28,5 +29,6 @@ declare global {
     __iwftPlayback__: IwftPlaybackSource | null;
     __iwftRunBridge__: IwftRunBridge | null;
     __iwftYouTubeFetch__: YouTubeFetch | null;
+    __iwftErrorDestinations__: ErrorDestination[] | null;
   }
 }

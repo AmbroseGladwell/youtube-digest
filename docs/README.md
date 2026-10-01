@@ -21,8 +21,8 @@ Five folders, five different questions.
 - `errors-and-logs.md` — what went wrong for a reader: `POST /api/errors` beside events, with
   or without an account, what an error may carry and how its message is redacted twice, the
   failing call's request id, the reporter both shells mount (what it catches, the trail of
-  recent actions, its own queue sent before events), and what is still to come (the
-  extension's worker, shipping the server's logs).
+  recent actions, its own queue sent before events), the extension's service worker and the
+  session copy it reads, and what is still to come (shipping the server's logs).
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
   how the extension gets its id, its server and its store zip.

@@ -5,6 +5,7 @@ export type { ActiveVideoSource } from "./app/ActiveVideoContext.js";
 export type { AppLayout } from "./app/LayoutContext.js";
 export type { PlaybackPosition, PlaybackSource } from "./app/PlaybackContext.js";
 export type { RunBridge } from "./app/RunBridgeContext.js";
+export type { ErrorDestination, ErrorDestinationMirror } from "./app/ErrorDestinationMirrorContext.js";
 export { useYouTubeFetch } from "./app/YouTubeFetchContext.js";
 // Re-exported so a shell wiring the fetch has one import source, as it does for the stores.
 export type { YouTubeFetch, YouTubeFetchRequest, YouTubeFetchResponse } from "@overview/transcripts";

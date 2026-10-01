@@ -97,3 +97,4 @@ export * from "./AnalyticsEventBatch.js";
 export * from "./RequestId.js";
 export * from "./redactErrorMessage.js";
 export * from "./ClientErrorBatch.js";
+export * from "./analyticsPlatform.js";

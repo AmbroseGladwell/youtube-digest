@@ -84,9 +84,9 @@ element's label, a file name or anything the reader typed, because there is no f
 shaped to hold one.
 
 What every event carries without being asked is said once per batch, in `context`: the
-shell (`web` or `extension`), the layout (`full` or `panel`), the app's version when it
-is a plain `x.y.z`, and the operating system in one word, from `analyticsPlatform`. The
-server adds the environment.
+shell (`web` or `extension`), the layout (`full` or `panel`, or `worker` for an error from
+the extension's service worker), the app's version when it is a plain `x.y.z`, and the
+operating system in one word, from `analyticsPlatform`. The server adds the environment.
 
 ## Naming
 

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createFetchErrorsApi, type ErrorsApi } from "@overview/sync";
+import { createFetchErrorsApi, toClientError, type ErrorsApi } from "@overview/sync";
+import { useErrorDestinationMirror } from "../../app/ErrorDestinationMirrorContext.js";
 import { useAnalyticsContext } from "../analytics/useAnalyticsContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { ActionTrail } from "./ActionTrail.js";
 import { ErrorQueue } from "./ErrorQueue.js";
 import { ErrorReporterProvider, type ErrorReporter } from "./ErrorReporterContext.js";
-import { toClientError } from "./toClientError.js";
 
 // Signed in or not: an error is reported to the server this shell knows, under the session
 // when there is one (docs/architecture/errors-and-logs.md, "Who is reported").
@@ -14,6 +14,7 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
   const apiUrl = useKnownApiUrl();
   const { token } = useSyncConnection().connection;
   const context = useAnalyticsContext();
+  const mirror = useErrorDestinationMirror();
 
   const api = useMemo<ErrorsApi | null>(
     () => (apiUrl === null ? null : createFetchErrorsApi({ baseUrl: apiUrl, token })),
@@ -64,6 +65,8 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
       globalThis.removeEventListener("pagehide", flushOnLeave);
     };
   }, [reporter, queue]);
+
+  useEffect(() => mirror?.({ apiUrl, token }), [mirror, apiUrl, token]);
 
   useEffect(() => () => queue.dispose(), [queue]);
 

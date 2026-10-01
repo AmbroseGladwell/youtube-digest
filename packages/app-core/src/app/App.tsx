@@ -10,6 +10,7 @@ import { StoresProvider, type Stores } from "../stores/StoresContext.js";
 import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
 import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
+import { ErrorDestinationMirrorProvider, type ErrorDestinationMirror } from "./ErrorDestinationMirrorContext.js";
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
 import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
@@ -32,6 +33,7 @@ export interface AppProps {
   appUpdate?: AppUpdate | null;
   defaultApiUrl?: string | null;
   build?: AppBuild | null;
+  errorDestinationMirror?: ErrorDestinationMirror | null;
 }
 
 export function App({
@@ -46,6 +48,7 @@ export function App({
   appUpdate = null,
   defaultApiUrl = null,
   build = null,
+  errorDestinationMirror = null,
 }: AppProps) {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
@@ -57,21 +60,23 @@ export function App({
                 <StoresProvider value={stores}>
                   <AppUpdateProvider value={appUpdate}>
                     <DefaultApiUrlProvider value={defaultApiUrl}>
-                      <AppBuildProvider value={build}>
-                        <QueryClientProvider client={queryClient}>
-                          <SyncRuntime>
-                            <ErrorReportingRuntime>
-                              <AnalyticsRuntime>
-                                <PlayerRuntime>
-                                  <ShareRuntime>
-                                    <RouterProvider router={router} />
-                                  </ShareRuntime>
-                                </PlayerRuntime>
-                              </AnalyticsRuntime>
-                            </ErrorReportingRuntime>
-                          </SyncRuntime>
-                        </QueryClientProvider>
-                      </AppBuildProvider>
+                      <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
+                        <AppBuildProvider value={build}>
+                          <QueryClientProvider client={queryClient}>
+                            <SyncRuntime>
+                              <ErrorReportingRuntime>
+                                <AnalyticsRuntime>
+                                  <PlayerRuntime>
+                                    <ShareRuntime>
+                                      <RouterProvider router={router} />
+                                    </ShareRuntime>
+                                  </PlayerRuntime>
+                                </AnalyticsRuntime>
+                              </ErrorReportingRuntime>
+                            </SyncRuntime>
+                          </QueryClientProvider>
+                        </AppBuildProvider>
+                      </ErrorDestinationMirrorProvider>
                     </DefaultApiUrlProvider>
                   </AppUpdateProvider>
                 </StoresProvider>

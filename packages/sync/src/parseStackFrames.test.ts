@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { MAX_ERROR_FRAMES } from "@overview/domain";
 import { parseStackFrames } from "./parseStackFrames.js";
 
@@ -11,7 +12,7 @@ describe("parseStackFrames", () => {
       "    at https://overview.example/assets/vendor-77aa.js:3:10",
     ].join("\n");
 
-    expect(parseStackFrames(stack)).toEqual([
+    assert.deepEqual(parseStackFrames(stack), [
       { function: "ReaderPage", file: "assets/index-Bx3k9.js", line: 12, column: 3456 },
       { function: "Object.commit", file: "assets/sidepanel-9f8e.js", line: 1, column: 200 },
       { function: "", file: "assets/vendor-77aa.js", line: 3, column: 10 },
@@ -21,7 +22,7 @@ describe("parseStackFrames", () => {
   it("reads Firefox's and Safari's frames the same way", () => {
     const stack = "ReaderPage@https://overview.example/assets/index-Bx3k9.js:12:3456\n@https://overview.example/assets/index-Bx3k9.js:1:2";
 
-    expect(parseStackFrames(stack)).toEqual([
+    assert.deepEqual(parseStackFrames(stack), [
       { function: "ReaderPage", file: "assets/index-Bx3k9.js", line: 12, column: 3456 },
       { function: "", file: "assets/index-Bx3k9.js", line: 1, column: 2 },
     ]);
@@ -31,8 +32,8 @@ describe("parseStackFrames", () => {
     const native = "    at Array.map (<anonymous>)\n    at native code";
     const many = Array.from({ length: MAX_ERROR_FRAMES + 5 }, (_, i) => `    at f${i} (https://o.example/a.js:${i + 1}:1)`).join("\n");
 
-    expect(parseStackFrames(native)).toEqual([]);
-    expect(parseStackFrames(many)).toHaveLength(MAX_ERROR_FRAMES);
-    expect(parseStackFrames(undefined)).toEqual([]);
+    assert.deepEqual(parseStackFrames(native), []);
+    assert.equal(parseStackFrames(many).length, MAX_ERROR_FRAMES);
+    assert.deepEqual(parseStackFrames(undefined), []);
   });
 });

@@ -1,6 +1,6 @@
 import { redactErrorMessage, type ClientErrorSource, type ClientErrorTrailEntry, type SentClientError } from "@overview/domain";
-import { isSyncRequestError, isSyncTransportError } from "@overview/sync";
-import { parseStackFrames } from "./util/parseStackFrames.js";
+import { isSyncRequestError, isSyncTransportError } from "./SyncRequestError.js";
+import { parseStackFrames } from "./parseStackFrames.js";
 
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,63}$/;
 

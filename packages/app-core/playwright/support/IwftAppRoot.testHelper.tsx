@@ -28,6 +28,11 @@ export function IwftAppRoot() {
       youTubeFetch={window.__iwftYouTubeFetch__}
       defaultApiUrl={window.__iwftDefaultApiUrl__}
       build={window.__iwftBuild__}
+      errorDestinationMirror={
+        window.__iwftErrorDestinations__ === null
+          ? null
+          : (destination) => window.__iwftErrorDestinations__?.push(destination)
+      }
     />
   );
 }

@@ -12,6 +12,18 @@ import { overviewButtonState } from "./overviewButtonState.js";
 import { fetchYouTubeInWorker } from "./fetchYouTubeInWorker.js";
 import { isYouTubeFetchMessage } from "./youTubeFetchBridge.js";
 import { installYouTubeOriginRule } from "./youTubeOriginRule.js";
+import { appBuild } from "./appBuild.js";
+import { readErrorDestination } from "./errorDestination.js";
+import { PRODUCTION_API_URL } from "./productionApiUrl.js";
+import { createWorkerErrorReporter } from "./workerErrorReporter.js";
+
+const errors = createWorkerErrorReporter({
+  readDestination: readErrorDestination,
+  defaultApiUrl: PRODUCTION_API_URL,
+  appVersion: appBuild.version,
+});
+self.addEventListener("error", (event) => void errors.report(event.error ?? event.message));
+self.addEventListener("unhandledrejection", (event) => void errors.report(event.reason));
 
 // Top level, not onInstalled: this re-runs on every worker start, so the toolbar icon keeps
 // opening the panel even if the flag doesn't survive a profile restart or an update.
@@ -50,7 +62,8 @@ async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
       overviews.some((overview) => overview.video.id === videoId) ||
       unreadable.some((record) => record.salvaged?.video?.id === videoId)
     );
-  } catch {
+  } catch (error) {
+    void errors.report(error, { handled: true });
     return null;
   }
 }

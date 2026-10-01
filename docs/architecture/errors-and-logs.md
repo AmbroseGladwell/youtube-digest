@@ -6,9 +6,13 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-Built so far: the server's half (`POST /api/errors`, its checks, passing errors on to
-PostHog) and the reporter in the app both shells mount. The extension's service worker and
-shipping the server's logs come later ("Not built yet").
+Built so far:
+
+- the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
+- the reporter in the app that both shells mount
+- the extension's service worker
+
+Shipping the server's logs comes later ("Not built yet").
 
 ## Where errors go
 
@@ -140,6 +144,38 @@ as `dropped` on the next batch that gets through. When the page is hidden or lef
 first because they matter more, and because a browser limits how much can be in flight
 as a page closes.
 
+## The service worker
+
+The extension's worker runs none of the app, so it has its own small reporter,
+`apps/extension/src/workerErrorReporter.ts`. It catches the worker's own `error` and
+`unhandledrejection` events, and a failure to read the local database when the injected
+button asks whether a video already has an overview.
+
+**Each error is sent the moment it is caught,** on its own and with `keepalive`. Chrome can
+stop a worker between any two messages, so a batch held for a second could be lost with it.
+It is sent as source `serviceWorker`, with layout `worker` in the context, and an empty
+trail, because nothing the reader does happens in the worker. Past 10 a minute, errors are
+dropped and counted, as in the app.
+
+**Where to send it, and under which session.** The worker can't read the page's
+`localStorage`, where the extension keeps its connection. So whenever the server or the
+session changes, the app hands both to the shell through `errorDestinationMirror`. The
+extension writes them to `chrome.storage.session` (`errorDestination.ts`), and the worker
+reads them from there. With nothing written yet, the worker sends to the server the
+extension was built for, with no session.
+
+This is a second copy of the reader's bearer token. It is safe for these reasons:
+
+- **Readers.** `chrome.storage.session` can be read only by the extension's own pages,
+  which can already read the original in `localStorage`, and by its worker.
+- **Lifetime.** It is held in memory and wiped when the browser closes or the extension
+  reloads. The original copy is on disk.
+- **Content scripts.** They are kept out by Chrome's default, and nothing may change that.
+  `sessionStorageAccess.test.ts` fails if any source calls `setAccessLevel`.
+- **Sign-out.** It replaces the copy with no token, and the IWFT checks this. A copy that
+  was somehow stale would be harmless: the server answers an unknown token on
+  `/api/errors` by treating the report as anonymous.
+
 ## Turning it on
 
 There's nothing more to set up than `analytics.md`'s "Turning it on". The same project and
@@ -149,12 +185,13 @@ errors are logged only".
 
 ## Not built yet
 
-- **The extension's service worker** (slice 3) sends each error at once, because the worker
-  can be stopped between messages.
 - **Shipping the server's logs** (slice 4): pino through OpenTelemetry to PostHog's log
   ingest, configured with the standard `OTEL_EXPORTER_OTLP_*` variables, so another
   destination needs no code change.
 - **Errors before the app mounts.** A shell that can't open its database renders
   `StartupFailure` outside `App`, so that failure isn't reported yet.
+- **One copy of the extension's session.** Keeping the connection in `chrome.storage`
+  rather than `localStorage` would let the worker read the original rather than a copy.
+  It is a larger change to how the app reads its connection in the extension.
 - **Source maps.** Frames are minified paths and positions until a build uploads its maps
   to PostHog.

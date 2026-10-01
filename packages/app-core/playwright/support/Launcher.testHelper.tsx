@@ -44,6 +44,7 @@ export interface LaunchOptions {
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
+  errorDestinationMirror?: boolean;
 }
 
 export class Launcher {
@@ -99,6 +100,7 @@ export class Launcher {
         runBridge: options.runBridge,
         youTubeFetch: options.youTubeFetch,
         failingReads: options.failingReads,
+        errorDestinationMirror: options.errorDestinationMirror,
       },
     });
   };
@@ -146,6 +148,10 @@ export class Launcher {
             report === null ? null : { status: report.status, videoUrl: report.videoUrl },
           ) ?? [],
       ));
+
+  // Every destination the app handed the worker, oldest first.
+  readErrorDestinations = (): Promise<Array<{ apiUrl: string | null; token: string | null }>> =>
+    test.step("Launcher.readErrorDestinations", () => this.page.evaluate(() => window.__iwftErrorDestinations__ ?? []));
 
   readPlaybackSeeks = (): Promise<number[]> =>
     test.step("Launcher.readPlaybackSeeks", () =>

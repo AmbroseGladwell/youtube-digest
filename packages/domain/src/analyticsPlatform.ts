@@ -1,4 +1,4 @@
-import type { AnalyticsPlatform } from "@overview/domain";
+import type { AnalyticsPlatform } from "./AnalyticsEventBatch.js";
 
 interface NavigatorWithUserAgentData {
   userAgent?: string;

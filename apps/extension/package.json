@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@overview/app-core": "*",
+    "@overview/domain": "*",
     "@overview/store-local": "*",
+    "@overview/sync": "*",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.287",
