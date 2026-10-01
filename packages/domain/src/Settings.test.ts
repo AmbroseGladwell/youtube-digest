@@ -40,3 +40,12 @@ test("a milestone this client does not know survives a read", () => {
 
   assert.deepEqual(Settings.parse({ ...DEFAULT_SETTINGS, milestones: { "200h": mark } }).milestones, { "200h": mark });
 });
+
+test("milestone cards show unless turned off, and a record from before the switch reads as on", () => {
+  assert.equal(DEFAULT_SETTINGS.showMilestoneCards, true);
+
+  const { showMilestoneCards: _, ...older } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(older).showMilestoneCards, true);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, showMilestoneCards: false }).showMilestoneCards, false);
+});

@@ -91,6 +91,37 @@ so a library still arriving from the server is not mistaken for milestones cross
 A reader whose library already passes several milestones the first time this ships sees
 them as one stack, which the design anticipates ("or a first import").
 
+### Settings › Milestones
+
+OV-68, design *OV-34 5 Settings* (34aj desktop, 34ak phone). A milestone card goes after a day
+or a ×, and this section is the only place to see it again. It is its own section, between
+Connections and Plan, and its row reads *9h 47m saved · 3 of 10*.
+
+- **The total and the way to the next**: the figure, how many of the ten are reached, the
+  next one in its colour with how long to go, and a bar from the last one reached.
+- **All ten milestones** (`milestoneTiles`): reached ones in their colour, each with the date it
+  was crossed, dismissed and expired ones included. The next has a dashed ring, how long to go
+  and a small bar. The rest are quiet with how long to go, and cannot be picked. Five across on
+  a wide screen, two on a phone or in the panel.
+- **Reached** means the total reaches it, as in the breakdown and the stack. The date is the
+  crossing's mark. A total that reaches a milestone whose crossing hasn't been recorded yet says
+  *Reached* with no date. The section runs `useMilestones` too, so opening Settings first
+  records the crossing just as the library would.
+- **Picking a reached one** shows its card underneath: the library's card with no ×, its pill
+  naming the day (*5 hours saved · 14 Sep*). The latest reached is picked to start with.
+- **Colouring in**: the first time a device shows a milestone reached, its colour floods in from
+  the centre, staggered tile by tile, then stays. Which ones a device has already coloured is a
+  per-device nicety, kept in the browser's storage (`milestonesColouredStorage`); storage that is
+  refused only means the colour floods in again. Under reduced motion it simply appears.
+- **Show milestone cards** turns the cards off on every device: `Settings.showMilestoneCards`,
+  which syncs with the rest of the account's settings and reads as on for a record written
+  before it existed. `useMilestones` shows no cards while it is off. Milestones are still
+  crossed, counted and listed here.
+
+**Where it departs from the design.** The design's card figures sit just past each milestone
+(*32m*, *1h 03m*), but nothing records the total at the moment of crossing, so the card
+shows the milestone itself. The date drops the year until it is a past year's.
+
 ### The lines
 
 Five per milestone, three comedy then two facts, in the order part 4 lists them
@@ -115,7 +146,10 @@ logs"):
 - `timeSaved.milestoneCard.dismissed` and `timeSaved.milestoneCard.dismissalUndone`, with
   the milestone.
 - `timeSaved.milestoneCard.lineChosen`, with the milestone and whether it was a swipe, the
-  arrow keys or a dot: whether anyone reads past the first line.
+  arrow keys or a dot: whether anyone reads past the first line. A card in Settings counts
+  the same way.
+- `timeSaved.settingsMilestones.opened`, `.milestonePicked` with the milestone, and
+  `.cardsSwitched` with whether the cards are now shown.
 
 A milestone being crossed, and so shown, is the app acting rather than the reader, so it is
 a log line instead. The API logs `time-saved milestones changed` whenever a settings patch

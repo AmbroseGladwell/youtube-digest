@@ -17,6 +17,9 @@ const NO_MARKS: MilestoneMarks = {};
 
 export interface Milestones {
   visible: Milestone[];
+  marks: MilestoneMarks;
+  cardsShown: boolean;
+  showCards: (shown: boolean) => void;
   lineChosen: (id: MilestoneId, by: MilestoneLineControl) => void;
   dismiss: (id: MilestoneId) => void;
   undo: (id: MilestoneId) => void;
@@ -35,6 +38,7 @@ export function useMilestones(minutes: number, libraryLoaded: boolean): Mileston
   useNow(60_000);
   const requested = useRef(new Set<MilestoneId>());
   const marks = settings.data?.milestones ?? NO_MARKS;
+  const cardsShown = settings.data?.showMilestoneCards ?? true;
   const caughtUp = !sync.connected || sync.status.lastSyncedAt !== null;
   const settled = libraryLoaded && settings.data !== undefined && caughtUp;
 
@@ -63,7 +67,13 @@ export function useMilestones(minutes: number, libraryLoaded: boolean): Mileston
   };
 
   return {
-    visible: settled ? visibleMilestones(marks, minutes, new Date()) : [],
+    visible: settled && cardsShown ? visibleMilestones(marks, minutes, new Date()) : [],
+    marks,
+    cardsShown,
+    showCards: (shown) => {
+      updateSettings.mutate({ showMilestoneCards: shown });
+      analytics.timeSaved.settingsMilestones.cardsSwitched({ shown });
+    },
     lineChosen: (id, by) => analytics.timeSaved.milestoneCard.lineChosen({ milestone: id, by }),
     dismiss: (id) => {
       mark(id, new Date().toISOString());

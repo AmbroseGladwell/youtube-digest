@@ -11,8 +11,9 @@ import { milestoneCardTestIds } from "./MilestoneCardTestIds.js";
 export interface MilestoneCardProps {
   milestone: Milestone;
   minutes: number;
-  dismissLabel: string;
-  onDismiss: () => void;
+  // Settings looks back at a milestone, so it names the day and offers no ×.
+  reachedOn?: string;
+  dismiss?: { label: string; onDismiss: () => void };
   onLineChosen: (by: MilestoneLineControl) => void;
   // Staggers the light that passes over the card, so a stack's cards never sweep together.
   shimmerIndex?: number;
@@ -32,7 +33,14 @@ interface Drag {
 // Design 34za: a tile tinted in the milestone's colour, its pill, the total rolling in,
 // and five lines that cycle, swipe and step with the arrow keys
 // (docs/features/time-saved.md).
-export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, onLineChosen, shimmerIndex = 0 }: MilestoneCardProps) {
+export function MilestoneCard({
+  milestone,
+  minutes,
+  reachedOn,
+  dismiss,
+  onLineChosen,
+  shimmerIndex = 0,
+}: MilestoneCardProps) {
   const lines = MILESTONE_LINES[milestone.id];
   const [held, setHeld] = useState({ hover: false, focus: false, drag: false });
   const paused = held.hover || held.focus || held.drag;
@@ -125,18 +133,20 @@ export function MilestoneCard({ milestone, minutes, dismissLabel, onDismiss, onL
       data-testid={milestoneCardTestIds.root}
     >
       <span className={styles.shimmer} aria-hidden="true" />
-      <button
-        type="button"
-        className={styles.dismiss}
-        onClick={onDismiss}
-        aria-label={dismissLabel}
-        title={dismissLabel}
-        data-testid={milestoneCardTestIds.dismissButton}
-      >
-        <StrokeIcon name="close" size={15} />
-      </button>
+      {dismiss !== undefined && (
+        <button
+          type="button"
+          className={styles.dismiss}
+          onClick={dismiss.onDismiss}
+          aria-label={dismiss.label}
+          title={dismiss.label}
+          data-testid={milestoneCardTestIds.dismissButton}
+        >
+          <StrokeIcon name="close" size={15} />
+        </button>
+      )}
       <p className={styles.pill} data-testid={milestoneCardTestIds.pill}>
-        {milestone.label} saved
+        {milestone.label} saved{reachedOn === undefined ? "" : ` · ${reachedOn}`}
       </p>
       <p className={styles.figure} aria-label={`Time saved: ${spokenTimeSaved(minutes)}`} data-testid={milestoneCardTestIds.figure}>
         <TimeSavedFigure

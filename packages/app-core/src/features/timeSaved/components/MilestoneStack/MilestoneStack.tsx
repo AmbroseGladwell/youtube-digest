@@ -94,8 +94,7 @@ export function MilestoneStack({ milestones, minutes, onLineChosen, onDismiss, o
           key={front.id}
           milestone={front}
           minutes={minutes}
-          dismissLabel={several ? "Hide this milestone" : "Hide until your next milestone"}
-          onDismiss={dismiss}
+          dismiss={{ label: several ? "Hide this milestone" : "Hide until your next milestone", onDismiss: dismiss }}
           onLineChosen={(by) => onLineChosen(front.id, by)}
           shimmerIndex={dismissedHere}
         />

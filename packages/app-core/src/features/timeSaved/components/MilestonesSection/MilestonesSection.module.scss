@@ -1,0 +1,291 @@
+// Design 34aj and 34ak. Each tile paints with its milestone's tokens through
+// milestoneColourStyle, so both themes answer with their own colours.
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton {
+  height: 9rem;
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.totalRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.figure {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 2.5rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.count,
+.toGo {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nextProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.nextHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.nextLabel {
+  font-weight: 600;
+  color: var(--label);
+}
+
+.nextName {
+  color: var(--milestone-ink);
+}
+
+.track {
+  height: 0.5rem;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.bar,
+.tileBar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-badge);
+  background: var(--milestone-ring);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.tile {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.625rem;
+  min-height: 5.25rem;
+  padding: 0.75rem;
+  border: 0;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--stone-tint);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: default;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.reached {
+  cursor: pointer;
+}
+
+.tile.next {
+  box-shadow: none;
+  outline: 1.5px dashed var(--milestone-ring);
+  outline-offset: -1.5px;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--milestone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--milestone-ring);
+}
+
+// docs/features/time-saved.md, "Colouring in".
+.flood {
+  animation: milestoneFlood 700ms var(--motion-ease) var(--flood-delay, 0ms) backwards;
+
+  & ~ .tileName,
+  & ~ .tileDetail {
+    animation: milestoneFloodLabel 500ms linear calc(var(--flood-delay, 0ms) + 200ms) backwards;
+  }
+}
+
+@keyframes milestoneFlood {
+  from {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: circle(75% at 50% 50%);
+    opacity: 1;
+  }
+}
+
+@keyframes milestoneFloodLabel {
+  from {
+    opacity: 0.45;
+  }
+}
+
+.tileName,
+.tileDetail {
+  position: relative;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ahead .tileName,
+.next .tileName {
+  color: var(--muted);
+}
+
+.tileDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+}
+
+.reachedOn {
+  color: var(--milestone-ink);
+}
+
+.tileToGo {
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tileTrack {
+  display: block;
+  height: 4px;
+  margin-top: 2px;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.tick {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-badge);
+  background: var(--milestone-ring);
+  color: var(--card);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.switchText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.switchLabel {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.switchHint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.switch {
+  flex: none;
+  display: flex;
+  justify-content: flex-start;
+  width: 46px;
+  height: 28px;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+
+  &[aria-checked="true"] {
+    justify-content: flex-end;
+    background: var(--label);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.knob {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-badge);
+  background: var(--card);
+
+  .switch[aria-checked="true"] & {
+    background: var(--ground);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

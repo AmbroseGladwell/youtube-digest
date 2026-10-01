@@ -11,6 +11,10 @@ import {
   SharedLinksPanel,
 } from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
+import {
+  MILESTONES_STANDFIRST,
+  MilestonesSection,
+} from "../../timeSaved/components/MilestonesSection/MilestonesSection.js";
 import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
 import {
@@ -33,6 +37,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   voice: NARRATION_VOICE_STANDFIRST,
   keys: BYO_KEY_NOTE,
   connections: null,
+  milestones: MILESTONES_STANDFIRST,
   shared: SHARED_LINKS_STANDFIRST,
   plan: null,
   about: null,
@@ -48,6 +53,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <ApiKeysSection />;
     case "connections":
       return <ConnectionsSection />;
+    case "milestones":
+      return <MilestonesSection />;
     case "shared":
       return <SharedLinksPanel />;
     case "plan":

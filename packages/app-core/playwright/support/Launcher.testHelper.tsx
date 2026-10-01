@@ -43,6 +43,7 @@ export interface LaunchOptions {
   narrationVoice?: NarrationVoice;
   // The time-saved milestones the account has already crossed or dismissed.
   milestones?: MilestoneMarks;
+  showMilestoneCards?: boolean;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -90,6 +91,7 @@ export class Launcher {
         seedSettings: {
           ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
+          ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
         },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
