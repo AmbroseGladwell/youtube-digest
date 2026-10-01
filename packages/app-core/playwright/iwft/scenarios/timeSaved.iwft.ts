@@ -271,6 +271,41 @@ test.describe("milestones", () => {
   });
 });
 
+test.describe("on the panel's home", () => {
+  test("a milestone crossed in the last day shows under the offer", async ({ launcher, backendSimulator }) => {
+    seedRead(backendSimulator, lasting(40));
+
+    const capture = await launcher.launchPanel({ milestones: { "30m": { crossedAt: hoursAgo(1), dismissedAt: null } } });
+
+    await capture.milestones.verifyFrontCardIs("30 minutes");
+    await capture.milestones.verifyFigureSays("Time saved: 39 minutes");
+  });
+
+  test("a library already past a milestone with no mark records it and shows it", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seedRead(backendSimulator, lasting(40));
+
+    const capture = await launcher.launchPanel();
+
+    await capture.milestones.verifyFrontCardIs("30 minutes");
+    await expect(async () => {
+      const settings = await backendSimulator.settingsStore.get();
+      expect(settings.milestones["30m"]).toMatchObject({ dismissedAt: null });
+    }).toPass();
+  });
+
+  test("any other day the home shows no card", async ({ launcher, backendSimulator }) => {
+    seedRead(backendSimulator, lasting(11));
+
+    const capture = await launcher.launchPanel();
+
+    await capture.milestones.verifyShowsNothing();
+    await capture.milestones.verifyNoCount();
+  });
+});
+
 test.describe("in an overview", () => {
   test("marking it read brings in what it saved, and it stays", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(lasting(11));

@@ -3,12 +3,17 @@ import { capturePageTestIds } from "../../src/features/capture/CapturePage/Captu
 import { captureReasonFieldTestIds } from "../../src/features/newOverview/components/CaptureReasonField/CaptureReasonFieldTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { GenerationStepsPageObject } from "./GenerationStepsPageObject.testHelper.js";
+import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
 export class CapturePageObject extends PageObject {
   get steps(): GenerationStepsPageObject {
     return new GenerationStepsPageObject(this.testContext);
+  }
+
+  get milestones(): MilestoneStackPageObject {
+    return new MilestoneStackPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<CapturePageObject> =>

@@ -63,6 +63,11 @@ since a card inside a closed sheet would never be seen. Verdict folded into *Mor
 at the foot of the rail to make room; closed, the row still says what is set (*Any verdict*,
 *Dubious only*), so a hidden filter is never a surprise.
 
+On the extension panel's home it sits under the hint below the primary action (34af). The
+home is otherwise unchanged: the panel has no running total and no breakdown, only the card
+on a milestone day. It is the same reader on the same account, so it records crossings and
+dismissals by the same rules.
+
 ### When a milestone shows
 
 - **For 24 hours from the moment it is crossed**, on every device opened in that time, and
@@ -125,7 +130,5 @@ server to log to, and nothing from the client is shipped anywhere until OV-61.
 
 ## Not built yet
 
-- **The extension panel's home (34af)**: the milestone card under the hint on a milestone
-  day. The panel's overview already shows the chip, since it is the same reader.
 - **Subtracting time actually watched.**
 - **Sharing the total** (OV-30) and a weekly or monthly recap.
