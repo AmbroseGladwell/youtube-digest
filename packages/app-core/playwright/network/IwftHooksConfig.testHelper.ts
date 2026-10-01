@@ -55,4 +55,7 @@ export interface IwftHooksConfig {
   // Whether this shell can reach YouTube at all. The web app cannot, and that is a
   // browser rule rather than a setting (docs/features/transcript-retrieval.md).
   youTubeFetch?: boolean;
+  // Whether this shell hands where errors go to a worker, as the extension does
+  // (docs/architecture/errors-and-logs.md, "The service worker").
+  errorDestinationMirror?: boolean;
 }

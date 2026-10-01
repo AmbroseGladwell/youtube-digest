@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { SyncRequestError, SyncTransportError } from "@overview/sync";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { SyncRequestError, SyncTransportError } from "./SyncRequestError.js";
 import { toClientError } from "./toClientError.js";
 
 const AT = new Date("2026-10-01T09:00:00.000Z");
@@ -13,21 +14,21 @@ describe("toClientError", () => {
 
     const report = toClientError(error, options);
 
-    expect(report.message).toBe("Couldn't parse <text> from <url>");
-    expect(report.frames).toEqual([{ function: "parse", file: "assets/index-Bx3k9.js", line: 1, column: 20 }]);
-    expect(JSON.stringify(report)).not.toMatch(/divorce|youtube|dQw4w9WgXcQ|overview\.example/);
+    assert.equal(report.message, "Couldn't parse <text> from <url>");
+    assert.deepEqual(report.frames, [{ function: "parse", file: "assets/index-Bx3k9.js", line: 1, column: 20 }]);
+    assert.doesNotMatch(JSON.stringify(report), /divorce|youtube|dQw4w9WgXcQ|overview\.example/);
   });
 
   it("names a refused call by the id it was sent with, its code and its status", () => {
     const refused = new SyncRequestError("revision_mismatch", 412, "Stale", undefined, "request-1234");
 
-    expect(toClientError(refused, { ...options, source: "failedRequest", handled: true })).toMatchObject({
-      type: "SyncRequestError",
-      requestId: "request-1234",
-      apiErrorCode: "revision_mismatch",
-      status: 412,
-      trail,
-    });
+    const report = toClientError(refused, { ...options, source: "failedRequest", handled: true });
+
+    assert.equal(report.type, "SyncRequestError");
+    assert.equal(report.requestId, "request-1234");
+    assert.equal(report.apiErrorCode, "revision_mismatch");
+    assert.equal(report.status, 412);
+    assert.deepEqual(report.trail, trail);
   });
 
   it("names a call that never got an answer by the id it was sent with", () => {
@@ -35,19 +36,22 @@ describe("toClientError", () => {
 
     const report = toClientError(unreachable, options);
 
-    expect(report.requestId).toBe("request-5678");
-    expect(report).not.toHaveProperty("apiErrorCode");
+    assert.equal(report.requestId, "request-5678");
+    assert.ok(!("apiErrorCode" in report));
   });
 
   it("reports something thrown that isn't an Error without guessing a class for it", () => {
-    expect(toClientError("reader@example.com went wrong", options)).toMatchObject({ type: "NonError", message: "<email> went wrong", frames: [] });
-    expect(toClientError({ note: "private" }, options)).toMatchObject({ type: "NonError", message: "" });
+    const thrownString = toClientError("reader@example.com went wrong", options);
+    assert.equal(thrownString.type, "NonError");
+    assert.equal(thrownString.message, "<email> went wrong");
+    assert.deepEqual(thrownString.frames, []);
+    assert.equal(toClientError({ note: "private" }, options).message, "");
   });
 
   it("calls an error whose name isn't a class name just an Error", () => {
     const error = new Error("boom");
     error.name = "My private title";
 
-    expect(toClientError(error, options).type).toBe("Error");
+    assert.equal(toClientError(error, options).type, "Error");
   });
 });

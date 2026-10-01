@@ -19,3 +19,5 @@ export * from "./EventsApi.js";
 export * from "./fetchEventsApi.js";
 export * from "./ErrorsApi.js";
 export * from "./fetchErrorsApi.js";
+export * from "./parseStackFrames.js";
+export * from "./toClientError.js";

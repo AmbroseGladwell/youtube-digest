@@ -99,3 +99,24 @@ test("an error the tracker couldn't take never reaches the reader", async ({ lau
   await deadEnd.verifyTitleReads("Couldn't load your library");
   expect(backendSimulator.errors.reported()).toEqual([]);
 });
+
+test("the extension hands its worker where errors go and the session, and takes the session back on sign-out", async ({
+  launcher,
+}) => {
+  await launcher.launch({
+    sync: true,
+    surface: "extension",
+    defaultApiUrl: "https://theoverviewapp.test",
+    syncConnection: { ...SIGNED_IN.syncConnection, token: "simulated-bearer" },
+    errorDestinationMirror: true,
+  });
+  await expect
+    .poll(() => launcher.readErrorDestinations())
+    .toEqual([{ apiUrl: "https://sync.test", token: "simulated-bearer" }]);
+
+  await (await launcher.appShell.accountMenu.open()).chooseSignOut();
+
+  await expect
+    .poll(async () => (await launcher.readErrorDestinations()).at(-1))
+    .toEqual({ apiUrl: "https://theoverviewapp.test", token: null });
+});

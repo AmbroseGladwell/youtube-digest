@@ -22,6 +22,7 @@ import {
   openLocalDatabase,
 } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
+import { writeErrorDestination } from "./errorDestination.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 
 export interface MountOptions {
@@ -80,6 +81,7 @@ export async function mountApp({
         runBridge={runBridge}
         youTubeFetch={youTubeFetch}
         defaultApiUrl={PRODUCTION_API_URL}
+        errorDestinationMirror={writeErrorDestination}
         build={appBuild}
       />
     </StrictMode>,

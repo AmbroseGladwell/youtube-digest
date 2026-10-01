@@ -11,7 +11,8 @@ export type AnalyticsPlatform = z.infer<typeof AnalyticsPlatform>;
 export const AnalyticsContext = z
   .object({
     surface: AuthSurface,
-    layout: z.enum(["full", "panel"]),
+    // "worker" is the extension's service worker, which reports errors and has no screen.
+    layout: z.enum(["full", "panel", "worker"]),
     appVersion: z
       .string()
       .regex(/^\d+\.\d+\.\d+$/)

@@ -1,9 +1,8 @@
 import { useMemo } from "react";
-import type { AnalyticsContext } from "@overview/domain";
+import { analyticsPlatform, type AnalyticsContext } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useLayout } from "../../app/LayoutContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
-import { analyticsPlatform } from "./util/analyticsPlatform.js";
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 
