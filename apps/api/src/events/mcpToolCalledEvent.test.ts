@@ -6,7 +6,7 @@ const AT = new Date("2026-10-01T09:00:00.000Z");
 
 test("a call is counted with the assistant it came from, and zero overviews for a tool that returns none", () => {
   assert.deepEqual(mcpToolCalledEvent({ tool: "list_topics", failed: false, overviews: null, durationMs: 12 }, "Claude", AT), {
-    name: "mcp.toolCalled",
+    name: "mcp.tools.called",
     props: { tool: "list_topics", assistant: "claude", failed: false, overviews: 0, durationMs: 12 },
     at: "2026-10-01T09:00:00.000Z",
   });

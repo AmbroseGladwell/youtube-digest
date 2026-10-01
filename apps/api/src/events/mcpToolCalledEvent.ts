@@ -3,7 +3,7 @@ import { mcpAssistant, serverAnalyticsEvents } from "@overview/domain";
 import type { McpToolCall } from "../mcp/handleMcpMessage.js";
 import type { SinkEvent } from "./EventSink.js";
 
-const ToolCalledProps = z.object(serverAnalyticsEvents.mcp.toolCalled.props).strict();
+const ToolCalledProps = z.object(serverAnalyticsEvents.mcp.tools.called.props).strict();
 
 // A tool that returns no overviews counts zero; a call is never longer than the catalogue
 // allows, so a stuck one still counts (docs/architecture/analytics.md, "Events the server sends").
@@ -15,5 +15,5 @@ export function mcpToolCalledEvent(call: McpToolCall, clientName: string | null,
     overviews: Math.min(call.overviews ?? 0, 1_000),
     durationMs: Math.min(call.durationMs, 600_000),
   });
-  return props.success ? { name: "mcp.toolCalled", props: props.data, at: at.toISOString() } : null;
+  return props.success ? { name: "mcp.tools.called", props: props.data, at: at.toISOString() } : null;
 }

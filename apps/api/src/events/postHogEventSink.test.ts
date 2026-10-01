@@ -25,8 +25,8 @@ test("a batch goes to PostHog's batch endpoint as one call, each event under the
 
   await sink.capture(
     [
-      { name: "consent.declined", props: { plan: "free" }, at: "2026-10-01T09:00:00.000Z" },
-      { name: "connections.revoked", props: {}, at: "2026-10-01T09:00:01.000Z" },
+      { name: "mcp.consentScreen.declined", props: { plan: "free" }, at: "2026-10-01T09:00:00.000Z" },
+      { name: "mcp.settingsConnections.revoked", props: {}, at: "2026-10-01T09:00:01.000Z" },
     ],
     source,
   );
@@ -38,7 +38,7 @@ test("a batch goes to PostHog's batch endpoint as one call, each event under the
         api_key: "phc_test",
         batch: [
           {
-            event: "consent.declined",
+            event: "mcp.consentScreen.declined",
             distinct_id: ACCOUNT_ID,
             timestamp: "2026-10-01T09:00:00.000Z",
             properties: {
@@ -52,7 +52,7 @@ test("a batch goes to PostHog's batch endpoint as one call, each event under the
             },
           },
           {
-            event: "connections.revoked",
+            event: "mcp.settingsConnections.revoked",
             distinct_id: ACCOUNT_ID,
             timestamp: "2026-10-01T09:00:01.000Z",
             properties: {
@@ -74,7 +74,7 @@ test("with no address to place the caller by, none is sent, so PostHog doesn't p
   const { sent, fetch } = answering(200);
   const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "development", fetch });
 
-  await sink.capture([{ name: "connections.revoked", props: {}, at: "2026-10-01T09:00:00.000Z" }], {
+  await sink.capture([{ name: "mcp.settingsConnections.revoked", props: {}, at: "2026-10-01T09:00:00.000Z" }], {
     ...source,
     geoAddress: null,
   });
@@ -87,7 +87,7 @@ test("an assistant's call is tagged as coming from MCP, with none of the app's c
   const { sent, fetch } = answering(200);
   const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
 
-  await sink.capture([{ name: "mcp.toolCalled", props: { tool: "get_overview" }, at: "2026-10-01T09:00:00.000Z" }], {
+  await sink.capture([{ name: "mcp.tools.called", props: { tool: "get_overview" }, at: "2026-10-01T09:00:00.000Z" }], {
     accountId: ACCOUNT_ID,
     origin: { kind: "mcp" },
     geoAddress: null,
@@ -102,7 +102,7 @@ test("a refusal is an error, for the route to log", async () => {
   const sink = createPostHogEventSink({ apiKey: "phc_wrong", host: "https://eu.i.posthog.com", environment: "production", fetch });
 
   await assert.rejects(
-    sink.capture([{ name: "connections.revoked", props: {}, at: "2026-10-01T09:00:00.000Z" }], source),
+    sink.capture([{ name: "mcp.settingsConnections.revoked", props: {}, at: "2026-10-01T09:00:00.000Z" }], source),
     EventDeliveryError,
   );
 });

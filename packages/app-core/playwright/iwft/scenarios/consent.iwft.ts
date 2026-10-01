@@ -82,7 +82,7 @@ test.describe("answering an assistant's request", () => {
     await backendSimulator.releaseEndpoint(EndpointKey.CONNECTION_DECISION);
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?code=simulated-code&state=s`);
     expect(backendSimulator.connections.decisions()).toEqual([{ requestId: REQUEST_ID, approve: true }]);
-    await expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(["consent.shown", "consent.approved"]);
+    await expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(["mcp.consentScreen.shown", "mcp.consentScreen.approved"]);
     expect(backendSimulator.analytics.batches()[0]!.context).toMatchObject({ surface: "web", layout: "full" });
   });
 
@@ -99,8 +99,8 @@ test.describe("answering an assistant's request", () => {
     await expect
       .poll(() => backendSimulator.analytics.events())
       .toEqual([
-        { name: "consent.shown", props: {} },
-        { name: "consent.declined", props: { plan: "plus" } },
+        { name: "mcp.consentScreen.shown", props: {} },
+        { name: "mcp.consentScreen.declined", props: { plan: "plus" } },
       ]);
   });
 
@@ -138,9 +138,9 @@ test.describe("answering an assistant's request", () => {
     await expect
       .poll(() => backendSimulator.analytics.events())
       .toEqual([
-        { name: "consent.shown", props: {} },
-        { name: "consent.planRequired", props: {} },
-        { name: "consent.declined", props: { plan: "free" } },
+        { name: "mcp.consentScreen.shown", props: {} },
+        { name: "mcp.consentScreen.plusRequired", props: {} },
+        { name: "mcp.consentScreen.declined", props: { plan: "free" } },
       ]);
   });
 
@@ -269,7 +269,7 @@ test.describe("answering while signed out", () => {
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?code=simulated-code&state=s`);
     await expect
       .poll(() => backendSimulator.analytics.eventNames(), { message: "the view while signed out is never sent" })
-      .toEqual(["consent.shown", "consent.approved"]);
+      .toEqual(["mcp.consentScreen.shown", "mcp.consentScreen.approved"]);
   });
 
   test("a link opened on another device says this device is the one sent back", async ({

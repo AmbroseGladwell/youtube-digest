@@ -13,34 +13,41 @@ type EventMethod<Definition> =
 
 // The queue's own bookkeeping is in the catalogue so the server can check it, but only the
 // queue sends it.
-type Area = Exclude<keyof AnalyticsCatalogue, "analytics">;
+type Feature = Exclude<keyof AnalyticsCatalogue, "analytics">;
 
 export type Analytics = {
-  [A in Area]: { [E in keyof AnalyticsCatalogue[A]]: EventMethod<AnalyticsCatalogue[A][E]> };
+  [F in Feature]: {
+    [S in keyof AnalyticsCatalogue[F]]: {
+      [A in keyof AnalyticsCatalogue[F][S]]: EventMethod<AnalyticsCatalogue[F][S][A]>;
+    };
+  };
 } & {
   flush(options?: SendOptions): Promise<void>;
 };
 
 export type AnalyticsRecorder = Pick<AnalyticsQueue, "record" | "flush">;
 
-// analytics.consent.approved(): one method per event in the catalogue, grouped by where in
-// the app it happens, so a call site can only name an event that exists with the
+type Props = Record<string, string | number | boolean>;
+
+// analytics.mcp.consentScreen.approved(): one method per event in the catalogue, by feature,
+// then screen, then action, so a call site can only name an event that exists with the
 // properties it declares (docs/architecture/analytics.md, "Adding an event").
 export function createAnalytics(recorder: AnalyticsRecorder): Analytics {
-  const areas = Object.entries(analyticsEvents)
-    .filter(([area]) => area !== "analytics")
-    .map(([area, events]) => [
-      area,
-      Object.fromEntries(
-        Object.keys(events).map((event) => [
-          event,
-          (props: Record<string, string | number | boolean> = {}) =>
-            recorder.record(`${area}.${event}` as AnalyticsEventName, props),
-        ]),
-      ),
+  const methodsFor = (feature: string, screen: string, events: object) =>
+    Object.fromEntries(
+      Object.keys(events).map((action) => [
+        action,
+        (props: Props = {}) => recorder.record(`${feature}.${screen}.${action}` as AnalyticsEventName, props),
+      ]),
+    );
+  const features = Object.entries(analyticsEvents)
+    .filter(([feature]) => feature !== "analytics")
+    .map(([feature, screens]) => [
+      feature,
+      Object.fromEntries(Object.entries(screens).map(([screen, events]) => [screen, methodsFor(feature, screen, events)])),
     ]);
   return {
-    ...(Object.fromEntries(areas) as Omit<Analytics, "flush">),
+    ...(Object.fromEntries(features) as Omit<Analytics, "flush">),
     flush: (options) => recorder.flush(options),
   };
 }
