@@ -6,6 +6,7 @@ import { ifMatchOf, sendWritten, UpdatedAt } from "../http/writeHeaders.js";
 import { decideMerge } from "../records/decideMerge.js";
 import { SETTINGS_RECORD_ID } from "../records/RecordKind.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
+import { milestoneChanges } from "./milestoneChanges.js";
 
 const SettingsPatch = Settings.partial()
   .extend({ sectionsEnabled: SectionsEnabled.partial().optional(), updatedAt: UpdatedAt })
@@ -25,13 +26,21 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
       {
         kind: "settings",
         id: SETTINGS_RECORD_ID,
-        decide: (current) =>
-          decideMerge(
+        decide: (current) => {
+          const decision = decideMerge(
             "settings",
             current,
             { patch, updatedAt, ifMatch, defaults: { ...DEFAULT_SETTINGS }, merge: mergeSettingsRecord },
             request.client!,
-          ),
+          );
+          if (patch.milestones !== undefined) {
+            const changes = milestoneChanges(current?.deleted ? null : current?.body?.milestones, patch.milestones);
+            if (Object.keys(changes).length > 0) {
+              request.log.info({ milestones: changes }, "time-saved milestones changed");
+            }
+          }
+          return decision;
+        },
       },
     ]);
     return sendWritten(reply, written!);

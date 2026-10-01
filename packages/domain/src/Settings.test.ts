@@ -25,3 +25,27 @@ test("a voice this client does not offer reads as the default rather than taking
   assert.equal(read.narrationVoice, "af_heart");
   assert.equal(read.readerContext, "a parent");
 });
+
+test("milestones start empty, and marks this client cannot read take nothing else with them", () => {
+  assert.deepEqual(DEFAULT_SETTINGS.milestones, {});
+
+  const read = Settings.parse({ ...DEFAULT_SETTINGS, readerContext: "a parent", milestones: { "30m": "garbled" } });
+
+  assert.deepEqual(read.milestones, {});
+  assert.equal(read.readerContext, "a parent");
+});
+
+test("a milestone this client does not know survives a read", () => {
+  const mark = { crossedAt: "2026-10-01T09:00:00.000Z", dismissedAt: null };
+
+  assert.deepEqual(Settings.parse({ ...DEFAULT_SETTINGS, milestones: { "200h": mark } }).milestones, { "200h": mark });
+});
+
+test("milestone cards show unless turned off, and a record from before the switch reads as on", () => {
+  assert.equal(DEFAULT_SETTINGS.showMilestoneCards, true);
+
+  const { showMilestoneCards: _, ...older } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(older).showMilestoneCards, true);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, showMilestoneCards: false }).showMilestoneCards, false);
+});

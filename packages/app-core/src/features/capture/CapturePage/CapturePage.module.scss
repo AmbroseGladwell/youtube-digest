@@ -37,6 +37,16 @@
   color: var(--muted);
 }
 
+// Design 34af: a little more air above the card than between the offer's own lines.
+// Empty on any other day, and an empty box takes no gap.
+.milestones {
+  margin-top: 0.5rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
 .primary {
   @include controls.action-pill;
   @include controls.pill-md;
@@ -65,6 +75,16 @@
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--muted);
+}
+
+// Design 34af: the card sits a little further under the hint than the page's own rhythm,
+// and on any other day the stack renders nothing and the wrapper takes no gap.
+.milestones {
+  margin-top: 0.25rem;
+
+  &:empty {
+    display: none;
+  }
 }
 
 .keys {

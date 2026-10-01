@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Settings } from "@overview/domain";
+import { mergeSettingsRecord, type Settings } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { settingsKeys } from "../settingsKeys.js";
 
@@ -19,7 +19,7 @@ export function useUpdateSettingsMutation() {
       await queryClient.cancelQueries({ queryKey: settingsKeys.all });
       const previous = queryClient.getQueryData<Settings>(settingsKeys.all);
       if (previous) {
-        queryClient.setQueryData<Settings>(settingsKeys.all, { ...previous, ...patch });
+        queryClient.setQueryData<Settings>(settingsKeys.all, mergeSettingsRecord(previous, patch) as Settings);
       }
       return { previous };
     },

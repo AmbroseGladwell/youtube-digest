@@ -1,4 +1,4 @@
-import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE } from "@overview/domain";
+import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -9,6 +9,8 @@ import {
   connectionsRowValue,
   UNREACHABLE_ROW_VALUE,
 } from "../connections/util/connectionsRowValue.js";
+import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
+import { readableEntries } from "../overviews/types/LibraryEntry.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
 import { PLAN_LABEL } from "../plus/planLabel.js";
 import { usePlan } from "../plus/usePlan.js";
@@ -22,6 +24,7 @@ import {
   aboutRowValue,
   accountRowValue,
   keysRowValue,
+  milestonesRowValue,
   sharedLinksRowValue,
   voiceRowValue,
 } from "./util/settingsRowValues.js";
@@ -47,6 +50,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const shareApi = useShareApi();
   const shares = useSharesQuery().data;
   const build = useAppBuild();
+  const overviews = useOverviewsWithStateQuery();
 
   return [
     ...(sync.available
@@ -77,6 +81,13 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
+    {
+      id: "milestones",
+      title: "Milestones",
+      value: overviews.isSuccess
+        ? milestonesRowValue(timeSavedSummary(readableEntries(overviews.data)).minutes)
+        : CHECKING_ROW_VALUE,
+    },
     ...(shareApi !== null
       ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }]
       : []),

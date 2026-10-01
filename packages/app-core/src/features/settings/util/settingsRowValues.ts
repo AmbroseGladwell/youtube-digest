@@ -1,5 +1,7 @@
 import {
   ANTHROPIC_MODEL_OPTIONS,
+  MILESTONES,
+  formatTimeSaved,
   narrationAccent,
   narrationVoiceName,
   type AnthropicModel,
@@ -10,6 +12,7 @@ import type { AppBuild } from "../../../app/AppBuildContext.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
 import type { SyncConnection } from "../../sync/types/SyncConnection.js";
 import { syncStatusLine } from "../../sync/util/syncStatusLine.js";
+import { reachedCount } from "../../timeSaved/util/milestoneTiles.js";
 import { ACCENT_GROUP_LABELS } from "./accentGroupLabels.js";
 
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in · this library stays here";
@@ -40,6 +43,10 @@ export function keysRowValue(apiKeys: ApiKeys, model: AnthropicModel): string {
 export function sharedLinksRowValue(count: number): string {
   if (count === 0) return "None";
   return count === 1 ? "1 shared" : `${count} shared`;
+}
+
+export function milestonesRowValue(minutes: number): string {
+  return `${formatTimeSaved(minutes)} saved · ${reachedCount(minutes)} of ${MILESTONES.length}`;
 }
 
 export function aboutRowValue(build: AppBuild): string {

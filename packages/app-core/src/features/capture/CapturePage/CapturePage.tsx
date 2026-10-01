@@ -1,4 +1,4 @@
-import { formatClock } from "@overview/domain";
+import { formatClock, timeSavedSummary } from "@overview/domain";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
@@ -14,6 +14,9 @@ import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunCon
 import type { NewOverviewRun } from "../../newOverview/types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
+import { readableEntries } from "../../overviews/types/LibraryEntry.js";
+import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
+import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
 import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
 import styles from "./CapturePage.module.scss";
@@ -29,6 +32,8 @@ export function CapturePage() {
   const overviewsQuery = useOverviewsWithStateQuery();
   const watchedTranscript = useWatchedTranscriptQuery();
   const keysReady = useGenerationReadiness() === "ready";
+  const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
+  const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
 
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
@@ -130,6 +135,16 @@ export function CapturePage() {
                 : "Fetches the transcript, then writes the overview."}
           </p>
         )}
+
+        <div className={styles.milestones}>
+          <MilestoneStack
+            milestones={milestones.visible}
+            minutes={timeSaved.minutes}
+            onLineChosen={milestones.lineChosen}
+            onDismiss={milestones.dismiss}
+            onUndo={milestones.undo}
+          />
+        </div>
 
         {!keysReady && (
           <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>

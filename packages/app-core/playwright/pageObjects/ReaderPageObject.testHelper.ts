@@ -16,6 +16,7 @@ import { TRANSCRIPT_REST_GAP } from "../../src/features/reader/components/Transc
 import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
 import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
+import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
@@ -404,6 +405,11 @@ export class ReaderPageObject extends PageObject {
       await this.click(overviewActionsMenuTestIds.readItem);
     });
 
+  verifySavedChipSays = (text: string) =>
+    this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
+
+  verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
+
   clickShare = (): Promise<ShareOverviewDialogPageObject> =>
     this.step("clickShare", async () => {
       await this.openActionsMenu();
@@ -737,6 +743,14 @@ export class ReaderPageObject extends PageObject {
   verifyListenReads = (label: string) =>
     this.step(`verifyListenReads ${label}`, () =>
       expect(this.get(readerMastheadTestIds.listenButton)).toHaveText(label),
+    );
+
+  clickPanelMarkRead = () =>
+    this.step("clickPanelMarkRead", () => this.click(readerMastheadTestIds.readButton));
+
+  verifyPanelReadButtonReads = (label: string) =>
+    this.step(`verifyPanelReadButtonReads ${label}`, () =>
+      expect(this.get(readerMastheadTestIds.readButton)).toHaveText(label),
     );
 
   verifyPlayerIsDocked = (docked: boolean) =>

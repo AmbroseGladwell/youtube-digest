@@ -8,4 +8,5 @@ export const readerMastheadTestIds = {
   favouriteButton: "ReaderMasthead.favouriteButton",
   readAloudButton: "ReaderMasthead.readAloudButton",
   listenButton: "ReaderMasthead.listenButton",
+  readButton: "ReaderMasthead.readButton",
 };

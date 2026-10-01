@@ -17,6 +17,7 @@ In order, each with the value its row shows:
 | Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
 | API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
 | Connections | `/settings/connections` | "N connected" or "None" on Plus, "Needs Plus", or "Sign in first" | the shell can sync |
+| Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
 | Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
 | Plan | `/settings/plan` | Free or Plus | always |
 | About | `/settings/about` | the version | the shell knows its build |
@@ -31,7 +32,7 @@ finds it. It comes after Connections: below the things people change, above Abou
 
 New sections go here: Personalisation (OV-46) after Narration voice, and YouTube playlists
 (OV-27) beside Connections. About stays last. Connections is described in
-`mcp-connector.md`, Shared links in `sharing.md`.
+`mcp-connector.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.
 
 ## Two panes, or a list then a page
 

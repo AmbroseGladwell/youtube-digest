@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { SHARE_PAYLOAD_ELEMENT_ID, type NarrationVoice, type Plan } from "@overview/domain";
+import { SHARE_PAYLOAD_ELEMENT_ID, type MilestoneMarks, type NarrationVoice, type Plan } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -41,6 +41,9 @@ export interface LaunchOptions {
   // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
+  // The time-saved milestones the account has already crossed or dismissed.
+  milestones?: MilestoneMarks;
+  showMilestoneCards?: boolean;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -86,7 +89,11 @@ export class Launcher {
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {
         ...this.backendSimulator.buildHooksConfig(),
-        seedSettings: options.narrationVoice === undefined ? undefined : { narrationVoice: options.narrationVoice },
+        seedSettings: {
+          ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
+          ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
+          ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
+        },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,

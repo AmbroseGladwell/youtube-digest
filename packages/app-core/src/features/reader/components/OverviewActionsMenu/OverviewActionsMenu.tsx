@@ -16,8 +16,6 @@ export interface OverviewActionsMenuProps {
   // Design 6h: the panel's menu offers the web app instead of read state and deletion.
   compact: boolean;
   webApp: OverviewInWebApp;
-  // Which edge of the trigger the menu hangs from, so it opens into the space there is.
-  align: "start" | "end";
   onEditTopics: () => void;
   onEditReason: () => void;
   onToggleRead: () => void;
@@ -34,7 +32,6 @@ export function OverviewActionsMenu({
   videoUrl,
   compact,
   webApp,
-  align,
   onShare,
   onEditTopics,
   onEditReason,
@@ -67,7 +64,7 @@ export function OverviewActionsMenu({
 
       {open && (
         <div
-          className={`${styles.menu} ${align === "start" ? styles.menuStart : styles.menuEnd}`}
+          className={styles.menu}
           role="menu"
           data-testid={overviewActionsMenuTestIds.menu}
         >

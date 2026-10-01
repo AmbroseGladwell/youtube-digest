@@ -1,0 +1,56 @@
+// Each digit strip sits in a one-row window and travels the rows between the old value and
+// the new; the strips start in turn, units first (docs/features/time-saved.md).
+$row: 1.2em;
+
+.root {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.window {
+  display: inline-block;
+  height: $row;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: $row;
+}
+
+.strip {
+  display: flex;
+  flex-direction: column;
+  animation-timing-function: var(--motion-ease);
+  animation-fill-mode: both;
+}
+
+.row {
+  display: block;
+  height: $row;
+  text-align: center;
+}
+
+.rollUp {
+  animation-name: odometerUp;
+}
+
+.rollDown {
+  animation-name: odometerDown;
+}
+
+@keyframes odometerUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-1 * #{$row} * var(--odometer-steps)));
+  }
+}
+
+@keyframes odometerDown {
+  from {
+    transform: translateY(calc(-1 * #{$row} * var(--odometer-steps)));
+  }
+  to {
+    transform: translateY(0);
+  }
+}

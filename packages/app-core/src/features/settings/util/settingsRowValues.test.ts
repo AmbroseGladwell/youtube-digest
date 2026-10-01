@@ -7,6 +7,7 @@ import {
   aboutRowValue,
   accountRowValue,
   keysRowValue,
+  milestonesRowValue,
   voiceRowValue,
 } from "./settingsRowValues.js";
 
@@ -61,5 +62,12 @@ describe("keysRowValue", () => {
 describe("aboutRowValue", () => {
   it("is the version without the commit, which the section itself carries", () => {
     expect(aboutRowValue({ version: "0.14.2", commit: "30bb95a", dirty: true })).toBe("Version 0.14.2");
+  });
+});
+
+describe("milestonesRowValue", () => {
+  it("is the total saved and how many of the ten milestones it reaches", () => {
+    expect(milestonesRowValue(9 * 60 + 47)).toBe("9h 47m saved · 3 of 10");
+    expect(milestonesRowValue(0)).toBe("0m saved · 0 of 10");
   });
 });
