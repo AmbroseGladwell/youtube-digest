@@ -200,7 +200,8 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **Client errors and the trail before them, and shipping the server's logs:** OV-61.
+- **Client errors and the trail before them, and shipping the server's logs:** OV-61,
+  in `errors-and-logs.md`.
 - **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62.
 - **The events other cards named:** the sort order people pick (`library-sort.md`), the
   voices sampled and chosen (`narration-voice.md`) and time from play to first sound are

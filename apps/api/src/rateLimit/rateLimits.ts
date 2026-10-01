@@ -16,5 +16,6 @@ export const rateLimits = {
   mcpPerAccount: { name: "mcpAccount", limit: 120, windowMs: MINUTE_MS },
   sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
   eventsPerAccount: { name: "eventsAccount", limit: 60, windowMs: MINUTE_MS },
+  errorsPerAddress: { name: "errorsAddress", limit: 30, windowMs: MINUTE_MS },
   sharePagePerAddress: { name: "sharePageAddress", limit: 600, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimit>;

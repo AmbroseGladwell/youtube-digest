@@ -30,6 +30,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
 | A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
 | The app's analytics at `POST /api/events`, checked against the catalogue, logged, and passed on to PostHog when there is a key | `packages/domain`: `analyticsEvents.ts`, `AnalyticsEventBatch.ts`; `src/events/`; `docs/architecture/analytics.md` |
+| The app's errors at `POST /api/errors`, with or without a session, redacted again, logged, and passed on to PostHog's error tracking when there is a key | `packages/domain`: `ClientErrorBatch.ts`, `redactErrorMessage.ts`; `src/errors/`; `docs/architecture/errors-and-logs.md` |
 | One id per request, the client's when it sent a usable one, said back in `X-Request-Id` | `packages/domain/src/RequestId.ts`, `src/http/requestIdFor.ts`; "Request ids", below |
 
 ## Shape
@@ -53,7 +54,9 @@ apps/api/
     mcp/                 /mcp: the access-token plugin, the JSON-RPC handler, the tools and prompt, reading and searching a library
     shares/              /s/<token>: the repository, the document and its Open Graph head, the card image and the text measuring it is laid out with
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
-    events/              POST /api/events, the EventSink seam, PostHog over its batch call, the caller's address cut to a network
+    events/              POST /api/events, the EventSink seam, PostHog for events, the caller's address cut to a network
+    errors/              POST /api/errors, the ErrorSink seam, PostHog's error tracking
+    postHog/             PostHog's one batch call, shared by events and errors
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio, shares
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
@@ -256,7 +259,8 @@ anything else, because the id is written into every log line for that request an
 is whatever the caller chose to put in it. Every answer says the id back in the same
 header, and a refused call's `SyncRequestError` carries it as `requestId`, so a failure the
 app reports and the server's lines for the same call can be found by one string. Nothing
-reports client failures yet; that is OV-61.
+takes a client's report of a failure at `POST /api/errors`, which logs that call's id as
+`failedRequestId` (`docs/architecture/errors-and-logs.md`).
 
 ## Rate limits
 
@@ -280,6 +284,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
+| `errorsAddress` | 30 | minute, per address | `POST /api/errors`: per address, because most readers sending errors have no account (`docs/architecture/errors-and-logs.md`) |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 

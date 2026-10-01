@@ -13,6 +13,7 @@ import { buildApp, type AppConfig } from "../buildApp.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { makeRecordingErrorSink, type RecordingErrorSink } from "../errors/RecordingErrorSink.testHelper.js";
 import { makeRecordingEventSink, type RecordingEventSink } from "../events/RecordingEventSink.testHelper.js";
 import { makeRecordingMailer, type RecordingMailer } from "../mail/RecordingMailer.testHelper.js";
 
@@ -29,6 +30,8 @@ export interface TestApp {
   mailer: RecordingMailer;
   // Every batch of checked events the app passed on, as PostHog would receive them.
   eventSink: RecordingEventSink;
+  // Every batch of checked client errors, as PostHog's error tracking would receive them.
+  errorSink: RecordingErrorSink;
   // The TTS service and the audio store narration goes through, and the queue a test drains
   // itself rather than race a background worker.
   narrator: ScriptedNarrator;
@@ -63,12 +66,14 @@ export async function createTestApp(
   const narrator = makeScriptedNarrator();
   const audioStore = makeMemoryAudioStore();
   const eventSink = makeRecordingEventSink();
+  const errorSink = makeRecordingErrorSink();
   const app = await buildApp({
     config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, ...config },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
     eventSink,
+    errorSink,
     clock: () => clock.now,
   });
   await app.ready();
@@ -78,6 +83,7 @@ export async function createTestApp(
     clock,
     mailer,
     eventSink,
+    errorSink,
     narrator,
     audioStore,
     drainAudio: async () => {

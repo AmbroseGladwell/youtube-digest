@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { AccountId } from "../auth/AccountId.js";
-import { createPostHogEventSink, EventDeliveryError } from "./postHogEventSink.js";
+import { PostHogDeliveryError } from "../postHog/sendPostHogBatch.js";
+import { createPostHogEventSink } from "./postHogEventSink.js";
 
 const ACCOUNT_ID = "6f1e2d3c-4b5a-4a8e-9b2a-0b8f5f7e3c1d" as AccountId;
 const source = {
@@ -89,6 +90,6 @@ test("a refusal is an error, for the route to log", async () => {
 
   await assert.rejects(
     sink.capture([{ name: "mcp.settingsConnections.revoked", props: {}, at: "2026-10-01T09:00:00.000Z" }], source),
-    EventDeliveryError,
+    PostHogDeliveryError,
   );
 });
