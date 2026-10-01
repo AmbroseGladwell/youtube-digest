@@ -33,8 +33,8 @@ they made or opened. Everything else is a log line, however countable it looks:
 | Audio rendered, a transcript cached, a share page viewed | the system or someone else acting | their existing log lines |
 
 So PostHog holds reader actions and nothing to filter out, and the logs hold the whole
-story, actions included, for anyone tracing what happened. Counting what is only logged
-today waits for the logs to be shipped somewhere they can be queried, which is OV-61.
+story, actions included, for anyone tracing what happened. The logs are shipped to
+PostHog's Logs, where what is only logged can be queried (`errors-and-logs.md`).
 
 ## Where events go
 
@@ -170,9 +170,9 @@ server's part is done, so a transformation in PostHog removes them on the way in
 ## Request ids
 
 Every API call carries an `X-Request-Id` the client made, and the server logs the request
-under it and says it back (`docs/architecture/api.md`, "Request ids"). Nothing reports client
-failures yet, so for now this matches a refused call in the console to its server lines.
-OV-61 is what puts the two side by side.
+under it and says it back (`docs/architecture/api.md`, "Request ids"). A client error carries
+the id of the call that failed, which finds the server's lines for it
+(`errors-and-logs.md`, "Finding what happened").
 
 ## Turning it on
 
@@ -200,8 +200,6 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **Client errors and the trail before them, and shipping the server's logs:** OV-61,
-  in `errors-and-logs.md`.
 - **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62.
 - **The events other cards named:** the sort order people pick (`library-sort.md`), the
   voices sampled and chosen (`narration-voice.md`) and time from play to first sound are

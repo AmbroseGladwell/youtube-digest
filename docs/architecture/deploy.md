@@ -155,6 +155,8 @@ looked at:
 - The root serves the web app, and Settings can ask for a magic link that arrives.
 - The release step's `voice samples ready` line says 15 of 15, and
   `https://theoverviewapp.com/api/audio/samples` lists them.
+- The `log shipping` startup line names PostHog, and the deploy's lines show up in
+  PostHog's Logs (`docs/architecture/errors-and-logs.md`, "Turning it on").
 - Settings shows the version and commit that were merged, and if the version was new,
   the repo has a `v<version>` release with the extension's zip attached.
 

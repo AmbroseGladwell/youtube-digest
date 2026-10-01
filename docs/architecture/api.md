@@ -57,6 +57,7 @@ apps/api/
     events/              POST /api/events, the EventSink seam, PostHog for events, the caller's address cut to a network
     errors/              POST /api/errors, the ErrorSink seam, PostHog's error tracking
     postHog/             PostHog's one batch call, shared by events and errors
+    logs/                pino with a route-only request log, written to stdout and to an OTLP log endpoint
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio, shares
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
@@ -381,6 +382,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |
+| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` and the other `OTEL_*` log variables | unset | where the server's logs are shipped besides stdout. Unset with `POSTHOG_API_KEY` set ships to PostHog; `OTEL_LOGS_EXPORTER=none` ships nowhere (`docs/architecture/errors-and-logs.md`, "Shipping the server's logs") |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell
