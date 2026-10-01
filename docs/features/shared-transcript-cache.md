@@ -175,7 +175,7 @@ video's served copy.
 
 ## Logs
 
-The hit rate comes from the server's own logs, since no client analytics exist:
+The hit rate comes from the server's own logs; the app's analytics don't cover retrieval:
 
 | Event | Fields | Answers |
 |---|---|---|
@@ -189,7 +189,7 @@ No video id or address is logged with these.
 ## What this does not do
 
 - **Which rung answered, on a miss.** A miss is followed on the client by whichever
-  rung answered, and there is no client analytics to report which. `hit: false` counts the
+  rung answered, and no event reports which yet (`docs/architecture/analytics.md`). `hit: false` counts the
   fetches that happened. What happened after them is not recorded.
 - **Refill a reader's Transcript tab.** When neither the device nor the account has a
   transcript, the tab doesn't ask the cache. That is OV-25, which runs the ladder this

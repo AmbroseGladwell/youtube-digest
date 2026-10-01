@@ -5,7 +5,7 @@ import { ConfigError, loadConfig } from "./loadConfig.js";
 
 const DATABASE_URL = "postgres://overview:secret@localhost:5432/overview";
 
-test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, trusts the socket's address, and narrates nothing", () => {
+test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, trusts the socket's address, narrates nothing, and forwards no analytics", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL }), {
     databaseUrl: DATABASE_URL,
     port: 3000,
@@ -17,7 +17,16 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     staticRoot: null,
     clientIpHeader: null,
     audio: null,
+    analytics: { environment: "development", postHog: null },
   });
+});
+
+test("analytics are forwarded to PostHog's EU host once there is a project key, tagged with the environment", () => {
+  assert.deepEqual(loadConfig({ DATABASE_URL, POSTHOG_API_KEY: "phc_test", ANALYTICS_ENVIRONMENT: "production" }).analytics, {
+    environment: "production",
+    postHog: { apiKey: "phc_test", host: "https://eu.i.posthog.com" },
+  });
+  assert.throws(() => loadConfig({ DATABASE_URL, ANALYTICS_ENVIRONMENT: "staging" }), ConfigError);
 });
 
 test("the header naming the caller's address is read in any case, and anything that is not a header name is refused", () => {

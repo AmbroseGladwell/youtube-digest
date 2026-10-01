@@ -328,6 +328,21 @@ so. Revoke access removes the row at once, sends the delete, and moves focus to 
 Connected label; a refused delete puts the row back and says so. Keep it restores the row
 with focus on its Revoke.
 
+## Events
+
+The design's five events are in the analytics catalogue under the app's own naming
+(`docs/architecture/analytics.md`): `consent.shown` once a request has loaded,
+`consent.planRequired` once a reader on Free is shown the Plus card, `consent.approved`,
+and `consent.declined` with the plan the reader was on, both sent as the page is left so
+they outlive it, and `connections.revoked` once the server has taken the revoke. Only a
+signed-in reader is counted, so a request looked at before signing in is not; the server
+still logs every decision and revoke itself, as above.
+
+Each tool call is also counted, by the server, as `mcp.toolCalled`: the tool, which of
+Claude, ChatGPT or another assistant made it, whether it failed, how many overviews it
+returned and how long it took. That is the same line the logs draw: never the query, a
+topic or anything read (`docs/architecture/analytics.md`, "Events the server sends").
+
 ## Not built yet
 
 - **CORS on the protocol routes.** Claude calls them from its servers. A browser-based
@@ -336,9 +351,6 @@ with focus on its Revoke.
   added when one is wanted.
 - **A sweep** of unused clients, lapsed authorization requests and expired tokens, which
   waits for the same future job as expired sessions (`api.md`).
-- **Events.** The design names `consent_shown`, `consent_approved`, `consent_declined`,
-  `consent_plan_required` and `connection_revoked`. The app has no analytics to send them
-  to yet (OV-60); the server already logs the decision and the revoke.
 - **Coming back after buying Plus.** The free consent state says, as design 58g does, that
   getting Plus brings the reader back to approve the request. See Plus opens the Plan
   section, which has nothing to buy yet; carrying the request through a purchase and back

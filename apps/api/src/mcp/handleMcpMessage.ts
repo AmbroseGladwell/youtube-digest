@@ -34,9 +34,17 @@ export type JsonRpcResponse =
 
 export type McpReply = { kind: "accepted" } | { kind: "response"; body: JsonRpcResponse };
 
+export interface McpToolCall {
+  tool: string;
+  failed: boolean;
+  overviews: number | null;
+  durationMs: number;
+}
+
 export interface McpCallContext extends McpToolContext {
   connectionId: string;
   log: FastifyBaseLogger;
+  onToolCalled?: (call: McpToolCall) => void;
 }
 
 const INSTRUCTIONS =
@@ -74,12 +82,17 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
     throw new JsonRpcError(JSON_RPC_ERRORS.invalidParams, `Unknown tool: ${name}`);
   }
   const logged = { connectionId: context.connectionId, tool: name };
+  const startedAt = performance.now();
+  const called = (failed: boolean, overviews: number | null) =>
+    context.onToolCalled?.({ tool: name, failed, overviews, durationMs: Math.round(performance.now() - startedAt) });
   try {
     const outcome = await tool.call(args, context);
     context.log.info({ ...logged, overviews: outcome.overviews ?? null, failed: outcome.isError === true }, "mcp tool called");
+    called(outcome.isError === true, outcome.overviews ?? null);
     return { content: [{ type: "text", text: outcome.text }], isError: outcome.isError === true };
   } catch (error) {
     context.log.error({ ...logged, err: error }, "mcp tool failed");
+    called(true, null);
     return { content: [{ type: "text", text: "Something went wrong reading the library. Try again shortly." }], isError: true };
   }
 }

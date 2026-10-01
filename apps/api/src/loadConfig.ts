@@ -36,6 +36,9 @@ const ConfigEnv = z
     R2_BUCKET: z.string().min(3).optional(),
     R2_ACCESS_KEY_ID: z.string().min(1).optional(),
     R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    POSTHOG_API_KEY: z.string().min(1).optional(),
+    POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
+    ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
@@ -74,6 +77,13 @@ export type AudioStoreConfig = ({ kind: "r2" } & R2Settings) | { kind: "file"; d
 
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
+// Analytics are forwarded only when there is a PostHog project to forward them to;
+// otherwise /api/events logs them and stops (docs/architecture/analytics.md).
+export type AnalyticsConfig = {
+  environment: "development" | "production";
+  postHog: { apiKey: string; host: string } | null;
+};
+
 export interface Config {
   databaseUrl: string;
   port: number;
@@ -86,6 +96,7 @@ export interface Config {
   staticRoot: string | null;
   clientIpHeader: string | null;
   audio: AudioConfig;
+  analytics: AnalyticsConfig;
 }
 
 export class ConfigError extends Error {}
@@ -126,5 +137,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
                     secretAccessKey: data.R2_SECRET_ACCESS_KEY!,
                   },
           },
+    analytics: {
+      environment: data.ANALYTICS_ENVIRONMENT,
+      postHog: data.POSTHOG_API_KEY === undefined ? null : { apiKey: data.POSTHOG_API_KEY, host: data.POSTHOG_HOST },
+    },
   };
 }

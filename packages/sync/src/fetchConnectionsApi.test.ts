@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
 import { createFetchConnectionsApi } from "./fetchConnectionsApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
+
+const SENT_REQUEST_ID = "5f0c2a9e-request";
 
 interface Sent {
   url: string;
@@ -38,7 +40,7 @@ test("a request is read by its id", async () => {
 
 test("a decision is a write that carries the client version, which is what stops another site making it", async () => {
   const { sent, fetch } = answering(200, { redirectTo: "https://claude.ai/callback?code=c" });
-  const api = createFetchConnectionsApi({ baseUrl: "https://overview.example", fetch });
+  const api = createFetchConnectionsApi({ baseUrl: "https://overview.example", fetch, newRequestId: () => SENT_REQUEST_ID });
 
   const decided = await api.decide(REQUEST_ID, true);
 
@@ -47,7 +49,7 @@ test("a decision is a write that carries the client version, which is what stops
     {
       url: `https://overview.example/api/oauth/requests/${REQUEST_ID}/decision`,
       method: "POST",
-      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), "content-type": "application/json" },
+      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), [REQUEST_ID_HEADER]: SENT_REQUEST_ID, "content-type": "application/json" },
       body: { approve: true },
     },
   ]);

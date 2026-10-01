@@ -6,13 +6,22 @@ export class SyncRequestError extends Error {
   readonly code: ApiErrorCode;
   readonly status: number;
   readonly details: Record<string, unknown> | undefined;
+  // The id the request was sent with, which the server logged it under.
+  readonly requestId: string | undefined;
 
-  constructor(code: ApiErrorCode, status: number, message: string, details?: Record<string, unknown>) {
+  constructor(
+    code: ApiErrorCode,
+    status: number,
+    message: string,
+    details?: Record<string, unknown>,
+    requestId?: string,
+  ) {
     super(message);
     this.name = "SyncRequestError";
     this.code = code;
     this.status = status;
     this.details = details;
+    this.requestId = requestId;
   }
 }
 

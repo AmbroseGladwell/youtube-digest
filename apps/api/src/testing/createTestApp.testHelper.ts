@@ -13,6 +13,7 @@ import { buildApp, type AppConfig } from "../buildApp.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { makeRecordingEventSink, type RecordingEventSink } from "../events/RecordingEventSink.testHelper.js";
 import { makeRecordingMailer, type RecordingMailer } from "../mail/RecordingMailer.testHelper.js";
 
 export interface TestClock {
@@ -26,6 +27,8 @@ export interface TestApp {
   clock: TestClock;
   // Every magic link the app sent, as the reader would receive it.
   mailer: RecordingMailer;
+  // Every batch of checked events the app passed on, as PostHog would receive them.
+  eventSink: RecordingEventSink;
   // The TTS service and the audio store narration goes through, and the queue a test drains
   // itself rather than race a background worker.
   narrator: ScriptedNarrator;
@@ -59,11 +62,13 @@ export async function createTestApp(
   const mailer = makeRecordingMailer();
   const narrator = makeScriptedNarrator();
   const audioStore = makeMemoryAudioStore();
+  const eventSink = makeRecordingEventSink();
   const app = await buildApp({
     config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, ...config },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
+    eventSink,
     clock: () => clock.now,
   });
   await app.ready();
@@ -72,6 +77,7 @@ export async function createTestApp(
     sql,
     clock,
     mailer,
+    eventSink,
     narrator,
     audioStore,
     drainAudio: async () => {

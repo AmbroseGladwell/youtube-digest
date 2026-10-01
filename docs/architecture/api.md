@@ -29,6 +29,8 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
 | Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
 | A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
+| The app's analytics at `POST /api/events`, checked against the catalogue, logged, and passed on to PostHog when there is a key | `packages/domain`: `analyticsEvents.ts`, `AnalyticsEventBatch.ts`; `src/events/`; `docs/architecture/analytics.md` |
+| One id per request, the client's when it sent a usable one, said back in `X-Request-Id` | `packages/domain/src/RequestId.ts`, `src/http/requestIdFor.ts`; "Request ids", below |
 
 ## Shape
 
@@ -41,7 +43,7 @@ apps/api/
     buildApp.ts          the /api scope: error handler, CORS, then address limit → parse → floor → session → account limit, then routes; the OAuth, MCP and /s scopes beside it
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
-    http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS
+    http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS, the request id
     auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, POST /api/session/link-code, the three /api/auth routes
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
@@ -51,15 +53,16 @@ apps/api/
     mcp/                 /mcp: the access-token plugin, the JSON-RPC handler, the tools and prompt, reading and searching a library
     shares/              /s/<token>: the repository, the document and its Open Graph head, the card image and the text measuring it is laid out with
     audio/               the render queue and its repository, the audio key, the Narrator and AudioStore seams, R2 and file stores, the voice samples and their seed
+    events/              POST /api/events, the EventSink seam, PostHog over its batch call, the caller's address cut to a network
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
     routes/              changes, overviews, topics, settings, transcripts, audio, shares
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
 
-`buildApp({ config, sql, mailer, audio, clock })` takes everything it depends on, so a test
-builds the same app over an in-process database with a clock it owns and a mailer that
-records, and `server.ts` is the only place the environment is read.
+`buildApp({ config, sql, mailer, audio, eventSink, clock })` takes everything it depends on, so a test
+builds the same app over an in-process database with a clock it owns, and a mailer and an
+event sink that record, and `server.ts` is the only place the environment is read.
 
 ## Auth
 
@@ -137,9 +140,10 @@ the hole, and a permissive setting nobody remembers is how it would become one.
 the cookie. Empty, the default, registers nothing and the service behaves exactly as it
 did: a preflight is the same 404 as any unknown route.
 
-**What is vouched for.** GET, POST, PUT and DELETE; the four headers a sync request
-carries, `Authorization`, `Content-Type`, `If-Match` and `X-Client-Version`; and `ETag`
-and `Retry-After` exposed, so the answer to a write, or to a throttle, can be read whole. The preflight is answered before the
+**What is vouched for.** GET, POST, PUT and DELETE; the five headers a sync request
+carries, `Authorization`, `Content-Type`, `If-Match`, `X-Client-Version` and `X-Request-Id`;
+and `ETag`, `Retry-After` and `X-Request-Id` exposed, so the answer to a write, or to a
+throttle, can be read whole and matched to the server's log of it. The preflight is answered before the
 parse, floor and session hooks run, because it carries no token and a 401 on it would
 reach the client as an unreachable server rather than a sign-out. The origin is echoed
 on error responses for the same reason: an envelope the browser hides reaches the client
@@ -243,6 +247,17 @@ understood, and refused for a reason no resend from this client can change. The 
 about the client; `record_newer_than_client` is about the resource's state, which is what
 409 says.
 
+## Request ids
+
+Every request is logged under one id, and the client makes it. `createApiRequester` sends a
+fresh UUID in `X-Request-Id` with every call; `requestIdFor` takes it as Fastify's request id
+when it is 8 to 64 letters, digits and hyphens, and mints a UUID when it is missing or
+anything else, because the id is written into every log line for that request and a header
+is whatever the caller chose to put in it. Every answer says the id back in the same
+header, and a refused call's `SyncRequestError` carries it as `requestId`, so a failure the
+app reports and the server's lines for the same call can be found by one string. Nothing
+reports client failures yet; that is OV-61.
+
 ## Rate limits
 
 Every limit is a fixed window counted in this process's memory, and a request past it is
@@ -264,6 +279,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
+| `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 
@@ -357,6 +373,9 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
 | `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |
 | `AUDIO_DIR` | | a directory to keep narration in instead, for working offline; `TTS_URL` needs this or R2 |
+| `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
+| `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
+| `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |
 
 `server.ts` applies migrations on every start, under an advisory lock so two starting
 machines cannot both apply the same one, then listens. Locally, from the Nix dev shell

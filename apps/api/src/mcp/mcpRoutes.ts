@@ -1,5 +1,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import type { SqlClient } from "../db/SqlClient.js";
+import type { EventSink } from "../events/EventSink.js";
+import { mcpToolCalledEvent } from "../events/mcpToolCalledEvent.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { handleMcpMessage, JSON_RPC_ERRORS, jsonRpcError, MCP_PROTOCOL_VERSIONS } from "./handleMcpMessage.js";
 
@@ -7,6 +9,8 @@ export interface McpRoutesOptions {
   sql: SqlClient;
   transcripts: TranscriptsRepository;
   appOrigin: string;
+  eventSink: EventSink | null;
+  clock: () => Date;
 }
 
 const PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
@@ -19,7 +23,10 @@ const onlyPost = (reply: FastifyReply) =>
 
 // Runs after connectionAccessPlugin, so every request here carries a connection
 // (docs/features/mcp-connector.md, "The endpoint").
-export function mcpRoutes(app: FastifyInstance, { sql, transcripts, appOrigin }: McpRoutesOptions): void {
+export function mcpRoutes(
+  app: FastifyInstance,
+  { sql, transcripts, appOrigin, eventSink, clock }: McpRoutesOptions,
+): void {
   app.post("/mcp", async (request, reply) => {
     reply.header("cache-control", "no-store");
     const origin = request.headers.origin;
@@ -37,6 +44,13 @@ export function mcpRoutes(app: FastifyInstance, { sql, transcripts, appOrigin }:
       accountId: access.accountId,
       connectionId: access.connectionId,
       log: request.log,
+      onToolCalled: (call) => {
+        const event = eventSink === null ? null : mcpToolCalledEvent(call, access.clientName, clock());
+        if (eventSink === null || event === null) return;
+        void eventSink
+          .capture([event], { accountId: access.accountId, origin: { kind: "mcp" }, geoAddress: null })
+          .catch((error: unknown) => request.log.warn({ error: String(error) }, "mcp events not forwarded"));
+      },
     });
     if (handled.kind === "accepted") {
       return reply.status(202).send();

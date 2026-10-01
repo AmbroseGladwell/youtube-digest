@@ -1,6 +1,6 @@
 import cors from "@fastify/cors";
 import fp from "fastify-plugin";
-import { CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
 
 export interface CorsPluginOptions {
   allowedOrigins: string[];
@@ -13,8 +13,8 @@ export const corsPlugin = fp<CorsPluginOptions>(async (app, { allowedOrigins }) 
   await app.register(cors, {
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["authorization", "content-type", "if-match", CLIENT_VERSION_HEADER],
-    exposedHeaders: ["etag", "retry-after"],
+    allowedHeaders: ["authorization", "content-type", "if-match", CLIENT_VERSION_HEADER, REQUEST_ID_HEADER],
+    exposedHeaders: ["etag", "retry-after", REQUEST_ID_HEADER],
     maxAge: 3600,
   });
 });

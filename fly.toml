@@ -27,6 +27,9 @@ primary_region = "lhr"
   TTS_CONCURRENCY = "5"
   R2_ACCOUNT_ID = "781691f32a5cf03b132121e499f510a4"
   R2_BUCKET = "the-overview-audio"
+  # Tags every event passed on to PostHog; nothing is passed on until POSTHOG_API_KEY is set
+  # (docs/architecture/analytics.md, "Turning it on").
+  ANALYTICS_ENVIRONMENT = "production"
 
 # Renders any missing voice sample before the new version goes live
 # (docs/features/narration-voice.md, "The samples").

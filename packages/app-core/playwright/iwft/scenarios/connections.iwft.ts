@@ -72,6 +72,7 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyConnectedLabelIsFocused();
     await settings.verifyRowReads("connections", "1 connected");
     test.expect(backendSimulator.connections.revoked()).toEqual(["claude"]);
+    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(["connections.revoked"]);
   });
 
   test("a revoke the server refused puts the row back and says so", async ({ launcher, backendSimulator }) => {
