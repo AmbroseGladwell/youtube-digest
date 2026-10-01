@@ -138,11 +138,23 @@ write, all of which would carry what the reader asked for.
 
 ## Location
 
-PostHog places an event in a country from an IP address, and every event the server
-passes on would otherwise come from the server's own. So the server sends `$ip`, cut down
-by `geoAddress` to the caller's network: the last octet of IPv4 goes, and everything past
-the /64 of IPv6. That is enough for a country and too little to single anyone out.
+PostHog places an event from an IP address, and every event the server passes on would
+otherwise come from the server's own. So the server sends `$ip`, cut down by `geoAddress`
+to the caller's network: the last octet of IPv4 goes, and everything past the /64 of IPv6.
 PostHog's "Discard client IP data" setting then drops even that after GeoIP has run.
+
+A network is still more precise than it sounds. The first real event (1 Oct 2026) came
+back with a city, a postcode district and coordinates good to 50 km, because a /24
+usually belongs to one provider in one place. City is kept: it is useful and is shared by
+many readers. **Postcode and coordinates are not**, since next to an account id a postcode
+district narrows a reader down further than counting needs, and the coordinates are often
+the postcode's centre rather than the city's. GeoIP runs inside PostHog, after the
+server's part is done, so a transformation in PostHog removes them on the way in (step 3 of
+"Turning it on").
+
+| Kept | Removed |
+|---|---|
+| continent, country, region (England), city, time zone | `$geoip_postal_code`, `$geoip_latitude`, `$geoip_longitude`, `$geoip_accuracy_radius` |
 
 ## Request ids
 
@@ -159,15 +171,19 @@ Once, when the PostHog project is made:
 2. In the project's settings, turn on **Discard client IP data**, and turn off
    autocapture, session replay and surveys. The app never loads PostHog's script, so they
    would only matter to someone adding it later, who should read this first.
-3. Sign PostHog's DPA.
-4. Put the project token (`phc_…`, Project settings → General) in Bitwarden as
+3. Add a transformation that removes `$geoip_postal_code`, `$geoip_latitude`,
+   `$geoip_longitude` and `$geoip_accuracy_radius` from every event, and the same fields
+   from person properties (`$geoip_*` and `$initial_geoip_*`), after GeoIP has run
+   ("Location"). Then check a new event carries a city and none of the four.
+4. Sign PostHog's DPA.
+5. Put the project token (`phc_…`, Project settings → General) in Bitwarden as
    `POSTHOG_API_KEY` in `overview-prod`, and run `task deploy:secrets`
    (`docs/conventions/secrets.md`). `.env.prod.tpl` already names it, and `fly.toml`
    already sets `ANALYTICS_ENVIRONMENT` to `production`. No secret or personal API key is
    needed: nothing here reads from PostHog.
-5. After the deploy, check the startup line reads `analytics` with the EU host rather than
+6. After the deploy, check the startup line reads `analytics` with the EU host rather than
    "client events are logged only", then approve or decline a test request and see the
-   event arrive in PostHog with a country and no IP.
+   event arrive in PostHog with a city, no postcode, no coordinates and no IP.
 
 Until then, events are logged on the server and go nowhere else.
 
