@@ -3,8 +3,38 @@ import { filterPanelTestIds } from "../../src/features/library/components/Filter
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class FilterPanelPageObject extends PageObject {
+  // Verdict is folded under More filters, so reaching one of its rows opens that first.
   clickNoveltyChip = (novelty: string) =>
-    this.step(`clickNoveltyChip ${novelty}`, () => this.click(filterPanelTestIds.noveltyChip(novelty)));
+    this.step(`clickNoveltyChip ${novelty}`, async () => {
+      await this.openMoreFilters();
+      await this.click(filterPanelTestIds.noveltyChip(novelty));
+    });
+
+  clickDubiousChip = () =>
+    this.step("clickDubiousChip", async () => {
+      await this.openMoreFilters();
+      await this.click(filterPanelTestIds.dubiousChip);
+    });
+
+  openMoreFilters = () =>
+    this.step("openMoreFilters", async () => {
+      const button = this.get(filterPanelTestIds.moreFiltersButton);
+      if ((await button.getAttribute("aria-expanded")) !== "true") {
+        await button.click();
+      }
+      await expect(button).toHaveAttribute("aria-expanded", "true");
+    });
+
+  verifyVerdictIsFolded = () =>
+    this.step("verifyVerdictIsFolded", async () => {
+      await expect(this.get(filterPanelTestIds.moreFiltersButton)).toHaveAttribute("aria-expanded", "false");
+      await expect(this.get(filterPanelTestIds.noveltyChip("all"))).not.toBeVisible();
+    });
+
+  verifyMoreFiltersSummaryReads = (summary: string) =>
+    this.step(`verifyMoreFiltersSummaryReads ${summary}`, () =>
+      expect(this.get(filterPanelTestIds.moreFiltersSummary)).toHaveText(summary),
+    );
 
   clickStatusChip = (status: string) =>
     this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));

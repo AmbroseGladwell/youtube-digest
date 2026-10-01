@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
 
 // A property can only be a choice, a flag or a number: nothing that could carry a URL,
@@ -34,6 +35,19 @@ export const analyticsEvents = {
     },
     settingsConnections: {
       revoked: event("The reader revokes an assistant's access in Settings › Connections"),
+    },
+  },
+  timeSaved: {
+    library: {
+      breakdownOpened: event("The reader opens the time-saved breakdown from the library's running total"),
+    },
+    milestoneCard: {
+      dismissed: event("The reader dismisses a time-saved milestone card", { milestone: MilestoneId }),
+      dismissalUndone: event("The reader undoes dismissing a time-saved milestone card", { milestone: MilestoneId }),
+      lineChosen: event("The reader moves a milestone card to another of its lines, by swiping, the arrow keys or a dot", {
+        milestone: MilestoneId,
+        by: MilestoneLineControl,
+      }),
     },
   },
 } as const satisfies AnalyticsCatalogueShape;

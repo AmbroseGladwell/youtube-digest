@@ -4,7 +4,9 @@ import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js"
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { NOVELTY_LABEL, overviewMetaParts } from "@overview/domain";
+import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved } from "@overview/domain";
+import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
+import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
@@ -18,6 +20,8 @@ export interface LibraryOverviewCardProps {
   playing: boolean;
   onListen: () => void;
 }
+
+const SAVED_CHIP_SHOWN_MS = 3_200;
 
 const SELLING_LABEL: Record<string, string> = {
   own_paid_product: "Sells own paid product",
@@ -42,6 +46,16 @@ export function LibraryOverviewCard({
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
   const metaParts = overviewMetaParts(overview);
+  const saved = overviewTimeSaved(overview);
+  const savedMoment = useSavedMoment(SAVED_CHIP_SHOWN_MS);
+  const toggleRead = () => {
+    if (state.read) {
+      savedMoment.hide();
+    } else if (saved.kind === "counted" && saved.minutes > 0) {
+      savedMoment.show();
+    }
+    onToggleRead();
+  };
 
   return (
     <article
@@ -85,9 +99,14 @@ export function LibraryOverviewCard({
           </Link>
 
           <div className={styles.foot}>
-            <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
-              {metaParts.join(" · ")}
-            </p>
+            <span className={styles.reading}>
+              <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
+                {metaParts.join(" · ")}
+              </p>
+              {savedMoment.phase !== "hidden" && saved.kind === "counted" && (
+                <SavedChip minutes={saved.minutes} leaving={savedMoment.phase === "leaving"} />
+              )}
+            </span>
 
             <div className={styles.actions}>
               <button
@@ -103,8 +122,8 @@ export function LibraryOverviewCard({
               </button>
               <button
                 type="button"
-                className={`${styles.action} ${state.read ? styles.actionActive : ""}`}
-                onClick={onToggleRead}
+                className={`${styles.action} ${styles.readAction} ${state.read ? styles.actionActive : ""}`}
+                onClick={toggleRead}
                 aria-pressed={state.read}
                 data-testid={libraryOverviewCardTestIds.readButton}
               >

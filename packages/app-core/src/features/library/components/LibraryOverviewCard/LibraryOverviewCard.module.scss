@@ -148,6 +148,15 @@
   margin-top: 0.25rem;
 }
 
+// The reading line, and beside it the "Saved you" chip for a moment after Mark read.
+.reading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.625rem;
+  min-width: 0;
+}
+
 // The same three numbers the reader prints, in the same treatment, so a row and the note it
 // opens read as one thing.
 .timing {
@@ -177,6 +186,11 @@
   @include controls.pill-sm;
 
   min-height: 2.125rem;
+}
+
+// Mark read and Read share one width, so turning one into the other moves nothing.
+.readAction {
+  min-width: 6.5rem;
 }
 
 .actionActive,

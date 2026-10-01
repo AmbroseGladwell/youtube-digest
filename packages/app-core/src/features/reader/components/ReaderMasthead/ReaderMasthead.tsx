@@ -10,11 +10,14 @@ import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import styles from "./ReaderMasthead.module.scss";
+import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
 
 export interface ReaderMastheadProps {
   overview: Overview;
   metaParts: string[];
+  // The "Saved you" chip, while the page holds it after Mark read.
+  savedChip: { minutes: number; leaving: boolean } | null;
   read: boolean;
   favourite: boolean;
   playing: boolean;
@@ -49,6 +52,7 @@ const savedOn = (savedAt: string) =>
 export function ReaderMasthead({
   overview,
   metaParts,
+  savedChip,
   read,
   favourite,
   playing,
@@ -183,6 +187,11 @@ export function ReaderMasthead({
             <span>
               {" · saved "}
               {savedOn(overview.savedAt)}
+            </span>
+          )}
+          {savedChip !== null && (
+            <span className={styles.savedChip}>
+              <SavedChip minutes={savedChip.minutes} countUp leaving={savedChip.leaving} />
             </span>
           )}
         </p>

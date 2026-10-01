@@ -2,6 +2,7 @@ export const libraryPageTestIds = {
   root: "LibraryPage.root",
   list: "LibraryPage.list",
   listCount: "LibraryPage.listCount",
+  timeSavedButton: "LibraryPage.timeSavedButton",
   searchInput: "LibraryPage.searchInput",
   clearSearchButton: "LibraryPage.clearSearchButton",
   empty: "LibraryPage.empty",

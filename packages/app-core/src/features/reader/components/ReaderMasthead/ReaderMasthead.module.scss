@@ -109,6 +109,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.savedChip {
+  display: inline-block;
+  margin-left: 0.625rem;
+  vertical-align: middle;
+}
+
 .title {
   margin: 0;
   font-family: var(--font-heading);

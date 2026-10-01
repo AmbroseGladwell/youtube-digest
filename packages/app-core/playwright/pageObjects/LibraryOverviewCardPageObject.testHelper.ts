@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import type { Locator } from "@playwright/test";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
+import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
@@ -50,6 +51,11 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   clickFavourite = () => this.step("clickFavourite", () => this.click(libraryOverviewCardTestIds.favouriteButton));
   clickMarkRead = () => this.step("clickMarkRead", () => this.click(libraryOverviewCardTestIds.readButton));
+
+  verifySavedChipSays = (text: string) =>
+    this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
+
+  verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
 
   verifyIsFavourited = (isFavourited: boolean) =>
     this.step(`verifyIsFavourited ${isFavourited}`, () =>

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AnthropicModel, DEFAULT_ANTHROPIC_MODEL } from "./AnthropicModel.js";
 import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
+import { MilestoneMarks } from "./Milestone.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -28,6 +29,9 @@ export const Settings = z.object({
   plan: Plan,
   plusNoticeDismissed: z.boolean(),
   narrationVoice: NarrationVoice.catch(DEFAULT_NARRATION_VOICE),
+  // When each time-saved milestone was crossed and dismissed, on the account so both hold
+  // on every device (docs/features/time-saved.md).
+  milestones: MilestoneMarks.catch({}),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -38,4 +42,5 @@ export const DEFAULT_SETTINGS: Settings = {
   plan: DEFAULT_PLAN,
   plusNoticeDismissed: false,
   narrationVoice: DEFAULT_NARRATION_VOICE,
+  milestones: {},
 };

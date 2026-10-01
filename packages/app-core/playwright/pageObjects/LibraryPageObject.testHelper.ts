@@ -10,11 +10,34 @@ import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.t
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
 import { SortPillPageObject } from "./SortPillPageObject.testHelper.js";
+import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
+import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
   get filterPanel(): FilterPanelPageObject {
     return new FilterPanelPageObject(this.testContext);
   }
+
+  get milestones(): MilestoneStackPageObject {
+    return new MilestoneStackPageObject(this.testContext);
+  }
+
+  // The figure is drawn as rolling digits, so what it says is read from its accessible name.
+  verifyTimeSavedSays = (spoken: string) =>
+    this.step(`verifyTimeSavedSays ${spoken}`, () =>
+      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveAttribute("aria-label", `Time saved: ${spoken}`),
+    );
+
+  verifyTimeSavedShows = (figure: string) =>
+    this.step(`verifyTimeSavedShows ${figure}`, () =>
+      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveText(`${figure}saved`),
+    );
+
+  openTimeSaved = (): Promise<TimeSavedSheetPageObject> =>
+    this.step("openTimeSaved", async () => {
+      await this.click(libraryPageTestIds.timeSavedButton);
+      return new TimeSavedSheetPageObject(this.testContext).verifyIsShown();
+    });
 
   get sortPill(): SortPillPageObject {
     return new SortPillPageObject(this.testContext);

@@ -70,6 +70,39 @@
   --radius-panel: 16px;
   --radius-tile: 18px;
   --radius-dialog: 24px;
+
+  // The ten time-saved milestones ("OV-34 2 Milestones" 34za): a tint for the card, a
+  // ring for its pill and a deeper step for the pill's label on the light ground.
+  --milestone-30m-tint: #f8f2e6;
+  --milestone-30m-ring: #c8902e;
+  --milestone-30m-ink: #7e5610;
+  --milestone-1h-tint: #fceae4;
+  --milestone-1h-ring: #e2511e;
+  --milestone-1h-ink: #b03c12;
+  --milestone-5h-tint: #ecf1eb;
+  --milestone-5h-ring: #5e8a5a;
+  --milestone-5h-ink: #3d6a3a;
+  --milestone-10h-tint: #e6eff1;
+  --milestone-10h-ring: #2f7a8c;
+  --milestone-10h-ink: #1d5c6b;
+  --milestone-15h-tint: #f1eaef;
+  --milestone-15h-ring: #8a4f7d;
+  --milestone-15h-ink: #6e3a63;
+  --milestone-20h-tint: #f8ebed;
+  --milestone-20h-ring: #c2566a;
+  --milestone-20h-ink: #9c3a4e;
+  --milestone-30h-tint: #f1f1e6;
+  --milestone-30h-ring: #8a8a32;
+  --milestone-30h-ink: #5a5a1a;
+  --milestone-50h-tint: #eaebf4;
+  --milestone-50h-ring: #4d5ba6;
+  --milestone-50h-ink: #3a4788;
+  --milestone-75h-tint: #f6ede6;
+  --milestone-75h-ring: #b8692f;
+  --milestone-75h-ink: #8a4a1e;
+  --milestone-100h-tint: #f8f3e6;
+  --milestone-100h-ring: #c29a2e;
+  --milestone-100h-ink: #7a5a10;
 }
 
 @mixin dark-tokens {
@@ -101,6 +134,37 @@
   --shadow-float: 0 6px 24px rgba(0, 0, 0, 0.35);
   --shadow-dialog: 0 24px 60px rgba(0, 0, 0, 0.6);
   --shadow-menu: 0 12px 32px rgba(0, 0, 0, 0.55);
+
+  --milestone-30m-tint: #3d362a;
+  --milestone-30m-ring: #e0b054;
+  --milestone-30m-ink: #e0b054;
+  --milestone-1h-tint: #402d28;
+  --milestone-1h-ring: #f0794a;
+  --milestone-1h-ink: #f0794a;
+  --milestone-5h-tint: #303732;
+  --milestone-5h-ring: #8db889;
+  --milestone-5h-ink: #8db889;
+  --milestone-10h-tint: #2b373c;
+  --milestone-10h-ring: #6fb3c4;
+  --milestone-10h-ink: #6fb3c4;
+  --milestone-15h-tint: #383039;
+  --milestone-15h-ring: #c08ab3;
+  --milestone-15h-ink: #c08ab3;
+  --milestone-20h-tint: #3e3035;
+  --milestone-20h-ring: #e68a9a;
+  --milestone-20h-ink: #e68a9a;
+  --milestone-30h-tint: #38392e;
+  --milestone-30h-ring: #c2c26a;
+  --milestone-30h-ink: #c2c26a;
+  --milestone-50h-tint: #323440;
+  --milestone-50h-ring: #9aa4e0;
+  --milestone-50h-ink: #9aa4e0;
+  --milestone-75h-tint: #3d332d;
+  --milestone-75h-ring: #e09a66;
+  --milestone-75h-ink: #e09a66;
+  --milestone-100h-tint: #3e3a2d;
+  --milestone-100h-ring: #e8c566;
+  --milestone-100h-ink: #e8c566;
 }
 
 :root[data-theme="dark"] {

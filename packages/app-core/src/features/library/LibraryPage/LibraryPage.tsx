@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import type { Overview, OverviewId } from "@overview/domain";
+import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -33,9 +33,19 @@ import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
 import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
 import { useFocusTrap } from "../../../util/useFocusTrap.js";
+import { useMediaQuery } from "../../../util/useMediaQuery.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
+import { TimeSavedFigure } from "../../timeSaved/components/TimeSavedFigure/TimeSavedFigure.js";
+import { TimeSavedSheet } from "../../timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
+import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
+
+// Below this width the rail is a sheet behind the filter button, so a milestone sits at
+// the top of the list instead (LibraryPage.module.scss; "OV-34 3 Phone and Panel" 34ad).
+const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
 
 export interface LibraryPageProps {
   entries: LibraryEntry[];
@@ -65,6 +75,20 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const rail = useRef<HTMLElement | null>(null);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
+  const [timeSavedOpen, setTimeSavedOpen] = useState(false);
+  const analytics = useAnalytics();
+  const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
+  const timeSaved = timeSavedSummary(readableEntries(entries));
+  const milestones = useMilestones(timeSaved.minutes, true);
+  const milestoneStack = (
+    <MilestoneStack
+      milestones={milestones.visible}
+      minutes={timeSaved.minutes}
+      onLineChosen={milestones.lineChosen}
+      onDismiss={milestones.dismiss}
+      onUndo={milestones.undo}
+    />
+  );
 
   const entering = useEnteringOverviewIds(entries.map(libraryEntryId));
   // The rail is a sheet over the page only in the narrow layout, and only there does it
@@ -159,6 +183,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 setNewTopicOpen(true);
               }}
             />
+            {!railIsSheet && <div className={styles.milestones}>{milestoneStack}</div>}
           </div>
           <div className={styles.sheetFoot}>
             <button
@@ -180,8 +205,26 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           <div className={styles.listHead}>
             <div>
               <h1 className={styles.title}>Overviews</h1>
-              <p className={styles.listCount} data-testid={libraryPageTestIds.listCount}>
-                {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
+              <p className={styles.listCount}>
+                <span data-testid={libraryPageTestIds.listCount}>
+                  {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
+                </span>
+                <span aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  className={styles.timeSaved}
+                  onClick={() => {
+                    setTimeSavedOpen(true);
+                    analytics.timeSaved.library.breakdownOpened();
+                  }}
+                  aria-haspopup="dialog"
+                  aria-expanded={timeSavedOpen}
+                  aria-label={`Time saved: ${spokenTimeSaved(timeSaved.minutes)}`}
+                  data-testid={libraryPageTestIds.timeSavedButton}
+                >
+                  <TimeSavedFigure minutes={timeSaved.minutes} />
+                  <span>saved</span>
+                </button>
               </p>
             </div>
             <SortPill
@@ -213,6 +256,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               />
             )}
           </div>
+
+          {railIsSheet && milestoneStack}
 
           {visible.length === 0 ? (
             <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
@@ -262,6 +307,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         onClick={closeFilters}
         aria-hidden="true"
       />
+
+      <TimeSavedSheet open={timeSavedOpen} summary={timeSaved} onClose={() => setTimeSavedOpen(false)} />
 
       <NewTopicDialog
         open={newTopicOpen}

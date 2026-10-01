@@ -7,6 +7,7 @@ import { useSurface } from "../../../app/SurfaceContext.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useNow } from "../../../util/useNow.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { ResendLinkButton } from "../../auth/components/ResendLinkButton/ResendLinkButton.js";
 import { useRequestMagicLinkMutation } from "../../auth/mutations/useRequestMagicLinkMutation.js";
@@ -44,15 +45,6 @@ function useOnce(when: boolean, record: () => void): void {
     recorded.current = true;
     record();
   }, [when, record]);
-}
-
-function useNow(intervalMs: number): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-  return now;
 }
 
 // Where an assistant sends a reader to answer its request (design 58,
