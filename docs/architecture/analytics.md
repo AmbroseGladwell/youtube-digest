@@ -160,10 +160,11 @@ Once, when the PostHog project is made:
    autocapture, session replay and surveys. The app never loads PostHog's script, so they
    would only matter to someone adding it later, who should read this first.
 3. Sign PostHog's DPA.
-4. Put the project key in Bitwarden as `POSTHOG_API_KEY` in `overview-prod`, add
-   `POSTHOG_API_KEY=${POSTHOG_API_KEY}` to `.env.prod.tpl`, and run `task deploy:secrets`
-   (`docs/conventions/secrets.md`). `fly.toml` already sets `ANALYTICS_ENVIRONMENT` to
-   `production`.
+4. Put the project token (`phc_…`, Project settings → General) in Bitwarden as
+   `POSTHOG_API_KEY` in `overview-prod`, and run `task deploy:secrets`
+   (`docs/conventions/secrets.md`). `.env.prod.tpl` already names it, and `fly.toml`
+   already sets `ANALYTICS_ENVIRONMENT` to `production`. No secret or personal API key is
+   needed: nothing here reads from PostHog.
 5. After the deploy, check the startup line reads `analytics` with the EU host rather than
    "client events are logged only", then approve or decline a test request and see the
    event arrive in PostHog with a country and no IP.
