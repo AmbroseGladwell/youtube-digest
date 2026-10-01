@@ -22,8 +22,8 @@ export interface ReaderMastheadProps {
   favourite: boolean;
   playing: boolean;
   editingTopics: boolean;
-  // Design 6d: the side panel's head is the title, the channel, the meta line and one
-  // Listen — no back link, because there is no list behind it to have come from
+  // Design 6d and 34v: the side panel's head is the title, the channel, the meta line,
+  // Listen and Mark read — no back link, because there is no list behind it to have come from
   // (docs/features/extension-panel.md).
   compact: boolean;
   webApp: OverviewInWebApp;
@@ -92,16 +92,28 @@ export function ReaderMasthead({
 
       <div className={styles.actions}>
         {compact ? (
-          <button
-            type="button"
-            className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
-            onClick={onListen}
-            aria-pressed={listening}
-            data-testid={readerMastheadTestIds.listenButton}
-          >
-            <StrokeIcon name="headphones" />
-            {listening ? "Listening" : "Listen"}
-          </button>
+          <>
+            <button
+              type="button"
+              className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
+              onClick={onListen}
+              aria-pressed={listening}
+              data-testid={readerMastheadTestIds.listenButton}
+            >
+              <StrokeIcon name="headphones" />
+              {listening ? "Listening" : "Listen"}
+            </button>
+            <button
+              type="button"
+              className={`${styles.read} ${read ? styles.readActive : ""}`}
+              onClick={onToggleRead}
+              aria-pressed={read}
+              data-testid={readerMastheadTestIds.readButton}
+            >
+              {read && <StrokeIcon name="check" />}
+              {read ? "Read" : "Mark read"}
+            </button>
+          </>
         ) : (
           <>
             <button
@@ -136,7 +148,6 @@ export function ReaderMasthead({
           videoUrl={overview.video.url}
           compact={compact}
           webApp={webApp}
-          align={compact ? "start" : "end"}
           onShare={onShare}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
