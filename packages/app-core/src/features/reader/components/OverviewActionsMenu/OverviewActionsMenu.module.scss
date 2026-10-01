@@ -15,11 +15,12 @@
 }
 
 // Design 4b: the dialog's own surface, 16px corners, 6px of padding around 10px-cornered
-// items. Which edge it hangs from is the caller's to say: at the right of the bar a menu
-// growing rightwards would leave the window.
+// items. Its trigger ends the row on every layout, so it hangs from the trailing edge: a
+// menu growing rightwards would leave the window.
 .menu {
   position: absolute;
   top: calc(100% + 0.5rem);
+  right: 0;
   z-index: 3;
   min-width: 13.75rem;
   background: var(--dialog);
@@ -29,14 +30,6 @@
   display: flex;
   flex-direction: column;
   animation: menuRise var(--motion-arrive) var(--motion-ease) both;
-}
-
-.menuEnd {
-  right: 0;
-}
-
-.menuStart {
-  left: 0;
 }
 
 @keyframes menuRise {
