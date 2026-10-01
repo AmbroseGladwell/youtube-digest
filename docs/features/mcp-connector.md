@@ -331,14 +331,15 @@ with focus on its Revoke.
 ## Events
 
 The design's five events are in the analytics catalogue under the app's own naming
-(`docs/architecture/analytics.md`): `consent.shown` once a request has loaded,
-`consent.planRequired` once a reader on Free is shown the Plus card, `consent.approved`,
-and `consent.declined` with the plan the reader was on, both sent as the page is left so
-they outlive it, and `connections.revoked` once the server has taken the revoke. Only a
+(`docs/architecture/analytics.md`, "Naming"): `mcp.consentScreen.shown` once a request
+has loaded, `mcp.consentScreen.plusRequired` once a reader on Free is shown the Plus card,
+`mcp.consentScreen.approved`, and `mcp.consentScreen.declined` with the plan the reader was
+on, both sent as the page is left so they outlive it, and `mcp.settingsConnections.revoked`
+once the server has taken the revoke. Only a
 signed-in reader is counted, so a request looked at before signing in is not; the server
 still logs every decision and revoke itself, as above.
 
-Each tool call is also counted, by the server, as `mcp.toolCalled`: the tool, which of
+Each tool call is also counted, by the server, as `mcp.tools.called`: the tool, which of
 Claude, ChatGPT or another assistant made it, whether it failed, how many overviews it
 returned and how long it took. That is the same line the logs draw: never the query, a
 topic or anything read (`docs/architecture/analytics.md`, "Events the server sends").

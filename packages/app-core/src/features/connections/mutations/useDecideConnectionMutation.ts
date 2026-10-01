@@ -19,8 +19,8 @@ export const useDecideConnectionMutation = (
   return useMutation<ConnectionDecided, Error, DecideConnectionVariables>({
     mutationFn: ({ requestId, approve }) => api!.decide(requestId, approve),
     onSuccess: ({ redirectTo }, { approve, plan }) => {
-      if (approve) analytics.consent.approved();
-      else analytics.consent.declined({ plan });
+      if (approve) analytics.mcp.consentScreen.approved();
+      else analytics.mcp.consentScreen.declined({ plan });
       void analytics.flush({ keepalive: true });
       leaveFor(redirectTo);
     },

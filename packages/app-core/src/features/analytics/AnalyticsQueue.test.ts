@@ -36,24 +36,24 @@ describe("AnalyticsQueue", () => {
   it("holds events for a moment and sends them together", async () => {
     const { queue, sent, names } = makeQueue();
 
-    queue.record("consent.shown", {});
+    queue.record("mcp.consentScreen.shown", {});
     vi.advanceTimersByTime(1_000);
-    queue.record("consent.declined", { plan: "free" });
+    queue.record("mcp.consentScreen.declined", { plan: "free" });
     expect(sent).toEqual([]);
     await vi.advanceTimersByTimeAsync(1_000);
 
-    expect(names()).toEqual([["consent.shown", "consent.declined"]]);
-    expect(sent[0]!.events[1]).toEqual({ name: "consent.declined", props: { plan: "free" }, at: "2026-10-01T09:00:01.000Z" });
+    expect(names()).toEqual([["mcp.consentScreen.shown", "mcp.consentScreen.declined"]]);
+    expect(sent[0]!.events[1]).toEqual({ name: "mcp.consentScreen.declined", props: { plan: "free" }, at: "2026-10-01T09:00:01.000Z" });
     expect(sent[0]!.keepalive).toBe(false);
   });
 
   it("sends at once, to outlive the page, when asked to flush", async () => {
     const { queue, sent } = makeQueue();
 
-    queue.record("consent.approved", {});
+    queue.record("mcp.consentScreen.approved", {});
     await queue.flush({ keepalive: true });
 
-    expect(sent).toEqual([{ events: [expect.objectContaining({ name: "consent.approved" })], keepalive: true }]);
+    expect(sent).toEqual([{ events: [expect.objectContaining({ name: "mcp.consentScreen.approved" })], keepalive: true }]);
     await vi.advanceTimersByTimeAsync(5_000);
     expect(sent).toHaveLength(1);
   });
@@ -62,7 +62,7 @@ describe("AnalyticsQueue", () => {
     const { queue, sent, signOut } = makeQueue();
     signOut();
 
-    queue.record("consent.shown", {});
+    queue.record("mcp.consentScreen.shown", {});
     await vi.advanceTimersByTimeAsync(5_000);
 
     expect(sent).toEqual([]);
@@ -71,7 +71,7 @@ describe("AnalyticsQueue", () => {
   it("forgets what it held if the reader signs out before it is sent", async () => {
     const { queue, sent, signOut } = makeQueue();
 
-    queue.record("consent.shown", {});
+    queue.record("mcp.consentScreen.shown", {});
     signOut();
     await vi.advanceTimersByTimeAsync(5_000);
 
@@ -81,15 +81,15 @@ describe("AnalyticsQueue", () => {
   it("drops past the per-minute cap, and says how many with the next batch that gets through", async () => {
     const { queue, names, sent } = makeQueue({ maxPerMinute: 3 });
 
-    for (let i = 0; i < 5; i++) queue.record("consent.shown", {});
+    for (let i = 0; i < 5; i++) queue.record("mcp.consentScreen.shown", {});
     await vi.advanceTimersByTimeAsync(2_000);
     vi.advanceTimersByTime(60_000);
-    queue.record("connections.revoked", {});
+    queue.record("mcp.settingsConnections.revoked", {});
     await vi.advanceTimersByTimeAsync(2_000);
 
     expect(names()).toEqual([
-      ["analytics.dropped", "consent.shown", "consent.shown", "consent.shown"],
-      ["connections.revoked"],
+      ["analytics.queue.dropped", "mcp.consentScreen.shown", "mcp.consentScreen.shown", "mcp.consentScreen.shown"],
+      ["mcp.settingsConnections.revoked"],
     ]);
     expect(sent[0]!.events[0]!.props).toEqual({ count: 2 });
   });
@@ -97,28 +97,28 @@ describe("AnalyticsQueue", () => {
   it("never holds more than one batch", async () => {
     const { queue, sent } = makeQueue({ maxPerMinute: 1_000 });
 
-    for (let i = 0; i < MAX_ANALYTICS_BATCH_EVENTS + 10; i++) queue.record("consent.shown", {});
+    for (let i = 0; i < MAX_ANALYTICS_BATCH_EVENTS + 10; i++) queue.record("mcp.consentScreen.shown", {});
     await vi.advanceTimersByTimeAsync(2_000);
 
     expect(sent[0]!.events).toHaveLength(MAX_ANALYTICS_BATCH_EVENTS);
-    expect(sent[0]!.events[0]).toEqual(expect.objectContaining({ name: "analytics.dropped", props: { count: 11 } }));
+    expect(sent[0]!.events[0]).toEqual(expect.objectContaining({ name: "analytics.queue.dropped", props: { count: 11 } }));
   });
 
   it("drops a batch that couldn't be sent rather than retrying it, and counts it", async () => {
     const { queue, sent, fail } = makeQueue();
 
     fail(true);
-    queue.record("consent.shown", {});
-    queue.record("consent.approved", {});
+    queue.record("mcp.consentScreen.shown", {});
+    queue.record("mcp.consentScreen.approved", {});
     await expect(queue.flush()).resolves.toBeUndefined();
     fail(false);
-    queue.record("connections.revoked", {});
+    queue.record("mcp.settingsConnections.revoked", {});
     await queue.flush();
 
     expect(sent).toHaveLength(1);
     expect(sent[0]!.events.map(({ name, props }) => [name, props])).toEqual([
-      ["analytics.dropped", { count: 2 }],
-      ["connections.revoked", {}],
+      ["analytics.queue.dropped", { count: 2 }],
+      ["mcp.settingsConnections.revoked", {}],
     ]);
   });
 });

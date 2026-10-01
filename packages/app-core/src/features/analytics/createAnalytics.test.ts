@@ -14,14 +14,14 @@ describe("createAnalytics", () => {
   it("has a method per event, named by where in the app it happens", () => {
     const { recorded, analytics } = recording();
 
-    analytics.consent.shown();
-    analytics.consent.declined({ plan: "plus" });
-    analytics.connections.revoked();
+    analytics.mcp.consentScreen.shown();
+    analytics.mcp.consentScreen.declined({ plan: "plus" });
+    analytics.mcp.settingsConnections.revoked();
 
     expect(recorded).toEqual([
-      ["consent.shown", {}],
-      ["consent.declined", { plan: "plus" }],
-      ["connections.revoked", {}],
+      ["mcp.consentScreen.shown", {}],
+      ["mcp.consentScreen.declined", { plan: "plus" }],
+      ["mcp.settingsConnections.revoked", {}],
     ]);
   });
 
@@ -29,15 +29,15 @@ describe("createAnalytics", () => {
     const { analytics } = recording();
     const refusedByTypes = () => {
       // @ts-expect-error not in the catalogue
-      analytics.consent.opened();
+      analytics.mcp.consentScreen.opened();
       // @ts-expect-error a property approved doesn't declare
-      analytics.consent.approved({ videoId: "dQw4w9WgXcQ" });
+      analytics.mcp.consentScreen.approved({ videoId: "dQw4w9WgXcQ" });
       // @ts-expect-error not one of the plans
-      analytics.consent.declined({ plan: "https://evil.test/" });
+      analytics.mcp.consentScreen.declined({ plan: "https://evil.test/" });
       // @ts-expect-error declined says which plan the reader was on
-      analytics.consent.declined();
+      analytics.mcp.consentScreen.declined();
       // @ts-expect-error the queue's own bookkeeping is not the app's to send
-      analytics.analytics.dropped({ count: 1 });
+      analytics.analytics.queue.dropped({ count: 1 });
     };
     expect(refusedByTypes).toBeTypeOf("function");
   });

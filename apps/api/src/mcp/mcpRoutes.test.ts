@@ -262,12 +262,12 @@ test("each tool call is counted under the reader's account: which tool, which as
     counted.map(({ events: [event], source }) => ({ name: event!.name, props: { ...event!.props, durationMs: 0 }, source })),
     [
       {
-        name: "mcp.toolCalled",
+        name: "mcp.tools.called",
         props: { tool: "get_overviews", assistant: "claude", failed: false, overviews: 1, durationMs: 0 },
         source: { accountId: reader.accountId, origin: { kind: "mcp" }, geoAddress: null },
       },
       {
-        name: "mcp.toolCalled",
+        name: "mcp.tools.called",
         props: { tool: "search_overviews", assistant: "claude", failed: true, overviews: 0, durationMs: 0 },
         source: { accountId: reader.accountId, origin: { kind: "mcp" }, geoAddress: null },
       },

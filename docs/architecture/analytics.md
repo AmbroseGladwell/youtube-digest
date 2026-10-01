@@ -13,7 +13,7 @@ event ends up missing from a funnel or a business fact ends up in a log with a 1
 
 | | Answers | Goes to | Example |
 |---|---|---|---|
-| **Analytics** | what readers do in the app, counted | `/api/events`, then PostHog | `consent.approved` |
+| **Analytics** | what readers do in the app, counted | `/api/events`, then PostHog | `mcp.consentScreen.approved` |
 | **Logging** | what the system did, and what went wrong | pino, as JSON on stdout (`docs/architecture/api.md`) | `connection request decided`, `throttled` |
 | **Audit records** | facts the system itself needs later | Postgres tables | a share's row, who fetched which transcript |
 
@@ -73,20 +73,37 @@ shell (`web` or `extension`), the layout (`full` or `panel`), the app's version 
 is a plain `x.y.z`, and the operating system in one word, from `analyticsPlatform`. The
 server adds the environment.
 
+## Naming
+
+Every event is `feature.screen.action`, so a name says where it came from without a
+lookup, and one `feature.*` filter in PostHog shows everything a feature does across its
+screens.
+
+| Part | Is | Examples |
+|---|---|---|
+| feature | the thing a reader would say they were doing | `mcp` (connecting and using an assistant), later `library`, `reader`, `analyticsConsent` |
+| screen | the screen or region of the app it happens on, as the design names it | `consentScreen`, `settingsConnections`, `sortPill`; `tools` for what the server sees on `/mcp` |
+| action | what the reader did, in the past tense, not the control they used | `approved`, not `approveClicked`; `orderChosen`, not `sortPillChanged` |
+
+The feature is never a word that could mean two features. `consent` alone would have meant
+both an assistant asking to connect and, once OV-62 lands, a reader agreeing to analytics,
+which is why the first events are `mcp.consentScreen.*`. The app's own bookkeeping is the
+`analytics` feature, and only the queue sends it.
+
 ## Adding an event
 
-1. Add it to `analyticsEvents` in `packages/domain`, under the area of the app it happens
-   in, with a description someone reading the numbers can act on, and any properties.
-   Name it for what the reader did (`declined`), not for the control (`declineClicked`).
-2. Call it where it happens: `useAnalytics()` and then `analytics.consent.declined({ plan })`.
+1. Add it to `analyticsEvents` in `packages/domain`, named as above, with a description
+   someone reading the numbers can act on, and any properties.
+2. Call it where it happens: `useAnalytics()` and then
+   `analytics.mcp.consentScreen.declined({ plan })`.
    The method exists only because the catalogue entry does, and its argument is typed by
    the declaration.
 3. Assert it in the IWFT for the feature, through `backendSimulator.analytics`. The
    catalogue is also what the server checks against, so shipping the API first, as
    `api.md` asks, keeps a new event from being refused.
 
-Call it after the fact, not before. `consent.approved` is sent once the server has taken
-the answer, and `connections.revoked` once the revoke succeeded, so a count is a count of
+Call it after the fact, not before. `mcp.consentScreen.approved` is sent once the server
+has taken the answer, and `mcp.settingsConnections.revoked` once the revoke succeeded, so a count is a count of
 things that happened.
 
 ## The client
@@ -101,7 +118,7 @@ reader back to the assistant.
 The queue can never fail or slow down what the reader did. A send that fails is dropped,
 never retried. Past 60 events a minute, or more than a batch waiting, events are dropped
 too, so a render loop can't spend the month's allowance. What is dropped is counted, and
-the count goes as `analytics.dropped` at the head of the next batch that gets through. A
+the count goes as `analytics.queue.dropped` at the head of the next batch that gets through. A
 gap then reads as lost data, not as a quiet day.
 
 ## The server
@@ -118,7 +135,7 @@ never reaches the reader. The answer is `204` either way.
 ## Events the server sends
 
 Some usage never passes through the app. An assistant reading the library over `/mcp`
-talks to the server directly, so the server records it itself: `mcp.toolCalled`, under the
+talks to the server directly, so the server records it itself: `mcp.tools.called`, under the
 reader's account id, once per tool call. It carries the tool (one of the five, as an enum
 that `mcpTools.test.ts` holds to the tools offered), the assistant (`claude`, `chatgpt` or
 `other`, from the name it registered with by `mcpAssistant`, never the name itself),
@@ -198,5 +215,5 @@ Until then, events are logged on the server and go nowhere else.
 - **Debouncing a noisy event.** Nothing noisy is sent yet. The per-minute cap is the
   backstop until something is.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
-  isn't, a script can print the areas, names, descriptions and properties from the same
+  isn't, a script can print the features, screens, names, descriptions and properties from the same
   object the server checks against.

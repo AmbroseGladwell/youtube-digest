@@ -88,8 +88,8 @@ export function ConsentPage() {
   useEffect(() => {
     if (loaded) heading.current?.focus();
   }, [loaded, sent]);
-  useOnce(loaded, analytics.consent.shown);
-  useOnce(loaded && plan === "free", analytics.consent.planRequired);
+  useOnce(loaded, analytics.mcp.consentScreen.shown);
+  useOnce(loaded && plan === "free", analytics.mcp.consentScreen.plusRequired);
 
   if (!sync.available) {
     return <ErrorState title="Accounts need the web app or the extension" back />;

@@ -27,7 +27,7 @@ export const useRevokeConnectionMutation = () => {
       );
       return { previous };
     },
-    onSuccess: () => analytics.connections.revoked(),
+    onSuccess: () => analytics.mcp.settingsConnections.revoked(),
     onError: (_error, _connectionId, context) => {
       for (const [queryKey, data] of context?.previous ?? []) queryClient.setQueryData(queryKey, data);
     },

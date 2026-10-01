@@ -73,7 +73,7 @@ export class AnalyticsQueue {
     const batch =
       dropped === 0
         ? events
-        : [{ name: "analytics.dropped", props: { count: dropped }, at: this.#now().toISOString() }, ...events];
+        : [{ name: "analytics.queue.dropped", props: { count: dropped }, at: this.#now().toISOString() }, ...events];
     try {
       await this.#send(batch, { keepalive });
     } catch {
