@@ -1,7 +1,9 @@
 import { useCallback, type ReactNode } from "react";
 import { Link } from "react-router";
+import { isSyncRequestError, isSyncTransportError } from "@overview/sync";
 import { Routes } from "../../../app/Routes.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
+import { useReportError } from "../../../features/errors/useReportError.js";
 import { StrokeIcon } from "../StrokeIcon/StrokeIcon.js";
 import styles from "./ErrorState.module.scss";
 import { errorStateTestIds } from "./ErrorStateTestIds.js";
@@ -18,6 +20,8 @@ export interface ErrorStateProps {
   body?: ReactNode;
   action?: ErrorStateAction | undefined;
   back?: boolean | undefined;
+  // The failure the screen is showing, reported once (docs/architecture/errors-and-logs.md).
+  error?: unknown;
 }
 
 // Design turn 19's one dead-end screen. A recovery action is a pill and navigation is the
@@ -25,8 +29,9 @@ export interface ErrorStateProps {
 // other and a one-action screen doesn't read as having lost its pair. Which actions a
 // case offers is the caller's to say, because offering the wrong one is the harm this
 // screen exists to avoid (docs/features/error-state.md).
-export function ErrorState({ title, body, action, back = false }: ErrorStateProps) {
+export function ErrorState({ title, body, action, back = false, error }: ErrorStateProps) {
   const isPanel = useIsPanel();
+  useReportError(error, isSyncRequestError(error) || isSyncTransportError(error) ? "failedRequest" : "errorState");
   const focusOnMount = useCallback((element: HTMLElement | null) => element?.focus(), []);
 
   return (

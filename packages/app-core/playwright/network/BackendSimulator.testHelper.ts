@@ -11,6 +11,7 @@ import {
   spokenScript,
   type NarrationRender,
   type AnalyticsEventBatch,
+  type ClientErrorBatch,
   type AuthSurface,
   type Connection,
   type ConnectionRequest,
@@ -131,6 +132,7 @@ export class BackendSimulator {
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
   #eventBatches: AnalyticsEventBatch[] = [];
+  #errorBatches: ClientErrorBatch[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -650,6 +652,18 @@ export class BackendSimulator {
         }),
       }),
     );
+    await this.#page.route("**/api/errors", (route) =>
+      this.#respond(route, EndpointKey.ERRORS, {
+        onDefault: () => {
+          this.#errorBatches.push(route.request().postDataJSON() as ClientErrorBatch);
+          return { status: 204, body: undefined };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
   };
 
   #respond = async (
@@ -812,6 +826,12 @@ export class BackendSimulator {
     events: (): Array<{ name: string; props: Record<string, unknown> }> =>
       this.#eventBatches.flatMap(({ events }) => events.map(({ name, props }) => ({ name, props }))),
     eventNames: (): string[] => this.#eventBatches.flatMap(({ events }) => events.map(({ name }) => name)),
+  };
+
+  // What the app told /api/errors, batch by batch and flattened (docs/architecture/errors-and-logs.md).
+  errors = {
+    batches: (): ClientErrorBatch[] => [...this.#errorBatches],
+    reported: (): ClientErrorBatch["errors"] => this.#errorBatches.flatMap(({ errors }) => errors),
   };
 
   transcripts = {

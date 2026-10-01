@@ -166,6 +166,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     return (
       <ErrorState
         title="Couldn't load this overview"
+        error={overviewQuery.error}
         body="Something went wrong reading it. Nothing has been lost."
         action={{ label: "Try again", onSelect: () => void overviewQuery.refetch() }}
         back

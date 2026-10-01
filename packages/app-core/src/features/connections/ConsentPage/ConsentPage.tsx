@@ -101,6 +101,7 @@ export function ConsentPage() {
     ) : (
       <ErrorState
         title="We couldn't load this request"
+        error={request.error ?? decide.error}
         body="The server didn't answer. Check your connection and try again."
         action={{ label: "Try again", onSelect: () => void request.refetch() }}
       />

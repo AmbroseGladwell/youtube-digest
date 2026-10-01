@@ -6,9 +6,9 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-The first slice is the server's half: `POST /api/errors`, its checks, and passing errors on
-to PostHog. The client's reporter, the extension's service worker and shipping the
-server's logs come in later slices ("Not built yet").
+Built so far: the server's half (`POST /api/errors`, its checks, passing errors on to
+PostHog) and the reporter in the app both shells mount. The extension's service worker and
+shipping the server's logs come later ("Not built yet").
 
 ## Where errors go
 
@@ -49,7 +49,7 @@ the only route that does this.
 
 | Field | Is | Kept out |
 |---|---|---|
-| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `failedRequest`, `serviceWorker` | |
+| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker` | |
 | `type` | the error's class name, as an identifier | a sentence |
 | `message` | redacted by `redactErrorMessage`, at most 200 characters | URLs, emails, quoted text, ids |
 | `frames` | up to 30: a function name, a path inside the bundle, a line and a column | a page's address, query strings |
@@ -95,6 +95,51 @@ is logged as `client errors dropped`, never as an error or an event ("Actions, n
 `analytics.md`). The batch is passed to the sink without waiting, and PostHog being down is
 logged as `client errors not forwarded`. The answer is `204` either way.
 
+## The client
+
+`ErrorReportingRuntime` sits inside the sync runtime and above `AnalyticsRuntime`. It sends
+to the server the shell knows (`useKnownApiUrl`) whether or not the reader is signed in,
+with the session when there is one. It gives the app an `ErrorReporter`.
+
+**What is caught, and as which source:**
+
+| Source | Caught by |
+|---|---|
+| `uncaught` | the window's `error` event |
+| `unhandledRejection` | the window's `unhandledrejection` event |
+| `routeBoundary` | `RouterErrorBoundary`: a page that threw while it rendered. The only one sent as `handled: false`, because the reader hit a dead end the app didn't plan |
+| `failedRequest` | an `ErrorState` given an `error` that is a `SyncRequestError` or `SyncTransportError`: a call to the API that was refused or never answered |
+| `errorState` | an `ErrorState` given any other `error`, such as a read from the device's store that failed |
+
+`ErrorState` takes the failure it is showing as `error` and reports it once, however often
+it renders. A screen that shows a dead end for an expected answer (a request that has
+expired, a session that has ended, a page that doesn't exist) passes no `error`, so only
+failures are reported. Each error object is reported once, so a failure that reaches both
+a screen and the window is one report.
+
+**The request id.** A `SyncRequestError` already carried the id its call was sent with.
+`SyncTransportError` now carries it too, for a call that never got an answer, so that
+failures without a server answer can be found as well.
+
+**Redaction runs on the device** before anything is queued. `toClientError` passes the
+message through `redactErrorMessage` and the stack through `parseStackFrames`, which keeps
+a frame's function name and its URL's path and drops its origin, query and hash. A frame
+with no URL, such as `<anonymous>` or native code, is dropped.
+
+**The trail.** Every call to `useAnalytics()` also records the event's name and time in an
+`ActionTrail` of 20. It records whether or not the reader is signed in, because it leaves
+the device only attached to an error, never as usage. It lives in memory and is gone with
+the page. A reader who isn't signed in sends no events, but their errors still carry what
+they did.
+
+**The queue.** `ErrorQueue` is separate from the events queue. It holds errors for a second
+and sends up to 10 together. Past 10 a minute, a render loop's errors are dropped. A send
+that fails, or has no server to go to, is dropped rather than retried, and the count goes
+as `dropped` on the next batch that gets through. When the page is hidden or left,
+`AnalyticsRuntime` flushes errors before events, both with `keepalive`. Errors are sent
+first because they matter more, and because a browser limits how much can be in flight
+as a page closes.
+
 ## Turning it on
 
 There's nothing more to set up than `analytics.md`'s "Turning it on". The same project and
@@ -104,16 +149,12 @@ errors are logged only".
 
 ## Not built yet
 
-- **The client's reporter** (slice 2) has these parts:
-  - a queue for errors, separate from the events queue and sent before it
-  - the trail kept in memory from what `useAnalytics()` records, signed in or not
-  - the stack parser and redaction run on the device
-  - capturing the router's boundary, `error`, `unhandledrejection` and failed mutations
-  - a `requestId` on `SyncTransportError`
 - **The extension's service worker** (slice 3) sends each error at once, because the worker
   can be stopped between messages.
 - **Shipping the server's logs** (slice 4): pino through OpenTelemetry to PostHog's log
   ingest, configured with the standard `OTEL_EXPORTER_OTLP_*` variables, so another
   destination needs no code change.
+- **Errors before the app mounts.** A shell that can't open its database renders
+  `StartupFailure` outside `App`, so that failure isn't reported yet.
 - **Source maps.** Frames are minified paths and positions until a build uploads its maps
   to PostHog.

@@ -66,6 +66,7 @@ export function SignInPage() {
     return (
       <ErrorState
         title="That link didn't sign you in"
+        error={signIn.error}
         body={authFailureMessage(signIn.error, LINK_SPENT)}
         action={{ label: "Try again", onSelect: () => signIn.mutate({ apiUrl, token }) }}
       />
