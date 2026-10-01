@@ -16,8 +16,8 @@ Five folders, five different questions.
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told
   apart, why events go through our own API to PostHog, who is counted and what an event may
-  carry, adding one, the client's queue, the MCP tool calls the server counts itself, and
-  turning it on.
+  carry, why only reader actions are events and everything else is a log, adding one, the
+  client's queue, and turning it on.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
   how the extension gets its id, its server and its store zip.

@@ -5,14 +5,14 @@ import { AnalyticsQueue, type AnalyticsQueueOptions } from "./AnalyticsQueue.js"
 const START = new Date("2026-10-01T09:00:00.000Z");
 
 const makeQueue = (options: Partial<AnalyticsQueueOptions> = {}) => {
-  const sent: Array<{ events: SentAnalyticsEvent[]; keepalive: boolean }> = [];
+  const sent: Array<{ events: SentAnalyticsEvent[]; dropped?: number; keepalive: boolean }> = [];
   let signedIn = true;
   let failing = false;
   const queue = new AnalyticsQueue({
     canSend: () => signedIn,
-    send: async (events, { keepalive }) => {
+    send: async (batch, { keepalive }) => {
       if (failing) throw new Error("Simulated: offline");
-      sent.push({ events, keepalive });
+      sent.push({ ...batch, keepalive });
     },
     now: () => new Date(),
     ...options,
@@ -78,7 +78,7 @@ describe("AnalyticsQueue", () => {
     expect(sent).toEqual([]);
   });
 
-  it("drops past the per-minute cap, and says how many with the next batch that gets through", async () => {
+  it("drops past the per-minute cap, and counts how many on the next batch that gets through, not as an event", async () => {
     const { queue, names, sent } = makeQueue({ maxPerMinute: 3 });
 
     for (let i = 0; i < 5; i++) queue.record("mcp.consentScreen.shown", {});
@@ -88,10 +88,10 @@ describe("AnalyticsQueue", () => {
     await vi.advanceTimersByTimeAsync(2_000);
 
     expect(names()).toEqual([
-      ["analytics.queue.dropped", "mcp.consentScreen.shown", "mcp.consentScreen.shown", "mcp.consentScreen.shown"],
+      ["mcp.consentScreen.shown", "mcp.consentScreen.shown", "mcp.consentScreen.shown"],
       ["mcp.settingsConnections.revoked"],
     ]);
-    expect(sent[0]!.events[0]!.props).toEqual({ count: 2 });
+    expect(sent.map(({ dropped }) => dropped)).toEqual([2, undefined]);
   });
 
   it("never holds more than one batch", async () => {
@@ -101,7 +101,7 @@ describe("AnalyticsQueue", () => {
     await vi.advanceTimersByTimeAsync(2_000);
 
     expect(sent[0]!.events).toHaveLength(MAX_ANALYTICS_BATCH_EVENTS);
-    expect(sent[0]!.events[0]).toEqual(expect.objectContaining({ name: "analytics.queue.dropped", props: { count: 11 } }));
+    expect(sent[0]!.dropped).toBe(10);
   });
 
   it("drops a batch that couldn't be sent rather than retrying it, and counts it", async () => {
@@ -116,9 +116,7 @@ describe("AnalyticsQueue", () => {
     await queue.flush();
 
     expect(sent).toHaveLength(1);
-    expect(sent[0]!.events.map(({ name, props }) => [name, props])).toEqual([
-      ["analytics.queue.dropped", { count: 2 }],
-      ["mcp.settingsConnections.revoked", {}],
-    ]);
+    expect(sent[0]!.events.map(({ name }) => name)).toEqual(["mcp.settingsConnections.revoked"]);
+    expect(sent[0]!.dropped).toBe(2);
   });
 });

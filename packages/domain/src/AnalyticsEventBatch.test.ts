@@ -24,7 +24,6 @@ test("free text or a URL in a property is refused, whether declared or not", () 
     parseAnalyticsEvent({ name: "mcp.consentScreen.approved", props: { note: "what the reader typed" }, at: AT }),
     null,
   );
-  assert.equal(parseAnalyticsEvent({ name: "analytics.queue.dropped", props: { count: 0 }, at: AT }), null);
 });
 
 test("a batch is one context and between one and the maximum number of events", () => {
@@ -36,4 +35,11 @@ test("a batch is one context and between one and the maximum number of events", 
   );
   assert.ok(!AnalyticsEventBatch.safeParse({ context: { ...context, appVersion: "0.4.1 (Reader's Mac)" }, events }).success);
   assert.ok(!AnalyticsEventBatch.safeParse({ context: { ...context, url: "https://x.test" }, events }).success);
+});
+
+test("what the app dropped is a count on the batch, not an event", () => {
+  const events = [{ name: "mcp.consentScreen.approved", props: {}, at: AT }];
+  assert.ok(AnalyticsEventBatch.safeParse({ context, events, dropped: 3 }).success);
+  assert.ok(!AnalyticsEventBatch.safeParse({ context, events, dropped: 0 }).success);
+  assert.equal(parseAnalyticsEvent({ name: "analytics.queue.dropped", props: { count: 3 }, at: AT }), null);
 });

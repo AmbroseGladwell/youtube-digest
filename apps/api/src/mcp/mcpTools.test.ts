@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CURRENT_SCHEMA_VERSIONS, McpToolName, OverviewId, TopicId, VideoId } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, OverviewId, TopicId, VideoId } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { sampleLibrary, type SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
 import { storedOverview, storedTopic } from "../testing/storedRecords.testHelper.js";
 import type { TestAccount } from "../testing/TestAccount.testHelper.js";
 import { connectMcpClient, plusAccount, seedLibrary, type McpClient } from "./McpClient.testHelper.js";
-import { LISTING_PAGE_SIZE, mcpTools, OVERVIEWS_PER_CALL } from "./mcpTools.js";
+import { LISTING_PAGE_SIZE, OVERVIEWS_PER_CALL } from "./mcpTools.js";
 
 interface Connected {
   testApp: TestApp;
@@ -288,8 +288,4 @@ test("an overview this server cannot read is left out, and the assistant is told
   assert.match(text, /^5 saved overview\(s\) match\./);
   assert.match(text, /1 saved overview\(s\) could not be read by this server and are left out\./);
   await testApp.close();
-});
-
-test("the tools counted in analytics are exactly the tools offered", () => {
-  assert.deepEqual(mcpTools.map(({ name }) => name).sort(), [...McpToolName.options].sort());
 });

@@ -37,6 +37,9 @@ export const AnalyticsEventBatch = z
   .object({
     context: AnalyticsContext,
     events: z.array(SentAnalyticsEvent).min(1).max(MAX_ANALYTICS_BATCH_EVENTS),
+    // How many events the app couldn't send or hold since its last batch got through. The
+    // app's own bookkeeping, so it is logged and never an event.
+    dropped: z.number().int().min(1).max(100_000).optional(),
   })
   .strict();
 export type AnalyticsEventBatch = z.infer<typeof AnalyticsEventBatch>;

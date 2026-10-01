@@ -13,13 +13,28 @@ event ends up missing from a funnel or a business fact ends up in a log with a 1
 
 | | Answers | Goes to | Example |
 |---|---|---|---|
-| **Analytics** | what readers do in the app, counted | `/api/events`, then PostHog | `mcp.consentScreen.approved` |
-| **Logging** | what the system did, and what went wrong | pino, as JSON on stdout (`docs/architecture/api.md`) | `connection request decided`, `throttled` |
+| **Analytics** | what readers did in the app, and nothing else | `/api/events`, then PostHog | `mcp.consentScreen.approved` |
+| **Logging** | everything: what the system did, what went wrong, and a copy of every event | pino, as JSON on stdout (`docs/architecture/api.md`) | `connection request decided`, `mcp tool called`, `client event` |
 | **Audit records** | facts the system itself needs later | Postgres tables | a share's row, who fetched which transcript |
 
 An event is never how the app finds something out, and a log line is never what a chart
 is drawn from. When the server already logs something, as it logs every decision on an
 assistant's request, the event is the reader's side of it and the log line is the system's.
+
+### Actions, not logs
+
+**An analytics event is something the reader did in the app**: a click, a choice, a thing
+they made or opened. Everything else is a log line, however countable it looks:
+
+| Not an event | Why | Where it is instead |
+|---|---|---|
+| Events the app dropped | the app's own bookkeeping | `dropped` on the batch, logged as `client events dropped` |
+| An assistant calling a tool over `/mcp` | the reader asked their assistant, but did nothing in the app | `mcp tool called`, with the tool, the assistant, the overview count, whether it failed and how long it took (`mcp-connector.md`, "Logging") |
+| Audio rendered, a transcript cached, a share page viewed | the system or someone else acting | their existing log lines |
+
+So PostHog holds reader actions and nothing to filter out, and the logs hold the whole
+story, actions included, for anyone tracing what happened. Counting what is only logged
+today waits for the logs to be shipped somewhere they can be queried, which is OV-61.
 
 ## Where events go
 
@@ -87,8 +102,7 @@ screens.
 
 The feature is never a word that could mean two features. `consent` alone would have meant
 both an assistant asking to connect and, once OV-62 lands, a reader agreeing to analytics,
-which is why the first events are `mcp.consentScreen.*`. The app's own bookkeeping is the
-`analytics` feature, and only the queue sends it.
+which is why the first events are `mcp.consentScreen.*`.
 
 ## Adding an event
 
@@ -118,8 +132,9 @@ reader back to the assistant.
 The queue can never fail or slow down what the reader did. A send that fails is dropped,
 never retried. Past 60 events a minute, or more than a batch waiting, events are dropped
 too, so a render loop can't spend the month's allowance. What is dropped is counted, and
-the count goes as `analytics.queue.dropped` at the head of the next batch that gets through. A
-gap then reads as lost data, not as a quiet day.
+the count goes as `dropped` on the next batch that gets through, where the server logs it
+as `client events dropped`. A gap then reads as lost data, not as a quiet day, without the
+app's bookkeeping becoming an event.
 
 ## The server
 
@@ -131,27 +146,6 @@ as `client event` with its name, properties and context, and any that were refus
 counted in one `client events refused` warning. Then the batch is passed to the sink
 without waiting: PostHog being slow or down is logged as `client events not forwarded` and
 never reaches the reader. The answer is `204` either way.
-
-## Events the server sends
-
-Some usage never passes through the app. An assistant reading the library over `/mcp`
-talks to the server directly, so the server records it itself: `mcp.tools.called`, under the
-reader's account id, once per tool call. It carries the tool (one of the five, as an enum
-that `mcpTools.test.ts` holds to the tools offered), the assistant (`claude`, `chatgpt` or
-`other`, from the name it registered with by `mcpAssistant`, never the name itself),
-whether the call failed, how many overviews it returned (zero for a tool that returns
-none), and how long it took in whole milliseconds, measured by the server. It carries no
-query, topic, id, overview text or transcript, the same line `mcp-connector.md` draws for
-its logs. Its origin is `mcp`, so PostHog shows `surface: mcp` beside `web` and `extension`.
-No address is sent with it, because the caller is the assistant's server, not the reader.
-
-These events live in `serverAnalyticsEvents`, apart from the app's catalogue, so the app
-has no method for them and `/api/events` refuses them: a client can't forge one.
-
-PostHog's own MCP SDK (`@posthog/mcp`, via `wizard mcp-analytics`) was considered and not
-used. It instruments an `McpServer` from the MCP SDK, which `/mcp` doesn't use, and by
-default it sends the tool's arguments, its result and an "intent" it asks the assistant to
-write, all of which would carry what the reader asked for.
 
 ## Location
 
