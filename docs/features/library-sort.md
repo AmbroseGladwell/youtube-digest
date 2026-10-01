@@ -43,8 +43,8 @@ Sorting runs after filtering and search, so the order always applies to what's s
   wins". The reader doesn't know which list it was opened from. Its filters were never
   carried either, and its "All overviews" link goes to `Routes.home()` with no params.
   OV-38 covers both.
-- **No analytics.** The card suggested logging which order people pick, but the app has
-  no analytics pipeline to log to.
+- **Which order people pick is not counted.** There is an event layer now
+  (`docs/architecture/analytics.md`); counting it is a catalogue entry and one call.
 
 ## The menu
 

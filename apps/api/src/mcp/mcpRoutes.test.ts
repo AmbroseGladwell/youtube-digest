@@ -246,3 +246,33 @@ test("one account's assistants are limited together, and told how long to wait",
   assert.ok(Number(response.headers["retry-after"]) > 0);
   await testApp.close();
 });
+
+test("each tool call is counted under the reader's account: which tool, which assistant, how it went, never what was asked", async () => {
+  const testApp = await createTestApp();
+  const reader = await plusAccount(testApp);
+  const saved = storedOverview({ inOneLine: "A video the reader saved." });
+  await reader.inject({ method: "POST", url: "/api/overviews", body: saved });
+  const client = await connectMcpClient(testApp, reader);
+
+  await client.callTool("get_overviews", { ids: [saved.id] });
+  await client.callTool("search_overviews", { savedFrom: "last tuesday" });
+
+  const counted = testApp.eventSink.captured;
+  assert.deepEqual(
+    counted.map(({ events: [event], source }) => ({ name: event!.name, props: { ...event!.props, durationMs: 0 }, source })),
+    [
+      {
+        name: "mcp.toolCalled",
+        props: { tool: "get_overviews", assistant: "claude", failed: false, overviews: 1, durationMs: 0 },
+        source: { accountId: reader.accountId, origin: { kind: "mcp" }, geoAddress: null },
+      },
+      {
+        name: "mcp.toolCalled",
+        props: { tool: "search_overviews", assistant: "claude", failed: true, overviews: 0, durationMs: 0 },
+        source: { accountId: reader.accountId, origin: { kind: "mcp" }, geoAddress: null },
+      },
+    ],
+  );
+  assert.ok(counted.every(({ events: [event] }) => typeof event!.props.durationMs === "number"));
+  await testApp.close();
+});

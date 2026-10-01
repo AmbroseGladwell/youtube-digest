@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
 import { createFetchAuthApi } from "./fetchAuthApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
+
+const SENT_REQUEST_ID = "5f0c2a9e-request";
 
 interface Sent {
   url: string;
@@ -27,7 +29,7 @@ const answering = (status: number, body: unknown) => {
 
 test("asking for a magic link posts the email and the surface, with the client version and no bearer", async () => {
   const { sent, fetch } = answering(202, { accepted: true });
-  const api = createFetchAuthApi({ baseUrl: "https://overview.example/", fetch });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example/", fetch, newRequestId: () => SENT_REQUEST_ID });
 
   await api.requestMagicLink({
     email: "reader@example.com",
@@ -40,7 +42,7 @@ test("asking for a magic link posts the email and the surface, with the client v
     {
       url: "https://overview.example/api/auth/magic-link",
       method: "POST",
-      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), "content-type": "application/json" },
+      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), [REQUEST_ID_HEADER]: SENT_REQUEST_ID, "content-type": "application/json" },
       body: { email: "reader@example.com", surface: "extension", intent: "createAccount", firstName: "Ada" },
     },
   ]);
@@ -103,14 +105,14 @@ test("signing out sends the bearer it was given and takes no content for an answ
 
 test("a signed-in shell mints a code for the extension over its own session, with no body", async () => {
   const { sent, fetch } = answering(200, { linkCode: "ABCD-EFGH", linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" });
-  const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch, newRequestId: () => SENT_REQUEST_ID });
 
   assert.deepEqual(await api.issueLinkCode(), { linkCode: "ABCD-EFGH", linkCodeExpiresAt: "2026-09-26T09:10:00.000Z" });
   assert.deepEqual(sent, [
     {
       url: "https://overview.example/api/session/link-code",
       method: "POST",
-      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), [REQUEST_ID_HEADER]: SENT_REQUEST_ID },
       body: undefined,
     },
   ]);

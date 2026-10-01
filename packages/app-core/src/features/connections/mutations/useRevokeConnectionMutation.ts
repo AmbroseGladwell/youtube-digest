@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Connection } from "@overview/domain";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { connectionKeys } from "../connectionKeys.js";
 import { useConnectionsApi } from "../useConnectionsApi.js";
 
@@ -12,6 +13,7 @@ interface RevokeConnectionContext {
 export const useRevokeConnectionMutation = () => {
   const api = useConnectionsApi();
   const queryClient = useQueryClient();
+  const analytics = useAnalytics();
   const lists = [...connectionKeys.all, "list"];
 
   return useMutation<void, Error, string, RevokeConnectionContext>({
@@ -25,6 +27,7 @@ export const useRevokeConnectionMutation = () => {
       );
       return { previous };
     },
+    onSuccess: () => analytics.connections.revoked(),
     onError: (_error, _connectionId, context) => {
       for (const [queryKey, data] of context?.previous ?? []) queryClient.setQueryData(queryKey, data);
     },

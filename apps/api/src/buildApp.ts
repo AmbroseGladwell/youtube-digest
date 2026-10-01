@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import { REQUEST_ID_HEADER } from "@overview/domain";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
@@ -8,8 +9,11 @@ import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
+import { eventRoutes } from "./events/eventRoutes.js";
+import type { EventSink } from "./events/EventSink.js";
 import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
+import { requestIdFor } from "./http/requestIdFor.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
 import type { Mailer } from "./mail/Mailer.js";
@@ -64,6 +68,8 @@ export interface BuildAppOptions {
   sql: SqlClient;
   mailer: Mailer;
   audio?: AudioSetup | null;
+  // Where checked analytics events are passed on to; absent, they are only logged.
+  eventSink?: EventSink | null;
   clock?: () => Date;
   logger?: boolean;
 }
@@ -85,10 +91,18 @@ export async function buildApp({
   sql,
   mailer,
   audio = null,
+  eventSink = null,
   clock = () => new Date(),
   logger = false,
 }: BuildAppOptions): Promise<FastifyInstance> {
-  const app = Fastify({ logger });
+  const app = Fastify({
+    logger,
+    requestIdHeader: false,
+    genReqId: requestIdFor,
+  });
+  app.addHook("onRequest", async (request, reply) => {
+    reply.header(REQUEST_ID_HEADER, request.id);
+  });
   const sessionCookieSecure = config.appUrl.startsWith("https://");
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
@@ -150,6 +164,7 @@ export async function buildApp({
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       shareRoutes(api, shares, config.appUrl);
+      eventRoutes(api, eventSink, clock);
       audioRoutes(
         api,
         audio === null || audioQueue === null
@@ -178,7 +193,13 @@ export async function buildApp({
       "onRequest",
       rateLimitHook(rateLimits.mcpPerAccount, (request) => request.connectionAccess?.accountId ?? null, clock),
     );
-    mcpRoutes(mcp, { sql, transcripts: new TranscriptsRepository(sql, clock), appOrigin: new URL(config.appUrl).origin });
+    mcpRoutes(mcp, {
+      sql,
+      transcripts: new TranscriptsRepository(sql, clock),
+      appOrigin: new URL(config.appUrl).origin,
+      eventSink,
+      clock,
+    });
   });
 
   app.addHook("onReady", async () => {

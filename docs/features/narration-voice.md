@@ -125,7 +125,7 @@ load, the play buttons go, the voices stay choosable, and "Try again" asks again
 
 ## Logging
 
-There is no analytics layer. The API logs `narration voice chosen` with the voice whenever
+The app's analytics (`docs/architecture/analytics.md`) don't count voices yet. The API logs `narration voice chosen` with the voice whenever
 settings are written with one, and every sample play is a request for a file whose key
 `voice_samples` maps back to its voice. Between them they say which voices get sampled and
 which get chosen.

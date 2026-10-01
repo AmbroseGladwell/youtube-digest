@@ -4,6 +4,7 @@ import {
   ApiErrorEnvelope,
   CLIENT_VERSION,
   CLIENT_VERSION_HEADER,
+  REQUEST_ID_HEADER,
   type ApiErrorCode,
 } from "@overview/domain";
 import { SyncRequestError, SyncTransportError } from "./SyncRequestError.js";
@@ -13,6 +14,8 @@ export type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
 export interface ApiRequestOptions {
   body?: unknown;
   ifMatch?: number | null | undefined;
+  // Lets the request outlive the page that sent it, for what is sent as a page is left.
+  keepalive?: boolean;
 }
 
 export interface ApiRequesterOptions {
@@ -23,6 +26,7 @@ export interface ApiRequesterOptions {
   token?: string | null | undefined;
   clientVersion?: number | undefined;
   fetch?: typeof fetch | undefined;
+  newRequestId?: () => string;
 }
 
 export type ApiRequester = <T>(
@@ -39,6 +43,7 @@ export function createApiRequester({
   token = null,
   clientVersion = CLIENT_VERSION,
   fetch: fetchImpl = globalThis.fetch,
+  newRequestId = () => globalThis.crypto.randomUUID(),
 }: ApiRequesterOptions): ApiRequester {
   const root = baseUrl.replace(/\/+$/, "");
 
@@ -46,8 +51,9 @@ export function createApiRequester({
     method: ApiMethod,
     path: string,
     schema: z.ZodType<T>,
-    { body, ifMatch }: ApiRequestOptions = {},
+    { body, ifMatch, keepalive = false }: ApiRequestOptions = {},
   ): Promise<T | null> => {
+    const requestId = newRequestId();
     let response: Response;
     try {
       response = await fetchImpl(`${root}/api${path}`, {
@@ -55,10 +61,12 @@ export function createApiRequester({
         headers: {
           ...(token === null ? {} : { authorization: `Bearer ${token}` }),
           [CLIENT_VERSION_HEADER]: String(clientVersion),
+          [REQUEST_ID_HEADER]: requestId,
           ...(body === undefined ? {} : { "content-type": "application/json" }),
           ...(ifMatch === null || ifMatch === undefined ? {} : { "if-match": `"${ifMatch}"` }),
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        ...(keepalive ? { keepalive } : {}),
       });
     } catch (error) {
       throw new SyncTransportError("The sync server could not be reached", { cause: error });
@@ -88,6 +96,7 @@ export function createApiRequester({
         response.status,
         message,
         details,
+        requestId,
       );
     }
 

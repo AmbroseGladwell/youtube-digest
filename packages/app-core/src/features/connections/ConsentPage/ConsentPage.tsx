@@ -7,6 +7,7 @@ import { useSurface } from "../../../app/SurfaceContext.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { ResendLinkButton } from "../../auth/components/ResendLinkButton/ResendLinkButton.js";
 import { useRequestMagicLinkMutation } from "../../auth/mutations/useRequestMagicLinkMutation.js";
 import { useSessionQuery } from "../../auth/queries/sessionQuery.js";
@@ -36,6 +37,15 @@ const EXPIRED_BODY =
 
 const isCode = (error: unknown, code: string) => isSyncRequestError(error) && error.code === code;
 
+function useOnce(when: boolean, record: () => void): void {
+  const recorded = useRef(false);
+  useEffect(() => {
+    if (!when || recorded.current) return;
+    recorded.current = true;
+    record();
+  }, [when, record]);
+}
+
 function useNow(intervalMs: number): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -60,6 +70,7 @@ export function ConsentPage() {
   const session = useSessionQuery();
   const decide = useDecideConnectionMutation();
   const requestLink = useRequestMagicLinkMutation();
+  const analytics = useAnalytics();
   const [deciding, setDeciding] = useState<ConsentDecision | null>(null);
   const [sent, setSent] = useState<{ email: string; sentAt: number } | null>(null);
   const [lastEmail, setLastEmail] = useState("");
@@ -71,10 +82,14 @@ export function ConsentPage() {
   );
   const heading = useRef<HTMLHeadingElement | null>(null);
   const loaded = request.data !== undefined;
+  const signedIn = sync.connected && !isCode(session.error, "unauthenticated");
+  const plan = signedIn ? session.data?.plan : undefined;
 
   useEffect(() => {
     if (loaded) heading.current?.focus();
   }, [loaded, sent]);
+  useOnce(loaded, analytics.consent.shown);
+  useOnce(loaded && plan === "free", analytics.consent.planRequired);
 
   if (!sync.available) {
     return <ErrorState title="Accounts need the web app or the extension" back />;
@@ -97,15 +112,14 @@ export function ConsentPage() {
   }
 
   const { redirectHost: host, clientName, expiresAt } = request.data;
-  const signedIn = sync.connected && !isCode(session.error, "unauthenticated");
-  const plan = signedIn ? session.data?.plan : undefined;
   const left = minutesLeft(expiresAt, now);
   const { title, label, sub } = consentHeading(clientName);
 
   const answer = (decision: ConsentDecision) => {
+    if (plan === undefined) return;
     setDeciding(decision);
     decide.mutate(
-      { requestId, approve: decision === "approve" },
+      { requestId, approve: decision === "approve", plan },
       {
         onError: (error) => {
           setDeciding(null);

@@ -82,6 +82,8 @@ test.describe("answering an assistant's request", () => {
     await backendSimulator.releaseEndpoint(EndpointKey.CONNECTION_DECISION);
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?code=simulated-code&state=s`);
     expect(backendSimulator.connections.decisions()).toEqual([{ requestId: REQUEST_ID, approve: true }]);
+    await expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(["consent.shown", "consent.approved"]);
+    expect(backendSimulator.analytics.batches()[0]!.context).toMatchObject({ surface: "web", layout: "full" });
   });
 
   test("declining sends the reader back with a refusal", async ({ launcher, backendSimulator, page }) => {
@@ -94,6 +96,12 @@ test.describe("answering an assistant's request", () => {
 
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?error=access_denied&state=s`);
     expect(backendSimulator.connections.decisions()).toEqual([{ requestId: REQUEST_ID, approve: false }]);
+    await expect
+      .poll(() => backendSimulator.analytics.events())
+      .toEqual([
+        { name: "consent.shown", props: {} },
+        { name: "consent.declined", props: { plan: "plus" } },
+      ]);
   });
 
   test("an answer the server did not take can be given again", async ({ launcher, backendSimulator }) => {
@@ -127,6 +135,13 @@ test.describe("answering an assistant's request", () => {
 
     await consent.declineOnFree();
     await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?error=access_denied&state=s`);
+    await expect
+      .poll(() => backendSimulator.analytics.events())
+      .toEqual([
+        { name: "consent.shown", props: {} },
+        { name: "consent.planRequired", props: {} },
+        { name: "consent.declined", props: { plan: "free" } },
+      ]);
   });
 
   test("an account that couldn't be checked says so and can be asked again, rather than waiting forever", async ({
@@ -234,6 +249,7 @@ test.describe("answering while signed out", () => {
   test("opening the link in the same browser lands back on the request, ready to answer", async ({
     launcher,
     backendSimulator,
+    page,
   }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.accountIsOn("plus");
@@ -248,6 +264,12 @@ test.describe("answering while signed out", () => {
     const consent = await launcher.consentPage.verifyIsShown();
     await consent.verifyOffersApprove(true);
     await consent.verifyNoteReads(null);
+
+    await consent.approve();
+    await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?code=simulated-code&state=s`);
+    await expect
+      .poll(() => backendSimulator.analytics.eventNames(), { message: "the view while signed out is never sent" })
+      .toEqual(["consent.shown", "consent.approved"]);
   });
 
   test("a link opened on another device says this device is the one sent back", async ({

@@ -10,6 +10,7 @@ import {
   ShareToken,
   spokenScript,
   type NarrationRender,
+  type AnalyticsEventBatch,
   type AuthSurface,
   type Connection,
   type ConnectionRequest,
@@ -126,6 +127,7 @@ export class BackendSimulator {
   #narrationPriorities: string[] = [];
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
+  #eventBatches: AnalyticsEventBatch[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -343,6 +345,7 @@ export class BackendSimulator {
     );
 
     await this.#handleConnectionNetworking();
+    await this.#handleAnalyticsNetworking();
 
     await this.#page.route("**/api/handshake", (route) =>
       this.#respond(route, EndpointKey.SYNC_HANDSHAKE, {
@@ -626,6 +629,21 @@ export class BackendSimulator {
     );
   };
 
+  #handleAnalyticsNetworking = async (): Promise<void> => {
+    await this.#page.route("**/api/events", (route) =>
+      this.#respond(route, EndpointKey.EVENTS, {
+        onDefault: () => {
+          this.#eventBatches.push(route.request().postDataJSON() as AnalyticsEventBatch);
+          return { status: 204, body: undefined };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+  };
+
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
@@ -773,6 +791,14 @@ export class BackendSimulator {
       this.#connections.push(connection);
     },
     revoked: (): string[] => [...this.#revoked],
+  };
+
+  // What the app told /api/events, batch by batch and flattened (docs/architecture/analytics.md).
+  analytics = {
+    batches: (): AnalyticsEventBatch[] => [...this.#eventBatches],
+    events: (): Array<{ name: string; props: Record<string, unknown> }> =>
+      this.#eventBatches.flatMap(({ events }) => events.map(({ name, props }) => ({ name, props }))),
+    eventNames: (): string[] => this.#eventBatches.flatMap(({ events }) => events.map(({ name }) => name)),
   };
 
   transcripts = {
