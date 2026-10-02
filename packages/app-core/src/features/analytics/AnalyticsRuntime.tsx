@@ -7,18 +7,20 @@ import { AnalyticsProvider } from "./AnalyticsContext.js";
 import { AnalyticsQueue } from "./AnalyticsQueue.js";
 import { createAnalytics } from "./createAnalytics.js";
 import { useAnalyticsContext } from "./useAnalyticsContext.js";
+import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Inside the sync runtime, because only a signed-in reader's usage is sent, over their own
 // session (docs/architecture/analytics.md, "Who is counted").
 export function AnalyticsRuntime({ children }: { children: ReactNode }) {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
+  const surface = useClientSurface();
   const context = useAnalyticsContext();
   const errors = useErrorReporter();
 
   const api = useMemo<EventsApi | null>(
-    () => (connected && apiUrl !== null ? createFetchEventsApi({ baseUrl: apiUrl, token }) : null),
-    [connected, apiUrl, token],
+    () => (connected && apiUrl !== null ? createFetchEventsApi({ baseUrl: apiUrl, token, surface }) : null),
+    [connected, apiUrl, token, surface],
   );
   const latest = useRef({ api, context });
   latest.current = { api, context };

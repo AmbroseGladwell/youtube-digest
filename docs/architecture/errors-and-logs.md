@@ -429,6 +429,7 @@ for it, `request completed` included:
 | Field | Bound by | Is |
 |---|---|---|
 | `clientVersion` | `clientVersionPlugin` | the version the client sent in `X-Client-Version` |
+| `surface` | `clientVersionPlugin` | `web` or `extension`, from `X-Client-Surface`, which every app-core API client and the extension's worker send. Anything else is left off |
 | `accountId` | `sessionPlugin`, `connectionAccessPlugin` | the opaque account id, the one error tracking and events already carry |
 | `sessionId` | `sessionPlugin` | the session's row id, never its token or the token's hash. Each device signs in separately, so this tells one reader's devices apart |
 | `connectionId` | `connectionAccessPlugin` | the assistant connection an `/mcp` call came through |
@@ -448,6 +449,12 @@ never logged.
   `detail` can quote what was sent, so it's never logged. The route is on the request's
   own lines.
 - **A 500.** See "The server's own errors".
+
+### Versions
+
+A client below the floor trying to write is a `request refused` with
+`code: "client_unsupported"`, its `clientVersion`, `minSupportedClientVersion` and
+`surface`. So "who is still on an old extension" is a filter on those lines.
 
 ### Sync
 

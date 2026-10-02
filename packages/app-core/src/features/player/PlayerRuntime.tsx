@@ -8,6 +8,7 @@ import { NarrationApiProvider } from "./NarrationApiContext.js";
 import { PlayerEngine } from "./PlayerEngine.js";
 import { PlayerProvider } from "./PlayerContext.js";
 import { bindMediaSession } from "./util/bindMediaSession.js";
+import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Owns the one player for this tab, above the router so a note keeps playing across
 // navigation, and inside the sync runtime because narration needs the account's session
@@ -15,9 +16,10 @@ import { bindMediaSession } from "./util/bindMediaSession.js";
 export function PlayerRuntime({ children }: { children: ReactNode }) {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
+  const surface = useClientSurface();
   const api = useMemo(
-    () => (connected && apiUrl !== null ? createFetchNarrationApi({ baseUrl: apiUrl, token }) : null),
-    [connected, apiUrl, token],
+    () => (connected && apiUrl !== null ? createFetchNarrationApi({ baseUrl: apiUrl, token, surface }) : null),
+    [connected, apiUrl, token, surface],
   );
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
   const [engine] = useState(() => new PlayerEngine({ api, voice, createMedia: () => new Audio() }));

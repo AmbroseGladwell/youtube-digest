@@ -25,7 +25,7 @@ export function createWorkerErrorReporter({
   readDestination,
   defaultApiUrl,
   appVersion,
-  createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token }),
+  createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token, surface: "extension" }),
   now = () => new Date(),
   maxPerMinute = 10,
 }: WorkerErrorReporterOptions): WorkerErrorReporter {

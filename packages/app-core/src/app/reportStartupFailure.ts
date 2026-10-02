@@ -28,7 +28,7 @@ export async function reportStartupFailure(
     build,
     defaultApiUrl = null,
     storage = globalThis.localStorage,
-    createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token }),
+    createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token, surface }),
     now = () => new Date(),
   }: ReportStartupFailureOptions,
 ): Promise<void> {
