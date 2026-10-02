@@ -17,6 +17,7 @@ export const ClientErrorSource = z.enum([
   "errorState",
   "failedRequest",
   "serviceWorker",
+  "startup",
 ]);
 export type ClientErrorSource = z.infer<typeof ClientErrorSource>;
 
