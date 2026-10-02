@@ -71,6 +71,9 @@ export class SharedOverviewPageObject extends PageObject {
       await expect(this.get(sharedOverviewGoneTestIds.heading)).toHaveText("This overview is no longer shared");
     });
 
+  clickMakeYourOwnFromGone = () =>
+    this.step("clickMakeYourOwnFromGone", () => this.click(sharedOverviewGoneTestIds.makeButton));
+
   verifySaysLinkGoesNowhere = () =>
     this.step("verifySaysLinkGoesNowhere", () =>
       expect(this.get(sharedOverviewGoneTestIds.heading)).toHaveText("This link doesn’t go anywhere"),

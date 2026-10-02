@@ -10,6 +10,7 @@ import { topicCounts } from "../../../overviews/util/topicCounts.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { TopicPicker } from "../TopicPicker/TopicPicker.js";
 import styles from "./TopicLine.module.scss";
 import { topicLineTestIds } from "./TopicLineTestIds.js";
@@ -38,8 +39,12 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
   const root = useRef<HTMLDivElement | null>(null);
   const picker = useRef<HTMLDivElement | null>(null);
   const isPhone = useIsPhone();
+  const analytics = useReaderAnalytics();
 
-  const close = () => onEditingChange(false);
+  const close = () => {
+    analytics.topics.pickerClosed();
+    onEditingChange(false);
+  };
 
   useDismissOnOutside(editing, close, root, picker);
 
@@ -48,13 +53,16 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
   const counts = topicCounts(readableEntries(libraryQuery.data ?? []).map((entry) => entry.overview));
   const busy = setOverviewTopics.isPending || createTopic.isPending;
 
-  const toggle = (topicId: TopicId) =>
+  const toggle = (topicId: TopicId) => {
+    if (overview.topicIds.includes(topicId)) analytics.topics.removed({ topicId });
+    else analytics.topics.added({ topicId });
     setOverviewTopics.mutate({
       overview,
       topicIds: overview.topicIds.includes(topicId)
         ? overview.topicIds.filter((id) => id !== topicId)
         : [...overview.topicIds, topicId],
     });
+  };
 
   if (selected.length === 0 && !editing) {
     return null;
@@ -110,7 +118,10 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
                 countByTopic={counts}
                 busy={busy}
                 onToggle={toggle}
-                onCreate={(name) => createTopic.mutate({ name, overviews: [overview] })}
+                onCreate={(name) => {
+                  analytics.topics.created();
+                  createTopic.mutate({ name, overviews: [overview] });
+                }}
                 onClose={close}
               />
             </>,

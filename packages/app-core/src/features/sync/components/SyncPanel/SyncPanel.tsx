@@ -7,6 +7,7 @@ import { useSyncConnection } from "../../useSyncConnection.js";
 import { syncStatusLine } from "../../util/syncStatusLine.js";
 import styles from "./SyncPanel.module.scss";
 import { syncPanelTestIds } from "./SyncPanelTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
 const EXTENSION_NOTE =
@@ -17,6 +18,7 @@ const EXTENSION_NOTE =
 // signed out, it points at the sign-in and create-account pages rather than being a second
 // place to ask for a link (docs/features/sync-client.md, docs/features/sign-in.md).
 export function SyncPanel() {
+  const analytics = useAnalytics();
   const sync = useSync();
   const surface = useSurface();
   const { connection } = useSyncConnection();
@@ -59,7 +61,10 @@ export function SyncPanel() {
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={() => void sync.signOut()}
+                onClick={() => {
+                  analytics.settings.sync.signOutChosen({ signedOutAtServer: true });
+                  void sync.signOut();
+                }}
                 data-testid={syncPanelTestIds.signOutButton}
               >
                 Sign in again
@@ -68,7 +73,10 @@ export function SyncPanel() {
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={sync.syncNow}
+                onClick={() => {
+                  analytics.settings.sync.syncNowChosen();
+                  sync.syncNow();
+                }}
                 disabled={sync.status.phase === "syncing"}
                 data-testid={syncPanelTestIds.syncNowButton}
               >
@@ -79,6 +87,7 @@ export function SyncPanel() {
               <Link
                 className={styles.secondaryButton}
                 to={Routes.connectExtension()}
+                onClick={() => analytics.settings.sync.connectExtensionChosen()}
                 data-testid={syncPanelTestIds.connectExtensionLink}
               >
                 Connect the extension
@@ -90,7 +99,10 @@ export function SyncPanel() {
           <button
             type="button"
             className={styles.signOutButton}
-            onClick={() => void sync.signOut()}
+            onClick={() => {
+              analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
+              void sync.signOut();
+            }}
             data-testid={syncPanelTestIds.signOutButton}
           >
             Sign out
@@ -108,12 +120,18 @@ export function SyncPanel() {
           {surface === "web" ? WEB_NOTE : EXTENSION_NOTE}
         </p>
         <div className={styles.actions}>
-          <Link className={styles.primaryButton} to={Routes.signIn()} data-testid={syncPanelTestIds.signInLink}>
+          <Link
+            className={styles.primaryButton}
+            to={Routes.signIn()}
+            onClick={() => analytics.settings.sync.signInChosen()}
+            data-testid={syncPanelTestIds.signInLink}
+          >
             Sign in
           </Link>
           <Link
             className={styles.secondaryButton}
             to={Routes.createAccount()}
+            onClick={() => analytics.settings.sync.createAccountChosen()}
             data-testid={syncPanelTestIds.createAccountLink}
           >
             Create account

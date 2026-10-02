@@ -16,6 +16,8 @@ import { blockParts } from "../../../transcripts/util/blockParts.js";
 import { transcriptFileName } from "../../../transcripts/util/transcriptFileName.js";
 import { ClearFieldButton } from "../../../../components/shared/ClearFieldButton/ClearFieldButton.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 import { useFollowPlayback, type FollowPlayback } from "./useFollowPlayback.js";
 import { useReadingPosition, type ReadingPosition } from "./useReadingPosition.js";
 import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearch.js";
@@ -69,6 +71,9 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
   });
   const seek = useSeekPlayback(video.id);
   const [copied, setCopied] = useState(false);
+  const analytics = useOverviewPageAnalytics();
+
+  useTypingSettled(search.query, () => analytics.transcript.searched({ matches: search.matches.length }));
 
   useEffect(() => {
     position.setRemembering(!follow.following);
@@ -92,12 +97,14 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
   const plainText = () => transcriptPlainText(video, blocks);
 
   const copy = () => {
+    analytics.transcript.copied();
     void navigator.clipboard.writeText(plainText()).then(() => setCopied(true));
   };
 
   // A Blob and an object URL rather than a data: URL, which a long transcript would
   // overrun.
   const exportFile = () => {
+    analytics.transcript.exported();
     const href = URL.createObjectURL(new Blob([plainText()], { type: "text/plain;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = href;
@@ -116,6 +123,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
   };
 
   const followPlayback = () => {
+    analytics.transcript.followResumed();
     search.setQuery("");
     follow.follow();
   };
@@ -124,7 +132,10 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
     isPending: held === undefined && transcriptQuery.isPending,
     error: held === undefined && transcriptQuery.isError ? transcriptQuery.error : null,
     blocks,
-    retry: () => void transcriptQuery.refetch(),
+    retry: () => {
+      analytics.transcript.retried();
+      void transcriptQuery.refetch();
+    },
   });
 
   const currentBlock = blocks[follow.currentBlockIndex] ?? null;
@@ -141,7 +152,10 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
               <button
                 type="button"
                 className={styles.backToChapters}
-                onClick={onBackToChapters}
+                onClick={() => {
+                  analytics.transcript.backToChapters();
+                  onBackToChapters();
+                }}
                 data-testid={transcriptPanelTestIds.backToChaptersButton}
               >
                 <StrokeIcon name="arrowLeft" size={14} />
@@ -294,6 +308,7 @@ function TranscriptRows({
 }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
+  const analytics = useOverviewPageAnalytics();
 
   useEffect(() => {
     if (currentMatch !== null && head !== null) {
@@ -343,7 +358,10 @@ function TranscriptRows({
               <button
                 type="button"
                 className={`${styles.time} ${styles.timeSeek}`}
-                onClick={() => seek(block.startMs)}
+                onClick={() => {
+                  analytics.transcript.timestampChosen({ by: "skip" });
+                  seek(block.startMs);
+                }}
                 aria-label={`Play the video from ${formatTimestamp(block.startMs)}`}
                 data-testid={transcriptPanelTestIds.rowTime}
               >
@@ -411,8 +429,10 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
   const searching = search.query.trim() !== "";
   const found = search.matches.length;
   const input = useRef<HTMLInputElement | null>(null);
+  const analytics = useOverviewPageAnalytics();
 
   const clear = () => {
+    analytics.transcript.searchCleared();
     onQueryChange("");
     input.current?.focus();
   };
@@ -422,6 +442,7 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && found > 0) {
       event.preventDefault();
+      analytics.transcript.matchStepped({ direction: event.shiftKey ? "previous" : "next" });
       search.step(event.shiftKey ? -1 : 1);
     }
     if (event.key === "Escape") {
@@ -430,6 +451,7 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
         input.current?.blur();
         return;
       }
+      analytics.transcript.searchCleared();
       onQueryChange("");
     }
   };
@@ -474,7 +496,10 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
           <button
             type="button"
             className={styles.stepMatch}
-            onClick={() => search.step(-1)}
+            onClick={() => {
+              analytics.transcript.matchStepped({ direction: "previous" });
+              search.step(-1);
+            }}
             disabled={found === 0}
             aria-label="Previous match"
             data-testid={transcriptPanelTestIds.previousMatchButton}
@@ -484,7 +509,10 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
           <button
             type="button"
             className={styles.stepMatch}
-            onClick={() => search.step(1)}
+            onClick={() => {
+              analytics.transcript.matchStepped({ direction: "next" });
+              search.step(1);
+            }}
             disabled={found === 0}
             aria-label="Next match"
             data-testid={transcriptPanelTestIds.nextMatchButton}

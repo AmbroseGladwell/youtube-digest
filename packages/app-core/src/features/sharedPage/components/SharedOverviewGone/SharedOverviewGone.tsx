@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import styles from "./SharedOverviewGone.module.scss";
 import { sharedOverviewGoneTestIds } from "./SharedOverviewGoneTestIds.js";
 
@@ -22,6 +23,7 @@ const COPY = {
 
 export function SharedOverviewGone({ state }: SharedOverviewGoneProps) {
   const { heading, body } = COPY[state];
+  const analytics = useAnalytics();
 
   return (
     <main className={styles.root} data-testid={sharedOverviewGoneTestIds.root}>
@@ -36,6 +38,7 @@ export function SharedOverviewGone({ state }: SharedOverviewGoneProps) {
         <Link
           className={styles.action}
           to={Routes.createAccount()}
+          onClick={() => analytics.sharedPage.gone.makeChosen()}
           data-testid={sharedOverviewGoneTestIds.makeButton}
         >
           Make an overview of your own

@@ -5,6 +5,7 @@ import type { SettingsSectionId } from "../../SettingsSectionId.js";
 import type { SettingsSectionSummary } from "../../useSettingsSections.js";
 import styles from "./SettingsSectionList.module.scss";
 import { settingsSectionListTestIds } from "./SettingsSectionListTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface SettingsSectionListProps {
   sections: SettingsSectionSummary[];
@@ -15,6 +16,7 @@ export interface SettingsSectionListProps {
 // Design OV-51 51a and 51d: each row carries its section's current value, so most visits
 // end here.
 export function SettingsSectionList({ sections, current, stacked }: SettingsSectionListProps) {
+  const analytics = useAnalytics();
   return (
     <nav
       className={stacked ? styles.stacked : styles.beside}
@@ -27,6 +29,7 @@ export function SettingsSectionList({ sections, current, stacked }: SettingsSect
           className={styles.row}
           to={Routes.settingsSection(section.id)}
           aria-current={section.id === current ? "page" : undefined}
+          onClick={() => analytics.settings.page.sectionOpened({ section: section.id })}
           data-testid={settingsSectionListTestIds.row(section.id)}
         >
           <span className={styles.names}>

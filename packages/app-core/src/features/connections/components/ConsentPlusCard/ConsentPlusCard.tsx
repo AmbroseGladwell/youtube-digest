@@ -4,6 +4,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { minutesLeftPhrase } from "../../util/minutesLeft.js";
 import styles from "./ConsentPlusCard.module.scss";
 import { consentPlusCardTestIds } from "./ConsentPlusCardTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface ConsentPlusCardProps {
   minutesLeft: number;
@@ -14,6 +15,7 @@ export interface ConsentPlusCardProps {
 // A free reader has nothing to approve, so there is no Approve at all: what Plus would do,
 // how long the request waits, and still a way to answer it (design 58g).
 export function ConsentPlusCard({ minutesLeft, declining, onDecline }: ConsentPlusCardProps) {
+  const analytics = useAnalytics();
   return (
     <div className={styles.root} data-testid={consentPlusCardTestIds.root}>
       <h2 className={styles.title}>Connecting an assistant comes with Plus</h2>
@@ -26,7 +28,12 @@ export function ConsentPlusCard({ minutesLeft, declining, onDecline }: ConsentPl
         This request stays open for {minutesLeftPhrase(minutesLeft)}. Get Plus and you’ll come back here to approve it.
       </p>
       <div className={styles.actions}>
-        <Link to={Routes.settingsSection("plan")} className={styles.seePlus} data-testid={consentPlusCardTestIds.seePlusLink}>
+        <Link
+          to={Routes.settingsSection("plan")}
+          className={styles.seePlus}
+          onClick={() => analytics.mcp.consentScreen.seePlusChosen()}
+          data-testid={consentPlusCardTestIds.seePlusLink}
+        >
           See Plus
         </Link>
         <button

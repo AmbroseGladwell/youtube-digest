@@ -6,6 +6,7 @@ import { isUrl } from "../../util/isUrl.js";
 import { looksLikeEmail } from "../../util/looksLikeEmail.js";
 import styles from "./EmailLinkForm.module.scss";
 import { emailLinkFormTestIds } from "./EmailLinkFormTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface EmailLinkFormValues {
   email: string;
@@ -44,6 +45,7 @@ export function EmailLinkForm({
   refused,
   onSubmit,
 }: EmailLinkFormProps) {
+  const analytics = useAnalytics();
   const isPanel = useIsPanel();
   const ids = useId();
   const [email, setEmail] = useState(initialEmail);
@@ -182,7 +184,10 @@ export function EmailLinkForm({
         <button
           type="button"
           className={styles.quiet}
-          onClick={() => setServerShown(true)}
+          onClick={() => {
+            analytics.account.signIn.serverFieldShown();
+            setServerShown(true);
+          }}
           data-testid={emailLinkFormTestIds.otherServerButton}
         >
           Use a different server

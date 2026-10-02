@@ -285,6 +285,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
+| `sharedPageEventsAddress` | 60 | minute, per address | `POST /api/shares/:token/events`: per address, because most people on a shared link have no account (`docs/architecture/analytics.md`, "The shared page") |
 | `errorsAddress` | 30 | minute, per address | `POST /api/errors`: per address, because most readers sending errors have no account (`docs/architecture/errors-and-logs.md`) |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:

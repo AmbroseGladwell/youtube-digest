@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
@@ -25,6 +25,7 @@ import {
 import styles from "./AppShell.module.scss";
 import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
+import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 
@@ -55,6 +56,14 @@ export function AppShell() {
   // outlive both the dialog it was started from and the page it was started on
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
+  const analytics = useAnalytics();
+
+  const panelOpened = useRef(false);
+  useEffect(() => {
+    if (!isPanel || panelOpened.current) return;
+    panelOpened.current = true;
+    analytics.extension.sidePanel.opened();
+  }, [isPanel, analytics]);
 
   // The injected YouTube button's end of that same run
   // (docs/features/injected-button.md).
@@ -78,7 +87,12 @@ export function AppShell() {
           data-testid={appShellTestIds.masthead}
         >
           <div className={styles.bar}>
-            <Link className={styles.brand} to={Routes.home()} data-testid={appShellTestIds.brand}>
+            <Link
+              className={styles.brand}
+              to={Routes.home()}
+              onClick={() => analytics.app.masthead.homeChosen()}
+              data-testid={appShellTestIds.brand}
+            >
               <OverviewMark />
               <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
                 {isPanel ? "Overview" : "The Overview"}
@@ -98,6 +112,7 @@ export function AppShell() {
                     }
                     to={Routes.home()}
                     viewTransition={animateNavigation}
+                    onClick={() => analytics.app.masthead.overviewsChosen()}
                     end
                   >
                     Overviews
@@ -108,7 +123,10 @@ export function AppShell() {
                   <button
                     type="button"
                     className={styles.newOverviewButton}
-                    onClick={newOverview.open}
+                    onClick={() => {
+                      analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                      newOverview.open();
+                    }}
                     aria-haspopup="dialog"
                     aria-expanded={newOverview.dialogOpen}
                     data-testid={appShellTestIds.newOverviewButton}
@@ -123,6 +141,7 @@ export function AppShell() {
                     className={styles.notNowLink}
                     to={Routes.home()}
                     viewTransition={animateNavigation}
+                    onClick={() => analytics.app.masthead.notNowChosen()}
                     data-testid={appShellTestIds.notNowLink}
                   >
                     Not now
@@ -156,7 +175,7 @@ export function AppShell() {
           <NewOverviewDialog
             open={newOverview.dialogOpen}
             run={newOverview.run}
-            onSubmit={newOverview.start}
+            onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
             onClose={newOverview.close}
             onDismiss={newOverview.dismiss}
             onReadOverview={readOverview}

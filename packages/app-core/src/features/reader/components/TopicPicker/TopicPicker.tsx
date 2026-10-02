@@ -4,6 +4,8 @@ import { creatableTopicName, topicMatches } from "../../../overviews/util/topicM
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./TopicPicker.module.scss";
 import { topicPickerTestIds } from "./TopicPickerTestIds.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 
 export interface TopicPickerProps {
   topics: Topic[];
@@ -29,6 +31,8 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
   }, []);
 
   const matches = topicMatches(topics, query);
+  const analytics = useReaderAnalytics();
+  useTypingSettled(query, () => analytics.topics.searched({ matches: matches.length }));
   const creatable = creatableTopicName(topics, query);
   const selectedIds = new Set(selected.map((topic) => topic.id));
 

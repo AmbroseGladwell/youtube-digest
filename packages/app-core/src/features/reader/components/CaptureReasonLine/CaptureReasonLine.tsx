@@ -4,6 +4,7 @@ import { useSetOverviewCaptureReasonMutation } from "../../../overviews/mutation
 import { captureReasonFromDraft } from "../../../overviews/util/captureReasonFromDraft.js";
 import styles from "./CaptureReasonLine.module.scss";
 import { captureReasonLineTestIds } from "./CaptureReasonLineTestIds.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 
 export interface CaptureReasonLineProps {
   overview: Overview;
@@ -29,9 +30,17 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
     }
   }, [editing]);
 
+  const analytics = useReaderAnalytics();
   const close = () => onEditingChange(false);
+  const cancel = () => {
+    analytics.captureReason.cancelled();
+    close();
+  };
 
   const save = (captureReason: string | null) => {
+    if (captureReason !== null) analytics.captureReason.saved({ edited: overview.captureReason !== null });
+    else if (overview.captureReason !== null) analytics.captureReason.removed();
+    else analytics.captureReason.cancelled();
     if (captureReason !== overview.captureReason) {
       setCaptureReason.mutate({ overview, captureReason });
     }
@@ -45,7 +54,7 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      close();
+      cancel();
     }
   };
 
@@ -77,7 +86,7 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
           <button
             type="button"
             className={styles.cancel}
-            onClick={close}
+            onClick={cancel}
             data-testid={captureReasonLineTestIds.cancelButton}
           >
             Cancel

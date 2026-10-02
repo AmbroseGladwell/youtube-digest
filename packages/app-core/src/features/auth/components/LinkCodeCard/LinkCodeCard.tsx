@@ -4,6 +4,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
 import styles from "./LinkCodeCard.module.scss";
 import { linkCodeCardTestIds } from "./LinkCodeCardTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export type LinkCodeCardProps =
   | { code: string; from: "emailLink" }
@@ -25,7 +26,9 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const copied = copiedCode === code;
 
+  const analytics = useAnalytics();
   const copy = () => {
+    analytics.account.linkCode.copied({ from: props.from });
     void navigator.clipboard.writeText(code).then(() => setCopiedCode(code));
   };
 
@@ -66,7 +69,10 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
           <button
             type="button"
             className={styles.newCode}
-            onClick={props.onNewCode}
+            onClick={() => {
+              analytics.account.linkCode.renewed();
+              props.onNewCode();
+            }}
             disabled={props.renewing}
             data-testid={linkCodeCardTestIds.newCodeButton}
           >

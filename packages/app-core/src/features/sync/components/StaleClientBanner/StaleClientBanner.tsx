@@ -5,6 +5,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useUnreadableRecordsQuery } from "../../queries/unreadableRecordsQuery.js";
 import styles from "./StaleClientBanner.module.scss";
 import { staleClientBannerTestIds } from "./StaleClientBannerTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 // Fires on encounter, not on the handshake: only when records are actually being held
 // back. Dismissed for the session and no longer, because what it reports is the reader's
@@ -13,6 +14,7 @@ export function StaleClientBanner() {
   const surface = useSurface();
   const appUpdate = useAppUpdate();
   const [dismissed, setDismissed] = useState(false);
+  const analytics = useAnalytics();
   const records = useUnreadableRecordsQuery().data ?? [];
   const heldBack = records.filter((record) => record.reason === "future-version");
 
@@ -37,7 +39,10 @@ export function StaleClientBanner() {
           <button
             type="button"
             className={styles.updateButton}
-            onClick={action.apply}
+            onClick={() => {
+              analytics.app.staleClientBanner.updateChosen();
+              action.apply();
+            }}
             data-testid={staleClientBannerTestIds.updateButton}
           >
             {action.label}
@@ -46,7 +51,10 @@ export function StaleClientBanner() {
         <button
           type="button"
           className={styles.dismissButton}
-          onClick={() => setDismissed(true)}
+          onClick={() => {
+            analytics.app.staleClientBanner.dismissed();
+            setDismissed(true);
+          }}
           aria-label="Dismiss"
           data-testid={staleClientBannerTestIds.dismissButton}
         >

@@ -8,6 +8,7 @@ import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { READY_DISMISS_MS } from "./readyDismissMs.js";
 import styles from "./GenerationStatusStrip.module.scss";
 import { generationStatusStripTestIds } from "./GenerationStatusStripTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface GenerationStatusStripProps {
   run: NewOverviewRun;
@@ -29,6 +30,7 @@ export function GenerationStatusStrip({
   const status = generationRunStatus(run);
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
 
+  const analytics = useAnalytics();
   useEffect(() => {
     if (!status.isReady) {
       return;
@@ -72,7 +74,10 @@ export function GenerationStatusStrip({
           <button
             type="button"
             className={styles.readAction}
-            onClick={() => onReadOverview(run.overview!)}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.readChosen({ overviewId: run.overview!.id, from: "statusStrip" });
+              onReadOverview(run.overview!);
+            }}
             data-testid={generationStatusStripTestIds.readOverviewButton}
           >
             Read overview
@@ -81,7 +86,10 @@ export function GenerationStatusStrip({
           <button
             type="button"
             className={styles.detailsAction}
-            onClick={onDetails}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.opened({ from: "statusStrip" });
+              onDetails();
+            }}
             data-testid={generationStatusStripTestIds.detailsButton}
           >
             Details
@@ -91,7 +99,10 @@ export function GenerationStatusStrip({
           <button
             type="button"
             className={styles.cancelAction}
-            onClick={onDismiss}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.runCancelled();
+              onDismiss();
+            }}
             aria-label="Cancel"
             data-testid={generationStatusStripTestIds.dismissButton}
           >
@@ -101,7 +112,10 @@ export function GenerationStatusStrip({
           <button
             type="button"
             className={styles.dismissAction}
-            onClick={onDismiss}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.runDismissed({ run: status.isReady ? "ready" : "failed" });
+              onDismiss();
+            }}
             aria-label="Dismiss"
             data-testid={generationStatusStripTestIds.dismissButton}
           >

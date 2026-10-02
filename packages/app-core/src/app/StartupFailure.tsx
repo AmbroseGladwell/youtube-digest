@@ -10,13 +10,13 @@ export interface StartupFailureProps {
 // everything else is a storage failure they can only retry (docs/features/error-state.md).
 export function StartupFailure({ blocked }: StartupFailureProps) {
   return blocked ? (
-    <ErrorState
+    <ErrorState screen="libraryLocked"
       title="Another window has your library open"
       body="This app is open in another window on an older version. Close it, then reload."
       action={{ label: "Reload", onSelect: () => globalThis.location.reload() }}
     />
   ) : (
-    <ErrorState
+    <ErrorState screen="libraryUnopenable"
       title="Couldn't open your library"
       body="Something went wrong opening the storage your overviews are kept in."
       action={{ label: "Reload", onSelect: () => globalThis.location.reload() }}

@@ -17,6 +17,7 @@ import { useVoiceSamplesQuery } from "../../queries/voiceSamplesQuery.js";
 import styles from "./NarrationVoicePicker.module.scss";
 import { narrationVoicePickerTestIds } from "./NarrationVoicePickerTestIds.js";
 import { useVoiceSamplePlayer, type SamplePlayback } from "./useVoiceSamplePlayer.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 const ACCENT_NAMES: Record<NarrationAccent, string> = {
   british: "British",
@@ -66,12 +67,15 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
     chosenRow.current?.scrollIntoView({ block: "center" });
   }, [scrollToChosen, settingsLoaded]);
 
+  const analytics = useAnalytics();
+
   if (api === null) return null;
 
   const sampleFor = (voice: NarrationVoice): VoiceSample | null =>
     samples.data?.find((sample) => sample.voice === voice) ?? null;
 
   const choose = (voice: NarrationVoice) => {
+    analytics.settings.voice.chosen({ voice });
     updateSettings.mutate({ narrationVoice: voice });
     setJustChose(voice);
   };
@@ -100,7 +104,10 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
           <button
             type="button"
             className={styles.tryAgain}
-            onClick={() => void samples.refetch()}
+            onClick={() => {
+              analytics.settings.voice.samplesRetried();
+              void samples.refetch();
+            }}
             data-testid={narrationVoicePickerTestIds.tryAgain}
           >
             <StrokeIcon name="rotateCw" size={14} />
@@ -139,8 +146,14 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
                 sample={sampleFor(voice)}
                 playback={samplePlayer.playback?.voice === voice ? samplePlayer.playback : null}
                 onChoose={() => choose(voice)}
-                onPlay={(sample) => samplePlayer.play(voice, api.fileUrl(sample), sample.durationSeconds)}
-                onStop={samplePlayer.stop}
+                onPlay={(sample) => {
+                  analytics.settings.voice.samplePlayed({ voice });
+                  samplePlayer.play(voice, api.fileUrl(sample), sample.durationSeconds);
+                }}
+                onStop={() => {
+                  analytics.settings.voice.sampleStopped({ voice });
+                  samplePlayer.stop();
+                }}
               />
             ))}
           </div>

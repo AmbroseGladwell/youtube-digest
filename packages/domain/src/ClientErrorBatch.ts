@@ -17,6 +17,7 @@ export const ClientErrorSource = z.enum([
   "errorState",
   "failedRequest",
   "serviceWorker",
+  "startup",
 ]);
 export type ClientErrorSource = z.infer<typeof ClientErrorSource>;
 
@@ -28,6 +29,8 @@ export const ClientErrorFrame = z
     file: z.string().max(200).regex(/^[\w./@~+-]*$/),
     line: z.number().int().min(0).max(10_000_000),
     column: z.number().int().min(0).max(10_000_000),
+    // The id PostHog's CLI injected into the frame's file, which its source map was uploaded under.
+    chunkId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).optional(),
   })
   .strict();
 export type ClientErrorFrame = z.infer<typeof ClientErrorFrame>;

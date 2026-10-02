@@ -8,6 +8,9 @@ primary_region = "lhr"
 
 [env]
   IDLE_EXIT_SECONDS = "15"
+  # Tags every error passed on to PostHog; nothing is passed on until POSTHOG_API_KEY is set
+  # (task deploy:tts:secrets).
+  ANALYTICS_ENVIRONMENT = "production"
 
 [[services]]
   internal_port = 8000

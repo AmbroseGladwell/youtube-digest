@@ -11,6 +11,8 @@ import { syncStatusLine } from "../../../sync/util/syncStatusLine.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
 import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
+import type { AccountMenuItem } from "@overview/domain";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -35,7 +37,13 @@ export function AccountMenu() {
     if (refocus) trigger.current?.focus();
   };
 
-  useDismissOnOutside(open, () => close(true), root);
+  const analytics = useAnalytics();
+  const dismiss = (refocus: boolean) => {
+    analytics.app.accountMenu.closed();
+    close(refocus);
+  };
+
+  useDismissOnOutside(open, () => dismiss(true), root);
 
   const go = (path: string) => () => {
     close(false);
@@ -56,10 +64,11 @@ export function AccountMenu() {
     else if (event.key === "ArrowUp") move(at - 1);
     else if (event.key === "Home") move(0);
     else if (event.key === "End") move(all.length - 1);
-    else if (event.key === "Tab") close(false);
+    else if (event.key === "Tab") dismiss(false);
   };
 
   const openMenu = (focus: "first" | "last") => {
+    analytics.app.accountMenu.opened();
     setOpen(true);
     requestAnimationFrame(() => {
       const all = items();
@@ -67,15 +76,24 @@ export function AccountMenu() {
     });
   };
 
-  const item = (icon: StrokeIconName, label: string, onSelect: () => void, testId: string) => (
-    <button type="button" role="menuitem" className={styles.item} onClick={onSelect} data-testid={testId}>
+  const item = (icon: StrokeIconName, label: string, name: AccountMenuItem, onSelect: () => void, testId: string) => (
+    <button
+      type="button"
+      role="menuitem"
+      className={styles.item}
+      onClick={() => {
+        analytics.app.accountMenu.itemChosen({ item: name });
+        onSelect();
+      }}
+      data-testid={testId}
+    >
       <StrokeIcon name={icon} size={16} />
       {label}
     </button>
   );
 
   const signedOutAtServer = sync.status.phase === "signedOut";
-  const settings = item("settings", "Settings", go(Routes.settings()), accountMenuTestIds.settingsItem);
+  const settings = item("settings", "Settings", "settings", go(Routes.settings()), accountMenuTestIds.settingsItem);
 
   let content: ReactNode;
   if (!sync.available) {
@@ -109,12 +127,13 @@ export function AccountMenu() {
         <div role="separator" className={styles.separator} />
         {surface === "web" &&
           !signedOutAtServer &&
-          item("puzzle", "Connect the extension", go(Routes.connectExtension()), accountMenuTestIds.connectExtensionItem)}
+          item("puzzle", "Connect the extension", "connectExtension", go(Routes.connectExtension()), accountMenuTestIds.connectExtensionItem)}
         {settings}
         {signedOutAtServer
           ? item(
               "signIn",
               "Sign in again",
+              "signInAgain",
               () => {
                 close(false);
                 void sync.signOut().then(() => navigate(Routes.signIn()));
@@ -124,6 +143,7 @@ export function AccountMenu() {
           : item(
               "signOut",
               "Sign out",
+              "signOut",
               () => {
                 close(true);
                 void sync.signOut();
@@ -139,7 +159,7 @@ export function AccountMenu() {
           <span className={styles.waitingTitle}>Waiting for your code</span>
           <span className={styles.email}>{pending.email}</span>
         </div>
-        {item("puzzle", "Enter code", go(Routes.signIn()), accountMenuTestIds.enterCodeItem)}
+        {item("puzzle", "Enter code", "enterCode", go(Routes.signIn()), accountMenuTestIds.enterCodeItem)}
         <div role="separator" className={styles.separator} />
         {settings}
       </>
@@ -147,8 +167,8 @@ export function AccountMenu() {
   } else {
     content = (
       <>
-        {item("signIn", "Sign in", go(Routes.signIn()), accountMenuTestIds.signInItem)}
-        {item("userPlus", "Create account", go(Routes.createAccount()), accountMenuTestIds.createAccountItem)}
+        {item("signIn", "Sign in", "signIn", go(Routes.signIn()), accountMenuTestIds.signInItem)}
+        {item("userPlus", "Create account", "createAccount", go(Routes.createAccount()), accountMenuTestIds.createAccountItem)}
         <div role="separator" className={styles.separator} />
         {settings}
       </>
@@ -163,7 +183,7 @@ export function AccountMenu() {
         type="button"
         ref={trigger}
         className={`${styles.trigger} ${current ? styles.triggerCurrent : ""} ${isPanel ? "" : styles.triggerBar}`}
-        onClick={() => (open ? close(false) : openMenu("first"))}
+        onClick={() => (open ? dismiss(false) : openMenu("first"))}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown" && !open) {
             event.preventDefault();

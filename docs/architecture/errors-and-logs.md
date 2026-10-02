@@ -6,12 +6,17 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has four parts:
+It has nine parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
+- source maps, so a minified frame reads as the TypeScript it came from
+- the server's own errors, reported the same way
+- the TTS service's errors
 - the reporter in the app that both shells mount
+- what's reported before the app mounts
 - the extension's service worker
 - shipping the server's own logs
+- alerts, so a new or worsening issue reaches someone
 
 ## Where errors go
 
@@ -52,10 +57,10 @@ the only route that does this.
 
 | Field | Is | Kept out |
 |---|---|---|
-| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker` | |
+| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker`, `startup` | |
 | `type` | the error's class name, as an identifier | a sentence |
 | `message` | redacted by `redactErrorMessage`, at most 200 characters | URLs, emails, quoted text, ids |
-| `frames` | up to 30: a function name, a path inside the bundle, a line and a column | a page's address, query strings |
+| `frames` | up to 30: a function name, a path inside the bundle, a line and a column, and the chunk id its file was injected with | a page's address, query strings |
 | `requestId` | the failing call's `X-Request-Id`, when it was a call to the API | |
 | `apiErrorCode`, `status` | the API's own answer, when there was one | a code the API doesn't have |
 | `trail` | up to 20 catalogue event names, each with its time | event properties, anything not in the catalogue |
@@ -75,6 +80,11 @@ changes nothing, and a test checks that.
 no scheme, host or query, and a function is an identifier with dots and brackets. A frame
 that doesn't fit refuses the whole batch with `invalid_request`, as a malformed event batch
 is refused.
+
+**Frame order.** Frames travel and are logged newest call first, as a stack reads, so a log
+line's `top` is the frame that threw. The sink reverses them on the way to PostHog, which
+wants the frame that threw last. Before OV-70 they went unreversed, so issues grouped
+before then may have been grouped by the wrong frame.
 
 **The trail** holds names and times only, because a name is something the catalogue already
 vouches for. The server drops any name that isn't in the catalogue.
@@ -97,6 +107,115 @@ a failure, search the logs for `failedRequestId` as a `reqId`. A `dropped` count
 is logged as `client errors dropped`, never as an error or an event ("Actions, not logs" in
 `analytics.md`). The batch is passed to the sink without waiting, and PostHog being down is
 logged as `client errors not forwarded`. The answer is `204` either way.
+
+## Source maps
+
+A client's frame is a minified file, line and column until PostHog has that build's source
+map. Both builds make maps (`build.sourcemap: "hidden"`, so no `sourceMappingURL` comment
+points at them), and `scripts/uploadSourceMaps.mjs` hands them to PostHog's CLI and then
+deletes them, so none is ever served or zipped.
+
+**How a frame finds its map.** `posthog-cli sourcemap process` does two things:
+
+- It injects a snippet into each chunk. The snippet records the chunk's id in
+  `globalThis._posthogChunkIds`, keyed by a stack taken inside that chunk. The id is a
+  UUIDv5 of the chunk's content, so the same code gets the same id on every build.
+- It uploads each map under that id, tied to a release named `overview-web` or
+  `overview-extension` at `<version>+<commit>`.
+
+On the device, `parseStackFrames` reads the snippet's map and gives each frame the chunk id
+of its file, the way PostHog's own SDK does. The sink sends a frame that has one as
+`platform: "web:javascript"` with `chunk_id`, which PostHog resolves through the uploaded
+map. A frame without one stays `custom` and reads as it was sent.
+
+**Where it runs.** The CLI's inject step needs the key too, because it registers the release.
+So it runs wherever the shipped bundle is built:
+
+- **The web app** is built inside the image on Fly's builder. The deploy job passes the key
+  and project id as Docker build secrets (`--build-secret`), which no layer keeps.
+- **The extension** is built by CI's `build (extension)` job. Only on a push to `main` does
+  it get the key. Every other build deletes its maps unread.
+
+Without a key, nothing is uploaded and the maps are still deleted. That covers the `image`
+CI job, a pull request, and `task deploy` from a laptop. With a key, an upload that fails
+fails the build. A deploy that silently lost its maps would leave that release's errors
+unreadable, and nobody would know until they needed one.
+
+**The key** is a PostHog personal API key with the *error tracking write* and *organization
+read* scopes. It isn't the project token events use. It lives in GitHub's secrets beside
+`FLY_API_TOKEN`, as `POSTHOG_CLI_API_KEY`, with the project's id as
+`POSTHOG_CLI_PROJECT_ID`. `gh secret set POSTHOG_CLI_API_KEY` asks for the value without
+echoing it.
+
+## The server's own errors
+
+A reader's error and the server's both become issues in PostHog's error tracking, so a
+failure on either side is found in the same place. Before OV-70, a server 500 was a log line
+only.
+
+**What counts.** Only what the server didn't plan for is reported:
+
+- **A 500.** The three error handlers (`/api` and `/s`, `/oauth`, `/mcp`) each log
+  `unhandled error`, then pass the error to `reportRequestError`.
+- **An exception nothing caught, or a rejection nothing handled.** `reportProcessErrors`
+  logs it at `fatal`, reports it, and exits, which is what Node would have done without the
+  handler. It is registered before the migrations run, so a database that refuses the
+  server at boot is reported too.
+
+A 4xx stays a log line. It is the server working: a refused write, an expired session, a
+route that doesn't exist.
+
+**What one carries.** `toServerError` builds it the way `toClientError` does on the device:
+
+- the type, as an identifier
+- the message, through `redactErrorMessage`
+- up to 30 frames, with paths relative to where the server runs. A frame in `node:` or
+  `node_modules/` is marked as not the app's own (`in_app: false`)
+- for a 500, the request's id, method, route (never its URL, as "What a log line may
+  carry" says) and status, and the account or assistant connection it was for
+
+It goes to PostHog with `error_source: "server"` and `surface: "api"`, and
+`mechanism.type` says what caught it: `request`, `uncaughtException` or
+`unhandledRejection`. An error under an account goes under that account's id. One with no
+account, and every process crash, gets a fresh id and no person, as an anonymous reader's
+does. `$geoip_disable` is set, because the address PostHog would see is the server's own.
+
+Reporting never changes the answer or holds it up. The error goes without waiting, and the
+tracker being down is logged as `server error not forwarded`. A crash waits for its one
+report, then ships the logs it still holds and exits. A second crash while the first is
+being sent is logged and not reported again.
+
+**Finding the server's lines.** The `request_id` on a server error is the call's own
+`reqId`, so filtering PostHog's Logs on it shows everything the server logged for that
+call.
+
+## The TTS service
+
+`services/tts` reports its own failures to the same project, the same way: an `$exception`
+over PostHog's batch call, with no SDK (`posthog_exception_reporter.py`). An SDK would
+bring a background thread to a process that exits 15 seconds after its last render and
+could take a queued error with it.
+
+- **What counts.** An exception the FastAPI app has no handler for. It is answered as `500`
+  with code `internal_error` in the API's envelope, and reported. A `ServiceError` (an
+  unknown voice, another render version) and a request that fails validation are the
+  service working, so they aren't reported.
+- **When it goes.** As a background task on the `500`, so the answer goes first and the
+  report doesn't hold it up. The send waits at most five seconds. If it fails, that's
+  logged as `error not forwarded` with the failure's type, and the answer is unchanged.
+- **What it carries.** `error_source: "tts"`, `surface: "tts"`, the environment, a fresh
+  id with no person, and `$geoip_disable`. The frames are Python's own, oldest first, with
+  paths relative to the service's directory. A frame in `site-packages` or outside the
+  service is marked as not its own.
+- **The message.** A spoken line is a reader's own words, and an exception can quote one,
+  such as a phonemiser failing on a word. So the message goes through
+  `redact_error_message`, a port of `redactErrorMessage` tested against the same cases.
+- **Request id.** None yet. The API doesn't pass its `reqId` to the TTS service, and renders
+  run on the API's queue rather than inside a reader's request.
+
+It reads `POSTHOG_API_KEY`, `POSTHOG_HOST` (default the EU host) and `ANALYTICS_ENVIRONMENT`,
+as the API does. Without a key, nothing is reported. The key is the TTS app's own Fly
+secret, imported by `task deploy:tts:secrets` from `services/tts/.env.prod.tpl`.
 
 ## The client
 
@@ -142,6 +261,28 @@ as `dropped` on the next batch that gets through. When the page is hidden or lef
 `AnalyticsRuntime` flushes errors before events, both with `keepalive`. Errors are sent
 first because they matter more, and because a browser limits how much can be in flight
 as a page closes.
+
+## Before the app mounts
+
+A shell that can't open its local database renders `StartupFailure` instead of `App`. With
+no `App`, there's none of the reporter. So in that branch the shell calls
+`reportStartupFailure` (`packages/app-core/src/app/`), which sends the one error straight
+to `/api/errors` as source `startup`, with `keepalive`:
+
+- **Where to:** the web app's own origin. For the extension, the server its saved
+  connection names, or the server it was built for. This is what `useKnownApiUrl` would
+  have answered.
+- **Under which session:** the extension's saved token, when there is one. The web app's
+  cookie goes with it as it does for every call.
+- **What with:** the surface, layout, build version and platform, and an empty trail,
+  because the reader hasn't done anything yet.
+
+A send that fails is dropped silently, because there's nothing mounted to report it to.
+The shell has already logged the error to the console.
+
+A **blocked** open isn't reported. That's another window holding an older version, which
+the screen tells the reader how to fix. It's the expected answer, not a failure, the same
+as the dead ends `ErrorState` shows without an `error`.
 
 ## The service worker
 
@@ -226,6 +367,40 @@ With none of them set and `POSTHOG_API_KEY` set, logs go to `<POSTHOG_HOST>/i/v1
 under the same project token, so production needs no new secret. A destination named
 without headers is never handed that token.
 
+## Alerts
+
+Error tracking only helps if someone looks, so PostHog posts to Slack when something
+changes. There are three notifications, one per trigger, all to `#alerts` in a Slack
+workspace kept for this:
+
+| Trigger | Means |
+|---|---|
+| **Issue created** | a failure nobody has seen before |
+| **Issue reopened** | an issue marked resolved has come back: the fix didn't hold |
+| **Issue spiking** | a known issue is happening much more often than usual, often after a deploy |
+
+They fire once per **issue**, not once per error. PostHog groups repeated errors into one
+issue, so a bug every reader hits is one alert. That grouping is what the redacted message
+and the frames are for ("What an error may carry").
+
+**Why Slack.** PostHog's issue alerts can go to Slack, Discord, Teams or a webhook, but not
+email. Email exists only on trend alerts, which watch the total `$exception` count and can
+miss a single new issue. Slack's free plan is enough: one app, and alerts don't need more
+than 90 days of history.
+
+**Setting it up again**, in a new project or after the workspace changes:
+
+1. In PostHog, go to Error tracking → Configuration → Alerting → **New notification**, and
+   pick a trigger.
+2. Choose Slack. **Connect to Slack** the first time, which opens Slack's permission page,
+   and click **Allow** for the workspace. It can also be connected from
+   Settings → Project → Integrations.
+3. In Slack, `/invite @PostHog` into `#alerts`. The app can't post to a channel it hasn't
+   joined.
+4. Pick `#alerts`, then **Test function**, and **Create & enable** once the test message
+   arrives.
+5. Do the same for the other two triggers. If spiking turns out noisy, disable it alone.
+
 ## What a log line may carry
 
 A request is logged by its **route**, `{ method, route }`, never by its URL or the
@@ -260,14 +435,13 @@ as `POSTHOG_API_KEY` is set. After the deploy, check three things:
 - the deploy's own lines appear in PostHog's Logs under `overview-api`, and no
   `logs not shipped` line appears on stderr
 
+The TTS service has its own copy of the token. Run `task deploy:tts:secrets` once, after
+which a render that fails reports itself.
+
 ## Not built yet
 
 - **Traces.** Logs are joined by request id, not by a trace. If a request ever spans more
   than this one process, OpenTelemetry tracing is the next step.
-- **Errors before the app mounts.** A shell that can't open its database renders
-  `StartupFailure` outside `App`, so that failure isn't reported yet.
 - **One copy of the extension's session.** Keeping the connection in `chrome.storage`
   rather than `localStorage` would let the worker read the original rather than a copy.
   It is a larger change to how the app reads its connection in the extension.
-- **Source maps.** Frames are minified paths and positions until a build uploads its maps
-  to PostHog.

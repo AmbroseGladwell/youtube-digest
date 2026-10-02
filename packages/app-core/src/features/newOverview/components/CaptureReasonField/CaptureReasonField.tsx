@@ -1,6 +1,8 @@
 import type { KeyboardEvent } from "react";
 import styles from "./CaptureReasonField.module.scss";
 import { captureReasonFieldTestIds } from "./CaptureReasonFieldTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 
 export interface CaptureReasonFieldProps {
   value: string;
@@ -12,6 +14,8 @@ export interface CaptureReasonFieldProps {
 // reads as a margin note written while the overview is being made. It saves on blur or
 // when the overview lands; there is nothing to confirm (docs/features/capture-reason.md).
 export function CaptureReasonField({ value, onChange, onCommit }: CaptureReasonFieldProps) {
+  const analytics = useAnalytics();
+  useTypingSettled(value, () => analytics.capture.captureReason.typed());
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.currentTarget.blur();

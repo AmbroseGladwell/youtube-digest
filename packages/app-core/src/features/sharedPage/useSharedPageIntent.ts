@@ -20,7 +20,7 @@ export function useSharedPageIntent(): () => Promise<string> {
       return Routes.home();
     }
     if (intent.kind === "generate") {
-      newOverview.start(intent.videoUrl);
+      newOverview.start(intent.videoUrl, { from: "sharedPage" });
       return Routes.home();
     }
     const overview = savedFromShare(intent.snapshot.note);

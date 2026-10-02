@@ -1,4 +1,5 @@
 import base64
+import logging
 import threading
 import time
 from typing import Annotated, Literal
@@ -6,14 +7,18 @@ from typing import Annotated, Literal
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTask
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 from pydantic.alias_generators import to_camel
 
 from .encode_m4a import encode_m4a
 from .idle_exit import IdleExit
+from .posthog_exception_reporter import ExceptionReporter
 from .render_script import RENDER_VERSION, Synthesiser, render_script
 
 MAX_SCRIPT_CHARACTERS = 20_000
+
+log = logging.getLogger(__name__)
 
 SpokenLine = Annotated[str, StringConstraints(strip_whitespace=True)]
 
@@ -58,9 +63,17 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
 
 
-def create_app(synthesiser: Synthesiser, idle_exit: IdleExit) -> FastAPI:
+def create_app(
+    synthesiser: Synthesiser, idle_exit: IdleExit, report_exception: ExceptionReporter | None = None
+) -> FastAPI:
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
     one_render_at_a_time = threading.Lock()
+
+    def report(error: Exception) -> None:
+        try:
+            report_exception(error)
+        except Exception as failure:
+            log.warning("error not forwarded: %s", type(failure).__name__)
 
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, error: ServiceError) -> JSONResponse:
@@ -69,6 +82,16 @@ def create_app(synthesiser: Synthesiser, idle_exit: IdleExit) -> FastAPI:
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_: Request, error: RequestValidationError) -> JSONResponse:
         return error_response(422, "invalid_request", str(error.errors()[0].get("msg", "Invalid request")))
+
+    # A failure nothing planned for: answered in the API's envelope, then reported once the
+    # answer has gone (docs/architecture/errors-and-logs.md, "The TTS service").
+    @app.exception_handler(Exception)
+    async def unexpected(_: Request, error: Exception) -> JSONResponse:
+        return JSONResponse(
+            status_code=500,
+            content={"error": {"code": "internal_error", "message": "Something went wrong"}},
+            background=None if report_exception is None else BackgroundTask(report, error),
+        )
 
     @app.get("/health")
     def health() -> dict:

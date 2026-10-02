@@ -10,6 +10,7 @@ import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { eventRoutes } from "./events/eventRoutes.js";
+import { sharedPageEventRoutes } from "./events/sharedPageEventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
 import { errorRoutes } from "./errors/errorRoutes.js";
 import type { ErrorSink } from "./errors/ErrorSink.js";
@@ -122,7 +123,7 @@ export async function buildApp({
 
   await app.register(
     async (api) => {
-      registerApiErrorHandler(api);
+      registerApiErrorHandler(api, { errorSink, clock });
       if (config.allowedOrigins.length > 0) {
         await api.register(corsPlugin, { allowedOrigins: config.allowedOrigins });
       }
@@ -172,6 +173,7 @@ export async function buildApp({
       transcriptRoutes(api, transcripts, clock);
       shareRoutes(api, shares, config.appUrl);
       eventRoutes(api, eventSink, clock);
+      sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
       errorRoutes(api, errorSink, clock);
       audioRoutes(
         api,
@@ -185,7 +187,7 @@ export async function buildApp({
   );
 
   await app.register(async (oauth) => {
-    registerOAuthErrorHandler(oauth);
+    registerOAuthErrorHandler(oauth, { errorSink, clock });
     registerFormBodyParser(oauth);
     await oauth.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
     oauth.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
@@ -193,7 +195,7 @@ export async function buildApp({
   });
 
   await app.register(async (mcp) => {
-    registerMcpErrorHandler(mcp);
+    registerMcpErrorHandler(mcp, { errorSink, clock });
     await mcp.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
     mcp.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
     await mcp.register(connectionAccessPlugin, { sql, clock, urls });
@@ -214,7 +216,7 @@ export async function buildApp({
 
   await app.register(
     async (page) => {
-      registerApiErrorHandler(page);
+      registerApiErrorHandler(page, { errorSink, clock });
       await page.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
       page.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
       await sharePagePlugin(page, { shares, appUrl: config.appUrl, staticRoot: config.staticRoot, clock });

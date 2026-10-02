@@ -17,6 +17,8 @@ import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
@@ -42,7 +44,7 @@ function LibraryHome() {
   if (overviewsQuery.isError) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <ErrorState
+        <ErrorState screen="libraryLoad"
           title="Couldn't load your library"
           error={overviewsQuery.error}
           body="Something went wrong reading your saved overviews. Nothing has been lost."
@@ -78,15 +80,20 @@ function FirstRunHero() {
   const [url, setUrl] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const ready = readiness === "ready";
+  const analytics = useAnalytics();
+  useTypingSettled(url, () =>
+    analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "home" }),
+  );
 
   const generate = (event: FormEvent) => {
     event.preventDefault();
     if (!isYouTubeUrl(url)) {
+      analytics.capture.newOverviewForm.linkRefused({ from: "home" });
       setValidationError("That doesn't look like a YouTube URL.");
       return;
     }
     setValidationError(null);
-    controller.start(url);
+    controller.start(url, { from: "home" });
     controller.open();
     setUrl("");
   };
@@ -138,7 +145,11 @@ function FirstRunHero() {
           <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
             <StrokeIcon name="check" />
             Using your saved API keys ·{" "}
-            <Link to={Routes.settingsSection("keys")} data-testid={homePageTestIds.settingsLink}>
+            <Link
+              to={Routes.settingsSection("keys")}
+              onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
+              data-testid={homePageTestIds.settingsLink}
+            >
               Change keys
             </Link>
           </p>
@@ -153,6 +164,7 @@ function FirstRunHero() {
               <Link
                 className={styles.keysLink}
                 to={Routes.settingsSection("keys")}
+                onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
                 data-testid={homePageTestIds.settingsLink}
               >
                 {settingsLinkLabel(readiness).replace(/\s*→$/, "")}

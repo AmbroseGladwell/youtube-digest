@@ -126,14 +126,18 @@ machine to come up healthy. GitHub records each one under the `production` envir
 with the app's URL. `task deploy` still works from a laptop, for a rollback or a hotfix
 while CI is red for an unrelated reason.
 
-The job needs one secret, `FLY_API_TOKEN`, a deploy token scoped to this app and nothing
+The job needs one secret to deploy, `FLY_API_TOKEN`, a deploy token scoped to this app and nothing
 else, made and stored without it ever appearing on screen:
 
 ```
 fly tokens create deploy --name github-actions --expiry 8760h | gh secret set FLY_API_TOKEN
 ```
 
-It is the one production value that lives outside Bitwarden, because GitHub's runners can
+Two more, `POSTHOG_CLI_API_KEY` and `POSTHOG_CLI_PROJECT_ID`, let the image and the
+extension's build upload their source maps to PostHog. Without them, both builds delete the
+maps and deploy anyway (`docs/architecture/errors-and-logs.md`, "Source maps").
+
+`FLY_API_TOKEN` is the one production value that lives outside Bitwarden, because GitHub's runners can
 only read GitHub's secrets; `docs/conventions/secrets.md` records the exception. Rotate it
 by running the same line again and revoking the old token with `fly tokens list` and
 `fly tokens revoke`.
@@ -308,7 +312,39 @@ fly deploy --remote-only
 fly scale count 5                 # the pool; each stays stopped until the proxy starts it
 ```
 
-CI builds this image on every push (the `image (tts)` job); deploying it is `fly deploy --remote-only --ha=false` from `services/tts`, by hand, because it changes rarely and the app's deploy token is scoped to `the-overview-app` alone.
+Its one secret is the PostHog token it reports errors under
+(`docs/architecture/errors-and-logs.md`, "The TTS service"). `services/tts/.env.prod.tpl`
+names it and `task deploy:tts:secrets` imports it into this app, the same way
+`task deploy:secrets` does for the API.
+
+CI builds this image on every push (the `image (tts)` job). On `main`, once everything has
+passed, the `deploy (tts)` job deploys it, but only when `services/tts` differs from what is
+live:
+
+- **What's live** is read from the machines. Each deploy runs
+  `fly deploy --remote-only --ha=false --env DEPLOYED_COMMIT=<sha>`, so every machine carries
+  the commit it was deployed from. `scripts/ttsDeployDecision.mjs` compares that commit with
+  the one being built.
+- **Why not compare with the previous push.** CI cancels a run on `main` when a newer merge
+  lands, so a TTS change whose run was cancelled would never deploy. Comparing with what's
+  live catches it on the next run.
+- **It deploys** when `services/tts` changed since the live commit, and when the machines
+  carry no commit or different ones (a deploy by hand drops the stamp). **It skips**, and
+  says why in the log, when nothing changed, or when the live commit is newer than this one,
+  so re-running an old run never rolls the pool back.
+- **It checks** by reading `DEPLOYED_COMMIT` back from every machine, stopped ones included.
+  There's no health check to ask: the service is private and its machines stop themselves.
+
+It has its own token, `FLY_TTS_API_TOKEN`, a deploy token scoped to `the-overview-tts`
+alone, so neither deploy job can touch the other app:
+
+```
+fly tokens create deploy --app the-overview-tts --name github-actions-tts --expiry 8760h | gh secret set FLY_TTS_API_TOKEN
+```
+
+Without it, the job skips with a warning rather than failing `main`. Deploying by hand,
+`fly deploy --remote-only --ha=false` from `services/tts`, still works. The app's one secret,
+`POSTHOG_API_KEY`, stays a one-off `task deploy:tts:secrets`, because CI can't read Bitwarden.
 
 Narration is kept in the private R2 bucket `the-overview-audio`, in Cloudflare account
 `781691f32a5cf03b132121e499f510a4`, through a token scoped to that bucket only.

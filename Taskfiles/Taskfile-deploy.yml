@@ -25,6 +25,16 @@ tasks:
     cmds:
       - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh fly-import
 
+  deploy:tts:secrets:
+    desc: Render services/tts/.env.prod.tpl from the overview-prod Bitwarden project straight into the TTS app's fly secrets
+    preconditions:
+      - sh: command -v fly
+        msg: 'flyctl is missing. Enter the dev shell first: direnv allow, or nix develop.'
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - BWS_PROJECT={{.PROD_PROJECT}} TEMPLATE=services/tts/.env.prod.tpl FLY_APP=the-overview-tts scripts/secrets.sh fly-import
+
   deploy:image:
     desc: Build the production image locally with Docker, as CI does, without deploying it
     preconditions:

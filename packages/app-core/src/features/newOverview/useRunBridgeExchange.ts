@@ -9,6 +9,7 @@ import { overviewsWithStateQueryOptions } from "../overviews/queries/overviewsWi
 import { overviewForVideoUrl } from "../overviews/util/overviewForVideoUrl.js";
 import type { NewOverviewRunController } from "./useNewOverviewRun.js";
 import { runReportFor } from "./util/runReportFor.js";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
 
 // Both halves of the injected button's conversation, together because they are one
 // exchange: the page asks for a run, and every change to the run it asked for goes back
@@ -22,6 +23,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
   const queryClient = useQueryClient();
   const { overviewStore } = useStores();
   const readiness = useGenerationReadiness();
+  const analytics = useAnalytics();
   const { run, start } = controller;
 
   useEffect(() => {
@@ -51,18 +53,21 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         videoUrl,
       );
       if (held !== null) {
+        analytics.extension.injectedButton.pressed({ outcome: "openedHeld" });
         restateCurrentRun();
         void navigate(Routes.overview(held.id));
         return;
       }
 
       if (readiness !== "ready") {
+        analytics.extension.injectedButton.pressed({ outcome: "keysNeeded" });
         restateCurrentRun();
         void navigate(Routes.settingsSection("keys"));
         return;
       }
 
-      start(videoUrl);
+      analytics.extension.injectedButton.pressed({ outcome: "started" });
+      start(videoUrl, { from: "injectedButton" });
       void navigate(Routes.home());
     };
 
@@ -77,5 +82,5 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
 
     take();
     return bridge.subscribe(take);
-  }, [bridge, readiness, navigate, start, queryClient, overviewStore]);
+  }, [bridge, readiness, navigate, start, queryClient, overviewStore, analytics]);
 }

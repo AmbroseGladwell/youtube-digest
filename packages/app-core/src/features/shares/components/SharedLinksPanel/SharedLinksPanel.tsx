@@ -7,6 +7,7 @@ import { useEditedShares } from "../../useEditedShares.js";
 import { shareStatusLine } from "../../util/shareStatusLine.js";
 import styles from "./SharedLinksPanel.module.scss";
 import { sharedLinksPanelTestIds } from "./SharedLinksPanelTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 // A stable empty list, so the effect that hashes them is not re-run on every render.
 const EMPTY: Share[] = [];
@@ -44,6 +45,7 @@ export function SharedLinksPanel() {
     );
   }
 
+  const analytics = useAnalytics();
   const row = (share: Share) =>
     confirming === share.token ? (
       <li key={share.token} className={styles.confirmRow} data-testid={sharedLinksPanelTestIds.confirm}>
@@ -56,6 +58,7 @@ export function SharedLinksPanel() {
             type="button"
             className={styles.primaryAction}
             onClick={() => {
+              analytics.settings.sharedLinks.stopped({ overviewId: share.overviewId });
               stopSharing.mutate({ token: share.token });
               setConfirming(null);
             }}
@@ -66,7 +69,10 @@ export function SharedLinksPanel() {
           <button
             type="button"
             className={styles.surfaceAction}
-            onClick={() => setConfirming(null)}
+            onClick={() => {
+              analytics.settings.sharedLinks.stopCancelled({ overviewId: share.overviewId });
+              setConfirming(null);
+            }}
             data-testid={sharedLinksPanelTestIds.keepSharingButton}
           >
             Keep sharing
@@ -92,7 +98,10 @@ export function SharedLinksPanel() {
           type="button"
           className={styles.iconAction}
           aria-label={`Copy link to ${share.title}`}
-          onClick={() => void navigator.clipboard?.writeText(share.url)}
+          onClick={() => {
+            analytics.settings.sharedLinks.linkCopied({ overviewId: share.overviewId });
+            void navigator.clipboard?.writeText(share.url);
+          }}
           data-testid={sharedLinksPanelTestIds.copyButton}
         >
           <StrokeIcon name="copy" size={16} />
@@ -101,7 +110,10 @@ export function SharedLinksPanel() {
           type="button"
           className={styles.surfaceAction}
           aria-label={`Stop sharing ${share.title}`}
-          onClick={() => setConfirming(share.token)}
+          onClick={() => {
+            analytics.settings.sharedLinks.stopAsked({ overviewId: share.overviewId });
+            setConfirming(share.token);
+          }}
           data-testid={sharedLinksPanelTestIds.stopButton}
         >
           Stop sharing

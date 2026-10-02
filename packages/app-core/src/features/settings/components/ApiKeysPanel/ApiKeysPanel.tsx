@@ -6,6 +6,7 @@ import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMuta
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface ApiKeysPanelProps {
   apiKeys: ApiKeys;
@@ -49,8 +50,15 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
     }
   }, [settingsQuery.data]);
 
+  const analytics = useAnalytics();
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    analytics.settings.apiKeys.saved({
+      anthropicKey: toStoredValue(anthropicApiKey) !== null,
+      supadataKey: toStoredValue(supadataApiKey) !== null,
+      model: modelDraft,
+      modelChanged: modelDraft !== savedModel,
+    });
     onSave({
       anthropicApiKey: toStoredValue(anthropicApiKey),
       supadataApiKey: toStoredValue(supadataApiKey),

@@ -6,6 +6,7 @@ import type { LibraryFilters } from "../../types/LibraryFilters.js";
 import { cappedTopics } from "../../util/cappedTopics.js";
 import styles from "./FilterPanel.module.scss";
 import { filterPanelTestIds } from "./FilterPanelTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface FilterPanelProps {
   filters: LibraryFilters;
@@ -30,6 +31,7 @@ const verdictSummary = (filters: LibraryFilters): string => {
 export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: FilterPanelProps) {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   const [moreShown, setMoreShown] = useState(false);
+  const analytics = useAnalytics();
   const capped = cappedTopics(topics, filters.topicId);
   const shownTopics = allTopicsShown ? topics : capped.shown;
 
@@ -84,7 +86,10 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
           <button
             type="button"
             className={styles.moreTopics}
-            onClick={() => setAllTopicsShown(!allTopicsShown)}
+            onClick={() => {
+              analytics.library.filters.allTopicsShown({ shown: !allTopicsShown });
+              setAllTopicsShown(!allTopicsShown);
+            }}
             aria-expanded={allTopicsShown}
             data-testid={filterPanelTestIds.showAllTopicsButton}
           >
@@ -106,7 +111,10 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
         <button
           type="button"
           className={styles.moreButton}
-          onClick={() => setMoreShown(!moreShown)}
+          onClick={() => {
+            analytics.library.filters.moreShown({ shown: !moreShown });
+            setMoreShown(!moreShown);
+          }}
           aria-expanded={moreShown}
           aria-controls={MORE_PANEL_ID}
           data-testid={filterPanelTestIds.moreFiltersButton}

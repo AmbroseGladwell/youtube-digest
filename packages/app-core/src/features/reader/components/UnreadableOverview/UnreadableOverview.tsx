@@ -28,12 +28,12 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
     if (videoUrl === null || !overviewId.success) {
       return;
     }
-    start(videoUrl, { overviewId: overviewId.data });
+    start(videoUrl, { from: "regenerate", overviewId: overviewId.data });
     void navigate(Routes.home());
   };
 
   return (
-    <ErrorState
+    <ErrorState screen="unreadableOverview"
       title={
         heldBack
           ? "This overview needs a newer version"

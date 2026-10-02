@@ -35,7 +35,8 @@ case "${1:-}" in
   fly-import)
     # The rendered lines go straight down a pipe into fly secrets import: nothing is
     # written to disk, typed, or shown.
-    bws run --project-id "$(projectId)" -- node scripts/renderEnv.mjs .env.prod.tpl - | fly secrets import
+    bws run --project-id "$(projectId)" -- node scripts/renderEnv.mjs "${TEMPLATE:-.env.prod.tpl}" - \
+      | fly secrets import ${FLY_APP:+--app "$FLY_APP"}
     ;;
   seed)
     if ! bws project list | jq -e --arg name "$PROJECT" '.[] | select(.name == $name)' > /dev/null; then

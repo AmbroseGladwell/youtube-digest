@@ -6,7 +6,7 @@ import {
 } from "@overview/domain";
 import type { AnalyticsQueue, SendOptions } from "./AnalyticsQueue.js";
 
-type EventMethod<Definition> =
+export type EventMethod<Definition> =
   keyof AnalyticsEventPropsOf<Definition> extends never
     ? () => void
     : (props: AnalyticsEventPropsOf<Definition>) => void;
