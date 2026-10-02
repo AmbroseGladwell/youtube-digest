@@ -210,8 +210,30 @@ could take a queued error with it.
 - **The message.** A spoken line is a reader's own words, and an exception can quote one,
   such as a phonemiser failing on a word. So the message goes through
   `redact_error_message`, a port of `redactErrorMessage` tested against the same cases.
-- **Request id.** None yet. The API doesn't pass its `reqId` to the TTS service, and renders
-  run on the API's queue rather than inside a reader's request.
+- **Request id.** The API's queue makes a fresh id for each render attempt, logs it as
+  `ttsRequestId` on `audio rendered` or `audio render failed`, and sends it as
+  `X-Request-Id`. The service logs that call under it as `reqId`. A malformed one is
+  replaced, as the API's own is.
+
+**Its logs** are JSON on stdout in pino's shape (`JsonLogFormatter`): `level` as pino's
+number, `time`, `msg`, `service: "overview-tts"`, the `reqId`, and the line's own fields.
+They ship the way the API's do, through `OtlpLogHandler`, by the same `OTEL_*` variables
+(`otlp_logs_config`, defaulting `service.name` to `overview-tts`), and with none set, to
+PostHog's log ingest under the `POSTHOG_API_KEY` the service already holds. A batch is
+held for two seconds, and the handler is closed as the process exits, so a machine that
+stops 15 seconds after its last render ships its last lines. uvicorn's access log is off,
+because it names the caller's address.
+
+| Line | Level | Fields |
+|---|---|---|
+| `render requested` | `info` | `voice`, `language`, `renderVersion`, `lines`, `characters` |
+| `render finished` | `info` | the same, with `synthesisSeconds`, `audioSeconds` and `bytes` |
+| `render refused` | `warn` | `code` (`unknown_voice`, `render_version_mismatch`, `invalid_request`), `status` |
+| `unhandled error` | `error` | `err`: its type and redacted message. Also reported, as above |
+| `model loaded` / `model failed to load` | `info` / `error` | `loadSeconds` / `err` |
+| `idle, stopping` | `info` | `idleSeconds` |
+
+No line carries a word of the script.
 
 It reads `POSTHOG_API_KEY`, `POSTHOG_HOST` (default the EU host) and `ANALYTICS_ENVIRONMENT`,
 as the API does. Without a key, nothing is reported. The key is the TTS app's own Fly
@@ -491,7 +513,8 @@ transcript is found by their `sessionId`, as a missing note is.
 `audio queued`, `audio rendered`, `audio render failed` (`warn`, to be tried again),
 `audio render gave up` (`error`), `audio worker stopped` (`error`) and `audio deleted`.
 The renders run on the API's queue, outside any request, so their lines carry no `reqId` or
-account. They're joined to the request by the audio `key`, which both carry. A failure's
+account. They're joined to the request by the audio `key`, which both carry, and to the TTS
+service's lines by `ttsRequestId` ("The TTS service"). A failure's
 message goes through `redactErrorMessage`, because the TTS service's error can quote a
 spoken line.
 

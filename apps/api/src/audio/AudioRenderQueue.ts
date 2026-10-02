@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NarrationVoice, narrationLanguage, redactErrorMessage } from "@overview/domain";
 import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
@@ -70,16 +71,15 @@ export class AudioRenderQueue {
       priority: job.priority,
       lines: job.lines.length,
       attempt: job.attempts,
+      ttsRequestId: randomUUID(),
       queueWaitSeconds: (claimedAt.getTime() - job.requestedAt.getTime()) / 1000,
     };
     try {
       const voice = NarrationVoice.parse(job.voice);
-      const narration = await narrator.narrate({
-        lines: job.lines,
-        voice,
-        language: narrationLanguage(voice),
-        renderVersion: job.renderVersion,
-      });
+      const narration = await narrator.narrate(
+        { lines: job.lines, voice, language: narrationLanguage(voice), renderVersion: job.renderVersion },
+        entry.ttsRequestId,
+      );
       await store.put(job.key, narration.audio);
       const readyAt = clock();
       await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, readyAt);
