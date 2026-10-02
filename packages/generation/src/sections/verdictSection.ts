@@ -18,7 +18,9 @@ export const verdictSection: PromptSection = {
 Novelty — one of NOVEL / ESTABLISHED / RECYCLED — plus a
 dubious flag and one or two sentences of reasoning. Be blunt. Most
 short-form content is a repackaging of standard advice, and saying so is
-the most useful thing you can tell me.
+the most useful thing you can tell me. Never begin the reasoning with
+the novelty word itself; the label is shown beside it and the reasoning
+is read aloud on its own.
 
 Set dubious only when a claim is stated with more certainty than it has
 actually earned — because it contradicts something you are confident is

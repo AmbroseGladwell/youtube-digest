@@ -6,9 +6,13 @@
 // note shape says Key points is a list of three to seven bullets, so the section that
 // builds the lines decides, and the mark stays out of `text` — the spoken script and the
 // word counts read that.
+//
+// `spoken` is what narration says for the line when it differs from what the reader shows,
+// and an empty `spoken` is a line narration passes over (docs/features/tts-pre-rendered-speech.md).
 export interface NoteLine {
   section: string;
   heading: boolean;
   bullet: boolean;
   text: string;
+  spoken?: string;
 }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OverviewId, type ClientWarningReport, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import {
+  OPENING_LINE,
   PREPARING_LONG_AFTER_MS,
   POLL_INTERVAL_MS,
   PlayerEngine,
@@ -25,6 +26,7 @@ const TRACK: PlayerTrack = {
   title: "The Quiet Return of Nuclear Baseload",
   channel: "Practical Engineering",
   artworkUrl: null,
+  opening: null,
   lines: [
     line("Summary", "Premise", true),
     line("Summary", "Three grids are costing reactors back in."),
@@ -126,6 +128,45 @@ describe("PlayerEngine", () => {
 
     media.reachTime(5);
     expect(engine.getLine()).toBe(2);
+  });
+
+  it("narrates the opening before the first line, with no line on screen standing for it", async () => {
+    const opened: PlayerTrack = { ...TRACK, opening: "The Quiet Return of Nuclear Baseload, from Practical Engineering." };
+    const withOpening: NarrationRender = { ...READY, lineStartsSeconds: [0, 3.5, 4.5, 8.3, 9.6], durationSeconds: 12.9 };
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(withOpening)) }));
+    engine.load(opened);
+    await settle();
+
+    engine.play();
+    expect(engine.getTime()).toBe(0);
+    expect(engine.getLine()).toBe(OPENING_LINE);
+
+    media.reachTime(3.6);
+    expect(engine.getLine()).toBe(0);
+
+    engine.seekLine(0);
+    expect(engine.getTime()).toBe(3.5);
+  });
+
+  it("asks for the opening ahead of the lines", async () => {
+    const api = scriptedApi();
+    const engine = engineWith(api);
+
+    engine.prepare({ ...TRACK, opening: "The Quiet Return of Nuclear Baseload, from Practical Engineering." });
+    await settle();
+
+    expect(vi.mocked(api.request).mock.calls[0]![0][0]).toBe(
+      "The Quiet Return of Nuclear Baseload, from Practical Engineering.",
+    );
+  });
+
+  it("still plays narration made before the opening existed, which has an entry per line and no more", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load({ ...TRACK, opening: "The Quiet Return of Nuclear Baseload, from Practical Engineering." });
+    await settle();
+
+    expect(engine.getSnapshot()).toMatchObject({ availability: "ready", source: "audio" });
+    expect(engine.getSnapshot().timings.lineStarts).toEqual([0, 1.02, 4.8, 6.1]);
   });
 
   it("narration nobody has made is asked for on the first press, polled, and played when it lands", async () => {
@@ -329,6 +370,28 @@ describe("PlayerEngine", () => {
     await settle();
 
     expect(engine.getSnapshot().availability).toBe("onFirstPlay");
+  });
+
+  it("asks for what each line says rather than what it shows, keeping a silent line in its place", async () => {
+    const api = scriptedApi();
+    const engine = engineWith(api);
+
+    engine.prepare({
+      ...TRACK,
+      lines: [
+        { ...line("Summary", "Premise", true), spoken: "The premise" },
+        line("Summary", "Three grids are costing reactors back in."),
+        { ...line("Verdict", "Recycled."), spoken: "" },
+        line("Verdict", "Standard advice, e.g. capacity markets."),
+      ],
+    });
+    await settle();
+
+    expect(api.request).toHaveBeenCalledWith(
+      ["The premise", "Three grids are costing reactors back in.", "", "Standard advice, for example capacity markets."],
+      "af_heart",
+      "background",
+    );
   });
 
   it("a note just made asks for its narration in the background, and leaves the player alone", async () => {

@@ -65,11 +65,11 @@ def test_a_voice_the_model_does_not_have_is_refused(service):
     "overrides",
     [
         {"lines": []},
-        {"lines": ["Verdict", "   "]},
+        {"lines": ["   ", ""]},
         {"lines": ["a" * (MAX_SCRIPT_CHARACTERS + 1)]},
         {"language": "fr-fr"},
     ],
-    ids=["no lines", "a blank line", "over the cap", "a language it does not speak"],
+    ids=["no lines", "only blank lines", "over the cap", "a language it does not speak"],
 )
 def test_a_malformed_render_is_refused(service, overrides):
     client, _, _ = service

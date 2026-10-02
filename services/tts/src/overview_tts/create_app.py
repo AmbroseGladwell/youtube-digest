@@ -21,7 +21,7 @@ MAX_SCRIPT_CHARACTERS = 20_000
 
 log = logging.getLogger(__name__)
 
-SpokenLine = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+SpokenLine = Annotated[str, StringConstraints(strip_whitespace=True)]
 
 
 class CamelModel(BaseModel):
@@ -37,6 +37,8 @@ class RenderRequest(CamelModel):
     @field_validator("lines")
     @classmethod
     def within_cap(cls, lines: list[str]) -> list[str]:
+        if not any(lines):
+            raise ValueError("A spoken script says something")
         if sum(len(line) for line in lines) > MAX_SCRIPT_CHARACTERS:
             raise ValueError(f"A spoken script is at most {MAX_SCRIPT_CHARACTERS} characters")
         return lines

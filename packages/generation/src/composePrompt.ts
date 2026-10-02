@@ -40,7 +40,12 @@ export function composePrompt(input: GenerationInput): ComposedPrompt {
   return {
     systemPrompt:
       "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. " +
-      "Never use an em dash (—) anywhere in your output; use a period, comma, or colon instead." +
+      "Never use an em dash (—) anywhere in your output; use a period or a comma instead. " +
+      "Every field is read on screen and also read aloud, so write for the ear as well as the eye: " +
+      "complete, natural sentences, no colons introducing lists, and no abbreviations a listener would have to decode. " +
+      "Keep numbers, money and symbols as digits and symbols, such as $600, 20% or 8×7; they are converted for speech separately. " +
+      "Brief parentheses are allowed only for a specific such as a year or a citation. They are not read aloud, " +
+      "so never put anything the sentence needs inside them." +
       instructions,
     userMessage: contextBlock(input),
     schema: z.object(shape),
