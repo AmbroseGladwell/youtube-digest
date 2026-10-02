@@ -419,13 +419,30 @@ kinds of record"), and the two aren't swapped for each other.
 Older lines named in camelCase (`shareCreated`) are renamed as their area is backfilled.
 
 **Every line made while handling a request goes through `request.log`**, never `app.log`.
-`request.log` adds the `reqId`.
+`request.log` adds the `reqId`, and the ids below once they are known.
+
+### Who a request was for
+
+As soon as a request has said who it's from, `bindLogContext` adds that to every later line
+for it, `request completed` included:
+
+| Field | Bound by | Is |
+|---|---|---|
+| `clientVersion` | `clientVersionPlugin` | the version the client sent in `X-Client-Version` |
+| `accountId` | `sessionPlugin`, `connectionAccessPlugin` | the opaque account id, the one error tracking and events already carry |
+| `sessionId` | `sessionPlugin` | the session's row id, never its token or the token's hash. Each device signs in separately, so this tells one reader's devices apart |
+| `connectionId` | `connectionAccessPlugin` | the assistant connection an `/mcp` call came through |
+
+Signing in logs `session created` with the new `accountId`, `sessionId` and `surface`. A
+support question then runs as: the account, its sessions (one per device), and each
+session's writes and feed reads. The account id is the only way into this from a reader,
+so finding it from their email is a database lookup, never a log search: an email is
+never logged.
 
 ### What every request logs
 
 - **A refusal.** Every `ApiError` under `/api`, and every 4xx Fastify raises itself, is
-  logged at `warn` as `request refused`, with `code`, `status` and the client's
-  `clientVersion` when it sent one. The `details` sent to the client aren't logged,
+  logged at `warn` as `request refused`, with `code` and `status`. The `details` sent to the client aren't logged,
   because a validation failure's detail can quote what was sent. The route is on the
   request's own lines.
 - **A 500.** See "The server's own errors".
@@ -440,9 +457,14 @@ Older lines named in camelCase (`shareCreated`) are renamed as their area is bac
 
 A conflict (`already_exists`, `revision_mismatch`, `record_newer_than_client`) and a write
 from below the floor (`client_unsupported`) are `request refused` lines. For a note
-that's missing on one device, filter on its `id`: its writes show whether it reached the
-server, and at which `seq`. A line carries no account id, so the other device's
-`changes served` lines can't be found from the note alone.
+that's missing on one device:
+
+1. Filter on the note's `id`. Its `record written` lines show whether it reached the
+   server, at which `seq`, and from which `sessionId`.
+2. Filter on the other device's `sessionId` (from its account's `session created` lines)
+   for `changes served`. A `next` that never reaches that `seq` means the device stopped
+   pulling. A `request refused` instead means the server turned it away, and its `code`
+   says why.
 
 ## What a log line may carry
 

@@ -23,6 +23,7 @@ test("a write is logged at info by kind, id, rev and seq, under its request's id
   const [written] = linesSaying(lines, "record written");
   assert.equal(written!.level, LOG_LEVELS.info);
   assert.equal(typeof written!.reqId, "string");
+  assert.equal(written!.accountId, account.accountId);
   assert.deepEqual(
     { kind: written!.kind, id: written!.id, rev: written!.rev, seq: written!.seq, deleted: written!.deleted },
     { kind: "overview", id: overview.id, rev: 1, seq: 1, deleted: false },

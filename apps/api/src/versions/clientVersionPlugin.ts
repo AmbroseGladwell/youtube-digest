@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import { CLIENT_VERSION_HEADER, schemaVersionsForClient } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
+import { bindLogContext } from "../logs/bindLogContext.js";
 import type { ClientContext } from "./ClientContext.js";
 
 declare module "fastify" {
@@ -15,7 +16,7 @@ const WHOLE_NUMBER = /^[1-9]\d*$/;
 // it needs to know about that client's versions (docs/architecture/api.md).
 export const clientVersionPlugin = fp(async (app) => {
   app.decorateRequest("client", null);
-  app.addHook("onRequest", async (request) => {
+  app.addHook("onRequest", async (request, reply) => {
     const header = request.headers[CLIENT_VERSION_HEADER];
     if (header === undefined) {
       return;
@@ -25,5 +26,6 @@ export const clientVersionPlugin = fp(async (app) => {
     }
     const version = Number(header);
     request.client = { version, schemaVersions: schemaVersionsForClient(version) };
+    bindLogContext(request, reply, { clientVersion: version });
   });
 });

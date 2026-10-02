@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import { bearerToken } from "../auth/bearerToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { bindLogContext } from "../logs/bindLogContext.js";
 import { CONNECTION_SCOPE } from "../oauth/connectionScope.js";
 import type { OAuthUrls } from "../oauth/oauthUrls.js";
 import { resolveAccessToken, type ConnectionAccess } from "../oauth/resolveAccessToken.js";
@@ -38,5 +39,6 @@ export const connectionAccessPlugin = fp<ConnectionAccessPluginOptions>(async (a
         .send({ error: "invalid_token", error_description: "A connection's access token is required" });
     }
     request.connectionAccess = access;
+    bindLogContext(request, reply, { accountId: access.accountId, connectionId: access.connectionId });
   });
 });
