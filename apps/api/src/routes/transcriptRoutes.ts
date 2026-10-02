@@ -19,6 +19,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     if (transcript === null) {
       throw new ApiError("not_found", "No transcript is kept for this video");
     }
+    request.log.info("transcript served");
     return transcript;
   });
 
@@ -30,11 +31,16 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     }
     const fault = transcriptFault(transcript, videoId);
     if (fault !== null) {
-      request.log.warn({ fault }, "transcriptRefused");
+      request.log.warn({ fault, segments: transcript.segments.length }, "transcript refused");
       return reply.status(204).send();
     }
     const contribution = await transcripts.putIfNoted(request.session!.accountId, transcript);
-    request.log.info({ contribution, generated: transcript.generated }, "transcriptContributed");
+    const logged = { contribution, generated: transcript.generated, segments: transcript.segments.length };
+    if (contribution === "not-noted") {
+      request.log.warn(logged, "transcript not kept");
+    } else {
+      request.log.info(logged, "transcript stored");
+    }
     return reply.status(204).send();
   });
 
@@ -47,7 +53,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     async (request) => {
       const { videoId } = parseOrThrow(Params, request.params, "The video id");
       const transcript = await transcripts.getShared(videoId);
-      request.log.info({ hit: transcript !== null }, "sharedTranscriptRead");
+      request.log.info({ hit: transcript !== null }, "shared transcript read");
       if (transcript === null) {
         throw new ApiError("not_found", "No shared transcript is kept for this video");
       }

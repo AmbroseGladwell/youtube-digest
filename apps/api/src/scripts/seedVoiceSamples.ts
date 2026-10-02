@@ -37,7 +37,7 @@ if (config.audio === null) {
   const queue = new AudioRenderQueue({
     renders,
     clock: () => new Date(),
-    log: { info: log, warn: log },
+    log: { info: log, warn: log, error: log },
     ...setup,
   });
   await Promise.all(Array.from({ length: setup.concurrency }, () => queue.drain()));
