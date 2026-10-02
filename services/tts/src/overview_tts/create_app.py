@@ -14,6 +14,7 @@ from pydantic.alias_generators import to_camel
 from .encode_m4a import encode_m4a
 from .idle_exit import IdleExit
 from .posthog_exception_reporter import ExceptionReporter
+from .request_id import REQUEST_ID_HEADER, current_request_id, request_id_for
 from .render_script import RENDER_VERSION, Synthesiser, render_script
 
 MAX_SCRIPT_CHARACTERS = 20_000
@@ -67,24 +68,41 @@ def create_app(
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
     one_render_at_a_time = threading.Lock()
 
+    @app.middleware("http")
+    async def under_request_id(request: Request, call_next):
+        request_id = request_id_for(request.headers.get(REQUEST_ID_HEADER))
+        request.state.request_id = request_id
+        token = current_request_id.set(request_id)
+        try:
+            response = await call_next(request)
+        finally:
+            current_request_id.reset(token)
+        response.headers[REQUEST_ID_HEADER] = request_id
+        return response
+
     def report(error: Exception) -> None:
         try:
             report_exception(error)
         except Exception as failure:
-            log.warning("error not forwarded: %s", type(failure).__name__)
+            log.warning("error not forwarded", extra={"errorType": type(failure).__name__})
 
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, error: ServiceError) -> JSONResponse:
+        log.warning("render refused", extra={"code": error.code, "status": error.status})
         return error_response(error.status, error.code, error.message)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_: Request, error: RequestValidationError) -> JSONResponse:
+        log.warning("render refused", extra={"code": "invalid_request", "status": 422})
         return error_response(422, "invalid_request", str(error.errors()[0].get("msg", "Invalid request")))
 
     # A failure nothing planned for: answered in the API's envelope, then reported once the
     # answer has gone (docs/architecture/errors-and-logs.md, "The TTS service").
     @app.exception_handler(Exception)
-    async def unexpected(_: Request, error: Exception) -> JSONResponse:
+    async def unexpected(request: Request, error: Exception) -> JSONResponse:
+        # Starlette answers an unexpected error outside the middleware, where the request's id
+        # has already been reset, so it is read back from the request itself.
+        log.error("unhandled error", exc_info=error, extra={"reqId": getattr(request.state, "request_id", None)})
         return JSONResponse(
             status_code=500,
             content={"error": {"code": "internal_error", "message": "Something went wrong"}},
@@ -97,6 +115,14 @@ def create_app(
 
     @app.post("/render", response_model=RenderResponse, response_model_by_alias=True)
     def render(request: RenderRequest) -> RenderResponse:
+        script = {
+            "voice": request.voice,
+            "language": request.language,
+            "renderVersion": request.render_version,
+            "lines": len(request.lines),
+            "characters": sum(len(line) for line in request.lines),
+        }
+        log.info("render requested", extra=script)
         with idle_exit.busy():
             if request.render_version != RENDER_VERSION:
                 raise ServiceError(
@@ -111,6 +137,15 @@ def create_app(
                 rendered = render_script(synthesiser, request.lines, request.voice, request.language)
                 synthesis_seconds = time.perf_counter() - started
                 audio = encode_m4a(rendered.samples, rendered.sample_rate)
+            log.info(
+                "render finished",
+                extra={
+                    **script,
+                    "synthesisSeconds": round(synthesis_seconds, 2),
+                    "audioSeconds": round(rendered.duration_seconds, 2),
+                    "bytes": len(audio),
+                },
+            )
             return RenderResponse(
                 render_version=RENDER_VERSION,
                 line_starts_seconds=rendered.line_starts_seconds,

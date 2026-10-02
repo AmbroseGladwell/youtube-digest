@@ -32,6 +32,7 @@ test("narration asked for is logged as queued, then rendered with its size and h
   assert.equal(rendered!.key, key);
   assert.equal(rendered!.lines, 2);
   assert.equal(rendered!.requestToReadySeconds, 60);
+  assert.match(rendered!.ttsRequestId as string, /^[0-9a-f-]{36}$/);
   assert.ok((rendered!.bytes as number) > 0);
   assert.doesNotMatch(JSON.stringify(lines), new RegExp(SPOKEN));
   await testApp.close();
