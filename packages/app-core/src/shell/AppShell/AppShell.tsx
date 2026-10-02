@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
@@ -57,6 +57,13 @@ export function AppShell() {
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
   const analytics = useAnalytics();
+
+  const panelOpened = useRef(false);
+  useEffect(() => {
+    if (!isPanel || panelOpened.current) return;
+    panelOpened.current = true;
+    analytics.extension.sidePanel.opened();
+  }, [isPanel, analytics]);
 
   // The injected YouTube button's end of that same run
   // (docs/features/injected-button.md).

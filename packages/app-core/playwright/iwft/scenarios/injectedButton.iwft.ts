@@ -1,6 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
+import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
@@ -100,4 +101,26 @@ test("the web app, which has no page to be pressed from, reports nothing to anyo
   await launcher.launch({ apiKeys: API_KEYS, surface: "web" });
 
   expect(await launcher.readRunReports()).toEqual([]);
+});
+
+test("a press on the page and the panel it opens are counted, with what the press did", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
+  const capture = await launcher.launchPanel({
+    ...panel,
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+  });
+
+  await launcher.pressInjectedButton(WATCHED_URL);
+  await capture.verifyIsWorking();
+
+  await expect
+    .poll(() => backendSimulator.analytics.eventNames().filter((name) => name.startsWith("extension.")))
+    .toEqual(["extension.sidePanel.opened", "extension.injectedButton.pressed"]);
+  expect(backendSimulator.analytics.events().find(({ name }) => name === "extension.injectedButton.pressed")?.props).toEqual({
+    outcome: "started",
+  });
 });
