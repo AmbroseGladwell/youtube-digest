@@ -37,3 +37,12 @@ def test_every_line_is_spoken_in_the_requested_voice_and_language():
     render_script(synthesiser, ["Verdict", "Recycled."], "bf_emma", "en-gb")
 
     assert synthesiser.spoken == [("Verdict", "bf_emma", "en-gb"), ("Recycled.", "bf_emma", "en-gb")]
+
+
+def test_a_blank_line_is_passed_over_and_starts_where_the_line_before_ended():
+    synthesiser = FakeSynthesiser()
+
+    rendered = render_script(synthesiser, ["Verdict", "", "Standard advice."], "af_heart", "en-us")
+
+    assert [text for text, _, _ in synthesiser.spoken] == ["Verdict", "Standard advice."]
+    assert rendered.line_starts_seconds == pytest.approx([0.0, 0.07, 0.07 + LINE_GAP_SECONDS])

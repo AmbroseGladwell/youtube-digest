@@ -1,5 +1,8 @@
-import { CoreFields } from "@overview/domain";
+import { CoreFields, wordCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
+
+export const KEY_POINT_TARGET_WORDS = 40;
+export const KEY_POINT_MAX_WORDS = 50;
 
 export const coreSection: PromptSection = {
   title: "Core",
@@ -23,10 +26,34 @@ described, if it's showing or explaining something instead. If it asserts
 nothing and is pure vibes, say so plainly and set thin to true.
 
 ## Key points
-3 to 7 bullets. Substance only. Strip the hook, the story, the
+3 to 7 points. Substance only. Strip the hook, the story, the
 restatement, and the call to action. Most videos need five or fewer.
 Seven is the ceiling however long the video is: a two hour debate still
 gets seven at most, so keep the ones that matter most and let the
-chapters carry the rest of the structure.`,
-  schemaShape: () => CoreFields.shape,
+chapters carry the rest of the structure.
+
+Each point is one to three complete sentences, ${KEY_POINT_TARGET_WORDS} words at most,
+that make sense heard on their own: never a noun phrase or a fragment.
+Most points need one or two sentences. Use a further sentence for the
+specific detail or example rather than dropping it, and never to restate.
+
+Keep the specifics that make a point worth having: names, numbers,
+dates, studies, and the concrete cues or steps. Always keep any caveat,
+criticism or counter-argument the video itself raises, and keep who
+claims something when the video presents it as one person's claim rather
+than settled fact.
+
+Each is read aloud after a linking word such as "First," or "Then,", so
+never open a point with its own number, a label and a colon, or a heading.
+Good: "Adding sets grows the arms faster than adding weight, as long as
+each set is taken close to failure."
+Bad: "Volume over load."`,
+  schemaShape: () => ({
+    ...CoreFields.shape,
+    keyPoints: CoreFields.shape.keyPoints.element
+      .refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`)
+      .array()
+      .min(3)
+      .max(7),
+  }),
 };

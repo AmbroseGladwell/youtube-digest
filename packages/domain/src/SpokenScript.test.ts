@@ -12,21 +12,55 @@ test("speaks every note line in order, headings included, so a timing's index is
 
   const script = spokenScript(overview);
 
-  assert.deepEqual(
-    script,
-    overviewNoteLines(overview).map((line) => line.text),
-  );
-  assert.equal(script[0], "Premise");
-  assert.ok(script.includes("Recycled."));
+  assert.equal(script.length, overviewNoteLines(overview).length + 1);
+  assert.equal(script[0], "Example, from Example Channel.");
+  assert.equal(script[1], "The premise");
+});
+
+test("opens with the video's title, channel and month of publication, tidied for speech", () => {
+  const overview = makeOverview();
+  const script = spokenScript({
+    ...overview,
+    video: { ...overview.video, title: "Arms (Guaranteed!)", publishedAt: "2024-05-02T10:00:00Z" },
+  });
+
+  assert.equal(script[0], "Arms, from Example Channel, published in May 2024.");
+});
+
+test("leaves the opening out when the video names nothing to open with", () => {
+  const overview = makeOverview();
+  const script = spokenScript({ ...overview, video: { ...overview.video, title: "", channel: "" } });
+
+  assert.equal(script.length, overviewNoteLines(overview).length);
+});
+
+test("passes over the verdict label with an empty entry rather than dropping its line", () => {
+  const overview = makeOverview({
+    verdict: { novelty: "recycled", dubious: false, reasoning: "Standard advice.", similarTo: [] },
+  });
+
+  const script = spokenScript(overview).slice(1);
+  const labelIndex = overviewNoteLines(overview).findIndex((line) => line.text === "Recycled.");
+
+  assert.equal(script[labelIndex], "");
+  assert.equal(script[labelIndex + 1], "Standard advice.");
+  assert.equal(SpokenScript.safeParse(script).success, true);
+});
+
+test("tidies the spoken text for speech", () => {
+  const script = spokenScript(makeOverview({ coreClaim: "Save 20% (roughly) vs spending." }));
+
+  assert.ok(script.includes("Save 20 percent versus spending."));
 });
 
 test("accepts the script a real overview produces", () => {
   assert.equal(SpokenScript.safeParse(spokenScript(makeOverview())).success, true);
 });
 
-test("refuses an empty script or a blank line", () => {
+test("refuses an empty script or one with nothing to say", () => {
   assert.equal(SpokenScript.safeParse([]).success, false);
-  assert.equal(SpokenScript.safeParse(["Premise", "   "]).success, false);
+  assert.equal(SpokenScript.safeParse(["   ", ""]).success, false);
+  assert.equal(SpokenScript.safeParse(["Premise", ""]).success, true);
 });
 
 test("refuses a script longer than the cap, counted across its lines", () => {

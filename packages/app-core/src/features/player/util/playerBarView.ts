@@ -50,7 +50,8 @@ export function playerBarView(
 ): PlayerBarView {
   const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];
-  const section = sectionHeadingAt(lines, lineAtTime(timings.lineStarts, time));
+  const inOpening = time < (timings.lineStarts[0] ?? 0);
+  const section = inOpening && track !== null ? track.title : sectionHeadingAt(lines, lineAtTime(timings.lineStarts, time));
   const duration = timings.durationSeconds;
   const percent = duration > 0 ? Math.min(100, (time / duration) * 100) : 0;
   const remaining = Math.max(0, duration - time);
