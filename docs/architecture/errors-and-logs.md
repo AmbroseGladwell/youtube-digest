@@ -409,7 +409,7 @@ kinds of record"), and the two aren't swapped for each other.
 | Level | When | For example |
 |---|---|---|
 | `fatal` | the process can't go on | an exception nothing caught |
-| `error` | something failed that someone must fix: an unexpected exception, a dependency down with no fallback, data that can't be read. It also becomes an issue in error tracking | `unhandled error` |
+| `error` | something failed that someone must fix: an unexpected exception, a dependency down with no fallback, data that can't be read. An unexpected exception also becomes an issue in error tracking. A failure the code caught, such as a render that gave up, is a log line only | `unhandled error`, `audio render gave up` |
 | `warn` | degraded but handled: a refusal, a fallback, a retry, a limit hit, a delivery skipped | `request refused`, `client events not forwarded` |
 | `info` | a step that means something to the business, done: once per operation, never once per loop iteration | `record written`, `changes served` |
 | `debug` | detail for local development. Production logs at `info` and drops it | |
@@ -475,6 +475,16 @@ that's missing on one device:
 and `transcripts forgotten`. A transcript line never carries the video id or a word of the
 transcript. A signed-in one carries the account and session, so a reader's missing
 transcript is found by their `sessionId`, as a missing note is.
+
+### Audio
+
+`docs/features/tts-pre-rendered-speech.md`, "The API side", lists them: `audio requested`,
+`audio queued`, `audio rendered`, `audio render failed` (`warn`, to be tried again),
+`audio render gave up` (`error`), `audio worker stopped` (`error`) and `audio deleted`.
+The renders run on the API's queue, outside any request, so their lines carry no `reqId` or
+account. They're joined to the request by the audio `key`, which both carry. A failure's
+message goes through `redactErrorMessage`, because the TTS service's error can quote a
+spoken line.
 
 ## What a log line may carry
 

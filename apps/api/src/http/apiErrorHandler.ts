@@ -21,6 +21,7 @@ const LOGGED_DETAILS = new Set([
   "bodySchemaVersion",
   "schemaVersion",
   "minSupportedClientVersion",
+  "limit",
 ]);
 
 const loggedDetails = (details: Record<string, unknown> | undefined) =>
