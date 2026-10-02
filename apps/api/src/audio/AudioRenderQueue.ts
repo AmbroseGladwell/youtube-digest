@@ -1,4 +1,4 @@
-import { NarrationVoice, narrationLanguage } from "@overview/domain";
+import { NarrationVoice, narrationLanguage, redactErrorMessage } from "@overview/domain";
 import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
 import type { Narrator } from "./Narrator.js";
@@ -10,6 +10,7 @@ const STALE_RENDER_MS = 15 * 60 * 1000;
 export interface RenderLog {
   info(entry: object, message: string): void;
   warn(entry: object, message: string): void;
+  error(entry: object, message: string): void;
 }
 
 export interface AudioRenderQueueOptions {
@@ -52,7 +53,7 @@ export class AudioRenderQueue {
     try {
       while (await this.#renderNext()) {}
     } catch (error) {
-      this.#options.log.warn({ error: String(error) }, "audio worker stopped");
+      this.#options.log.error({ error: redactErrorMessage(String(error)) }, "audio worker stopped");
     }
   }
 
@@ -67,6 +68,7 @@ export class AudioRenderQueue {
       key: job.key,
       voice: job.voice,
       priority: job.priority,
+      lines: job.lines.length,
       attempt: job.attempts,
       queueWaitSeconds: (claimedAt.getTime() - job.requestedAt.getTime()) / 1000,
     };
@@ -79,9 +81,16 @@ export class AudioRenderQueue {
         renderVersion: job.renderVersion,
       });
       await store.put(job.key, narration.audio);
-      await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, clock());
+      const readyAt = clock();
+      await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, readyAt);
       log.info(
-        { ...entry, synthesisSeconds: narration.synthesisSeconds, audioSeconds: narration.durationSeconds },
+        {
+          ...entry,
+          synthesisSeconds: narration.synthesisSeconds,
+          audioSeconds: narration.durationSeconds,
+          bytes: narration.audio.byteLength,
+          requestToReadySeconds: (readyAt.getTime() - job.requestedAt.getTime()) / 1000,
+        },
         "audio rendered",
       );
     } catch (error) {
@@ -94,7 +103,12 @@ export class AudioRenderQueue {
         MAX_RENDER_ATTEMPTS,
         now,
       );
-      log.warn({ ...entry, error: String(error), status }, "audio render failed");
+      const failed = { ...entry, error: redactErrorMessage(String(error)), status };
+      if (status === "failed") {
+        log.error(failed, "audio render gave up");
+      } else {
+        log.warn(failed, "audio render failed");
+      }
       if (status === "queued" && this.#options.runWorkers) {
         setTimeout(() => this.kick(), delay).unref();
       }

@@ -133,11 +133,15 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
   minutes.
 - **Three waiting per account.** An account with three renders queued or running is refused a
   fourth with `429 too_many_requests`; asking again for one already waiting is never refused.
-- **Every render is logged** with its voice, priority, attempt, time spent waiting, synthesis
-  time and audio length, the numbers that say whether the pool is big enough.
+- **Every render is logged** as `audio rendered`, with its voice, priority, attempt, line
+  count, time spent waiting, synthesis time, audio length, size in bytes and time from
+  request to ready: the numbers that say whether the pool is big enough. A failed attempt
+  is `audio render failed` at `warn` while it will be tried again, and `audio render gave
+  up` at `error` once it won't. Its message is redacted.
 - **Every request is logged** with its priority and what it found under its key: nothing,
   or a render in some state and at some priority. That is where "was a new note's audio
-  ready by its first play" is read from (`audio-player.md`, "A note just made").
+  ready by its first play" is read from (`audio-player.md`, "A note just made"). A request
+  that put a render on the queue is also logged as `audio queued`.
 
 Storage is behind `AudioStore`: Cloudflare R2 through its S3 API, signed with `aws4fetch`,
 one private bucket per environment (`the-overview-audio`, `the-overview-audio-dev`) with a

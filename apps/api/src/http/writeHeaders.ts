@@ -25,10 +25,23 @@ export interface WrittenRecord {
   rev: number;
   seq: number;
   deleted: boolean;
+  schemaVersion: number;
+  previousSchemaVersion: number | null;
 }
 
 export function sendWritten(reply: FastifyReply, written: WrittenRecord, status: 200 | 201 = 200) {
-  const { kind, id, rev, seq, deleted } = written;
-  reply.request.log.info({ kind, id, rev, seq, deleted }, "record written");
+  const { kind, id, rev, seq, deleted, schemaVersion, previousSchemaVersion } = written;
+  reply.request.log.info(
+    {
+      kind,
+      id,
+      rev,
+      seq,
+      deleted,
+      schemaVersion,
+      ...(previousSchemaVersion !== null && previousSchemaVersion !== schemaVersion ? { migratedFrom: previousSchemaVersion } : {}),
+    },
+    "record written",
+  );
   return reply.status(status).header("etag", `"${rev}"`).send({ id, rev, seq });
 }

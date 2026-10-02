@@ -91,6 +91,7 @@ export function audioRoutes(
       requestedBy: accountId,
       now: clock(),
     });
+    request.log.info({ key, priority, voice, lines: lines.length, status: render.status }, "audio queued");
     queue.kick();
     return reply.status(202).send(describe(render));
   });
