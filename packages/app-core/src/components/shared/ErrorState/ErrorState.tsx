@@ -1,8 +1,10 @@
 import { useCallback, type ReactNode } from "react";
 import { Link } from "react-router";
+import type { ErrorScreen } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError } from "@overview/sync";
 import { Routes } from "../../../app/Routes.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
+import { useAnalytics } from "../../../features/analytics/AnalyticsContext.js";
 import { useReportError } from "../../../features/errors/useReportError.js";
 import { StrokeIcon } from "../StrokeIcon/StrokeIcon.js";
 import styles from "./ErrorState.module.scss";
@@ -16,6 +18,8 @@ export type ErrorStateAction =
   | { label: string; href: string };
 
 export interface ErrorStateProps {
+  // Which dead end this is, for counting what readers do on it; the title is copy.
+  screen: ErrorScreen;
   title: string;
   body?: ReactNode;
   action?: ErrorStateAction | undefined;
@@ -29,8 +33,9 @@ export interface ErrorStateProps {
 // other and a one-action screen doesn't read as having lost its pair. Which actions a
 // case offers is the caller's to say, because offering the wrong one is the harm this
 // screen exists to avoid (docs/features/error-state.md).
-export function ErrorState({ title, body, action, back = false, error }: ErrorStateProps) {
+export function ErrorState({ screen, title, body, action, back = false, error }: ErrorStateProps) {
   const isPanel = useIsPanel();
+  const analytics = useAnalytics();
   useReportError(error, isSyncRequestError(error) || isSyncTransportError(error) ? "failedRequest" : "errorState");
   const focusOnMount = useCallback((element: HTMLElement | null) => element?.focus(), []);
 
@@ -61,6 +66,7 @@ export function ErrorState({ title, body, action, back = false, error }: ErrorSt
                 href={action.href}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => analytics.app.errorState.actionChosen({ screen })}
                 data-testid={errorStateTestIds.action}
               >
                 {action.label}
@@ -69,7 +75,10 @@ export function ErrorState({ title, body, action, back = false, error }: ErrorSt
               <button
                 type="button"
                 className={styles.action}
-                onClick={action.onSelect}
+                onClick={() => {
+                  analytics.app.errorState.actionChosen({ screen });
+                  action.onSelect();
+                }}
                 data-testid={errorStateTestIds.action}
               >
                 {action.label}
@@ -79,6 +88,7 @@ export function ErrorState({ title, body, action, back = false, error }: ErrorSt
             <Link
               to={Routes.home()}
               className={styles.back}
+              onClick={() => analytics.app.errorState.backChosen({ screen })}
               data-testid={errorStateTestIds.back}
             >
               <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}

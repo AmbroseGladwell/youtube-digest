@@ -195,7 +195,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       return <UnreadableOverview record={overviewQuery.error.record} />;
     }
     return (
-      <ErrorState
+      <ErrorState screen="overviewLoad"
         title="Couldn't load this overview"
         error={overviewQuery.error}
         body="Something went wrong reading it. Nothing has been lost."

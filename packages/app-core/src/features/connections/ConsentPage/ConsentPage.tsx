@@ -84,14 +84,14 @@ export function ConsentPage() {
   useOnce(loaded && plan === "free", analytics.mcp.consentScreen.plusRequired);
 
   if (!sync.available) {
-    return <ErrorState title="Accounts need the web app or the extension" back />;
+    return <ErrorState screen="accountsUnavailable" title="Accounts need the web app or the extension" back />;
   }
 
   if (request.isError || isCode(decide.error, "not_found")) {
     return isCode(request.error ?? decide.error, "not_found") ? (
-      <ErrorState title="This request has expired" body={EXPIRED_BODY} back />
+      <ErrorState screen="consentExpired" title="This request has expired" body={EXPIRED_BODY} back />
     ) : (
-      <ErrorState
+      <ErrorState screen="consentLoad"
         title="We couldn't load this request"
         error={request.error ?? decide.error}
         body="The server didn't answer. Check your connection and try again."

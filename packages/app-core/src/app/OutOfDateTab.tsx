@@ -7,7 +7,7 @@ import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 // reload, which is the one thing that does fix it (docs/features/error-state.md).
 export function OutOfDateTab() {
   return (
-    <ErrorState
+    <ErrorState screen="outOfDateTab"
       title="This tab is out of date"
       body="Another window updated your library. Reload to catch up."
       action={{ label: "Reload", onSelect: () => globalThis.location.reload() }}

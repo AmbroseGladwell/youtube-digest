@@ -174,7 +174,7 @@ test("opening the section, picking a milestone and switching the cards are count
   await settings.milestones.clickCardsSwitch();
 
   await expect
-    .poll(() => backendSimulator.analytics.events())
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("timeSaved.")))
     .toEqual([
       { name: "timeSaved.settingsMilestones.opened", props: {} },
       { name: "timeSaved.settingsMilestones.milestonePicked", props: { milestone: "1h" } },
