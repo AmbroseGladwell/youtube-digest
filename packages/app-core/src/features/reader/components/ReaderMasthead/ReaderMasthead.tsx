@@ -6,6 +6,7 @@ import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
@@ -28,7 +29,7 @@ export interface ReaderMastheadProps {
   compact: boolean;
   webApp: OverviewInWebApp;
   listening: boolean;
-  onToggleRead: () => void;
+  onToggleRead: (from: "masthead" | "actionsMenu") => void;
   onToggleFavourite: () => void;
   onTogglePlaying: () => void;
   onListen: () => void;
@@ -71,6 +72,7 @@ export function ReaderMasthead({
   ref,
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
+  const analytics = useReaderAnalytics();
 
   return (
     <header
@@ -83,6 +85,7 @@ export function ReaderMasthead({
           className={styles.backLink}
           to={Routes.home()}
           viewTransition={animateNavigation}
+          onClick={() => analytics.page.backFollowed()}
           data-testid={readerMastheadTestIds.backLink}
         >
           <StrokeIcon name="arrowLeft" size={15} />
@@ -106,7 +109,7 @@ export function ReaderMasthead({
             <button
               type="button"
               className={`${styles.read} ${read ? styles.readActive : ""}`}
-              onClick={onToggleRead}
+              onClick={() => onToggleRead("masthead")}
               aria-pressed={read}
               data-testid={readerMastheadTestIds.readButton}
             >
@@ -151,7 +154,7 @@ export function ReaderMasthead({
           onShare={onShare}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
-          onToggleRead={onToggleRead}
+          onToggleRead={() => onToggleRead("actionsMenu")}
           onDelete={onDelete}
         />
       </div>

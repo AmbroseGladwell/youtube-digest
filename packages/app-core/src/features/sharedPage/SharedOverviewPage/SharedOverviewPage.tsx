@@ -15,6 +15,7 @@ import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { usePlayer } from "../../player/PlayerContext.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { MakeYourOwnAside } from "../components/MakeYourOwnAside/MakeYourOwnAside.js";
 import { SharedOverviewGone } from "../components/SharedOverviewGone/SharedOverviewGone.js";
 import { SharedPageHeader } from "../components/SharedPageHeader/SharedPageHeader.js";
@@ -62,6 +63,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const navigate = useNavigate();
+  const analytics = useAnalytics();
   // Both are measured rather than assumed, because the read-along's scroll margin and the
   // tab strip's own offset are built from them (docs/features/overview-redesign.md).
   const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(MASTHEAD_HEIGHT_PROPERTY);
@@ -133,6 +135,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               type="button"
               className={styles.surfaceAction}
               onClick={() => {
+                analytics.sharedPage.actions.saveChosen();
                 rememberSharedPageIntent({
                   kind: "save",
                   token: payload.token,
@@ -151,6 +154,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               href={note.video.url}
               target="_blank"
               rel="noopener"
+              onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
               data-testid={sharedOverviewPageTestIds.watchButton}
             >
               Watch on YouTube

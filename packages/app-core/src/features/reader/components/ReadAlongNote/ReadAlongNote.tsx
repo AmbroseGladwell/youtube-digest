@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { NoteLine } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
@@ -51,6 +52,7 @@ const keepInTopThird = (line: HTMLElement) => {
 
 export function ReadAlongNote({ lines, activeIndex, lineStartLabels = null, onSelectLine }: ReadAlongNoteProps) {
   const activeLine = useRef<HTMLButtonElement | null>(null);
+  const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
 
   useEffect(() => {
@@ -72,7 +74,10 @@ export function ReadAlongNote({ lines, activeIndex, lineStartLabels = null, onSe
               line.bullet ? styles.bulletLine : ""
             } ${active ? styles.lineActive : ""}`}
             aria-current={active}
-            onClick={() => onSelectLine(index)}
+            onClick={() => {
+              analytics.readAlong.lineChosen();
+              onSelectLine(index);
+            }}
             data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
           >
             {lineStartLabels?.[index] !== undefined && (

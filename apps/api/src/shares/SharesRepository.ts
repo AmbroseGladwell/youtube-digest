@@ -136,4 +136,15 @@ export class SharesRepository {
     );
     return published(rows[0]);
   }
+
+  // Which overview a shared page's events are about, read without counting a visit. A
+  // stopped link still answers, so what its visitors do next is counted too.
+  async overviewFor(token: string): Promise<{ overviewId: string; stopped: boolean } | null> {
+    const rows = await this.#sql.query<{ overview_id: string; revoked_at: Date | null }>(
+      "select overview_id, revoked_at from shares where token = $1",
+      [token],
+    );
+    const row = rows[0];
+    return row === undefined ? null : { overviewId: row.overview_id, stopped: row.revoked_at !== null };
+  }
 }

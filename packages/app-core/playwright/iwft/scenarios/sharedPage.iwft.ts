@@ -1,6 +1,6 @@
 import { ShareToken, shareSnapshot, type Overview, type SharePayload } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
-import { test } from "../../support/fixtures.testHelper.js";
+import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -145,4 +145,46 @@ test("the stretch worth watching offers a way into the video at that moment", as
   const page = await launcher.sharedOverviewPage.verifyIsShown();
 
   await page.verifyOffersToWatchFrom("Watch from 6:05", "https://www.youtube.com/watch?v=example&t=365");
+});
+
+test("what a visitor with no account does is counted against the share, under a view id made for the visit", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedPayload());
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+
+  await page.clickTab("Transcript");
+
+  await expect
+    .poll(() => backendSimulator.analytics.sharedPage.events())
+    .toEqual([
+      { name: "sharedPage.page.opened", props: { stopped: false } },
+      { name: "sharedPage.tabs.switched", props: { tab: "transcript" } },
+    ]);
+  const { token, batch } = backendSimulator.analytics.sharedPage.batches()[0]!;
+  expect(token).toBe(TOKEN);
+  expect(batch.viewId).toMatch(/^[0-9a-f-]{36}$/);
+  expect(backendSimulator.analytics.events()).toEqual([]);
+});
+
+test("a stopped link's visit is counted as one, and so is the visitor making their own", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload({ state: "revoked" });
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await launcher.sharedOverviewPage.verifySaysNoLongerShared();
+
+  await launcher.sharedOverviewPage.clickMakeYourOwnFromGone();
+
+  await expect
+    .poll(() => backendSimulator.analytics.sharedPage.events())
+    .toEqual([
+      { name: "sharedPage.page.opened", props: { stopped: true } },
+      { name: "sharedPage.gone.makeChosen", props: {} },
+    ]);
 });

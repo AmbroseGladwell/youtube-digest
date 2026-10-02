@@ -5,6 +5,7 @@ import { shareStatusLine } from "../../util/shareStatusLine.js";
 import { canShareToSystem, shareToSystem } from "../../util/systemShare.js";
 import styles from "./ShareOverviewDialog.module.scss";
 import { shareOverviewDialogTestIds } from "./ShareOverviewDialogTestIds.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 
 export interface ShareOverviewDialogProps {
   share: Share | null;
@@ -60,8 +61,15 @@ export function ShareOverviewDialog({
     return () => clearTimeout(timer);
   }, [copied]);
 
+  const analytics = useReaderAnalytics();
+  const close = () => {
+    analytics.shareDialog.closed();
+    onClose();
+  };
+
   const copy = () => {
     if (share === null) return;
+    analytics.shareDialog.linkCopied();
     void navigator.clipboard?.writeText(share.url);
     setCopied(true);
   };
@@ -79,7 +87,7 @@ export function ShareOverviewDialog({
               type="button"
               ref={initialFocus}
               className={styles.quietAction}
-              onClick={onClose}
+              onClick={close}
               data-testid={shareOverviewDialogTestIds.cancelButton}
             >
               Cancel
@@ -87,7 +95,10 @@ export function ShareOverviewDialog({
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={onSignIn}
+              onClick={() => {
+                analytics.shareDialog.signInChosen();
+                onSignIn();
+              }}
               data-testid={shareOverviewDialogTestIds.signInButton}
             >
               Sign in
@@ -109,7 +120,10 @@ export function ShareOverviewDialog({
               type="button"
               ref={initialFocus}
               className={styles.quietAction}
-              onClick={() => setConfirmingStop(false)}
+              onClick={() => {
+                analytics.shareDialog.stopCancelled();
+                setConfirmingStop(false);
+              }}
               data-testid={shareOverviewDialogTestIds.keepSharingButton}
             >
               Keep sharing
@@ -117,7 +131,10 @@ export function ShareOverviewDialog({
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={onStop}
+              onClick={() => {
+                analytics.shareDialog.stopped();
+                onStop();
+              }}
               disabled={busy}
               data-testid={shareOverviewDialogTestIds.confirmStopButton}
             >
@@ -158,7 +175,7 @@ export function ShareOverviewDialog({
               type="button"
               ref={initialFocus}
               className={styles.quietAction}
-              onClick={onClose}
+              onClick={close}
               data-testid={shareOverviewDialogTestIds.cancelButton}
             >
               Cancel
@@ -166,7 +183,10 @@ export function ShareOverviewDialog({
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={onCreate}
+              onClick={() => {
+                analytics.shareDialog.created();
+                onCreate();
+              }}
               disabled={busy}
               data-testid={shareOverviewDialogTestIds.createButton}
             >
@@ -201,7 +221,10 @@ export function ShareOverviewDialog({
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={() => void shareToSystem({ title: share.title, url: share.url })}
+              onClick={() => {
+                analytics.shareDialog.systemShareOpened();
+                void shareToSystem({ title: share.title, url: share.url });
+              }}
               data-testid={shareOverviewDialogTestIds.systemShareButton}
             >
               Share… <StrokeIcon name="share" size={16} />
@@ -224,7 +247,10 @@ export function ShareOverviewDialog({
             <button
               type="button"
               className={styles.noticeAction}
-              onClick={onCreate}
+              onClick={() => {
+                analytics.shareDialog.updated();
+                onCreate();
+              }}
               disabled={busy}
               data-testid={shareOverviewDialogTestIds.updateButton}
             >
@@ -242,7 +268,10 @@ export function ShareOverviewDialog({
           <button
             type="button"
             className={styles.dangerAction}
-            onClick={() => setConfirmingStop(true)}
+            onClick={() => {
+              analytics.shareDialog.stopAsked();
+              setConfirmingStop(true);
+            }}
             data-testid={shareOverviewDialogTestIds.stopButton}
           >
             Stop sharing
@@ -251,7 +280,7 @@ export function ShareOverviewDialog({
             type="button"
             ref={initialFocus}
             className={styles.quietAction}
-            onClick={onClose}
+            onClick={close}
             data-testid={shareOverviewDialogTestIds.doneButton}
           >
             Done
@@ -268,11 +297,11 @@ export function ShareOverviewDialog({
       aria-labelledby={HEADING_ID}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        close();
       }}
       onClick={(event) => {
         if (event.target === dialog.current) {
-          onClose();
+          close();
         }
       }}
       data-testid={shareOverviewDialogTestIds.root}
@@ -288,7 +317,7 @@ export function ShareOverviewDialog({
             type="button"
             className={styles.closeButton}
             aria-label="Close"
-            onClick={onClose}
+            onClick={close}
             data-testid={shareOverviewDialogTestIds.closeButton}
           >
             <StrokeIcon name="close" size={16} />

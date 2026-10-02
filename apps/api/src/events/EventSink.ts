@@ -8,7 +8,10 @@ export interface SinkEvent {
 }
 
 export interface EventSource {
-  accountId: AccountId;
+  // Null for someone on a shared link with no account, who is told apart by viewId instead.
+  accountId: AccountId | null;
+  // A shared page's load, made in memory by the page (docs/architecture/analytics.md, "The shared page").
+  viewId?: string;
   context: AnalyticsContext;
   // The caller's address cut to its network (geoAddress), for placing events in a country.
   geoAddress: string | null;
