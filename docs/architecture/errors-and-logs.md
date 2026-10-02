@@ -401,6 +401,49 @@ than 90 days of history.
    arrives.
 5. Do the same for the other two triggers. If spiking turns out noisy, disable it alone.
 
+## Which level
+
+A log says what the system did. What a reader did is an event (`analytics.md`, "Three
+kinds of record"), and the two aren't swapped for each other.
+
+| Level | When | For example |
+|---|---|---|
+| `fatal` | the process can't go on | an exception nothing caught |
+| `error` | something failed that someone must fix: an unexpected exception, a dependency down with no fallback, data that can't be read. It also becomes an issue in error tracking | `unhandled error` |
+| `warn` | degraded but handled: a refusal, a fallback, a retry, a limit hit, a delivery skipped | `request refused`, `client events not forwarded` |
+| `info` | a step that means something to the business, done: once per operation, never once per loop iteration | `record written`, `changes served` |
+| `debug` | detail for local development. Production logs at `info` and drops it | |
+
+**A message** is a short lower-case phrase that says what happened, in the past tense
+(`record written`, not `writeRecord` or `Writing record...`). The fields carry the rest.
+Older lines named in camelCase (`shareCreated`) are renamed as their area is backfilled.
+
+**Every line made while handling a request goes through `request.log`**, never `app.log`.
+`request.log` adds the `reqId`.
+
+### What every request logs
+
+- **A refusal.** Every `ApiError` under `/api`, and every 4xx Fastify raises itself, is
+  logged at `warn` as `request refused`, with `code`, `status` and the client's
+  `clientVersion` when it sent one. The `details` sent to the client aren't logged,
+  because a validation failure's detail can quote what was sent. The route is on the
+  request's own lines.
+- **A 500.** See "The server's own errors".
+
+### Sync
+
+| Line | Level | Fields |
+|---|---|---|
+| `record written` | `info` | `kind`, `id`, `rev`, `seq`, `deleted` |
+| `record already deleted` | `info` | `kind`, `id`: a delete retried after it was done |
+| `changes served` | `info` | `since`, `next`, `count`, `more` |
+
+A conflict (`already_exists`, `revision_mismatch`, `record_newer_than_client`) and a write
+from below the floor (`client_unsupported`) are `request refused` lines. For a note
+that's missing on one device, filter on its `id`: its writes show whether it reached the
+server, and at which `seq`. A line carries no account id, so the other device's
+`changes served` lines can't be found from the note alone.
+
 ## What a log line may carry
 
 A request is logged by its **route**, `{ method, route }`, never by its URL or the

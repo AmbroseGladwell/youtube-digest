@@ -9,6 +9,7 @@ export interface WriteOutcome {
   id: string;
   rev: number;
   seq: number;
+  deleted: boolean;
 }
 
 export interface WriteOperation {
@@ -71,7 +72,7 @@ export class RecordsRepository {
             stored.body === null ? null : JSON.stringify(stored.body),
           ],
         );
-        outcomes.push({ kind, id, rev, seq });
+        outcomes.push({ kind, id, rev, seq, deleted: decision.action === "tombstone" });
       }
       return outcomes;
     });

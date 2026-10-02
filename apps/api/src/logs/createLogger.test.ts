@@ -2,13 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
-import { createLogger } from "./createLogger.js";
-
-const recordingLogger = () => {
-  const lines: Array<Record<string, unknown>> = [];
-  const logger = createLogger([{ write: (chunk: string) => void lines.push(JSON.parse(chunk)) }]);
-  return { lines, logger };
-};
+import { recordingLogger } from "./recordingLogger.testHelper.js";
 
 test("a request is logged under its id by its route, never by a path holding a share token, a query, or the caller's address", async () => {
   const { lines, logger } = recordingLogger();

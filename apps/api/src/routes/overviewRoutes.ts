@@ -113,6 +113,10 @@ export function overviewRoutes(
     ]);
     // On every delete, the retry of one already done included, so a failure here heals.
     await transcripts.forgetUnnoted(accountId);
-    return overview === null || overview === undefined ? reply.status(204).send() : sendWritten(reply, overview);
+    if (overview === null || overview === undefined) {
+      request.log.info({ kind: "overview", id }, "record already deleted");
+      return reply.status(204).send();
+    }
+    return sendWritten(reply, overview);
   });
 }

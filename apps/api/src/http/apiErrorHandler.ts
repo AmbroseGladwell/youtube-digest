@@ -19,9 +19,11 @@ const isFastifyError = (error: unknown): error is FastifyError =>
 export function registerApiErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
+      request.log.warn({ code: error.code, status: error.status, clientVersion: request.client?.version }, "request refused");
       return reply.status(error.status).send(envelope(error));
     }
     if (isFastifyError(error) && error.statusCode !== undefined && error.statusCode < 500) {
+      request.log.warn({ code: "invalid_request", status: 400, clientVersion: request.client?.version }, "request refused");
       return reply
         .status(400)
         .send(envelope(new ApiError("invalid_request", error.message)));

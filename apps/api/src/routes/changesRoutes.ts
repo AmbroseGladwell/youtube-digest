@@ -24,6 +24,7 @@ export function changesRoutes(app: FastifyInstance, records: RecordsRepository):
   app.get("/changes", async (request) => {
     const { since, limit } = parseOrThrow(ChangesQuery, request.query, "The changes query");
     const page = await records.listChanges(request.session!.accountId, since, limit);
+    request.log.info({ since, next: page.next, count: page.changes.length, more: page.more }, "changes served");
     return { changes: page.changes.map(change), next: page.next, more: page.more };
   });
 }

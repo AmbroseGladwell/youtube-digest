@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import type { RecordKind } from "../records/RecordKind.js";
 import { ApiError } from "./ApiError.js";
 
 const IF_MATCH = /^"?([1-9]\d*)"?$/;
@@ -19,12 +20,15 @@ export function ifMatchOf(request: FastifyRequest): number | null {
 export const UpdatedAt = z.iso.datetime({ offset: true }).transform((value) => new Date(value).toISOString());
 
 export interface WrittenRecord {
+  kind: RecordKind;
   id: string;
   rev: number;
   seq: number;
+  deleted: boolean;
 }
 
 export function sendWritten(reply: FastifyReply, written: WrittenRecord, status: 200 | 201 = 200) {
-  const { id, rev, seq } = written;
+  const { kind, id, rev, seq, deleted } = written;
+  reply.request.log.info({ kind, id, rev, seq, deleted }, "record written");
   return reply.status(status).header("etag", `"${rev}"`).send({ id, rev, seq });
 }
