@@ -12,6 +12,7 @@ import { GenerateOverviewForm } from "../GenerateOverviewForm/GenerateOverviewFo
 import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
 import { newOverviewDialogTestIds } from "./NewOverviewDialogTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface NewOverviewDialogProps {
   open: boolean;
@@ -62,7 +63,21 @@ export function NewOverviewDialog({
 
   // Closing a running generation hands it to the status strip; closing anything else is
   // done with it (docs/features/overview-redesign.md, "Generating in the background").
-  const requestClose = () => (inProgress ? onClose() : onDismiss());
+  const analytics = useAnalytics();
+  const closeForm = () => {
+    analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    onDismiss();
+  };
+  const requestClose = () => {
+    if (inProgress) {
+      analytics.capture.newOverviewDialog.closed({ run: "running" });
+      onClose();
+      return;
+    }
+    if (run !== null && run.overview !== null) analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
+    else analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    onDismiss();
+  };
 
   const handleSubmit = (submittedUrl: string) => {
     setUrl(submittedUrl);
@@ -98,7 +113,7 @@ export function NewOverviewDialog({
               <button
                 type="button"
                 className={styles.close}
-                onClick={onDismiss}
+                onClick={closeForm}
                 aria-label="Close"
                 data-testid={newOverviewDialogTestIds.closeButton}
               >
@@ -109,7 +124,7 @@ export function NewOverviewDialog({
               url={url}
               onUrlChange={setUrl}
               onSubmit={handleSubmit}
-              onCancel={onDismiss}
+              onCancel={closeForm}
               generationError={run?.error ?? null}
             />
           </>
@@ -151,6 +166,7 @@ function RunProgress({
   const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const isDone = run.overview !== null;
+  const analytics = useAnalytics();
 
   return (
     <>
@@ -209,7 +225,10 @@ function RunProgress({
             <button
               type="button"
               className={styles.secondaryAction}
-              onClick={onDismiss}
+              onClick={() => {
+                analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
+                onDismiss();
+              }}
               data-testid={newOverviewDialogTestIds.closeWhenDoneButton}
             >
               Close
@@ -217,7 +236,10 @@ function RunProgress({
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={() => onReadOverview(run.overview!)}
+              onClick={() => {
+                analytics.capture.newOverviewDialog.readChosen({ overviewId: run.overview!.id, from: "dialog" });
+                onReadOverview(run.overview!);
+              }}
               data-testid={newOverviewDialogTestIds.readOverviewButton}
             >
               Read overview
@@ -228,7 +250,10 @@ function RunProgress({
             <button
               type="button"
               className={styles.quietAction}
-              onClick={onDismiss}
+              onClick={() => {
+                analytics.capture.newOverviewDialog.runCancelled();
+                onDismiss();
+              }}
               data-testid={newOverviewDialogTestIds.cancelRunButton}
             >
               Cancel
@@ -236,7 +261,10 @@ function RunProgress({
             <button
               type="button"
               className={styles.secondaryAction}
-              onClick={onClose}
+              onClick={() => {
+                analytics.capture.newOverviewDialog.closed({ run: "running" });
+                onClose();
+              }}
               data-testid={newOverviewDialogTestIds.runInBackgroundButton}
             >
               Run in background

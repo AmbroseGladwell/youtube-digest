@@ -25,6 +25,7 @@ import {
 import styles from "./AppShell.module.scss";
 import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
+import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 
@@ -55,6 +56,7 @@ export function AppShell() {
   // outlive both the dialog it was started from and the page it was started on
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
+  const analytics = useAnalytics();
 
   // The injected YouTube button's end of that same run
   // (docs/features/injected-button.md).
@@ -108,7 +110,10 @@ export function AppShell() {
                   <button
                     type="button"
                     className={styles.newOverviewButton}
-                    onClick={newOverview.open}
+                    onClick={() => {
+                      analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                      newOverview.open();
+                    }}
                     aria-haspopup="dialog"
                     aria-expanded={newOverview.dialogOpen}
                     data-testid={appShellTestIds.newOverviewButton}
@@ -156,7 +161,7 @@ export function AppShell() {
           <NewOverviewDialog
             open={newOverview.dialogOpen}
             run={newOverview.run}
-            onSubmit={newOverview.start}
+            onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
             onClose={newOverview.close}
             onDismiss={newOverview.dismiss}
             onReadOverview={readOverview}

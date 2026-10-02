@@ -11,6 +11,8 @@ import { useWatchedTranscriptQuery } from "../../../transcripts/queries/watchedT
 import { isYouTubeUrl } from "../../util/parseYouTubeUrl.js";
 import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -34,10 +36,15 @@ export function GenerateOverviewForm({
   const readiness = useGenerationReadiness();
   const keysReady = readiness === "ready";
   const [validationError, setValidationError] = useState<string | null>(null);
+  const analytics = useAnalytics();
+  useTypingSettled(url, () =>
+    analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "dialog" }),
+  );
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!isYouTubeUrl(url)) {
+      analytics.capture.newOverviewForm.linkRefused({ from: "dialog" });
       setValidationError("That doesn't look like a YouTube URL.");
       return;
     }
@@ -82,7 +89,10 @@ export function GenerateOverviewForm({
         <button
           type="button"
           className={styles.watchingButton}
-          onClick={() => onUrlChange(activeVideoUrl)}
+          onClick={() => {
+            analytics.capture.newOverviewForm.watchingVideoUsed();
+            onUrlChange(activeVideoUrl);
+          }}
           disabled={!keysReady}
           data-testid={generateOverviewFormTestIds.watchingButton}
         >
@@ -94,7 +104,10 @@ export function GenerateOverviewForm({
         <button
           type="button"
           className={styles.pasteButton}
-          onClick={() => void navigator.clipboard.readText().then(onUrlChange)}
+          onClick={() => {
+            analytics.capture.newOverviewForm.clipboardPasted();
+            void navigator.clipboard.readText().then(onUrlChange);
+          }}
           disabled={!keysReady}
           data-testid={generateOverviewFormTestIds.pasteButton}
         >
@@ -112,7 +125,10 @@ export function GenerateOverviewForm({
           {transcriptSourceNote(readiness)}{" "}
           <Link
             to={Routes.settingsSection("keys")}
-            onClick={onCancel}
+            onClick={() => {
+              analytics.capture.newOverviewForm.keysLinkFollowed({ from: "dialog" });
+              onCancel();
+            }}
             data-testid={generateOverviewFormTestIds.settingsLink}
           >
             {settingsLinkLabel(readiness)}

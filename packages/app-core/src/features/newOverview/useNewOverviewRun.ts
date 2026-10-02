@@ -1,12 +1,15 @@
 import { useCallback, useRef, useState } from "react";
-import type { Overview, OverviewId } from "@overview/domain";
+import type { CaptureEntry, CaptureTranscriptSource, Overview, OverviewId } from "@overview/domain";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSetOverviewCaptureReasonMutation } from "../overviews/mutations/useSetOverviewCaptureReasonMutation.js";
 import { captureReasonFromDraft } from "../overviews/util/captureReasonFromDraft.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
+import { captureFailureOf } from "./util/captureFailureOf.js";
 import type { NewOverviewRun } from "./types/NewOverviewRun.js";
 
 export interface StartOverviewRunOptions {
+  from: CaptureEntry;
   overviewId?: OverviewId | undefined;
 }
 
@@ -15,7 +18,7 @@ export interface NewOverviewRunController {
   dialogOpen: boolean;
   open: () => void;
   close: () => void;
-  start: (url: string, options?: StartOverviewRunOptions) => void;
+  start: (url: string, options: StartOverviewRunOptions) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -28,6 +31,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
   const { apiKeys } = useApiKeys();
   const { mutate } = useGenerateOverviewMutation(apiKeys);
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
+  const analytics = useAnalytics();
   const [run, setRun] = useState<NewOverviewRun | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const runIdRef = useRef(0);
@@ -54,9 +58,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
   // The callbacks are stable because the status strip's self-dismiss timer depends on
   // them: a fresh identity every render would restart the countdown on every re-render.
   const start = useCallback(
-    (url: string, options: StartOverviewRunOptions = {}) => {
+    (url: string, options: StartOverviewRunOptions) => {
       const runId = (runIdRef.current += 1);
       const isCurrent = () => runIdRef.current === runId;
+      const { from } = options;
+      const startedAt = Date.now();
+      let transcriptSource: CaptureTranscriptSource | null = null;
+      analytics.capture.newOverview.started({ from });
 
       draftRef.current = "";
       setRun({
@@ -76,6 +84,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
           overviewId: options.overviewId,
           captureReason: () => draftRef.current,
           onProgress: (progress) => {
+            transcriptSource = progress.transcriptSource;
             if (isCurrent()) {
               setRun((current) => (current === null ? null : { ...current, ...progress }));
             }
@@ -88,6 +97,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
               // A keystroke between the pipeline's read and this callback is the one the
               // record would otherwise miss.
               const saved = commitDraftOnto(overview);
+              analytics.capture.newOverview.finished({
+                overviewId: saved.id,
+                from,
+                transcriptSource: transcriptSource ?? "stored",
+                durationMs: Date.now() - startedAt,
+                reasonGiven: saved.captureReason !== null,
+              });
               setRun((current) =>
                 current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },
               );
@@ -95,6 +111,11 @@ export function useNewOverviewRun(): NewOverviewRunController {
           },
           onError: (error) => {
             if (isCurrent()) {
+              analytics.capture.newOverview.failed({
+                from,
+                failure: captureFailureOf(error, { transcriptResolved: transcriptSource !== null }),
+                durationMs: Date.now() - startedAt,
+              });
               setRun((current) =>
                 current === null ? null : { ...current, error: error.message, finishedAt: Date.now() },
               );
@@ -103,7 +124,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
         },
       );
     },
-    [mutate, commitDraftOnto],
+    [mutate, commitDraftOnto, analytics],
   );
 
   const setCaptureReason = useCallback((captureReason: string) => {
