@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { REQUEST_ID_HEADER } from "@overview/domain";
 import { createHttpNarrator } from "./httpNarrator.js";
 import type { NarrationRequest } from "./Narrator.js";
 
@@ -11,9 +12,9 @@ const REQUEST: NarrationRequest = {
 };
 
 const answering = (status: number, body: unknown) => {
-  const calls: { url: string; body: unknown }[] = [];
+  const calls: { url: string; body: unknown; requestId: string | undefined }[] = [];
   const fetchImpl = (async (url: string, init: RequestInit) => {
-    calls.push({ url, body: JSON.parse(String(init.body)) });
+    calls.push({ url, body: JSON.parse(String(init.body)), requestId: (init.headers as Record<string, string>)[REQUEST_ID_HEADER] });
     return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   }) as typeof fetch;
   return { calls, fetchImpl };
@@ -31,9 +32,9 @@ const rendered = (overrides: Record<string, unknown> = {}) => ({
 test("posts the script to the service's /render and hands back the decoded audio and timings", async () => {
   const { calls, fetchImpl } = answering(200, rendered());
 
-  const narration = await createHttpNarrator("http://tts.internal:8000/", fetchImpl).narrate(REQUEST);
+  const narration = await createHttpNarrator("http://tts.internal:8000/", fetchImpl).narrate(REQUEST, "tts-request-0001");
 
-  assert.deepEqual(calls, [{ url: "http://tts.internal:8000/render", body: REQUEST }]);
+  assert.deepEqual(calls, [{ url: "http://tts.internal:8000/render", body: REQUEST, requestId: "tts-request-0001" }]);
   assert.deepEqual(narration, {
     lineStartsSeconds: [0, 1.2],
     durationSeconds: 3.4,
@@ -45,16 +46,16 @@ test("posts the script to the service's /render and hands back the decoded audio
 test("a refusal carries the service's own error code", async () => {
   const { fetchImpl } = answering(409, { error: { code: "render_version_mismatch", message: "renders version 2" } });
 
-  await assert.rejects(createHttpNarrator("http://tts", fetchImpl).narrate(REQUEST), /render_version_mismatch/);
+  await assert.rejects(createHttpNarrator("http://tts", fetchImpl).narrate(REQUEST, "tts-request-0001"), /render_version_mismatch/);
 });
 
 test("audio rendered at another version, or timed for the wrong number of lines, is refused", async () => {
   await assert.rejects(
-    createHttpNarrator("http://tts", answering(200, rendered({ renderVersion: 2 })).fetchImpl).narrate(REQUEST),
+    createHttpNarrator("http://tts", answering(200, rendered({ renderVersion: 2 })).fetchImpl).narrate(REQUEST, "tts-request-0001"),
     /version 2/,
   );
   await assert.rejects(
-    createHttpNarrator("http://tts", answering(200, rendered({ lineStartsSeconds: [0] })).fetchImpl).narrate(REQUEST),
+    createHttpNarrator("http://tts", answering(200, rendered({ lineStartsSeconds: [0] })).fetchImpl).narrate(REQUEST, "tts-request-0001"),
     /1 lines of 2/,
   );
 });

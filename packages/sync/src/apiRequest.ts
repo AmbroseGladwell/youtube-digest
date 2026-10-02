@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   API_ERROR_CODES,
   ApiErrorEnvelope,
+  type AuthSurface,
+  CLIENT_SURFACE_HEADER,
   CLIENT_VERSION,
   CLIENT_VERSION_HEADER,
   REQUEST_ID_HEADER,
@@ -25,6 +27,8 @@ export interface ApiRequesterOptions {
   // (docs/features/sign-in.md).
   token?: string | null | undefined;
   clientVersion?: number | undefined;
+  // Which shell is asking, sent so the server's logs can tell the two apart.
+  surface?: AuthSurface | undefined;
   fetch?: typeof fetch | undefined;
   newRequestId?: () => string;
 }
@@ -42,6 +46,7 @@ export function createApiRequester({
   baseUrl,
   token = null,
   clientVersion = CLIENT_VERSION,
+  surface,
   fetch: fetchImpl = globalThis.fetch,
   newRequestId = () => globalThis.crypto.randomUUID(),
 }: ApiRequesterOptions): ApiRequester {
@@ -61,6 +66,7 @@ export function createApiRequester({
         headers: {
           ...(token === null ? {} : { authorization: `Bearer ${token}` }),
           [CLIENT_VERSION_HEADER]: String(clientVersion),
+          ...(surface === undefined ? {} : { [CLIENT_SURFACE_HEADER]: surface }),
           [REQUEST_ID_HEADER]: requestId,
           ...(body === undefined ? {} : { "content-type": "application/json" }),
           ...(ifMatch === null || ifMatch === undefined ? {} : { "if-match": `"${ifMatch}"` }),

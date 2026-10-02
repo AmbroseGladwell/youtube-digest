@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
+import { bindLogContext } from "../logs/bindLogContext.js";
 import { bearerToken } from "./bearerToken.js";
 import { resolveSession } from "./resolveSession.js";
 import type { Session } from "./Session.js";
@@ -49,6 +50,7 @@ export const sessionPlugin = fp<SessionPluginOptions>(
         );
       }
       request.session = resolved.session;
+      bindLogContext(request, reply, { accountId: resolved.session.accountId, sessionId: resolved.session.id });
     });
   },
 );

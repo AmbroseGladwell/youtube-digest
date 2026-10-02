@@ -6,6 +6,7 @@ import { sessionExpiry } from "./sessionExpiry.js";
 import type { AccountId } from "./AccountId.js";
 
 export interface CreatedSession {
+  id: string;
   token: string;
   accountId: AccountId;
   expiresAt: string;
@@ -25,11 +26,11 @@ export async function createSessionForAccount(
 ): Promise<CreatedSession> {
   const token = generateToken();
   const expiresAt = sessionExpiry(now, sessionTtlDays);
-  await sql.query(
-    "insert into sessions (account_id, token_hash, created_at, expires_at, last_seen_at) values ($1, $2, $3::timestamptz, $4::timestamptz, $3::timestamptz)",
+  const [row] = await sql.query<{ id: string }>(
+    "insert into sessions (account_id, token_hash, created_at, expires_at, last_seen_at) values ($1, $2, $3::timestamptz, $4::timestamptz, $3::timestamptz) returning id",
     [accountId, hashToken(token), now.toISOString(), expiresAt],
   );
-  return { token, accountId, expiresAt };
+  return { id: row!.id, token, accountId, expiresAt };
 }
 
 export async function createSession(

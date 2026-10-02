@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import type { LinkedSession } from "@overview/domain";
 import { createFetchAuthApi, type AuthApi } from "@overview/sync";
+import { useClientSurface } from "../../../app/SurfaceContext.js";
 
 export interface ExchangeLinkCodeVariables {
   apiUrl: string;
@@ -8,8 +9,11 @@ export interface ExchangeLinkCodeVariables {
 }
 
 export const useExchangeLinkCodeMutation = (
-  createApi: (baseUrl: string) => AuthApi = (baseUrl) => createFetchAuthApi({ baseUrl }),
-) =>
-  useMutation<LinkedSession, Error, ExchangeLinkCodeVariables>({
-    mutationFn: ({ apiUrl, code }) => createApi(apiUrl).exchangeLinkCode(code),
+  createApi?: (baseUrl: string) => AuthApi,
+) => {
+  const surface = useClientSurface();
+  const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));
+  return useMutation<LinkedSession, Error, ExchangeLinkCodeVariables>({
+    mutationFn: ({ apiUrl, code }) => api(apiUrl).exchangeLinkCode(code),
   });
+};

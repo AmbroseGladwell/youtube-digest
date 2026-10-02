@@ -112,7 +112,14 @@ export function overviewRoutes(
       { kind: "overviewState", id, decide: (current) => decideTombstone("overviewState", current, null, request.client!) },
     ]);
     // On every delete, the retry of one already done included, so a failure here heals.
-    await transcripts.forgetUnnoted(accountId);
-    return overview === null || overview === undefined ? reply.status(204).send() : sendWritten(reply, overview);
+    const forgotten = await transcripts.forgetUnnoted(accountId);
+    if (forgotten > 0) {
+      request.log.info({ count: forgotten }, "transcripts forgotten");
+    }
+    if (overview === null || overview === undefined) {
+      request.log.info({ kind: "overview", id }, "record already deleted");
+      return reply.status(204).send();
+    }
+    return sendWritten(reply, overview);
   });
 }

@@ -1,8 +1,9 @@
-import { MAX_CLIENT_ERROR_BATCH, type SentClientError } from "@overview/domain";
+import { MAX_CLIENT_ERROR_BATCH, MAX_CLIENT_WARNING_BATCH, type ClientWarning, type SentClientError } from "@overview/domain";
 import type { SendOptions } from "../analytics/AnalyticsQueue.js";
 
 export interface QueuedErrorBatch {
   errors: SentClientError[];
+  warnings?: ClientWarning[];
   dropped?: number;
 }
 
@@ -27,6 +28,7 @@ export class ErrorQueue {
   readonly #batchWindowMs: number;
   readonly #maxPerMinute: number;
   #held: SentClientError[] = [];
+  #heldWarnings: ClientWarning[] = [];
   #dropped = 0;
   #minuteStartedAt = Number.NEGATIVE_INFINITY;
   #inMinute = 0;
@@ -41,18 +43,28 @@ export class ErrorQueue {
   }
 
   record(error: SentClientError): void {
+    if (this.#admit(this.#held.length >= MAX_CLIENT_ERROR_BATCH)) this.#held.push(error);
+  }
+
+  // Warnings share the errors' budget and their batch, so a loop that keeps falling back
+  // can't send more than a loop that keeps throwing.
+  recordWarning(warning: ClientWarning): void {
+    if (this.#admit(this.#heldWarnings.length >= MAX_CLIENT_WARNING_BATCH)) this.#heldWarnings.push(warning);
+  }
+
+  #admit(full: boolean): boolean {
     const now = this.#now().getTime();
     if (now - this.#minuteStartedAt >= MINUTE_MS) {
       this.#minuteStartedAt = now;
       this.#inMinute = 0;
     }
-    if (this.#inMinute >= this.#maxPerMinute || this.#held.length >= MAX_CLIENT_ERROR_BATCH) {
+    if (this.#inMinute >= this.#maxPerMinute || full) {
       this.#dropped += 1;
-      return;
+      return false;
     }
     this.#inMinute += 1;
-    this.#held.push(error);
     this.#timer ??= setTimeout(() => void this.flush(), this.#batchWindowMs);
+    return true;
   }
 
   async flush({ keepalive }: SendOptions = { keepalive: false }): Promise<void> {
@@ -60,19 +72,25 @@ export class ErrorQueue {
       clearTimeout(this.#timer);
       this.#timer = null;
     }
-    if (this.#held.length === 0) return;
+    if (this.#held.length === 0 && this.#heldWarnings.length === 0) return;
     const errors = this.#held;
+    const warnings = this.#heldWarnings;
     const dropped = this.#dropped;
     this.#held = [];
+    this.#heldWarnings = [];
     this.#dropped = 0;
+    const lost = dropped + errors.length + warnings.length;
     if (!this.#canSend()) {
-      this.#dropped += dropped + errors.length;
+      this.#dropped += lost;
       return;
     }
     try {
-      await this.#send(dropped === 0 ? { errors } : { errors, dropped }, { keepalive });
+      await this.#send(
+        { errors, ...(warnings.length === 0 ? {} : { warnings }), ...(dropped === 0 ? {} : { dropped }) },
+        { keepalive },
+      );
     } catch {
-      this.#dropped += dropped + errors.length;
+      this.#dropped += lost;
     }
   }
 
@@ -80,5 +98,6 @@ export class ErrorQueue {
     if (this.#timer !== null) clearTimeout(this.#timer);
     this.#timer = null;
     this.#held = [];
+    this.#heldWarnings = [];
   }
 }
