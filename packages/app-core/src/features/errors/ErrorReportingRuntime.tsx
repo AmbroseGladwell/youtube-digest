@@ -44,6 +44,7 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
         }
         queue.record(toClientError(thrown, { source, handled, trail: trail.entries(), at: new Date() }));
       },
+      warn: (warning) => queue.recordWarning({ ...warning, at: new Date().toISOString() }),
       recordAction: (name) => trail.record(name),
       flush: (options) => queue.flush(options),
     };

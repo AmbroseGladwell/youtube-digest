@@ -10,7 +10,7 @@ import {
 import { generateOverview, type GenerationClient } from "@overview/generation";
 import { countWords } from "../../../util/countWords.js";
 import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
-import { resolveVideo } from "../../transcripts/api/resolveVideo.js";
+import { resolveVideo, type VideoResolutionDeps } from "../../transcripts/api/resolveVideo.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 
@@ -24,6 +24,7 @@ export interface GenerationProgress {
 
 export interface GenerationPipelineDeps {
   sources: TranscriptSource[];
+  warn?: VideoResolutionDeps["warn"];
   generationClient: GenerationClient;
   overviewStore: OverviewStore;
   transcriptStore: TranscriptStore;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OverviewId, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
+import { OverviewId, type ClientWarningReport, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import {
   PREPARING_LONG_AFTER_MS,
@@ -208,6 +208,44 @@ describe("PlayerEngine", () => {
 
       expect(engine.getSnapshot()).toMatchObject({ source: "pacer", pacerReason: "unavailable", status: "playing" });
     }
+  });
+
+  it("narration that fell back to the pacer is reported as a warning, with the failed call's id and code", async () => {
+    const warnings: ClientWarningReport[] = [];
+    const refused = new SyncRequestError("unavailable", 503, "No TTS", undefined, "5f0c2a9e-0000-4000-8000-000000000001");
+    for (const api of [
+      scriptedApi({ request: vi.fn(async () => Promise.reject(refused)) }),
+      scriptedApi({ request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })) }),
+    ]) {
+      const engine = new PlayerEngine({ api, createMedia: () => new FakeMedia(), warn: (warning) => warnings.push(warning) });
+      engine.load(TRACK);
+      engine.play();
+      await settle();
+    }
+
+    expect(warnings).toEqual([
+      {
+        name: "narrationFellBack",
+        reason: "requestFailed",
+        requestId: "5f0c2a9e-0000-4000-8000-000000000001",
+        apiErrorCode: "unavailable",
+      },
+      { name: "narrationFellBack", reason: "renderFailed" },
+    ]);
+  });
+
+  it("a session that has ended is not a warning: the pacer is the right answer to it", async () => {
+    const warnings: ClientWarningReport[] = [];
+    const engine = new PlayerEngine({
+      api: scriptedApi({ request: vi.fn(async () => Promise.reject(new SyncRequestError("unauthenticated", 401, "No"))) }),
+      createMedia: () => new FakeMedia(),
+      warn: (warning) => warnings.push(warning),
+    });
+    engine.load(TRACK);
+    engine.play();
+    await settle();
+
+    expect(warnings).toEqual([]);
   });
 
   it("a session that has ended falls back to the pacer as signed out, not as a failure", async () => {
