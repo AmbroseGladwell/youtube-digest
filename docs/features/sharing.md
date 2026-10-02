@@ -192,9 +192,11 @@ touching the counter, so that is one visit. A stopped link stops counting.
 A count is all that is kept. No address, no user agent, no viewer identity, nothing that
 would make the page a log of who read what.
 
-Shares created and stopped are logged, as `shareCreated` and `shareRevoked`, with whether a
+Shares created and stopped are logged, as `share created` and `share revoked`, with whether a
 create replaced an existing copy and whether the copy carried a transcript or narration —
-and nothing about the overview itself.
+and nothing about the overview itself. A page opened is `share viewed`, and a link that was
+never made or has been stopped is `share page missing` with its `state`. No line carries the
+token.
 
 ## Limits
 

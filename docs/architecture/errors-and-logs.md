@@ -416,7 +416,7 @@ kinds of record"), and the two aren't swapped for each other.
 
 **A message** is a short lower-case phrase that says what happened, in the past tense
 (`record written`, not `writeRecord` or `Writing record...`). The fields carry the rest.
-Older lines named in camelCase (`shareCreated`) are renamed as their area is backfilled.
+Lines named in camelCase before OV-71 (`shareCreated`) have been renamed this way.
 
 **Every line made while handling a request goes through `request.log`**, never `app.log`.
 `request.log` adds the `reqId`, and the ids below once they are known.
@@ -442,8 +442,10 @@ never logged.
 
 ### What every request logs
 
-- **A refusal.** Every `ApiError` under `/api`, and every 4xx Fastify raises itself, is
-  logged at `warn` as `request refused`, with `code` and `status`. Of the `details` sent
+- **A refusal.** Every refusal is logged at `warn` as `request refused` (`logRefused`), with
+  `code` and `status`. That covers every `ApiError` and every 4xx Fastify raises itself, under
+  `/api`, `/s`, `/oauth` and `/mcp`, plus an `/mcp` call without a valid token. An OAuth
+  refusal's `code` is its OAuth error (`invalid_grant`). Of the `details` sent
   to the client, only the ids, numbers and enums are logged (`LOGGED_DETAILS` in
   `apiErrorHandler.ts`): `kind`, `rev` and the schema versions. A validation failure's
   `detail` can quote what was sent, so it's never logged. The route is on the request's
@@ -507,6 +509,13 @@ Mail that can't be sent fails the request, so it's an `unhandled error` with the
 provider's answer (`Brevo answered 503`). It's reported to error tracking like any other
 500, because a reader who can't get a link can't sign in at all. No line carries the
 address, the link or its token.
+
+### Shares
+
+`share created`, `share revoked`, `share viewed` and `share page missing` (`state`:
+`unknown` or `revoked`), all at `info` (`docs/features/sharing.md`, "Counting"). None of
+them carries the token or anything from the note. The owner's lines carry their account and
+session. A viewer's carry nothing about them.
 
 ### The database
 
