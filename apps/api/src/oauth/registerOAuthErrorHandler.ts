@@ -1,11 +1,12 @@
 import type { FastifyError, FastifyInstance } from "fastify";
 import { isApiError } from "../http/ApiError.js";
 import { isOAuthError } from "./OAuthError.js";
+import { reportRequestError, type RequestErrorReporting } from "../errors/reportRequestError.js";
 
 const isFastifyError = (error: unknown): error is FastifyError =>
   typeof error === "object" && error !== null && "code" in error && "statusCode" in error;
 
-export function registerOAuthErrorHandler(app: FastifyInstance): void {
+export function registerOAuthErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
   app.setErrorHandler((error, request, reply) => {
     reply.header("cache-control", "no-store");
     if (isOAuthError(error)) {
@@ -21,6 +22,7 @@ export function registerOAuthErrorHandler(app: FastifyInstance): void {
       return reply.status(400).send({ error: "invalid_request", error_description: error.message });
     }
     request.log.error({ err: error, requestId: request.id }, "unhandled error");
+    reportRequestError(reporting, request, error);
     return reply.status(500).send({ error: "server_error", error_description: "Something went wrong" });
   });
 }

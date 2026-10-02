@@ -1,6 +1,7 @@
 import type { FastifyError, FastifyInstance } from "fastify";
 import type { ApiErrorEnvelope } from "@overview/domain";
 import { ApiError, isApiError } from "./ApiError.js";
+import { reportRequestError, type RequestErrorReporting } from "../errors/reportRequestError.js";
 
 const envelope = (error: ApiError): ApiErrorEnvelope => ({
   error: {
@@ -15,7 +16,7 @@ const isFastifyError = (error: unknown): error is FastifyError =>
 
 // One shape for every failure under /api, and nothing about an unexpected error's cause
 // reaches the client (docs/architecture/api.md).
-export function registerApiErrorHandler(app: FastifyInstance): void {
+export function registerApiErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
       return reply.status(error.status).send(envelope(error));
@@ -26,6 +27,7 @@ export function registerApiErrorHandler(app: FastifyInstance): void {
         .send(envelope(new ApiError("invalid_request", error.message)));
     }
     request.log.error({ err: error, requestId: request.id }, "unhandled error");
+    reportRequestError(reporting, request, error);
     return reply.status(500).send(envelope(new ApiError("internal_error", "Something went wrong")));
   });
 

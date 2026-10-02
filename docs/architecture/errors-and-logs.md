@@ -6,9 +6,10 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has four parts:
+It has five parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
+- the server's own errors, reported the same way
 - the reporter in the app that both shells mount
 - the extension's service worker
 - shipping the server's own logs
@@ -76,6 +77,11 @@ no scheme, host or query, and a function is an identifier with dots and brackets
 that doesn't fit refuses the whole batch with `invalid_request`, as a malformed event batch
 is refused.
 
+**Frame order.** Frames travel and are logged newest call first, as a stack reads, so a log
+line's `top` is the frame that threw. The sink reverses them on the way to PostHog, which
+wants the frame that threw last. Before OV-70 they went unreversed, so issues grouped
+before then may have been grouped by the wrong frame.
+
 **The trail** holds names and times only, because a name is something the catalogue already
 vouches for. The server drops any name that isn't in the catalogue.
 
@@ -97,6 +103,48 @@ a failure, search the logs for `failedRequestId` as a `reqId`. A `dropped` count
 is logged as `client errors dropped`, never as an error or an event ("Actions, not logs" in
 `analytics.md`). The batch is passed to the sink without waiting, and PostHog being down is
 logged as `client errors not forwarded`. The answer is `204` either way.
+
+## The server's own errors
+
+A reader's error and the server's both become issues in PostHog's error tracking, so a
+failure on either side is found in the same place. Before OV-70, a server 500 was a log line
+only.
+
+**What counts.** Only what the server didn't plan for is reported:
+
+- **A 500.** The three error handlers (`/api` and `/s`, `/oauth`, `/mcp`) each log
+  `unhandled error`, then pass the error to `reportRequestError`.
+- **An exception nothing caught, or a rejection nothing handled.** `reportProcessErrors`
+  logs it at `fatal`, reports it, and exits, which is what Node would have done without the
+  handler. It is registered before the migrations run, so a database that refuses the
+  server at boot is reported too.
+
+A 4xx stays a log line. It is the server working: a refused write, an expired session, a
+route that doesn't exist.
+
+**What one carries.** `toServerError` builds it the way `toClientError` does on the device:
+
+- the type, as an identifier
+- the message, through `redactErrorMessage`
+- up to 30 frames, with paths relative to where the server runs. A frame in `node:` or
+  `node_modules/` is marked as not the app's own (`in_app: false`)
+- for a 500, the request's id, method, route (never its URL, as "What a log line may
+  carry" says) and status, and the account or assistant connection it was for
+
+It goes to PostHog with `error_source: "server"` and `surface: "api"`, and
+`mechanism.type` says what caught it: `request`, `uncaughtException` or
+`unhandledRejection`. An error under an account goes under that account's id. One with no
+account, and every process crash, gets a fresh id and no person, as an anonymous reader's
+does. `$geoip_disable` is set, because the address PostHog would see is the server's own.
+
+Reporting never changes the answer or holds it up. The error goes without waiting, and the
+tracker being down is logged as `server error not forwarded`. A crash waits for its one
+report, then ships the logs it still holds and exits. A second crash while the first is
+being sent is logged and not reported again.
+
+**Finding the server's lines.** The `request_id` on a server error is the call's own
+`reqId`, so filtering PostHog's Logs on it shows everything the server logged for that
+call.
 
 ## The client
 
