@@ -7,6 +7,7 @@ import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { useKnownApiUrl } from "../../sync/useKnownApiUrl.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { usePlayer } from "../../player/PlayerContext.js";
+import { useErrorReporter } from "../../errors/ErrorReporterContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
 import { createGenerationClient, createTranscriptSources } from "../api/generationClients.js";
@@ -26,6 +27,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
   const player = usePlayer();
+  const reporter = useErrorReporter();
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
@@ -47,6 +49,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
           ),
           overviewStore,
           transcriptStore,
+          warn: (warning) => reporter.warn(warning),
         },
         { onProgress, isCancelled, overviewId, captureReason },
       );

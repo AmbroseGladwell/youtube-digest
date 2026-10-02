@@ -210,8 +210,30 @@ could take a queued error with it.
 - **The message.** A spoken line is a reader's own words, and an exception can quote one,
   such as a phonemiser failing on a word. So the message goes through
   `redact_error_message`, a port of `redactErrorMessage` tested against the same cases.
-- **Request id.** None yet. The API doesn't pass its `reqId` to the TTS service, and renders
-  run on the API's queue rather than inside a reader's request.
+- **Request id.** The API's queue makes a fresh id for each render attempt, logs it as
+  `ttsRequestId` on `audio rendered` or `audio render failed`, and sends it as
+  `X-Request-Id`. The service logs that call under it as `reqId`. A malformed one is
+  replaced, as the API's own is.
+
+**Its logs** are JSON on stdout in pino's shape (`JsonLogFormatter`): `level` as pino's
+number, `time`, `msg`, `service: "overview-tts"`, the `reqId`, and the line's own fields.
+They ship the way the API's do, through `OtlpLogHandler`, by the same `OTEL_*` variables
+(`otlp_logs_config`, defaulting `service.name` to `overview-tts`), and with none set, to
+PostHog's log ingest under the `POSTHOG_API_KEY` the service already holds. A batch is
+held for two seconds, and the handler is closed as the process exits, so a machine that
+stops 15 seconds after its last render ships its last lines. uvicorn's access log is off,
+because it names the caller's address.
+
+| Line | Level | Fields |
+|---|---|---|
+| `render requested` | `info` | `voice`, `language`, `renderVersion`, `lines`, `characters` |
+| `render finished` | `info` | the same, with `synthesisSeconds`, `audioSeconds` and `bytes` |
+| `render refused` | `warn` | `code` (`unknown_voice`, `render_version_mismatch`, `invalid_request`), `status` |
+| `unhandled error` | `error` | `err`: its type and redacted message. Also reported, as above |
+| `model loaded` / `model failed to load` | `info` / `error` | `loadSeconds` / `err` |
+| `idle, stopping` | `info` | `idleSeconds` |
+
+No line carries a word of the script.
 
 It reads `POSTHOG_API_KEY`, `POSTHOG_HOST` (default the EU host) and `ANALYTICS_ENVIRONMENT`,
 as the API does. Without a key, nothing is reported. The key is the TTS app's own Fly
@@ -261,6 +283,32 @@ as `dropped` on the next batch that gets through. When the page is hidden or lef
 `AnalyticsRuntime` flushes errors before events, both with `keepalive`. Errors are sent
 first because they matter more, and because a browser limits how much can be in flight
 as a page closes.
+
+## Client warnings
+
+Some moments aren't failures but are worth knowing about: something the app depends on let
+it down, and it carried on. They go through `POST /api/errors` as `warnings` beside the
+errors, and the server logs each one at `warn` as `client warning`. That's all it does
+with them. A warning never becomes an error-tracking issue, so it never opens an alert,
+and it isn't an event, because events are what readers did (`analytics.md`, "Actions, not
+logs"). The line carries the reader's account, session and surface, so it sits with the
+server's own lines for that device.
+
+The catalogue is `ClientWarning` in `packages/domain`. Every field is an enum, a count or
+an id:
+
+| Warning | When | Fields |
+|---|---|---|
+| `transcriptFellThrough` | making an overview, a transcript rung threw before another answered, or no rung answered. A rung that had no answer is the ladder working, and alone isn't a warning. Watching detection's background ladder doesn't warn | `passed` (each rung asked and its outcome), `answeredBy` (or `null`) |
+| `narrationFellBack` | the player moved to the pacer because the render failed or didn't match the note, or because asking for it failed. A signed-out reader's pacer isn't a warning | `reason` (`renderFailed`, `requestFailed`), the failed call's `requestId` and `apiErrorCode` |
+
+A **parked sync write** needs no warning. The refusal that parks it is already a
+`request refused` line under the device's session.
+
+Warnings share the error queue's budget of 10 a minute, and its batch, so a loop that
+keeps falling back can't send more than a loop that keeps throwing. The app reports one
+with `ErrorReporter.warn()`. `PlayerEngine` and `resolveVideo` take a `warn` callback,
+which the player's runtime and the generation mutation wire to the reporter.
 
 ## Before the app mounts
 
@@ -416,7 +464,7 @@ kinds of record"), and the two aren't swapped for each other.
 
 **A message** is a short lower-case phrase that says what happened, in the past tense
 (`record written`, not `writeRecord` or `Writing record...`). The fields carry the rest.
-Older lines named in camelCase (`shareCreated`) are renamed as their area is backfilled.
+Lines named in camelCase before OV-71 (`shareCreated`) have been renamed this way.
 
 **Every line made while handling a request goes through `request.log`**, never `app.log`.
 `request.log` adds the `reqId`, and the ids below once they are known.
@@ -429,6 +477,7 @@ for it, `request completed` included:
 | Field | Bound by | Is |
 |---|---|---|
 | `clientVersion` | `clientVersionPlugin` | the version the client sent in `X-Client-Version` |
+| `surface` | `clientVersionPlugin` | `web` or `extension`, from `X-Client-Surface`, which every app-core API client and the extension's worker send. Anything else is left off |
 | `accountId` | `sessionPlugin`, `connectionAccessPlugin` | the opaque account id, the one error tracking and events already carry |
 | `sessionId` | `sessionPlugin` | the session's row id, never its token or the token's hash. Each device signs in separately, so this tells one reader's devices apart |
 | `connectionId` | `connectionAccessPlugin` | the assistant connection an `/mcp` call came through |
@@ -441,13 +490,21 @@ never logged.
 
 ### What every request logs
 
-- **A refusal.** Every `ApiError` under `/api`, and every 4xx Fastify raises itself, is
-  logged at `warn` as `request refused`, with `code` and `status`. Of the `details` sent
+- **A refusal.** Every refusal is logged at `warn` as `request refused` (`logRefused`), with
+  `code` and `status`. That covers every `ApiError` and every 4xx Fastify raises itself, under
+  `/api`, `/s`, `/oauth` and `/mcp`, plus an `/mcp` call without a valid token. An OAuth
+  refusal's `code` is its OAuth error (`invalid_grant`). Of the `details` sent
   to the client, only the ids, numbers and enums are logged (`LOGGED_DETAILS` in
   `apiErrorHandler.ts`): `kind`, `rev` and the schema versions. A validation failure's
   `detail` can quote what was sent, so it's never logged. The route is on the request's
   own lines.
 - **A 500.** See "The server's own errors".
+
+### Versions
+
+A client below the floor trying to write is a `request refused` with
+`code: "client_unsupported"`, its `clientVersion`, `minSupportedClientVersion` and
+`surface`. So "who is still on an old extension" is a filter on those lines.
 
 ### Sync
 
@@ -482,7 +539,8 @@ transcript is found by their `sessionId`, as a missing note is.
 `audio queued`, `audio rendered`, `audio render failed` (`warn`, to be tried again),
 `audio render gave up` (`error`), `audio worker stopped` (`error`) and `audio deleted`.
 The renders run on the API's queue, outside any request, so their lines carry no `reqId` or
-account. They're joined to the request by the audio `key`, which both carry. A failure's
+account. They're joined to the request by the audio `key`, which both carry, and to the TTS
+service's lines by `ttsRequestId` ("The TTS service"). A failure's
 message goes through `redactErrorMessage`, because the TTS service's error can quote a
 spoken line.
 
@@ -500,6 +558,13 @@ Mail that can't be sent fails the request, so it's an `unhandled error` with the
 provider's answer (`Brevo answered 503`). It's reported to error tracking like any other
 500, because a reader who can't get a link can't sign in at all. No line carries the
 address, the link or its token.
+
+### Shares
+
+`share created`, `share revoked`, `share viewed` and `share page missing` (`state`:
+`unknown` or `revoked`), all at `info` (`docs/features/sharing.md`, "Counting"). None of
+them carries the token or anything from the note. The owner's lines carry their account and
+session. A viewer's carry nothing about them.
 
 ### The database
 

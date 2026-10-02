@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MAX_CLIENT_ERROR_BATCH, type SentClientError } from "@overview/domain";
+import { MAX_CLIENT_ERROR_BATCH, type ClientWarning, type SentClientError } from "@overview/domain";
 import { ErrorQueue, type ErrorQueueOptions, type QueuedErrorBatch } from "./ErrorQueue.js";
 
 const error = (message: string): SentClientError => ({
@@ -84,5 +84,22 @@ describe("ErrorQueue", () => {
     await queue.flush();
 
     expect(sent).toEqual([expect.objectContaining({ errors: [expect.objectContaining({ message: "sent" })], dropped: 2 })]);
+  });
+
+  it("sends a warning in the same batch as errors, or alone, and counts it against the same budget", async () => {
+    const { queue, sent } = makeQueue({ maxPerMinute: 2 });
+    const warning: ClientWarning = { name: "narrationFellBack", reason: "renderFailed", at: "2026-10-02T09:00:00.000Z" };
+
+    queue.recordWarning(warning);
+    await queue.flush();
+    queue.record(error("one"));
+    queue.recordWarning(warning);
+    await queue.flush();
+
+    expect(sent).toEqual([
+      expect.objectContaining({ errors: [], warnings: [warning] }),
+      expect.objectContaining({ errors: [expect.objectContaining({ message: "one" })], dropped: 1 }),
+    ]);
+    expect(sent[1]).not.toHaveProperty("warnings");
   });
 });

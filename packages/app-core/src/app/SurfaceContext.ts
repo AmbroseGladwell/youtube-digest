@@ -10,6 +10,12 @@ const SurfaceContext = createContext<Surface | null>(null);
 
 export const SurfaceProvider = SurfaceContext.Provider;
 
+// The surface when there is one, for what only reports it: an API call sends it so the
+// server's logs can tell the shells apart, and works the same without it.
+export function useClientSurface(): Surface | undefined {
+  return useContext(SurfaceContext) ?? undefined;
+}
+
 export function useSurface(): Surface {
   const surface = useContext(SurfaceContext);
   if (!surface) {

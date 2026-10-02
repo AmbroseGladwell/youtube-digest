@@ -17,10 +17,10 @@ test("a request is logged under its id by its route, never by a path holding a s
   const forRequest = lines.filter(({ reqId }) => reqId === "request-0001");
   assert.deepEqual(
     forRequest.map(({ msg }) => msg),
-    ["incoming request", "request completed"],
+    ["incoming request", "share page missing", "request completed"],
   );
   assert.deepEqual(forRequest[0]!.req, { method: "GET", route: "/s/:token" });
-  assert.deepEqual((forRequest[1]!.res as { statusCode: number }).statusCode, 404);
+  assert.deepEqual((forRequest[2]!.res as { statusCode: number }).statusCode, 404);
   const logged = JSON.stringify(lines);
   assert.doesNotMatch(logged, /sharetoken0123456789abcdef|utm_source|reader@example\.com|127\.0\.0\.1|remoteAddress/);
   await testApp.close();

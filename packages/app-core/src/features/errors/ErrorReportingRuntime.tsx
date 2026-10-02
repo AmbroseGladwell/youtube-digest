@@ -7,18 +7,20 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { ActionTrail } from "./ActionTrail.js";
 import { ErrorQueue } from "./ErrorQueue.js";
 import { ErrorReporterProvider, type ErrorReporter } from "./ErrorReporterContext.js";
+import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Signed in or not: an error is reported to the server this shell knows, under the session
 // when there is one (docs/architecture/errors-and-logs.md, "Who is reported").
 export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
   const apiUrl = useKnownApiUrl();
   const { token } = useSyncConnection().connection;
+  const surface = useClientSurface();
   const context = useAnalyticsContext();
   const mirror = useErrorDestinationMirror();
 
   const api = useMemo<ErrorsApi | null>(
-    () => (apiUrl === null ? null : createFetchErrorsApi({ baseUrl: apiUrl, token })),
-    [apiUrl, token],
+    () => (apiUrl === null ? null : createFetchErrorsApi({ baseUrl: apiUrl, token, surface })),
+    [apiUrl, token, surface],
   );
   const latest = useRef({ api, context });
   latest.current = { api, context };
@@ -42,6 +44,7 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
         }
         queue.record(toClientError(thrown, { source, handled, trail: trail.entries(), at: new Date() }));
       },
+      warn: (warning) => queue.recordWarning({ ...warning, at: new Date().toISOString() }),
       recordAction: (name) => trail.record(name),
       flush: (options) => queue.flush(options),
     };

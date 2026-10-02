@@ -15,6 +15,7 @@ import { settingsKeys } from "../settings/settingsKeys.js";
 import { SyncProvider } from "./SyncContext.js";
 import { DEFAULT_SYNC_CONNECTION, useSyncConnection } from "./useSyncConnection.js";
 import { isConnected } from "./types/SyncConnection.js";
+import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Owns the one engine for this tab: built when a server is known, stopped when it goes.
 // Sits above the router so a cycle outlives every navigation, and inside the query
@@ -27,6 +28,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const engine = useRef<SyncEngine | null>(null);
   const connected = syncStorage !== null && isConnected(connection);
   const { apiUrl, token } = connection;
+  const surface = useClientSurface();
 
   useEffect(() => {
     if (syncStorage === null || apiUrl === null) {
@@ -34,7 +36,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       return;
     }
     const started = new SyncEngine({
-      api: createFetchSyncApi({ baseUrl: apiUrl, token }),
+      api: createFetchSyncApi({ baseUrl: apiUrl, token, surface }),
       storage: syncStorage,
       onApplied: () => {
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -50,7 +52,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       unsubscribe();
       engine.current = null;
     };
-  }, [syncStorage, apiUrl, token, queryClient]);
+  }, [syncStorage, apiUrl, token, surface, queryClient]);
 
   const value = useMemo(() => {
     const disconnect = async () => {
@@ -72,12 +74,12 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       // be told about ends on its own, and this device is done with it either way.
       signOut: async () => {
         if (apiUrl !== null) {
-          await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
+          await createFetchAuthApi({ baseUrl: apiUrl, token, surface }).signOut().catch(() => undefined);
         }
         await disconnect();
       },
     };
-  }, [syncStorage, connected, status, setConnection, apiUrl, token]);
+  }, [syncStorage, connected, status, setConnection, apiUrl, token, surface]);
 
   return <SyncProvider value={value}>{children}</SyncProvider>;
 }
