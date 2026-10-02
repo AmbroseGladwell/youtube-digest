@@ -6,10 +6,11 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has six parts:
+It has seven parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
 - the server's own errors, reported the same way
+- the TTS service's errors
 - the reporter in the app that both shells mount
 - what's reported before the app mounts
 - the extension's service worker
@@ -146,6 +147,34 @@ being sent is logged and not reported again.
 **Finding the server's lines.** The `request_id` on a server error is the call's own
 `reqId`, so filtering PostHog's Logs on it shows everything the server logged for that
 call.
+
+## The TTS service
+
+`services/tts` reports its own failures to the same project, the same way: an `$exception`
+over PostHog's batch call, with no SDK (`posthog_exception_reporter.py`). An SDK would
+bring a background thread to a process that exits 15 seconds after its last render and
+could take a queued error with it.
+
+- **What counts.** An exception the FastAPI app has no handler for. It is answered as `500`
+  with code `internal_error` in the API's envelope, and reported. A `ServiceError` (an
+  unknown voice, another render version) and a request that fails validation are the
+  service working, so they aren't reported.
+- **When it goes.** As a background task on the `500`, so the answer goes first and the
+  report doesn't hold it up. The send waits at most five seconds. If it fails, that's
+  logged as `error not forwarded` with the failure's type, and the answer is unchanged.
+- **What it carries.** `error_source: "tts"`, `surface: "tts"`, the environment, a fresh
+  id with no person, and `$geoip_disable`. The frames are Python's own, oldest first, with
+  paths relative to the service's directory. A frame in `site-packages` or outside the
+  service is marked as not its own.
+- **The message.** A spoken line is a reader's own words, and an exception can quote one,
+  such as a phonemiser failing on a word. So the message goes through
+  `redact_error_message`, a port of `redactErrorMessage` tested against the same cases.
+- **Request id.** None yet. The API doesn't pass its `reqId` to the TTS service, and renders
+  run on the API's queue rather than inside a reader's request.
+
+It reads `POSTHOG_API_KEY`, `POSTHOG_HOST` (default the EU host) and `ANALYTICS_ENVIRONMENT`,
+as the API does. Without a key, nothing is reported. The key is the TTS app's own Fly
+secret, imported by `task deploy:tts:secrets` from `services/tts/.env.prod.tpl`.
 
 ## The client
 
@@ -330,6 +359,9 @@ as `POSTHOG_API_KEY` is set. After the deploy, check three things:
   stdout only"
 - the deploy's own lines appear in PostHog's Logs under `overview-api`, and no
   `logs not shipped` line appears on stderr
+
+The TTS service has its own copy of the token. Run `task deploy:tts:secrets` once, after
+which a render that fails reports itself.
 
 ## Not built yet
 
