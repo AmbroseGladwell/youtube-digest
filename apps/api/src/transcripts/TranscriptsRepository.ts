@@ -97,8 +97,8 @@ export class TranscriptsRepository {
     });
   }
 
-  async forgetUnnoted(accountId: AccountId): Promise<void> {
-    await this.#sql.transaction(async (tx) => {
+  async forgetUnnoted(accountId: AccountId): Promise<number> {
+    return this.#sql.transaction(async (tx) => {
       const forgotten = await tx.query<{ video_id: string }>(
         `delete from account_transcripts t
          where t.account_id = $1
@@ -109,6 +109,7 @@ export class TranscriptsRepository {
       for (const { video_id } of forgotten) {
         await this.#forgetUnlinkedPending(tx, video_id);
       }
+      return forgotten.length;
     });
   }
 

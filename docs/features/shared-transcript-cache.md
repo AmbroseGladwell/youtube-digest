@@ -60,7 +60,7 @@ because a rung has to answer with the video as well as its captions.
 | `times-out-of-order` | a segment ends before it starts, or starts before the one before it. Two captions starting on the same millisecond are allowed, because one cue can hold two lines. |
 
 A faulted upload is answered `204` and kept nowhere, neither shared nor on the account,
-and logged as `transcriptRefused` with the fault. It isn't answered `400`, because a `400`
+and logged at `warn` as `transcript refused` with the fault. It isn't answered `400`, because a `400`
 would park the entry in the reader's outbox (`docs/features/sync-client.md`) and show them
 "waiting to send" for a transcript nobody could use.
 
@@ -111,8 +111,9 @@ the copy waits for two fetches from the same kind of source.
 `selectCaptionTrack` is deterministic, so two readers' fetches can agree at all. A rung
 that picked a track by the reader's language would split them.
 
-Each upload's outcome is logged as `transcriptContributed`: `pending`, `confirmed`,
-`already-confirmed` or `not-noted`.
+Each upload's outcome is logged as `transcript stored`, with `contribution` saying
+`pending`, `confirmed` or `already-confirmed`. An upload for a video no live note uses is
+`transcript not kept`, at `warn`, with `contribution: "not-noted"`.
 
 ## Storage: copies, links and contributions, kept apart
 
@@ -179,9 +180,12 @@ The hit rate comes from the server's own logs; the app's analytics don't cover r
 
 | Event | Fields | Answers |
 |---|---|---|
-| `sharedTranscriptRead` | `hit` | how often the cache spares a fetch |
-| `transcriptContributed` | `contribution`, `generated` | how often copies wait, and how often a second account confirms one |
-| `transcriptRefused` | `fault` | what bad uploads look like |
+| `shared transcript read` | `hit` | how often the cache spares a fetch |
+| `transcript stored` | `contribution`, `generated`, `segments` | how often copies wait, and how often a second account confirms one |
+| `transcript not kept` | `contribution`, `generated`, `segments` | how often an upload outlives its note |
+| `transcript refused` | `fault`, `segments` | what bad uploads look like |
+| `transcript served` | | how often an account reads its own copy back |
+| `transcripts forgotten` | `count` | a deleted note taking its transcripts with it |
 | `throttled` | `limit: sharedTranscriptAddress` | whether 300 an hour is ever reached (`docs/architecture/api.md`) |
 
 No video id or address is logged with these.

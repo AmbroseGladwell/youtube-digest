@@ -466,6 +466,14 @@ that's missing on one device:
    pulling. A `request refused` instead means the server turned it away, and its `code`
    says why.
 
+### Transcripts
+
+`docs/features/shared-transcript-cache.md`, "Logs", lists them: `transcript stored`,
+`transcript not kept`, `transcript refused`, `transcript served`, `shared transcript read`
+and `transcripts forgotten`. A transcript line never carries the video id or a word of the
+transcript. A signed-in one carries the account and session, so a reader's missing
+transcript is found by their `sessionId`, as a missing note is.
+
 ## What a log line may carry
 
 A request is logged by its **route**, `{ method, route }`, never by its URL or the
