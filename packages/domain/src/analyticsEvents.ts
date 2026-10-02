@@ -246,6 +246,16 @@ export const analyticsEvents = {
       closed: event("The reader closes the share dialog"),
     },
   }),
+  extension: {
+    injectedButton: {
+      pressed: event("The reader presses the button the extension puts on a YouTube video, and what it did", {
+        outcome: z.enum(["openedHeld", "keysNeeded", "started"]),
+      }),
+    },
+    sidePanel: {
+      opened: event("The reader opens the extension's side panel"),
+    },
+  },
   app: {
     masthead: {
       homeChosen: event("The reader follows the wordmark home"),
