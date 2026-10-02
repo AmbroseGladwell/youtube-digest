@@ -5,3 +5,5 @@ export * from "./IndexedDbOverviewStore.js";
 export * from "./IndexedDbSettingsStore.js";
 export * from "./IndexedDbTranscriptStore.js";
 export * from "./IndexedDbSyncStorage.js";
+export * from "./localDatabaseName.js";
+export * from "./openLocalLibrary.js";

@@ -17,4 +17,6 @@ export { reportStartupFailure, type ReportStartupFailureOptions } from "./app/re
 export { Routes } from "./app/Routes.js";
 export type { Surface } from "./app/SurfaceContext.js";
 export type { Stores } from "./stores/StoresContext.js";
+export type { Library, OpenLibrary } from "./stores/Library.js";
+export { readLibraryAccountId } from "./features/sync/syncConnectionStorage.js";
 export { isYouTubeUrl } from "./features/newOverview/util/parseYouTubeUrl.js";

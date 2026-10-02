@@ -265,10 +265,12 @@ second place to ask for a link.
 **On a phone (9e).** The sign-in and create-account pages swap the bar's actions for a
 single `Not now`.
 
-**Sign-out** tells the server and then disconnects whether or not it answered. A session
-the server could not be told about ends on its own within thirty days; this device is
-done with it either way, and reporting "could not sign out" for a token the device has
-already forgotten would be a control with nothing behind it.
+**Sign-out** lets a sync cycle already running finish, tells the server, and then signs
+this device out whether or not it answered. A session the server could not be told about
+ends on its own within thirty days; this device is done with it either way, and reporting
+"could not sign out" for a token the device has already forgotten would be a control with
+nothing behind it. The account's library stays on the device and the app switches to the
+no-account one (`docs/features/account-libraries.md`).
 
 ## Departures, recorded
 

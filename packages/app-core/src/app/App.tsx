@@ -6,7 +6,8 @@ import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
-import { StoresProvider, type Stores } from "../stores/StoresContext.js";
+import type { Library, OpenLibrary } from "../stores/Library.js";
+import { LibraryRuntime } from "../stores/LibraryRuntime.js";
 import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
 import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
@@ -22,7 +23,8 @@ import type { AppRouter } from "./createAppRouter.js";
 import "../theme/global.scss";
 
 export interface AppProps {
-  stores: Stores;
+  library: Library;
+  openLibrary: OpenLibrary;
   router: AppRouter;
   surface: Surface;
   layout?: AppLayout;
@@ -37,7 +39,8 @@ export interface AppProps {
 }
 
 export function App({
-  stores,
+  library,
+  openLibrary,
   router,
   surface,
   layout = "full",
@@ -57,12 +60,12 @@ export function App({
           <RunBridgeProvider value={runBridge}>
             <LayoutProvider value={layout}>
               <SurfaceProvider value={surface}>
-                <StoresProvider value={stores}>
-                  <AppUpdateProvider value={appUpdate}>
-                    <DefaultApiUrlProvider value={defaultApiUrl}>
-                      <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
-                        <AppBuildProvider value={build}>
-                          <QueryClientProvider client={queryClient}>
+                <AppUpdateProvider value={appUpdate}>
+                  <DefaultApiUrlProvider value={defaultApiUrl}>
+                    <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
+                      <AppBuildProvider value={build}>
+                        <QueryClientProvider client={queryClient}>
+                          <LibraryRuntime library={library} openLibrary={openLibrary}>
                             <SyncRuntime>
                               <ErrorReportingRuntime>
                                 <AnalyticsRuntime>
@@ -74,12 +77,12 @@ export function App({
                                 </AnalyticsRuntime>
                               </ErrorReportingRuntime>
                             </SyncRuntime>
-                          </QueryClientProvider>
-                        </AppBuildProvider>
-                      </ErrorDestinationMirrorProvider>
-                    </DefaultApiUrlProvider>
-                  </AppUpdateProvider>
-                </StoresProvider>
+                          </LibraryRuntime>
+                        </QueryClientProvider>
+                      </AppBuildProvider>
+                    </ErrorDestinationMirrorProvider>
+                  </DefaultApiUrlProvider>
+                </AppUpdateProvider>
               </SurfaceProvider>
             </LayoutProvider>
           </RunBridgeProvider>

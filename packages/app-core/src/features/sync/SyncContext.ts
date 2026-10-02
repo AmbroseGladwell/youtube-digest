@@ -9,9 +9,8 @@ export interface SyncState {
   connected: boolean;
   status: SyncStatus;
   syncNow: () => void;
-  // Stops syncing and forgets the bookkeeping. The records stay.
-  disconnect: () => Promise<void>;
-  // Tells the server to end the session, then disconnects whether or not it answered.
+  // Lets a running cycle finish, tells the server to end the session, then signs this device
+  // out whether or not it answered.
   signOut: () => Promise<void>;
   // Asks the server for a transcript this device does not hold. Null when not signed in.
   fetchTranscript: ((videoId: VideoId) => Promise<StoredTranscript | null>) | null;
@@ -22,7 +21,6 @@ const SyncContext = createContext<SyncState>({
   connected: false,
   status: INITIAL_SYNC_STATUS,
   syncNow: () => undefined,
-  disconnect: () => Promise.resolve(),
   signOut: () => Promise.resolve(),
   fetchTranscript: null,
 });

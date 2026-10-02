@@ -1,15 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter } from "react-router";
-import { App, createAppRouter, OutOfDateTab, reportStartupFailure, StartupFailure } from "@overview/app-core";
 import {
-  IndexedDbOverviewStore,
-  IndexedDbSettingsStore,
-  IndexedDbSyncStorage,
-  LocalDatabaseBlockedError,
-  IndexedDbTranscriptStore,
-  openLocalDatabase,
-} from "@overview/store-local";
+  App,
+  createAppRouter,
+  OutOfDateTab,
+  readLibraryAccountId,
+  reportStartupFailure,
+  StartupFailure,
+  type Library,
+  type OpenLibrary,
+} from "@overview/app-core";
+import { LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 
 async function main() {
@@ -20,9 +22,17 @@ async function main() {
   // render into: it fires long after mount, whenever another tab or the worker upgrades.
   const root = createRoot(container);
 
-  let db: IDBDatabase;
+  const openLibrary: OpenLibrary = async (accountId) => {
+    const { close, ...stores } = await openLocalLibrary({
+      accountId,
+      onSuperseded: () => root.render(<OutOfDateTab />),
+    });
+    return { accountId, stores, close };
+  };
+
+  let library: Library;
   try {
-    db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
+    library = await openLibrary(readLibraryAccountId());
   } catch (error) {
     console.error(error);
     const blocked = error instanceof LocalDatabaseBlockedError;
@@ -31,15 +41,11 @@ async function main() {
     return;
   }
 
-  const syncStorage = new IndexedDbSyncStorage(db);
-  const overviewStore = new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const settingsStore = new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const transcriptStore = new IndexedDbTranscriptStore(db);
-
   root.render(
     <StrictMode>
       <App
-        stores={{ overviewStore, settingsStore, transcriptStore, syncStorage }}
+        library={library}
+        openLibrary={openLibrary}
         router={createAppRouter(createBrowserRouter)}
         surface="web"
         build={appBuild}

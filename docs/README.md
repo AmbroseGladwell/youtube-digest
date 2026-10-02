@@ -120,6 +120,11 @@ Five folders, five different questions.
   write and why it carries the change rather than the record, enrolment, one cycle's order,
   which refusals stop it and which park one write, pending writes rebased over a pull, and
   the three screens.
+- `account-libraries.md` — each account's library on the device: a database per account
+  beside the no-account one, why the app swaps libraries in place rather than remounting,
+  sign-out that waits for the cycle in flight and clears nothing, the extension's worker
+  told which library is open, and the decisions about the move on sign-in, one overview
+  per video and installs already signed in, with what is built so far.
 - `sign-in.md` — magic-link sign-in: why the link is spent by a POST from the page and
   carries its token in the fragment, the cookie the web app gets and the code the
   extension exchanges for its bearer, why the tab that opened an extension link stays

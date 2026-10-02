@@ -134,16 +134,17 @@ test("a web link signs the browser in with a cookie the API then accepts", async
   const response = await signIn(testApp, testApp.mailer.lastToken());
 
   assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.json(), {
-    surface: "web",
-    email: EMAIL,
-    firstName: null,
-    expiresAt: "2026-10-26T09:00:00.000Z",
-  });
   assert.match(setCookie(response), new RegExp(`^${SESSION_COOKIE}=.+; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax; Secure$`));
   const session = await whoAmI(testApp, { cookie: cookiePair(response) });
   assert.equal(session.statusCode, 200);
   assert.equal(session.json().email, EMAIL);
+  assert.deepEqual(response.json(), {
+    surface: "web",
+    accountId: session.json().accountId,
+    email: EMAIL,
+    firstName: null,
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
   await testApp.close();
 });
 
@@ -260,7 +261,9 @@ test("a web app already signed in hands the extension a code that signs it in wi
   assert.equal(exchanged.json().email, EMAIL);
   const bearer = { authorization: `Bearer ${exchanged.json().token}` };
   assert.equal((await whoAmI(testApp, bearer)).json().email, EMAIL);
-  assert.equal((await whoAmI(testApp, { cookie })).statusCode, 200);
+  const webSession = await whoAmI(testApp, { cookie });
+  assert.equal(webSession.statusCode, 200);
+  assert.equal(exchanged.json().accountId, webSession.json().accountId);
   assert.equal(testApp.mailer.sent.length, mailed);
   await testApp.close();
 });

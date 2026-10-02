@@ -45,6 +45,7 @@ import {
 import type {} from "./iwftWindow.testHelper.js";
 
 // What the simulated server hands a signed-in reader (docs/features/sign-in.md).
+export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
@@ -291,7 +292,13 @@ export class BackendSimulator {
                     linkCode: SIMULATED_LINK_CODE,
                     linkCodeExpiresAt: "2026-09-26T09:10:00.000Z",
                   }
-                : { surface: "web", email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+                : {
+                    surface: "web",
+                    accountId: SIMULATED_ACCOUNT_ID,
+                    email: SIMULATED_EMAIL,
+                    firstName: this.#accountFirstName,
+                    expiresAt,
+                  },
           };
         },
         onError: spent,
@@ -304,7 +311,13 @@ export class BackendSimulator {
           this.#linkCodeServers.push(new URL(route.request().url()).origin);
           return {
             status: 200,
-            body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+            body: {
+              token: SIMULATED_BEARER,
+              accountId: SIMULATED_ACCOUNT_ID,
+              email: SIMULATED_EMAIL,
+              firstName: this.#accountFirstName,
+              expiresAt,
+            },
           };
         },
         onError: spent,
@@ -337,7 +350,7 @@ export class BackendSimulator {
                 : {
                     status: 200,
                     body: {
-                      accountId: "account",
+                      accountId: SIMULATED_ACCOUNT_ID,
                       email: SIMULATED_EMAIL,
                       firstName: this.#accountFirstName,
                       expiresAt,

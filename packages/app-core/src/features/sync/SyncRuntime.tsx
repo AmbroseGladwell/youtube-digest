@@ -24,7 +24,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const { connection, setConnection } = useSyncConnection();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SyncStatus>(INITIAL_SYNC_STATUS);
-  const engine = useRef<SyncEngine | null>(null);
+  const engine = useRef<{ engine: SyncEngine; stop: () => void } | null>(null);
   const connected = syncStorage !== null && isConnected(connection);
   const { apiUrl, token } = connection;
 
@@ -42,9 +42,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
       },
     });
-    engine.current = started;
     const unsubscribe = started.subscribe(setStatus);
     const stop = started.start();
+    engine.current = { engine: started, stop };
     return () => {
       stop();
       unsubscribe();
@@ -52,32 +52,28 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
     };
   }, [syncStorage, apiUrl, token, queryClient]);
 
-  const value = useMemo(() => {
-    const disconnect = async () => {
-      const running = engine.current;
-      setConnection(DEFAULT_SYNC_CONNECTION);
-      await running?.whenIdle();
-      await syncStorage?.leave();
-    };
-    return {
+  const value = useMemo(
+    () => ({
       available: syncStorage !== null,
       connected,
       status,
-      syncNow: () => void engine.current?.sync(),
+      syncNow: () => void engine.current?.engine.sync(),
       fetchTranscript: connected
-        ? (videoId: VideoId) => engine.current?.fetchTranscript(videoId) ?? Promise.resolve(null)
+        ? (videoId: VideoId) => engine.current?.engine.fetchTranscript(videoId) ?? Promise.resolve(null)
         : null,
-      disconnect,
-      // The server's answer does not decide the outcome: a session the server could not
-      // be told about ends on its own, and this device is done with it either way.
+      // Nothing is cleared, and the server's answer decides nothing (docs/features/account-libraries.md).
       signOut: async () => {
+        const running = engine.current;
+        running?.stop();
+        await running?.engine.whenIdle();
         if (apiUrl !== null) {
           await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
         }
-        await disconnect();
+        setConnection(DEFAULT_SYNC_CONNECTION);
       },
-    };
-  }, [syncStorage, connected, status, setConnection, apiUrl, token]);
+    }),
+    [syncStorage, connected, status, setConnection, apiUrl, token],
+  );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;
 }

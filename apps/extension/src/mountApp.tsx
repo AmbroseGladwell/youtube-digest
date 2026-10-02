@@ -10,20 +10,17 @@ import {
   type PlaybackSource,
   type RunBridge,
   type YouTubeFetch,
+  type Library,
+  type OpenLibrary,
   OutOfDateTab,
+  readLibraryAccountId,
   reportStartupFailure,
   StartupFailure,
 } from "@overview/app-core";
-import {
-  IndexedDbOverviewStore,
-  IndexedDbSettingsStore,
-  IndexedDbSyncStorage,
-  LocalDatabaseBlockedError,
-  IndexedDbTranscriptStore,
-  openLocalDatabase,
-} from "@overview/store-local";
+import { LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 import { writeErrorDestination } from "./errorDestination.js";
+import { writeLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 
 export interface MountOptions {
@@ -55,9 +52,18 @@ export async function mountApp({
 
   const root = createRoot(container);
 
-  let db: IDBDatabase;
+  const openLibrary: OpenLibrary = async (accountId) => {
+    const { close, ...stores } = await openLocalLibrary({
+      accountId,
+      onSuperseded: () => root.render(<OutOfDateTab />),
+    });
+    await writeLibraryAccount(accountId);
+    return { accountId, stores, close };
+  };
+
+  let library: Library;
   try {
-    db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
+    library = await openLibrary(readLibraryAccountId());
   } catch (error) {
     console.error(error);
     const blocked = error instanceof LocalDatabaseBlockedError;
@@ -68,15 +74,11 @@ export async function mountApp({
     return;
   }
 
-  const syncStorage = new IndexedDbSyncStorage(db);
-  const overviewStore = new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const settingsStore = new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const transcriptStore = new IndexedDbTranscriptStore(db);
-
   root.render(
     <StrictMode>
       <App
-        stores={{ overviewStore, settingsStore, transcriptStore, syncStorage }}
+        library={library}
+        openLibrary={openLibrary}
         appUpdate={openExtensionsPage}
         router={createAppRouter(createHashRouter)}
         surface="extension"

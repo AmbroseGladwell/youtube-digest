@@ -49,11 +49,17 @@ test("asking for a magic link posts the email and the surface, with the client v
 });
 
 test("signing in with a web link answers what the cookie now carries, with no name from a server that sends none", async () => {
-  const { fetch } = answering(200, { surface: "web", email: "reader@example.com", expiresAt: "2026-10-26T09:00:00.000Z" });
+  const { fetch } = answering(200, {
+    surface: "web",
+    accountId: "account-a",
+    email: "reader@example.com",
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
   const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
 
   assert.deepEqual(await api.signIn("t"), {
     surface: "web",
+    accountId: "account-a",
     email: "reader@example.com",
     firstName: null,
     expiresAt: "2026-10-26T09:00:00.000Z",
@@ -83,12 +89,18 @@ test("a spent link is refused as link_invalid", async () => {
 });
 
 test("exchanging a code hands back the extension's bearer", async () => {
-  const { sent, fetch } = answering(200, { token: "bearer-token", email: "reader@example.com", expiresAt: "2026-10-26T09:00:00.000Z" });
+  const { sent, fetch } = answering(200, {
+    token: "bearer-token",
+    accountId: "account-a",
+    email: "reader@example.com",
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
   const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
 
   const linked = await api.exchangeLinkCode("abcd-efgh");
 
   assert.equal(linked.token, "bearer-token");
+  assert.equal(linked.accountId, "account-a");
   assert.deepEqual(sent[0]!.body, { code: "abcd-efgh" });
 });
 

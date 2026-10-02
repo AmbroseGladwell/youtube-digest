@@ -3,7 +3,11 @@ import "../src/theme/global.scss";
 import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import { writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
 import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js";
-import { DEFAULT_SYNC_CONNECTION, SyncConnection } from "../src/features/sync/types/SyncConnection.js";
+import {
+  DEFAULT_SYNC_CONNECTION,
+  libraryAccountIdOf,
+  SyncConnection,
+} from "../src/features/sync/types/SyncConnection.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
@@ -15,12 +19,20 @@ import { InMemoryTranscriptStore } from "./network/InMemoryTranscriptStore.testH
 import { InMemorySyncStorage } from "./network/InMemorySyncStorage.testHelper.js";
 import type {} from "./network/iwftWindow.testHelper.js";
 
-beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
+const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const overviewStore = new InMemoryOverviewStore();
   const settingsStore = new InMemorySettingsStore();
   const transcriptStore = new InMemoryTranscriptStore();
-  const syncStorage =
-    hooksConfig?.syncAvailable === true ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore) : null;
+  const syncStorage = syncAvailable ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore) : null;
+  return { overviewStore, settingsStore, transcriptStore, syncStorage };
+};
+
+beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
+  const syncAvailable = hooksConfig?.syncAvailable === true;
+  const connection = SyncConnection.parse(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION);
+  const seeded = makeStores(syncAvailable);
+  const { overviewStore, settingsStore, transcriptStore } = seeded;
+  const libraries = new Map<string | null, Window["__iwftStores__"]>([[libraryAccountIdOf(connection), seeded]]);
 
   for (const overview of hooksConfig?.seedOverviews ?? []) overviewStore.seedOverview(overview);
   for (const state of hooksConfig?.seedStates ?? []) overviewStore.seedState(state);
@@ -31,10 +43,17 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);
   for (const read of hooksConfig?.failingReads ?? []) overviewStore.failOn(read);
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
-  writeSyncConnection(SyncConnection.parse(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION));
+  writeSyncConnection(connection);
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
 
-  window.__iwftStores__ = { overviewStore, settingsStore, transcriptStore, syncStorage };
+  window.__iwftStores__ = seeded;
+  window.__iwftLibrary__ = { accountId: libraryAccountIdOf(connection), stores: seeded, close: () => undefined };
+  window.__iwftOpenLibrary__ = async (accountId) => {
+    const stores = libraries.get(accountId) ?? makeStores(syncAvailable);
+    libraries.set(accountId, stores);
+    window.__iwftStores__ = stores;
+    return { accountId, stores, close: () => undefined };
+  };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";
   window.__iwftLayout__ = hooksConfig?.layout ?? "full";
   window.__iwftDefaultApiUrl__ = hooksConfig?.defaultApiUrl ?? null;

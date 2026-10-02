@@ -11,15 +11,20 @@ import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.j
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
 import type { InMemorySyncStorage } from "./InMemorySyncStorage.testHelper.js";
+import type { Library, OpenLibrary } from "../../src/stores/Library.js";
 
 declare global {
   interface Window {
+    // The library the app has open now: the one the test seeded, until a sign-in or
+    // sign-out switches it (docs/features/account-libraries.md).
     __iwftStores__: {
       overviewStore: InMemoryOverviewStore;
       settingsStore: InMemorySettingsStore;
       transcriptStore: InMemoryTranscriptStore;
       syncStorage: InMemorySyncStorage | null;
     };
+    __iwftLibrary__: Library;
+    __iwftOpenLibrary__: OpenLibrary;
     __iwftRouter__: AppRouter;
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;

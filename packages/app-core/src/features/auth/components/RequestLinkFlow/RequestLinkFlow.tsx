@@ -114,7 +114,13 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
       {
         onSuccess: (linked) => {
           setWelcomeName(linked.firstName);
-          setConnection({ apiUrl, token: linked.token, email: linked.email, firstName: linked.firstName });
+          setConnection({
+            apiUrl,
+            token: linked.token,
+            accountId: linked.accountId,
+            email: linked.email,
+            firstName: linked.firstName,
+          });
           setPending(null);
         },
         onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
