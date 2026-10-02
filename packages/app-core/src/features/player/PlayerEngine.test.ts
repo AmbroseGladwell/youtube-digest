@@ -293,6 +293,28 @@ describe("PlayerEngine", () => {
     expect(engine.getSnapshot().availability).toBe("onFirstPlay");
   });
 
+  it("asks for what each line says rather than what it shows, keeping a silent line in its place", async () => {
+    const api = scriptedApi();
+    const engine = engineWith(api);
+
+    engine.prepare({
+      ...TRACK,
+      lines: [
+        { ...line("Summary", "Premise", true), spoken: "The premise" },
+        line("Summary", "Three grids are costing reactors back in."),
+        { ...line("Verdict", "Recycled."), spoken: "" },
+        line("Verdict", "Standard advice, e.g. capacity markets."),
+      ],
+    });
+    await settle();
+
+    expect(api.request).toHaveBeenCalledWith(
+      ["The premise", "Three grids are costing reactors back in.", "", "Standard advice, for example capacity markets."],
+      "af_heart",
+      "background",
+    );
+  });
+
   it("a note just made asks for its narration in the background, and leaves the player alone", async () => {
     const api = scriptedApi();
     const engine = engineWith(api);

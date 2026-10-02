@@ -1,4 +1,10 @@
-import { DEFAULT_NARRATION_VOICE, type NarrationRender, type NarrationVoice, type ReadyNarration } from "@overview/domain";
+import {
+  DEFAULT_NARRATION_VOICE,
+  spokenLines,
+  type NarrationRender,
+  type NarrationVoice,
+  type ReadyNarration,
+} from "@overview/domain";
 import { isSyncRequestError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import type {
   PacerReason,
@@ -43,13 +49,14 @@ const IDLE: PlayerSnapshot = {
   narratedVoice: null,
 };
 
-const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) =>
-  a !== null &&
-  a.overviewId === b.overviewId &&
-  a.lines.length === b.lines.length &&
-  a.lines.every((line, index) => line.text === b.lines[index]!.text);
+const scriptOf = (track: PlayerTrack) => spokenLines(track.lines);
 
-const scriptOf = (track: PlayerTrack) => track.lines.map((line) => line.text);
+const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) => {
+  if (a === null || a.overviewId !== b.overviewId || a.lines.length !== b.lines.length) return false;
+  const aScript = scriptOf(a);
+  const bScript = scriptOf(b);
+  return a.lines.every((line, index) => line.text === b.lines[index]!.text && aScript[index] === bScript[index]);
+};
 
 // The one player for the whole app: narrated audio when there is some, the pacer when
 // there is not, and the states between (docs/features/audio-player.md). It lives above the

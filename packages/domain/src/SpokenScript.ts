@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { NoteLine } from "./NoteLine.js";
 import type { SharedNote } from "./SharedNote.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
 import { speakable } from "./speakable.js";
@@ -18,6 +19,10 @@ export const SpokenScript = z
   );
 export type SpokenScript = z.infer<typeof SpokenScript>;
 
+export function spokenLines(lines: NoteLine[]): SpokenScript {
+  return lines.map((line) => speakable(line.spoken ?? line.text));
+}
+
 export function spokenScript(overview: SharedNote): SpokenScript {
-  return overviewNoteLines(overview).map((line) => speakable(line.spoken ?? line.text));
+  return spokenLines(overviewNoteLines(overview));
 }
