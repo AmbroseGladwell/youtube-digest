@@ -15,6 +15,8 @@ export function validateRecordBody(kind: RecordKind, body: Record<string, unknow
   const read = readStoredRecord(stampSchemaVersion(body, schemaVersion), schema, migrations);
   if (read.status === "unreadable") {
     throw new ApiError("invalid_request", `The ${kind} is not valid at schema version ${schemaVersion}`, {
+      kind,
+      schemaVersion,
       detail: read.detail,
     });
   }

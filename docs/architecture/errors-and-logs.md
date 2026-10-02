@@ -442,16 +442,18 @@ never logged.
 ### What every request logs
 
 - **A refusal.** Every `ApiError` under `/api`, and every 4xx Fastify raises itself, is
-  logged at `warn` as `request refused`, with `code` and `status`. The `details` sent to the client aren't logged,
-  because a validation failure's detail can quote what was sent. The route is on the
-  request's own lines.
+  logged at `warn` as `request refused`, with `code` and `status`. Of the `details` sent
+  to the client, only the ids, numbers and enums are logged (`LOGGED_DETAILS` in
+  `apiErrorHandler.ts`): `kind`, `rev` and the schema versions. A validation failure's
+  `detail` can quote what was sent, so it's never logged. The route is on the request's
+  own lines.
 - **A 500.** See "The server's own errors".
 
 ### Sync
 
 | Line | Level | Fields |
 |---|---|---|
-| `record written` | `info` | `kind`, `id`, `rev`, `seq`, `deleted` |
+| `record written` | `info` | `kind`, `id`, `rev`, `seq`, `deleted`, `schemaVersion`, and `migratedFrom` when the write moved a stored record up from an older schema version |
 | `record already deleted` | `info` | `kind`, `id`: a delete retried after it was done |
 | `changes served` | `info` | `since`, `next`, `count`, `more` |
 
