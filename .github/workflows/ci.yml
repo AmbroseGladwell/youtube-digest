@@ -122,6 +122,13 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: npm run build --workspace apps/${{ matrix.app }}
+      # Only main's build is a release, so only it uploads the extension's maps; every other
+      # build deletes them, so no zip ever carries one (docs/architecture/errors-and-logs.md, "Source maps").
+      - if: matrix.app == 'extension'
+        run: node scripts/uploadSourceMaps.mjs apps/extension/dist overview-extension
+        env:
+          POSTHOG_CLI_API_KEY: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.POSTHOG_CLI_API_KEY || '' }}
+          POSTHOG_CLI_PROJECT_ID: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.POSTHOG_CLI_PROJECT_ID || '' }}
       - if: matrix.app == 'extension'
         run: node scripts/packExtension.mjs
       - if: matrix.app == 'extension'
@@ -192,9 +199,16 @@ jobs:
           path: apps/extension/release
       - run: node scripts/verifyRelease.mjs ${{ github.sha }}
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only --build-arg BUILD_COMMIT=${{ github.sha }}
+      # The PostHog key goes in as a build secret, so the image injects and uploads the web
+      # app's maps without any layer keeping it (docs/architecture/errors-and-logs.md, "Source maps").
+      - run: >-
+          flyctl deploy --remote-only --build-arg BUILD_COMMIT=${{ github.sha }}
+          --build-secret POSTHOG_CLI_API_KEY="$POSTHOG_CLI_API_KEY"
+          --build-secret POSTHOG_CLI_PROJECT_ID="$POSTHOG_CLI_PROJECT_ID"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_CLI_PROJECT_ID }}
       - run: curl --fail --silent --show-error https://theoverviewapp.com/api/health
       # A tag marks the first deploy of each version; later deploys under the same number
       # are told apart by the commit Settings shows (docs/architecture/deploy.md).

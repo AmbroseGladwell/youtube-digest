@@ -35,6 +35,8 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
+    // Uploaded to PostHog and deleted before the zip, never shipped (scripts/uploadSourceMaps.mjs).
+    sourcemap: "hidden",
     // Vite's modulepreload polyfill is an inline <script>, which MV3's extension-page CSP
     // refuses to run.
     modulePreload: { polyfill: false },

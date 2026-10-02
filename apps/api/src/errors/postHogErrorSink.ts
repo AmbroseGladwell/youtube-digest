@@ -19,8 +19,9 @@ const exceptionList = ({ type, message, handled, frames }: ClientError) => [
     stacktrace: {
       type: "raw",
       frames: oldestFirst(frames).map((frame) => ({
-        platform: "custom",
-        lang: "javascript",
+        ...(frame.chunkId === undefined
+          ? { platform: "custom", lang: "javascript" }
+          : { platform: "web:javascript", chunk_id: frame.chunkId }),
         function: frame.function,
         filename: frame.file,
         lineno: frame.line,

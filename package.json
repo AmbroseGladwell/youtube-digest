@@ -18,6 +18,7 @@
     "test:tooling": "node --test scripts/*.test.mjs .claude/hooks/*.test.mjs"
   },
   "devDependencies": {
+    "@posthog/cli": "0.18.9",
     "playwright": "1.62.1"
   }
 }

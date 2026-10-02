@@ -6,9 +6,10 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has seven parts:
+It has eight parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
+- source maps, so a minified frame reads as the TypeScript it came from
 - the server's own errors, reported the same way
 - the TTS service's errors
 - the reporter in the app that both shells mount
@@ -58,7 +59,7 @@ the only route that does this.
 | `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker`, `startup` | |
 | `type` | the error's class name, as an identifier | a sentence |
 | `message` | redacted by `redactErrorMessage`, at most 200 characters | URLs, emails, quoted text, ids |
-| `frames` | up to 30: a function name, a path inside the bundle, a line and a column | a page's address, query strings |
+| `frames` | up to 30: a function name, a path inside the bundle, a line and a column, and the chunk id its file was injected with | a page's address, query strings |
 | `requestId` | the failing call's `X-Request-Id`, when it was a call to the API | |
 | `apiErrorCode`, `status` | the API's own answer, when there was one | a code the API doesn't have |
 | `trail` | up to 20 catalogue event names, each with its time | event properties, anything not in the catalogue |
@@ -105,6 +106,45 @@ a failure, search the logs for `failedRequestId` as a `reqId`. A `dropped` count
 is logged as `client errors dropped`, never as an error or an event ("Actions, not logs" in
 `analytics.md`). The batch is passed to the sink without waiting, and PostHog being down is
 logged as `client errors not forwarded`. The answer is `204` either way.
+
+## Source maps
+
+A client's frame is a minified file, line and column until PostHog has that build's source
+map. Both builds make maps (`build.sourcemap: "hidden"`, so no `sourceMappingURL` comment
+points at them), and `scripts/uploadSourceMaps.mjs` hands them to PostHog's CLI and then
+deletes them, so none is ever served or zipped.
+
+**How a frame finds its map.** `posthog-cli sourcemap process` does two things:
+
+- It injects a snippet into each chunk. The snippet records the chunk's id in
+  `globalThis._posthogChunkIds`, keyed by a stack taken inside that chunk. The id is a
+  UUIDv5 of the chunk's content, so the same code gets the same id on every build.
+- It uploads each map under that id, tied to a release named `overview-web` or
+  `overview-extension` at `<version>+<commit>`.
+
+On the device, `parseStackFrames` reads the snippet's map and gives each frame the chunk id
+of its file, the way PostHog's own SDK does. The sink sends a frame that has one as
+`platform: "web:javascript"` with `chunk_id`, which PostHog resolves through the uploaded
+map. A frame without one stays `custom` and reads as it was sent.
+
+**Where it runs.** The CLI's inject step needs the key too, because it registers the release.
+So it runs wherever the shipped bundle is built:
+
+- **The web app** is built inside the image on Fly's builder. The deploy job passes the key
+  and project id as Docker build secrets (`--build-secret`), which no layer keeps.
+- **The extension** is built by CI's `build (extension)` job. Only on a push to `main` does
+  it get the key. Every other build deletes its maps unread.
+
+Without a key, nothing is uploaded and the maps are still deleted. That covers the `image`
+CI job, a pull request, and `task deploy` from a laptop. With a key, an upload that fails
+fails the build. A deploy that silently lost its maps would leave that release's errors
+unreadable, and nobody would know until they needed one.
+
+**The key** is a PostHog personal API key with the *error tracking write* and *organization
+read* scopes. It isn't the project token events use. It lives in GitHub's secrets beside
+`FLY_API_TOKEN`, as `POSTHOG_CLI_API_KEY`, with the project's id as
+`POSTHOG_CLI_PROJECT_ID`. `gh secret set POSTHOG_CLI_API_KEY` asks for the value without
+echoing it.
 
 ## The server's own errors
 
@@ -370,5 +410,3 @@ which a render that fails reports itself.
 - **One copy of the extension's session.** Keeping the connection in `chrome.storage`
   rather than `localStorage` would let the worker read the original rather than a copy.
   It is a larger change to how the app reads its connection in the extension.
-- **Source maps.** Frames are minified paths and positions until a build uploads its maps
-  to PostHog.

@@ -107,6 +107,26 @@ test("frames go to PostHog oldest call first, with the one that threw last", asy
   assert.deepEqual(frames.map(({ function: name }: { function: string }) => name), ["ReaderPage", "readTitle"]);
 });
 
+test("a frame from an injected build goes as web JavaScript with its chunk id, which PostHog resolves through the uploaded map", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogErrorSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+  const chunkId = "0e9b3c7a-5d1f-52a8-b6c4-e2d0f8a17593";
+
+  await sink.capture([{ ...error, frames: [{ ...error.frames[0]!, chunkId }] }], { accountId: ACCOUNT_ID, context, geoAddress: null });
+
+  assert.deepEqual(sent[0]!.body.batch[0]!.properties.$exception_list[0].stacktrace.frames, [
+    {
+      platform: "web:javascript",
+      chunk_id: chunkId,
+      function: "ReaderPage",
+      filename: "assets/index-Bx3k9.js",
+      lineno: 12,
+      colno: 3456,
+      in_app: true,
+    },
+  ]);
+});
+
 test("a refusal is an error, for the route to log", async () => {
   const { fetch } = answering(401);
   const sink = createPostHogErrorSink({ apiKey: "phc_wrong", host: "https://eu.i.posthog.com", environment: "production", fetch });
