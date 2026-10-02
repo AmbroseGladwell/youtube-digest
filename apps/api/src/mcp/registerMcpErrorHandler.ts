@@ -1,11 +1,12 @@
 import type { FastifyError, FastifyInstance } from "fastify";
 import { isApiError } from "../http/ApiError.js";
 import { JSON_RPC_ERRORS, jsonRpcError } from "./handleMcpMessage.js";
+import { reportRequestError, type RequestErrorReporting } from "../errors/reportRequestError.js";
 
 const isFastifyError = (error: unknown): error is FastifyError =>
   typeof error === "object" && error !== null && "code" in error && "statusCode" in error;
 
-export function registerMcpErrorHandler(app: FastifyInstance): void {
+export function registerMcpErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
       return reply.status(error.status).send({ error: error.code, error_description: error.message });
@@ -15,6 +16,7 @@ export function registerMcpErrorHandler(app: FastifyInstance): void {
       return reply.status(error.statusCode).send(jsonRpcError(null, code, error.message));
     }
     request.log.error({ err: error, requestId: request.id }, "unhandled error");
+    reportRequestError(reporting, request, error);
     return reply.status(500).send(jsonRpcError(null, JSON_RPC_ERRORS.internalError, "Something went wrong"));
   });
 }

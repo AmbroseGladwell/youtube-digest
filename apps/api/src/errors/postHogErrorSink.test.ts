@@ -101,3 +101,75 @@ test("a refusal is an error, for the route to log", async () => {
 
   await assert.rejects(sink.capture([error], { accountId: ACCOUNT_ID, context, geoAddress: null }), PostHogDeliveryError);
 });
+
+test("the server's own error goes as an $exception from the api, under the reader it failed, with the call's id and route", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogErrorSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+
+  await sink.captureServerError({
+    caughtBy: "request",
+    type: "DatabaseError",
+    message: "Connection terminated unexpectedly",
+    frames: [{ function: "RecordsRepository.write", file: "apps/api/dist/records/RecordsRepository.js", line: 41, column: 18, inApp: true }],
+    request: { id: "5b0d2c1e-8f3a-4c6d-9e7b-1a2b3c4d5e6f", method: "PUT", route: "/api/overviews/:id", status: 500, accountId: ACCOUNT_ID },
+    at: AT,
+  });
+
+  assert.deepEqual(sent[0]!.body.batch, [
+    {
+      event: "$exception",
+      distinct_id: ACCOUNT_ID,
+      timestamp: AT,
+      properties: {
+        $exception_list: [
+          {
+            type: "DatabaseError",
+            value: "Connection terminated unexpectedly",
+            mechanism: { handled: false, synthetic: false, type: "request" },
+            stacktrace: {
+              type: "raw",
+              frames: [
+                {
+                  platform: "custom",
+                  lang: "javascript",
+                  function: "RecordsRepository.write",
+                  filename: "apps/api/dist/records/RecordsRepository.js",
+                  lineno: 41,
+                  colno: 18,
+                  in_app: true,
+                },
+              ],
+            },
+          },
+        ],
+        error_source: "server",
+        request_id: "5b0d2c1e-8f3a-4c6d-9e7b-1a2b3c4d5e6f",
+        method: "PUT",
+        route: "/api/overviews/:id",
+        status: 500,
+        surface: "api",
+        environment: "production",
+        $geoip_disable: true,
+      },
+    },
+  ]);
+});
+
+test("a crash outside any request goes under no person, and isn't placed where the server is", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogErrorSink({
+    apiKey: "phc_test",
+    host: "https://eu.i.posthog.com",
+    environment: "production",
+    fetch,
+    newDistinctId: () => "anonymous-1",
+  });
+
+  await sink.captureServerError({ caughtBy: "uncaughtException", type: "Error", message: "boom", frames: [], at: AT });
+
+  const [{ distinct_id, properties }] = sent[0]!.body.batch as [Record<string, any>];
+  assert.equal(distinct_id, "anonymous-1");
+  assert.equal(properties.$process_person_profile, false);
+  assert.equal(properties.$geoip_disable, true);
+  assert.ok(!("request_id" in properties));
+});

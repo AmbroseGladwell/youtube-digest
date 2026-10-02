@@ -123,7 +123,7 @@ export async function buildApp({
 
   await app.register(
     async (api) => {
-      registerApiErrorHandler(api);
+      registerApiErrorHandler(api, { errorSink, clock });
       if (config.allowedOrigins.length > 0) {
         await api.register(corsPlugin, { allowedOrigins: config.allowedOrigins });
       }
@@ -187,7 +187,7 @@ export async function buildApp({
   );
 
   await app.register(async (oauth) => {
-    registerOAuthErrorHandler(oauth);
+    registerOAuthErrorHandler(oauth, { errorSink, clock });
     registerFormBodyParser(oauth);
     await oauth.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
     oauth.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
@@ -195,7 +195,7 @@ export async function buildApp({
   });
 
   await app.register(async (mcp) => {
-    registerMcpErrorHandler(mcp);
+    registerMcpErrorHandler(mcp, { errorSink, clock });
     await mcp.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
     mcp.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
     await mcp.register(connectionAccessPlugin, { sql, clock, urls });
@@ -216,7 +216,7 @@ export async function buildApp({
 
   await app.register(
     async (page) => {
-      registerApiErrorHandler(page);
+      registerApiErrorHandler(page, { errorSink, clock });
       await page.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
       page.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
       await sharePagePlugin(page, { shares, appUrl: config.appUrl, staticRoot: config.staticRoot, clock });
