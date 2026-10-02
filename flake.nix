@@ -18,6 +18,9 @@
       devShells = forEachSystem (pkgs: {
         default = pkgs.mkShell {
           packages = [
+            # The shell's macOS SDK has no git, which breaks /usr/bin/git inside it, and fly and
+            # task both shell out to git.
+            pkgs.git
             pkgs.nodejs_22
             pkgs.go-task
             pkgs.postgresql_17

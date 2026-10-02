@@ -29,8 +29,9 @@ Five folders, five different questions.
   anywhere the `OTEL_*` variables name), the Slack alerts for new, reopened and spiking
   issues, what a log line may carry, and how to find a failure's server lines by request id.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
-  Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
-  how the extension gets its id, its server and its store zip.
+  Neon, secrets piped from Bitwarden, what a deploy does and what to check after, the TTS
+  pool deployed from CI only when it changed, and how the extension gets its id, its server
+  and its store zip.
 
 ## `conventions/` — how code gets written here, day to day
 

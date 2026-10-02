@@ -228,3 +228,44 @@ jobs:
             gh release create "v$version" "${zips[@]}" \
               --target "${{ github.sha }}" --title "v$version" --generate-notes
           fi
+
+  # The TTS pool deploys from here too, with its own token, and only when services/tts differs
+  # from what its machines say is live: comparing with the previous push would miss a change
+  # whose run was cancelled by a later merge (docs/architecture/deploy.md, "The TTS service").
+  deploy-tts:
+    name: deploy (tts)
+    runs-on: ubuntu-latest
+    needs: ci
+    if: needs.ci.result == 'success' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    concurrency:
+      group: deploy-tts
+      cancel-in-progress: false
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_TTS_API_TOKEN }}
+    steps:
+      - id: token
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::warning::FLY_TTS_API_TOKEN isn't set, so the TTS service wasn't deployed"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.token.outputs.ready == 'true'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - if: steps.token.outputs.ready == 'true'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - id: decide
+        if: steps.token.outputs.ready == 'true'
+        run: |
+          flyctl machines list --app the-overview-tts --json > "$RUNNER_TEMP/machines.json"
+          node scripts/ttsDeployDecision.mjs decide "$RUNNER_TEMP/machines.json" ${{ github.sha }}
+      - if: steps.decide.outputs.deploy == 'true'
+        working-directory: services/tts
+        run: flyctl deploy --remote-only --ha=false --env DEPLOYED_COMMIT=${{ github.sha }}
+      - if: steps.decide.outputs.deploy == 'true'
+        run: |
+          flyctl machines list --app the-overview-tts --json > "$RUNNER_TEMP/machines.json"
+          node scripts/ttsDeployDecision.mjs verify "$RUNNER_TEMP/machines.json" ${{ github.sha }}
