@@ -486,6 +486,21 @@ account. They're joined to the request by the audio `key`, which both carry. A f
 message goes through `redactErrorMessage`, because the TTS service's error can quote a
 spoken line.
 
+### Sign-in and mail
+
+| Line | Level | Fields |
+|---|---|---|
+| `magic link sent` | `info` | `surface`, `purpose` |
+| `magic link held back` | `warn` | `surface`, `intent`, `reason: "cooldown"`: a second link asked for inside a minute, answered as if sent |
+| `signed in`, `account created` | `info` | `accountId`, `intent`, `surface` |
+| `session created` | `info` | `accountId`, `sessionId`, `surface` |
+| `link code issued` | `info` | `transport` |
+
+Mail that can't be sent fails the request, so it's an `unhandled error` with the
+provider's answer (`Brevo answered 503`). It's reported to error tracking like any other
+500, because a reader who can't get a link can't sign in at all. No line carries the
+address, the link or its token.
+
 ## What a log line may carry
 
 A request is logged by its **route**, `{ method, route }`, never by its URL or the
