@@ -38,7 +38,11 @@ reportProcessErrors({
   clock: () => new Date(),
   exit: () => void Promise.resolve(logExporter?.close()).finally(() => process.exit(1)),
 });
-const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
+const pool = new pg.Pool({ connectionString: config.databaseUrl });
+// An idle connection the database drops is emitted here, and an unheard "error" would
+// crash the process. The pool replaces the connection on the next query.
+pool.on("error", (error) => logger.error({ err: error }, "database connection lost"));
+const sql = createPgSqlClient(pool);
 const applied = await runMigrations(sql);
 const app = await buildApp({ config, sql, mailer: createMailer(config.mail), audio, eventSink, errorSink, logger });
 app.log.info({ applied }, "migrations applied");

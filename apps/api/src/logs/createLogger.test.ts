@@ -37,3 +37,20 @@ test("a request no route matched is logged with no route rather than its path", 
   assert.doesNotMatch(JSON.stringify(lines), /dQw4w9WgXcQ/);
   await testApp.close();
 });
+
+test("an error is logged by its type, redacted message, code and stack, never the fields a database error adds", async () => {
+  const { lines, logger } = recordingLogger();
+  const error = Object.assign(new Error('duplicate key value violates unique constraint "accounts_email_key"'), {
+    code: "23505",
+    detail: "Key (email)=(reader@example.com) already exists.",
+  });
+
+  logger.error({ err: error }, "unhandled error");
+
+  const err = lines[0]!.err as Record<string, unknown>;
+  assert.equal(err.type, "Error");
+  assert.equal(err.code, "23505");
+  assert.match(err.message as string, /duplicate key value/);
+  assert.equal(err.detail, undefined);
+  assert.doesNotMatch(JSON.stringify(lines), /reader@example\.com/);
+});

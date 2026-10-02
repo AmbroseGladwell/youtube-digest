@@ -9,6 +9,7 @@ import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
+import { SLOW_QUERY_MS, timedSqlClient } from "./db/timedSqlClient.js";
 import { eventRoutes } from "./events/eventRoutes.js";
 import { sharedPageEventRoutes } from "./events/sharedPageEventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
@@ -19,6 +20,7 @@ import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { requestIdFor } from "./http/requestIdFor.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
+import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { connectionAccessPlugin } from "./mcp/connectionAccessPlugin.js";
 import { mcpRoutes } from "./mcp/mcpRoutes.js";
@@ -78,6 +80,8 @@ export interface BuildAppOptions {
   clock?: () => Date;
   // The server's pino instance (createLogger); absent, nothing is logged, which is what tests want.
   logger?: FastifyBaseLogger | null;
+  // A query or transaction at least this long is logged as slow.
+  slowQueryMs?: number;
 }
 
 declare module "fastify" {
@@ -95,22 +99,25 @@ declare module "fastify" {
 // update before it is told to sign in (docs/architecture/api.md).
 export async function buildApp({
   config,
-  sql,
+  sql: untimedSql,
   mailer,
   audio = null,
   eventSink = null,
   errorSink = null,
   clock = () => new Date(),
   logger = null,
+  slowQueryMs = SLOW_QUERY_MS,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
     requestIdHeader: false,
     genReqId: requestIdFor,
   });
+  trackCurrentRequest(app);
   app.addHook("onRequest", async (request, reply) => {
     reply.header(REQUEST_ID_HEADER, request.id);
   });
+  const sql = timedSqlClient(untimedSql, { log: () => currentLog(app.log), slowMs: slowQueryMs });
   const sessionCookieSecure = config.appUrl.startsWith("https://");
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
