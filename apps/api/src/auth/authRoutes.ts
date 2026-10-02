@@ -58,16 +58,20 @@ export function authRoutes(
       "The sign-in request",
     );
     const issued = await issueMagicLink(sql, { email, surface, intent, firstName, now: clock() });
-    if (issued !== null) {
+    if (issued === null) {
+      request.log.warn({ surface, intent, reason: "cooldown" }, "magic link held back");
+    } else {
       const creating = intent === "createAccount" && !(await accountExists(sql, issued.email));
+      const purpose = creating ? "createAccount" : "signIn";
       await mailer.sendMagicLink({
         to: issued.email,
         link: signInLink(appUrl, issued.token, surface === "web" ? returnTo : null),
         surface,
-        purpose: creating ? "createAccount" : "signIn",
+        purpose,
         firstName: creating ? firstName : null,
         expiresAt: issued.expiresAt,
       });
+      request.log.info({ surface, purpose }, "magic link sent");
     }
     return reply.status(202).send({ accepted: true });
   });

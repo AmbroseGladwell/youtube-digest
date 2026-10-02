@@ -45,6 +45,7 @@ export interface TestApp {
 export interface TestAppOptions {
   narration?: boolean;
   logger?: FastifyBaseLogger;
+  slowQueryMs?: number;
 }
 
 export const TEST_APP_URL = "https://overview.test";
@@ -53,7 +54,7 @@ export const TEST_APP_URL = "https://overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true, logger }: TestAppOptions = {},
+  { narration = true, logger, slowQueryMs }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql);
@@ -77,6 +78,7 @@ export async function createTestApp(
     errorSink,
     clock: () => clock.now,
     ...(logger === undefined ? {} : { logger }),
+    ...(slowQueryMs === undefined ? {} : { slowQueryMs }),
   });
   await app.ready();
   return {

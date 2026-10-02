@@ -486,6 +486,37 @@ account. They're joined to the request by the audio `key`, which both carry. A f
 message goes through `redactErrorMessage`, because the TTS service's error can quote a
 spoken line.
 
+### Sign-in and mail
+
+| Line | Level | Fields |
+|---|---|---|
+| `magic link sent` | `info` | `surface`, `purpose` |
+| `magic link held back` | `warn` | `surface`, `intent`, `reason: "cooldown"`: a second link asked for inside a minute, answered as if sent |
+| `signed in`, `account created` | `info` | `accountId`, `intent`, `surface` |
+| `session created` | `info` | `accountId`, `sessionId`, `surface` |
+| `link code issued` | `info` | `transport` |
+
+Mail that can't be sent fails the request, so it's an `unhandled error` with the
+provider's answer (`Brevo answered 503`). It's reported to error tracking like any other
+500, because a reader who can't get a link can't sign in at all. No line carries the
+address, the link or its token.
+
+### The database
+
+- **`slow query`** (`warn`), with `durationMs` and `statement`: any query at or over 500 ms
+  (`SLOW_QUERY_MS` in `timedSqlClient.ts`). The statement is the code's own SQL, with
+  whitespace collapsed and cut at 120 characters. Its parameters are the reader's data and
+  are never logged. **`slow transaction`** is the same for a whole transaction.
+- **`database connection lost`** (`error`): the pool's `error` event, for an idle connection
+  the database dropped. Before this, nothing listened for it, and an unheard `error` event
+  crashes the process. The pool replaces the connection on the next query.
+
+A query has no request in hand, so `trackCurrentRequest` (`logs/currentLog.ts`) keeps the
+current request in `AsyncLocalStorage`, and `currentLog` hands the database client that
+request's logger. A slow query then carries the `reqId`, account and session of the
+request that made it. Outside a request, such as the audio queue, it logs on the app's
+logger.
+
 ## What a log line may carry
 
 A request is logged by its **route**, `{ method, route }`, never by its URL or the
@@ -496,6 +527,11 @@ already broken the rate limits' promise never to log an address, and shipping wo
 copied it all to a third party. A request no route matched is logged with `route: null`.
 The response is logged by its status. `createLogger.test.ts` fails if a token, a query or
 an address appears in a line.
+
+**An error** is logged by its type, its message through `redactErrorMessage`, its `code`
+and its stack, and nothing else (`createLogger`'s `err` serializer). pino's own serializer
+copied every field an error has. A Postgres error's `detail` quotes the row it refused
+(`Key (email)=(...)`), so that would have put an address in the logs.
 
 Otherwise the logs are what they were: ids, never names or content
 (`docs/architecture/api.md`).
