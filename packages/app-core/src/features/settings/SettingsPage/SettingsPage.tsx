@@ -27,6 +27,7 @@ import type { SettingsSectionId } from "../SettingsSectionId.js";
 import { useSettingsSections, type SettingsSectionSummary } from "../useSettingsSections.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 
 export interface SettingsPageProps {
   section?: SettingsSectionId;
@@ -67,6 +68,7 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
 // Design OV-51 (docs/features/settings.md): two panes on a wide screen, and on a phone or in
 // the panel the list is the page and each section is a page of its own.
 export function SettingsPage({ section }: SettingsPageProps) {
+  const analytics = useAnalytics();
   const sections = useSettingsSections();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -90,7 +92,12 @@ export function SettingsPage({ section }: SettingsPageProps) {
     return (
       <div className={`${styles.root} ${styles.rootStacked}`} data-testid={settingsPageTestIds.root}>
         <div className={styles.back}>
-          <Link className={styles.backLink} to={Routes.settings()} data-testid={settingsPageTestIds.settingsLink}>
+          <Link
+            className={styles.backLink}
+            to={Routes.settings()}
+            onClick={() => analytics.settings.page.backToSettingsChosen()}
+            data-testid={settingsPageTestIds.settingsLink}
+          >
             <StrokeIcon name="arrowLeft" /> Settings
           </Link>
         </div>
@@ -101,7 +108,12 @@ export function SettingsPage({ section }: SettingsPageProps) {
 
   return (
     <div className={`${styles.root} ${stacked ? styles.rootStacked : ""}`} data-testid={settingsPageTestIds.root}>
-      <Link className={styles.backLink} to={Routes.home()} data-testid={settingsPageTestIds.overviewsLink}>
+      <Link
+        className={styles.backLink}
+        to={Routes.home()}
+        onClick={() => analytics.settings.page.overviewsChosen()}
+        data-testid={settingsPageTestIds.overviewsLink}
+      >
         <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
       </Link>
       <h1 className={styles.title}>Settings</h1>

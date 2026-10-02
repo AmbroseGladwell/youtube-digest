@@ -2,6 +2,9 @@ import { z } from "zod";
 import { OverviewId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
+import { AnthropicModel } from "./AnthropicModel.js";
+import { AuthIntent } from "./AuthIntent.js";
+import { NarrationVoice } from "./NarrationVoice.js";
 import { Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 
@@ -113,6 +116,8 @@ export const AccountMenuItem = z.enum([
   "createAccount",
 ]);
 export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
+export const SettingsSection = z.enum(["account", "voice", "keys", "connections", "milestones", "shared", "plan", "about"]);
+const LinkCodeFrom = z.enum(["emailLink", "webApp"]);
 export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
@@ -287,6 +292,67 @@ export const analyticsEvents = {
       recheckChosen: event("The reader asks to check their plan again after it couldn't be checked"),
     },
   },
+  account: {
+    signIn: {
+      linkRequested: event("The reader asks for a sign-in link; never the address", {
+        intent: AuthIntent,
+        from: z.enum(["signInPage", "consentScreen"]),
+        resend: z.boolean(),
+      }),
+      differentEmailChosen: event("The reader goes back to use a different email address", {
+        from: z.enum(["checkEmail", "enterCode", "consentScreen"]),
+      }),
+      switchChosen: event("The reader switches between signing in and creating an account", { to: AuthIntent }),
+      serverFieldShown: event("The reader asks to name a different server to sign in to"),
+      codeSubmitted: event("The reader types a code into the extension to sign it in; never the code", {
+        from: LinkCodeFrom,
+      }),
+      webAppCodeChosen: event("The reader chooses to sign the extension in with a code from the web app"),
+      emailInsteadChosen: event("The reader goes back from entering a code to signing in by email"),
+      welcomeDone: event("The reader leaves the welcome shown after signing in"),
+      notYouChosen: event("The reader signs out from the consent screen's Not you?"),
+    },
+    linkCode: {
+      copied: event("The reader copies a code for signing the extension in", { from: LinkCodeFrom }),
+      renewed: event("The reader asks for a new code for signing the extension in"),
+    },
+  },
+  settings: {
+    page: {
+      sectionOpened: event("The reader opens a section of Settings from its list", { section: SettingsSection }),
+      backToSettingsChosen: event("The reader goes back from a section to the list of Settings"),
+      overviewsChosen: event("The reader leaves Settings for their overviews"),
+    },
+    apiKeys: {
+      saved: event("The reader saves their keys and model; never a key, only whether one is set", {
+        anthropicKey: z.boolean(),
+        supadataKey: z.boolean(),
+        model: AnthropicModel,
+        modelChanged: z.boolean(),
+      }),
+    },
+    voice: {
+      chosen: event("The reader chooses the voice their notes are narrated in", { voice: NarrationVoice }),
+      samplePlayed: event("The reader plays a voice's sample", { voice: NarrationVoice }),
+      sampleStopped: event("The reader stops a voice's sample", { voice: NarrationVoice }),
+      samplesRetried: event("The reader tries loading the voice samples again"),
+    },
+    sharedLinks: {
+      linkCopied: event("The reader copies a share link from Settings › Shared links", { overviewId: OverviewId }),
+      stopAsked: event("The reader asks to stop sharing from Settings › Shared links", { overviewId: OverviewId }),
+      stopped: event("The reader confirms stopping sharing from Settings › Shared links", { overviewId: OverviewId }),
+      stopCancelled: event("The reader keeps sharing after asking to stop in Settings › Shared links", {
+        overviewId: OverviewId,
+      }),
+    },
+    sync: {
+      syncNowChosen: event("The reader asks to sync now"),
+      signOutChosen: event("The reader signs out from Settings", { signedOutAtServer: z.boolean() }),
+      connectExtensionChosen: event("The reader follows Connect the extension from Settings"),
+      signInChosen: event("The reader follows Sign in from Settings"),
+      createAccountChosen: event("The reader follows Create account from Settings"),
+    },
+  },
   capture: {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
@@ -436,9 +502,18 @@ export const analyticsEvents = {
       plusRequired: event("A reader on Free is told on the consent screen that connecting an assistant needs Plus"),
       approved: event("The reader approves an assistant's request to connect"),
       declined: event("The reader declines an assistant's request to connect", { plan: Plan }),
+      seePlusChosen: event("A reader on Free follows See Plus from the consent screen"),
+      sessionRetried: event("The reader tries checking their account again on the consent screen"),
     },
     settingsConnections: {
       revoked: event("The reader revokes an assistant's access in Settings › Connections"),
+      revokeAsked: event("The reader asks to revoke an assistant's access, before confirming"),
+      revokeKept: event("The reader keeps an assistant's access after asking to revoke it"),
+      addressCopied: event("The reader copies the connector address to give their assistant"),
+      seePlusChosen: event("The reader on Free follows See Plus from Settings › Connections"),
+      signInChosen: event("The reader follows Sign in from Settings › Connections"),
+      createAccountChosen: event("The reader follows Create account from Settings › Connections"),
+      retried: event("The reader tries loading their connections again"),
     },
   },
   timeSaved: {

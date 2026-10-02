@@ -6,6 +6,7 @@ import { isUrl } from "../../util/isUrl.js";
 import { ResendLinkButton } from "../ResendLinkButton/ResendLinkButton.js";
 import styles from "./EnterCode.module.scss";
 import { enterCodeTestIds } from "./EnterCodeTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 interface EnterCodeCommonProps {
   connecting: boolean;
@@ -28,6 +29,7 @@ export function EnterCode(props: EnterCodeProps) {
   const fromEmail = props.from === "emailLink";
   const ids = useId();
   const [code, setCode] = useState("");
+  const analytics = useAnalytics();
   const [empty, setEmpty] = useState(false);
   const [serverUrl, setServerUrl] = useState(props.from === "webApp" ? (props.initialServerUrl ?? "") : "");
   const [serverShown, setServerShown] = useState(props.from === "webApp" && props.initialServerUrl === null);
@@ -50,6 +52,7 @@ export function EnterCode(props: EnterCodeProps) {
       return;
     }
     setEmpty(false);
+    analytics.account.signIn.codeSubmitted({ from: props.from });
     onConnect(code.trim(), serverShown ? serverUrl.trim() : null);
   };
 
@@ -122,7 +125,10 @@ export function EnterCode(props: EnterCodeProps) {
           <button
             type="button"
             className={styles.quiet}
-            onClick={() => setServerShown(true)}
+            onClick={() => {
+              analytics.account.signIn.serverFieldShown();
+              setServerShown(true);
+            }}
             data-testid={enterCodeTestIds.otherServerButton}
           >
             Use a different server

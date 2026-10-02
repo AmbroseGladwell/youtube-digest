@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useState } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./ConnectorSetup.module.scss";
 import { connectorSetupTestIds } from "./ConnectorSetupTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface ConnectorSetupProps {
   label: string;
@@ -31,6 +32,7 @@ export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupPro
     return () => clearTimeout(timer);
   }, [copied]);
 
+  const analytics = useAnalytics();
   const copy = () => {
     void navigator.clipboard.writeText(address).then(
       () => setCopied(true),
@@ -60,7 +62,10 @@ export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupPro
                 type="button"
                 className={styles.copy}
                 aria-label="Copy connector address"
-                onClick={copy}
+                onClick={() => {
+                  analytics.mcp.settingsConnections.addressCopied();
+                  copy();
+                }}
                 data-testid={connectorSetupTestIds.copyButton}
               >
                 <StrokeIcon name="copy" size={14} />

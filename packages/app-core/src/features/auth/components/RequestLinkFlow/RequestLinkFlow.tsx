@@ -23,6 +23,7 @@ import { EmailLinkForm, type EmailLinkFormValues } from "../EmailLinkForm/EmailL
 import { EnterCode } from "../EnterCode/EnterCode.js";
 import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface RequestLinkFlowProps {
   intent: AuthIntent;
@@ -59,6 +60,8 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const sent = inExtension ? pending : sentHere;
   const setSent = inExtension ? setPending : setSentHere;
 
+  const analytics = useAnalytics();
+
   if (!sync.available) {
     return <ErrorState screen="accountsUnavailable" title="Accounts need the web app or the extension" back />;
   }
@@ -68,7 +71,10 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
       <SignedInWelcome
         firstName={welcomeName}
         overviewCount={overviewCount}
-        onDone={() => void navigate(Routes.home(), { replace: true })}
+        onDone={() => {
+          analytics.account.signIn.welcomeDone();
+          void navigate(Routes.home(), { replace: true });
+        }}
       />
     );
   }
@@ -77,7 +83,8 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
     return <Navigate to={Routes.home()} replace />;
   }
 
-  const ask = (apiUrl: string, email: string, askedIntent: AuthIntent, firstName: string | null) => {
+  const ask = (apiUrl: string, email: string, askedIntent: AuthIntent, firstName: string | null, resend: boolean) => {
+    analytics.account.signIn.linkRequested({ intent: askedIntent, from: "signInPage", resend });
     setRefused(null);
     requestLink.mutate(
       {
@@ -116,6 +123,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   };
 
   const startOver = () => {
+    analytics.account.signIn.differentEmailChosen({ from: inExtension ? "enterCode" : "checkEmail" });
     setLastEmail(sent?.email ?? "");
     requestLink.reset();
     exchangeCode.reset();
@@ -124,7 +132,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   };
 
   if (sent !== null) {
-    const resend = () => ask(sent.apiUrl, sent.email, sent.intent, sent.firstName);
+    const resend = () => ask(sent.apiUrl, sent.email, sent.intent, sent.firstName, true);
     if (inExtension) {
       return (
         <EnterCode
@@ -163,6 +171,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         connecting={exchangeCode.isPending}
         refused={codeRefused}
         onEmailInstead={() => {
+          analytics.account.signIn.emailInsteadChosen();
           exchangeCode.reset();
           setCodeRefused(null);
           setCodeFromWebApp(false);
@@ -208,14 +217,24 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
           expired ? undefined : creating ? (
             <>
               {shortSwitch ? "Have an account?" : "Already have an account?"}{" "}
-              <Link to={Routes.signIn()} replace data-testid={requestLinkFlowTestIds.switchLink}>
+              <Link
+                to={Routes.signIn()}
+                replace
+                onClick={() => analytics.account.signIn.switchChosen({ to: "signIn" })}
+                data-testid={requestLinkFlowTestIds.switchLink}
+              >
                 Sign in
               </Link>
             </>
           ) : (
             <>
               New here?{" "}
-              <Link to={Routes.createAccount()} replace data-testid={requestLinkFlowTestIds.switchLink}>
+              <Link
+                to={Routes.createAccount()}
+                replace
+                onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
+                data-testid={requestLinkFlowTestIds.switchLink}
+              >
                 Create an account
               </Link>
               {offersWebAppCode && (
@@ -224,7 +243,10 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
                   Signed in on the web app?{" "}
                   <button
                     type="button"
-                    onClick={() => setCodeFromWebApp(true)}
+                    onClick={() => {
+                      analytics.account.signIn.webAppCodeChosen();
+                      setCodeFromWebApp(true);
+                    }}
                     data-testid={requestLinkFlowTestIds.webAppCodeButton}
                   >
                     Enter a code
@@ -238,7 +260,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         refused={refused}
         onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
           const apiUrl = serverUrl ?? knownServer;
-          if (apiUrl !== null) ask(apiUrl, email, intent, firstName);
+          if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
         }}
       />
     </AuthScreen>

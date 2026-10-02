@@ -74,7 +74,7 @@ test.describe("Settings › Connections", () => {
     test.expect(backendSimulator.connections.revoked()).toEqual(["claude"]);
     await test
       .expect.poll(() => backendSimulator.analytics.eventNames().filter((name) => name.startsWith("mcp.")))
-      .toEqual(["mcp.settingsConnections.revoked"]);
+      .toEqual(["mcp.settingsConnections.revokeAsked", "mcp.settingsConnections.revoked"]);
   });
 
   test("a revoke the server refused puts the row back and says so", async ({ launcher, backendSimulator }) => {
