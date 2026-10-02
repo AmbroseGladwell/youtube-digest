@@ -176,11 +176,13 @@ jobs:
   # A merge to main that passed everything above is a release. Deploys queue rather than
   # cancel each other, so a second merge waits for the first machine to come up healthy
   # (docs/architecture/deploy.md).
+  # The app goes out only once the TTS pool has, so an app that sends something new never
+  # reaches a pool that refuses it (docs/architecture/deploy.md, "Deploy order").
   deploy:
     name: deploy
     runs-on: ubuntu-latest
-    needs: ci
-    if: needs.ci.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [ci, deploy-tts]
+    if: needs.ci.result == 'success' && needs.deploy-tts.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
     concurrency:

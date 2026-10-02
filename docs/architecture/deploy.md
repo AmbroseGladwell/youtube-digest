@@ -346,6 +346,32 @@ Without it, the job skips with a warning rather than failing `main`. Deploying b
 `fly deploy --remote-only --ha=false` from `services/tts`, still works. The app's one secret,
 `POSTHOG_API_KEY`, stays a one-off `task deploy:tts:secrets`, because CI can't read Bitwarden.
 
+### Deploy order
+
+The app's `deploy` job waits for `deploy (tts)`, and goes out only if it succeeded. When
+`services/tts` hasn't changed, that job skips in seconds, so the app is barely held up. When
+it has, the app waits until every machine reports the new commit. Without the TTS token, the
+TTS job passes with its warning and the app deploys as before.
+
+TTS first is the safe order for the usual change: the pool learns to accept something, and
+the app starts sending it. OV-69 was one: the pool started accepting an empty line (a line
+shown but not spoken), which the pool before it refused. The rule that comes with the order:
+**a change to `services/tts` must keep working with the app that is already live**, because
+for the length of a deploy it will be. Two kinds of change can't meet that, and no order fixes
+them, so they ship as two PRs:
+
+- **The pool stops accepting something** (a stricter limit, a language dropped): first a PR
+  where the app stops sending it, then the one where the pool stops accepting it.
+- **The render version changes** (`RENDER_VERSION` in the service, `NARRATION_RENDER_VERSION`
+  in the domain): the pool refuses any version but its own, so until both match, every render
+  fails. First a PR where the pool accepts both versions, then the app's bump, then a PR that
+  drops the old one.
+
+A flag on the merge (a PR label, or a commit trailer) could choose app first for a single run,
+with a second TTS job after `deploy`. It isn't built: the only change it would serve is the
+first kind above, which is safer as two PRs anyway, because the old app is live during any
+deploy.
+
 Narration is kept in the private R2 bucket `the-overview-audio`, in Cloudflare account
 `781691f32a5cf03b132121e499f510a4`, through a token scoped to that bucket only.
 `.env.prod.tpl` carries its two keys, which `task deploy:secrets` imports; `fly.toml`'s `[env]`
