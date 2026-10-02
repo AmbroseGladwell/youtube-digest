@@ -12,8 +12,26 @@ test("speaks every note line in order, headings included, so a timing's index is
 
   const script = spokenScript(overview);
 
+  assert.equal(script.length, overviewNoteLines(overview).length + 1);
+  assert.equal(script[0], "Example, from Example Channel.");
+  assert.equal(script[1], "The premise");
+});
+
+test("opens with the video's title, channel and month of publication, tidied for speech", () => {
+  const overview = makeOverview();
+  const script = spokenScript({
+    ...overview,
+    video: { ...overview.video, title: "Arms (Guaranteed!)", publishedAt: "2024-05-02T10:00:00Z" },
+  });
+
+  assert.equal(script[0], "Arms, from Example Channel, published in May 2024.");
+});
+
+test("leaves the opening out when the video names nothing to open with", () => {
+  const overview = makeOverview();
+  const script = spokenScript({ ...overview, video: { ...overview.video, title: "", channel: "" } });
+
   assert.equal(script.length, overviewNoteLines(overview).length);
-  assert.equal(script[0], "The premise");
 });
 
 test("passes over the verdict label with an empty entry rather than dropping its line", () => {
@@ -21,7 +39,7 @@ test("passes over the verdict label with an empty entry rather than dropping its
     verdict: { novelty: "recycled", dubious: false, reasoning: "Standard advice.", similarTo: [] },
   });
 
-  const script = spokenScript(overview);
+  const script = spokenScript(overview).slice(1);
   const labelIndex = overviewNoteLines(overview).findIndex((line) => line.text === "Recycled.");
 
   assert.equal(script[labelIndex], "");

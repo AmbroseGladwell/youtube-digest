@@ -43,6 +43,23 @@ test("narration that exists says so before the first press, and plays on its own
   await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
 });
 
+test("narration opens by naming the video, with the bar on its title and no line lit, then reaches the premise", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(`Now playing · ${NOTE.video.title}`);
+  await reader.verifyNoLineIsActive();
+
+  await reader.verifyBarSays(/^Now playing · Premise$/);
+  await reader.verifyActiveLineReads("Premise");
+});
+
 test("tapping a line seeks the narration to where that line starts", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);

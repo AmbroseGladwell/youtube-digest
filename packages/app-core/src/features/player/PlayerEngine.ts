@@ -49,7 +49,20 @@ const IDLE: PlayerSnapshot = {
   narratedVoice: null,
 };
 
-const scriptOf = (track: PlayerTrack) => spokenLines(track.lines);
+const scriptOf = (track: PlayerTrack) => spokenLines(track.lines, track.opening);
+
+// Where getLine says the opening is being narrated: before the first line, which no line
+// on screen stands for.
+export const OPENING_LINE = -1;
+
+// A render made before the opening existed has no entry for it, and still describes the
+// lines one for one; a share made then keeps playing its audio.
+const lineStartsOf = (render: ReadyNarration, track: PlayerTrack): number[] | null => {
+  const { lineStartsSeconds } = render;
+  if (track.opening !== null && lineStartsSeconds.length === track.lines.length + 1) return lineStartsSeconds.slice(1);
+  if (lineStartsSeconds.length === track.lines.length) return lineStartsSeconds;
+  return null;
+};
 
 const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) => {
   if (a === null || a.overviewId !== b.overviewId || a.lines.length !== b.lines.length) return false;
@@ -98,7 +111,10 @@ export class PlayerEngine {
 
   getSnapshot = (): PlayerSnapshot => this.#snapshot;
   getTime = (): number => this.#time;
-  getLine = (): number => lineAtTime(this.#snapshot.timings.lineStarts, this.#time);
+  getLine = (): number => {
+    const { lineStarts } = this.#snapshot.timings;
+    return this.#time < (lineStarts[0] ?? 0) ? OPENING_LINE : lineAtTime(lineStarts, this.#time);
+  };
   canNarrate = (): boolean => this.#api !== null;
 
   // A shell that signs in or out mid-note hands over a new API; a note nobody has pressed
@@ -450,13 +466,12 @@ export class PlayerEngine {
   // False when the render does not describe these lines, which would put the highlight on
   // the wrong sentence: better the pacer, marked as such, than that.
   #adopt(render: ReadyNarration, line = this.getLine()): boolean {
-    if (render.lineStartsSeconds.length !== this.#snapshot.track?.lines.length) return false;
+    const track = this.#snapshot.track;
+    const lineStarts = track ? lineStartsOf(render, track) : null;
+    if (lineStarts === null) return false;
     this.#render = render;
-    const timings: LineTimings = {
-      lineStarts: render.lineStartsSeconds,
-      durationSeconds: render.durationSeconds,
-    };
-    this.#time = timings.lineStarts[line] ?? 0;
+    const timings: LineTimings = { lineStarts, durationSeconds: render.durationSeconds };
+    this.#time = line <= 0 ? 0 : (timings.lineStarts[line] ?? 0);
     this.#set({ timings });
     this.#emitTime();
     return true;

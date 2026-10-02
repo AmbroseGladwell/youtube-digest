@@ -251,6 +251,9 @@ export class ReaderPageObject extends PageObject {
       ).toHaveText(text),
     );
 
+  verifyNoLineIsActive = () =>
+    this.step("verifyNoLineIsActive", () => this.expectNotToBeVisible(readAlongNoteTestIds.activeLine));
+
   verifyBulletedLinesRead = (texts: string[]) =>
     this.step(`verifyBulletedLinesRead ${texts.join(", ")}`, () =>
       expect(

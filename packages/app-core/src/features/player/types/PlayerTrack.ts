@@ -1,13 +1,15 @@
 import type { NoteLine, OverviewId, SharedNote } from "@overview/domain";
-import { overviewNoteLines } from "@overview/domain";
+import { overviewNoteLines, spokenOpening } from "@overview/domain";
 
 // What the player plays and what the lock screen names: one note, its lines, and the
-// video it came from.
+// video it came from. The opening is narrated before the first line and shown nowhere
+// (docs/features/tts-pre-rendered-speech.md, "The spoken script").
 export interface PlayerTrack {
   overviewId: OverviewId;
   title: string;
   channel: string;
   artworkUrl: string | null;
+  opening: string | null;
   lines: NoteLine[];
 }
 
@@ -19,6 +21,7 @@ export function playerTrackFor(overview: SharedNote, lines: NoteLine[] = overvie
     title: overview.video.title,
     channel: overview.video.channel,
     artworkUrl: overview.video.thumbnailUrl ?? null,
+    opening: spokenOpening(overview.video),
     lines,
   };
 }

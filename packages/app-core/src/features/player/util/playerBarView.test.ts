@@ -18,6 +18,7 @@ const snapshot = (patch: Partial<PlayerSnapshot> = {}): PlayerSnapshot => ({
     title: "The Quiet Return of Nuclear Baseload",
     channel: "Practical Engineering",
     artworkUrl: null,
+    opening: "The Quiet Return of Nuclear Baseload, from Practical Engineering.",
     lines: LINES,
   },
   status: "ready",
@@ -78,6 +79,15 @@ describe("playerBarView", () => {
 
     const paused = view({ status: "paused" }, 130);
     expect(paused.label).toMatchObject({ lead: "Paused", rest: "Key points" });
+  });
+
+  it("names the video while its opening is narrated, before the first line starts", () => {
+    const opening = { timings: { lineStarts: [4, 60, 120, 180], durationSeconds: 364 } };
+
+    expect(view({ ...opening, status: "playing" }, 2).label.lead).toBe(
+      "Now playing · The Quiet Return of Nuclear Baseload",
+    );
+    expect(view({ ...opening, status: "playing" }, 5).label.lead).toBe("Now playing · Premise");
   });
 
   it("1g: buffering holds the clock and still offers to pause", () => {

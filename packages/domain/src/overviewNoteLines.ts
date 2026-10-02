@@ -102,7 +102,7 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
   );
 
   if (overview.selling && overview.selling.type !== "none") {
-    section("What it sells", { text: "What it sells" }, [
+    section("What it sells", { text: "What it sells", spoken: "What it's selling" }, [
       { text: `${SELLING_LABEL[overview.selling.type]}. ${overview.selling.detail}`.trim() },
     ]);
   }

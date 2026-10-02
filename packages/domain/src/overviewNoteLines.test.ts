@@ -148,6 +148,7 @@ test("speaks each heading in its own words while showing the heading unchanged",
     makeOverview({
       verdict: { novelty: "novel", dubious: false, reasoning: "New.", similarTo: [] },
       howToApply: { items: ["Do it."] },
+      selling: { type: "own_paid_product", detail: "A course.", compromisesContent: false },
       watchAnyway: { answer: "no", reason: "Covered.", range: null },
     }),
   );
@@ -160,6 +161,7 @@ test("speaks each heading in its own words while showing the heading unchanged",
       ["Verdict", "The verdict"],
       ["Key points", "There are three key points"],
       ["How to apply", "How you could apply it"],
+      ["What it sells", "What it's selling"],
       ["Watch it anyway?", "Should you watch it anyway?"],
     ],
   );
