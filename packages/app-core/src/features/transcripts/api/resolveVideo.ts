@@ -1,5 +1,11 @@
 import { TranscriptFetchError, isWorthAnotherSource } from "@overview/transcripts";
-import { VideoId, type CaptureTranscriptSource, type StoredTranscript, type TranscriptStore } from "@overview/domain";
+import {
+  VideoId,
+  type CaptureTranscriptSource,
+  type ClientWarningReport,
+  type StoredTranscript,
+  type TranscriptStore,
+} from "@overview/domain";
 import { canonicalYouTubeUrl, extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { ResolvedVideo, TranscriptSource, TranscriptSourceContext } from "../types/TranscriptSource.js";
 import { transcriptFailureMessage } from "../util/transcriptFailureMessage.js";
@@ -8,7 +14,25 @@ import { NoTranscriptSourceError, type TranscriptSourceFailure } from "./NoTrans
 export interface VideoResolutionDeps {
   sources: TranscriptSource[];
   transcriptStore: TranscriptStore;
+  // Told when a rung failed on the way, or none answered, so the server's logs say so. A
+  // rung with no answer is the ladder working, and alone is not worth a warning
+  // (docs/architecture/errors-and-logs.md, "Client warnings").
+  warn?: ((warning: ClientWarningReport) => void) | undefined;
 }
+
+const warnIfDegraded = (
+  deps: VideoResolutionDeps,
+  failures: TranscriptSourceFailure[],
+  answeredBy: TranscriptSourceFailure["tier"] | null,
+) => {
+  if (answeredBy !== null && !failures.some(({ outcome }) => outcome === "failed")) return;
+  if (failures.length === 0) return;
+  deps.warn?.({
+    name: "transcriptFellThrough",
+    passed: failures.map(({ tier, outcome }) => ({ rung: tier, outcome })),
+    answeredBy,
+  });
+};
 
 export type { ResolvedVideo };
 
@@ -44,6 +68,7 @@ export async function resolveVideo(
         continue;
       }
       await saveResolved(resolved, deps.transcriptStore);
+      warnIfDegraded(deps, failures, source.tier);
       return { ...resolved, source: source.tier };
     } catch (error) {
       failures.push({ tier: source.tier, outcome: "failed", error });
@@ -54,6 +79,7 @@ export async function resolveVideo(
     }
   }
 
+  warnIfDegraded(deps, failures, null);
   throw new NoTranscriptSourceError(transcriptFailureMessage(failures), failures);
 }
 

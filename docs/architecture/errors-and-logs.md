@@ -284,6 +284,32 @@ as `dropped` on the next batch that gets through. When the page is hidden or lef
 first because they matter more, and because a browser limits how much can be in flight
 as a page closes.
 
+## Client warnings
+
+Some moments aren't failures but are worth knowing about: something the app depends on let
+it down, and it carried on. They go through `POST /api/errors` as `warnings` beside the
+errors, and the server logs each one at `warn` as `client warning`. That's all it does
+with them. A warning never becomes an error-tracking issue, so it never opens an alert,
+and it isn't an event, because events are what readers did (`analytics.md`, "Actions, not
+logs"). The line carries the reader's account, session and surface, so it sits with the
+server's own lines for that device.
+
+The catalogue is `ClientWarning` in `packages/domain`. Every field is an enum, a count or
+an id:
+
+| Warning | When | Fields |
+|---|---|---|
+| `transcriptFellThrough` | making an overview, a transcript rung threw before another answered, or no rung answered. A rung that had no answer is the ladder working, and alone isn't a warning. Watching detection's background ladder doesn't warn | `passed` (each rung asked and its outcome), `answeredBy` (or `null`) |
+| `narrationFellBack` | the player moved to the pacer because the render failed or didn't match the note, or because asking for it failed. A signed-out reader's pacer isn't a warning | `reason` (`renderFailed`, `requestFailed`), the failed call's `requestId` and `apiErrorCode` |
+
+A **parked sync write** needs no warning. The refusal that parks it is already a
+`request refused` line under the device's session.
+
+Warnings share the error queue's budget of 10 a minute, and its batch, so a loop that
+keeps falling back can't send more than a loop that keeps throwing. The app reports one
+with `ErrorReporter.warn()`. `PlayerEngine` and `resolveVideo` take a `warn` callback,
+which the player's runtime and the generation mutation wire to the reporter.
+
 ## Before the app mounts
 
 A shell that can't open its local database renders `StartupFailure` instead of `App`. With

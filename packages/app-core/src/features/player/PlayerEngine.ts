@@ -1,5 +1,11 @@
-import { DEFAULT_NARRATION_VOICE, type NarrationRender, type NarrationVoice, type ReadyNarration } from "@overview/domain";
-import { isSyncRequestError, type NarrationApi, type VoicedNarration } from "@overview/sync";
+import {
+  DEFAULT_NARRATION_VOICE,
+  type ClientWarningReport,
+  type NarrationRender,
+  type NarrationVoice,
+  type ReadyNarration,
+} from "@overview/domain";
+import { isSyncRequestError, isSyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import type {
   PacerReason,
   PlayerSnapshot,
@@ -28,6 +34,9 @@ export interface PlayerEngineOptions {
   api: NarrationApi | null;
   createMedia: () => PlayerMedia;
   voice?: NarrationVoice;
+  // Told when narration that should have played falls back to the pacer, so the server's
+  // logs say so (docs/architecture/errors-and-logs.md, "Client warnings").
+  warn?: (warning: ClientWarningReport) => void;
 }
 
 const IDLE: PlayerSnapshot = {
@@ -70,11 +79,13 @@ export class PlayerEngine {
   #pacerTimer: ReturnType<typeof setInterval> | null = null;
   #pollFailures = 0;
   #watchChecks = 0;
+  #warn: (warning: ClientWarningReport) => void;
   #listeners = new Set<() => void>();
   #timeListeners = new Set<() => void>();
 
-  constructor({ api, createMedia, voice = DEFAULT_NARRATION_VOICE }: PlayerEngineOptions) {
+  constructor({ api, createMedia, voice = DEFAULT_NARRATION_VOICE, warn = () => undefined }: PlayerEngineOptions) {
     this.#api = api;
+    this.#warn = warn;
     this.#createMedia = createMedia;
     this.#snapshot = { ...IDLE, voice };
   }
@@ -367,7 +378,9 @@ export class PlayerEngine {
           this.#set({ status: "busy", preparing: null });
           return;
         }
-        this.#fallBackToPacer(this.#pacerReasonFor(error), true);
+        const reason = this.#pacerReasonFor(error);
+        if (reason === "unavailable") this.#warnRequestFailed(error);
+        this.#fallBackToPacer(reason, true);
       });
   }
 
@@ -390,6 +403,7 @@ export class PlayerEngine {
     const line = this.getLine();
     this.#stopPacer();
     if (!this.#adopt(render, line)) {
+      this.#warn({ name: "narrationFellBack", reason: "renderFailed" });
       this.#fallBackToPacer("unavailable", pacerWasPlaying || !readingAlong);
       return;
     }
@@ -432,6 +446,7 @@ export class PlayerEngine {
   }
 
   #renderGaveUp(): void {
+    this.#warn({ name: "narrationFellBack", reason: "renderFailed" });
     this.#replacing = null;
     if (this.#snapshot.source === "pacer") {
       this.#set({ pacerReason: "unavailable", preparing: null });
@@ -469,6 +484,16 @@ export class PlayerEngine {
     this.#usePacerTimings(line);
     this.#set({ source: "pacer", pacerReason: reason, preparing: null, status: "ready", narratedVoice: null });
     if (start) this.#startPacer();
+  }
+
+  #warnRequestFailed(error: unknown): void {
+    const requestId = isSyncRequestError(error) || isSyncTransportError(error) ? error.requestId : undefined;
+    this.#warn({
+      name: "narrationFellBack",
+      reason: "requestFailed",
+      ...(requestId === undefined ? {} : { requestId }),
+      ...(isSyncRequestError(error) ? { apiErrorCode: error.code } : {}),
+    });
   }
 
   #pacerReasonFor(error: unknown): PacerReason {

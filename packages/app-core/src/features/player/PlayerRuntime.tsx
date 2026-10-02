@@ -9,6 +9,7 @@ import { PlayerEngine } from "./PlayerEngine.js";
 import { PlayerProvider } from "./PlayerContext.js";
 import { bindMediaSession } from "./util/bindMediaSession.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
+import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 
 // Owns the one player for this tab, above the router so a note keeps playing across
 // navigation, and inside the sync runtime because narration needs the account's session
@@ -22,7 +23,10 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
     [connected, apiUrl, token, surface],
   );
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
-  const [engine] = useState(() => new PlayerEngine({ api, voice, createMedia: () => new Audio() }));
+  const reporter = useErrorReporter();
+  const [engine] = useState(
+    () => new PlayerEngine({ api, voice, createMedia: () => new Audio(), warn: (warning) => reporter.warn(warning) }),
+  );
 
   useEffect(() => engine.setApi(api), [engine, api]);
   useEffect(() => engine.setVoice(voice), [engine, voice]);
