@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
+import { isYouTubeUrl } from "../../../newOverview/util/parseYouTubeUrl.js";
 import { rememberSharedPageIntent } from "../../util/sharedPageIntent.js";
 import styles from "./MakeYourOwnAside.module.scss";
 import { makeYourOwnAsideTestIds } from "./MakeYourOwnAsideTestIds.js";
@@ -19,8 +22,11 @@ export function MakeYourOwnAside() {
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const headingId = useId();
+  const analytics = useAnalytics();
+  useTypingSettled(url, () => analytics.sharedPage.makeYourOwn.linkEntered({ recognised: isYouTubeUrl(url.trim()) }));
 
   const make = () => {
+    analytics.sharedPage.makeYourOwn.submitted({ recognised: isYouTubeUrl(url.trim()) });
     rememberSharedPageIntent({ kind: "generate", videoUrl: url.trim() });
     void navigate(Routes.createAccount());
   };
@@ -67,7 +73,12 @@ export function MakeYourOwnAside() {
 
       <p className={styles.note}>
         Free to start. Have an account?{" "}
-        <Link className={styles.link} to={Routes.signIn()} data-testid={makeYourOwnAsideTestIds.signInLink}>
+        <Link
+          className={styles.link}
+          to={Routes.signIn()}
+          onClick={() => analytics.sharedPage.makeYourOwn.signInChosen()}
+          data-testid={makeYourOwnAsideTestIds.signInLink}
+        >
           Sign in
         </Link>
       </p>

@@ -5,6 +5,7 @@ import { usePlaybackPosition, useSeekPlayback } from "../../../../app/PlaybackCo
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ChaptersPanel.module.scss";
 import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
 
@@ -42,6 +43,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt }: Cha
   const isPanel = useIsPanel();
   const seek = useSeekPlayback(video.id);
   const position = usePlaybackPosition(video.id);
+  const analytics = useOverviewPageAnalytics();
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const hasTranscript = (transcript?.segments.length ?? 0) > 0;
@@ -107,7 +109,10 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt }: Cha
                   <button
                     type="button"
                     className={styles.transcriptButton}
-                    onClick={() => onOpenTranscriptAt(chapter.startMs)}
+                    onClick={() => {
+                      analytics.chapters.transcriptOpened();
+                      onOpenTranscriptAt(chapter.startMs);
+                    }}
                     disabled={!hasTranscript}
                     title={hasTranscript ? undefined : noTranscriptReason}
                     aria-label={`Open the transcript at ${formatTimestamp(chapter.startMs)}`}
@@ -159,13 +164,17 @@ interface ChapterRangeProps {
 // prints the range as plain text (docs/features/chapters.md).
 function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
   const label = formatTimeRange(chapter.startMs, chapter.endMs);
+  const analytics = useOverviewPageAnalytics();
 
   if (seek !== null) {
     return (
       <button
         type="button"
         className={styles.rangeControl}
-        onClick={() => seek(chapter.startMs)}
+        onClick={() => {
+          analytics.chapters.videoOpened({ by: "skip" });
+          seek(chapter.startMs);
+        }}
         aria-label={`Play the video from ${formatTimestamp(chapter.startMs)}`}
         data-testid={chaptersPanelTestIds.range}
       >
@@ -180,6 +189,7 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
         href={youtubeTimestampUrl(video.url, chapter.startMs)}
         target="_blank"
         rel="noopener"
+        onClick={() => analytics.chapters.videoOpened({ by: "youtube" })}
         aria-label={`Open the video on YouTube at ${formatTimestamp(chapter.startMs)}`}
         data-testid={chaptersPanelTestIds.range}
       >

@@ -7,11 +7,11 @@ export interface PostHogEventSinkOptions extends PostHogBatchOptions {
 
 export function createPostHogEventSink({ environment, ...options }: PostHogEventSinkOptions): EventSink {
   return {
-    capture: (events, { accountId, context, geoAddress }) =>
+    capture: (events, { accountId, viewId, context, geoAddress }) =>
       sendPostHogBatch(
         events.map(({ name, props, at }) => ({
           event: name,
-          distinct_id: accountId,
+          distinct_id: accountId ?? `shared-view:${viewId}`,
           timestamp: at,
           properties: {
             ...props,
@@ -20,6 +20,7 @@ export function createPostHogEventSink({ environment, ...options }: PostHogEvent
             app_version: context.appVersion,
             platform: context.platform,
             environment,
+            ...(accountId === null ? { $process_person_profile: false } : {}),
             ...(geoAddress === null ? {} : { $ip: geoAddress }),
           },
         })),

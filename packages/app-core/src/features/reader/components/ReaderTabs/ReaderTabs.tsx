@@ -1,4 +1,6 @@
 import type { CSSProperties, Ref } from "react";
+import { ReaderTabChoice } from "@overview/domain";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { READER_TABS, type ReaderTab } from "../../types/ReaderTab.js";
 import { useTabIndicator } from "./useTabIndicator.js";
 import styles from "./ReaderTabs.module.scss";
@@ -12,8 +14,15 @@ export interface ReaderTabsProps {
   ref?: Ref<HTMLDivElement>;
 }
 
+const readerTabChoice = (tab: ReaderTab): ReaderTabChoice => ReaderTabChoice.parse(tab.toLowerCase());
+
 export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabsProps) {
   const indicator = useTabIndicator(active);
+  const analytics = useOverviewPageAnalytics();
+  const choose = (tab: ReaderTab) => {
+    if (tab !== active) analytics.tabs.switched({ tab: readerTabChoice(tab) });
+    onChange(tab);
+  };
 
   return (
     <div
@@ -35,7 +44,7 @@ export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabs
               aria-selected={tab === active}
               aria-controls={panelId(tab)}
               className={`${styles.tab} ${tab === active ? styles.tabActive : ""}`}
-              onClick={() => onChange(tab)}
+              onClick={() => choose(tab)}
               data-testid={readerTabsTestIds.tab(tab)}
             >
               {tab}

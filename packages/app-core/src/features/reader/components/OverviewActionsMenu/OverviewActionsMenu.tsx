@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import type { OverviewMenuItem } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
+import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import styles from "./OverviewActionsMenu.module.scss";
 import { overviewActionsMenuTestIds } from "./OverviewActionsMenuTestIds.js";
@@ -40,10 +42,17 @@ export function OverviewActionsMenu({
 }: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
+  const analytics = useReaderAnalytics();
 
-  useDismissOnOutside(open, () => setOpen(false), root);
+  const close = () => {
+    analytics.actionsMenu.closed();
+    setOpen(false);
+  };
 
-  const choose = (action: () => void) => () => {
+  useDismissOnOutside(open, close, root);
+
+  const choose = (item: OverviewMenuItem, action: () => void) => () => {
+    analytics.actionsMenu.itemChosen({ item });
     setOpen(false);
     action();
   };
@@ -53,7 +62,14 @@ export function OverviewActionsMenu({
       <button
         type="button"
         className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (open) {
+            close();
+            return;
+          }
+          analytics.actionsMenu.opened();
+          setOpen(true);
+        }}
         aria-label="More"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -72,7 +88,7 @@ export function OverviewActionsMenu({
             type="button"
             role="menuitem"
             className={styles.item}
-            onClick={choose(onEditTopics)}
+            onClick={choose("editTopics", onEditTopics)}
             data-testid={overviewActionsMenuTestIds.editTopicsItem}
           >
             Edit topics
@@ -84,7 +100,7 @@ export function OverviewActionsMenu({
             type="button"
             role="menuitem"
             className={styles.item}
-            onClick={choose(onEditReason)}
+            onClick={choose("editReason", onEditReason)}
             data-testid={overviewActionsMenuTestIds.reasonItem}
           >
             {hasReason ? "Edit reason" : "Add reason"}
@@ -94,7 +110,7 @@ export function OverviewActionsMenu({
               type="button"
               role="menuitem"
               className={styles.item}
-              onClick={choose(onToggleRead)}
+              onClick={choose("toggleRead", onToggleRead)}
               data-testid={overviewActionsMenuTestIds.readItem}
             >
               {read ? "Mark as unread" : "Mark as read"}
@@ -107,7 +123,7 @@ export function OverviewActionsMenu({
                 type="button"
                 role="menuitem"
                 className={`${styles.item} ${styles.itemStandout}`}
-                onClick={choose(onShare)}
+                onClick={choose("share", onShare)}
                 data-testid={overviewActionsMenuTestIds.shareItem}
               >
                 Share…
@@ -121,7 +137,7 @@ export function OverviewActionsMenu({
             href={videoUrl}
             target="_blank"
             rel="noopener"
-            onClick={() => setOpen(false)}
+            onClick={choose("watchOnYouTube", () => undefined)}
             data-testid={overviewActionsMenuTestIds.watchItem}
           >
             Watch on YouTube
@@ -131,7 +147,7 @@ export function OverviewActionsMenu({
               type="button"
               role="menuitem"
               className={styles.item}
-              onClick={choose(() => void navigator.clipboard.writeText(videoUrl))}
+              onClick={choose("copyYouTubeLink", () => void navigator.clipboard.writeText(videoUrl))}
               data-testid={overviewActionsMenuTestIds.copyLinkItem}
             >
               Copy YouTube link
@@ -146,7 +162,7 @@ export function OverviewActionsMenu({
                 href={webApp.href}
                 target="_blank"
                 rel="noopener"
-                onClick={() => setOpen(false)}
+                onClick={choose("openInWebApp", () => undefined)}
                 data-testid={overviewActionsMenuTestIds.openInWebItem}
               >
                 Open in web app
@@ -170,7 +186,7 @@ export function OverviewActionsMenu({
               type="button"
               role="menuitem"
               className={`${styles.item} ${styles.itemDanger}`}
-              onClick={choose(onDelete)}
+              onClick={choose("delete", onDelete)}
               data-testid={overviewActionsMenuTestIds.deleteItem}
             >
               Delete overview

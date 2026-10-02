@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AnalyticsEventBatch, MAX_ANALYTICS_BATCH_EVENTS, parseAnalyticsEvent } from "./AnalyticsEventBatch.js";
+import {
+  AnalyticsEventBatch,
+  MAX_ANALYTICS_BATCH_EVENTS,
+  SharedPageEventBatch,
+  parseAnalyticsEvent,
+  parseSharedPageEvent,
+} from "./AnalyticsEventBatch.js";
 
 const AT = "2026-10-01T09:00:00.000Z";
 const context = { surface: "web", layout: "full", appVersion: "0.4.1", platform: "macos" } as const;
@@ -42,4 +48,27 @@ test("what the app dropped is a count on the batch, not an event", () => {
   assert.ok(AnalyticsEventBatch.safeParse({ context, events, dropped: 3 }).success);
   assert.ok(!AnalyticsEventBatch.safeParse({ context, events, dropped: 0 }).success);
   assert.equal(parseAnalyticsEvent({ name: "analytics.queue.dropped", props: { count: 3 }, at: AT }), null);
+});
+
+test("an overview's id is the one id an event may carry, and it must be an id", () => {
+  const overviewId = "0b7c9d2e-4f61-4a8b-9c3d-2e1f0a9b8c7d";
+  assert.deepEqual(
+    parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId, tab: "chapters" }, at: AT })?.props,
+    { overviewId, tab: "chapters" },
+  );
+  assert.equal(
+    parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId: "dQw4w9WgXcQ", tab: "chapters" }, at: AT }),
+    null,
+  );
+  assert.equal(parseAnalyticsEvent({ name: "reader.tabs.switched", props: { tab: "chapters" }, at: AT }), null);
+});
+
+test("a shared link's batch carries a view id and can only say what happened on a shared page", () => {
+  const events = [{ name: "sharedPage.tabs.switched", props: { tab: "transcript" }, at: AT }];
+  const viewId = "6f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b";
+  assert.ok(SharedPageEventBatch.safeParse({ context, viewId, events }).success);
+  assert.ok(!SharedPageEventBatch.safeParse({ context, events }).success);
+  assert.ok(!SharedPageEventBatch.safeParse({ context, viewId: "visitor-7", events }).success);
+  assert.equal(parseSharedPageEvent(events[0]!)?.name, "sharedPage.tabs.switched");
+  assert.equal(parseSharedPageEvent({ name: "mcp.consentScreen.approved", props: {}, at: AT }), null);
 });

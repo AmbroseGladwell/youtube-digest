@@ -63,7 +63,8 @@ limit, a year's retention) and Better Stack's are compared on OV-60 and OV-61.
 ## Who is counted
 
 Only a signed-in reader, under their opaque account id, which the server takes from the
-session the batch arrives on: the app never sends an id of its own. The basis is
+session the batch arrives on: the app never sends an id of its own. The one exception is a
+shared link's page, which counts its visitors with or without an account ("The shared page"). The basis is
 legitimate interests, which OV-62's privacy notice has to state before launch.
 
 A reader without an account sends nothing. Usage from someone with no account is OV-62's
@@ -76,12 +77,50 @@ extension storage. The queue lives in memory and is gone with the page.
 
 ## What an event may carry
 
-A property is a choice (`z.enum`), a flag or a number, and nothing else. The catalogue's
+A property is a choice (`z.enum`), a flag, a number, or one of the ids in `ANALYTICS_IDS`:
+an overview's (`OverviewId`) or a topic's (`TopicId`), and nothing else. The catalogue's
 type allows only those, `analyticsEvents.test.ts` checks every entry at runtime in case a
 cast gets past the type, and the server parses each event's properties strictly against
-its declaration. So an event can't carry a URL, a video id, an overview's text, an
-element's label, a file name or anything the reader typed, because there is no field
-shaped to hold one.
+its declaration, so an id has to be a uuid to pass. So an event can't carry a URL, a video
+id, an overview's text, an element's label, a file name or anything the reader typed,
+because there is no field shaped to hold one.
+
+The two ids are allowed because they are ours: random uuids minted on the device, which say
+nothing about the video or the reader on their own, and are what lets every event about one
+overview be read together, or a filter be told apart by the topic it chose. A video id is
+not: it names the video. A choice the app defines, a novelty or a read status, is sent as
+its own enum value (`novel`, `unread`), never its label, so a chart reads the same when the
+copy changes.
+
+### One overview's events
+
+Everything a reader does on an overview's page carries the overview's id, so a funnel can
+follow one overview from opened to read to the video watched anyway. The tabs, the note,
+the transcript, the chapters and the player are drawn on two pages, the reader's own and a
+shared link's, so their events are declared once (`overviewPageEvents`) and sent under two
+features:
+
+- `reader.*`, with `overviewId`, which `bindOverviewId` adds so a component says only what
+  happened. The reader's page provides it through `OverviewAnalyticsProvider`.
+- `sharedPage.*`, without it. The shared page never sees the owner's overview id; the server
+  adds it from the share (see below).
+
+A component used on both pages calls `useOverviewPageAnalytics()`, and one only on the
+reader's page calls `useReaderAnalytics()`. Neither knows which page it is on.
+
+### Typing
+
+What someone types is never sent. A field that is worth counting says so once they stop,
+through `useTypingSettled`, a second after the last keystroke, with what the typing found:
+the transcript search sends how many matches there were, the topic picker how many topics
+matched, the shared page's link field whether it was a YouTube link. A field's starting
+value isn't typing and sends nothing.
+
+### Changing a state
+
+An event that changes something says what it changed to: `readSwitched({ read: true })`,
+`favouriteSwitched({ favourite: false })`, `rateChanged({ rate: 1.5 })`, and where it was
+done from when there is more than one place (`from: "masthead" | "actionsMenu" | "playerBar"`).
 
 What every event carries without being asked is said once per batch, in `context`: the
 shell (`web` or `extension`), the layout (`full` or `panel`, or `worker` for an error from
@@ -167,6 +206,25 @@ server's part is done, so a transformation in PostHog removes them on the way in
 |---|---|
 | continent, country, region (England), city, time zone | `$geoip_postal_code`, `$geoip_latitude`, `$geoip_longitude`, `$geoip_accuracy_radius` |
 
+## The shared page
+
+A shared link is read mostly by people with no account, so its page sends its events to
+`POST /api/shares/:token/events` rather than `/api/events`, with or without a session:
+
+- **Only `sharedPage.*` events.** Anything else in the batch is refused, one at a time.
+- **The token never travels on.** The server looks the share up, adds the overview's id to
+  each event, and logs and forwards the events without the token. The log line records the
+  route, never the URL (`errors-and-logs.md`). A stopped link still counts, against the
+  overview it shared, and an unknown token's events go on with no overview id.
+- **A view id, not a person.** The page makes a uuid when it loads and keeps it in memory, so
+  one visit's events read together. Nothing is written to the device. In PostHog it is the
+  `distinct_id` (`shared-view:<uuid>`) with `$process_person_profile: false`, so no person is
+  made. A visitor who is signed in is counted under their account instead.
+- **Rate limited per address**, at `sharedPageEventsAddress`, like `/api/errors`.
+
+The page sends nothing about the reader who shared it, and the shared copy carries no id:
+the link is all the page has.
+
 ## Request ids
 
 Every API call carries an `X-Request-Id` the client made, and the server logs the request
@@ -205,8 +263,9 @@ Until then, events are logged on the server and go nowhere else.
   voices sampled and chosen (`narration-voice.md`) and time from play to first sound are
   OV-63, and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
   a call.
-- **Debouncing a noisy event.** Nothing noisy is sent yet. The per-minute cap is the
-  backstop until something is.
+- **The rest of the app's actions.** The reader and the shared page are counted. The
+  library, making an overview, the player outside the reader, settings, sign-in and the
+  extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
   isn't, a script can print the features, screens, names, descriptions and properties from the same
   object the server checks against.

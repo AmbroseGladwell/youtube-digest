@@ -16,8 +16,9 @@ Five folders, five different questions.
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told
   apart, why events go through our own API to PostHog, who is counted and what an event may
-  carry, why only reader actions are events and everything else is a log, adding one, the
-  client's queue, and turning it on.
+  carry, why only reader actions are events and everything else is a log, the overview and topic
+  ids an event may carry, typing counted once it settles, the shared page counted without an
+  account, adding one, the client's queue, and turning it on.
 - `errors-and-logs.md` — what went wrong for a reader: `POST /api/errors` beside events, with
   or without an account, what an error may carry and how its message is redacted twice, the
   failing call's request id, the reporter both shells mount (what it catches, the trail of

@@ -2,6 +2,7 @@ import { formatTimestamp, youtubeTimestampUrl } from "@overview/domain";
 import type { TimeRange, VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
 import styles from "./WatchAnywayJump.module.scss";
 import { watchAnywayJumpTestIds } from "./WatchAnywayJumpTestIds.js";
@@ -18,6 +19,7 @@ export interface WatchAnywayJumpProps {
 // timestamp give. The range is printed either way.
 export function WatchAnywayJump({ range, video }: WatchAnywayJumpProps) {
   const seek = useSeekPlayback(video.id);
+  const analytics = useOverviewPageAnalytics();
 
   return (
     <p className={styles.root} data-testid={watchAnywayJumpTestIds.root}>
@@ -30,6 +32,7 @@ export function WatchAnywayJump({ range, video }: WatchAnywayJumpProps) {
           href={youtubeTimestampUrl(video.url, range.startMs)}
           target="_blank"
           rel="noopener"
+          onClick={() => analytics.watchAnyway.followed({ by: "youtube" })}
           aria-label={`Watch from ${formatTimestamp(range.startMs)} on YouTube, opens in a new tab`}
           data-testid={watchAnywayJumpTestIds.watchLink}
         >
@@ -40,7 +43,10 @@ export function WatchAnywayJump({ range, video }: WatchAnywayJumpProps) {
         <button
           type="button"
           className={styles.skip}
-          onClick={() => seek(range.startMs)}
+          onClick={() => {
+            analytics.watchAnyway.followed({ by: "skip" });
+            seek(range.startMs);
+          }}
           aria-label={`Skip the video to ${formatTimestamp(range.startMs)}`}
           data-testid={watchAnywayJumpTestIds.skipButton}
         >

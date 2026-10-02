@@ -93,3 +93,18 @@ test("a refusal is an error, for the route to log", async () => {
     PostHogDeliveryError,
   );
 });
+
+test("someone on a shared link with no account is one page load in PostHog, with no person made for them", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+
+  await sink.capture([{ name: "sharedPage.tabs.switched", props: { tab: "chapters" }, at: "2026-10-02T09:00:00.000Z" }], {
+    ...source,
+    accountId: null,
+    viewId: "6f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b",
+  });
+
+  const [captured] = (sent[0]!.body as { batch: Array<{ distinct_id: string; properties: Record<string, unknown> }> }).batch;
+  assert.equal(captured!.distinct_id, "shared-view:6f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b");
+  assert.equal(captured!.properties.$process_person_profile, false);
+});

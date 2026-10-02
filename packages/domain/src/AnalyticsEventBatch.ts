@@ -28,7 +28,8 @@ export type AnalyticsContext = z.infer<typeof AnalyticsContext>;
 export const SentAnalyticsEvent = z
   .object({
     name: z.string().max(64),
-    props: z.record(z.string().max(32), z.union([z.string().max(32), z.number(), z.boolean()])),
+    // 36 is a uuid, the longest a property may be (analyticsEvents.ts, ANALYTICS_IDS).
+    props: z.record(z.string().max(32), z.union([z.string().max(36), z.number(), z.boolean()])),
     at: z.iso.datetime(),
   })
   .strict();
@@ -45,6 +46,19 @@ export const AnalyticsEventBatch = z
   .strict();
 export type AnalyticsEventBatch = z.infer<typeof AnalyticsEventBatch>;
 
+// From a shared link, with or without an account. The view id is made for the page load and
+// held in memory, so one visit's events read together and nothing is kept on the device
+// (docs/architecture/analytics.md, "The shared page").
+export const SharedPageEventBatch = z
+  .object({
+    ...AnalyticsEventBatch.shape,
+    viewId: z.uuid(),
+  })
+  .strict();
+export type SharedPageEventBatch = z.infer<typeof SharedPageEventBatch>;
+
+export const SHARED_PAGE_EVENT_PREFIX = "sharedPage.";
+
 export interface AnalyticsEvent {
   name: AnalyticsEventName;
   props: Record<string, string | number | boolean>;
@@ -56,4 +70,8 @@ export function parseAnalyticsEvent(sent: SentAnalyticsEvent): AnalyticsEvent | 
   if (definition === undefined) return null;
   const props = z.object(definition.props).strict().safeParse(sent.props);
   return props.success ? { name: sent.name as AnalyticsEventName, props: props.data, at: sent.at } : null;
+}
+
+export function parseSharedPageEvent(sent: SentAnalyticsEvent): AnalyticsEvent | null {
+  return sent.name.startsWith(SHARED_PAGE_EVENT_PREFIX) ? parseAnalyticsEvent(sent) : null;
 }

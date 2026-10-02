@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import {
   OverviewId,
@@ -44,6 +44,9 @@ import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useOverviewInWebApp } from "../../sync/useOverviewInWebApp.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { bindOverviewId } from "../../analytics/bindOverviewId.js";
+import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
@@ -124,12 +127,30 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overviewShare = useOverviewShare(overview);
   const shareOverview = useShareOverviewMutation();
   const stopSharing = useStopSharingMutation();
+  const analytics = useAnalytics();
+  const reader = useMemo(() => bindOverviewId(analytics.reader, overviewId), [analytics, overviewId]);
+  const overviewAnalytics = useMemo(() => ({ page: reader, reader }), [reader]);
+
+  const opened = useRef<string | null>(null);
+  const loaded = overviewQuery.data ?? null;
+  useEffect(() => {
+    if (loaded === null || opened.current === overviewId) return;
+    opened.current = overviewId;
+    reader.page.opened({
+      answer: loaded.overview.watchAnyway?.answer ?? "none",
+      novelty: loaded.overview.verdict?.novelty ?? "none",
+      dubious: loaded.overview.verdict?.dubious ?? false,
+      read: loaded.state.read,
+      favourite: loaded.state.favourite,
+    });
+  }, [loaded, overviewId, reader]);
 
   // Design 2d: the panel's Listen plays straight away and docks the bar; the Plus prompt
   // it used to raise is retired, since audio is open to every account
   // (docs/features/audio-player.md). Docking is its own state rather than a read of
   // playing: pausing from the bar must not take the bar away.
   const listen = () => {
+    reader.overview.listenPressed({ listening: !playerDocked });
     if (playerDocked) {
       setPlayerDocked(false);
       notePlayer.pause();
@@ -147,11 +168,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       event.preventDefault();
+      reader.page.lineStepped({ direction: event.key === "]" ? "next" : "previous" });
       stepLine(event.key === "]" ? 1 : -1);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [stepLine]);
+  }, [stepLine, reader]);
 
   if (overviewQuery.isPending) {
     return (
@@ -197,8 +219,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     openedFromChapter === undefined
       ? null
       : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
-  const toggleFavourite = () =>
+  const toggleFavourite = (from: "masthead" | "playerBar") => {
+    reader.overview.favouriteSwitched({ favourite: !state.favourite, from });
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
+  };
+  const toggleRead = (from: "masthead" | "actionsMenu") => {
+    reader.overview.readSwitched({ read: !state.read, from });
+    setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
+  };
   const neighbours = overviewNeighbours(
     orderLibraryEntriesBySavedAt(libraryQuery.data ?? []),
     overviewId,
@@ -214,196 +242,208 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     notePlayer.current && notePlayer.snapshot.source === "audio" && notePlayer.snapshot.availability === "ready";
   const lineStartLabels = narrated ? notePlayer.snapshot.timings.lineStarts.map(formatClock) : null;
   const confirmDelete = () => {
+    reader.deleteDialog.confirmed();
     setConfirmingDelete(false);
     deleteOverview.mutate({ overviewId });
     void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
   };
 
   return (
-    <article
-      className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
-      ref={publishHeightsOn}
-      data-testid={readerPageTestIds.root}
-    >
-      <ReaderMasthead
-        overview={overview}
-        metaParts={overviewMetaParts(overview)}
-        savedChip={savedChip}
-        read={state.read}
-        favourite={state.favourite}
-        playing={notePlayer.playing}
-        editingTopics={editingTopics}
-        compact={isPanel}
-        webApp={webApp}
-        listening={playerDocked}
-        // Measured only where it sticks: published on the wide reader it would push the
-        // tab strip down by the height of a masthead that scrolls away.
-        ref={isPanel ? readerMastheadHeight.measured : undefined}
-        onToggleRead={() => setOverviewState.mutate({ overviewId, patch: { read: !state.read } })}
-        onToggleFavourite={toggleFavourite}
-        onTogglePlaying={notePlayer.main}
-        onListen={listen}
-        onEditingTopicsChange={setEditingTopics}
-        onEditReason={editReason}
-        onShare={
-          overviewShare.available
-            ? () => {
-                overviewShare.refresh();
-                setSharing(true);
-              }
-            : null
-        }
-        onDelete={() => setConfirmingDelete(true)}
-      />
-
-      {savedLocallyNote.shown && <PlusSavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
-
-      <ReaderTabs
-        active={tab}
-        tabId={tabId}
-        panelId={panelId}
-        onChange={changeTab}
-        ref={tabsHeight.measured}
-      />
-
-      <div
-        key={tab}
-        className={`${styles.main} ${styles.panel}`}
-        role="tabpanel"
-        id={panelId(tab)}
-        aria-labelledby={tabId(tab)}
+    <OverviewAnalyticsProvider value={overviewAnalytics}>
+      <article
+        className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
+        ref={publishHeightsOn}
+        data-testid={readerPageTestIds.root}
       >
-        {tab === "Overview" && (
-          <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
-            <CaptureReasonLine
-              overview={overview}
-              editing={editingReason}
-              compact={isPanel}
-              onEditingChange={setEditingReason}
-            />
-            <ReadAlongNote
-              lines={lines}
-              activeIndex={notePlayer.activeIndex}
-              lineStartLabels={lineStartLabels}
-              onSelectLine={notePlayer.selectLine}
-            />
-            {range !== null && <WatchAnywayJump range={range} video={overview.video} />}
-            <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
-              {overview.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
+        <ReaderMasthead
+          overview={overview}
+          metaParts={overviewMetaParts(overview)}
+          savedChip={savedChip}
+          read={state.read}
+          favourite={state.favourite}
+          playing={notePlayer.playing}
+          editingTopics={editingTopics}
+          compact={isPanel}
+          webApp={webApp}
+          listening={playerDocked}
+          // Measured only where it sticks: published on the wide reader it would push the
+          // tab strip down by the height of a masthead that scrolls away.
+          ref={isPanel ? readerMastheadHeight.measured : undefined}
+          onToggleRead={toggleRead}
+          onToggleFavourite={() => toggleFavourite("masthead")}
+          onTogglePlaying={() => {
+            reader.overview.listenPressed({ listening: !notePlayer.playing });
+            notePlayer.main();
+          }}
+          onListen={listen}
+          onEditingTopicsChange={setEditingTopics}
+          onEditReason={editReason}
+          onShare={
+            overviewShare.available
+              ? () => {
+                  overviewShare.refresh();
+                  setSharing(true);
+                }
+              : null
+          }
+          onDelete={() => setConfirmingDelete(true)}
+        />
+
+        {savedLocallyNote.shown && <PlusSavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
+
+        <ReaderTabs
+          active={tab}
+          tabId={tabId}
+          panelId={panelId}
+          onChange={changeTab}
+          ref={tabsHeight.measured}
+        />
+
+        <div
+          key={tab}
+          className={`${styles.main} ${styles.panel}`}
+          role="tabpanel"
+          id={panelId(tab)}
+          aria-labelledby={tabId(tab)}
+        >
+          {tab === "Overview" && (
+            <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
+              <CaptureReasonLine
+                overview={overview}
+                editing={editingReason}
+                compact={isPanel}
+                onEditingChange={setEditingReason}
+              />
+              <ReadAlongNote
+                lines={lines}
+                activeIndex={notePlayer.activeIndex}
+                lineStartLabels={lineStartLabels}
+                onSelectLine={notePlayer.selectLine}
+              />
+              {range !== null && <WatchAnywayJump range={range} video={overview.video} />}
+              <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
+                {overview.tags.map((tag) => (
+                  <span key={tag} className={styles.tag}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+          {tab === "Transcript" && (
+            <TranscriptPanel
+              key={overview.video.id}
+              video={overview.video}
+              openAtMs={transcriptOpenAtMs}
+              openedFrom={openedFrom}
+              onBackToChapters={() => changeTab("Chapters")}
+            />
+          )}
+          {tab === "Chapters" && (
+            <ChaptersPanel
+              chapters={overview.chapters}
+              video={overview.video}
+              onOpenTranscriptAt={openTranscriptAt}
+            />
+          )}
+        </div>
+
+        {/* Where the library's order takes you next. At the foot rather than on the bar:
+            the next note is a thing to want once this one is read (design 4a has no
+            stepper, and the panel has no list to step through). */}
+        {!isPanel && neighbours.position !== null && (
+          <nav className={styles.foot} aria-label="Neighbouring overviews">
+            {neighbours.previousId ? (
+              <Link
+                className={styles.stepLink}
+                to={Routes.overview(neighbours.previousId)}
+                viewTransition={animateNavigation}
+                onClick={() => reader.page.neighbourFollowed({ direction: "previous" })}
+                data-testid={readerPageTestIds.previousLink}
+              >
+                <StrokeIcon name="arrowLeft" />
+                Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className={styles.position} data-testid={readerPageTestIds.position}>
+              {neighbours.position} of {neighbours.total}
+            </span>
+            {neighbours.nextId ? (
+              <Link
+                className={styles.stepLink}
+                to={Routes.overview(neighbours.nextId)}
+                viewTransition={animateNavigation}
+                onClick={() => reader.page.neighbourFollowed({ direction: "next" })}
+                data-testid={readerPageTestIds.nextLink}
+              >
+                Next
+                <StrokeIcon name="arrowRight" />
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
         )}
-        {tab === "Transcript" && (
-          <TranscriptPanel
-            key={overview.video.id}
-            video={overview.video}
-            openAtMs={transcriptOpenAtMs}
-            openedFrom={openedFrom}
-            onBackToChapters={() => changeTab("Chapters")}
+
+        {confirmingDelete && (
+          <DeleteOverviewDialog
+            title={overview.video.title}
+            onDelete={confirmDelete}
+            onClose={() => {
+              reader.deleteDialog.cancelled();
+              setConfirmingDelete(false);
+            }}
           />
         )}
-        {tab === "Chapters" && (
-          <ChaptersPanel
-            chapters={overview.chapters}
-            video={overview.video}
-            onOpenTranscriptAt={openTranscriptAt}
+
+        {sharing && (
+          <ShareOverviewDialog
+            share={overviewShare.share}
+            edited={overviewShare.edited}
+            signedIn={sync.connected}
+            busy={shareOverview.isPending || stopSharing.isPending}
+            failed={shareOverview.isError || stopSharing.isError}
+            onCreate={() => shareOverview.mutate({ overview })}
+            onStop={() => {
+              if (overviewShare.share !== null) {
+                stopSharing.mutate({ token: overviewShare.share.token });
+              }
+            }}
+            onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
+            onClose={() => setSharing(false)}
           />
         )}
-      </div>
 
-      {/* Where the library's order takes you next. At the foot rather than on the bar:
-          the next note is a thing to want once this one is read (design 4a has no
-          stepper, and the panel has no list to step through). */}
-      {!isPanel && neighbours.position !== null && (
-        <nav className={styles.foot} aria-label="Neighbouring overviews">
-          {neighbours.previousId ? (
-            <Link
-              className={styles.stepLink}
-              to={Routes.overview(neighbours.previousId)}
-              viewTransition={animateNavigation}
-              data-testid={readerPageTestIds.previousLink}
-            >
-              <StrokeIcon name="arrowLeft" />
-              Previous
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className={styles.position} data-testid={readerPageTestIds.position}>
-            {neighbours.position} of {neighbours.total}
-          </span>
-          {neighbours.nextId ? (
-            <Link
-              className={styles.stepLink}
-              to={Routes.overview(neighbours.nextId)}
-              viewTransition={animateNavigation}
-              data-testid={readerPageTestIds.nextLink}
-            >
-              Next
-              <StrokeIcon name="arrowRight" />
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
-
-      {confirmingDelete && (
-        <DeleteOverviewDialog
-          title={overview.video.title}
-          onDelete={confirmDelete}
-          onClose={() => setConfirmingDelete(false)}
-        />
-      )}
-
-      {sharing && (
-        <ShareOverviewDialog
-          share={overviewShare.share}
-          edited={overviewShare.edited}
-          signedIn={sync.connected}
-          busy={shareOverview.isPending || stopSharing.isPending}
-          failed={shareOverview.isError || stopSharing.isError}
-          onCreate={() => shareOverview.mutate({ overview })}
-          onStop={() => {
-            if (overviewShare.share !== null) {
-              stopSharing.mutate({ token: overviewShare.share.token });
-            }
-          }}
-          onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
-          onClose={() => setSharing(false)}
-        />
-      )}
-
-      {(!isPanel || playerDocked) && (
-        <ReaderPlayerBar
-          view={barView}
-          time={notePlayer.time}
-          lines={lines}
-          lineStarts={notePlayer.snapshot.timings.lineStarts}
-          durationSeconds={notePlayer.snapshot.timings.durationSeconds}
-          favourite={isPanel ? { on: state.favourite, onToggle: toggleFavourite } : null}
-          canSignIn={sync.available}
-          onMain={notePlayer.main}
-          onSkip={(delta) => player.skip(delta)}
-          onSeek={(seconds) => player.seek(seconds)}
-          onCycleRate={() => player.cycleRate()}
-          onAction={(action) => {
-            if (action === "markRead") {
-              setOverviewState.mutate({ overviewId, patch: { read: true } });
-            } else if (action === "tryAgain") {
-              notePlayer.play();
-            } else {
-              player.readAlong();
-            }
-          }}
-          onReRecord={() => player.reRecord()}
-        />
-      )}
-    </article>
+        {(!isPanel || playerDocked) && (
+          <ReaderPlayerBar
+            view={barView}
+            time={notePlayer.time}
+            lines={lines}
+            lineStarts={notePlayer.snapshot.timings.lineStarts}
+            durationSeconds={notePlayer.snapshot.timings.durationSeconds}
+            favourite={isPanel ? { on: state.favourite, onToggle: () => toggleFavourite("playerBar") } : null}
+            canSignIn={sync.available}
+            onMain={notePlayer.main}
+            onSkip={(delta) => player.skip(delta)}
+            onSeek={(seconds) => player.seek(seconds)}
+            onCycleRate={() => player.cycleRate()}
+            onAction={(action) => {
+              if (action === "markRead") {
+                reader.overview.readSwitched({ read: true, from: "playerBar" });
+                setOverviewState.mutate({ overviewId, patch: { read: true } });
+              } else if (action === "tryAgain") {
+                notePlayer.play();
+              } else {
+                player.readAlong();
+              }
+            }}
+            onReRecord={() => player.reRecord()}
+          />
+        )}
+      </article>
+    </OverviewAnalyticsProvider>
   );
 }
 

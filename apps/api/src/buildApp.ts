@@ -10,6 +10,7 @@ import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { eventRoutes } from "./events/eventRoutes.js";
+import { sharedPageEventRoutes } from "./events/sharedPageEventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
 import { errorRoutes } from "./errors/errorRoutes.js";
 import type { ErrorSink } from "./errors/ErrorSink.js";
@@ -172,6 +173,7 @@ export async function buildApp({
       transcriptRoutes(api, transcripts, clock);
       shareRoutes(api, shares, config.appUrl);
       eventRoutes(api, eventSink, clock);
+      sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
       errorRoutes(api, errorSink, clock);
       audioRoutes(
         api,

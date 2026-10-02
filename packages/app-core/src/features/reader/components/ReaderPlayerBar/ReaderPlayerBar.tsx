@@ -6,6 +6,8 @@ import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayP
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { PlayerScrubber } from "../../../player/components/PlayerScrubber/PlayerScrubber.js";
 import { SKIP_SECONDS } from "../../../player/PlayerEngine.js";
+import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
+import { usePlayer } from "../../../player/PlayerContext.js";
 import type { PlayerBarAction, PlayerBarView } from "../../../player/util/playerBarView.js";
 import styles from "./ReaderPlayerBar.module.scss";
 import { readerPlayerBarTestIds } from "./ReaderPlayerBarTestIds.js";
@@ -73,6 +75,12 @@ export function ReaderPlayerBar({
   onReRecord,
 }: ReaderPlayerBarProps) {
   const actions = view.actions.filter((action) => action !== "signIn" || canSignIn);
+  const analytics = useOverviewPageAnalytics();
+  const player = usePlayer();
+  const reRecord = () => {
+    analytics.playerBar.reRecordChosen();
+    onReRecord();
+  };
 
   return (
     <div className={styles.root} data-testid={readerPlayerBarTestIds.root}>
@@ -80,7 +88,10 @@ export function ReaderPlayerBar({
         <button
           type="button"
           className={styles.step}
-          onClick={() => onSkip(-SKIP_SECONDS)}
+          onClick={() => {
+            analytics.playerBar.skipped({ direction: "back" });
+            onSkip(-SKIP_SECONDS);
+          }}
           disabled={!view.skipEnabled}
           aria-label={`Back ${SKIP_SECONDS} seconds`}
           data-testid={readerPlayerBarTestIds.skipBackButton}
@@ -90,7 +101,10 @@ export function ReaderPlayerBar({
         <button
           type="button"
           className={styles.play}
-          onClick={onMain}
+          onClick={() => {
+            analytics.playerBar.mainPressed({ button: view.main.kind });
+            onMain();
+          }}
           disabled={view.main.disabled}
           aria-label={view.main.label}
           data-kind={view.main.kind}
@@ -101,7 +115,10 @@ export function ReaderPlayerBar({
         <button
           type="button"
           className={styles.step}
-          onClick={() => onSkip(SKIP_SECONDS)}
+          onClick={() => {
+            analytics.playerBar.skipped({ direction: "forward" });
+            onSkip(SKIP_SECONDS);
+          }}
           disabled={!view.skipEnabled}
           aria-label={`Forward ${SKIP_SECONDS} seconds`}
           data-testid={readerPlayerBarTestIds.skipForwardButton}
@@ -129,6 +146,7 @@ export function ReaderPlayerBar({
                   <Link
                     className={styles.voiceLink}
                     to={Routes.settingsSection("voice")}
+                    onClick={() => analytics.playerBar.voiceLinkFollowed()}
                     data-testid={readerPlayerBarTestIds.voiceLink}
                   >
                     {view.label.rest}
@@ -144,7 +162,7 @@ export function ReaderPlayerBar({
                 <button
                   type="button"
                   className={styles.reRecordLink}
-                  onClick={onReRecord}
+                  onClick={reRecord}
                   data-testid={readerPlayerBarTestIds.reRecordInline}
                 >
                   {view.reRecord}
@@ -167,7 +185,10 @@ export function ReaderPlayerBar({
             lines={lines}
             lineStarts={lineStarts}
             durationSeconds={durationSeconds}
-            onSeek={onSeek}
+            onSeek={(seconds) => {
+              analytics.playerBar.seeked();
+              onSeek(seconds);
+            }}
           />
         </div>
       </div>
@@ -178,7 +199,7 @@ export function ReaderPlayerBar({
         <button
           type="button"
           className={styles.reRecord}
-          onClick={onReRecord}
+          onClick={reRecord}
           data-testid={readerPlayerBarTestIds.reRecordButton}
         >
           <StrokeIcon name="rotateCw" size={14} />
@@ -194,6 +215,7 @@ export function ReaderPlayerBar({
                 key={action}
                 className={styles.signIn}
                 to={Routes.signIn()}
+                onClick={() => analytics.playerBar.actionChosen({ action })}
                 data-testid={readerPlayerBarTestIds.signInLink}
               >
                 {ACTION_LABELS[action]}
@@ -203,7 +225,10 @@ export function ReaderPlayerBar({
                 key={action}
                 type="button"
                 className={action === "tryAgain" ? styles.primaryAction : styles.action}
-                onClick={() => onAction(action)}
+                onClick={() => {
+                  analytics.playerBar.actionChosen({ action });
+                  onAction(action);
+                }}
                 data-testid={readerPlayerBarTestIds.action(action)}
               >
                 {ACTION_LABELS[action]}
@@ -229,7 +254,10 @@ export function ReaderPlayerBar({
       <button
         type="button"
         className={`${styles.rate} ${view.showRate ? "" : styles.rateHiddenWide}`}
-        onClick={onCycleRate}
+        onClick={() => {
+          onCycleRate();
+          analytics.playerBar.rateChanged({ rate: player.getSnapshot().rate });
+        }}
         aria-label={`Playback speed ${view.rateLabel}`}
         data-testid={readerPlayerBarTestIds.rateButton}
       >

@@ -11,6 +11,7 @@ import {
   spokenScript,
   type NarrationRender,
   type AnalyticsEventBatch,
+  type SharedPageEventBatch,
   type ClientErrorBatch,
   type AuthSurface,
   type Connection,
@@ -132,6 +133,7 @@ export class BackendSimulator {
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
   #eventBatches: AnalyticsEventBatch[] = [];
+  #sharedPageEventBatches: Array<{ token: string; batch: SharedPageEventBatch }> = [];
   #errorBatches: ClientErrorBatch[] = [];
 
   constructor(page: Page) {
@@ -652,6 +654,19 @@ export class BackendSimulator {
         }),
       }),
     );
+    await this.#page.route("**/api/shares/*/events", (route) =>
+      this.#respond(route, EndpointKey.SHARED_PAGE_EVENTS, {
+        onDefault: () => {
+          const token = new URL(route.request().url()).pathname.split("/").at(-2)!;
+          this.#sharedPageEventBatches.push({ token, batch: route.request().postDataJSON() as SharedPageEventBatch });
+          return { status: 204, body: undefined };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
     await this.#page.route("**/api/errors", (route) =>
       this.#respond(route, EndpointKey.ERRORS, {
         onDefault: () => {
@@ -831,6 +846,12 @@ export class BackendSimulator {
     events: (): Array<{ name: string; props: Record<string, unknown> }> =>
       this.#eventBatches.flatMap(({ events }) => events.map(({ name, props }) => ({ name, props }))),
     eventNames: (): string[] => this.#eventBatches.flatMap(({ events }) => events.map(({ name }) => name)),
+    // What a shared link's page told /api/shares/:token/events, with the token it was sent under.
+    sharedPage: {
+      batches: (): Array<{ token: string; batch: SharedPageEventBatch }> => [...this.#sharedPageEventBatches],
+      events: (): Array<{ name: string; props: Record<string, unknown> }> =>
+        this.#sharedPageEventBatches.flatMap(({ batch }) => batch.events.map(({ name, props }) => ({ name, props }))),
+    },
   };
 
   // What the app told /api/errors, batch by batch and flattened (docs/architecture/errors-and-logs.md).
