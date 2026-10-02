@@ -1,7 +1,11 @@
+import logging
 import threading
+import time
 from pathlib import Path
 
 import numpy as np
+
+log = logging.getLogger(__name__)
 
 MODEL_FILE = "kokoro-v1.0.onnx"
 VOICES_FILE = "voices-v1.0.bin"
@@ -36,10 +40,13 @@ class LoadingSynthesiser:
         threading.Thread(target=self._load, args=(load,), daemon=True).start()
 
     def _load(self, load) -> None:
+        started = time.perf_counter()
         try:
             self._loaded = load()
+            log.info("model loaded", extra={"loadSeconds": round(time.perf_counter() - started, 2)})
         except BaseException as error:
             self._error = error
+            log.error("model failed to load", exc_info=error)
         finally:
             self._ready.set()
 
