@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 # The API and the web app it serves, in one image (docs/architecture/deploy.md).
 FROM node:22-slim AS build
+# The slim image has no CA certificates, and PostHog's CLI needs them to reach its API.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 ARG BUILD_COMMIT
 ENV BUILD_COMMIT=$BUILD_COMMIT
 WORKDIR /app
