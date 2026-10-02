@@ -21,6 +21,7 @@ import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTran
 import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
+import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 
 // The side panel's home: one video, the one in front of it (docs/features/extension-panel.md).
 // There is no list here and no + New — the whole page is the offer to take this video,
@@ -46,11 +47,16 @@ export function CapturePage() {
     void navigate(Routes.overview(finished.id), { replace: true, state: JUST_GENERATED });
   }, [finished, dismiss, navigate]);
 
-  const readOverview = (overview: Overview) => void navigate(Routes.overview(overview.id));
+  const analytics = useAnalytics();
+  const readOverview = (overview: Overview) => {
+    analytics.capture.panel.readChosen({ overviewId: overview.id });
+    void navigate(Routes.overview(overview.id));
+  };
 
-  const createOverview = () => {
+  const createOverview = (again: boolean) => {
     if (activeVideoUrl !== null) {
-      controller.start(activeVideoUrl);
+      analytics.capture.panel.createChosen({ again });
+      controller.start(activeVideoUrl, { from: "panel" });
     }
   };
 
@@ -100,7 +106,7 @@ export function CapturePage() {
               <button
                 type="button"
                 className={styles.quiet}
-                onClick={createOverview}
+                onClick={() => createOverview(true)}
                 disabled={!keysReady}
                 data-testid={capturePageTestIds.createAgainButton}
               >
@@ -112,7 +118,7 @@ export function CapturePage() {
           <button
             type="button"
             className={styles.primary}
-            onClick={createOverview}
+            onClick={() => createOverview(false)}
             disabled={activeVideoUrl === null || !keysReady}
             data-testid={capturePageTestIds.createButton}
           >
@@ -153,6 +159,7 @@ export function CapturePage() {
             <Link
               className={styles.keysLink}
               to={Routes.settingsSection("keys")}
+              onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "panel" })}
               data-testid={capturePageTestIds.settingsLink}
             >
               Set up keys in Settings <StrokeIcon name="arrowRight" size={14} />
@@ -177,6 +184,7 @@ function RunInProgress({
   onCaptureReasonChange,
   onCaptureReasonCommit,
 }: RunInProgressProps) {
+  const analytics = useAnalytics();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const failed = run.error !== null;
 
@@ -217,7 +225,10 @@ function RunInProgress({
           <button
             type="button"
             className={styles.outlined}
-            onClick={onDismiss}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.runDismissed({ run: "failed" });
+              onDismiss();
+            }}
             data-testid={capturePageTestIds.startAgainButton}
           >
             Start again
@@ -226,7 +237,10 @@ function RunInProgress({
           <button
             type="button"
             className={styles.outlined}
-            onClick={onDismiss}
+            onClick={() => {
+              analytics.capture.newOverviewDialog.runCancelled();
+              onDismiss();
+            }}
             data-testid={capturePageTestIds.cancelButton}
           >
             Cancel

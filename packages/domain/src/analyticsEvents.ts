@@ -60,6 +60,28 @@ const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, or Clear all.
 const FilterControl = z.enum(["panel", "appliedChip", "clearAll"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
+// Where a new overview was asked for.
+export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
+export type CaptureEntry = z.infer<typeof CaptureEntry>;
+// Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
+export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "supadata", "service"]);
+export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
+// A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
+export const CaptureFailure = z.enum([
+  "no-captions",
+  "video-unavailable",
+  "access-restricted",
+  "source-blocked",
+  "rate-limited",
+  "source-unavailable",
+  "malformed-response",
+  "source-unsupported",
+  "noTranscriptSource",
+  "generation",
+  "unknown",
+]);
+export type CaptureFailure = z.infer<typeof CaptureFailure>;
+const RunState = z.enum(["running", "ready", "failed"]);
 export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
@@ -188,6 +210,56 @@ export const analyticsEvents = {
       closed: event("The reader closes the share dialog"),
     },
   }),
+  capture: {
+    newOverview: {
+      started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
+      finished: event("An overview the reader asked for is made and saved; its duration measured by the app", {
+        overviewId: OverviewId,
+        from: CaptureEntry,
+        transcriptSource: CaptureTranscriptSource,
+        durationMs: z.number().int().nonnegative(),
+        reasonGiven: z.boolean(),
+      }),
+      failed: event("An overview the reader asked for could not be made, and why", {
+        from: CaptureEntry,
+        failure: CaptureFailure,
+        durationMs: z.number().int().nonnegative(),
+      }),
+    },
+    newOverviewDialog: {
+      opened: event("The reader opens the new overview dialog", { from: z.enum(["newButton", "statusStrip"]) }),
+      closed: event("The reader closes the new overview dialog, leaving any run going", { run: z.enum(["none", ...RunState.options]) }),
+      runCancelled: event("The reader cancels an overview being made"),
+      runDismissed: event("The reader dismisses a finished or failed run", { run: RunState }),
+      readChosen: event("The reader opens the overview they just made", {
+        overviewId: OverviewId,
+        from: z.enum(["dialog", "statusStrip", "panel"]),
+      }),
+    },
+    newOverviewForm: {
+      linkEntered: event("The reader types or pastes a video link, counted once they stop; never the link", {
+        recognised: z.boolean(),
+        from: z.enum(["dialog", "home"]),
+      }),
+      linkRefused: event("The reader submits something that isn't a YouTube link", { from: z.enum(["dialog", "home"]) }),
+      watchingVideoUsed: event("The reader fills the link with the video they're watching"),
+      clipboardPasted: event("The reader fills the link from the clipboard"),
+      keysLinkFollowed: event("The reader follows the link to set up their keys before making an overview", {
+        from: z.enum(["dialog", "home", "panel"]),
+      }),
+    },
+    captureReason: {
+      typed: event("The reader types why they saved an overview while it's made, once they stop; never the reason"),
+    },
+    panel: {
+      createChosen: event("The reader asks the side panel for an overview of the video in front of it", {
+        again: z.boolean(),
+      }),
+      readChosen: event("The reader opens the overview the library already holds for this video", {
+        overviewId: OverviewId,
+      }),
+    },
+  },
   library: {
     filters: {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),

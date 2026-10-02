@@ -36,6 +36,12 @@ So PostHog holds reader actions and nothing to filter out, and the logs hold the
 story, actions included, for anyone tracing what happened. The logs are shipped to
 PostHog's Logs, where what is only logged can be queried (`errors-and-logs.md`).
 
+One kind of outcome is an event too: how the reader's own request ended, on their screen,
+where a funnel can't be drawn without it. `capture.newOverview.started` is the click;
+`finished` and `failed` are what the reader then saw, so "asked for an overview → got one →
+read it" is one funnel. Their durations are measured by the app between the two, never
+estimated, and a failure is named by kind (`captureFailureOf`), never by its message.
+
 ## Where events go
 
 **Our own API, then PostHog.** The app only ever posts to `/api/events` on the server it
@@ -263,8 +269,8 @@ Until then, events are logged on the server and go nowhere else.
   and time from play to first sound are OV-63 (the sort order people pick is counted, as
   `library.sortPill.orderChosen`), and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
   a call.
-- **The rest of the app's actions.** The reader, the shared page and the library are
-  counted. Making an overview, the player outside the reader, settings, sign-in and the
+- **The rest of the app's actions.** The reader, the shared page, the library and making
+  an overview are counted. The player outside the reader, settings, sign-in and the
   extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
   isn't, a script can print the features, screens, names, descriptions and properties from the same

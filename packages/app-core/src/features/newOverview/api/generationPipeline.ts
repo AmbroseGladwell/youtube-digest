@@ -1,6 +1,7 @@
 import {
   DEFAULT_SECTIONS_ENABLED,
   OverviewId,
+  type CaptureTranscriptSource,
   type Overview,
   type OverviewStore,
   type TranscriptStore,
@@ -18,6 +19,7 @@ import { GenerationCancelledError } from "./GenerationCancelledError.js";
 export interface GenerationProgress {
   video: VideoSource;
   transcriptWords: number;
+  transcriptSource: CaptureTranscriptSource;
 }
 
 export interface GenerationPipelineDeps {
@@ -50,11 +52,11 @@ export async function runOverviewGeneration(
     }
   };
 
-  const { video, transcript } = await resolveVideo(url, deps);
+  const { video, transcript, source: transcriptSource } = await resolveVideo(url, deps);
   const transcriptWords = transcript.reduce((total, segment) => total + countWords(segment.text), 0);
 
   stopIfCancelled();
-  options.onProgress?.({ video, transcriptWords });
+  options.onProgress?.({ video, transcriptWords, transcriptSource });
   const [existingTopics, pastClaims] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),

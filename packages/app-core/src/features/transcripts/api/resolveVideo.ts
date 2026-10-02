@@ -1,5 +1,5 @@
 import { TranscriptFetchError, isWorthAnotherSource } from "@overview/transcripts";
-import { VideoId, type StoredTranscript, type TranscriptStore } from "@overview/domain";
+import { VideoId, type CaptureTranscriptSource, type StoredTranscript, type TranscriptStore } from "@overview/domain";
 import { canonicalYouTubeUrl, extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { ResolvedVideo, TranscriptSource, TranscriptSourceContext } from "../types/TranscriptSource.js";
 import { transcriptFailureMessage } from "../util/transcriptFailureMessage.js";
@@ -12,15 +12,19 @@ export interface VideoResolutionDeps {
 
 export type { ResolvedVideo };
 
+export interface ResolvedVideoWithSource extends ResolvedVideo {
+  source: CaptureTranscriptSource;
+}
+
 // The rungs in order, each asked only if the one before could not answer. The store is
 // read before any of them (docs/features/transcript-retrieval.md).
 export async function resolveVideo(
   pastedUrl: string,
   deps: VideoResolutionDeps,
-): Promise<ResolvedVideo> {
+): Promise<ResolvedVideoWithSource> {
   const url = canonicalYouTubeUrl(pastedUrl) ?? pastedUrl;
   const cached = await readCachedVideo(url, deps.transcriptStore);
-  if (cached) return cached;
+  if (cached) return { ...cached, source: "stored" };
 
   const context: TranscriptSourceContext = {
     readHeldTranscript: (videoId) => deps.transcriptStore.getTranscript(videoId),
@@ -40,7 +44,7 @@ export async function resolveVideo(
         continue;
       }
       await saveResolved(resolved, deps.transcriptStore);
-      return resolved;
+      return { ...resolved, source: source.tier };
     } catch (error) {
       failures.push({ tier: source.tier, outcome: "failed", error });
       // Nothing about the video will be different at the next rung.

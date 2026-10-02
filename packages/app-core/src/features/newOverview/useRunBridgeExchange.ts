@@ -62,7 +62,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         return;
       }
 
-      start(videoUrl);
+      start(videoUrl, { from: "injectedButton" });
       void navigate(Routes.home());
     };
 
