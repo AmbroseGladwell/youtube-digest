@@ -8,6 +8,9 @@ export interface PostHogErrorSinkOptions extends PostHogBatchOptions {
   newDistinctId?: () => string;
 }
 
+// A stack reads newest call first; PostHog wants the call that threw last.
+const oldestFirst = <Frame>(frames: Frame[]): Frame[] => [...frames].reverse();
+
 const exceptionList = ({ type, message, handled, frames }: ClientError) => [
   {
     type,
@@ -15,7 +18,7 @@ const exceptionList = ({ type, message, handled, frames }: ClientError) => [
     mechanism: { handled, synthetic: false },
     stacktrace: {
       type: "raw",
-      frames: frames.map((frame) => ({
+      frames: oldestFirst(frames).map((frame) => ({
         platform: "custom",
         lang: "javascript",
         function: frame.function,
@@ -35,7 +38,7 @@ const serverExceptionList = ({ caughtBy, type, message, frames }: ServerError) =
     mechanism: { handled: false, synthetic: false, type: caughtBy },
     stacktrace: {
       type: "raw",
-      frames: frames.map((frame) => ({
+      frames: oldestFirst(frames).map((frame) => ({
         platform: "custom",
         lang: "javascript",
         function: frame.function,

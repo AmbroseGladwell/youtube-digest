@@ -77,6 +77,11 @@ no scheme, host or query, and a function is an identifier with dots and brackets
 that doesn't fit refuses the whole batch with `invalid_request`, as a malformed event batch
 is refused.
 
+**Frame order.** Frames travel and are logged newest call first, as a stack reads, so a log
+line's `top` is the frame that threw. The sink reverses them on the way to PostHog, which
+wants the frame that threw last. Before OV-70 they went unreversed, so issues grouped
+before then may have been grouped by the wrong frame.
+
 **The trail** holds names and times only, because a name is something the catalogue already
 vouches for. The server drops any name that isn't in the catalogue.
 

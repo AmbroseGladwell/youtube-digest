@@ -95,6 +95,18 @@ test("a reader with no account gets a fresh id per error and no person in PostHo
   assert.ok(batch.every(({ properties }) => !("$ip" in properties)));
 });
 
+test("frames go to PostHog oldest call first, with the one that threw last", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogErrorSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+  const thrownIn = { function: "readTitle", file: "assets/index-Bx3k9.js", line: 12, column: 40 };
+  const calledFrom = { function: "ReaderPage", file: "assets/index-Bx3k9.js", line: 12, column: 3456 };
+
+  await sink.capture([{ ...error, frames: [thrownIn, calledFrom] }], { accountId: ACCOUNT_ID, context, geoAddress: null });
+
+  const frames = sent[0]!.body.batch[0]!.properties.$exception_list[0].stacktrace.frames;
+  assert.deepEqual(frames.map(({ function: name }: { function: string }) => name), ["ReaderPage", "readTitle"]);
+});
+
 test("a refusal is an error, for the route to log", async () => {
   const { fetch } = answering(401);
   const sink = createPostHogErrorSink({ apiKey: "phc_wrong", host: "https://eu.i.posthog.com", environment: "production", fetch });
