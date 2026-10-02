@@ -126,14 +126,18 @@ machine to come up healthy. GitHub records each one under the `production` envir
 with the app's URL. `task deploy` still works from a laptop, for a rollback or a hotfix
 while CI is red for an unrelated reason.
 
-The job needs one secret, `FLY_API_TOKEN`, a deploy token scoped to this app and nothing
+The job needs one secret to deploy, `FLY_API_TOKEN`, a deploy token scoped to this app and nothing
 else, made and stored without it ever appearing on screen:
 
 ```
 fly tokens create deploy --name github-actions --expiry 8760h | gh secret set FLY_API_TOKEN
 ```
 
-It is the one production value that lives outside Bitwarden, because GitHub's runners can
+Two more, `POSTHOG_CLI_API_KEY` and `POSTHOG_CLI_PROJECT_ID`, let the image and the
+extension's build upload their source maps to PostHog. Without them, both builds delete the
+maps and deploy anyway (`docs/architecture/errors-and-logs.md`, "Source maps").
+
+`FLY_API_TOKEN` is the one production value that lives outside Bitwarden, because GitHub's runners can
 only read GitHub's secrets; `docs/conventions/secrets.md` records the exception. Rotate it
 by running the same line again and revoking the old token with `fly tokens list` and
 `fly tokens revoke`.

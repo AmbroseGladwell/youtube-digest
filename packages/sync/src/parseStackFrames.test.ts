@@ -36,4 +36,33 @@ describe("parseStackFrames", () => {
     assert.equal(parseStackFrames(many).length, MAX_ERROR_FRAMES);
     assert.deepEqual(parseStackFrames(undefined), []);
   });
+
+  it("gives each frame the chunk id PostHog's CLI injected into its file, so its source map can be found", () => {
+    const chunkIds = {
+      "Error\n    at https://overview.example/assets/index-Bx3k9.js:1:120\n    at https://overview.example/assets/index-Bx3k9.js:1:900":
+        "0e9b3c7a-5d1f-52a8-b6c4-e2d0f8a17593",
+      "Error\n    at chrome-extension://abcdefghijklmnop/chunks/app-9f8e.js:1:80": "7c1d2e3f-4a5b-5c6d-8e7f-a1b2c3d4e5f6",
+    };
+    const stack = [
+      "TypeError: boom",
+      "    at ReaderPage (https://overview.example/assets/index-Bx3k9.js:12:3456)",
+      "    at commit (chrome-extension://abcdefghijklmnop/chunks/app-9f8e.js:1:200)",
+      "    at https://overview.example/assets/vendor-77aa.js:3:10",
+    ].join("\n");
+
+    assert.deepEqual(
+      parseStackFrames(stack, chunkIds).map(({ file, chunkId }) => ({ file, chunkId })),
+      [
+        { file: "assets/index-Bx3k9.js", chunkId: "0e9b3c7a-5d1f-52a8-b6c4-e2d0f8a17593" },
+        { file: "chunks/app-9f8e.js", chunkId: "7c1d2e3f-4a5b-5c6d-8e7f-a1b2c3d4e5f6" },
+        { file: "assets/vendor-77aa.js", chunkId: undefined },
+      ],
+    );
+  });
+
+  it("leaves chunk ids off when the build was never injected", () => {
+    assert.deepEqual(parseStackFrames("    at f (https://o.example/a.js:1:1)", undefined), [
+      { function: "f", file: "a.js", line: 1, column: 1 },
+    ]);
+  });
 });

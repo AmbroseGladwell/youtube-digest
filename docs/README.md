@@ -20,13 +20,14 @@ Five folders, five different questions.
   ids an event may carry, typing counted once it settles, the shared page counted without an
   account, adding one, the client's queue, and turning it on.
 - `errors-and-logs.md` — what went wrong for a reader: `POST /api/errors` beside events, with
-  or without an account, what an error may carry and how its message is redacted twice, the
-  server's own 500s and crashes and the TTS service's reported beside them, the failing
-  call's request id, the reporter both shells mount (what it catches, the trail of recent
-  actions, its own queue sent before events), a database that won't open before the app
-  mounts, the extension's service worker and the session copy it reads, shipping the
-  server's logs over OTLP to PostHog (or anywhere the `OTEL_*` variables name), what a log
-  line may carry, and how to find a failure's server lines by request id.
+  or without an account, what an error may carry and how its message is redacted twice,
+  source maps uploaded from each build and never served, the server's own 500s and crashes
+  and the TTS service's reported beside them, the failing call's request id, the reporter
+  both shells mount (what it catches, the trail of recent actions, its own queue sent before
+  events), a database that won't open before the app mounts, the extension's service worker
+  and the session copy it reads, shipping the server's logs over OTLP to PostHog (or
+  anywhere the `OTEL_*` variables name), what a log line may carry, and how to find a
+  failure's server lines by request id.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, and
   how the extension gets its id, its server and its store zip.

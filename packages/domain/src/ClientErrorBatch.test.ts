@@ -28,6 +28,16 @@ test("a frame can hold a function name and a path in the bundle, and not a page'
   assert.ok(!withFrame({ function: "what, the reader typed!", file: "a.js", line: 1, column: 2 }));
 });
 
+test("a frame can carry the chunk id PostHog's CLI injected, and nothing else in its place", () => {
+  const withChunkId = (chunkId: string) =>
+    ClientErrorBatch.safeParse({
+      context,
+      errors: [{ ...sent, frames: [{ function: "f", file: "a.js", line: 1, column: 2, chunkId }] }],
+    }).success;
+  assert.ok(withChunkId("0e9b3c7a-5d1f-52a8-b6c4-e2d0f8a17593"));
+  assert.ok(!withChunkId("reader@example.com"));
+});
+
 test("an error's type is a class name, never a sentence", () => {
   assert.ok(!ClientErrorBatch.safeParse({ context, errors: [{ ...sent, type: "Something about my note" }] }).success);
 });

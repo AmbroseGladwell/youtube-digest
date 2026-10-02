@@ -11,6 +11,11 @@ export default defineConfig({
   define: {
     __BUILD_STAMP__: JSON.stringify(buildStamp()),
   },
+  // Maps are made for PostHog and never served: "hidden" leaves no sourceMappingURL in the
+  // bundle, and the image deletes them once uploaded (docs/architecture/errors-and-logs.md, "Source maps").
+  build: {
+    sourcemap: "hidden",
+  },
   resolve: {
     alias: {
       // app-core is TSX source, not a build step apps/web should have to run first —
