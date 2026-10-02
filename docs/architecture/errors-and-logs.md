@@ -6,11 +6,12 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has five parts:
+It has six parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
 - the server's own errors, reported the same way
 - the reporter in the app that both shells mount
+- what's reported before the app mounts
 - the extension's service worker
 - shipping the server's own logs
 
@@ -53,7 +54,7 @@ the only route that does this.
 
 | Field | Is | Kept out |
 |---|---|---|
-| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker` | |
+| `source` | where it was caught: `uncaught`, `unhandledRejection`, `routeBoundary`, `errorState`, `failedRequest`, `serviceWorker`, `startup` | |
 | `type` | the error's class name, as an identifier | a sentence |
 | `message` | redacted by `redactErrorMessage`, at most 200 characters | URLs, emails, quoted text, ids |
 | `frames` | up to 30: a function name, a path inside the bundle, a line and a column | a page's address, query strings |
@@ -191,6 +192,28 @@ as `dropped` on the next batch that gets through. When the page is hidden or lef
 first because they matter more, and because a browser limits how much can be in flight
 as a page closes.
 
+## Before the app mounts
+
+A shell that can't open its local database renders `StartupFailure` instead of `App`. With
+no `App`, there's none of the reporter. So in that branch the shell calls
+`reportStartupFailure` (`packages/app-core/src/app/`), which sends the one error straight
+to `/api/errors` as source `startup`, with `keepalive`:
+
+- **Where to:** the web app's own origin. For the extension, the server its saved
+  connection names, or the server it was built for. This is what `useKnownApiUrl` would
+  have answered.
+- **Under which session:** the extension's saved token, when there is one. The web app's
+  cookie goes with it as it does for every call.
+- **What with:** the surface, layout, build version and platform, and an empty trail,
+  because the reader hasn't done anything yet.
+
+A send that fails is dropped silently, because there's nothing mounted to report it to.
+The shell has already logged the error to the console.
+
+A **blocked** open isn't reported. That's another window holding an older version, which
+the screen tells the reader how to fix. It's the expected answer, not a failure, the same
+as the dead ends `ErrorState` shows without an `error`.
+
 ## The service worker
 
 The extension's worker runs none of the app, so it has its own small reporter,
@@ -312,8 +335,6 @@ as `POSTHOG_API_KEY` is set. After the deploy, check three things:
 
 - **Traces.** Logs are joined by request id, not by a trace. If a request ever spans more
   than this one process, OpenTelemetry tracing is the next step.
-- **Errors before the app mounts.** A shell that can't open its database renders
-  `StartupFailure` outside `App`, so that failure isn't reported yet.
 - **One copy of the extension's session.** Keeping the connection in `chrome.storage`
   rather than `localStorage` would let the worker read the original rather than a copy.
   It is a larger change to how the app reads its connection in the extension.

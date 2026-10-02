@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter } from "react-router";
-import { App, createAppRouter, OutOfDateTab, StartupFailure } from "@overview/app-core";
+import { App, createAppRouter, OutOfDateTab, reportStartupFailure, StartupFailure } from "@overview/app-core";
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
@@ -25,7 +25,9 @@ async function main() {
     db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
   } catch (error) {
     console.error(error);
-    root.render(<StartupFailure blocked={error instanceof LocalDatabaseBlockedError} />);
+    const blocked = error instanceof LocalDatabaseBlockedError;
+    if (!blocked) void reportStartupFailure(error, { surface: "web", build: appBuild });
+    root.render(<StartupFailure blocked={blocked} />);
     return;
   }
 

@@ -11,6 +11,7 @@ import {
   type RunBridge,
   type YouTubeFetch,
   OutOfDateTab,
+  reportStartupFailure,
   StartupFailure,
 } from "@overview/app-core";
 import {
@@ -59,7 +60,11 @@ export async function mountApp({
     db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
   } catch (error) {
     console.error(error);
-    root.render(<StartupFailure blocked={error instanceof LocalDatabaseBlockedError} />);
+    const blocked = error instanceof LocalDatabaseBlockedError;
+    if (!blocked) {
+      void reportStartupFailure(error, { surface: "extension", layout, build: appBuild, defaultApiUrl: PRODUCTION_API_URL });
+    }
+    root.render(<StartupFailure blocked={blocked} />);
     return;
   }
 
