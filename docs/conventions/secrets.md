@@ -64,7 +64,9 @@ secrets production needs, and `task deploy:secrets` renders it under `bws run` a
 `overview-prod` and pipes the lines straight into `fly secrets import`, so no value is
 written to a file, typed into a terminal or pasted into a dashboard
 (`docs/architecture/deploy.md`). Everything that is not a secret lives in `fly.toml`'s
-`[env]`, in the repository. One value has to live outside Bitwarden: the Fly deploy token
+`[env]`, in the repository. The TTS service is a second Fly app with its own template,
+`services/tts/.env.prod.tpl`, and its own task, `task deploy:tts:secrets`. One value has to
+live outside Bitwarden: the Fly deploy token
 the CI deploy job uses, which is a GitHub Actions secret because GitHub's runners can read
 nothing else. It is piped from `fly tokens create` into `gh secret set` without appearing
 on screen (`docs/architecture/deploy.md`).

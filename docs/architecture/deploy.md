@@ -308,6 +308,11 @@ fly deploy --remote-only
 fly scale count 5                 # the pool; each stays stopped until the proxy starts it
 ```
 
+Its one secret is the PostHog token it reports errors under
+(`docs/architecture/errors-and-logs.md`, "The TTS service"). `services/tts/.env.prod.tpl`
+names it and `task deploy:tts:secrets` imports it into this app, the same way
+`task deploy:secrets` does for the API.
+
 CI builds this image on every push (the `image (tts)` job); deploying it is `fly deploy --remote-only --ha=false` from `services/tts`, by hand, because it changes rarely and the app's deploy token is scoped to `the-overview-app` alone.
 
 Narration is kept in the private R2 bucket `the-overview-audio`, in Cloudflare account
