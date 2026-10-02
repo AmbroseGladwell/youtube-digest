@@ -13,6 +13,7 @@ import { ConnectorSetup } from "../ConnectorSetup/ConnectorSetup.js";
 import { ExampleQuestions } from "../ExampleQuestions/ExampleQuestions.js";
 import styles from "./ConnectionsSection.module.scss";
 import { connectionsSectionTestIds } from "./ConnectionsSectionTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export const CONNECTIONS_INTRO =
   "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved. Read-only.";
@@ -20,6 +21,7 @@ export const CONNECTIONS_INTRO =
 // Design 58i–58r. A connection belongs to an account on Plus, so signed out and Free each
 // say what it would take rather than showing controls that cannot work.
 export function ConnectionsSection() {
+  const analytics = useAnalytics();
   const sync = useSync();
   const { connection } = useSyncConnection();
   const session = useSessionQuery();
@@ -40,12 +42,18 @@ export function ConnectionsSection() {
           from the web app.
         </p>
         <div className={styles.actions}>
-          <Link to={Routes.signIn()} className={styles.primary} data-testid={connectionsSectionTestIds.signInLink}>
+          <Link
+            to={Routes.signIn()}
+            className={styles.primary}
+            onClick={() => analytics.mcp.settingsConnections.signInChosen()}
+            data-testid={connectionsSectionTestIds.signInLink}
+          >
             Sign in
           </Link>
           <Link
             to={Routes.createAccount()}
             className={styles.secondary}
+            onClick={() => analytics.mcp.settingsConnections.createAccountChosen()}
             data-testid={connectionsSectionTestIds.createAccountLink}
           >
             Create account
@@ -60,7 +68,10 @@ export function ConnectionsSection() {
       <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
         <StrokeIcon name="alertCircle" size={14} />
         Your account couldn't be checked.{" "}
-        <button type="button" className={styles.retry} onClick={() => void session.refetch()}>
+        <button type="button" className={styles.retry} onClick={() => {
+            analytics.mcp.settingsConnections.retried();
+            void session.refetch();
+          }}>
           Try again
         </button>
       </p>
@@ -84,6 +95,7 @@ export function ConnectionsSection() {
           <Link
             to={Routes.settingsSection("plan")}
             className={styles.primary}
+            onClick={() => analytics.mcp.settingsConnections.seePlusChosen()}
             data-testid={connectionsSectionTestIds.seePlusLink}
           >
             See Plus
@@ -118,7 +130,10 @@ export function ConnectionsSection() {
         <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
           <StrokeIcon name="alertCircle" size={14} />
           Your connections couldn't be loaded.{" "}
-          <button type="button" className={styles.retry} onClick={() => void connections.refetch()}>
+          <button type="button" className={styles.retry} onClick={() => {
+            analytics.mcp.settingsConnections.retried();
+            void connections.refetch();
+          }}>
             Try again
           </button>
         </p>

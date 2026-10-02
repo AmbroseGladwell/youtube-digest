@@ -264,15 +264,18 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62.
+- **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62. Until
+  then, `account.signIn.*` is called but mostly not sent: someone asking for a link has no
+  session yet, so the queue drops it unseen, as it does every signed-out event. The calls are
+  in place so the sign-in funnel counts the day consent lands.
 - **The events other cards named:** the voices sampled and chosen (`narration-voice.md`)
   and time from play to first sound are OV-63 (the sort order people pick is counted, as
   `library.sortPill.orderChosen`), and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
   a call.
 - **The rest of the app's actions.** The reader, the shared page, the library and making
   an overview are counted, and so are the app's chrome (masthead, account menu, mini-player,
-  the dead-end screens by `ErrorScreen`, the newer-version banner, the Plus notes). Settings,
-  sign-in and the extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
+  the dead-end screens by `ErrorScreen`, the newer-version banner, the Plus notes), Settings,
+  sign-in and Connections. The extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
   isn't, a script can print the features, screens, names, descriptions and properties from the same
   object the server checks against.

@@ -3,6 +3,7 @@ import type { Connection } from "@overview/domain";
 import { connectionUseLine } from "../../util/connectionUseLine.js";
 import styles from "./ConnectionRow.module.scss";
 import { connectionRowTestIds } from "./ConnectionRowTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface ConnectionRowProps {
   connection: Connection;
@@ -12,6 +13,7 @@ export interface ConnectionRowProps {
 
 // Revoking cannot be undone, so the row asks once and says so (design 58i, 58j).
 export function ConnectionRow({ connection, now, onRevoke }: ConnectionRowProps) {
+  const analytics = useAnalytics();
   const [confirming, setConfirming] = useState(false);
   const [returned, setReturned] = useState(false);
   const confirmTitle = useRef<HTMLParagraphElement>(null);
@@ -47,6 +49,7 @@ export function ConnectionRow({ connection, now, onRevoke }: ConnectionRowProps)
             type="button"
             className={styles.keep}
             onClick={() => {
+              analytics.mcp.settingsConnections.revokeKept();
               setReturned(true);
               setConfirming(false);
             }}
@@ -74,7 +77,10 @@ export function ConnectionRow({ connection, now, onRevoke }: ConnectionRowProps)
         ref={revokeButton}
         className={styles.revoke}
         aria-label={name === null ? "Revoke unnamed assistant" : `Revoke ${name}`}
-        onClick={() => setConfirming(true)}
+        onClick={() => {
+          analytics.mcp.settingsConnections.revokeAsked();
+          setConfirming(true);
+        }}
         data-testid={connectionRowTestIds.revokeButton}
       >
         Revoke

@@ -122,8 +122,9 @@ export function ConsentPage() {
     );
   };
 
-  const askForLink = (email: string) => {
+  const askForLink = (email: string, resend: boolean = false) => {
     if (knownApiUrl === null) return;
+    analytics.account.signIn.linkRequested({ intent: "signIn", from: "consentScreen", resend });
     setRefused(null);
     requestLink.mutate(
       {
@@ -182,6 +183,7 @@ export function ConsentPage() {
               type="button"
               className={styles.secondary}
               onClick={() => {
+                analytics.account.signIn.differentEmailChosen({ from: "consentScreen" });
                 setLastEmail(sent.email);
                 requestLink.reset();
                 setSent(null);
@@ -194,7 +196,7 @@ export function ConsentPage() {
               sentAt={sent.sentAt}
               sending={requestLink.isPending}
               label="Send another"
-              onResend={() => askForLink(sent.email)}
+              onResend={() => askForLink(sent.email, true)}
             />
           </div>
         </div>
@@ -225,7 +227,10 @@ export function ConsentPage() {
       <button
         type="button"
         className={styles.notYou}
-        onClick={() => void sync.signOut()}
+        onClick={() => {
+          analytics.account.signIn.notYouChosen();
+          void sync.signOut();
+        }}
         disabled={deciding !== null}
         data-testid={consentPageTestIds.notYouButton}
       >
@@ -266,13 +271,20 @@ export function ConsentPage() {
             initialEmail={lastEmail}
             sending={requestLink.isPending}
             refused={refused}
-            onSubmit={askForLink}
+            onSubmit={(email) => askForLink(email)}
           />
         ) : session.isError ? (
           <p className={styles.error} role="alert" data-testid={consentPageTestIds.sessionError}>
             <StrokeIcon name="alertCircle" size={14} />
             We couldn't check your account.{" "}
-            <button type="button" className={styles.retry} onClick={() => void session.refetch()}>
+            <button
+              type="button"
+              className={styles.retry}
+              onClick={() => {
+                analytics.mcp.consentScreen.sessionRetried();
+                void session.refetch();
+              }}
+            >
               Try again
             </button>
           </p>
