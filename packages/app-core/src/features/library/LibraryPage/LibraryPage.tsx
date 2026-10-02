@@ -108,7 +108,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
   if (topicsQuery.isError) {
     return (
-      <ErrorState
+      <ErrorState screen="topicsLoad"
         title="Couldn't load your topics"
         error={topicsQuery.error}
         action={{ label: "Try again", onSelect: () => void topicsQuery.refetch() }}

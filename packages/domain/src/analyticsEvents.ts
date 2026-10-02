@@ -82,6 +82,37 @@ export const CaptureFailure = z.enum([
 ]);
 export type CaptureFailure = z.infer<typeof CaptureFailure>;
 const RunState = z.enum(["running", "ready", "failed"]);
+// Which of the app's dead ends a reader was on, named because its title is copy
+// (docs/features/error-state.md).
+export const ErrorScreen = z.enum([
+  "routeError",
+  "outOfDateTab",
+  "libraryLocked",
+  "libraryUnopenable",
+  "notFound",
+  "overviewLoad",
+  "unreadableOverview",
+  "libraryLoad",
+  "topicsLoad",
+  "accountsUnavailable",
+  "extensionSessionEnded",
+  "extensionCodeFailed",
+  "signInLinkFailed",
+  "writeFloor",
+  "consentExpired",
+  "consentLoad",
+]);
+export type ErrorScreen = z.infer<typeof ErrorScreen>;
+export const AccountMenuItem = z.enum([
+  "settings",
+  "connectExtension",
+  "signInAgain",
+  "signOut",
+  "enterCode",
+  "signIn",
+  "createAccount",
+]);
+export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
 export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
@@ -210,6 +241,52 @@ export const analyticsEvents = {
       closed: event("The reader closes the share dialog"),
     },
   }),
+  app: {
+    masthead: {
+      homeChosen: event("The reader follows the wordmark home"),
+      overviewsChosen: event("The reader follows Overviews in the masthead"),
+      notNowChosen: event("The reader leaves sign-in or account creation with Not now"),
+    },
+    accountMenu: {
+      opened: event("The reader opens the account menu"),
+      closed: event("The reader closes the account menu without choosing anything"),
+      itemChosen: event("The reader picks an item from the account menu", { item: AccountMenuItem }),
+    },
+    errorState: {
+      actionChosen: event("The reader takes the way out a dead-end screen offers: trying again, or leaving for the video", {
+        screen: ErrorScreen,
+      }),
+      backChosen: event("The reader goes back to their overviews from a dead-end screen", { screen: ErrorScreen }),
+    },
+    staleClientBanner: {
+      updateChosen: event("The reader reloads or updates the app from the newer-version banner"),
+      dismissed: event("The reader dismisses the newer-version banner"),
+    },
+  },
+  player: {
+    miniPlayer: {
+      overviewOpened: event("The reader opens the playing overview from the mini-player", { overviewId: OverviewId }),
+      skipped: event("The reader skips back or forward from the mini-player", {
+        overviewId: OverviewId,
+        direction: SkipDirection,
+      }),
+      playToggled: event("The reader plays or pauses from the mini-player, to the state chosen", {
+        overviewId: OverviewId,
+        playing: z.boolean(),
+      }),
+      stopped: event("The reader stops and closes the mini-player", { overviewId: OverviewId }),
+    },
+  },
+  plus: {
+    savedLocallyNote: {
+      seePlusChosen: event("The reader follows See Plus from the note that a new overview is saved only on this browser"),
+      dismissed: event("The reader dismisses the note that a new overview is saved only on this browser"),
+    },
+    planPanel: {
+      connectionsChosen: event("The reader follows the assistant feature from the plan panel to Connections"),
+      recheckChosen: event("The reader asks to check their plan again after it couldn't be checked"),
+    },
+  },
   capture: {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),

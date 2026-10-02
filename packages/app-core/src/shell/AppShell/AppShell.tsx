@@ -80,7 +80,12 @@ export function AppShell() {
           data-testid={appShellTestIds.masthead}
         >
           <div className={styles.bar}>
-            <Link className={styles.brand} to={Routes.home()} data-testid={appShellTestIds.brand}>
+            <Link
+              className={styles.brand}
+              to={Routes.home()}
+              onClick={() => analytics.app.masthead.homeChosen()}
+              data-testid={appShellTestIds.brand}
+            >
               <OverviewMark />
               <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
                 {isPanel ? "Overview" : "The Overview"}
@@ -100,6 +105,7 @@ export function AppShell() {
                     }
                     to={Routes.home()}
                     viewTransition={animateNavigation}
+                    onClick={() => analytics.app.masthead.overviewsChosen()}
                     end
                   >
                     Overviews
@@ -128,6 +134,7 @@ export function AppShell() {
                     className={styles.notNowLink}
                     to={Routes.home()}
                     viewTransition={animateNavigation}
+                    onClick={() => analytics.app.masthead.notNowChosen()}
                     data-testid={appShellTestIds.notNowLink}
                   >
                     Not now

@@ -6,13 +6,20 @@ import { MCP_FEATURE, PLUS_FEATURES } from "../../plusFeatures.js";
 import { usePlan } from "../../usePlan.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export function PlusPlanPanel() {
   const { plan, isPlus, status, recheck } = usePlan();
   const sync = useSync();
+  const analytics = useAnalytics();
   const feature = (text: string) =>
     text === MCP_FEATURE && sync.available ? (
-      <Link to={Routes.settingsSection("connections")} className={styles.featureLink} data-testid={plusPlanPanelTestIds.connectionsLink}>
+      <Link
+        to={Routes.settingsSection("connections")}
+        className={styles.featureLink}
+        onClick={() => analytics.plus.planPanel.connectionsChosen()}
+        data-testid={plusPlanPanelTestIds.connectionsLink}
+      >
         {text}
       </Link>
     ) : (
@@ -32,7 +39,10 @@ export function PlusPlanPanel() {
             <button
               type="button"
               className={styles.recheck}
-              onClick={recheck}
+              onClick={() => {
+                analytics.plus.planPanel.recheckChosen();
+                recheck();
+              }}
               data-testid={plusPlanPanelTestIds.recheckButton}
             >
               Try again

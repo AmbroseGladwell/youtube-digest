@@ -44,7 +44,7 @@ function LibraryHome() {
   if (overviewsQuery.isError) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <ErrorState
+        <ErrorState screen="libraryLoad"
           title="Couldn't load your library"
           error={overviewsQuery.error}
           body="Something went wrong reading your saved overviews. Nothing has been lost."

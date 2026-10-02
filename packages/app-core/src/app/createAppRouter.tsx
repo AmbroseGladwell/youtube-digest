@@ -44,7 +44,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },
         { path: Routes.connect(`:${RouteParams.requestId}`), element: <ConsentPage /> },
-        { path: "*", element: <ErrorState title="There's nothing at this address" back /> },
+        { path: "*", element: <ErrorState screen="notFound" title="There's nothing at this address" back /> },
       ],
     },
   ]);

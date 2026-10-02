@@ -12,6 +12,7 @@ import { lineAtTime } from "../../util/lineAtTime.js";
 import { sectionHeadingAt } from "../../util/playerBarView.js";
 import styles from "./MiniPlayer.module.scss";
 import { miniPlayerTestIds } from "./MiniPlayerTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 const CLEARANCE_PROPERTY = "--mini-player-clearance";
 const CLEARANCE_GAP_PX = 8;
@@ -37,6 +38,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
   const engine = usePlayer();
   const time = usePlayerTime();
   const animateNavigation = useShouldAnimateNavigation();
+  const analytics = useAnalytics();
   const root = useRef<HTMLDivElement | null>(null);
   const [artworkFailed, setArtworkFailed] = useState(false);
   const track = snapshot.track!;
@@ -79,6 +81,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
           className={styles.title}
           to={Routes.overview(track.overviewId)}
           viewTransition={animateNavigation}
+          onClick={() => analytics.player.miniPlayer.overviewOpened({ overviewId: track.overviewId })}
           data-testid={miniPlayerTestIds.titleLink}
         >
           <span className={styles.titleText}>{track.title}</span>
@@ -91,7 +94,10 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         <button
           type="button"
           className={styles.step}
-          onClick={() => engine.skip(-SKIP_SECONDS)}
+          onClick={() => {
+            analytics.player.miniPlayer.skipped({ overviewId: track.overviewId, direction: "back" });
+            engine.skip(-SKIP_SECONDS);
+          }}
           disabled={preparing}
           aria-label={`Back ${SKIP_SECONDS} seconds`}
         >
@@ -100,7 +106,10 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         <button
           type="button"
           className={styles.play}
-          onClick={() => engine.toggle()}
+          onClick={() => {
+            analytics.player.miniPlayer.playToggled({ overviewId: track.overviewId, playing: !playing && !preparing });
+            engine.toggle();
+          }}
           aria-label={preparing ? "Cancel preparing audio" : playing ? "Pause" : "Play"}
           data-testid={miniPlayerTestIds.playButton}
         >
@@ -115,7 +124,10 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         <button
           type="button"
           className={styles.step}
-          onClick={() => engine.skip(SKIP_SECONDS)}
+          onClick={() => {
+            analytics.player.miniPlayer.skipped({ overviewId: track.overviewId, direction: "forward" });
+            engine.skip(SKIP_SECONDS);
+          }}
           disabled={preparing}
           aria-label={`Forward ${SKIP_SECONDS} seconds`}
         >
@@ -124,7 +136,10 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         <button
           type="button"
           className={styles.step}
-          onClick={onStop}
+          onClick={() => {
+            analytics.player.miniPlayer.stopped({ overviewId: track.overviewId });
+            onStop();
+          }}
           aria-label="Stop and close"
           data-testid={miniPlayerTestIds.closeButton}
         >

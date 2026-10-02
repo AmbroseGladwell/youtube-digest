@@ -45,7 +45,7 @@ export function ConnectExtensionPage() {
 
   if (sessionEnded) {
     return (
-      <ErrorState
+      <ErrorState screen="extensionSessionEnded"
         title="This browser's session has ended"
         body="Sign in again, then connect the extension."
         action={{
@@ -58,7 +58,7 @@ export function ConnectExtensionPage() {
 
   if (issue.isError) {
     return (
-      <ErrorState
+      <ErrorState screen="extensionCodeFailed"
         title="Couldn't make a code for the extension"
         error={issue.error}
         body={authFailureMessage(issue.error, CODE_SPENT)}

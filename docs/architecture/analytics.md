@@ -270,8 +270,9 @@ Until then, events are logged on the server and go nowhere else.
   `library.sortPill.orderChosen`), and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
   a call.
 - **The rest of the app's actions.** The reader, the shared page, the library and making
-  an overview are counted. The player outside the reader, settings, sign-in and the
-  extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
+  an overview are counted, and so are the app's chrome (masthead, account menu, mini-player,
+  the dead-end screens by `ErrorScreen`, the newer-version banner, the Plus notes). Settings,
+  sign-in and the extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
   isn't, a script can print the features, screens, names, descriptions and properties from the same
   object the server checks against.

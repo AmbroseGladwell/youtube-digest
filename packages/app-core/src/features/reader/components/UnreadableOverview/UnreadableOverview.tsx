@@ -33,7 +33,7 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
   };
 
   return (
-    <ErrorState
+    <ErrorState screen="unreadableOverview"
       title={
         heldBack
           ? "This overview needs a newer version"

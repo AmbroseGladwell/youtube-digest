@@ -60,7 +60,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const setSent = inExtension ? setPending : setSentHere;
 
   if (!sync.available) {
-    return <ErrorState title="Accounts need the web app or the extension" back />;
+    return <ErrorState screen="accountsUnavailable" title="Accounts need the web app or the extension" back />;
   }
 
   if (welcomeName !== undefined) {
