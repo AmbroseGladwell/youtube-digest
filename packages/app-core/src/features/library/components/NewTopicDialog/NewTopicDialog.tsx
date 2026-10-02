@@ -9,12 +9,13 @@ export interface NewTopicDialogProps {
   unsorted: Overview[];
   busy: boolean;
   onCreate: (input: { name: string; overviews: Overview[] }) => void;
+  onPick: (overviewId: OverviewId, picked: boolean) => void;
   onClose: () => void;
 }
 
 const HEADING_ID = "NewTopicDialog-heading";
 
-export function NewTopicDialog({ open, unsorted, busy, onCreate, onClose }: NewTopicDialogProps) {
+export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<OverviewId[]>([]);
@@ -37,12 +38,14 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onClose }: NewT
   const trimmed = name.trim();
   const picked = unsorted.filter((overview) => chosen.includes(overview.id));
 
-  const toggle = (overviewId: OverviewId) =>
+  const toggle = (overviewId: OverviewId) => {
+    onPick(overviewId, !chosen.includes(overviewId));
     setChosen((current) =>
       current.includes(overviewId)
         ? current.filter((id) => id !== overviewId)
         : [...current, overviewId],
     );
+  };
 
   const submit = () => {
     if (trimmed === "" || busy) {

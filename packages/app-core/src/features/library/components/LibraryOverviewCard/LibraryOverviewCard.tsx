@@ -15,6 +15,7 @@ export interface LibraryOverviewCardProps {
   overviewWithState: OverviewWithState;
   entering?: boolean;
   topicNames: string[];
+  onOpen: (from: "title" | "thumbnail") => void;
   onToggleFavourite: () => void;
   onToggleRead: () => void;
   playing: boolean;
@@ -36,6 +37,7 @@ export function LibraryOverviewCard({
   overviewWithState,
   entering = false,
   topicNames,
+  onOpen,
   onToggleFavourite,
   onToggleRead,
   playing,
@@ -65,7 +67,12 @@ export function LibraryOverviewCard({
       data-testid={libraryOverviewCardTestIds.root}
     >
       <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
-        <OverviewThumbnail video={overview.video} to={readerPath} className={styles.thumbnail} />
+        <OverviewThumbnail
+          video={overview.video}
+          to={readerPath}
+          onOpen={() => onOpen("thumbnail")}
+          className={styles.thumbnail}
+        />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
             {topicNames.map((name) => (
@@ -90,6 +97,7 @@ export function LibraryOverviewCard({
             className={styles.titleLink}
             to={readerPath}
             viewTransition={animateNavigation}
+            onClick={() => onOpen("title")}
             data-testid={libraryOverviewCardTestIds.titleLink}
           >
             <span className={styles.title}>{overview.video.title}</span>

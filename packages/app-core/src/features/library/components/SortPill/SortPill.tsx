@@ -4,6 +4,7 @@ import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { LIBRARY_SORTS, LIBRARY_SORT_LABEL, type LibrarySort } from "../../types/LibrarySort.js";
 import styles from "./SortPill.module.scss";
 import { sortPillTestIds } from "./SortPillTestIds.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface SortPillProps {
   sort: LibrarySort;
@@ -15,6 +16,7 @@ export function SortPill({ sort, onChange }: SortPillProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const options = useRef<(HTMLButtonElement | null)[]>([]);
+  const analytics = useAnalytics();
 
   const close = () => {
     setOpen(false);
@@ -58,7 +60,10 @@ export function SortPill({ sort, onChange }: SortPillProps) {
         type="button"
         ref={trigger}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (!open) analytics.library.sortPill.opened();
+          setOpen(!open);
+        }}
         aria-label={`Sort: ${LIBRARY_SORT_LABEL[sort]}`}
         aria-haspopup="menu"
         aria-expanded={open}

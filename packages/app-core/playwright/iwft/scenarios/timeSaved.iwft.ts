@@ -246,7 +246,7 @@ test.describe("milestones", () => {
     await library.milestones.verifyShowsNothing();
   });
 
-  test("opening the breakdown, stepping a card's lines, dismissing and undoing are counted", async ({
+  test("opening and closing the breakdown, stepping a card's lines, dismissing and undoing are counted", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -268,6 +268,7 @@ test.describe("milestones", () => {
         { name: "timeSaved.milestoneCard.dismissed", props: { milestone: "30m" } },
         { name: "timeSaved.milestoneCard.dismissalUndone", props: { milestone: "30m" } },
         { name: "timeSaved.library.breakdownOpened", props: {} },
+        { name: "timeSaved.library.breakdownClosed", props: {} },
       ]);
   });
 });

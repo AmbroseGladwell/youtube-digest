@@ -57,6 +57,9 @@ const VideoReach = z.enum(["skip", "youtube"]);
 const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
+// Where a library filter was changed: the rail or its sheet, an applied chip's ×, or Clear all.
+const FilterControl = z.enum(["panel", "appliedChip", "clearAll"]);
+const LibrarySort = z.enum(["newest", "oldest", "title"]);
 export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
@@ -185,6 +188,72 @@ export const analyticsEvents = {
       closed: event("The reader closes the share dialog"),
     },
   }),
+  library: {
+    filters: {
+      topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
+      topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
+      noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {
+        novelty: z.enum([...Novelty.options, "all"]),
+        from: FilterControl,
+      }),
+      statusChosen: event("The reader filters the library by read or unread, or back to all", {
+        status: z.enum(["all", "read", "unread"]),
+        from: FilterControl,
+      }),
+      favouriteSwitched: event("The reader turns the favourites filter on or off", { on: z.boolean(), from: FilterControl }),
+      dubiousSwitched: event("The reader turns the dubious-claims filter on or off", { on: z.boolean(), from: FilterControl }),
+      allCleared: event("The reader clears every library filter at once", { applied: z.number().int().nonnegative() }),
+      allTopicsShown: event("The reader shows or hides the topics past the first few", { shown: z.boolean() }),
+      moreShown: event("The reader shows or hides the rail's further filters", { shown: z.boolean() }),
+    },
+    filterSheet: {
+      opened: event("The reader opens the filter sheet on a narrow screen"),
+      closed: event("The reader closes the filter sheet on a narrow screen"),
+    },
+    search: {
+      searched: event("The reader searches the library, counted once they stop typing; never the words", {
+        results: z.number().int().nonnegative(),
+      }),
+      cleared: event("The reader clears the library search"),
+    },
+    sortPill: {
+      opened: event("The reader opens the library's sort menu"),
+      orderChosen: event("The reader picks an order for the library", { sort: LibrarySort }),
+    },
+    overviewCard: {
+      opened: event("The reader opens an overview from its library row", {
+        overviewId: OverviewId,
+        from: z.enum(["title", "thumbnail"]),
+      }),
+      readSwitched: event("The reader marks a library row read or unread, to the state chosen", {
+        overviewId: OverviewId,
+        read: z.boolean(),
+      }),
+      favouriteSwitched: event("The reader favourites or unfavourites a library row, to the state chosen", {
+        overviewId: OverviewId,
+        favourite: z.boolean(),
+      }),
+      listenPressed: event("The reader presses Listen on a library row, to the state chosen", {
+        overviewId: OverviewId,
+        listening: z.boolean(),
+      }),
+    },
+    unreadableCard: {
+      opened: event("The reader opens an overview the app couldn't read from its library row"),
+    },
+    newTopicDialog: {
+      opened: event("The reader opens the new topic dialog from the library"),
+      overviewPicked: event("The reader ticks or unticks an unsorted overview to file under the new topic", {
+        overviewId: OverviewId,
+        picked: z.boolean(),
+      }),
+      created: event("The reader creates a topic from the library; never its name", {
+        topicId: TopicId,
+        filed: z.number().int().nonnegative(),
+      }),
+      cancelled: event("The reader closes the new topic dialog without creating one"),
+    },
+  },
   sharedPage: {
     ...overviewPageEvents,
     page: {
@@ -226,6 +295,7 @@ export const analyticsEvents = {
   timeSaved: {
     library: {
       breakdownOpened: event("The reader opens the time-saved breakdown from the library's running total"),
+      breakdownClosed: event("The reader closes the time-saved breakdown"),
     },
     milestoneCard: {
       dismissed: event("The reader dismisses a time-saved milestone card", { milestone: MilestoneId }),
