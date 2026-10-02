@@ -6,7 +6,7 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has eight parts:
+It has nine parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
 - source maps, so a minified frame reads as the TypeScript it came from
@@ -16,6 +16,7 @@ It has eight parts:
 - what's reported before the app mounts
 - the extension's service worker
 - shipping the server's own logs
+- alerts, so a new or worsening issue reaches someone
 
 ## Where errors go
 
@@ -365,6 +366,40 @@ Cloud or Better Stack is a change of secrets, not of code:
 With none of them set and `POSTHOG_API_KEY` set, logs go to `<POSTHOG_HOST>/i/v1/logs`
 under the same project token, so production needs no new secret. A destination named
 without headers is never handed that token.
+
+## Alerts
+
+Error tracking only helps if someone looks, so PostHog posts to Slack when something
+changes. There are three notifications, one per trigger, all to `#alerts` in a Slack
+workspace kept for this:
+
+| Trigger | Means |
+|---|---|
+| **Issue created** | a failure nobody has seen before |
+| **Issue reopened** | an issue marked resolved has come back: the fix didn't hold |
+| **Issue spiking** | a known issue is happening much more often than usual, often after a deploy |
+
+They fire once per **issue**, not once per error. PostHog groups repeated errors into one
+issue, so a bug every reader hits is one alert. That grouping is what the redacted message
+and the frames are for ("What an error may carry").
+
+**Why Slack.** PostHog's issue alerts can go to Slack, Discord, Teams or a webhook, but not
+email. Email exists only on trend alerts, which watch the total `$exception` count and can
+miss a single new issue. Slack's free plan is enough: one app, and alerts don't need more
+than 90 days of history.
+
+**Setting it up again**, in a new project or after the workspace changes:
+
+1. In PostHog, go to Error tracking → Configuration → Alerting → **New notification**, and
+   pick a trigger.
+2. Choose Slack. **Connect to Slack** the first time, which opens Slack's permission page,
+   and click **Allow** for the workspace. It can also be connected from
+   Settings → Project → Integrations.
+3. In Slack, `/invite @PostHog` into `#alerts`. The app can't post to a channel it hasn't
+   joined.
+4. Pick `#alerts`, then **Test function**, and **Create & enable** once the test message
+   arrives.
+5. Do the same for the other two triggers. If spiking turns out noisy, disable it alone.
 
 ## What a log line may carry
 
