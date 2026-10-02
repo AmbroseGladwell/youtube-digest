@@ -29,8 +29,11 @@ def render_script(synthesiser: Synthesiser, lines: list[str], voice: str, langua
     pieces: list[np.ndarray] = []
     starts: list[float] = []
     position = 0
-    for index, text in enumerate(lines):
-        if index > 0:
+    for text in lines:
+        if not text:
+            starts.append(round(position / sample_rate, 3))
+            continue
+        if pieces:
             pieces.append(gap)
             position += len(gap)
         starts.append(round(position / sample_rate, 3))

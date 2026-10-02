@@ -489,6 +489,41 @@ has already been told twice. This is also why `anthropicGenerationClient` uses `
 and not `messages.parse`: `parse` throws away the whole response on any client-side
 check, and a response that is nearly right is the thing the correction pass needs.
 
+**Decision: key points are written to be heard, without losing what made them
+worth having.** Narration reads each point after a linking word ("First,", "Then,"),
+so a point has to be one to three complete sentences that make sense heard on their
+own, never a fragment, a numbering or a label and a colon. A first version also banned
+parentheses and asked for numbers written as they would be said, with a 35 word cap
+and one or two sentences. The resulting points were cleaner to hear, but they had
+lost detail. The old points had packed two or three ideas each behind semicolons and
+colons, and with those gone the model kept to the cap by dropping content, not by
+tightening. The heartbeats note lost its whole "the theory is contested" point; the
+finance note turned "she claims a lifetime of upgrades costs $200,000" into a plain
+fact; the arms note went from three body-position cues to one. Losing a caveat or
+the source of a claim is the worst thing a note like this can do.
+
+So the prompt now says what to keep: names, numbers, dates, studies and the concrete
+cues or steps, always any caveat or counter-argument the video raises, and who claims
+something when the video presents it as one person's claim. A further sentence is
+there for the specific detail rather than for restating. Numbers, money and symbols
+stay as digits and symbols, because they read better on screen, and speech converts
+them in code (`docs/features/tts-pre-rendered-speech.md`, "The spoken script").
+Brief parentheses are allowed only for a year or a citation, and speech drops them.
+
+**Decision: the word cap is a target in the prompt and a looser limit in the
+schema.** The prompt asks for 40 words a point; the schema refuses only over 50.
+How to apply items work the same way, at 30 and 40. Run against the samples with
+40 enforced, one generation failed outright: a key point was still over 40 words
+after the correction pass. A note failing over a few words is worse than a slightly
+long point, so the hard limit is now only a guard against a point running away, and
+it's the target that sets the length. At 40 words the narrations run about 15%
+longer than before this change, against about 20% at 45.
+
+**Decision: verdict reasoning never opens with the novelty word, and the watch-anyway
+reason never restates the answer.** Narration says the answer itself before the
+reason, and leaves the novelty label on screen only, so either repetition would be
+heard twice or out of order.
+
 ## Stress-testing against genres outside the samples
 
 None of the five real samples are a narrative interview, an instructional video, a

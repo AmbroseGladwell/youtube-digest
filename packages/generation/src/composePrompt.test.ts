@@ -1,8 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
+import { KEY_POINT_MAX_WORDS, KEY_POINT_TARGET_WORDS } from "./sections/coreSection.js";
+import { HOW_TO_APPLY_MAX_WORDS, HOW_TO_APPLY_TARGET_WORDS } from "./sections/howToApplySection.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
 const baseInput: GenerationInput = {
@@ -177,4 +180,54 @@ test("a video saved without a reason says so, rather than leaving the line blank
   const { userMessage } = composePrompt(baseInput);
 
   assert.match(userMessage, /Why they saved it: not said/);
+});
+
+test("asks for fields that read well aloud, whichever sections are on", () => {
+  const { systemPrompt } = composePrompt({
+    ...baseInput,
+    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+  });
+  assert.ok(systemPrompt.includes("write for the ear as well as the eye"));
+  assert.ok(systemPrompt.includes("Keep numbers, money and symbols as digits and symbols"));
+});
+
+test("asks for key points and actions as complete sentences that follow the ordering words", () => {
+  const { systemPrompt } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes(`one to three complete sentences, ${KEY_POINT_TARGET_WORDS} words at most`));
+  assert.ok(systemPrompt.includes(`one complete sentence, ${HOW_TO_APPLY_TARGET_WORDS} words at most`));
+  assert.ok(systemPrompt.includes(`"First,", "Then," or "And finally,"`));
+});
+
+test("asks the key points to keep the specifics and any caveat the video raises", () => {
+  const { systemPrompt } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("names, numbers,\ndates, studies"));
+  assert.ok(systemPrompt.includes("Always keep any caveat,\ncriticism or counter-argument"));
+});
+
+test("keeps the verdict reasoning off its own label and the watch reason off the answer", () => {
+  const { systemPrompt } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("Never begin the reasoning with\nthe novelty word itself"));
+  assert.ok(systemPrompt.includes("never restate yes, no, or skip in it"));
+});
+
+test("asks for fewer words than it enforces, so a near miss does not fail the overview", () => {
+  const { schema } = composePrompt(baseInput);
+  const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
+  const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
+
+  assert.ok(KEY_POINT_TARGET_WORDS < KEY_POINT_MAX_WORDS);
+  assert.ok(HOW_TO_APPLY_TARGET_WORDS < HOW_TO_APPLY_MAX_WORDS);
+  assert.equal(accepts("keyPoints", [words(KEY_POINT_TARGET_WORDS + 1), "Two.", "Three."]), true);
+  assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_TARGET_WORDS + 1)] }), true);
+});
+
+test("refuses a key point or an action over its hard word ceiling, so the retry shortens it", () => {
+  const { schema } = composePrompt(baseInput);
+  const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
+  const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
+
+  assert.equal(accepts("keyPoints", [words(KEY_POINT_MAX_WORDS), "Two.", "Three."]), true);
+  assert.equal(accepts("keyPoints", [words(KEY_POINT_MAX_WORDS + 1), "Two.", "Three."]), false);
+  assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS)] }), true);
+  assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS + 1)] }), false);
 });
