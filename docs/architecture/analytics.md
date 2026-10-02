@@ -259,12 +259,12 @@ Until then, events are logged on the server and go nowhere else.
 ## Not built
 
 - **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62.
-- **The events other cards named:** the sort order people pick (`library-sort.md`), the
-  voices sampled and chosen (`narration-voice.md`) and time from play to first sound are
-  OV-63, and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
+- **The events other cards named:** the voices sampled and chosen (`narration-voice.md`)
+  and time from play to first sound are OV-63 (the sort order people pick is counted, as
+  `library.sortPill.orderChosen`), and the link shapes the parser refuses are OV-29. Each is a catalogue entry and
   a call.
-- **The rest of the app's actions.** The reader and the shared page are counted. The
-  library, making an overview, the player outside the reader, settings, sign-in and the
+- **The rest of the app's actions.** The reader, the shared page and the library are
+  counted. Making an overview, the player outside the reader, settings, sign-in and the
   extension's own surfaces follow, each as catalogue entries and calls in the pattern above.
 - **A generated catalogue page.** `analyticsEvents.ts` is short enough to read. When it
   isn't, a script can print the features, screens, names, descriptions and properties from the same

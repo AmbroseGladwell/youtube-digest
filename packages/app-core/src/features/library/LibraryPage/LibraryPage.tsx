@@ -35,6 +35,8 @@ import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
 import { useFocusTrap } from "../../../util/useFocusTrap.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { useTypingSettled } from "../../analytics/useTypingSettled.js";
+import { recordLibraryFilterChange, type FilterControl } from "../util/recordLibraryFilterChange.js";
 import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
 import { TimeSavedFigure } from "../../timeSaved/components/TimeSavedFigure/TimeSavedFigure.js";
 import { TimeSavedSheet } from "../../timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
@@ -64,6 +66,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
     playerSnapshot.track?.overviewId === overviewId &&
     ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
   const listen = (overview: Overview) => {
+    analytics.library.overviewCard.listenPressed({ overviewId: overview.id, listening: !isPlaying(overview.id) });
     if (playerSnapshot.track?.overviewId === overview.id) {
       player.toggle();
       return;
@@ -77,6 +80,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
+  const searchSettled = useRef(() => {});
+  useTypingSettled(parseLibraryFilters(searchParams).query, () => searchSettled.current());
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
@@ -94,7 +99,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   // The rail is a sheet over the page only in the narrow layout, and only there does it
   // hold the keyboard. On the wide one it is part of the page and `filtersOpen` is never
   // set, the button that would set it being hidden.
-  const closeFilters = () => setFiltersOpen(false);
+  const closeFilters = () => {
+    if (filtersOpen) analytics.library.filterSheet.closed();
+    setFiltersOpen(false);
+  };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
 
@@ -113,14 +121,17 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const counts = libraryFilterCounts(entries);
   const applied = appliedLibraryFilters(filters, topics);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
-  const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1]) =>
+  const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
+    if (from !== null) recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
     setSearchParams(applyLibraryFilterPatch(searchParams, patch), { replace: true });
+  };
 
   const sort = parseLibrarySort(searchParams);
   const visible = orderLibraryEntries(
     entries.filter((entry) => matchesLibraryFilters(entry, filters)),
     sort,
   );
+  searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
@@ -128,7 +139,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         <button
           type="button"
           className={`${styles.filterButton} ${applied.length > 0 ? styles.filterButtonActive : ""}`}
-          onClick={() => setFiltersOpen(true)}
+          onClick={() => {
+            analytics.library.filterSheet.opened();
+            setFiltersOpen(true);
+          }}
           aria-label="Filters"
           aria-expanded={filtersOpen}
           data-testid={libraryPageTestIds.filterButton}
@@ -144,7 +158,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 key={chip.key}
                 type="button"
                 className={styles.appliedChip}
-                onClick={() => changeFilters(chip.clear)}
+                onClick={() => changeFilters(chip.clear, "appliedChip")}
                 data-testid={libraryPageTestIds.appliedChip(chip.key)}
               >
                 {chip.label}
@@ -178,8 +192,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               filters={filters}
               topics={topics}
               counts={counts}
-              onChange={changeFilters}
+              onChange={(patch) => changeFilters(patch, "panel")}
               onNewTopic={() => {
+                analytics.library.newTopicDialog.opened();
                 setFiltersOpen(false);
                 setNewTopicOpen(true);
               }}
@@ -190,7 +205,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             <button
               type="button"
               className={styles.clearAll}
-              onClick={() => changeFilters(DEFAULT_LIBRARY_FILTERS)}
+              onClick={() => {
+                analytics.library.filters.allCleared({ applied: applied.length });
+                changeFilters(DEFAULT_LIBRARY_FILTERS, "clearAll");
+              }}
               data-testid={libraryPageTestIds.clearFiltersButton}
             >
               Clear all
@@ -230,9 +248,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             </div>
             <SortPill
               sort={sort}
-              onChange={(next) =>
-                setSearchParams(applyLibrarySort(searchParams, next), { replace: true })
-              }
+              onChange={(next) => {
+                analytics.library.sortPill.orderChosen({ sort: next });
+                setSearchParams(applyLibrarySort(searchParams, next), { replace: true });
+              }}
             />
           </div>
 
@@ -252,7 +271,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             {filters.query !== "" && (
               <ClearFieldButton
                 label="Clear search"
-                onClick={() => changeFilters({ query: "" })}
+                onClick={() => {
+                  analytics.library.search.cleared();
+                  changeFilters({ query: "" });
+                }}
                 testId={libraryPageTestIds.clearSearchButton}
               />
             )}
@@ -270,6 +292,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 entry.kind === "unreadable" ? (
                   <LibraryUnreadableCard
                     key={entry.record.id}
+                    onOpen={() => analytics.library.unreadableCard.opened()}
                     record={entry.record}
                     entering={entering.has(entry.record.id)}
                   />
@@ -281,18 +304,24 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                     topicNames={entry.overview.topicIds
                       .map((topicId) => topicNameById.get(topicId))
                       .filter((name): name is string => name !== undefined)}
-                    onToggleFavourite={() =>
+                    onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
+                    onToggleFavourite={() => {
+                      analytics.library.overviewCard.favouriteSwitched({
+                        overviewId: entry.overview.id,
+                        favourite: !entry.state.favourite,
+                      });
                       setOverviewState.mutate({
                         overviewId: entry.overview.id,
                         patch: { favourite: !entry.state.favourite },
-                      })
-                    }
-                    onToggleRead={() =>
+                      });
+                    }}
+                    onToggleRead={() => {
+                      analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
                       setOverviewState.mutate({
                         overviewId: entry.overview.id,
                         patch: { read: !entry.state.read },
-                      })
-                    }
+                      });
+                    }}
                     playing={isPlaying(entry.overview.id)}
                     onListen={() => listen(entry.overview)}
                   />
@@ -309,16 +338,32 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         aria-hidden="true"
       />
 
-      <TimeSavedSheet open={timeSavedOpen} summary={timeSaved} onClose={() => setTimeSavedOpen(false)} />
+      <TimeSavedSheet
+        open={timeSavedOpen}
+        summary={timeSaved}
+        onClose={() => {
+          analytics.timeSaved.library.breakdownClosed();
+          setTimeSavedOpen(false);
+        }}
+      />
 
       <NewTopicDialog
         open={newTopicOpen}
         unsorted={unsortedOverviews(readableEntries(entries).map((entry) => entry.overview))}
         busy={createTopic.isPending}
         onCreate={(input) => {
-          createTopic.mutate(input, { onSuccess: () => setNewTopicOpen(false) });
+          createTopic.mutate(input, {
+            onSuccess: (topic) => {
+              analytics.library.newTopicDialog.created({ topicId: topic.id, filed: input.overviews.length });
+              setNewTopicOpen(false);
+            },
+          });
         }}
-        onClose={() => setNewTopicOpen(false)}
+        onPick={(overviewId, picked) => analytics.library.newTopicDialog.overviewPicked({ overviewId, picked })}
+        onClose={() => {
+          analytics.library.newTopicDialog.cancelled();
+          setNewTopicOpen(false);
+        }}
       />
     </div>
   );
