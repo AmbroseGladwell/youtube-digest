@@ -232,6 +232,7 @@ with the session when there is one. It gives the app an `ErrorReporter`.
 | `routeBoundary` | `RouterErrorBoundary`: a page that threw while it rendered. The only one sent as `handled: false`, because the reader hit a dead end the app didn't plan |
 | `failedRequest` | an `ErrorState` given an `error` that is a `SyncRequestError` or `SyncTransportError`: a call to the API that was refused or never answered |
 | `errorState` | an `ErrorState` given any other `error`, such as a read from the device's store that failed |
+| `libraryMove` | the move on sign-in of what this device made without an account, when it fails (`docs/features/account-libraries.md`); what it didn't move is tried again on the next start |
 
 `ErrorState` takes the failure it is showing as `error` and reports it once, however often
 it renders. A screen that shows a dead end for an expected answer (a request that has

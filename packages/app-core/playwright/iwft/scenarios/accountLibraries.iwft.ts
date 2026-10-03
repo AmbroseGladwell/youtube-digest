@@ -1,9 +1,10 @@
-import type { OutboxEntry } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, VideoId, type OutboxEntry, type Overview, type RecordChange } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import {
   SIMULATED_ACCOUNT_ID,
   SIMULATED_EMAIL,
+  SIMULATED_LINK_CODE,
   type BackendSimulator,
 } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -27,6 +28,23 @@ const signOutsCounted = (backendSimulator: BackendSimulator) =>
     .map(({ props }) => props);
 
 const titled = (title: string) => makeOverview({ video: { ...makeOverview().video, title } });
+
+const ofVideo = (videoId: string): Overview => {
+  const overview = makeOverview();
+  return { ...overview, video: { ...overview.video, id: VideoId.parse(videoId), title: `Video ${videoId}` } };
+};
+
+// The account as the server holds it, arriving on the first pull after signing in.
+const inTheAccount = (seq: number, overview: Overview): RecordChange => ({
+  kind: "overview",
+  id: overview.id,
+  schemaVersion: CURRENT_SCHEMA_VERSIONS.overview,
+  rev: 1,
+  seq,
+  updatedAt: "2026-10-01T08:00:00.000Z",
+  deleted: false,
+  body: overview,
+});
 
 const readMark = (key: number, overviewId: string): OutboxEntry => ({
   key,
@@ -82,7 +100,7 @@ test.describe("each account's library", () => {
 
     await launcher.openSignInLink("the-token-from-the-email");
 
-    await launcher.homePage.verifyShowsFirstRunHero();
+    await launcher.libraryMoveNotice.verifyReads("1 Overview added to your account.", null);
     test.expect(await backendSimulator.sync.enrolled(SIMULATED_ACCOUNT_ID)).toBe(true);
     test.expect(await backendSimulator.sync.enrolled(null)).toBe(false);
   });
@@ -240,4 +258,91 @@ test("signing in opens the account's library behind its skeleton", async ({ laun
   await launcher.openSignInLink("the-token-from-the-email");
 
   await launcher.openingLibrary.verifyIsShown();
+});
+
+// Decisions 6 and 7, and design 47e: what this device made without an account moves into it
+// on sign-in, one overview per video, and the reader is told once.
+test.describe("the move on sign-in", () => {
+  test("adds what this browser made to the account, keeps the account's copy of a video it has, and says so", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seed(ofVideo("only-here"));
+    backendSimulator.overviews.seed(ofVideo("in-both"));
+    backendSimulator.sync.seedChange(inTheAccount(1, ofVideo("in-both")));
+    await launcher.launchExpectingLibrary({ sync: true });
+
+    await launcher.openSignInLink("the-token-from-the-email");
+
+    await launcher.libraryMoveNotice.verifyReads(
+      "1 Overview added to your account.",
+      "1 was already there, so we kept your existing version.",
+    );
+    const library = await launcher.homePage.verifyShowsLibrary();
+    await library.expectCardCountToBe(2);
+    test.expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
+    await test
+      .expect.poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "account.signIn.libraryMoved"))
+      .toEqual([{ name: "account.signIn.libraryMoved", props: { moved: 1, alreadyThere: 1 } }]);
+  });
+
+  test("never says added when the account had everything already", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(ofVideo("in-both"));
+    backendSimulator.sync.seedChange(inTheAccount(1, ofVideo("in-both")));
+    await launcher.launchExpectingLibrary({ sync: true });
+
+    await launcher.openSignInLink("the-token-from-the-email");
+
+    await launcher.libraryMoveNotice.verifyReads(
+      "1 Overview was already in your account, so we kept your existing version.",
+      null,
+    );
+  });
+
+  test("says nothing when this browser held nothing", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+
+    await launcher.openSignInLink("the-token-from-the-email");
+
+    await launcher.homePage.verifyShowsFirstRunHero();
+    await launcher.libraryMoveNotice.verifyIsAbsent();
+  });
+
+  test("waits for the account to be pulled, rather than moving blind", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(ofVideo("only-here"));
+    backendSimulator.simulateEndpointError(EndpointKey.SYNC_CHANGES);
+    await launcher.launchExpectingLibrary({ sync: true });
+
+    await launcher.openSignInLink("the-token-from-the-email");
+
+    await launcher.homePage.verifyShowsFirstRunHero();
+    await launcher.libraryMoveNotice.verifyIsAbsent();
+    test.expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(1);
+  });
+
+  test("the notice can be closed, and closing it is counted", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(ofVideo("only-here"));
+    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.openSignInLink("the-token-from-the-email");
+    await launcher.libraryMoveNotice.verifyReads("1 Overview added to your account.", null);
+
+    await launcher.libraryMoveNotice.dismiss();
+
+    await launcher.libraryMoveNotice.verifyIsAbsent();
+    await test
+      .expect.poll(() => backendSimulator.analytics.eventNames())
+      .toContain("account.movedNotice.dismissed");
+  });
+
+  test("the extension says it on the step that welcomes the reader", async ({ launcher, backendSimulator }) => {
+    backendSimulator.auth.accountIsNamed("Ada");
+    backendSimulator.overviews.seed(ofVideo("only-here"));
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: "https://sync.test" });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.requestLink(SIMULATED_EMAIL);
+
+    await signIn.enterCode(SIMULATED_LINK_CODE);
+
+    await signIn.verifyWelcomes("You're in, Ada", /^1 Overview added to your account\.$/);
+  });
 });

@@ -22,10 +22,10 @@ async function main() {
   // render into: it fires long after mount, whenever another tab or the worker upgrades.
   const root = createRoot(container);
 
-  const openLibrary: OpenLibrary = async (accountId) => {
+  const openLibrary: OpenLibrary = async (accountId, { shown = true } = {}) => {
     const { close, ...stores } = await openLocalLibrary({
       accountId,
-      onSuperseded: () => root.render(<OutOfDateTab />),
+      ...(shown ? { onSuperseded: () => root.render(<OutOfDateTab />) } : {}),
     });
     return { accountId, stores, close };
   };

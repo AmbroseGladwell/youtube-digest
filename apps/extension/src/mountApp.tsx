@@ -52,12 +52,12 @@ export async function mountApp({
 
   const root = createRoot(container);
 
-  const openLibrary: OpenLibrary = async (accountId) => {
+  const openLibrary: OpenLibrary = async (accountId, { shown = true } = {}) => {
     const { close, ...stores } = await openLocalLibrary({
       accountId,
-      onSuperseded: () => root.render(<OutOfDateTab />),
+      ...(shown ? { onSuperseded: () => root.render(<OutOfDateTab />) } : {}),
     });
-    await writeLibraryAccount(accountId);
+    if (shown) await writeLibraryAccount(accountId);
     return { accountId, stores, close };
   };
 

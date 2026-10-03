@@ -52,10 +52,10 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftStores__ = seeded;
   window.__iwftLibraries__ = libraries;
   window.__iwftLibrary__ = { accountId: libraryAccountIdOf(connection), stores: seeded, close: () => undefined };
-  window.__iwftOpenLibrary__ = async (accountId) => {
+  window.__iwftOpenLibrary__ = async (accountId, { shown = true } = {}) => {
     const stores = libraries.get(accountId) ?? makeStores(syncAvailable);
     libraries.set(accountId, stores);
-    window.__iwftStores__ = stores;
+    if (shown) window.__iwftStores__ = stores;
     return { accountId, stores, close: () => undefined };
   };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";

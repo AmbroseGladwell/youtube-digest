@@ -24,6 +24,7 @@ import { EnterCode } from "../EnterCode/EnterCode.js";
 import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useLibraryMove } from "../../../accountLibraries/LibraryMoveContext.js";
 
 export interface RequestLinkFlowProps {
   intent: AuthIntent;
@@ -55,6 +56,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const exchangeCode = useExchangeLinkCodeMutation();
   const library = useOverviewsWithStateQuery();
   const overviewCount = library.data?.filter((entry) => entry.kind === "overview").length ?? 0;
+  const libraryMove = useLibraryMove();
 
   const inExtension = surface === "extension";
   const sent = inExtension ? pending : sentHere;
@@ -70,9 +72,10 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
     return (
       <SignedInWelcome
         firstName={welcomeName}
-        overviewCount={overviewCount}
+        move={libraryMove.move}
         onDone={() => {
           analytics.account.signIn.welcomeDone();
+          libraryMove.dismiss();
           void navigate(Routes.home(), { replace: true });
         }}
       />

@@ -10,6 +10,7 @@ import { libraryAccountIdOf } from "../features/sync/types/SyncConnection.js";
 import { useSyncConnection } from "../features/sync/useSyncConnection.js";
 import type { Library, OpenLibrary } from "./Library.js";
 import { LibraryAccountProvider } from "./LibraryAccountContext.js";
+import { OpenLibraryProvider } from "./OpenLibraryContext.js";
 import { StoresProvider } from "./StoresContext.js";
 
 export interface LibraryRuntimeProps {
@@ -63,8 +64,10 @@ export function LibraryRuntime({ library: initial, openLibrary, children }: Libr
   if (failure !== null) return <StartupFailure blocked={failure.blocked} />;
 
   return (
-    <LibraryAccountProvider value={library.accountId}>
-      <StoresProvider value={library.stores}>{children}</StoresProvider>
-    </LibraryAccountProvider>
+    <OpenLibraryProvider value={openLibrary}>
+      <LibraryAccountProvider value={library.accountId}>
+        <StoresProvider value={library.stores}>{children}</StoresProvider>
+      </LibraryAccountProvider>
+    </OpenLibraryProvider>
   );
 }

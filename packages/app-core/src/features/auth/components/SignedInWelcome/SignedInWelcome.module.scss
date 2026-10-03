@@ -1,5 +1,14 @@
 @use "../../auth" as auth;
 
+// Design 47e-1 in the panel: what the account already had, under what was added.
+.then {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
 .footer {
   margin-top: auto;
 }

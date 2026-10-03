@@ -321,6 +321,10 @@ export const analyticsEvents = {
       emailInsteadChosen: event("The reader goes back from entering a code to signing in by email"),
       welcomeDone: event("The reader leaves the welcome shown after signing in"),
       notYouChosen: event("The reader signs out from the consent screen's Not you?"),
+      libraryMoved: event(
+        "Signing in moved this device's overviews into the account: how many were added, and how many the account already had a copy of",
+        { moved: z.number().int().nonnegative(), alreadyThere: z.number().int().nonnegative() },
+      ),
     },
     linkCode: {
       copied: event("The reader copies a code for signing the extension in", { from: LinkCodeFrom }),
@@ -342,6 +346,9 @@ export const analyticsEvents = {
     },
     signedOutLibrary: {
       signInChosen: event("The reader follows Sign in from the empty library shown after signing out"),
+    },
+    movedNotice: {
+      dismissed: event("The reader closes the notice saying which overviews signing in added to the account"),
     },
     accountOffer: {
       createAccountChosen: event("The reader follows Create account from the strip offering an account"),

@@ -17,6 +17,8 @@ import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWit
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
 import { AccountStrip } from "../../accountLibraries/components/AccountStrip/AccountStrip.js";
+import { LibraryMoveNotice } from "../../accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
+import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
 import { useAccountStripKind } from "../../accountLibraries/useAccountStripKind.js";
 import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
@@ -44,6 +46,7 @@ export function CapturePage() {
   const accountStrip = useAccountStripKind(heldHere);
   const signedOutWithNothingHere = useSignedOutHere() && heldHere === 0;
   const sync = useSync();
+  const libraryMoved = useLibraryMove().move !== null;
 
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
@@ -94,8 +97,11 @@ export function CapturePage() {
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
-    <div className={`${styles.root} ${accountStrip === null ? "" : styles.withStrip}`} data-testid={capturePageTestIds.root}>
-      {accountStrip !== null && <AccountStrip kind={accountStrip} panel />}
+    <div
+      className={`${styles.root} ${accountStrip === null && !libraryMoved ? "" : styles.withStrip}`}
+      data-testid={capturePageTestIds.root}
+    >
+      {libraryMoved ? <LibraryMoveNotice panel /> : accountStrip !== null && <AccountStrip kind={accountStrip} panel />}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         <div>
           <h2 className={styles.title}>

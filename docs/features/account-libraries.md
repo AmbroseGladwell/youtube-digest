@@ -29,6 +29,7 @@ was decided for both (Trello OV-47, 2026-10-02) and what is built so far.
 | What the device remembers: signed out here, offer turned down | `features/accountLibraries/deviceAccountHistoryStorage.ts`, `useDeviceAccountHistory.ts` |
 | The strips (47a, 47c), the signed-out library (47b), the notice (47d), opening (47f) | `features/accountLibraries/components/` |
 | Which strip shows, and when the device counts as signed out here | `features/accountLibraries/useAccountStripKind.ts`, `useSignedOutHere.ts` |
+| The move on sign-in, one overview per video, and what it tells the reader (47e) | `features/accountLibraries/moveLibraryInto.ts`, `LibraryMoveRuntime.tsx`, `components/LibraryMoveNotice/`, `util/libraryMoveCopy.ts`; reading positions in `readingPositionStorage.ts` (`moveReadingPositions`) |
 | Settings' row and section (47g), the sign-in page's line (47h) | `features/settings/util/settingsRowValues.ts`, `features/sync/components/SyncPanel/`, `features/auth/util/savedOverviewsNote.ts` |
 | Reading positions kept per library | `features/transcripts/readingPositionStorage.ts` |
 | The screens, against in-memory libraries per account | `packages/app-core/playwright/iwft/scenarios/accountLibraries.iwft.ts` |
@@ -130,6 +131,42 @@ dismissed or until the next sign-in. With nothing left, there is nothing to say.
 **A sign-in that lands meanwhile wins.** Sign-out clears the connection only if it is still
 the one it set out to sign out, so a sign-in finished during its last cycle is not undone.
 
+## The move on sign-in
+
+**It waits for the account's first pull.** `LibraryMoveRuntime` runs once the open library
+is the signed-in account's and its sync has completed a cycle (`lastSyncedAt`), so "the
+account already has this video" means what the account holds, not what this device happened
+to have. A sign-in whose first pull fails moves nothing until one succeeds.
+
+**One overview per video, and the account's copy is kept.** For each overview in the
+no-account library: if the account already holds one of the same video (unreadable records
+included, by their salvaged video id), this copy is let go; otherwise it is written into the
+account's library, journalled like any local write, with its transcript, its read and
+favourite state, and its topics filed under the account's topic of the same name
+(`sameTopicName`) or under a new one. Then it leaves the no-account library. Where the
+reader had got to in its transcript goes with it, unless the account's library already
+remembers a place.
+
+**A move that stops is finished by running it again.** Each overview is written into the
+account before it is removed here, and the runtime runs on every start that finds the
+no-account library holding something. So an overview that arrived before an interruption now
+counts as the account's, and only leaves here; none is ever in neither library, and none is
+pushed twice.
+
+**State is copied only where it differs from the default.** The server refuses a patch that
+changes nothing (`sync-api.md`), and a refused write would sit parked forever.
+
+**The reader is told once (47e).** On the web, in the strip slot: "12 Overviews added to
+your account. 2 were already there, so we kept your existing versions.", or only the second
+part, worded as such, when nothing was added. It goes by itself after ten seconds, the bar
+along its foot holding while the pointer or focus is on it, or with ×. In the extension the
+"You're in" step says it, and Done counts as having been told; the panel's home carries the
+same notice otherwise. Nothing is said when the device held nothing.
+
+**The no-account library is opened beside the account's, not shown.** `openLibrary` takes
+`{ shown: false }` for this, so the extension's worker keeps checking the account's library
+for the YouTube button and the test harness keeps reading the one on screen.
+
 ## What signed out looks like
 
 Two flags, kept on the device whoever is signed in (`DeviceAccountHistory`): whether an
@@ -186,7 +223,13 @@ count the day it lands.
 `link code exchanged` and `signed out` each carry the account's id, and `signed out` the
 session's transport, so one account's sign-in can be followed to its sign-out; never the
 address (`errors-and-logs.md`, "What a log line may carry"). A library that fails to open
-on a switch is reported as a startup failure is.
+on a switch is reported as a startup failure is, and a move that fails as a handled error
+with its own source, `libraryMove`; the overviews it didn't move stay in the no-account
+library for the next start to try again.
+
+**The move is counted** as `account.signIn.libraryMoved`, with how many were added and how
+many the account already had, and closing its notice as `account.movedNotice.dismissed`.
+Both happen signed in, so both are sent.
 
 ## Departures, recorded
 
@@ -200,16 +243,21 @@ on a switch is reported as a startup failure is.
   the first-run page.
 - **The account button's name is "Account, signed out"** only once this device has signed
   out of an account, as the designs draw it; otherwise it stays "Account".
+- **The move writes one overview at a time, not in one transaction.** The card asked for a
+  single transaction on the account's side. The move goes through the stores' own writes,
+  so each is journalled exactly as a reader's would be, and finishing an interrupted move by
+  running it again gives the same guarantee: nothing in both libraries, nothing in neither.
+- **Topics stay behind in the no-account library**, empty, since topics can't be deleted
+  yet. Nothing counts or shows a topic with no overviews, so nothing tells.
+- **An unreadable record stays where it is.** The move can't carry what it can't read, and
+  removing it would lose it; it waits in the no-account library for an app that can.
+- **The extension's welcome no longer counts the extension's overviews as syncing.** It says
+  what the move did, or that what is made here will sync.
 - **`accountId` is required on both sign-in answers.** The server ships before any client
   that reads it, as the web app ships in the same image and the extension is built against
   the deployed server.
 
 ## Not built yet
 
-This card is built as stacked PRs.
-
 - Decision 5's migration of an install signed in when this lands. Until it lands, such an
   install keeps reading `overview-local-store` while signed in.
-- Decisions 6 and 7: the move on sign-in, one per video, and its notice (47e). Until then, a
-  new sign-in opens an empty account library and the no-account library waits where it is;
-  47e has nothing to report until the move exists, so it is built with it.

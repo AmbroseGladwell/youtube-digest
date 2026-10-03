@@ -8,4 +8,10 @@ export interface Library {
   close: () => void;
 }
 
-export type OpenLibrary = (accountId: string | null) => Promise<Library>;
+export interface OpenLibraryOptions {
+  // False for a library opened only to be read from, as the move on sign-in opens the
+  // no-account one: it is not what the app is showing, so nothing should follow it.
+  shown?: boolean;
+}
+
+export type OpenLibrary = (accountId: string | null, options?: OpenLibraryOptions) => Promise<Library>;

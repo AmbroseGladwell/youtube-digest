@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   forgetReadingPosition,
+  moveReadingPositions,
   readReadingPosition,
   writeReadingPosition,
 } from "./readingPositionStorage.js";
@@ -57,6 +58,19 @@ describe("readingPositionStorage", () => {
     expect(readReadingPosition("video1", "account-a", storage)).toBe(65_000);
     expect(readReadingPosition("video1", "account-b", storage)).toBeNull();
     expect(readReadingPosition("video1", null, storage)).toBe(12_000);
+  });
+
+  it("carries the positions of moved overviews into the account, keeping any it already had", () => {
+    const storage = makeStorage();
+    writeReadingPosition("moved", 65_000, null, storage);
+    writeReadingPosition("both", 12_000, null, storage);
+    writeReadingPosition("both", 30_000, "account-a", storage);
+
+    moveReadingPositions(["moved", "both"], "account-a", storage);
+
+    expect(readReadingPosition("moved", "account-a", storage)).toBe(65_000);
+    expect(readReadingPosition("both", "account-a", storage)).toBe(30_000);
+    expect(readReadingPosition("moved", null, storage)).toBeNull();
   });
 
   it("costs nothing but the memory when the browser refuses site data", () => {

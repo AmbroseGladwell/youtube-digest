@@ -30,6 +30,7 @@ import {
   type DeviceAccountHistory,
 } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
+import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutLibraryPageObject } from "../pageObjects/SignedOutLibraryPageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
@@ -207,6 +208,10 @@ export class Launcher {
 
   get accountStrip(): AccountStripPageObject {
     return new AccountStripPageObject(this.testContext);
+  }
+
+  get libraryMoveNotice(): LibraryMoveNoticePageObject {
+    return new LibraryMoveNoticePageObject(this.testContext);
   }
 
   get signOutNotice(): SignOutNoticePageObject {

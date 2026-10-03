@@ -763,6 +763,12 @@ export class BackendSimulator {
       this.#page.evaluate((queued) => {
         for (const entry of queued) window.__iwftStores__.syncStorage?.seedPending(entry);
       }, entries),
+    // How many overviews one of this device's libraries still holds, the no-account one under null.
+    overviewsHeldIn: (accountId: string | null) =>
+      this.#page.evaluate(
+        async (id) => (await window.__iwftLibraries__.get(id)?.overviewStore.listOverviews())?.length ?? 0,
+        accountId,
+      ),
     // Whether a library was ever enrolled into the account, which is what pushes all of it.
     enrolled: (accountId: string | null) =>
       this.#page.evaluate((id) => window.__iwftLibraries__.get(id)?.syncStorage?.enrolled ?? false, accountId),

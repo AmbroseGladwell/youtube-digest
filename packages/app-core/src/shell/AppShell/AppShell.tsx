@@ -8,7 +8,9 @@ import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
 import { AccountStrip } from "../../features/accountLibraries/components/AccountStrip/AccountStrip.js";
+import { LibraryMoveNotice } from "../../features/accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
 import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
+import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
 import { useAccountStripKind } from "../../features/accountLibraries/useAccountStripKind.js";
 import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
@@ -45,6 +47,7 @@ export function AppShell() {
   const onHome = pathname === Routes.home();
   const heldHere = useOverviewsWithStateQuery().data?.length ?? null;
   const accountStrip = useAccountStripKind(onHome && !isPanel ? heldHere : null);
+  const libraryMoved = useLibraryMove().move !== null;
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
   // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
@@ -168,7 +171,9 @@ export function AppShell() {
               onReadOverview={readOverview}
             />
           ) : (
-            !newOverview.run && accountStrip !== null && <AccountStrip kind={accountStrip} />
+            !isPanel &&
+            !newOverview.run &&
+            (libraryMoved ? <LibraryMoveNotice /> : accountStrip !== null && <AccountStrip kind={accountStrip} />)
           )}
         </header>
 

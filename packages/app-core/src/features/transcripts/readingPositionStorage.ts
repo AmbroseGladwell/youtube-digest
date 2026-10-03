@@ -57,3 +57,20 @@ export function forgetReadingPosition(
     writeAll(forgetReadingPositionIn(positions, videoId), accountId, storage);
   }
 }
+
+// Where the reader had got to in the overviews the move on sign-in carried into an account
+// goes with them, without replacing a place the account's library already holds.
+export function moveReadingPositions(
+  videoIds: readonly string[],
+  toAccountId: string,
+  storage: Storage = globalThis.localStorage,
+): void {
+  for (const videoId of videoIds) {
+    const startMs = readReadingPosition(videoId, null, storage);
+    if (startMs === null) continue;
+    if (readReadingPosition(videoId, toAccountId, storage) === null) {
+      writeReadingPosition(videoId, startMs, toAccountId, storage);
+    }
+    forgetReadingPosition(videoId, null, storage);
+  }
+}
