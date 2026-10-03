@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { StoredTranscript, VideoId } from "@overview/domain";
 import { INITIAL_SYNC_STATUS, type SyncStatus } from "@overview/sync";
 import type { SignOutNotice } from "./types/SignOutNotice.js";
+import type { SignOutOptions } from "./types/SignOutOutcome.js";
 
 export interface SyncState {
   // Whether this shell can sync at all. False hides every sync control.
@@ -12,7 +13,7 @@ export interface SyncState {
   syncNow: () => void;
   // Runs one last cycle, tells the server to end the session, then signs this device out
   // whether or not it answered (docs/features/account-libraries.md).
-  signOut: () => Promise<void>;
+  signOut: (options?: SignOutOptions) => Promise<void>;
   signingOut: boolean;
   // What the last sign-out could not send, until the reader dismisses it.
   signOutNotice: SignOutNotice | null;

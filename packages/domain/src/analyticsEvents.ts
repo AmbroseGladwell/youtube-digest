@@ -326,6 +326,27 @@ export const analyticsEvents = {
       copied: event("The reader copies a code for signing the extension in", { from: LinkCodeFrom }),
       renewed: event("The reader asks for a new code for signing the extension in"),
     },
+    signOut: {
+      finished: event(
+        "The reader's sign-out went through: what its last sync left unsent, what the server had refused, whether the device was offline and whether the sync was given up on",
+        {
+          pending: z.number().int().nonnegative(),
+          stuck: z.number().int().nonnegative(),
+          offline: z.boolean(),
+          timedOut: z.boolean(),
+        },
+      ),
+    },
+    signedOutStrip: {
+      signInChosen: event("The reader follows Sign in from the strip a signed-out library carries"),
+    },
+    signedOutLibrary: {
+      signInChosen: event("The reader follows Sign in from the empty library shown after signing out"),
+    },
+    accountOffer: {
+      createAccountChosen: event("The reader follows Create account from the strip offering an account"),
+      dismissed: event("The reader turns down the strip offering an account, which hides it on this device"),
+    },
   },
   settings: {
     page: {

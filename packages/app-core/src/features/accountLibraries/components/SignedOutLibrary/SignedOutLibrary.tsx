@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useStartFromLink } from "../../../newOverview/useStartFromLink.js";
 import { savedHere } from "../../util/libraryPlace.js";
 import styles from "./SignedOutLibrary.module.scss";
@@ -16,6 +17,7 @@ export function SignedOutLibrary() {
   const surface = useSurface();
   const { ready, url, setUrl, validationError, generate } = useStartFromLink();
   const heading = useRef<HTMLHeadingElement | null>(null);
+  const analytics = useAnalytics();
 
   useEffect(() => heading.current?.focus(), []);
 
@@ -33,7 +35,12 @@ export function SignedOutLibrary() {
         sign in.
       </p>
       <div>
-        <Link className={styles.signIn} to={Routes.signIn()} data-testid={signedOutLibraryTestIds.signIn}>
+        <Link
+          className={styles.signIn}
+          to={Routes.signIn()}
+          onClick={() => analytics.account.signedOutLibrary.signInChosen()}
+          data-testid={signedOutLibraryTestIds.signIn}
+        >
           <StrokeIcon name="signIn" size={17} />
           Sign in
         </Link>

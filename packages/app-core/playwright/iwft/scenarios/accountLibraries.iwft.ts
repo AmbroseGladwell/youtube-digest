@@ -1,7 +1,11 @@
 import type { OutboxEntry } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import {
+  SIMULATED_ACCOUNT_ID,
+  SIMULATED_EMAIL,
+  type BackendSimulator,
+} from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
@@ -14,6 +18,13 @@ const signedInAs = (accountId: string) => ({
   email: SIMULATED_EMAIL,
   firstName: "Ada",
 });
+
+// Sent while the session can still carry it, so it is there once the reader is signed out.
+const signOutsCounted = (backendSimulator: BackendSimulator) =>
+  backendSimulator.analytics
+    .events()
+    .filter(({ name }) => name === "account.signOut.finished")
+    .map(({ props }) => props);
 
 const titled = (title: string) => makeOverview({ video: { ...makeOverview().video, title } });
 
@@ -158,6 +169,13 @@ test.describe("never signed in", () => {
       .toContain('"offerDismissed":true');
   });
 
+  test("the empty first-run page offers nothing but the link", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+
+    await launcher.homePage.verifyShowsFirstRunHero();
+    await launcher.accountStrip.verifyIsAbsent();
+  });
+
   test("a shell that cannot sync offers no account", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Mine"));
     await launcher.launchExpectingLibrary();
@@ -178,7 +196,7 @@ test.describe("signing out", () => {
     await menu.verifySigningOut();
   });
 
-  test("with nothing waiting, there is nothing to say", async ({ launcher }) => {
+  test("with nothing waiting, there is nothing to say", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, syncConnection: signedInAs(SIMULATED_ACCOUNT_ID) });
     const menu = await launcher.appShell.accountMenu.open();
 
@@ -186,6 +204,9 @@ test.describe("signing out", () => {
 
     await launcher.signedOutLibrary.verifyIsShown();
     await launcher.signOutNotice.verifyIsAbsent();
+    test
+      .expect(signOutsCounted(backendSimulator))
+      .toEqual([{ pending: 0, stuck: 0, offline: false, timedOut: false }]);
   });
 
   test("offline, it goes anyway and says what will sync on the next sign-in here", async ({
@@ -203,6 +224,9 @@ test.describe("signing out", () => {
     await menu.chooseSignOut();
 
     await launcher.signOutNotice.verifyLeadReads("Signed out while offline. 1 change hasn’t synced to your account yet.");
+    test
+      .expect(signOutsCounted(backendSimulator))
+      .toEqual([{ pending: 1, stuck: 0, offline: true, timedOut: false }]);
     await launcher.signOutNotice.dismiss();
     await launcher.signOutNotice.verifyIsAbsent();
   });

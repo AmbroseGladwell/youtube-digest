@@ -19,7 +19,9 @@ import { readSyncConnection } from "./syncConnectionStorage.js";
 import { DEFAULT_SYNC_CONNECTION, useSyncConnection } from "./useSyncConnection.js";
 import type { SignOutNotice } from "./types/SignOutNotice.js";
 import { isConnected, libraryAccountIdOf } from "./types/SyncConnection.js";
+import type { SignOutOptions, SignOutOutcome } from "./types/SignOutOutcome.js";
 import { signOutNoticeFor } from "./util/signOutNoticeFor.js";
+import { signOutOutcomeOf } from "./util/signOutOutcomeOf.js";
 
 // How long sign-out waits for its last cycle before going anyway: it always completes.
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
@@ -92,19 +94,24 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       signOutNotice,
       dismissSignOutNotice: () => setSignOutNotice(null),
       opening: opening && connected,
-      signOut: async () => {
+      signOut: async ({ beforeEndingSession }: SignOutOptions = {}) => {
         const running = engine.current;
         setSigningOut(true);
         try {
-          const last = running === null ? null : await lastCycleBeforeSigningOut(running.engine);
+          const online = globalThis.navigator?.onLine ?? true;
+          const outcome: SignOutOutcome =
+            running === null
+              ? { pending: 0, stuck: 0, offline: !online, timedOut: false }
+              : await lastCycleBeforeSigningOut(running.engine, online);
           running?.stop();
+          await beforeEndingSession?.(outcome).catch(() => undefined);
           if (apiUrl !== null) {
             await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
           }
           const stillThisConnection = readSyncConnection().accountId === connection.accountId;
           if (stillThisConnection) {
             rememberSignedOutHere();
-            setSignOutNotice(last === null ? null : signOutNoticeFor(last, globalThis.navigator?.onLine ?? true));
+            setSignOutNotice(signOutNoticeFor(outcome));
             setConnection(DEFAULT_SYNC_CONNECTION);
           }
         } finally {
@@ -120,7 +127,8 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
 
 // One cycle, so whatever was waiting goes before the session does; a cycle that hangs is
 // given up on rather than holding the reader signed in (docs/features/account-libraries.md).
-async function lastCycleBeforeSigningOut(engine: SyncEngine): Promise<SyncStatus> {
+async function lastCycleBeforeSigningOut(engine: SyncEngine, online: boolean): Promise<SignOutOutcome> {
   const limit = new Promise<null>((resolve) => setTimeout(() => resolve(null), SIGN_OUT_SYNC_LIMIT_MS));
-  return (await Promise.race([engine.sync().catch(() => null), limit])) ?? engine.status;
+  const finished = await Promise.race([engine.sync().catch(() => engine.status), limit]);
+  return signOutOutcomeOf(finished ?? engine.status, { online, timedOut: finished === null });
 }

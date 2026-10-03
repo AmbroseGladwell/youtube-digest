@@ -29,6 +29,7 @@ export function sessionRoutes(app: FastifyInstance, { sql, clock, sessionCookieS
   app.delete("/session", async (request, reply) => {
     const session = request.session!;
     await deleteSession(sql, session.tokenHash);
+    request.log.info({ accountId: session.accountId, transport: session.transport }, "signed out");
     if (session.transport === "cookie") {
       reply.header("set-cookie", clearedSessionCookie({ secure: sessionCookieSecure }));
     }

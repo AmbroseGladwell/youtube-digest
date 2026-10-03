@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { LightMyRequestResponse } from "fastify";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { createLogger } from "../logs/createLogger.js";
 import { createTestApp, TEST_APP_URL, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { hashToken } from "./hashToken.js";
 import { SESSION_COOKIE } from "./sessionCookie.js";
@@ -304,6 +305,29 @@ test("signing out with the cookie deletes the session and clears the cookie", as
   assert.equal(signOut.statusCode, 204);
   assert.match(setCookie(signOut), new RegExp(`^${SESSION_COOKIE}=; Max-Age=0;`));
   assert.equal((await whoAmI(testApp, { cookie })).statusCode, 401);
+  await testApp.close();
+});
+
+test("signing in, exchanging a code and signing out are logged by account id, never by address", async () => {
+  const lines: Array<Record<string, unknown>> = [];
+  const logger = createLogger([{ write: (chunk: string) => void lines.push(JSON.parse(chunk)) }]);
+  const testApp = await createTestApp({}, { logger });
+  const cookie = await signInOnTheWeb(testApp);
+  const { accountId } = (await whoAmI(testApp, { cookie })).json();
+  const headers = { cookie, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
+  const { linkCode } = (await testApp.app.inject({ method: "POST", url: "/api/session/link-code", headers })).json();
+  await exchange(testApp, linkCode);
+
+  await testApp.app.inject({ method: "DELETE", url: "/api/session", headers });
+
+  const line = (msg: string) => lines.find((logged) => logged.msg === msg);
+  assert.equal(line("account created")?.accountId, accountId);
+  assert.equal(line("link code exchanged")?.accountId, accountId);
+  assert.deepEqual(
+    { accountId: line("signed out")?.accountId, transport: line("signed out")?.transport },
+    { accountId, transport: "cookie" },
+  );
+  assert.doesNotMatch(JSON.stringify(lines), new RegExp(EMAIL));
   await testApp.close();
 });
 

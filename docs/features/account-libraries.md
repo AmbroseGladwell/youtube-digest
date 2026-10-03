@@ -24,7 +24,8 @@ was decided for both (Trello OV-47, 2026-10-02) and what is built so far.
 | Each shell opens the library the device was last signed in to | `apps/web/src/main.tsx`, `apps/extension/src/mountApp.tsx` |
 | The extension's worker reads the same library as its pages | `apps/extension/src/libraryAccount.ts`, `serviceWorker.ts` |
 | Sign-out syncs first, for ten seconds at most, and clears nothing | `features/sync/SyncRuntime.tsx` |
-| What a sign-out left queued, counted and worded | `features/sync/util/signOutNoticeFor.ts`, `features/accountLibraries/util/signOutNoticeCopy.ts` |
+| What a sign-out left queued, counted and worded | `features/sync/util/signOutOutcomeOf.ts`, `signOutNoticeFor.ts`, `features/accountLibraries/util/signOutNoticeCopy.ts` |
+| Sign-out counted before the session ends | `features/accountLibraries/useSignOut.ts`, `account.*` in `packages/domain/src/analyticsEvents.ts` |
 | What the device remembers: signed out here, offer turned down | `features/accountLibraries/deviceAccountHistoryStorage.ts`, `useDeviceAccountHistory.ts` |
 | The strips (47a, 47c), the signed-out library (47b), the notice (47d), opening (47f) | `features/accountLibraries/components/` |
 | Which strip shows, and when the device counts as signed out here | `features/accountLibraries/useAccountStripKind.ts`, `useSignedOutHere.ts` |
@@ -145,8 +146,10 @@ nothing about signing out, ever.
   heading. Below Sign in, the first-run field, so someone else at a shared device can start;
   it is shown only when this device can generate, like every control here. The panel says
   it in one line under its offer.
-- **Never signed in (47c).** The same slot offers an account, "Sync across devices…", with
-  Create account and ×, which hides it on this device for good.
+- **Never signed in (47c).** Once the library holds an overview, the same slot offers an
+  account, "Sync across devices…", with Create account and ×, which hides it on this device
+  for good. The empty first-run page doesn't carry it: it has one job, taking a link, and a
+  reader with nothing yet has nothing to sync. The same goes for the panel.
 - **Opening (47f).** After a sign-in, until the account's first cycle is done, the library
   is its own skeleton with "Opening your library…", so an empty library is never taken for
   the account's. Sign-out needs none: the device's own library opens at once.
@@ -159,6 +162,31 @@ nothing about signing out, ever.
 The strips show only on the library, where what they describe is in front of the reader,
 and give way to the generation strip while something is being made. The web app says "this
 browser" wherever the extension says "the extension".
+
+## Analytics and logging
+
+**`account.signOut.finished` is the one sign-out event, and it is sent before the session
+ends.** A signed-out reader sends nothing (`analytics.md`, "Who is counted"), so an event
+recorded after sign-out would never leave the device. `useSignOut` passes `signOut` a
+`beforeEndingSession` step that records the outcome and flushes the queue while the session
+is still alive: how many writes were left unsent, how many the server had refused, whether
+the device was offline, and whether the last cycle was given up on. Every sign-out goes
+through it, from the menu, Settings, the consent screen and Connect the extension. Which
+control was used is already counted (`app.accountMenu.itemChosen`,
+`settings.sync.signOutChosen`).
+
+**What a signed-out library offers is called but not yet sent.**
+`account.signedOutStrip.signInChosen`, `account.signedOutLibrary.signInChosen`,
+`account.accountOffer.createAccountChosen` and `account.accountOffer.dismissed` are made by
+readers without a session, so like `account.signIn.*` they reach only the trail an error
+carries until OV-62 brings consent and an anonymous id. The calls are in place so they
+count the day it lands.
+
+**The server logs each session by account id.** `account created` or `signed in`,
+`link code exchanged` and `signed out` each carry the account's id, and `signed out` the
+session's transport, so one account's sign-in can be followed to its sign-out; never the
+address (`errors-and-logs.md`, "What a log line may carry"). A library that fails to open
+on a switch is reported as a startup failure is.
 
 ## Departures, recorded
 

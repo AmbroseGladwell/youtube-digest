@@ -15,6 +15,7 @@ import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 import type { AccountMenuItem } from "@overview/domain";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -27,6 +28,7 @@ export function AccountMenu() {
   const isPanel = useIsPanel();
   const surface = useSurface();
   const sync = useSync();
+  const signOut = useSignOut();
   const { connection } = useSyncConnection();
   const { pending } = usePendingSignIn();
   const { signedOutHere } = useDeviceAccountHistory();
@@ -146,7 +148,7 @@ export function AccountMenu() {
               "signInAgain",
               () => {
                 close(false);
-                void sync.signOut().then(() => navigate(Routes.signIn()));
+                void signOut().then(() => navigate(Routes.signIn()));
               },
               accountMenuTestIds.signInAgainItem,
             )
@@ -171,7 +173,7 @@ export function AccountMenu() {
                 "signOut",
                 "Sign out",
                 "signOut",
-                () => void sync.signOut().then(() => close(false)).then(refocusIfNothingElseIs),
+                () => void signOut().then(() => close(false)).then(refocusIfNothingElseIs),
                 accountMenuTestIds.signOutItem,
               )}
       </>

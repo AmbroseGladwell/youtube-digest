@@ -1,7 +1,6 @@
-import type { SyncStatus } from "@overview/sync";
 import type { SignOutNotice } from "../types/SignOutNotice.js";
+import type { SignOutOutcome } from "../types/SignOutOutcome.js";
 
-export function signOutNoticeFor(status: SyncStatus, online: boolean): SignOutNotice | null {
-  if (status.pending === 0 && status.stuck === 0) return null;
-  return { pending: status.pending, stuck: status.stuck, offline: !online || status.phase === "offline" };
+export function signOutNoticeFor({ pending, stuck, offline }: SignOutOutcome): SignOutNotice | null {
+  return pending === 0 && stuck === 0 ? null : { pending, stuck, offline };
 }

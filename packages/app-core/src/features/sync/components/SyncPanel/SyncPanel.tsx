@@ -11,6 +11,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignedOutHere } from "../../../accountLibraries/useSignedOutHere.js";
 import { overviewsNoun, savedHere } from "../../../accountLibraries/util/libraryPlace.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
+import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
 const EXTENSION_NOTE =
@@ -24,6 +25,7 @@ const EXTENSION_NOTE =
 export function SyncPanel() {
   const analytics = useAnalytics();
   const sync = useSync();
+  const signOut = useSignOut();
   const surface = useSurface();
   const { connection } = useSyncConnection();
   const signedOutHere = useSignedOutHere();
@@ -69,7 +71,7 @@ export function SyncPanel() {
                 className={styles.primaryButton}
                 onClick={() => {
                   analytics.settings.sync.signOutChosen({ signedOutAtServer: true });
-                  void sync.signOut();
+                  void signOut();
                 }}
                 data-testid={syncPanelTestIds.signOutButton}
               >
@@ -108,7 +110,7 @@ export function SyncPanel() {
             onClick={() => {
               if (sync.signingOut) return;
               analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
-              void sync.signOut();
+              void signOut();
             }}
             aria-disabled={sync.signingOut}
             aria-live="polite"

@@ -11,6 +11,7 @@ import { LinkCodeCard } from "../components/LinkCodeCard/LinkCodeCard.js";
 import { useIssueLinkCodeMutation } from "../mutations/useIssueLinkCodeMutation.js";
 import { authFailureMessage, CODE_SPENT } from "../util/authFailureMessage.js";
 import { connectExtensionPageTestIds } from "./ConnectExtensionPageTestIds.js";
+import { useSignOut } from "../../accountLibraries/useSignOut.js";
 
 // The web app, already signed in, mints a code over its own session so the extension
 // beside it signs in without a second email (docs/features/sign-in.md).
@@ -18,6 +19,7 @@ export function ConnectExtensionPage() {
   const surface = useSurface();
   const navigate = useNavigate();
   const sync = useSync();
+  const signOut = useSignOut();
   const { connection } = useSyncConnection();
   const issue = useIssueLinkCodeMutation();
   const apiUrl = connection.apiUrl ?? globalThis.location?.origin ?? "";
@@ -50,7 +52,7 @@ export function ConnectExtensionPage() {
         body="Sign in again, then connect the extension."
         action={{
           label: "Sign in again",
-          onSelect: () => void sync.signOut().then(() => navigate(Routes.signIn())),
+          onSelect: () => void signOut().then(() => navigate(Routes.signIn())),
         }}
       />
     );

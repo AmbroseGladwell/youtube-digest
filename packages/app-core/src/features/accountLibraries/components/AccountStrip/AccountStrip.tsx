@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { dismissAccountOffer } from "../../useDeviceAccountHistory.js";
 import type { AccountStripKind } from "../../useAccountStripKind.js";
 import styles from "./AccountStrip.module.scss";
@@ -33,6 +34,16 @@ const COPY = {
 // this reader may never want an account (docs/features/account-libraries.md).
 export function AccountStrip({ kind, panel = false }: AccountStripProps) {
   const copy = COPY[kind];
+  const analytics = useAnalytics();
+  const actionChosen =
+    kind === "signedOut"
+      ? analytics.account.signedOutStrip.signInChosen
+      : analytics.account.accountOffer.createAccountChosen;
+  const dismiss = () => {
+    analytics.account.accountOffer.dismissed();
+    dismissAccountOffer();
+  };
+
   return (
     <div
       className={`${styles.root} ${panel ? styles.panel : ""}`}
@@ -49,14 +60,19 @@ export function AccountStrip({ kind, panel = false }: AccountStripProps) {
         </span>
       </span>
       <span className={styles.actions}>
-        <Link className={styles.action} to={copy.to} data-testid={accountStripTestIds.action}>
+        <Link
+          className={styles.action}
+          to={copy.to}
+          onClick={() => actionChosen()}
+          data-testid={accountStripTestIds.action}
+        >
           {copy.action}
         </Link>
         {kind === "offer" && (
           <button
             type="button"
             className={styles.dismiss}
-            onClick={dismissAccountOffer}
+            onClick={dismiss}
             aria-label="Dismiss"
             data-testid={accountStripTestIds.dismiss}
           >

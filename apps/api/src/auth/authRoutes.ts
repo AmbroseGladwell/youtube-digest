@@ -81,7 +81,7 @@ export function authRoutes(
     }
     const account = await findOrCreateAccount(sql, link.email, link.firstName);
     request.log.info(
-      { created: account.created, intent: link.intent, surface: link.surface },
+      { accountId: account.id, created: account.created, intent: link.intent, surface: link.surface },
       account.created ? "account created" : "signed in",
     );
     if (link.surface === "extension") {
@@ -118,6 +118,7 @@ export function authRoutes(
       throw new ApiError("link_invalid", "That code is wrong, has expired, or was already used");
     }
     const session = await createSessionForAccount(sql, accountId, { now, sessionTtlDays });
+    request.log.info({ accountId }, "link code exchanged");
     const [account] = await sql.query<{ email: string; first_name: string | null }>(
       "select email, first_name from accounts where id = $1",
       [accountId],
