@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import {
+  adoptSignedInLibrary,
   App,
   createAppRouter,
   OutOfDateTab,
@@ -11,7 +12,7 @@ import {
   type Library,
   type OpenLibrary,
 } from "@overview/app-core";
-import { LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
+import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 
 async function main() {
@@ -29,6 +30,15 @@ async function main() {
     });
     return { accountId, stores, close };
   };
+
+  // Once, for an install signed in before each account had a library of its own. A failure
+  // leaves the library where it was, to be tried again next start.
+  try {
+    await adoptSignedInLibrary({ moveDatabase: (accountId) => adoptLibraryIntoAccount({ accountId }) });
+  } catch (error) {
+    console.error(error);
+    void reportStartupFailure(error, { surface: "web", build: appBuild });
+  }
 
   let library: Library;
   try {

@@ -29,6 +29,7 @@ was decided for both (Trello OV-47, 2026-10-02) and what is built so far.
 | What the device remembers: signed out here, offer turned down | `features/accountLibraries/deviceAccountHistoryStorage.ts`, `useDeviceAccountHistory.ts` |
 | The strips (47a, 47c), the signed-out library (47b), the notice (47d), opening (47f) | `features/accountLibraries/components/` |
 | Which strip shows, and when the device counts as signed out here | `features/accountLibraries/useAccountStripKind.ts`, `useSignedOutHere.ts` |
+| An install signed in before this card: its library adopted by its account, once | `packages/store-local/src/adoptLibraryIntoAccount.ts`, `features/accountLibraries/adoptSignedInLibrary.ts`, both shells' start; reading positions in `readingPositionStorage.ts` (`adoptReadingPositions`) |
 | The move on sign-in, one overview per video, and what it tells the reader (47e) | `features/accountLibraries/moveLibraryInto.ts`, `LibraryMoveRuntime.tsx`, `components/LibraryMoveNotice/`, `util/libraryMoveCopy.ts`; reading positions in `readingPositionStorage.ts` (`moveReadingPositions`) |
 | Settings' row and section (47g), the sign-in page's line (47h) | `features/settings/util/settingsRowValues.ts`, `features/sync/components/SyncPanel/`, `features/auth/util/savedOverviewsNote.ts` |
 | Reading positions kept per library | `features/transcripts/readingPositionStorage.ts` |
@@ -167,6 +168,37 @@ same notice otherwise. Nothing is said when the device held nothing.
 `{ shown: false }` for this, so the extension's worker keeps checking the account's library
 for the YouTube button and the test harness keeps reading the one on screen.
 
+## Installs already signed in
+
+An install signed in when this card landed has a connection with no `accountId` and one
+database, `overview-local-store`, enrolled, perhaps with writes still waiting. Decision 5:
+that database becomes the account's, and the no-account library starts empty.
+
+**Once, before the app opens a library.** Each shell calls `adoptSignedInLibrary` first. It
+asks the server whose session this is (`GET /api/session`, which carries the account's id),
+copies the whole database into `overview-account-<id>` (every store, so the outbox,
+revisions, cursor, enrolled flags and settings come with the records), empties the original,
+and only then writes the id into the connection, and moves the reading positions under it.
+From the next start on, the connection names the account and none of this runs.
+
+**It can stop anywhere.** The copy is one transaction and the emptying another, and the
+connection is written last. A run that stopped after the copy copies the same keys again;
+one that stopped after the emptying copies nothing and then writes the id. An outbox key
+copied across keeps the account's key generator ahead of it, so the next write is journalled
+after the ones that came with the library.
+
+**If the server can't say, nothing changes.** Offline, a server that doesn't answer within
+five seconds, or a session the server has ended: the install keeps reading
+`overview-local-store` as it did, and asks again next start. A failure in the copy itself is
+reported as a startup failure and leaves the library where it was. The app opens either way.
+
+**A session that ended first is the one case it doesn't cover.** Signing in again then
+starts a new account library, and the old database becomes the no-account library, enrolled
+and holding its outbox; the move on sign-in carries its overviews, state and topics into the
+account, but writes still waiting in that outbox (a delete, a field changed since the last
+push) don't come with them. It needs a session to have ended on an install that had unsent
+writes and then not been opened until this landed.
+
 ## What signed out looks like
 
 Two flags, kept on the device whoever is signed in (`DeviceAccountHistory`): whether an
@@ -256,8 +288,3 @@ Both happen signed in, so both are sent.
 - **`accountId` is required on both sign-in answers.** The server ships before any client
   that reads it, as the web app ships in the same image and the extension is built against
   the deployed server.
-
-## Not built yet
-
-- Decision 5's migration of an install signed in when this lands. Until it lands, such an
-  install keeps reading `overview-local-store` while signed in.

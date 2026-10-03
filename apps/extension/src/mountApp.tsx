@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter } from "react-router";
 import {
+  adoptSignedInLibrary,
   App,
   createAppRouter,
   type ActiveVideoSource,
@@ -17,7 +18,7 @@ import {
   reportStartupFailure,
   StartupFailure,
 } from "@overview/app-core";
-import { LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
+import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 import { writeErrorDestination } from "./errorDestination.js";
 import { writeLibraryAccount } from "./libraryAccount.js";
@@ -60,6 +61,15 @@ export async function mountApp({
     if (shown) await writeLibraryAccount(accountId);
     return { accountId, stores, close };
   };
+
+  // Once, for an install signed in before each account had a library of its own. A failure
+  // leaves the library where it was, to be tried again next start.
+  try {
+    await adoptSignedInLibrary({ moveDatabase: (accountId) => adoptLibraryIntoAccount({ accountId }) });
+  } catch (error) {
+    console.error(error);
+    void reportStartupFailure(error, { surface: "extension", layout, build: appBuild, defaultApiUrl: PRODUCTION_API_URL });
+  }
 
   let library: Library;
   try {

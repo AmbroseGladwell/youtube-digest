@@ -19,4 +19,5 @@ export type { Surface } from "./app/SurfaceContext.js";
 export type { Stores } from "./stores/StoresContext.js";
 export type { Library, OpenLibrary } from "./stores/Library.js";
 export { readLibraryAccountId } from "./features/sync/syncConnectionStorage.js";
+export { adoptSignedInLibrary } from "./features/accountLibraries/adoptSignedInLibrary.js";
 export { isYouTubeUrl } from "./features/newOverview/util/parseYouTubeUrl.js";

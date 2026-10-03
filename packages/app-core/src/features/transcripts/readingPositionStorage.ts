@@ -74,3 +74,16 @@ export function moveReadingPositions(
     forgetReadingPosition(videoId, null, storage);
   }
 }
+
+// An install signed in before accounts had libraries of their own: every place it
+// remembered was the account's, and moves under it with the library.
+export function adoptReadingPositions(accountId: string, storage: Storage = globalThis.localStorage): void {
+  const positions = readAll(null, storage);
+  if (positions.length === 0) return;
+  for (const { videoId, startMs } of [...positions].reverse()) {
+    if (readReadingPosition(videoId, accountId, storage) === null) {
+      writeReadingPosition(videoId, startMs, accountId, storage);
+    }
+  }
+  writeAll([], null, storage);
+}
