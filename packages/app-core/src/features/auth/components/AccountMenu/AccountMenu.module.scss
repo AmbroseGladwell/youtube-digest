@@ -118,3 +118,31 @@
   line-height: 1.5;
   color: var(--muted);
 }
+
+// Design 47d-1: Sign out turns into this in place, and the menu stays open until it is done.
+.signingOut {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5625rem 0.875rem;
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.spinner {
+  display: inline-flex;
+  color: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

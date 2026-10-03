@@ -18,6 +18,7 @@ import {
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
+  type OutboxEntry,
   type Overview,
   type OverviewId,
   type OverviewState,
@@ -757,6 +758,11 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
+    // Writes this device made and has not sent yet, as the open library's outbox holds them.
+    queueLocalWrites: (entries: OutboxEntry[]) =>
+      this.#page.evaluate((queued) => {
+        for (const entry of queued) window.__iwftStores__.syncStorage?.seedPending(entry);
+      }, entries),
     // Whether a library was ever enrolled into the account, which is what pushes all of it.
     enrolled: (accountId: string | null) =>
       this.#page.evaluate((id) => window.__iwftLibraries__.get(id)?.syncStorage?.enrolled ?? false, accountId),

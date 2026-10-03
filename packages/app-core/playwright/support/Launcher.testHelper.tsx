@@ -25,6 +25,14 @@ import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper
 import { SharedOverviewPageObject } from "../pageObjects/SharedOverviewPageObject.testHelper.js";
 import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js";
 import { Routes } from "../../src/app/Routes.js";
+import {
+  NO_ACCOUNT_HISTORY,
+  type DeviceAccountHistory,
+} from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
+import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
+import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
+import { SignedOutLibraryPageObject } from "../pageObjects/SignedOutLibraryPageObject.testHelper.js";
+import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -32,6 +40,8 @@ export interface LaunchOptions {
   sync?: boolean;
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
+  // Whether this device has signed out of an account before, or turned down the offer of one.
+  deviceAccountHistory?: Partial<DeviceAccountHistory>;
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
@@ -98,6 +108,7 @@ export class Launcher {
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,
         pendingSignIn: options.pendingSignIn,
+        deviceAccountHistory: { ...NO_ACCOUNT_HISTORY, ...options.deviceAccountHistory },
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
@@ -192,6 +203,22 @@ export class Launcher {
 
   get signInPage(): SignInPageObject {
     return new SignInPageObject(this.testContext);
+  }
+
+  get accountStrip(): AccountStripPageObject {
+    return new AccountStripPageObject(this.testContext);
+  }
+
+  get signOutNotice(): SignOutNoticePageObject {
+    return new SignOutNoticePageObject(this.testContext);
+  }
+
+  get signedOutLibrary(): SignedOutLibraryPageObject {
+    return new SignedOutLibraryPageObject(this.testContext);
+  }
+
+  get openingLibrary(): OpeningLibraryPageObject {
+    return new OpeningLibraryPageObject(this.testContext);
   }
 
   get homePage(): HomePageObject {

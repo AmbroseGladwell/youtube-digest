@@ -16,6 +16,18 @@
   gap: 1.25rem;
 }
 
+// Designs 47a and 47c: the strip sits at the top of the panel, and the offer stays centred
+// in what is left.
+.withStrip {
+  justify-content: flex-start;
+  gap: 0.875rem;
+  padding-top: 0.25rem;
+
+  .opening {
+    margin-block: auto;
+  }
+}
+
 .title {
   margin: 0 0 0.625rem;
   font-family: var(--font-heading);

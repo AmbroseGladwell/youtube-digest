@@ -13,29 +13,45 @@ import {
 
 const NOW = new Date("2026-09-30T12:00:00Z");
 const SYNCED = { ...INITIAL_SYNC_STATUS, lastSyncedAt: "2026-09-30T11:58:00Z" };
+const NEVER_SIGNED_OUT = { signedOutHere: false, surface: "web" as const };
 const SIGNED_IN = { ...DEFAULT_SYNC_CONNECTION, apiUrl: "https://sync.test", email: "ada@example.com" };
 
 describe("accountRowValue", () => {
   it("names the reader by first name, then the sync status line", () => {
-    expect(accountRowValue({ connected: true, status: SYNCED }, { ...SIGNED_IN, firstName: "Ada" }, NOW)).toBe(
+    expect(accountRowValue({ connected: true, status: SYNCED }, { ...SIGNED_IN, firstName: "Ada" }, NOW, NEVER_SIGNED_OUT)).toBe(
       "Ada · Synced 2 minutes ago",
     );
   });
 
   it("falls back to the email when the account has no first name", () => {
-    expect(accountRowValue({ connected: true, status: SYNCED }, SIGNED_IN, NOW)).toBe(
+    expect(accountRowValue({ connected: true, status: SYNCED }, SIGNED_IN, NOW, NEVER_SIGNED_OUT)).toBe(
       "ada@example.com · Synced 2 minutes ago",
     );
   });
 
   it("is the status line alone when neither is known", () => {
-    expect(accountRowValue({ connected: true, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe(
+    expect(accountRowValue({ connected: true, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW, NEVER_SIGNED_OUT)).toBe(
       "Synced 2 minutes ago",
     );
   });
 
+  it("says where the library is saved once this device has signed out of an account (47g)", () => {
+    expect(
+      accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW, {
+        signedOutHere: true,
+        surface: "web",
+      }),
+    ).toBe("Signed out · saved in this browser");
+    expect(
+      accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW, {
+        signedOutHere: true,
+        surface: "extension",
+      }),
+    ).toBe("Signed out · saved in the extension");
+  });
+
   it("says a signed-out library stays where it is", () => {
-    expect(accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe(
+    expect(accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW, NEVER_SIGNED_OUT)).toBe(
       NOT_SIGNED_IN_ROW_VALUE,
     );
   });

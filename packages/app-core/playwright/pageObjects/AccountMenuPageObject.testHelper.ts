@@ -55,6 +55,17 @@ export class AccountMenuPageObject extends PageObject {
       ),
     );
 
+  verifyTriggerLabel = (label: string) =>
+    this.step(`verifyTriggerLabel ${label}`, () =>
+      expect(this.get(accountMenuTestIds.trigger)).toHaveAttribute("aria-label", label),
+    );
+
+  verifySigningOut = () =>
+    this.step("verifySigningOut", async () => {
+      await expect(this.get(accountMenuTestIds.signingOut)).toHaveText("Syncing before you sign out…");
+      await this.expectToBeVisible(accountMenuTestIds.menu);
+    });
+
   verifySignedInAs = (firstName: string | null, email: string) =>
     this.step(`verifySignedInAs ${firstName} ${email}`, async () => {
       await expect(this.get(accountMenuTestIds.who)).toContainText(email);

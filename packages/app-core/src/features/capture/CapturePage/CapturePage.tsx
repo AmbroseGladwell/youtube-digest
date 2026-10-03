@@ -16,6 +16,11 @@ import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
+import { AccountStrip } from "../../accountLibraries/components/AccountStrip/AccountStrip.js";
+import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
+import { useAccountStripKind } from "../../accountLibraries/useAccountStripKind.js";
+import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
+import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
 import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
@@ -35,6 +40,10 @@ export function CapturePage() {
   const keysReady = useGenerationReadiness() === "ready";
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
+  const heldHere = overviewsQuery.data?.length ?? null;
+  const accountStrip = useAccountStripKind(heldHere);
+  const signedOutWithNothingHere = useSignedOutHere() && heldHere === 0;
+  const sync = useSync();
 
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
@@ -73,11 +82,20 @@ export function CapturePage() {
     );
   }
 
+  if (sync.opening) {
+    return (
+      <div className={styles.root} data-testid={capturePageTestIds.root}>
+        <OpeningLibrary panel />
+      </div>
+    );
+  }
+
   const alreadyHeld = overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl);
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
-    <div className={styles.root} data-testid={capturePageTestIds.root}>
+    <div className={`${styles.root} ${accountStrip === null ? "" : styles.withStrip}`} data-testid={capturePageTestIds.root}>
+      {accountStrip !== null && <AccountStrip kind={accountStrip} panel />}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         <div>
           <h2 className={styles.title}>
@@ -129,6 +147,12 @@ export function CapturePage() {
         {activeVideoUrl === null && (
           <p className={styles.note} data-testid={capturePageTestIds.noVideoNote}>
             Visit a YouTube video to start creating an overview.
+          </p>
+        )}
+
+        {signedOutWithNothingHere && (
+          <p className={styles.note} data-testid={capturePageTestIds.signedOutNote}>
+            You’re signed out. Your Overviews are safe in your account. Sign in to get them back.
           </p>
         )}
 

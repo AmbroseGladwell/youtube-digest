@@ -23,7 +23,12 @@ was decided for both (Trello OV-47, 2026-10-02) and what is built so far.
 | The app follows the account, swapping libraries in place | `packages/app-core/src/stores/LibraryRuntime.tsx`, `Library.ts`, `LibraryAccountContext.ts` |
 | Each shell opens the library the device was last signed in to | `apps/web/src/main.tsx`, `apps/extension/src/mountApp.tsx` |
 | The extension's worker reads the same library as its pages | `apps/extension/src/libraryAccount.ts`, `serviceWorker.ts` |
-| Sign-out waits for the cycle in flight and clears nothing | `features/sync/SyncRuntime.tsx` |
+| Sign-out syncs first, for ten seconds at most, and clears nothing | `features/sync/SyncRuntime.tsx` |
+| What a sign-out left queued, counted and worded | `features/sync/util/signOutNoticeFor.ts`, `features/accountLibraries/util/signOutNoticeCopy.ts` |
+| What the device remembers: signed out here, offer turned down | `features/accountLibraries/deviceAccountHistoryStorage.ts`, `useDeviceAccountHistory.ts` |
+| The strips (47a, 47c), the signed-out library (47b), the notice (47d), opening (47f) | `features/accountLibraries/components/` |
+| Which strip shows, and when the device counts as signed out here | `features/accountLibraries/useAccountStripKind.ts`, `useSignedOutHere.ts` |
+| Settings' row and section (47g), the sign-in page's line (47h) | `features/settings/util/settingsRowValues.ts`, `features/sync/components/SyncPanel/`, `features/auth/util/savedOverviewsNote.ts` |
 | Reading positions kept per library | `features/transcripts/readingPositionStorage.ts` |
 | The screens, against in-memory libraries per account | `packages/app-core/playwright/iwft/scenarios/accountLibraries.iwft.ts` |
 
@@ -101,32 +106,82 @@ signing in or out changes which overviews are held.
 
 ## Sign-out
 
-It stops the engine, waits for a cycle already running to finish, tells the server, and
-then clears the connection, which is what switches the library. Nothing in the account's
-database is cleared: `IndexedDbSyncStorage.leave()` is no longer called on sign-out. Before
-this, sign-out ended the session first, so a push in flight could be refused, and then
-cleared the outbox, losing the writes it held. A push the server accepted but whose
-acknowledgement never landed stays queued and is sent again at the next sign-in; every
-route takes a resend as the same write (`sync-client.md`, "What stops a cycle and what parks
-a write").
+It runs one sync cycle, so whatever was waiting goes before the session does, then stops
+the engine, tells the server, and clears the connection, which is what switches the
+library. Nothing in the account's database is cleared: `IndexedDbSyncStorage.leave()` is no
+longer called on sign-out. Before this, sign-out ended the session first, so a push in
+flight could be refused, and then cleared the outbox, losing the writes it held. A push the
+server accepted but whose acknowledgement never landed stays queued and is sent again at the
+next sign-in; every route takes a resend as the same write (`sync-client.md`, "What stops a
+cycle and what parks a write").
+
+**It always completes.** A cycle that hangs is given up on after ten seconds rather than
+holding the reader signed in, and an offline device goes at once, since its cycle stops as
+`offline`. While it runs, Sign out reads "Syncing before you sign out…" in place, in the
+menu (which stays open) and in Settings (47d-1); there is no dialog and no Cancel.
+
+**Then it says what it couldn't send.** If the last cycle left writes queued or parked, a
+notice floats over the page (47d-2): how many will sync at the next sign-in here, with the
+reason first when the device was offline (47d-3), and parked writes on their own line in
+warning ink, since nothing will send them. It is polite, never takes focus, and stays until
+dismissed or until the next sign-in. With nothing left, there is nothing to say.
+
+**A sign-in that lands meanwhile wins.** Sign-out clears the connection only if it is still
+the one it set out to sign out, so a sign-in finished during its last cycle is not undone.
+
+## What signed out looks like
+
+Two flags, kept on the device whoever is signed in (`DeviceAccountHistory`): whether an
+account has ever signed out here, written by sign-out and cleared by sign-in, and whether
+the offer of an account was turned down. A reader who has never had an account is told
+nothing about signing out, ever.
+
+- **Signed out, holding overviews (47a).** A stone strip in the generation strip's slot,
+  "Signed out. Sign in to sync your Overviews…", with Sign in and no ×: it lasts as long as
+  the state does. The subtitle says "in this browser", and the account button's name says
+  "Account, signed out". In the panel the strip sits above the offer.
+- **Signed out, holding nothing (47b).** Not a route: the library at / when it is empty and
+  the flag is set. It leads with what is safe, shows no address, and takes focus on its
+  heading. Below Sign in, the first-run field, so someone else at a shared device can start;
+  it is shown only when this device can generate, like every control here. The panel says
+  it in one line under its offer.
+- **Never signed in (47c).** The same slot offers an account, "Sync across devices…", with
+  Create account and ×, which hides it on this device for good.
+- **Opening (47f).** After a sign-in, until the account's first cycle is done, the library
+  is its own skeleton with "Opening your library…", so an empty library is never taken for
+  the account's. Sign-out needs none: the device's own library opens at once.
+- **Settings (47g).** Signed out here, the account row reads "Signed out · saved in this
+  browser", and the section says how many Overviews are only saved here, with Sign in and
+  Create account. A device that never had an account keeps the old copy.
+- **The sign-in page (47h)** says signing in adds what is here "except any for videos it
+  already has". Creating an account is unchanged: a new account holds nothing to clash with.
+
+The strips show only on the library, where what they describe is in front of the reader,
+and give way to the generation strip while something is being made. The web app says "this
+browser" wherever the extension says "the extension".
 
 ## Departures, recorded
 
 - **`SyncState.disconnect` is gone.** It existed so sign-out could forget the bookkeeping,
   which is exactly what sign-out must now not do, and nothing else called it.
+- **The strips show on the library only**, not on every page the slot exists on: the
+  designs draw them on the library, and a strip about the library on a reader's page would
+  be beside the point.
+- **47b's field is shown only when this device can generate.** The design draws it
+  unconditionally; a field that cannot work is hidden, as the hero's keys note explains for
+  the first-run page.
+- **The account button's name is "Account, signed out"** only once this device has signed
+  out of an account, as the designs draw it; otherwise it stays "Account".
 - **`accountId` is required on both sign-in answers.** The server ships before any client
   that reads it, as the web app ships in the same image and the extension is built against
   the deployed server.
 
 ## Not built yet
 
-This card is built as stacked PRs, data first and screens once their designs exist (designs
-47a–47f on the card).
+This card is built as stacked PRs.
 
-- Decision 3's sync before signing out, and the notice of what is still queued.
 - Decision 5's migration of an install signed in when this lands. Until it lands, such an
   install keeps reading `overview-local-store` while signed in.
-- Decisions 6 and 7: the move on sign-in, one per video, and its notice. Until then, a new
-  sign-in opens an empty account library and the no-account library waits where it is.
-- The signed-out library's own states (47a, 47b), the switching state (47f), and the copy on
-  the sign-in and Settings pages.
+- Decisions 6 and 7: the move on sign-in, one per video, and its notice (47e). Until then, a
+  new sign-in opens an empty account library and the no-account library waits where it is;
+  47e has nothing to report until the move exists, so it is built with it.

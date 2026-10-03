@@ -1,6 +1,8 @@
 import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
+import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
+import { useDeviceAccountHistory } from "../accountLibraries/useDeviceAccountHistory.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
@@ -51,10 +53,18 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const shares = useSharesQuery().data;
   const build = useAppBuild();
   const overviews = useOverviewsWithStateQuery();
+  const { signedOutHere } = useDeviceAccountHistory();
+  const surface = useSurface();
 
   return [
     ...(sync.available
-      ? [{ id: "account" as const, title: "Account & sync", value: accountRowValue(sync, connection, new Date()) }]
+      ? [
+          {
+            id: "account" as const,
+            title: "Account & sync",
+            value: accountRowValue(sync, connection, new Date(), { signedOutHere, surface }),
+          },
+        ]
       : []),
     ...(narrationApi !== null
       ? [

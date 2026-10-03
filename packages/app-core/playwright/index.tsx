@@ -3,6 +3,8 @@ import "../src/theme/global.scss";
 import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import { writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
 import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js";
+import { writeDeviceAccountHistory } from "../src/features/accountLibraries/deviceAccountHistoryStorage.js";
+import { NO_ACCOUNT_HISTORY } from "../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import {
   DEFAULT_SYNC_CONNECTION,
   libraryAccountIdOf,
@@ -45,6 +47,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
   writeSyncConnection(connection);
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
+  writeDeviceAccountHistory(hooksConfig?.deviceAccountHistory ?? NO_ACCOUNT_HISTORY);
 
   window.__iwftStores__ = seeded;
   window.__iwftLibraries__ = libraries;

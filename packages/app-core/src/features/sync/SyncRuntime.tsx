@@ -8,14 +8,21 @@ import {
   SyncEngine,
   type SyncStatus,
 } from "@overview/sync";
+import { forgetSignedOutHere, rememberSignedOutHere } from "../accountLibraries/useDeviceAccountHistory.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { topicKeys } from "../overviews/topicKeys.js";
 import { settingsKeys } from "../settings/settingsKeys.js";
 import { SyncProvider } from "./SyncContext.js";
+import { readSyncConnection } from "./syncConnectionStorage.js";
 import { DEFAULT_SYNC_CONNECTION, useSyncConnection } from "./useSyncConnection.js";
+import type { SignOutNotice } from "./types/SignOutNotice.js";
 import { isConnected, libraryAccountIdOf } from "./types/SyncConnection.js";
+import { signOutNoticeFor } from "./util/signOutNoticeFor.js";
+
+// How long sign-out waits for its last cycle before going anyway: it always completes.
+const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
 
 // Owns the one engine for this tab: built when a server is known, stopped when it goes.
 // Sits above the router so a cycle outlives every navigation, and inside the query
@@ -31,10 +38,24 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const engine = useRef<{ engine: SyncEngine; stop: () => void } | null>(null);
   const connected = syncStorage !== null && isConnected(connection);
   const { apiUrl, token } = connection;
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutNotice, setSignOutNotice] = useState<SignOutNotice | null>(null);
+  const [opening, setOpening] = useState(false);
+  const wasConnected = useRef(connected);
+
+  useEffect(() => {
+    const signedIn = connected && !wasConnected.current;
+    wasConnected.current = connected;
+    if (!signedIn) return;
+    forgetSignedOutHere();
+    setSignOutNotice(null);
+    setOpening(true);
+  }, [connected]);
 
   useEffect(() => {
     if (syncStorage === null || apiUrl === null) {
       setStatus(INITIAL_SYNC_STATUS);
+      setOpening(false);
       return;
     }
     const started = new SyncEngine({
@@ -49,6 +70,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
     const unsubscribe = started.subscribe(setStatus);
     const stop = started.start();
     engine.current = { engine: started, stop };
+    void started.whenIdle().then(() => setOpening(false));
     return () => {
       stop();
       unsubscribe();
@@ -66,18 +88,39 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         ? (videoId: VideoId) => engine.current?.engine.fetchTranscript(videoId) ?? Promise.resolve(null)
         : null,
       // Nothing is cleared, and the server's answer decides nothing (docs/features/account-libraries.md).
+      signingOut,
+      signOutNotice,
+      dismissSignOutNotice: () => setSignOutNotice(null),
+      opening: opening && connected,
       signOut: async () => {
         const running = engine.current;
-        running?.stop();
-        await running?.engine.whenIdle();
-        if (apiUrl !== null) {
-          await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
+        setSigningOut(true);
+        try {
+          const last = running === null ? null : await lastCycleBeforeSigningOut(running.engine);
+          running?.stop();
+          if (apiUrl !== null) {
+            await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
+          }
+          const stillThisConnection = readSyncConnection().accountId === connection.accountId;
+          if (stillThisConnection) {
+            rememberSignedOutHere();
+            setSignOutNotice(last === null ? null : signOutNoticeFor(last, globalThis.navigator?.onLine ?? true));
+            setConnection(DEFAULT_SYNC_CONNECTION);
+          }
+        } finally {
+          setSigningOut(false);
         }
-        setConnection(DEFAULT_SYNC_CONNECTION);
       },
     }),
-    [stores.syncStorage, connected, status, setConnection, apiUrl, token],
+    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, signingOut, signOutNotice, opening],
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;
+}
+
+// One cycle, so whatever was waiting goes before the session does; a cycle that hangs is
+// given up on rather than holding the reader signed in (docs/features/account-libraries.md).
+async function lastCycleBeforeSigningOut(engine: SyncEngine): Promise<SyncStatus> {
+  const limit = new Promise<null>((resolve) => setTimeout(() => resolve(null), SIGN_OUT_SYNC_LIMIT_MS));
+  return (await Promise.race([engine.sync().catch(() => null), limit])) ?? engine.status;
 }

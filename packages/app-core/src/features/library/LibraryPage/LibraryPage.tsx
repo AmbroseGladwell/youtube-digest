@@ -42,6 +42,11 @@ import { TimeSavedFigure } from "../../timeSaved/components/TimeSavedFigure/Time
 import { TimeSavedSheet } from "../../timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
+import { savedHere } from "../../accountLibraries/util/libraryPlace.js";
+import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 
@@ -105,6 +110,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
+  const surface = useSurface();
+  const phone = useIsPhone();
+  const signedOutHere = useSignedOutHere();
 
   if (topicsQuery.isError) {
     return (
@@ -226,7 +234,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               <h1 className={styles.title}>Overviews</h1>
               <p className={styles.listCount}>
                 <span data-testid={libraryPageTestIds.listCount}>
-                  {counts.total} {counts.total === 1 ? "overview" : "overviews"} · {counts.unread} unread
+                  {libraryCountLine(counts, { savedHere: signedOutHere ? savedHere(surface) : null, phone })}
                 </span>
                 <span aria-hidden="true">·</span>
                 <button

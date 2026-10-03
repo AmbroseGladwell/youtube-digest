@@ -83,3 +83,33 @@
     color: var(--ink);
   }
 }
+
+// Design 47g: the signed-out tile leads with the state, then where the library is.
+.signedOutTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.signedOutBody {
+  margin: -0.125rem 0 0;
+  max-width: 52ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.spinner {
+  display: inline-flex;
+  color: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

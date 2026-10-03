@@ -9,6 +9,8 @@ import { useSync } from "../../../sync/SyncContext.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { syncStatusLine } from "../../../sync/util/syncStatusLine.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
+import { useDeviceAccountHistory } from "../../../accountLibraries/useDeviceAccountHistory.js";
+import { isConnected } from "../../../sync/types/SyncConnection.js";
 import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 import type { AccountMenuItem } from "@overview/domain";
@@ -27,10 +29,18 @@ export function AccountMenu() {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const { pending } = usePendingSignIn();
+  const { signedOutHere } = useDeviceAccountHistory();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
+
+  // The page a sign-out lands on may take focus itself (design 47b); only when it hasn't
+  // does focus come back to the button.
+  const refocusIfNothingElseIs = () =>
+    requestAnimationFrame(() => {
+      if (document.activeElement === document.body) trigger.current?.focus();
+    });
 
   const close = (refocus: boolean) => {
     setOpen(false);
@@ -140,16 +150,30 @@ export function AccountMenu() {
               },
               accountMenuTestIds.signInAgainItem,
             )
-          : item(
-              "signOut",
-              "Sign out",
-              "signOut",
-              () => {
-                close(true);
-                void sync.signOut();
-              },
-              accountMenuTestIds.signOutItem,
-            )}
+          : sync.signingOut
+            ? (
+                <div
+                  role="menuitem"
+                  aria-disabled="true"
+                  aria-live="polite"
+                  tabIndex={-1}
+                  autoFocus
+                  className={styles.signingOut}
+                  data-testid={accountMenuTestIds.signingOut}
+                >
+                  <span className={styles.spinner}>
+                    <StrokeIcon name="loader" size={16} />
+                  </span>
+                  Syncing before you sign out…
+                </div>
+              )
+            : item(
+                "signOut",
+                "Sign out",
+                "signOut",
+                () => void sync.signOut().then(() => close(false)).then(refocusIfNothingElseIs),
+                accountMenuTestIds.signOutItem,
+              )}
       </>
     );
   } else if (surface === "extension" && pending !== null) {
@@ -193,7 +217,7 @@ export function AccountMenu() {
             openMenu("last");
           }
         }}
-        aria-label="Account"
+        aria-label={signedOutHere && sync.available && !isConnected(connection) ? "Account, signed out" : "Account"}
         aria-haspopup="menu"
         aria-expanded={open}
         data-testid={accountMenuTestIds.trigger}
