@@ -62,7 +62,8 @@ nowhere.
 `localStorage`, in the same way the API keys are kept and for the same reason: it is
 per device and per origin, which is exactly what a reading position is. The extension and
 the web app are two libraries already, and where you had got to in one does not belong
-in the other. It is not on `OverviewState`, which is keyed by overview rather than by
+in the other. For the same reason each account's library keeps its own positions, beside
+the no-account library's (`docs/features/account-libraries.md`). It is not on `OverviewState`, which is keyed by overview rather than by
 video and is the kind of user state a sync will one day carry, and a field that changes
 on every scroll would be a bad thing to give an outbox.
 

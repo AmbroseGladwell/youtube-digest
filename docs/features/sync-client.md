@@ -87,8 +87,9 @@ Three rules inside that:
   that will not migrate stays quarantined and counted where it is. Pushing it would either
   be refused or, worse, accepted at the wrong version.
 
-Leaving, which signing out does, is the reverse: the bookkeeping goes and the records
-stay.
+Signing out is not leaving. The account's library stays on the device with its
+bookkeeping, so the next sign-in carries on from it rather than enrolling again
+(`docs/features/account-libraries.md`). `leave()` is no longer called on sign-out.
 
 ## One cycle
 

@@ -1,4 +1,4 @@
-import { DEFAULT_SYNC_CONNECTION, SyncConnection } from "./types/SyncConnection.js";
+import { DEFAULT_SYNC_CONNECTION, libraryAccountIdOf, SyncConnection } from "./types/SyncConnection.js";
 
 const STORAGE_KEY = "overview.syncConnection.v1";
 
@@ -18,4 +18,8 @@ export function writeSyncConnection(
   storage: Storage = globalThis.localStorage,
 ): void {
   storage.setItem(STORAGE_KEY, JSON.stringify(connection));
+}
+
+export function readLibraryAccountId(storage: Storage = globalThis.localStorage): string | null {
+  return libraryAccountIdOf(readSyncConnection(storage));
 }

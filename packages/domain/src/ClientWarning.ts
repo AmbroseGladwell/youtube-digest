@@ -33,6 +33,16 @@ export const ClientWarning = z.discriminatedUnion("name", [
       at: z.iso.datetime(),
     })
     .strict(),
+  z
+    .object({
+      name: z.literal("signOutSyncGaveUp"),
+      // The last cycle before signing out ran past its limit, and the reader was signed out
+      // anyway, with this much left unsent and refused (docs/features/account-libraries.md).
+      pending: z.number().int().nonnegative(),
+      stuck: z.number().int().nonnegative(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
 ]);
 export type ClientWarning = z.infer<typeof ClientWarning>;
 export type ClientWarningName = ClientWarning["name"];

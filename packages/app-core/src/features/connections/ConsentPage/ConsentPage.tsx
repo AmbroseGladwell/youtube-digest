@@ -28,6 +28,7 @@ import { consentHeading } from "../util/consentHeading.js";
 import { minutesLeft, minutesLeftPhrase } from "../util/minutesLeft.js";
 import styles from "./ConsentPage.module.scss";
 import { consentPageTestIds } from "./ConsentPageTestIds.js";
+import { useSignOut } from "../../accountLibraries/useSignOut.js";
 
 export interface ConsentPageLocationState {
   fromSignInLink?: boolean;
@@ -54,6 +55,7 @@ export function ConsentPage() {
   const location = useLocation();
   const surface = useSurface();
   const sync = useSync();
+  const signOut = useSignOut();
   const { connection } = useSyncConnection();
   const knownApiUrl = useKnownApiUrl();
   const isPhone = useIsPhone();
@@ -229,7 +231,7 @@ export function ConsentPage() {
         className={styles.notYou}
         onClick={() => {
           analytics.account.signIn.notYouChosen();
-          void sync.signOut();
+          void signOut();
         }}
         disabled={deciding !== null}
         data-testid={consentPageTestIds.notYouButton}

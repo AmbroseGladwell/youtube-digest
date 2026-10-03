@@ -267,7 +267,9 @@ Until then, events are logged on the server and go nowhere else.
 - **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62. Until
   then, `account.signIn.*` is called but mostly not sent: someone asking for a link has no
   session yet, so the queue drops it unseen, as it does every signed-out event. The calls are
-  in place so the sign-in funnel counts the day consent lands.
+  in place so the sign-in funnel counts the day consent lands. The same goes for what a
+  signed-out library offers (`account.signedOutStrip.*`, `account.signedOutLibrary.*`,
+  `account.accountOffer.*`, `docs/features/account-libraries.md`).
 - **The events other cards named:** time from play to first sound is OV-63, and the link
   shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,
   which OV-63 also named, are counted (`library.sortPill.orderChosen`, `settings.voice.*`).

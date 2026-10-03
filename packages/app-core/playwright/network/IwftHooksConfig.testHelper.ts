@@ -1,3 +1,4 @@
+import type { DeviceAccountHistory } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import type {
   Overview,
   OverviewState,
@@ -38,6 +39,8 @@ export interface IwftHooksConfig {
   syncAvailable?: boolean;
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
+  // What this device remembers about accounts (docs/features/account-libraries.md).
+  deviceAccountHistory?: DeviceAccountHistory;
   surface?: Surface;
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.

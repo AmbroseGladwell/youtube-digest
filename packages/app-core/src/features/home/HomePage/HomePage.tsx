@@ -1,4 +1,3 @@
-import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
@@ -8,17 +7,18 @@ import {
   settingsLinkLabel,
   transcriptSourceNote,
 } from "../../transcripts/transcriptSourceNote.js";
-import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
-import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
-import { isYouTubeUrl } from "../../newOverview/util/parseYouTubeUrl.js";
+import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
+import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
+import { SignedOutLibrary } from "../../accountLibraries/components/SignedOutLibrary/SignedOutLibrary.js";
+import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
+import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
-import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
@@ -28,6 +28,16 @@ export function HomePage() {
 
 function LibraryHome() {
   const overviewsQuery = useOverviewsWithStateQuery();
+  const sync = useSync();
+  const signedOutHere = useSignedOutHere();
+
+  if (sync.opening) {
+    return (
+      <div className={styles.wide} data-testid={homePageTestIds.root}>
+        <OpeningLibrary />
+      </div>
+    );
+  }
 
   if (overviewsQuery.isPending) {
     return (
@@ -54,6 +64,14 @@ function LibraryHome() {
     );
   }
 
+  if (overviewsQuery.data.length === 0 && signedOutHere) {
+    return (
+      <div className={styles.wide} data-testid={homePageTestIds.root}>
+        <SignedOutLibrary />
+      </div>
+    );
+  }
+
   if (overviewsQuery.data.length === 0) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
@@ -75,28 +93,8 @@ function LibraryHome() {
 // (docs/features/stone-theme.md, "First run").
 function FirstRunHero() {
   const surface = useSurface();
-  const readiness = useGenerationReadiness();
-  const controller = useNewOverviewRunController();
-  const [url, setUrl] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const ready = readiness === "ready";
+  const { readiness, ready, url, setUrl, validationError, generate } = useStartFromLink();
   const analytics = useAnalytics();
-  useTypingSettled(url, () =>
-    analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "home" }),
-  );
-
-  const generate = (event: FormEvent) => {
-    event.preventDefault();
-    if (!isYouTubeUrl(url)) {
-      analytics.capture.newOverviewForm.linkRefused({ from: "home" });
-      setValidationError("That doesn't look like a YouTube URL.");
-      return;
-    }
-    setValidationError(null);
-    controller.start(url, { from: "home" });
-    controller.open();
-    setUrl("");
-  };
 
   return (
     <div className={styles.hero} data-testid={homePageTestIds.hero}>

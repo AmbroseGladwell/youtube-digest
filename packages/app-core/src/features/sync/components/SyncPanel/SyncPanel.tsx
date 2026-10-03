@@ -8,6 +8,10 @@ import { syncStatusLine } from "../../util/syncStatusLine.js";
 import styles from "./SyncPanel.module.scss";
 import { syncPanelTestIds } from "./SyncPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useSignedOutHere } from "../../../accountLibraries/useSignedOutHere.js";
+import { overviewsNoun, savedHere } from "../../../accountLibraries/util/libraryPlace.js";
+import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
+import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
 const EXTENSION_NOTE =
@@ -16,12 +20,16 @@ const EXTENSION_NOTE =
 // Hidden entirely when the shell cannot sync: a control that cannot work is worse than no
 // control (CLAUDE.md). Signed in, it is design 51a's two tiles, who and whether in step;
 // signed out, it points at the sign-in and create-account pages rather than being a second
-// place to ask for a link (docs/features/sync-client.md, docs/features/sign-in.md).
+// place to ask for a link, and once this device has signed out of an account it says where
+// the library is kept (design 47g, docs/features/account-libraries.md).
 export function SyncPanel() {
   const analytics = useAnalytics();
   const sync = useSync();
+  const signOut = useSignOut();
   const surface = useSurface();
   const { connection } = useSyncConnection();
+  const signedOutHere = useSignedOutHere();
+  const heldHere = useOverviewsWithStateQuery().data?.length ?? 0;
 
   if (!sync.available) {
     return null;
@@ -63,7 +71,7 @@ export function SyncPanel() {
                 className={styles.primaryButton}
                 onClick={() => {
                   analytics.settings.sync.signOutChosen({ signedOutAtServer: true });
-                  void sync.signOut();
+                  void signOut();
                 }}
                 data-testid={syncPanelTestIds.signOutButton}
               >
@@ -100,14 +108,60 @@ export function SyncPanel() {
             type="button"
             className={styles.signOutButton}
             onClick={() => {
+              if (sync.signingOut) return;
               analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
-              void sync.signOut();
+              void signOut();
             }}
+            aria-disabled={sync.signingOut}
+            aria-live="polite"
             data-testid={syncPanelTestIds.signOutButton}
           >
-            Sign out
+            {sync.signingOut ? (
+              <>
+                <span className={styles.spinner}>
+                  <StrokeIcon name="loader" size={16} />
+                </span>
+                Syncing before you sign out…
+              </>
+            ) : (
+              "Sign out"
+            )}
           </button>
         )}
+      </div>
+    );
+  }
+
+  if (signedOutHere) {
+    return (
+      <div className={styles.root} data-testid={syncPanelTestIds.root}>
+        <section className={styles.tile} data-testid={syncPanelTestIds.signedOutHere}>
+          <p className={styles.signedOutTitle}>You’re signed out</p>
+          <p className={styles.signedOutBody} data-testid={syncPanelTestIds.hint}>
+            {heldHere === 0
+              ? "Your Overviews are safe in your account. Sign in to get them back."
+              : `${heldHere} ${overviewsNoun(heldHere)} ${heldHere === 1 ? "is" : "are"} only saved ${savedHere(surface)}. Sign in or create an account to sync them to your account and access them on any device.`}
+          </p>
+          <div className={styles.actions}>
+            <Link
+              className={styles.primaryButton}
+              to={Routes.signIn()}
+              onClick={() => analytics.settings.sync.signInChosen()}
+              data-testid={syncPanelTestIds.signInLink}
+            >
+              <StrokeIcon name="signIn" size={16} />
+              Sign in
+            </Link>
+            <Link
+              className={styles.secondaryButton}
+              to={Routes.createAccount()}
+              onClick={() => analytics.settings.sync.createAccountChosen()}
+              data-testid={syncPanelTestIds.createAccountLink}
+            >
+              Create account
+            </Link>
+          </div>
+        </section>
       </div>
     );
   }

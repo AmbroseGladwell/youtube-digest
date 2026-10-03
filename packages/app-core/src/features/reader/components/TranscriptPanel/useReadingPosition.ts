@@ -6,6 +6,7 @@ import {
   writeReadingPosition,
 } from "../../../transcripts/readingPositionStorage.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
+import { useLibraryAccountId } from "../../../../stores/LibraryAccountContext.js";
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import { transcriptRestingLine } from "./transcriptRestingLine.js";
 
@@ -26,7 +27,8 @@ export function useReadingPosition(
   blocks: TranscriptBlock[],
   { ignored, head }: { ignored: boolean; head: HTMLElement | null },
 ): ReadingPosition {
-  const [remembered] = useState(() => (videoId === null ? null : readReadingPosition(videoId)));
+  const accountId = useLibraryAccountId();
+  const [remembered] = useState(() => (videoId === null ? null : readReadingPosition(videoId, accountId)));
   const [restoreDone, setRestoreDone] = useState(false);
   const [restoredRow, setRestoredRow] = useState<HTMLElement | null>(null);
   const rows = useRef<HTMLElement | null>(null);
@@ -47,10 +49,10 @@ export function useReadingPosition(
     (remembering: boolean) => {
       rememberingNow.current = remembering;
       if (!remembering && videoId !== null) {
-        forgetReadingPosition(videoId);
+        forgetReadingPosition(videoId, accountId);
       }
     },
-    [videoId],
+    [videoId, accountId],
   );
 
   // One measurement per frame at most, off the rows' own boxes; nothing here estimates
@@ -67,9 +69,9 @@ export function useReadingPosition(
       }
       const row = rowAtRestingLine(rows.current, transcriptRestingLine(head));
       if (row === null || row.index === 0) {
-        forgetReadingPosition(videoId);
+        forgetReadingPosition(videoId, accountId);
       } else {
-        writeReadingPosition(videoId, row.startMs);
+        writeReadingPosition(videoId, row.startMs, accountId);
       }
     };
     const onScroll = () => {
@@ -84,7 +86,7 @@ export function useReadingPosition(
         cancelAnimationFrame(frame);
       }
     };
-  }, [videoId, head]);
+  }, [videoId, head, accountId]);
 
   return {
     restoredBlockIndex,

@@ -4,6 +4,7 @@ import { z } from "zod";
 // (docs/features/sign-in.md).
 export const LinkedSession = z.object({
   token: z.string().min(1),
+  accountId: z.string(),
   email: z.string(),
   firstName: z.string().nullable().default(null),
   expiresAt: z.string(),

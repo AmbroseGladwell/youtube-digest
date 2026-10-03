@@ -31,3 +31,8 @@ test("a code the API doesn't have is dropped from a narration warning", () => {
 
   assert.deepEqual(read, { name: "narrationFellBack", reason: "requestFailed", at: AT });
 });
+
+test("a sign-out that gave up on its last sync says only how much it left", () => {
+  assert.ok(ClientWarning.safeParse({ name: "signOutSyncGaveUp", pending: 3, stuck: 0, at: AT }).success);
+  assert.ok(!ClientWarning.safeParse({ name: "signOutSyncGaveUp", pending: -1, stuck: 0, at: AT }).success);
+});

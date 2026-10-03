@@ -18,7 +18,8 @@ window.__iwftRouter__ = router;
 export function IwftAppRoot() {
   return (
     <App
-      stores={window.__iwftStores__}
+      library={window.__iwftLibrary__}
+      openLibrary={window.__iwftOpenLibrary__}
       router={router}
       surface={window.__iwftSurface__}
       layout={window.__iwftLayout__}

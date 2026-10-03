@@ -108,8 +108,11 @@ stranger could.
 **The name is written only by the insert that makes the account.**
 `findOrCreateAccount` takes the name the link was asked with and writes it only when
 `insert … on conflict` actually inserted, which is also how the sign-in knows whether it
-created an account. The route logs `account created` or `signed in`, with the intent and
-the surface, so the two can be counted apart. An account made by an ordinary sign-in has
+created an account. The route logs `account created` or `signed in`, with the account's
+id, the intent and the surface, so the two can be counted apart. Each session made logs
+`session created` and each ended `signed out`, under its account and session ids, so one
+device's session can be followed from sign-in to sign-out; never its address
+(`docs/architecture/errors-and-logs.md`, "Sign-in and mail"). An account made by an ordinary sign-in has
 no name, and every screen that would use one falls back to the address.
 
 **The name travels with the session.** `SignedIn`, `LinkedSession` and `SessionInfo` carry
@@ -256,7 +259,8 @@ stays signed out and why. A spent, expired or unknown link asks for the address 
 the same page. Any other failure is the dead-end screen with Try again.
 
 **Settings, signed out.** The Sync section points at the two pages rather than being a
-second place to ask for a link.
+second place to ask for a link. Once this device has signed out of an account, it says how
+many overviews are saved only here instead (`docs/features/account-libraries.md`, 47g).
 
 **Settings, signed in.** `Signed in as …`, the one status line sync already had,
 `Sync now` and `Sign out`. When the server no longer knows the session the line says
@@ -265,10 +269,12 @@ second place to ask for a link.
 **On a phone (9e).** The sign-in and create-account pages swap the bar's actions for a
 single `Not now`.
 
-**Sign-out** tells the server and then disconnects whether or not it answered. A session
-the server could not be told about ends on its own within thirty days; this device is
-done with it either way, and reporting "could not sign out" for a token the device has
-already forgotten would be a control with nothing behind it.
+**Sign-out** runs one last sync cycle, ten seconds at most, tells the server, and then
+signs this device out whether or not it answered; what it couldn't send is said afterwards. A session the server could not be told about
+ends on its own within thirty days; this device is done with it either way, and reporting
+"could not sign out" for a token the device has already forgotten would be a control with
+nothing behind it. The account's library stays on the device and the app switches to the
+no-account one (`docs/features/account-libraries.md`).
 
 ## Departures, recorded
 

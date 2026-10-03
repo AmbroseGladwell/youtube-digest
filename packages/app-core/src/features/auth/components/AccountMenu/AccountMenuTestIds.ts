@@ -12,6 +12,7 @@ export const accountMenuTestIds = {
   connectExtensionItem: "AccountMenu.connectExtensionItem",
   settingsItem: "AccountMenu.settingsItem",
   signOutItem: "AccountMenu.signOutItem",
+  signingOut: "AccountMenu.signingOut",
   signInAgainItem: "AccountMenu.signInAgainItem",
   noAccountsNote: "AccountMenu.noAccountsNote",
 };

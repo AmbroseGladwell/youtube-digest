@@ -1,5 +1,5 @@
 import type { RunReport } from "@overview/app-core";
-import { IndexedDbOverviewStore, openLocalDatabase } from "@overview/store-local";
+import { IndexedDbOverviewStore, localDatabaseName, openLocalDatabase } from "@overview/store-local";
 import {
   BridgeMessage,
   isReadButtonState,
@@ -14,6 +14,7 @@ import { isYouTubeFetchMessage } from "./youTubeFetchBridge.js";
 import { installYouTubeOriginRule } from "./youTubeOriginRule.js";
 import { appBuild } from "./appBuild.js";
 import { readErrorDestination } from "./errorDestination.js";
+import { onLibraryAccountChanged, readLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 import { createWorkerErrorReporter } from "./workerErrorReporter.js";
 
@@ -44,7 +45,18 @@ async function readSession<T>(key: string): Promise<T | null> {
   return (stored[key] as T | undefined) ?? null;
 }
 
-let database: Promise<IDBDatabase> | null = null;
+const databases = new Map<string, Promise<IDBDatabase>>();
+
+async function openCurrentLibrary(): Promise<IDBDatabase> {
+  const name = localDatabaseName(await readLibraryAccount());
+  let database = databases.get(name);
+  if (database === undefined) {
+    database = openLocalDatabase({ name, onSuperseded: () => databases.delete(name) });
+    database.catch(() => databases.delete(name));
+    databases.set(name, database);
+  }
+  return database;
+}
 
 // Existence checks see the whole store, quarantined records included: a record that
 // cannot be rendered is still one the reader owns, and offering to generate it again is
@@ -52,8 +64,7 @@ let database: Promise<IDBDatabase> | null = null;
 // which is not the same answer as "no".
 async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
   try {
-    database ??= openLocalDatabase();
-    const store = new IndexedDbOverviewStore(await database);
+    const store = new IndexedDbOverviewStore(await openCurrentLibrary());
     const [overviews, unreadable] = await Promise.all([
       store.listOverviews(),
       store.listUnreadable(),
@@ -90,6 +101,9 @@ async function broadcast(report: RunReport | null): Promise<void> {
     }),
   );
 }
+
+// Signing in or out changes which overviews are held, so every button says so again.
+onLibraryAccountChanged(() => void readSession<RunReport>(LATEST_REPORT).then(broadcast));
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isRequestOverview(message)) {

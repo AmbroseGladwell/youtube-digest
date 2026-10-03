@@ -1,0 +1,146 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 47b, transcribed: one column, 620px, set in from the top-left of the page.
+.root {
+  box-sizing: border-box;
+  max-width: 38.75rem;
+  padding: 4.5rem 0 3rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 2.75rem;
+  line-height: 1.08;
+  color: var(--ink);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.aside {
+  margin: 0;
+  font-size: 0.90625rem;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.signIn {
+  @include controls.action-pill;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.start {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.startLabel {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.875rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius-btn);
+  background: var(--card);
+  color: var(--muted);
+
+  &:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.fieldIcon {
+  flex: none;
+  display: inline-flex;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.90625rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.generate {
+  @include controls.surface-pill;
+  height: 2.875rem;
+  padding: 0 1.25rem;
+  font-size: 0.875rem;
+  flex: none;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--accent);
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    padding: 2.5rem 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .title {
+    font-size: 2.125rem;
+    line-height: 1.1;
+  }
+
+  .lead {
+    font-size: 0.96875rem;
+    line-height: 1.55;
+  }
+
+  .aside {
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .signIn {
+    height: 3rem;
+    padding: 0 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  .form {
+    flex-direction: column;
+  }
+}

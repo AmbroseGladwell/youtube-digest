@@ -118,7 +118,7 @@ test.describe("signing in on the web", () => {
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
     await signIn.verifySavedOverviewsNoteReads(
-      "Signing in adds the 2 overviews saved in this browser to your account, so they're there on your phone, in the extension and on any other device.",
+      "Signing in adds the 2 Overviews saved in this browser to your account, except any for videos it already has. You’ll then have them on your phone, in the extension and on any other device.",
     );
   });
 

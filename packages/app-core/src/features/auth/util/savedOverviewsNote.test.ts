@@ -4,7 +4,7 @@ import { savedOverviewsNote } from "./savedOverviewsNote.js";
 describe("savedOverviewsNote", () => {
   it("says how many overviews in this browser signing in adds, and where they will be", () => {
     expect(savedOverviewsNote(31, "signIn", "browser")).toBe(
-      "Signing in adds the 31 overviews saved in this browser to your account, so they're there on your phone, in the extension and on any other device.",
+      "Signing in adds the 31 Overviews saved in this browser to your account, except any for videos it already has. You’ll then have them on your phone, in the extension and on any other device.",
     );
   });
 
@@ -16,7 +16,7 @@ describe("savedOverviewsNote", () => {
 
   it("speaks of one overview as one", () => {
     expect(savedOverviewsNote(1, "signIn", "phone")).toBe(
-      "Signing in adds the overview saved on this phone to your account.",
+      "Signing in adds the Overview saved on this phone to your account, unless it already has one for that video.",
     );
     expect(savedOverviewsNote(1, "createAccount", "phone")).toBe("The overview saved on this phone comes with you.");
   });

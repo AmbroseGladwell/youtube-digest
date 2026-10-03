@@ -107,6 +107,7 @@ export function authRoutes(
     );
     const signedIn: SignedIn = {
       surface: "web",
+      accountId: account.id,
       email: link.email,
       firstName: account.firstName,
       expiresAt: session.expiresAt,
@@ -129,6 +130,7 @@ export function authRoutes(
     );
     const linked: LinkedSession = {
       token: session.token,
+      accountId,
       email: account!.email,
       firstName: account!.first_name,
       expiresAt: session.expiresAt,

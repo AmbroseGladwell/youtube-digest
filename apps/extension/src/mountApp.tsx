@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter } from "react-router";
 import {
+  adoptSignedInLibrary,
   App,
   createAppRouter,
   type ActiveVideoSource,
@@ -10,20 +11,17 @@ import {
   type PlaybackSource,
   type RunBridge,
   type YouTubeFetch,
+  type Library,
+  type OpenLibrary,
   OutOfDateTab,
+  readLibraryAccountId,
   reportStartupFailure,
   StartupFailure,
 } from "@overview/app-core";
-import {
-  IndexedDbOverviewStore,
-  IndexedDbSettingsStore,
-  IndexedDbSyncStorage,
-  LocalDatabaseBlockedError,
-  IndexedDbTranscriptStore,
-  openLocalDatabase,
-} from "@overview/store-local";
+import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 import { writeErrorDestination } from "./errorDestination.js";
+import { writeLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 
 export interface MountOptions {
@@ -55,9 +53,30 @@ export async function mountApp({
 
   const root = createRoot(container);
 
-  let db: IDBDatabase;
+  const openLibrary: OpenLibrary = async (accountId, { shown = true } = {}) => {
+    const { close, ...stores } = await openLocalLibrary({
+      accountId,
+      ...(shown ? { onSuperseded: () => root.render(<OutOfDateTab />) } : {}),
+    });
+    if (shown) await writeLibraryAccount(accountId);
+    return { accountId, stores, close };
+  };
+
+  // Once, for an install signed in before each account had a library of its own. A failure
+  // leaves the library where it was, to be tried again next start.
   try {
-    db = await openLocalDatabase({ onSuperseded: () => root.render(<OutOfDateTab />) });
+    await adoptSignedInLibrary({
+      surface: "extension",
+      moveDatabase: (accountId) => adoptLibraryIntoAccount({ accountId }),
+    });
+  } catch (error) {
+    console.error(error);
+    void reportStartupFailure(error, { surface: "extension", layout, build: appBuild, defaultApiUrl: PRODUCTION_API_URL });
+  }
+
+  let library: Library;
+  try {
+    library = await openLibrary(readLibraryAccountId());
   } catch (error) {
     console.error(error);
     const blocked = error instanceof LocalDatabaseBlockedError;
@@ -68,15 +87,11 @@ export async function mountApp({
     return;
   }
 
-  const syncStorage = new IndexedDbSyncStorage(db);
-  const overviewStore = new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const settingsStore = new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled });
-  const transcriptStore = new IndexedDbTranscriptStore(db);
-
   root.render(
     <StrictMode>
       <App
-        stores={{ overviewStore, settingsStore, transcriptStore, syncStorage }}
+        library={library}
+        openLibrary={openLibrary}
         appUpdate={openExtensionsPage}
         router={createAppRouter(createHashRouter)}
         surface="extension"

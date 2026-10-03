@@ -42,7 +42,9 @@ export type StrokeIconName =
   | "circlePlay"
   | "circleMinus"
   | "monitor"
-  | "smartphone";
+  | "smartphone"
+  | "cloudUpload"
+  | "wifiOff";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -262,6 +264,24 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="10" />
       <path d="M8 12h8" />
+    </>
+  ),
+  cloudUpload: (
+    <>
+      <path d="M12 13v8" />
+      <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+      <path d="m8 17 4-4 4 4" />
+    </>
+  ),
+  wifiOff: (
+    <>
+      <path d="M12 20h.01" />
+      <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+      <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+      <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+      <path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
+      <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+      <path d="m2 2 20 20" />
     </>
   ),
   monitor: (

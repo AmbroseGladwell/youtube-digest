@@ -18,6 +18,7 @@ import {
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
+  type OutboxEntry,
   type Overview,
   type OverviewId,
   type OverviewState,
@@ -45,6 +46,7 @@ import {
 import type {} from "./iwftWindow.testHelper.js";
 
 // What the simulated server hands a signed-in reader (docs/features/sign-in.md).
+export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
@@ -291,7 +293,13 @@ export class BackendSimulator {
                     linkCode: SIMULATED_LINK_CODE,
                     linkCodeExpiresAt: "2026-09-26T09:10:00.000Z",
                   }
-                : { surface: "web", email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+                : {
+                    surface: "web",
+                    accountId: SIMULATED_ACCOUNT_ID,
+                    email: SIMULATED_EMAIL,
+                    firstName: this.#accountFirstName,
+                    expiresAt,
+                  },
           };
         },
         onError: spent,
@@ -304,7 +312,13 @@ export class BackendSimulator {
           this.#linkCodeServers.push(new URL(route.request().url()).origin);
           return {
             status: 200,
-            body: { token: SIMULATED_BEARER, email: SIMULATED_EMAIL, firstName: this.#accountFirstName, expiresAt },
+            body: {
+              token: SIMULATED_BEARER,
+              accountId: SIMULATED_ACCOUNT_ID,
+              email: SIMULATED_EMAIL,
+              firstName: this.#accountFirstName,
+              expiresAt,
+            },
           };
         },
         onError: spent,
@@ -337,7 +351,7 @@ export class BackendSimulator {
                 : {
                     status: 200,
                     body: {
-                      accountId: "account",
+                      accountId: SIMULATED_ACCOUNT_ID,
                       email: SIMULATED_EMAIL,
                       firstName: this.#accountFirstName,
                       expiresAt,
@@ -744,6 +758,20 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
+    // Writes this device made and has not sent yet, as the open library's outbox holds them.
+    queueLocalWrites: (entries: OutboxEntry[]) =>
+      this.#page.evaluate((queued) => {
+        for (const entry of queued) window.__iwftStores__.syncStorage?.seedPending(entry);
+      }, entries),
+    // How many overviews one of this device's libraries still holds, the no-account one under null.
+    overviewsHeldIn: (accountId: string | null) =>
+      this.#page.evaluate(
+        async (id) => (await window.__iwftLibraries__.get(id)?.overviewStore.listOverviews())?.length ?? 0,
+        accountId,
+      ),
+    // Whether a library was ever enrolled into the account, which is what pushes all of it.
+    enrolled: (accountId: string | null) =>
+      this.#page.evaluate((id) => window.__iwftLibraries__.get(id)?.syncStorage?.enrolled ?? false, accountId),
     // The browser saying the network is back, which is one of the things that starts a cycle.
     simulateBackOnline: () => this.#page.evaluate(() => window.dispatchEvent(new Event("online"))),
   };

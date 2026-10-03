@@ -254,6 +254,7 @@ with the session when there is one. It gives the app an `ErrorReporter`.
 | `routeBoundary` | `RouterErrorBoundary`: a page that threw while it rendered. The only one sent as `handled: false`, because the reader hit a dead end the app didn't plan |
 | `failedRequest` | an `ErrorState` given an `error` that is a `SyncRequestError` or `SyncTransportError`: a call to the API that was refused or never answered |
 | `errorState` | an `ErrorState` given any other `error`, such as a read from the device's store that failed |
+| `libraryMove` | the move on sign-in of what this device made without an account, when it fails (`docs/features/account-libraries.md`); what it didn't move is tried again on the next start |
 
 `ErrorState` takes the failure it is showing as `error` and reports it once, however often
 it renders. A screen that shows a dead end for an expected answer (a request that has
@@ -301,6 +302,7 @@ an id:
 |---|---|---|
 | `transcriptFellThrough` | making an overview, a transcript rung threw before another answered, or no rung answered. A rung that had no answer is the ladder working, and alone isn't a warning. Watching detection's background ladder doesn't warn | `passed` (each rung asked and its outcome), `answeredBy` (or `null`) |
 | `narrationFellBack` | the player moved to the pacer because the render failed or didn't match the note, or because asking for it failed. A signed-out reader's pacer isn't a warning | `reason` (`renderFailed`, `requestFailed`), the failed call's `requestId` and `apiErrorCode` |
+| `signOutSyncGaveUp` | signing out, the last sync ran past its ten seconds and the reader was signed out anyway. Sent before the session ends, so it carries the account (`docs/features/account-libraries.md`) | `pending`, `stuck` |
 
 A **parked sync write** needs no warning. The refusal that parks it is already a
 `request refused` line under the device's session.
@@ -482,7 +484,8 @@ for it, `request completed` included:
 | `sessionId` | `sessionPlugin` | the session's row id, never its token or the token's hash. Each device signs in separately, so this tells one reader's devices apart |
 | `connectionId` | `connectionAccessPlugin` | the assistant connection an `/mcp` call came through |
 
-Signing in logs `session created` with the new `accountId`, `sessionId` and `surface`. A
+Signing in logs `session created` with the new `accountId`, `sessionId` and `surface`, and
+signing out logs `signed out` under the same two. A
 support question then runs as: the account, its sessions (one per device), and each
 session's writes and feed reads. The account id is the only way into this from a reader,
 so finding it from their email is a database lookup, never a log search: an email is
@@ -552,6 +555,7 @@ spoken line.
 | `magic link held back` | `warn` | `surface`, `intent`, `reason: "cooldown"`: a second link asked for inside a minute, answered as if sent |
 | `signed in`, `account created` | `info` | `accountId`, `intent`, `surface` |
 | `session created` | `info` | `accountId`, `sessionId`, `surface` |
+| `signed out` | `info` | `transport`, under the ending session's `accountId` and `sessionId` (`docs/features/account-libraries.md`) |
 | `link code issued` | `info` | `transport` |
 
 Mail that can't be sent fails the request, so it's an `unhandled error` with the

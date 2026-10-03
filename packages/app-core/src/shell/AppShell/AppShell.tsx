@@ -7,6 +7,12 @@ import { OverviewMark } from "../../components/shared/OverviewMark/OverviewMark.
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
+import { AccountStrip } from "../../features/accountLibraries/components/AccountStrip/AccountStrip.js";
+import { LibraryMoveNotice } from "../../features/accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
+import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
+import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
+import { useAccountStripKind } from "../../features/accountLibraries/useAccountStripKind.js";
+import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
@@ -38,6 +44,10 @@ export function AppShell() {
   const sync = useSync();
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
+  const onHome = pathname === Routes.home();
+  const heldHere = useOverviewsWithStateQuery().data?.length ?? null;
+  const accountStrip = useAccountStripKind(onHome && !isPanel ? heldHere : null);
+  const libraryMoved = useLibraryMove().move !== null;
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
   // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
@@ -153,13 +163,17 @@ export function AppShell() {
 
           <StaleClientBanner />
 
-          {!isPanel && newOverview.run && !newOverview.dialogOpen && (
+          {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
             <GenerationStatusStrip
               run={newOverview.run}
               onDetails={newOverview.open}
               onDismiss={newOverview.dismiss}
               onReadOverview={readOverview}
             />
+          ) : (
+            !isPanel &&
+            !newOverview.run &&
+            (libraryMoved ? <LibraryMoveNotice /> : accountStrip !== null && <AccountStrip kind={accountStrip} />)
           )}
         </header>
 
@@ -168,6 +182,8 @@ export function AppShell() {
         </div>
 
         <MiniPlayer />
+
+        <SignOutNotice />
 
         <ScrollRestoration />
 
