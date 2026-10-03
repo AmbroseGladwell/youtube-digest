@@ -23,6 +23,8 @@ declare global {
       transcriptStore: InMemoryTranscriptStore;
       syncStorage: InMemorySyncStorage | null;
     };
+    // Every library opened so far, by account, the no-account one under null.
+    __iwftLibraries__: Map<string | null, Window["__iwftStores__"]>;
     __iwftLibrary__: Library;
     __iwftOpenLibrary__: OpenLibrary;
     __iwftRouter__: AppRouter;

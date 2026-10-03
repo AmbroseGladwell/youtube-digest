@@ -48,3 +48,14 @@ test("a second account signing in on this device never sees the first account's 
   await launcher.appShell.accountMenu.open();
   await menu.verifySignedInAs("Bea", SIMULATED_EMAIL);
 });
+
+test("signing in never syncs the library being left", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(titled("Made Before Signing In"));
+  await launcher.launchExpectingLibrary({ sync: true });
+
+  await launcher.openSignInLink("the-token-from-the-email");
+
+  await launcher.homePage.verifyShowsFirstRunHero();
+  test.expect(await backendSimulator.sync.enrolled(SIMULATED_ACCOUNT_ID)).toBe(true);
+  test.expect(await backendSimulator.sync.enrolled(null)).toBe(false);
+});

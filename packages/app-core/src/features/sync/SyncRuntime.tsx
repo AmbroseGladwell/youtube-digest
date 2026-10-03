@@ -8,20 +8,24 @@ import {
   SyncEngine,
   type SyncStatus,
 } from "@overview/sync";
+import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { topicKeys } from "../overviews/topicKeys.js";
 import { settingsKeys } from "../settings/settingsKeys.js";
 import { SyncProvider } from "./SyncContext.js";
 import { DEFAULT_SYNC_CONNECTION, useSyncConnection } from "./useSyncConnection.js";
-import { isConnected } from "./types/SyncConnection.js";
+import { isConnected, libraryAccountIdOf } from "./types/SyncConnection.js";
 
 // Owns the one engine for this tab: built when a server is known, stopped when it goes.
 // Sits above the router so a cycle outlives every navigation, and inside the query
 // client so a pull can tell every open page to re-read (docs/features/sync-client.md).
 export function SyncRuntime({ children }: { children: ReactNode }) {
-  const { syncStorage } = useStores();
+  const stores = useStores();
   const { connection, setConnection } = useSyncConnection();
+  // Never the library being left, mid-switch (docs/features/account-libraries.md).
+  const libraryIsTheAccounts = useLibraryAccountId() === libraryAccountIdOf(connection);
+  const syncStorage = libraryIsTheAccounts ? stores.syncStorage : null;
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SyncStatus>(INITIAL_SYNC_STATUS);
   const engine = useRef<{ engine: SyncEngine; stop: () => void } | null>(null);
@@ -54,7 +58,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      available: syncStorage !== null,
+      available: stores.syncStorage !== null,
       connected,
       status,
       syncNow: () => void engine.current?.engine.sync(),
@@ -72,7 +76,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         setConnection(DEFAULT_SYNC_CONNECTION);
       },
     }),
-    [syncStorage, connected, status, setConnection, apiUrl, token],
+    [stores.syncStorage, connected, status, setConnection, apiUrl, token],
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;

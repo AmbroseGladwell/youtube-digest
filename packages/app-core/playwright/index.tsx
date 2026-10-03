@@ -47,6 +47,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
 
   window.__iwftStores__ = seeded;
+  window.__iwftLibraries__ = libraries;
   window.__iwftLibrary__ = { accountId: libraryAccountIdOf(connection), stores: seeded, close: () => undefined };
   window.__iwftOpenLibrary__ = async (accountId) => {
     const stores = libraries.get(accountId) ?? makeStores(syncAvailable);

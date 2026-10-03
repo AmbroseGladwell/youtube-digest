@@ -75,6 +75,13 @@ screen. The extension's code exchange ends on "You're in, Ada", local state of a
 connection change would otherwise throw away. The router is a module-level object either
 way, so the reader stays where they were.
 
+**Sync runs only on the account's own library.** The connection changes the moment a
+sign-in answers, and the account's library opens a moment later. In between, the stores
+are still the library being left, and an engine started on them would enrol it and push
+it into the account: the very leak this card closes. So `SyncRuntime` treats the device as
+unable to sync until the open library is the connection's, and
+`accountLibraries.iwft.ts` checks that the no-account library is never enrolled.
+
 **A web sign-in lands only once the account's library is open.** Signing in can finish
 something the visitor started on a shared page: saving its copy, or generating from its
 link (`docs/features/sharing.md`). Done the moment the connection changed, that would go
