@@ -35,7 +35,7 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
       snapshot,
       contentHash: await shareContentHash(snapshot.note),
     });
-    request.log.info({ replacing, hasTranscript: transcript !== null, hasNarration: narration !== null }, "shareCreated");
+    request.log.info({ replacing, hasTranscript: transcript !== null, hasNarration: narration !== null }, "share created");
     return reply.status(replacing ? 200 : 201).send(describe(share));
   });
 
@@ -48,7 +48,7 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
     if (!(await shares.revoke(request.session!.accountId, token))) {
       throw new ApiError("not_found", "This account has no live shared link with that token");
     }
-    request.log.info("shareRevoked");
+    request.log.info("share revoked");
     return reply.status(204).send();
   });
 }

@@ -144,8 +144,9 @@ the hole, and a permissive setting nobody remembers is how it would become one.
 the cookie. Empty, the default, registers nothing and the service behaves exactly as it
 did: a preflight is the same 404 as any unknown route.
 
-**What is vouched for.** GET, POST, PUT and DELETE; the five headers a sync request
-carries, `Authorization`, `Content-Type`, `If-Match`, `X-Client-Version` and `X-Request-Id`;
+**What is vouched for.** GET, POST, PUT and DELETE; the six headers a sync request
+carries, `Authorization`, `Content-Type`, `If-Match`, `X-Client-Version`,
+`X-Client-Surface` and `X-Request-Id`;
 and `ETag`, `Retry-After` and `X-Request-Id` exposed, so the answer to a write, or to a
 throttle, can be read whole and matched to the server's log of it. The preflight is answered before the
 parse, floor and session hooks run, because it carries no token and a 401 on it would
@@ -171,6 +172,10 @@ is bumped deliberately, when a migration registry moves or the wire contract cha
 way the floor must be able to exclude, not on every release. Every request may send it; every
 write must. Malformed is `400` on any route; absent on a write is `400` too, since a write
 with no version cannot be checked.
+
+**`X-Client-Surface`** says which shell sent the request, `web` or `extension`. It's only
+ever logged, never used for a decision, so a value that isn't one of the two is ignored
+rather than refused (`errors-and-logs.md`, "Who a request was for").
 
 **From that number the server derives everything else it knows about the caller.**
 `clientSchemaVersions.ts` is a table, one row per client version that moved a registry,

@@ -1,5 +1,6 @@
 import type { SessionInfo } from "@overview/domain";
 import { createFetchAuthApi } from "@overview/sync";
+import type { Surface } from "../../app/SurfaceContext.js";
 import { readSyncConnection, writeSyncConnection } from "../sync/syncConnectionStorage.js";
 import { isConnected, type SyncConnection } from "../sync/types/SyncConnection.js";
 import { adoptReadingPositions } from "../transcripts/readingPositionStorage.js";
@@ -7,6 +8,7 @@ import { adoptReadingPositions } from "../transcripts/readingPositionStorage.js"
 export interface AdoptSignedInLibraryOptions {
   // The shell's own: copies the device's one library into the account's and empties it.
   moveDatabase: (accountId: string) => Promise<void>;
+  surface: Surface;
   storage?: Storage;
   readSession?: (connection: SyncConnection & { apiUrl: string }) => Promise<SessionInfo>;
   timeoutMs?: number;
@@ -20,8 +22,9 @@ const ASK_LIMIT_MS = 5_000;
 // start asks again (docs/features/account-libraries.md, "Installs already signed in").
 export async function adoptSignedInLibrary({
   moveDatabase,
+  surface,
   storage = globalThis.localStorage,
-  readSession = ({ apiUrl, token }) => createFetchAuthApi({ baseUrl: apiUrl, token }).session(),
+  readSession = ({ apiUrl, token }) => createFetchAuthApi({ baseUrl: apiUrl, token, surface }).session(),
   timeoutMs = ASK_LIMIT_MS,
 }: AdoptSignedInLibraryOptions): Promise<string | null> {
   const connection = readSyncConnection(storage);

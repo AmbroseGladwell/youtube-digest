@@ -35,7 +35,7 @@ describe("adoptSignedInLibrary", () => {
     writeReadingPosition("video1", 65_000, null, storage);
     const moveDatabase = vi.fn(async () => undefined);
 
-    const adopted = await adoptSignedInLibrary({ moveDatabase, storage, readSession: async () => SESSION });
+    const adopted = await adoptSignedInLibrary({ surface: "web", moveDatabase, storage, readSession: async () => SESSION });
 
     expect(adopted).toBe("account-a");
     expect(moveDatabase).toHaveBeenCalledWith("account-a");
@@ -51,8 +51,8 @@ describe("adoptSignedInLibrary", () => {
     writeSyncConnection({ ...SIGNED_IN_BEFORE, accountId: "account-a" }, knows);
     const signedOut = makeStorage();
 
-    await adoptSignedInLibrary({ moveDatabase, readSession, storage: knows });
-    await adoptSignedInLibrary({ moveDatabase, readSession, storage: signedOut });
+    await adoptSignedInLibrary({ surface: "web", moveDatabase, readSession, storage: knows });
+    await adoptSignedInLibrary({ surface: "web", moveDatabase, readSession, storage: signedOut });
 
     expect(readSession).not.toHaveBeenCalled();
     expect(moveDatabase).not.toHaveBeenCalled();
@@ -64,11 +64,13 @@ describe("adoptSignedInLibrary", () => {
     const moveDatabase = vi.fn(async () => undefined);
 
     const refused = await adoptSignedInLibrary({
+      surface: "web",
       moveDatabase,
       storage,
       readSession: () => Promise.reject(new Error("offline")),
     });
     const silent = await adoptSignedInLibrary({
+      surface: "web",
       moveDatabase,
       storage,
       readSession: () => new Promise(() => undefined),
@@ -85,6 +87,7 @@ describe("adoptSignedInLibrary", () => {
     writeSyncConnection(SIGNED_IN_BEFORE, storage);
 
     await adoptSignedInLibrary({
+      surface: "web",
       storage,
       readSession: async () => SESSION,
       moveDatabase: async () => writeSyncConnection(DEFAULT_SYNC_CONNECTION, storage),

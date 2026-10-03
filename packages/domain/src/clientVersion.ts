@@ -4,3 +4,7 @@
 export const CLIENT_VERSION = 1;
 
 export const CLIENT_VERSION_HEADER = "x-client-version";
+
+// Which shell sent a request, an AuthSurface, so the server's logs can tell the web app's
+// calls from the extension's. Only ever logged, never trusted for a decision.
+export const CLIENT_SURFACE_HEADER = "x-client-surface";

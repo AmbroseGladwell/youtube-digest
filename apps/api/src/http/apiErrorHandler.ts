@@ -1,6 +1,7 @@
 import type { FastifyError, FastifyInstance } from "fastify";
 import type { ApiErrorEnvelope } from "@overview/domain";
 import { ApiError, isApiError } from "./ApiError.js";
+import { logRefused } from "./logRefused.js";
 import { reportRequestError, type RequestErrorReporting } from "../errors/reportRequestError.js";
 
 const envelope = (error: ApiError): ApiErrorEnvelope => ({
@@ -19,9 +20,11 @@ const isFastifyError = (error: unknown): error is FastifyError =>
 export function registerApiErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
+      logRefused(request, error.code, error.status, error.details);
       return reply.status(error.status).send(envelope(error));
     }
     if (isFastifyError(error) && error.statusCode !== undefined && error.statusCode < 500) {
+      logRefused(request, "invalid_request", 400);
       return reply
         .status(400)
         .send(envelope(new ApiError("invalid_request", error.message)));

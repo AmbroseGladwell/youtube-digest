@@ -22,6 +22,7 @@ import { isConnected, libraryAccountIdOf } from "./types/SyncConnection.js";
 import type { SignOutOptions, SignOutOutcome } from "./types/SignOutOutcome.js";
 import { signOutNoticeFor } from "./util/signOutNoticeFor.js";
 import { signOutOutcomeOf } from "./util/signOutOutcomeOf.js";
+import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // How long sign-out waits for its last cycle before going anyway: it always completes.
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
@@ -44,6 +45,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const [signOutNotice, setSignOutNotice] = useState<SignOutNotice | null>(null);
   const [opening, setOpening] = useState(false);
   const wasConnected = useRef(connected);
+  const surface = useClientSurface();
 
   useEffect(() => {
     const signedIn = connected && !wasConnected.current;
@@ -61,7 +63,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       return;
     }
     const started = new SyncEngine({
-      api: createFetchSyncApi({ baseUrl: apiUrl, token }),
+      api: createFetchSyncApi({ baseUrl: apiUrl, token, surface }),
       storage: syncStorage,
       onApplied: () => {
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -78,7 +80,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       unsubscribe();
       engine.current = null;
     };
-  }, [syncStorage, apiUrl, token, queryClient]);
+  }, [syncStorage, apiUrl, token, surface, queryClient]);
 
   const value = useMemo(
     () => ({
@@ -106,7 +108,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
           running?.stop();
           await beforeEndingSession?.(outcome).catch(() => undefined);
           if (apiUrl !== null) {
-            await createFetchAuthApi({ baseUrl: apiUrl, token }).signOut().catch(() => undefined);
+            await createFetchAuthApi({ baseUrl: apiUrl, token, surface }).signOut().catch(() => undefined);
           }
           const stillThisConnection = readSyncConnection().accountId === connection.accountId;
           if (stillThisConnection) {
@@ -119,7 +121,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, signingOut, signOutNotice, opening],
+    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, surface, signingOut, signOutNotice, opening],
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;

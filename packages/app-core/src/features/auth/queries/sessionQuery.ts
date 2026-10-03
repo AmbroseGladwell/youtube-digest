@@ -4,6 +4,7 @@ import { createFetchAuthApi, type AuthApi } from "@overview/sync";
 import { useSync } from "../../sync/SyncContext.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { authKeys } from "../authKeys.js";
+import { useClientSurface } from "../../../app/SurfaceContext.js";
 
 export const sessionQueryOptions = (account: string | null, api: AuthApi | null) =>
   queryOptions({
@@ -18,9 +19,10 @@ export function useSessionQuery() {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const { apiUrl, token, email } = connection;
+  const surface = useClientSurface();
   const api = useMemo(
-    () => (sync.connected && apiUrl !== null ? createFetchAuthApi({ baseUrl: apiUrl, token }) : null),
-    [sync.connected, apiUrl, token],
+    () => (sync.connected && apiUrl !== null ? createFetchAuthApi({ baseUrl: apiUrl, token, surface }) : null),
+    [sync.connected, apiUrl, token, surface],
   );
   return useQuery(sessionQueryOptions(email, api));
 }

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
+import { CLIENT_SURFACE_HEADER, CLIENT_VERSION, CLIENT_VERSION_HEADER, REQUEST_ID_HEADER } from "@overview/domain";
 import { createFetchAuthApi } from "./fetchAuthApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
 
@@ -128,4 +128,15 @@ test("a signed-in shell mints a code for the extension over its own session, wit
       body: undefined,
     },
   ]);
+});
+
+test("a requester told its surface sends it on every call, and one not told sends none", async () => {
+  const told = answering(204, null);
+  const untold = answering(204, null);
+
+  await createFetchAuthApi({ baseUrl: "https://overview.example", fetch: told.fetch, surface: "extension" }).signOut();
+  await createFetchAuthApi({ baseUrl: "https://overview.example", fetch: untold.fetch }).signOut();
+
+  assert.equal(told.sent[0]!.headers[CLIENT_SURFACE_HEADER], "extension");
+  assert.equal(CLIENT_SURFACE_HEADER in untold.sent[0]!.headers, false);
 });

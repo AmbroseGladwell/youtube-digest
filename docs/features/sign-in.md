@@ -109,9 +109,10 @@ stranger could.
 `findOrCreateAccount` takes the name the link was asked with and writes it only when
 `insert … on conflict` actually inserted, which is also how the sign-in knows whether it
 created an account. The route logs `account created` or `signed in`, with the account's
-id, the intent and the surface, so the two can be counted apart. Exchanging a code logs
-`link code exchanged` and ending a session `signed out`, each with the account's id, so one
-account's sessions can be followed from sign-in to sign-out; never its address. An account made by an ordinary sign-in has
+id, the intent and the surface, so the two can be counted apart. Each session made logs
+`session created` and each ended `signed out`, under its account and session ids, so one
+device's session can be followed from sign-in to sign-out; never its address
+(`docs/architecture/errors-and-logs.md`, "Sign-in and mail"). An account made by an ordinary sign-in has
 no name, and every screen that would use one falls back to the address.
 
 **The name travels with the session.** `SignedIn`, `LinkedSession` and `SessionInfo` carry

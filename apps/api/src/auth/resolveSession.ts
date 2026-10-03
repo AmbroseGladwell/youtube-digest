@@ -7,6 +7,7 @@ import { sessionExpiry } from "./sessionExpiry.js";
 export const SESSION_TOUCH_INTERVAL_MS = 60 * 60 * 1000;
 
 interface SessionRow {
+  id: string;
   account_id: string;
   email: string;
   first_name: string | null;
@@ -31,7 +32,7 @@ export async function resolveSession(
 ): Promise<ResolvedSession | null> {
   const tokenHash = hashToken(token);
   const rows = await sql.query<SessionRow>(
-    `select s.account_id, a.email, a.first_name, s.expires_at, s.last_seen_at
+    `select s.id, s.account_id, a.email, a.first_name, s.expires_at, s.last_seen_at
        from sessions s join accounts a on a.id = s.account_id
       where s.token_hash = $1 and s.expires_at > $2::timestamptz`,
     [tokenHash, now.toISOString()],
@@ -51,7 +52,7 @@ export async function resolveSession(
     );
   }
   return {
-    session: { accountId: AccountId.parse(row.account_id), email: row.email, firstName: row.first_name, expiresAt, tokenHash, transport },
+    session: { id: row.id, accountId: AccountId.parse(row.account_id), email: row.email, firstName: row.first_name, expiresAt, tokenHash, transport },
     slid,
   };
 }

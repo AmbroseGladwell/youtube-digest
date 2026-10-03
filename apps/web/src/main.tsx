@@ -34,7 +34,10 @@ async function main() {
   // Once, for an install signed in before each account had a library of its own. A failure
   // leaves the library where it was, to be tried again next start.
   try {
-    await adoptSignedInLibrary({ moveDatabase: (accountId) => adoptLibraryIntoAccount({ accountId }) });
+    await adoptSignedInLibrary({
+      surface: "web",
+      moveDatabase: (accountId) => adoptLibraryIntoAccount({ accountId }),
+    });
   } catch (error) {
     console.error(error);
     void reportStartupFailure(error, { surface: "web", build: appBuild });

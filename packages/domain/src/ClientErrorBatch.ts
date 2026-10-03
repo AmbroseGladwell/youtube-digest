@@ -3,6 +3,7 @@ import { AnalyticsContext } from "./AnalyticsEventBatch.js";
 import { isAnalyticsEventName, type AnalyticsEventName } from "./analyticsEvents.js";
 import { API_ERROR_CODES, type ApiErrorCode } from "./ApiErrorCode.js";
 import { MAX_ERROR_MESSAGE_LENGTH, redactErrorMessage } from "./redactErrorMessage.js";
+import { ClientWarning, MAX_CLIENT_WARNING_BATCH } from "./ClientWarning.js";
 import { RequestId } from "./RequestId.js";
 
 export const MAX_CLIENT_ERROR_BATCH = 10;
@@ -65,11 +66,15 @@ export type SentClientError = z.infer<typeof SentClientError>;
 export const ClientErrorBatch = z
   .object({
     context: AnalyticsContext,
-    errors: z.array(SentClientError).min(1).max(MAX_CLIENT_ERROR_BATCH),
+    errors: z.array(SentClientError).max(MAX_CLIENT_ERROR_BATCH),
+    warnings: z.array(ClientWarning).max(MAX_CLIENT_WARNING_BATCH).optional(),
     // How many errors the app couldn't send or hold since its last batch got through.
     dropped: z.number().int().min(1).max(100_000).optional(),
   })
-  .strict();
+  .strict()
+  .refine((batch) => batch.errors.length > 0 || (batch.warnings?.length ?? 0) > 0, {
+    message: "A batch carries at least one error or warning",
+  });
 export type ClientErrorBatch = z.infer<typeof ClientErrorBatch>;
 
 export interface ClientError extends Omit<SentClientError, "apiErrorCode" | "trail"> {

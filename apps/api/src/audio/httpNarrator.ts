@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { REQUEST_ID_HEADER } from "@overview/domain";
 import type { Narrator } from "./Narrator.js";
 
 const RENDER_TIMEOUT_MS = 10 * 60 * 1000;
@@ -15,10 +16,10 @@ const ErrorResponse = z.object({ error: z.object({ code: z.string(), message: z.
 
 export function createHttpNarrator(baseUrl: string, fetchImpl: typeof fetch = fetch): Narrator {
   return {
-    async narrate(request) {
+    async narrate(request, requestId) {
       const response = await fetchImpl(`${baseUrl.replace(/\/+$/, "")}/render`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", [REQUEST_ID_HEADER]: requestId },
         body: JSON.stringify(request),
         signal: AbortSignal.timeout(RENDER_TIMEOUT_MS),
       });

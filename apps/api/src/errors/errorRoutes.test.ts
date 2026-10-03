@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MAX_CLIENT_ERROR_BATCH, type SentClientError } from "@overview/domain";
+import { makeSession } from "../auth/SessionFactory.testHelper.js";
+import { LOG_LEVELS, recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 
@@ -119,5 +121,40 @@ test("an address sending more than thirty batches a minute is throttled", async 
 
   assert.equal(throttled.statusCode, 429);
   assert.equal(testApp.errorSink.captured.length, 30);
+  await testApp.close();
+});
+
+test("a warning is logged at warn under the reader's session and never passed on to error tracking", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+  const session = await makeSession(testApp.sql, { now: testApp.clock.now });
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/errors",
+    headers: session.headers,
+    payload: {
+      context: { surface: "extension", layout: "panel", appVersion: "0.4.1", platform: "macos" },
+      errors: [],
+      warnings: [
+        {
+          name: "narrationFellBack",
+          reason: "requestFailed",
+          requestId: "5f0c2a9e-0000-4000-8000-000000000001",
+          apiErrorCode: "unavailable",
+          at: "2026-10-02T09:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  assert.equal(response.statusCode, 204);
+  const [warned] = lines.filter(({ msg }) => msg === "client warning");
+  assert.equal(warned!.level, LOG_LEVELS.warn);
+  assert.deepEqual(warned!.clientWarning, { name: "narrationFellBack", reason: "requestFailed", apiErrorCode: "unavailable" });
+  assert.equal(warned!.failedRequestId, "5f0c2a9e-0000-4000-8000-000000000001");
+  assert.equal(warned!.accountId, session.accountId);
+  assert.equal(warned!.surface, "extension");
+  assert.deepEqual(testApp.errorSink.captured, []);
   await testApp.close();
 });

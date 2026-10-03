@@ -308,7 +308,7 @@ test("signing out with the cookie deletes the session and clears the cookie", as
   await testApp.close();
 });
 
-test("signing in, exchanging a code and signing out are logged by account id, never by address", async () => {
+test("signing in, a session made for the extension and signing out are logged by account id, never by address", async () => {
   const lines: Array<Record<string, unknown>> = [];
   const logger = createLogger([{ write: (chunk: string) => void lines.push(JSON.parse(chunk)) }]);
   const testApp = await createTestApp({}, { logger });
@@ -322,7 +322,7 @@ test("signing in, exchanging a code and signing out are logged by account id, ne
 
   const line = (msg: string) => lines.find((logged) => logged.msg === msg);
   assert.equal(line("account created")?.accountId, accountId);
-  assert.equal(line("link code exchanged")?.accountId, accountId);
+  assert.equal(lines.find((logged) => logged.msg === "session created" && logged.surface === "extension")?.accountId, accountId);
   assert.deepEqual(
     { accountId: line("signed out")?.accountId, transport: line("signed out")?.transport },
     { accountId, transport: "cookie" },

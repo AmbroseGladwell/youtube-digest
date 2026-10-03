@@ -251,10 +251,16 @@ readers without a session, so like `account.signIn.*` they reach only the trail 
 carries until OV-62 brings consent and an anonymous id. The calls are in place so they
 count the day it lands.
 
-**The server logs each session by account id.** `account created` or `signed in`,
-`link code exchanged` and `signed out` each carry the account's id, and `signed out` the
-session's transport, so one account's sign-in can be followed to its sign-out; never the
-address (`errors-and-logs.md`, "What a log line may carry"). A library that fails to open
+**The server logs each session from start to end.** `session created` when it is made
+and `signed out` when it ends, both under the account's and the session's ids, `signed out`
+with the session's transport too, so one device's session can be followed through; never
+the address (`errors-and-logs.md`, "Sign-in and mail").
+
+**A sign-out that gave up on its last sync warns.** If that cycle ran past its ten seconds,
+`useSignOut` sends the client warning `signOutSyncGaveUp` with what was left unsent and
+refused, before the session ends, so the server's `client warning` line sits under the
+account's session (`errors-and-logs.md`, "Client warnings"). It is something the app relied
+on letting it down, not something the reader did, so it is a warning rather than an event. A library that fails to open
 on a switch is reported as a startup failure is, and a move that fails as a handled error
 with its own source, `libraryMove`; the overviews it didn't move stay in the no-account
 library for the next start to try again.
