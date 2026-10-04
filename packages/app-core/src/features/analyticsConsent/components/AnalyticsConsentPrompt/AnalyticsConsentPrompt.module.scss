@@ -1,0 +1,127 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Designs 62a and 62b, in the strip slot 47a and 47c use: the stone tint, the question
+// beside two identical pills on a wide screen, the pills full width beneath it on a phone
+// (44px) and in the panel (40px).
+.root {
+  margin: 0 1.25rem 1.25rem;
+  padding: 0.875rem 0.875rem 0.875rem 1.25rem;
+  border-radius: var(--radius-panel);
+  background: var(--stone-tint);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+}
+
+.text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  min-width: 0;
+  max-width: 42.5rem;
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+  padding-top: 2px;
+  color: var(--label);
+}
+
+.words {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.body {
+  color: var(--muted);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.privacyLink {
+  color: var(--accent);
+  font-weight: 600;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.answers {
+  flex: none;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.answer {
+  @include controls.pill-shape;
+  @include controls.control-motion;
+  min-width: 8.25rem;
+  height: 2.25rem;
+  padding: 0 1rem;
+  background: var(--tint-pill);
+  color: var(--ink);
+  font-size: 0.8125rem;
+
+  &:hover {
+    background: var(--tint-pill-hover);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+@mixin stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+
+  .text {
+    max-width: none;
+  }
+
+  .answers {
+    flex: auto;
+  }
+
+  .answer {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    margin: 0.25rem 0.75rem 0.75rem;
+    padding: 0.875rem;
+    @include stacked;
+  }
+
+  .answer {
+    height: 2.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+.panel {
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.78125rem;
+  @include stacked;
+
+  .answer {
+    height: 2.5rem;
+    padding: 0 0.875rem;
+    font-size: 0.8125rem;
+  }
+}

@@ -41,6 +41,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   milestones: MILESTONES_STANDFIRST,
   shared: SHARED_LINKS_STANDFIRST,
   plan: null,
+  privacy: null,
   about: null,
 };
 
@@ -60,6 +61,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <SharedLinksPanel />;
     case "plan":
       return <PlusPlanPanel />;
+    case "privacy":
+      return null;
     case "about":
       return <BuildLine />;
   }

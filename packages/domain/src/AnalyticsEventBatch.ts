@@ -35,13 +35,21 @@ export const SentAnalyticsEvent = z
   .strict();
 export type SentAnalyticsEvent = z.infer<typeof SentAnalyticsEvent>;
 
+const eventBatchShape = {
+  context: AnalyticsContext,
+  events: z.array(SentAnalyticsEvent).min(1).max(MAX_ANALYTICS_BATCH_EVENTS),
+  // How many events the app couldn't send or hold since its last batch got through. The
+  // app's own bookkeeping, so it is logged and never an event.
+  dropped: z.number().int().min(1).max(100_000).optional(),
+};
+
+// A batch from a reader with no account carries the random id they agreed to keep on this
+// device; a signed-in reader's carries none, because the server takes the account from the
+// session (docs/features/analytics-consent.md).
 export const AnalyticsEventBatch = z
   .object({
-    context: AnalyticsContext,
-    events: z.array(SentAnalyticsEvent).min(1).max(MAX_ANALYTICS_BATCH_EVENTS),
-    // How many events the app couldn't send or hold since its last batch got through. The
-    // app's own bookkeeping, so it is logged and never an event.
-    dropped: z.number().int().min(1).max(100_000).optional(),
+    ...eventBatchShape,
+    anonymousId: z.uuid().optional(),
   })
   .strict();
 export type AnalyticsEventBatch = z.infer<typeof AnalyticsEventBatch>;
@@ -51,7 +59,7 @@ export type AnalyticsEventBatch = z.infer<typeof AnalyticsEventBatch>;
 // (docs/architecture/analytics.md, "The shared page").
 export const SharedPageEventBatch = z
   .object({
-    ...AnalyticsEventBatch.shape,
+    ...eventBatchShape,
     viewId: z.uuid(),
   })
   .strict();

@@ -126,6 +126,10 @@ Five folders, five different questions.
   signed out looks like (the strips, the empty library, opening, Settings), the move on
   sign-in (one overview per video, the account's copy kept, finished by running again) and
   what it tells the reader, sign-out and the move counted, and installs already signed in.
+- `analytics-consent.md` — asking a reader without an account to share usage: the three
+  tiers, the prompt in the strip slot and what outranks it, the consent record and the
+  anonymous id kept only after a yes and dropped at sign-in, asking again when what is
+  counted grows, and what of OV-62 is not built yet.
 - `sign-in.md` — magic-link sign-in: why the link is spent by a POST from the page and
   carries its token in the fragment, the cookie the web app gets and the code the
   extension exchanges for its bearer, why the tab that opened an extension link stays

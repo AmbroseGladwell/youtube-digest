@@ -1,0 +1,126 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 62c, where the prompt was: one line on a wide screen and two on a phone or in the
+// panel, counting ten seconds down along its foot as 47e's notice does.
+.root {
+  position: relative;
+  margin: 0 1.25rem 1.25rem;
+  padding: 0.625rem 0.625rem 0.625rem 1.25rem;
+  border-radius: var(--radius-panel);
+  background: var(--stone-tint);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+}
+
+.text {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+  color: var(--label);
+}
+
+.lead {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.then {
+  color: var(--muted);
+}
+
+.settingsLink {
+  color: var(--accent);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.dismiss {
+  @include controls.ghost-pill;
+  @include controls.circle(2rem);
+  flex: none;
+}
+
+.timer {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timerBar {
+  display: block;
+  height: 100%;
+  background: var(--label);
+  opacity: 0.45;
+  transform-origin: left;
+  animation: countDown 10s linear forwards;
+}
+
+.root:hover .timerBar,
+.root:focus-within .timerBar {
+  animation-play-state: paused;
+}
+
+@keyframes countDown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@mixin stacked {
+  align-items: flex-start;
+
+  .text {
+    align-items: flex-start;
+  }
+
+  .icon {
+    padding-top: 2px;
+  }
+
+  .words {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    margin: 0.25rem 0.75rem 0.75rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.875rem;
+    @include stacked;
+  }
+
+  .text {
+    padding: 0.5rem 0;
+  }
+
+  .dismiss {
+    @include controls.circle(2.75rem);
+  }
+}
+
+.panel {
+  margin: 0;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  font-size: 0.78125rem;
+  @include stacked;
+}

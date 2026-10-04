@@ -108,3 +108,18 @@ test("someone on a shared link with no account is one page load in PostHog, with
   assert.equal(captured!.distinct_id, "shared-view:6f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b");
   assert.equal(captured!.properties.$process_person_profile, false);
 });
+
+test("a reader with no account who agreed to share is counted under their anonymous id, and no person is made for it", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+
+  await sink.capture([{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: "2026-10-03T09:00:00.000Z" }], {
+    ...source,
+    accountId: null,
+    anonymousId: "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+  });
+
+  const [captured] = (sent[0]!.body as { batch: Array<{ distinct_id: string; properties: Record<string, unknown> }> }).batch;
+  assert.equal(captured!.distinct_id, "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d");
+  assert.equal(captured!.properties.$process_person_profile, false);
+});

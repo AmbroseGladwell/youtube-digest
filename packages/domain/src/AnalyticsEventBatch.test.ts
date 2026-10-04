@@ -50,6 +50,12 @@ test("what the app dropped is a count on the batch, not an event", () => {
   assert.equal(parseAnalyticsEvent({ name: "analytics.queue.dropped", props: { count: 3 }, at: AT }), null);
 });
 
+test("a batch from a reader with no account carries the anonymous id they agreed to, and it must be an id", () => {
+  const events = [{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: AT }];
+  assert.ok(AnalyticsEventBatch.safeParse({ context, events, anonymousId: "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d" }).success);
+  assert.ok(!AnalyticsEventBatch.safeParse({ context, events, anonymousId: "reader@example.com" }).success);
+});
+
 test("an overview's id is the one id an event may carry, and it must be an id", () => {
   const overviewId = "0b7c9d2e-4f61-4a8b-9c3d-2e1f0a9b8c7d";
   assert.deepEqual(

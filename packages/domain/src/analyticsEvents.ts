@@ -116,7 +116,7 @@ export const AccountMenuItem = z.enum([
   "createAccount",
 ]);
 export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
-export const SettingsSection = z.enum(["account", "voice", "keys", "connections", "milestones", "shared", "plan", "about"]);
+export const SettingsSection = z.enum(["account", "voice", "keys", "connections", "milestones", "shared", "plan", "privacy", "about"]);
 const LinkCodeFrom = z.enum(["emailLink", "webApp"]);
 export const OverviewMenuItem = z.enum([
   "editTopics",
@@ -353,6 +353,14 @@ export const analyticsEvents = {
     accountOffer: {
       createAccountChosen: event("The reader follows Create account from the strip offering an account"),
       dismissed: event("The reader turns down the strip offering an account, which hides it on this device"),
+    },
+  },
+  analyticsConsent: {
+    prompt: {
+      accepted: event(
+        "A reader with no account agrees to share usage from the library's prompt, the first event they send; whether it was the first ask or an ask after what is counted changed",
+        { asked: z.enum(["first", "again"]) },
+      ),
     },
   },
   settings: {

@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFetchEventsApi, type EventsApi } from "@overview/sync";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
+import {
+  analyticsConsentSnapshot,
+  forgetAnonymousId,
+  mintAnonymousId,
+  useAnalyticsConsent,
+} from "../analyticsConsent/useAnalyticsConsent.js";
+import { consentAllowsSharing } from "../analyticsConsent/util/consentAskOf.js";
 import { useSync } from "../sync/SyncContext.js";
+import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { AnalyticsProvider } from "./AnalyticsContext.js";
 import { AnalyticsQueue } from "./AnalyticsQueue.js";
@@ -9,29 +17,58 @@ import { createAnalytics } from "./createAnalytics.js";
 import { useAnalyticsContext } from "./useAnalyticsContext.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 
-// Inside the sync runtime, because only a signed-in reader's usage is sent, over their own
-// session (docs/architecture/analytics.md, "Who is counted").
+interface Sender {
+  api: EventsApi;
+  anonymousId?: string;
+}
+
+// Inside the sync runtime: a signed-in reader's usage goes over their own session, and a
+// reader without an account's only once they have said yes, under the anonymous id that
+// yes made (docs/architecture/analytics.md, "Who is counted").
 export function AnalyticsRuntime({ children }: { children: ReactNode }) {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
+  const knownApiUrl = useKnownApiUrl();
   const surface = useClientSurface();
   const context = useAnalyticsContext();
   const errors = useErrorReporter();
+  const { consent } = useAnalyticsConsent();
 
-  const api = useMemo<EventsApi | null>(
+  useEffect(() => {
+    if (connected) forgetAnonymousId();
+    else mintAnonymousId();
+  }, [connected, consent]);
+
+  const sessionApi = useMemo<EventsApi | null>(
     () => (connected && apiUrl !== null ? createFetchEventsApi({ baseUrl: apiUrl, token, surface }) : null),
     [connected, apiUrl, token, surface],
   );
-  const latest = useRef({ api, context });
-  latest.current = { api, context };
-
-  const [queue] = useState(
-    () =>
-      new AnalyticsQueue({
-        canSend: () => latest.current.api !== null,
-        send: (batch, options) => latest.current.api!.send({ context: latest.current.context, ...batch }, options),
-      }),
+  const anonymousApi = useMemo<EventsApi | null>(
+    () => (!connected && knownApiUrl !== null ? createFetchEventsApi({ baseUrl: knownApiUrl, token: null, surface }) : null),
+    [connected, knownApiUrl, surface],
   );
+  const latest = useRef({ sessionApi, anonymousApi, context });
+  latest.current = { sessionApi, anonymousApi, context };
+
+  const [queue] = useState(() => {
+    const sender = (): Sender | null => {
+      if (latest.current.sessionApi !== null) return { api: latest.current.sessionApi };
+      const { consent: answered } = analyticsConsentSnapshot();
+      const anonymousId = answered?.anonymousId ?? null;
+      if (latest.current.anonymousApi === null || !consentAllowsSharing(answered) || anonymousId === null) return null;
+      return { api: latest.current.anonymousApi, anonymousId };
+    };
+    return new AnalyticsQueue({
+      canSend: () => sender() !== null,
+      send: (batch, options) => {
+        const { api, anonymousId } = sender()!;
+        return api.send(
+          { context: latest.current.context, ...batch, ...(anonymousId === undefined ? {} : { anonymousId }) },
+          options,
+        );
+      },
+    });
+  });
 
   useEffect(() => {
     const flushErrorsThenEvents = () => {

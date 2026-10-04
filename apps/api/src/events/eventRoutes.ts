@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { AnalyticsEventBatch, parseAnalyticsEvent, type AnalyticsEvent } from "@overview/domain";
+import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -8,22 +9,34 @@ import { geoAddress } from "./geoAddress.js";
 
 const EVENTS_BODY_LIMIT_BYTES = 32 * 1024;
 
-// Signed in only: usage from a reader with no account waits for their consent
-// (docs/architecture/analytics.md, "Who is counted").
+// Signed in, under the session's account; or with no account, only when the batch carries
+// the anonymous id the reader agreed to keep (docs/features/analytics-consent.md).
 export function eventRoutes(app: FastifyInstance, sink: EventSink | null, clock: () => Date): void {
   app.post(
     "/events",
     {
       bodyLimit: EVENTS_BODY_LIMIT_BYTES,
-      preHandler: rateLimitHook(rateLimits.eventsPerAccount, (request) => request.session?.accountId ?? null, clock),
+      config: { optionalSession: true },
+      preHandler: [
+        rateLimitHook(rateLimits.eventsPerAccount, (request) => request.session?.accountId ?? null, clock),
+        rateLimitHook(
+          rateLimits.anonymousEventsPerAddress,
+          (request) => (request.session === null ? request.clientAddress : null),
+          clock,
+        ),
+      ],
     },
     async (request, reply) => {
-      const { context, events, dropped } = parseOrThrow(AnalyticsEventBatch, request.body, "The events");
+      const { context, events, dropped, anonymousId } = parseOrThrow(AnalyticsEventBatch, request.body, "The events");
+      const accountId = request.session?.accountId ?? null;
+      if (accountId === null && anonymousId === undefined) {
+        throw new ApiError("unauthenticated", "Sign in, or agree to share usage, to send events");
+      }
       const accepted = events.map(parseAnalyticsEvent).filter((event): event is AnalyticsEvent => event !== null);
       const refused = events.length - accepted.length;
 
       for (const { name, props } of accepted) {
-        request.log.info({ event: name, props, ...context }, "client event");
+        request.log.info({ event: name, props, signedIn: accountId !== null, ...context }, "client event");
       }
       if (dropped !== undefined) {
         request.log.warn({ dropped, surface: context.surface, appVersion: context.appVersion }, "client events dropped");
@@ -33,10 +46,11 @@ export function eventRoutes(app: FastifyInstance, sink: EventSink | null, clock:
       }
       if (sink !== null && accepted.length > 0) {
         const source = {
-          accountId: request.session!.accountId,
+          accountId,
+          ...(accountId === null && anonymousId !== undefined ? { anonymousId } : {}),
           context,
           geoAddress: geoAddress(request.clientAddress),
-        } as const;
+        };
         void sink
           .capture(accepted, source)
           .catch((error: unknown) =>

@@ -6,6 +6,7 @@ export const SETTINGS_SECTION_IDS = [
   "milestones",
   "shared",
   "plan",
+  "privacy",
   "about",
 ] as const;
 
