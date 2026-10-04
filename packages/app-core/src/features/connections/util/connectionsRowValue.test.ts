@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { connectionsRowValue, type ConnectionsRowState } from "./connectionsRowValue.js";
 
-const PLUS: ConnectionsRowState = { signedIn: true, planStatus: "known", isPlus: true, count: 2, countFailed: false };
+const PLUS: ConnectionsRowState = { signedIn: true, planStatus: "known", canConnect: true, count: 2, countFailed: false };
 
 describe("connectionsRowValue", () => {
   it.each<[Partial<ConnectionsRowState>, string]>([
-    [{ signedIn: false, planStatus: "known", isPlus: false }, "Sign in first"],
-    [{ planStatus: "checking", isPlus: false, count: undefined }, "Checking…"],
-    [{ planStatus: "unreachable", isPlus: false, count: undefined }, "Couldn't check"],
-    [{ isPlus: false, count: undefined }, "Needs Plus"],
+    [{ signedIn: false, planStatus: "known", canConnect: false }, "Sign in first"],
+    [{ planStatus: "checking", canConnect: false, count: undefined }, "Checking…"],
+    [{ planStatus: "unreachable", canConnect: false, count: undefined }, "Couldn't check"],
+    [{ canConnect: false, count: undefined }, "Needs Plus"],
     [{ count: undefined }, "Checking…"],
     [{ count: undefined, countFailed: true }, "Couldn't check"],
     [{ count: 0 }, "None"],

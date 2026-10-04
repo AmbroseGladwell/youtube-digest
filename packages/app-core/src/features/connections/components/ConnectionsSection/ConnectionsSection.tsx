@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router";
+import { canConnectAssistant } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -82,7 +83,7 @@ export function ConnectionsSection() {
     return <div className={styles.pending} aria-busy="true" data-testid={connectionsSectionTestIds.pending} />;
   }
 
-  if (session.data.plan !== "plus") {
+  if (!canConnectAssistant(session.data.plan)) {
     return (
       <div className={styles.offer} data-testid={connectionsSectionTestIds.plusOffer}>
         <p className={styles.label}>Comes with Plus</p>

@@ -1,3 +1,4 @@
+import { canConnectAssistant, type Plan } from "@overview/domain";
 import { AccountId } from "../auth/AccountId.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -13,7 +14,7 @@ interface RefreshRow {
   client_id: string;
   account_id: string;
   scope: string;
-  plan: string;
+  plan: Plan;
 }
 
 // Refresh tokens rotate: each is spent once, and presenting a spent one means it was copied,
@@ -43,7 +44,7 @@ export async function refreshTokens(
     if (new Date(row.expires_at).getTime() <= now.getTime()) {
       return { kind: "refused", description: "The refresh token has expired" };
     }
-    if (row.plan !== "plus") {
+    if (!canConnectAssistant(row.plan)) {
       return { kind: "refused", description: "Connecting an assistant needs Plus" };
     }
 

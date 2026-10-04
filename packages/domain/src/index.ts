@@ -1,5 +1,6 @@
 export * from "./AnthropicModel.js";
 export * from "./Plan.js";
+export * from "./canConnectAssistant.js";
 export * from "./Brands.js";
 export * from "./RecordMigration.js";
 export * from "./RecordMigrationError.js";

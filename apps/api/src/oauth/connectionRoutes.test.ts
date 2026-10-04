@@ -57,7 +57,7 @@ test("a signed-out reader cannot answer a request", async () => {
   await testApp.close();
 });
 
-test("a free reader cannot approve a connection, and the request stays open for after they upgrade", async () => {
+test("a free reader cannot approve a connection, and the request stays open for after they upgrade", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
@@ -73,6 +73,18 @@ test("a free reader cannot approve a connection, and the request stays open for 
   assert.equal(refused.json().error.code, "plan_required");
   await putOnPlan(testApp, reader, "plus");
   const back = await assistant.approveAs(reader, authorization);
+  assert.ok(back.searchParams.get("code"));
+  await testApp.close();
+});
+
+test("a free reader can approve a connection while every account can connect", async () => {
+  const testApp = await createTestApp();
+  const assistant = await makeConnectingAssistant(testApp);
+  const reader = await makeAccount(testApp);
+  const authorization = await assistant.startAuthorization();
+
+  const back = await assistant.approveAs(reader, authorization);
+
   assert.ok(back.searchParams.get("code"));
   await testApp.close();
 });

@@ -1,3 +1,4 @@
+import { canConnectAssistant, type Plan } from "@overview/domain";
 import { AccountId } from "../auth/AccountId.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -19,7 +20,7 @@ interface CodeRow {
   code_expires_at: string | Date;
   code_consumed_at: string | Date | null;
   connection_id: string | null;
-  plan: string;
+  plan: Plan;
 }
 
 export interface CodeExchange {
@@ -65,7 +66,7 @@ export async function exchangeCode(
     if (exchange.resource !== undefined && exchange.resource.replace(/\/+$/, "") !== urls.resource) {
       return { kind: "refused", description: `The only resource is ${urls.resource}` };
     }
-    if (row.plan !== "plus") {
+    if (!canConnectAssistant(row.plan)) {
       return { kind: "refused", description: "Connecting an assistant needs Plus" };
     }
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
-import { consentPath, MAGIC_LINK_TTL_MINUTES } from "@overview/domain";
+import { canConnectAssistant, consentPath, MAGIC_LINK_TTL_MINUTES } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { RouteParams } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -83,7 +83,7 @@ export function ConsentPage() {
     if (loaded) heading.current?.focus();
   }, [loaded, sent]);
   useOnce(loaded, analytics.mcp.consentScreen.shown);
-  useOnce(loaded && plan === "free", analytics.mcp.consentScreen.plusRequired);
+  useOnce(loaded && plan !== undefined && !canConnectAssistant(plan), analytics.mcp.consentScreen.plusRequired);
 
   if (!sync.available) {
     return <ErrorState screen="accountsUnavailable" title="Accounts need the web app or the extension" back />;
@@ -292,7 +292,7 @@ export function ConsentPage() {
           </p>
         ) : plan === undefined ? (
           <div className={styles.planPending} aria-busy="true" />
-        ) : plan === "plus" ? (
+        ) : canConnectAssistant(plan) ? (
           <ConsentAnswer host={host} deciding={deciding} onDecide={answer} />
         ) : (
           <ConsentPlusCard minutesLeft={left} declining={deciding === "decline"} onDecline={() => answer("decline")} />

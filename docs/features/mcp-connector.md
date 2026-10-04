@@ -111,6 +111,13 @@ plan was only a local setting (`plus-upsell.md`) and the server had nothing to c
 task plan -- reader@example.com plus
 ```
 
+**Until OV-18 ships, every account can connect.** Nothing can be bought, so the connector
+could not be tested by anyone not set to Plus by hand. Every check below asks
+`canConnectAssistant(plan)` in `@overview/domain`, which answers yes for any plan for now;
+moving the connector back to Plus is that one function returning `plan === "plus"`, and
+un-skipping the tests that say "until billing exists". A signed-out device still cannot
+connect: approving needs a session.
+
 OV-18's billing will write the same column. It is checked at three points, so that
 leaving Plus cuts access off rather than waiting for a token to lapse:
 

@@ -123,6 +123,7 @@ test.describe("answering an assistant's request", () => {
     backendSimulator,
     page,
   }) => {
+    test.skip(true, "every account can connect an assistant until billing exists (OV-18)");
     backendSimulator.connections.seedRequest(request());
     await launcher.launch(SIGNED_IN);
     await launcher.openConsent(REQUEST_ID);
@@ -142,6 +143,17 @@ test.describe("answering an assistant's request", () => {
         { name: "mcp.consentScreen.plusRequired", props: {} },
         { name: "mcp.consentScreen.declined", props: { plan: "free" } },
       ]);
+  });
+
+  test("a free reader can approve while every account can connect", async ({ launcher, backendSimulator, page }) => {
+    backendSimulator.connections.seedRequest(request());
+    await launcher.launch(SIGNED_IN);
+    await launcher.openConsent(REQUEST_ID);
+
+    await (await launcher.consentPage.verifyIsShown()).approve();
+
+    await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?code=simulated-code&state=s`);
+    expect(backendSimulator.connections.decisions()).toEqual([{ requestId: REQUEST_ID, approve: true }]);
   });
 
   test("an account that couldn't be checked says so and can be asked again, rather than waiting forever", async ({
