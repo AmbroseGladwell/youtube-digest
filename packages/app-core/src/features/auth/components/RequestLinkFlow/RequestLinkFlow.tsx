@@ -22,6 +22,9 @@ import { CheckEmail } from "../CheckEmail/CheckEmail.js";
 import { EmailLinkForm, type EmailLinkFormValues } from "../EmailLinkForm/EmailLinkForm.js";
 import { EnterCode } from "../EnterCode/EnterCode.js";
 import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
+import { analyticsConsentSnapshot } from "../../../analyticsConsent/useAnalyticsConsent.js";
+import { consentAllowsSharing } from "../../../analyticsConsent/util/consentAskOf.js";
+import { AccountTermsLine } from "../AccountTermsLine/AccountTermsLine.js";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useLibraryMove } from "../../../accountLibraries/LibraryMoveContext.js";
@@ -37,6 +40,14 @@ export interface RequestLinkFlowProps {
 // Asking for a link, then waiting for it: design 9a–9e and 9h on the web, 10b–10e in the
 // extension, where the wait is for a code and outlives the panel being closed
 // (docs/features/sign-in.md).
+// A reader who said yes on this device sends their anonymous id with the request to create
+// an account, so what they shared is linked to it once it is made; anyone else sends none
+// (docs/features/analytics-consent.md, "Creating an account").
+const sharedAnonymousId = (): { anonymousId?: string } => {
+  const { consent } = analyticsConsentSnapshot();
+  return consentAllowsSharing(consent) && consent?.anonymousId != null ? { anonymousId: consent.anonymousId } : {};
+};
+
 export function RequestLinkFlow({ intent, expired = false, returnTo = null }: RequestLinkFlowProps) {
   const surface = useSurface();
   const isPanel = useIsPanel();
@@ -98,6 +109,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
           intent: askedIntent,
           ...(firstName === null ? {} : { firstName }),
           ...(returnTo === null || inExtension ? {} : { returnTo }),
+          ...(askedIntent === "createAccount" ? sharedAnonymousId() : {}),
         },
       },
       {
@@ -222,6 +234,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         askForServer={inExtension ? (knownServer === null ? "always" : "onRequest") : "never"}
         initialServerUrl={knownServer}
         note={expired ? null : savedOverviewsNote(overviewCount, intent, place)}
+        {...(creating && !expired ? { aboveSubmit: <AccountTermsLine /> } : {})}
         switchLink={
           expired ? undefined : creating ? (
             <>

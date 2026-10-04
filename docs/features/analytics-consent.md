@@ -2,8 +2,9 @@
 
 A reader without an account is asked, once, whether to share how they use the app, and
 nothing is sent for them until they say yes. Every reader can change it in Settings ›
-Privacy, and a signed-in reader's choice is kept on their account. Designs: "OV-62 1 Prompt"
-(62a–62c) and "OV-62 2 Privacy" (62d–62i). Cards: OV-62 and OV-80. The privacy policy it
+Privacy, and a signed-in reader's choice is kept on their account. Creating an account says
+what it agrees to, and links what a reader shared before to the account. Designs: "OV-62 1
+Prompt" (62a–62c), "OV-62 2 Privacy" (62d–62i) and "OV-62 3 Create Account" (62j). Cards: OV-62 and OV-80. The privacy policy it
 links to is OV-79.
 
 **What is built, and where:**
@@ -23,7 +24,9 @@ links to is OV-79.
 | The policy and terms links, in Privacy and About (62i) | `features/settings/components/PolicyLinks/`, `analyticsConsent/util/policyPageUrl.ts` |
 | A signed-in reader's opt-out, on the account | `packages/domain/src/Settings.ts` (`analyticsOptOut`, `analyticsOptOutChangedAt`); `apps/api/src/events/eventRoutes.ts` drops the account's events |
 | A no, counted with no id | `features/analyticsConsent/useAnalyticsDecline.ts`; `POST /api/events/declined` in `eventRoutes.ts` |
-| The screens | `packages/app-core/playwright/iwft/scenarios/analyticsConsent.iwft.ts`, `settingsPrivacy.iwft.ts` |
+| The line on the create-account page (62j) | `features/auth/components/AccountTermsLine/`, placed by `EmailLinkForm`'s `aboveSubmit` |
+| The anonymous id sent with a request to create an account, and linked once the account is made | `features/auth/components/RequestLinkFlow/RequestLinkFlow.tsx`; `packages/domain/src/MagicLinkRequest.ts`; `apps/api/migrations/V0011__magic_link_anonymous_ids.sql`, `src/auth/authRoutes.ts`; `EventSink.link` in `src/events/` |
+| The screens | `packages/app-core/playwright/iwft/scenarios/analyticsConsent.iwft.ts`, `settingsPrivacy.iwft.ts`, `accountTerms.iwft.ts` |
 
 ## Three tiers
 
@@ -113,6 +116,26 @@ recorded and the queue flushed before the answer changes, so what was recorded u
 yes goes out under it and nothing follows. On is recorded after the answer is stored, and
 for an account once the setting is saved.
 
+## Creating an account
+
+**The line (62j).** Directly above Create account, in the page's small print: "By creating
+an account, you agree to the Terms and Privacy policy, including sharing which features you
+use. You can turn this off in Settings › Privacy." Terms and Privacy policy link to `/terms`
+and `/privacy`, in a new tab from the extension; "Settings › Privacy" is plain text. There
+is no checkbox: counting a signed-in reader rests on legitimate interests, not consent, so
+it isn't dressed as a choice, and the switch still turns it off. In the extension it is
+also the Chrome Web Store's in-product disclosure. Flush left on a wide screen; on a phone
+and in the panel it is centred with a full-width button and the way to sign in, at the
+form's foot.
+
+**Linking.** A reader who said yes on this device sends their anonymous id with the request
+to create an account (`intent: "createAccount"`); anyone else sends none, and a request to
+sign in never carries one. The server keeps it on the magic link and, only if opening the
+link creates the account, sends PostHog one `$identify` under the account naming the
+anonymous id, so what they shared before is read as theirs. It logs `anonymous id linked`
+under the account, never the id. An account that already existed is never linked, and
+PostHog being down never fails the sign-in.
+
 ## Analytics and logging
 
 `analyticsConsent.prompt.accepted({ asked: "first" | "again" })` is the first event a
@@ -132,8 +155,6 @@ Changing the account's opt-out logs `analytics opt-out set`.
 
 ## Not built yet
 
-- **The create-account line** (design 62j) and **linking the anonymous id at sign-up**, for
-  readers who said yes.
 - **Deleting anonymous data never linked after 30 days.** PostHog keeps events for a year.
 - **The privacy policy and terms pages** are OV-79. Until they exist, the links have nowhere
   to go.
