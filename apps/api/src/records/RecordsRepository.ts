@@ -101,6 +101,10 @@ export class RecordsRepository {
     };
   }
 
+  async read(accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {
+    return this.#get(this.#sql, accountId, kind, id);
+  }
+
   async #allocateSeq(tx: SqlClient, accountId: AccountId): Promise<number> {
     const rows = await tx.query<{ last_seq: number | string | bigint }>(
       "update accounts set last_seq = last_seq + 1 where id = $1 returning last_seq",

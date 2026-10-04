@@ -77,7 +77,9 @@ Three tiers, from OV-62 (`docs/features/analytics-consent.md`):
    route takes such a batch without a session, limited per address.
 3. **A signed-in reader** is counted under their opaque account id, which the server takes
    from the session the batch arrives on; an anonymous id on such a batch is ignored. The
-   basis is legitimate interests, which the privacy notice (OV-79) states.
+   basis is legitimate interests, which the privacy notice (OV-79) states. A reader who
+   turns sharing off in Settings › Privacy sends nothing, and the server drops what their
+   account's devices still send.
 
 The one other case is a shared link's page, which counts its visitors with or without an
 account and stores nothing ("The shared page").
@@ -268,12 +270,8 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **The rest of OV-62:** Settings › Privacy, the create-account line, linking the anonymous
-  id at sign-up, a signed-in reader's opt-out and the 30-day deletion
-  (`docs/features/analytics-consent.md`, "Not built yet"). Until a reader without an account
-  says yes, `account.signIn.*` and what a signed-out library offers
-  (`account.signedOutStrip.*`, `account.signedOutLibrary.*`, `account.accountOffer.*`) are
-  called but not sent; after a yes they are.
+- **The rest of consent:** the create-account line, linking the anonymous id at sign-up,
+  and the 30-day deletion (`docs/features/analytics-consent.md`, "Not built yet").
 - **The privacy policy page** is OV-79.
 - **The events other cards named:** time from play to first sound is OV-63, and the link
   shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,

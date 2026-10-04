@@ -25,6 +25,8 @@ import { SettingsSection, settingsSectionHeadingId } from "../components/Setting
 import { SettingsSectionList } from "../components/SettingsSectionList/SettingsSectionList.js";
 import type { SettingsSectionId } from "../SettingsSectionId.js";
 import { useSettingsSections, type SettingsSectionSummary } from "../useSettingsSections.js";
+import { PrivacySection } from "../../analyticsConsent/components/PrivacySection/PrivacySection.js";
+import { PolicyLinks } from "../components/PolicyLinks/PolicyLinks.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -62,9 +64,14 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
     case "plan":
       return <PlusPlanPanel />;
     case "privacy":
-      return null;
+      return <PrivacySection />;
     case "about":
-      return <BuildLine />;
+      return (
+        <>
+          <BuildLine />
+          <PolicyLinks />
+        </>
+      );
   }
 }
 

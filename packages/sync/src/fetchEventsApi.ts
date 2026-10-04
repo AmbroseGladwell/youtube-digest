@@ -10,5 +10,8 @@ export function createFetchEventsApi(options: FetchEventsApiOptions): EventsApi 
     send: async (batch, { keepalive = false } = {}) => {
       await request("POST", "/events", z.never(), { body: batch, keepalive });
     },
+    declined: async (context) => {
+      await request("POST", "/events/declined", z.never(), { body: { context } });
+    },
   };
 }

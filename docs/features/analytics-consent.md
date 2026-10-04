@@ -1,8 +1,10 @@
 # Analytics consent
 
 A reader without an account is asked, once, whether to share how they use the app, and
-nothing is sent for them until they say yes. Design: "OV-62 1 Prompt" (62a–62c). Card:
-OV-62. The privacy policy it links to is OV-79.
+nothing is sent for them until they say yes. Every reader can change it in Settings ›
+Privacy, and a signed-in reader's choice is kept on their account. Designs: "OV-62 1 Prompt"
+(62a–62c) and "OV-62 2 Privacy" (62d–62i). Cards: OV-62 and OV-80. The privacy policy it
+links to is OV-79.
 
 **What is built, and where:**
 
@@ -17,7 +19,11 @@ OV-62. The privacy policy it links to is OV-79.
 | The batch's `anonymousId`, and `analyticsConsent.prompt.accepted` | `packages/domain/src/AnalyticsEventBatch.ts`, `analyticsEvents.ts` |
 | The route taking an anonymous batch, and its limit per address | `apps/api/src/events/eventRoutes.ts`, `rateLimit/rateLimits.ts` (`anonymousEventsAddress`) |
 | PostHog: the anonymous id as the distinct id, no person made | `apps/api/src/events/postHogEventSink.ts` |
-| The screens | `packages/app-core/playwright/iwft/scenarios/analyticsConsent.iwft.ts` |
+| Settings › Privacy: the switch, what its line says, and what turning it writes (62d–62h) | `features/analyticsConsent/components/PrivacySection/`, `useShareUsage.ts`, `util/shareUsageStatus.ts` |
+| The policy and terms links, in Privacy and About (62i) | `features/settings/components/PolicyLinks/`, `analyticsConsent/util/policyPageUrl.ts` |
+| A signed-in reader's opt-out, on the account | `packages/domain/src/Settings.ts` (`analyticsOptOut`, `analyticsOptOutChangedAt`); `apps/api/src/events/eventRoutes.ts` drops the account's events |
+| A no, counted with no id | `features/analyticsConsent/useAnalyticsDecline.ts`; `POST /api/events/declined` in `eventRoutes.ts` |
+| The screens | `packages/app-core/playwright/iwft/scenarios/analyticsConsent.iwft.ts`, `settingsPrivacy.iwft.ts` |
 
 ## Three tiers
 
@@ -28,7 +34,7 @@ OV-62. The privacy policy it links to is OV-79.
    is kept beside the answer and sent on every batch as `anonymousId`. The server takes the
    batch without a session.
 3. **Signed in:** the account id from the session, under legitimate interests. A signed-in
-   reader is never asked.
+   reader is never asked, and can turn it off in Settings › Privacy.
 
 ## The record
 
@@ -74,24 +80,60 @@ policy. In the extension the link opens the web app's `/privacy` in a tab of its
 **After either answer (62c)** a notice says what was chosen and where to change it, and
 goes after ten seconds or with ×. The two answers get the same notice.
 
+## Settings › Privacy
+
+The seventh row, between Plan and About, shown whenever there is a server to send to. Its
+value is "Not chosen", "Sharing usage" or "Not sharing usage". One switch, "Share usage"
+(`role="switch"`), the same for everyone; its line under the label is its description and
+says what it means:
+
+| Who | Off | On |
+|---|---|---|
+| No account, never answered | "You haven't chosen yet, so nothing is shared." | — |
+| No account, answered | "Off since 4 October 2026" | "On since 4 October 2026" |
+| No account, answered an older list | the old answer, with "Share usage now covers more. Nothing new is shared until you choose." | |
+| Signed in | "Off across your devices since 4 October 2026" | "On across your devices", with "since …" once changed |
+
+A date that is today reads "today". The text under the switch says what is shared, and
+signed out that the random id lives in this browser (or the extension) and is deleted when
+the switch goes off. Error reports sit in a card of their own, with no switch. The privacy
+policy and the terms are linked at the foot, and under the version in About.
+
+**Signed out, the switch is the prompt's answer.** On records a yes and makes a new
+anonymous id; one deleted by a no is never used again. Off records a no and deletes the id.
+Answering here retires the prompt, and says nothing in the library's slot.
+
+**Signed in, it is the account's opt-out:** `Settings.analyticsOptOut` and the time it
+changed, which sync like any setting. While it is on, the app sends nothing and
+`/api/events` drops whatever an account's devices still send, logging only how many
+(`client events dropped for opt-out`). A record from before the switch reads as sharing.
+
+**Off sends its own event first.** `analyticsConsent.settings.switched({ on: false })` is
+recorded and the queue flushed before the answer changes, so what was recorded under the
+yes goes out under it and nothing follows. On is recorded after the answer is stored, and
+for an account once the setting is saved.
+
 ## Analytics and logging
 
 `analyticsConsent.prompt.accepted({ asked: "first" | "again" })` is the first event a
 reader without an account sends, recorded straight after the yes is stored, so the queue
-sees it. A no sends nothing. Every event a signed-out reader's app already calls
-(`account.signIn.*`, the strips') is sent once they say yes.
+sees it. Every event a signed-out reader's app already calls (`account.signIn.*`, the
+strips') is sent once they say yes. `analyticsConsent.settings.switched({ on })` is the
+switch in Settings.
+
+**A no is counted with no id.** "Don't share" on the prompt, from a reader who hadn't said
+yes, posts the app's context alone to `POST /api/events/declined`, which logs
+`analytics declined` and keeps nothing else; it is limited per address like anonymous
+events. A no after a yes is a withdrawal, not a decline, and isn't posted. The switch can't
+decline: from "Not chosen" it can only turn on.
 
 The server logs each event with `signedIn`, and never the anonymous id in the log line.
+Changing the account's opt-out logs `analytics opt-out set`.
 
 ## Not built yet
 
-- **Settings › Privacy** (part 2 of the design): the section, its switch and withdrawal.
-  The `privacy` section id is reserved, and the notice already links to it, but the section
-  isn't listed yet, so the link opens Settings.
-- **The create-account line** (part 3).
-- **Linking the anonymous id at sign-up**, for readers who said yes, and the account's own
-  opt-out for a signed-in reader, enforced on the server.
+- **The create-account line** (design 62j) and **linking the anonymous id at sign-up**, for
+  readers who said yes.
 - **Deleting anonymous data never linked after 30 days.** PostHog keeps events for a year.
-- **The privacy policy page** is OV-79. Until it exists, the prompt's link has nowhere to go.
-- **A no is not logged.** The card asks for declines to be counted as a log line with no
-  id; nothing sends one yet.
+- **The privacy policy and terms pages** are OV-79. Until they exist, the links have nowhere
+  to go.

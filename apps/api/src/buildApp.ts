@@ -179,7 +179,7 @@ export async function buildApp({
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       shareRoutes(api, shares, config.appUrl);
-      eventRoutes(api, eventSink, clock);
+      eventRoutes(api, { sink: eventSink, records, clock });
       sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
       errorRoutes(api, errorSink, clock);
       audioRoutes(

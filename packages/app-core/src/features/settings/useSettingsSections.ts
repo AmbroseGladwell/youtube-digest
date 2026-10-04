@@ -3,6 +3,8 @@ import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useDeviceAccountHistory } from "../accountLibraries/useDeviceAccountHistory.js";
+import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
+import { shareUsageRowValue } from "../analyticsConsent/util/shareUsageStatus.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
@@ -19,6 +21,7 @@ import { usePlan } from "../plus/usePlan.js";
 import { useSharesQuery } from "../shares/queries/sharesQuery.js";
 import { useShareApi } from "../shares/ShareApiContext.js";
 import { useSync } from "../sync/SyncContext.js";
+import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useSettingsQuery } from "./queries/settingsQuery.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
@@ -55,6 +58,8 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const overviews = useOverviewsWithStateQuery();
   const { signedOutHere } = useDeviceAccountHistory();
   const surface = useSurface();
+  const knownApiUrl = useKnownApiUrl();
+  const shareUsage = useShareUsageState();
 
   return [
     ...(sync.available
@@ -111,6 +116,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,
     },
+    ...(knownApiUrl !== null ? [{ id: "privacy" as const, title: "Privacy", value: shareUsageRowValue(shareUsage) }] : []),
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
 }
