@@ -360,7 +360,7 @@ test("an access token stops reading after its hour", async () => {
   await testApp.close();
 });
 
-test("a reader who leaves Plus loses the connection on its next request and cannot refresh it", async () => {
+test("a reader who leaves Plus loses the connection on its next request and cannot refresh it", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await plusAccount(testApp);
@@ -373,7 +373,7 @@ test("a reader who leaves Plus loses the connection on its next request and cann
   await testApp.close();
 });
 
-test("a reader who leaves Plus between approving and the exchange gets no tokens", async () => {
+test("a reader who leaves Plus between approving and the exchange gets no tokens", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await plusAccount(testApp);

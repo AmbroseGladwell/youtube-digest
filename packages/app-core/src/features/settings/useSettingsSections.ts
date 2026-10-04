@@ -1,4 +1,4 @@
-import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
+import { canConnectAssistant, DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
@@ -45,7 +45,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const narrationApi = useNarrationApi();
   const settings = useSettingsQuery().data;
   const { apiKeys } = useApiKeys();
-  const { plan, isPlus, status: planStatus } = usePlan();
+  const { plan, status: planStatus } = usePlan();
   const connections = useConnectionsQuery();
   const session = useSessionQuery();
   const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
@@ -84,7 +84,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
             value: connectionsRowValue({
               signedIn: sync.connected && !sessionEnded,
               planStatus,
-              isPlus,
+              canConnect: canConnectAssistant(plan),
               count: connections.data?.length,
               countFailed: connections.isError,
             }),

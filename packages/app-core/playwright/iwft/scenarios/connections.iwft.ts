@@ -105,6 +105,7 @@ test.describe("Settings › Connections", () => {
   });
 
   test("on Free, it says what a connection does and offers Plus, with no address or steps", async ({ launcher }) => {
+    test.skip(true, "every account can connect an assistant until billing exists (OV-18)");
     await launcher.launch(SIGNED_IN);
     const settings = await launcher.appShell.openSettings();
     await settings.verifyRowReads("connections", "Needs Plus");
@@ -112,6 +113,17 @@ test.describe("Settings › Connections", () => {
     await settings.openSection("connections");
 
     await settings.connections.verifyOffersPlus();
+  });
+
+  test("on Free, it lists connections and shows the address while every account can connect", async ({ launcher }) => {
+    await launcher.launch(SIGNED_IN);
+    const settings = await launcher.appShell.openSettings();
+    await settings.verifyRowReads("connections", "None");
+
+    await settings.openSection("connections");
+
+    await settings.connections.verifyListsConnections([]);
+    await settings.connections.verifyShowsSetup(`${SERVER}/mcp`);
   });
 
   test("signed out, it asks to sign in first", async ({ launcher }) => {

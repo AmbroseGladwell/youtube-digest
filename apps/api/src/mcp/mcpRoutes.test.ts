@@ -196,7 +196,7 @@ test("one reader's connection never reads another reader's overviews", async () 
   await testApp.close();
 });
 
-test("a reader who leaves Plus cuts the assistant off on its next request", async () => {
+test("a reader who leaves Plus cuts the assistant off on its next request", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
   const testApp = await createTestApp();
   const reader = await plusAccount(testApp);
   const client = await connectMcpClient(testApp, reader);
@@ -206,6 +206,16 @@ test("a reader who leaves Plus cuts the assistant off on its next request", asyn
   const response = await client.post({ jsonrpc: "2.0", id: 1, method: "ping" });
 
   assert.equal(response.statusCode, 401);
+  await testApp.close();
+});
+
+test("a free reader's assistant is answered while every account can connect", async () => {
+  const testApp = await createTestApp();
+  const client = await connectMcpClient(testApp, await makeAccount(testApp));
+
+  const response = await client.post({ jsonrpc: "2.0", id: 1, method: "ping" });
+
+  assert.equal(response.statusCode, 200);
   await testApp.close();
 });
 
