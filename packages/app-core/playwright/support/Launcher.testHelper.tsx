@@ -30,6 +30,10 @@ import {
   type DeviceAccountHistory,
 } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
+import { AnalyticsConsentNoticePageObject } from "../pageObjects/AnalyticsConsentNoticePageObject.testHelper.js";
+import { AnalyticsConsentPromptPageObject } from "../pageObjects/AnalyticsConsentPromptPageObject.testHelper.js";
+import { makeAnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
+import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutLibraryPageObject } from "../pageObjects/SignedOutLibraryPageObject.testHelper.js";
@@ -43,6 +47,9 @@ export interface LaunchOptions {
   pendingSignIn?: PendingSignIn;
   // Whether this device has signed out of an account before, or turned down the offer of one.
   deviceAccountHistory?: Partial<DeviceAccountHistory>;
+  // What this device said about sharing usage. Absent is a "no" already given, so a
+  // scenario about something else isn't asked; null is a device that has never been asked.
+  analyticsConsent?: AnalyticsConsent | null;
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
@@ -110,6 +117,7 @@ export class Launcher {
         syncConnection: options.syncConnection,
         pendingSignIn: options.pendingSignIn,
         deviceAccountHistory: { ...NO_ACCOUNT_HISTORY, ...options.deviceAccountHistory },
+        analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
@@ -208,6 +216,14 @@ export class Launcher {
 
   get accountStrip(): AccountStripPageObject {
     return new AccountStripPageObject(this.testContext);
+  }
+
+  get analyticsConsentPrompt(): AnalyticsConsentPromptPageObject {
+    return new AnalyticsConsentPromptPageObject(this.testContext);
+  }
+
+  get analyticsConsentNotice(): AnalyticsConsentNoticePageObject {
+    return new AnalyticsConsentNoticePageObject(this.testContext);
   }
 
   get libraryMoveNotice(): LibraryMoveNoticePageObject {

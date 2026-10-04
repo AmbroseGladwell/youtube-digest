@@ -12,6 +12,8 @@ import { LibraryMoveNotice } from "../../features/accountLibraries/components/Li
 import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
 import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
 import { useAccountStripKind } from "../../features/accountLibraries/useAccountStripKind.js";
+import { AnalyticsConsentStripSlot } from "../../features/analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
+import { useAnalyticsConsentStrip } from "../../features/analyticsConsent/useAnalyticsConsentStrip.js";
 import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
@@ -47,6 +49,7 @@ export function AppShell() {
   const onHome = pathname === Routes.home();
   const heldHere = useOverviewsWithStateQuery().data?.length ?? null;
   const accountStrip = useAccountStripKind(onHome && !isPanel ? heldHere : null);
+  const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel);
   const libraryMoved = useLibraryMove().move !== null;
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
@@ -173,7 +176,13 @@ export function AppShell() {
           ) : (
             !isPanel &&
             !newOverview.run &&
-            (libraryMoved ? <LibraryMoveNotice /> : accountStrip !== null && <AccountStrip kind={accountStrip} />)
+            (libraryMoved ? (
+              <LibraryMoveNotice />
+            ) : consentStrip !== null ? (
+              <AnalyticsConsentStripSlot strip={consentStrip} />
+            ) : (
+              accountStrip !== null && <AccountStrip kind={accountStrip} />
+            ))
           )}
         </header>
 

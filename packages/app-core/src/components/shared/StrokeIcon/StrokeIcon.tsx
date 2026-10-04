@@ -43,6 +43,8 @@ export type StrokeIconName =
   | "circleMinus"
   | "monitor"
   | "smartphone"
+  | "chart"
+  | "refreshCw"
   | "cloudUpload"
   | "wifiOff";
 
@@ -295,6 +297,21 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
       <path d="M12 18h.01" />
+    </>
+  ),
+  chart: (
+    <>
+      <path d="M12 20V10" />
+      <path d="M18 20V4" />
+      <path d="M6 20v-4" />
+    </>
+  ),
+  refreshCw: (
+    <>
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M8 16H3v5" />
     </>
   ),
 };

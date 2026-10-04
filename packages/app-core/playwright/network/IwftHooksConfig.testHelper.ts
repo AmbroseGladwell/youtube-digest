@@ -1,4 +1,5 @@
 import type { DeviceAccountHistory } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
+import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import type {
   Overview,
   OverviewState,
@@ -41,6 +42,9 @@ export interface IwftHooksConfig {
   pendingSignIn?: PendingSignIn;
   // What this device remembers about accounts (docs/features/account-libraries.md).
   deviceAccountHistory?: DeviceAccountHistory;
+  // What this device said about sharing usage; null is never asked
+  // (docs/features/analytics-consent.md).
+  analyticsConsent?: AnalyticsConsent | null;
   surface?: Surface;
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.

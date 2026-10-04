@@ -36,18 +36,95 @@ test("a signed-in reader's events are passed on under their account id, with wha
   await testApp.close();
 });
 
-test("a reader with no session sends nothing: usage without an account waits for their consent", async () => {
-  const testApp = await createTestApp();
+const ANONYMOUS_ID = "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
 
-  const response = await testApp.app.inject({
+const sendWithoutSession = (testApp: Awaited<ReturnType<typeof createTestApp>>, payload: object) =>
+  testApp.app.inject({
     method: "POST",
     url: "/api/events",
     headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
-    payload: { context, events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }] },
+    payload,
+  });
+
+test("a reader with no session and no anonymous id sends nothing: their usage waits for their consent", async () => {
+  const testApp = await createTestApp();
+
+  const response = await sendWithoutSession(testApp, {
+    context,
+    events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }],
   });
 
   assert.equal(response.statusCode, 401);
   assert.deepEqual(testApp.eventSink.captured, []);
+  await testApp.close();
+});
+
+test("a reader with no account who agreed to share is counted under their anonymous id", async () => {
+  const testApp = await createTestApp();
+
+  const response = await sendWithoutSession(testApp, {
+    context,
+    anonymousId: ANONYMOUS_ID,
+    events: [{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: AT }],
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.deepEqual(testApp.eventSink.captured, [
+    {
+      events: [{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: AT }],
+      source: { accountId: null, anonymousId: ANONYMOUS_ID, context, geoAddress: "127.0.0.0" },
+    },
+  ]);
+  await testApp.close();
+});
+
+test("a signed-in reader is counted under their account, whatever anonymous id the batch carries", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  await account.inject({
+    method: "POST",
+    url: "/api/events",
+    body: { context, anonymousId: ANONYMOUS_ID, events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }] },
+  });
+
+  assert.deepEqual(
+    testApp.eventSink.captured.map(({ source }) => source),
+    [{ accountId: account.accountId, context, geoAddress: "127.0.0.0" }],
+  );
+  await testApp.close();
+});
+
+test("an anonymous id that isn't a random id is refused whole", async () => {
+  const testApp = await createTestApp();
+
+  const response = await sendWithoutSession(testApp, {
+    context,
+    anonymousId: "reader@example.com",
+    events: [{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: AT }],
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(testApp.eventSink.captured, []);
+  await testApp.close();
+});
+
+test("an address sending more than sixty anonymous batches a minute is throttled", async () => {
+  const testApp = await createTestApp();
+  const send = () =>
+    sendWithoutSession(testApp, {
+      context,
+      anonymousId: ANONYMOUS_ID,
+      events: [{ name: "analyticsConsent.prompt.accepted", props: { asked: "first" }, at: AT }],
+    });
+
+  for (let sent = 0; sent < 60; sent++) {
+    assert.equal((await send()).statusCode, 204);
+  }
+  const throttled = await send();
+
+  assert.equal(throttled.statusCode, 429);
+  assert.equal(testApp.eventSink.captured.length, 60);
   await testApp.close();
 });
 

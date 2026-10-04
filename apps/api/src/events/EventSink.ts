@@ -8,8 +8,11 @@ export interface SinkEvent {
 }
 
 export interface EventSource {
-  // Null for someone on a shared link with no account, who is told apart by viewId instead.
+  // Null for a reader with no account, who is told apart by anonymousId or viewId instead.
   accountId: AccountId | null;
+  // The random id a reader with no account agreed to keep on their device
+  // (docs/features/analytics-consent.md).
+  anonymousId?: string;
   // A shared page's load, made in memory by the page (docs/architecture/analytics.md, "The shared page").
   viewId?: string;
   context: AnalyticsContext;

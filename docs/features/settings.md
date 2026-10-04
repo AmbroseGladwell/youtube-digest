@@ -30,8 +30,9 @@ each panel already reads.
 Plan is its own section rather than part of Account, so a Free reader with no account still
 finds it. It comes after Connections: below the things people change, above About.
 
-New sections go here: Personalisation (OV-46) after Narration voice, and YouTube playlists
-(OV-27) beside Connections. About stays last. Connections is described in
+New sections go here: Personalisation (OV-46) after Narration voice, YouTube playlists
+(OV-27) beside Connections, and Privacy (OV-62) between Plan and About, whose id is already
+reserved (`analytics-consent.md`). About stays last. Connections is described in
 `mcp-connector.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.
 
 ## Two panes, or a list then a page

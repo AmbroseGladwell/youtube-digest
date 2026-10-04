@@ -3,8 +3,8 @@
 What a reader did in the app, counted: one catalogue of named events shared by both shells
 and the API, a typed method per event at the call site, a small queue on the client, and
 `POST /api/events`, which checks each event and passes it on to PostHog. This is OV-60's
-first slice. Client errors and the trail before them are OV-61, and consent, an anonymous
-id for readers without an account, and the privacy policy are OV-62.
+first slice. Client errors and the trail before them are OV-61, and consent and an anonymous
+id for readers without an account are OV-62 (`docs/features/analytics-consent.md`).
 
 ## Three kinds of record
 
@@ -68,18 +68,22 @@ limit, a year's retention) and Better Stack's are compared on OV-60 and OV-61.
 
 ## Who is counted
 
-Only a signed-in reader, under their opaque account id, which the server takes from the
-session the batch arrives on: the app never sends an id of its own. The one exception is a
-shared link's page, which counts its visitors with or without an account ("The shared page"). The basis is
-legitimate interests, which OV-62's privacy notice has to state before launch.
+Three tiers, from OV-62 (`docs/features/analytics-consent.md`):
 
-A reader without an account sends nothing. Usage from someone with no account is OV-62's
-tier 2, which needs their consent and an anonymous id kept on the device, and neither
-exists yet. So the queue doesn't hold, send or count events while there is no session, the
-route is an ordinary authenticated one, and "signed-out use stays local" is still true.
+1. **A reader without an account who hasn't said yes sends nothing.** The queue doesn't
+   hold, send or count their events, and nothing about analytics is written to the device.
+2. **A reader without an account who said yes** is counted under a random anonymous id,
+   kept on the device only after that yes and sent on each batch as `anonymousId`. The
+   route takes such a batch without a session, limited per address.
+3. **A signed-in reader** is counted under their opaque account id, which the server takes
+   from the session the batch arrives on; an anonymous id on such a batch is ignored. The
+   basis is legitimate interests, which the privacy notice (OV-79) states.
 
-Nothing about analytics is written to the device: no cookie, no `localStorage`, no
-extension storage. The queue lives in memory and is gone with the page.
+The one other case is a shared link's page, which counts its visitors with or without an
+account and stores nothing ("The shared page").
+
+The queue itself lives in memory and is gone with the page. What the device keeps is the
+consent record and, after a yes, the anonymous id, both in `localStorage`.
 
 ## What an event may carry
 
@@ -146,8 +150,8 @@ screens.
 | action | what the reader did, in the past tense, not the control they used | `approved`, not `approveClicked`; `orderChosen`, not `sortPillChanged` |
 
 The feature is never a word that could mean two features. `consent` alone would have meant
-both an assistant asking to connect and, once OV-62 lands, a reader agreeing to analytics,
-which is why the first events are `mcp.consentScreen.*`.
+both an assistant asking to connect and a reader agreeing to analytics, which is why the
+first events are `mcp.consentScreen.*` and a reader's answer is `analyticsConsent.*`.
 
 ## Adding an event
 
@@ -264,12 +268,13 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **Consent, the anonymous id, linking it at sign-up, the privacy policy:** OV-62. Until
-  then, `account.signIn.*` is called but mostly not sent: someone asking for a link has no
-  session yet, so the queue drops it unseen, as it does every signed-out event. The calls are
-  in place so the sign-in funnel counts the day consent lands. The same goes for what a
-  signed-out library offers (`account.signedOutStrip.*`, `account.signedOutLibrary.*`,
-  `account.accountOffer.*`, `docs/features/account-libraries.md`).
+- **The rest of OV-62:** Settings › Privacy, the create-account line, linking the anonymous
+  id at sign-up, a signed-in reader's opt-out and the 30-day deletion
+  (`docs/features/analytics-consent.md`, "Not built yet"). Until a reader without an account
+  says yes, `account.signIn.*` and what a signed-out library offers
+  (`account.signedOutStrip.*`, `account.signedOutLibrary.*`, `account.accountOffer.*`) are
+  called but not sent; after a yes they are.
+- **The privacy policy page** is OV-79.
 - **The events other cards named:** time from play to first sound is OV-63, and the link
   shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,
   which OV-63 also named, are counted (`library.sortPill.orderChosen`, `settings.voice.*`).

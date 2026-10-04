@@ -21,6 +21,8 @@ import { LibraryMoveNotice } from "../../accountLibraries/components/LibraryMove
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
 import { useAccountStripKind } from "../../accountLibraries/useAccountStripKind.js";
+import { AnalyticsConsentStripSlot } from "../../analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
+import { useAnalyticsConsentStrip } from "../../analyticsConsent/useAnalyticsConsentStrip.js";
 import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
@@ -44,6 +46,7 @@ export function CapturePage() {
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
   const heldHere = overviewsQuery.data?.length ?? null;
   const accountStrip = useAccountStripKind(heldHere);
+  const consentStrip = useAnalyticsConsentStrip(true);
   const signedOutWithNothingHere = useSignedOutHere() && heldHere === 0;
   const sync = useSync();
   const libraryMoved = useLibraryMove().move !== null;
@@ -98,10 +101,16 @@ export function CapturePage() {
 
   return (
     <div
-      className={`${styles.root} ${accountStrip === null && !libraryMoved ? "" : styles.withStrip}`}
+      className={`${styles.root} ${accountStrip === null && consentStrip === null && !libraryMoved ? "" : styles.withStrip}`}
       data-testid={capturePageTestIds.root}
     >
-      {libraryMoved ? <LibraryMoveNotice panel /> : accountStrip !== null && <AccountStrip kind={accountStrip} panel />}
+      {libraryMoved ? (
+        <LibraryMoveNotice panel />
+      ) : consentStrip !== null ? (
+        <AnalyticsConsentStripSlot strip={consentStrip} panel />
+      ) : (
+        accountStrip !== null && <AccountStrip kind={accountStrip} panel />
+      )}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         <div>
           <h2 className={styles.title}>
