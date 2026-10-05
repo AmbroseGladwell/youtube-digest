@@ -22,8 +22,7 @@
   },
   "dependencies": {
     "@overview/domain": "*",
-    "zod": "^4.6.5",
-    "@supadata/js": "^1.4.0"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

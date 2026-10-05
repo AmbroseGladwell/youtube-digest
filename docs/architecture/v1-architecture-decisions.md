@@ -123,6 +123,12 @@ five real videos ran from 13.8s short to 1.5s long. A caption-derived figure pre
 runtime is precisely what `docs/prototype/constraints.md` exists to forbid, so the move off
 Supadata does not only make retrieval free, it **corrects a measurement**.
 
+**Amended again on 2026-10-05: Supadata is gone (OV-91).** Once our own server became the
+last rung, a Supadata key was only a detour on the way to it, so the rung, the key field
+and the dependency were removed. The ladder is now the shared cache, then the user's own
+extension, then our server. What that gave up, deliberately, is Supadata's `mode=generate`:
+a video with no caption track at all now fails with `no-captions`, and nothing fetches it.
+
 The server-side deferral below was lifted by OV-55: `docs/architecture/server-side-transcripts.md`
 records the ToS position and how the last rung is bounded. What
 changed is why it is deferred: the extension removed the urgency for its own users, and
@@ -157,7 +163,7 @@ now that the transcript source carries YouTube's own per-segment timing; ads on 
 | 1 | Confirm v1 = Model D | Yes, in the free/paid split described above — Model D's server shape is what the paid tier is. |
 | 2 | Keys per-device or synced | Per-device. Generate on the device with a key, listen anywhere. We never hold a provider secret. |
 | 3 | Store audio server-side or regenerate | Store it, keyed by a hash of the spoken script — Kokoro now runs server-side (see below), so regenerating per-play would mean re-running CPU synthesis on every listen for content that never changes. |
-| 4 | Transcript source | A ladder — the shared cache, then the user's own extension, then a BYO Supadata key, then a server. Still client-fetched and contributed to the shared cache. Amended 2026-09-20, see `docs/features/transcript-retrieval.md`. |
+| 4 | Transcript source | A ladder — the shared cache, then the user's own extension, then our server. Amended 2026-09-20 and 2026-10-05, see `docs/features/transcript-retrieval.md`. |
 | 5 | TTS provider | Self-hosted Kokoro, per `docs/features/tts-pre-rendered-speech.md` — see Technology stack. |
 | 6 | Headless queue draining | Not required for v1. The capture queue drains next time a keyed device opens; no background worker needed. |
 | 7 | Browser support | Chrome/Edge only for v1. |

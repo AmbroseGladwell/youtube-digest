@@ -36,14 +36,14 @@ test("saving keys says which are set and the model chosen, and never a key", asy
   await launcher.launch(SIGNED_IN);
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
-  await settings.apiKeysPanel.saveKeys("sk-ant-test-typed", "");
+  await settings.apiKeysPanel.saveKeys("sk-ant-test-typed");
 
   await expect
     .poll(() => settingsEvents(backendSimulator).filter(({ name }) => name === "settings.apiKeys.saved"))
     .toEqual([
       {
         name: "settings.apiKeys.saved",
-        props: { anthropicKey: true, supadataKey: false, model: expect.any(String), modelChanged: false },
+        props: { anthropicKey: true, model: expect.any(String), modelChanged: false },
       },
     ]);
   expect(JSON.stringify(backendSimulator.analytics.batches())).not.toContain("sk-ant-test-typed");

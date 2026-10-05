@@ -17,7 +17,6 @@ describe("isAllowedYouTubeUrl", () => {
 
   it("refuses the other hosts the extension can reach, which is the point of it", () => {
     expect(isAllowedYouTubeUrl("https://api.anthropic.com/v1/messages")).toBe(false);
-    expect(isAllowedYouTubeUrl("https://api.supadata.ai/v1/transcript")).toBe(false);
   });
 
   it("refuses a lookalike host rather than matching on the name appearing in it", () => {

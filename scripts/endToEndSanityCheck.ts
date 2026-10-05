@@ -1,15 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/domain";
-import {
-  createSupadataClient,
-  fetchInnerTubeTranscript,
-  fetchSupadataTranscript,
-  isWorthAnotherSource,
-  TranscriptFetchError,
-  type FetchedTranscript,
-  type YouTubeFetch,
-} from "@overview/transcripts";
+import { fetchInnerTubeTranscript, type YouTubeFetch } from "@overview/transcripts";
 import { generateOverview, createAnthropicGenerationClient } from "@overview/generation";
 
 const url = process.argv[2];
@@ -34,22 +26,7 @@ const nodeFetch: YouTubeFetch = async (request) => {
   return { status: response.status, body: await response.text() };
 };
 
-// The same rungs in the same order as the app: the free source first, Supadata only
-// when there is a key and the free source's failure says nothing about the video.
-async function fetchTranscript(videoUrl: string): Promise<FetchedTranscript> {
-  try {
-    return await fetchInnerTubeTranscript(nodeFetch, videoIdOf(videoUrl), videoUrl);
-  } catch (error) {
-    const apiKey = process.env.SUPADATA_API_KEY;
-    const worthAsking =
-      error instanceof TranscriptFetchError && isWorthAnotherSource(error.failure) && apiKey;
-    if (!worthAsking) throw error;
-    console.error(`InnerTube failed (${error.failure}): ${error.message}; asking Supadata`);
-    return fetchSupadataTranscript(createSupadataClient({ apiKey }), videoUrl);
-  }
-}
-
-const fetched = await fetchTranscript(url);
+const fetched = await fetchInnerTubeTranscript(nodeFetch, videoIdOf(url), url);
 console.error(
   `fetched ${fetched.transcript.length} segments (${fetched.generated ? "ASR-generated" : "native captions"}) ` +
     `for "${fetched.video.title}"`,

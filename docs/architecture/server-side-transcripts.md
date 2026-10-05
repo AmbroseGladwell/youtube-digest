@@ -1,7 +1,7 @@
 # Our own server fetching transcripts
 
 The last rung of the ladder in `docs/features/transcript-retrieval.md`. When the shared
-cache, the reader's own extension and a Supadata key have all failed to answer, the API
+cache and the reader's own extension have both failed to answer, the API
 fetches the captions itself, through a residential proxy if it has to, and adds them to
 the shared cache. `v1-architecture-decisions.md` deferred this "with its accompanying
 YouTube-ToS exposure". This file records the position taken on that exposure, and how the
@@ -19,8 +19,8 @@ bounds, and they are the position:**
   signs in. What it fetches is the public text of a public video, the same for every
   reader.
 - **Last, never first.** Every rung above it fetches nothing from our address. The
-  shared cache answers from a row, and the extension and Supadata fetch from somewhere
-  else. The server is asked only when all of those have failed.
+  shared cache answers from a row, and the extension fetches from the reader's own
+  address. The server is asked only when both have failed.
 - **Once per video, ever.** What the server fetches goes into the shared cache as
   confirmed, so the next reader of that video is answered from the row. The bill and
   the exposure both track the rate at which new videos enter the corpus, not readers
@@ -119,8 +119,7 @@ reader is told their other options.
 **Global, proxied fetches only.** One proxied fetch is reserved before the proxy is
 touched and released if no request went through it. When none is left, the failure is
 `budget-exhausted`, a `TranscriptFetchFailure` of its own: the reader is told our server
-has fetched what it can today, and that the extension or a Supadata key can still fetch
-it. It is not retryable.
+has fetched what it can today, and that the extension can still fetch it. It is not retryable.
 
 The quotas are constants in `serviceTranscriptQuotas`. The global cap is
 `TRANSCRIPT_PROXY_DAILY_FETCHES`, default 1,000 (about 100 MB, or $0.40 a day).

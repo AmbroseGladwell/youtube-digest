@@ -9,7 +9,7 @@ import {
 } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 const SIGNED_OUT_HERE = { signedOutHere: true };
 
 const signedInAs = (accountId: string) => ({

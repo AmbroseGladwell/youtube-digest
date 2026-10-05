@@ -7,7 +7,7 @@ describe("transcriptFailureMessage", () => {
     expect(
       transcriptFailureMessage([
         { tier: "extension", outcome: "unavailable" },
-        { tier: "supadata", outcome: "unavailable" },
+        { tier: "service", outcome: "unavailable" },
       ]),
     ).toBe("Nothing here can fetch a transcript.");
   });
@@ -16,7 +16,7 @@ describe("transcriptFailureMessage", () => {
     const message = transcriptFailureMessage([
       { tier: "extension", outcome: "unavailable" },
       {
-        tier: "supadata",
+        tier: "service",
         outcome: "failed",
         error: new TranscriptFetchError("This video has no captions.", {
           failure: TranscriptFetchFailure.NO_CAPTIONS,
@@ -37,20 +37,20 @@ describe("transcriptFailureMessage", () => {
         }),
       },
       {
-        tier: "supadata",
+        tier: "service",
         outcome: "failed",
-        error: new TranscriptFetchError("Out of credits.", {
-          failure: TranscriptFetchFailure.SOURCE_UNSUPPORTED,
+        error: new TranscriptFetchError("Our server could not fetch the transcript.", {
+          failure: TranscriptFetchFailure.SOURCE_UNAVAILABLE,
         }),
       },
     ]);
 
-    expect(message).toBe("Out of credits.");
+    expect(message).toBe("Our server could not fetch the transcript.");
   });
 
   it("falls back to a plain sentence when a source failed with something unrecognisable", () => {
     expect(
-      transcriptFailureMessage([{ tier: "supadata", outcome: "failed", error: new Error("boom") }]),
+      transcriptFailureMessage([{ tier: "service", outcome: "failed", error: new Error("boom") }]),
     ).toBe("No transcript source could fetch this video.");
   });
 });

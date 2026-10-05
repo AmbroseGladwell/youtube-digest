@@ -43,7 +43,6 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
           sources: createTranscriptSources({
             sharedCacheApiUrl: knownApiUrl,
             youTubeFetch,
-            supadataApiKey: apiKeys.supadataApiKey,
             service: knownApiUrl === null ? null : { apiUrl: knownApiUrl, token: connection.token },
           }),
           generationClient: createGenerationClient(

@@ -7,7 +7,7 @@ const BUILD = { version: "0.14.2", commit: "30bb95a", dirty: false };
 const EVERYTHING = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL, firstName: "Ada" },
-  apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: null },
+  apiKeys: { anthropicApiKey: "sk-ant-test" },
   narrationVoice: "bm_george" as const,
   plan: "plus" as const,
   build: BUILD,

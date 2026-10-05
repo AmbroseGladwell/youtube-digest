@@ -23,8 +23,8 @@ describe("apiKeyStorage", () => {
 
   it("round-trips keys written through writeApiKeys", () => {
     const storage = makeStorage();
-    writeApiKeys({ anthropicApiKey: "sk-ant-x", supadataApiKey: "sd-x" }, storage);
-    expect(readApiKeys(storage)).toEqual({ anthropicApiKey: "sk-ant-x", supadataApiKey: "sd-x" });
+    writeApiKeys({ anthropicApiKey: "sk-ant-x" }, storage);
+    expect(readApiKeys(storage)).toEqual({ anthropicApiKey: "sk-ant-x" });
   });
 
   it("falls back to the default when stored data fails schema validation", () => {

@@ -6,7 +6,7 @@ test("keys saved on the settings page unlock the dialog's generate form", async 
   await form.clickCancel();
 
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
-  await settings.apiKeysPanel.saveKeys("sk-ant-test", "sd-test");
+  await settings.apiKeysPanel.saveKeys("sk-ant-test");
   await settings.verifySavedConfirmation();
   await settings.verifyRowReads("keys", /^Anthropic key set · /);
 
@@ -26,44 +26,31 @@ test("the form's own settings link lands on the keys section, and closes the dia
   await launcher.appShell.newOverviewDialog.verifyIsHidden();
 });
 
-// The Supadata key stopped being required the moment a browser could fetch captions
-// itself, so the panel has to say which of those is true here
-// (docs/features/transcript-retrieval.md).
-test("a browser that fetches its own captions says the transcript key is not needed", async ({
+// Nothing but the Anthropic key is ever asked for: the extension fetches captions itself, and
+// the web app asks our server (docs/features/transcript-retrieval.md).
+test("a web reader writes with the Anthropic key alone, because our server fetches the transcript", async ({
   launcher,
 }) => {
-  await launcher.launch({ youTubeFetch: true });
-  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: { anthropicApiKey: "sk-ant-test" } });
 
-  await settings.apiKeysPanel.verifySupadataNoteReads(/Not needed here/);
+  await form.verifyGenerateButtonEnabled();
 });
 
-test("a key saved on a browser that does not need it is reported as saved but unused", async ({
+test("with our server's fetching off and no extension, the Anthropic key alone is not enough", async ({
   launcher,
+  backendSimulator,
 }) => {
-  await launcher.launch({
-    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
-    youTubeFetch: true,
-  });
-  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+  backendSimulator.transcripts.serviceIsOff();
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: { anthropicApiKey: "sk-ant-test" } });
 
-  await settings.apiKeysPanel.verifySupadataNoteReads(/Saved, but not in use/);
-});
-
-test("a browser that cannot reach YouTube is told when the key is the thing that would", async ({
-  launcher,
-}) => {
-  await launcher.launch();
-  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
-
-  await settings.apiKeysPanel.verifySupadataNoteReads(/Only needed where nothing else/);
+  await form.verifyUrlInputDisabled();
 });
 
 test("the Anthropic key alone unlocks generation where captions come for free", async ({
   launcher,
 }) => {
   const form = await launcher.launchExpectingFirstRun({
-    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: null },
+    apiKeys: { anthropicApiKey: "sk-ant-test" },
     youTubeFetch: true,
   });
 

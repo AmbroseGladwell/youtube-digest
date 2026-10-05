@@ -69,7 +69,7 @@ const LibrarySort = z.enum(["newest", "oldest", "title"]);
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
 // Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
-export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "supadata", "service"]);
+export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service"]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
@@ -385,7 +385,6 @@ export const analyticsEvents = {
     apiKeys: {
       saved: event("The reader saves their keys and model; never a key, only whether one is set", {
         anthropicKey: z.boolean(),
-        supadataKey: z.boolean(),
         model: AnthropicModel,
         modelChanged: z.boolean(),
       }),

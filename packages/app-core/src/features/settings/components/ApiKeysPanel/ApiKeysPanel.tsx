@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ANTHROPIC_MODEL_OPTIONS, DEFAULT_ANTHROPIC_MODEL, type AnthropicModel } from "@overview/domain";
-import { useYouTubeFetch } from "../../../../app/YouTubeFetchContext.js";
 import type { ApiKeys } from "../../../apiKeys/ApiKeys.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
@@ -15,14 +14,8 @@ export interface ApiKeysPanelProps {
 
 const toStoredValue = (raw: string): string | null => (raw.trim() === "" ? null : raw.trim());
 
-const SUPADATA_NOT_NEEDED = "Not needed here — this browser fetches transcripts from YouTube itself.";
-const SUPADATA_NOT_IN_USE = "Saved, but not in use: this browser fetches transcripts from YouTube itself.";
-const SUPADATA_NEEDED = "Only needed where nothing else can fetch a transcript, such as the web app.";
-
 export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
   const [anthropicApiKey, setAnthropicApiKey] = useState(apiKeys.anthropicApiKey ?? "");
-  const [supadataApiKey, setSupadataApiKey] = useState(apiKeys.supadataApiKey ?? "");
-  const hasFreeSource = useYouTubeFetch() !== null;
   const settingsQuery = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
   const savedModel = settingsQuery.data?.model ?? DEFAULT_ANTHROPIC_MODEL;
@@ -32,11 +25,6 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
   // freshly-mounted select with no real user selection behind it).
   const [modelDraft, setModelDraft] = useState(savedModel);
   const selectedOption = ANTHROPIC_MODEL_OPTIONS.find((option) => option.id === modelDraft);
-  const supadataNote = !hasFreeSource
-    ? SUPADATA_NEEDED
-    : apiKeys.supadataApiKey === null
-      ? SUPADATA_NOT_NEEDED
-      : SUPADATA_NOT_IN_USE;
 
   // settingsQuery resolves asynchronously (an IndexedDB read), so the real saved model
   // may arrive after this component's first render. Sync the draft once, the first time
@@ -55,13 +43,11 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
     event.preventDefault();
     analytics.settings.apiKeys.saved({
       anthropicKey: toStoredValue(anthropicApiKey) !== null,
-      supadataKey: toStoredValue(supadataApiKey) !== null,
       model: modelDraft,
       modelChanged: modelDraft !== savedModel,
     });
     onSave({
       anthropicApiKey: toStoredValue(anthropicApiKey),
-      supadataApiKey: toStoredValue(supadataApiKey),
     });
     if (modelDraft !== savedModel) {
       updateSettings.mutate({ model: modelDraft });
@@ -84,25 +70,6 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
           onChange={(event) => setAnthropicApiKey(event.target.value)}
           data-testid={apiKeysPanelTestIds.anthropicInput}
         />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="supadata-api-key">
-          Supadata API key <span className={styles.optional}>optional</span>
-        </label>
-        <input
-          id="supadata-api-key"
-          className={styles.input}
-          type="password"
-          autoComplete="off"
-          value={supadataApiKey}
-          onChange={(event) => setSupadataApiKey(event.target.value)}
-          data-testid={apiKeysPanelTestIds.supadataInput}
-        />
-        {/* What the app will actually do, rather than leaving it to be inferred from a
-            bill that never arrives (docs/features/transcript-retrieval.md). */}
-        <p className={styles.fieldNote} data-testid={apiKeysPanelTestIds.supadataNote}>
-          {supadataNote}
-        </p>
       </div>
       <div className={styles.field}>
         <label className={styles.label} htmlFor="generation-model">

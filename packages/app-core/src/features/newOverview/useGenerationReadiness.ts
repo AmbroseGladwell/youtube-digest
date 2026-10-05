@@ -9,7 +9,7 @@ export type GenerationReadiness =
   | "needs-both";
 
 // A transcript no longer has one source, so "have you pasted both keys" is the wrong
-// question: a shell that can reach YouTube needs no transcript key at all
+// question: a shell that can reach YouTube needs nothing more
 // (docs/features/transcript-retrieval.md). Nor does a reader whose server fetches them itself
 // (docs/architecture/server-side-transcripts.md).
 export function useGenerationReadiness(): GenerationReadiness {
@@ -18,8 +18,7 @@ export function useGenerationReadiness(): GenerationReadiness {
   const serviceStatus = useServiceTranscriptStatusQuery();
 
   const hasAnthropic = apiKeys.anthropicApiKey !== null;
-  const hasTranscriptSource =
-    youTubeFetch !== null || apiKeys.supadataApiKey !== null || serviceStatus.data?.available === true;
+  const hasTranscriptSource = youTubeFetch !== null || serviceStatus.data?.available === true;
 
   if (hasAnthropic && hasTranscriptSource) return "ready";
   if (hasAnthropic) return "needs-transcript-source";

@@ -8,8 +8,7 @@
 export const BYO_KEY_NOTE =
   "Bring-your-own-key. Your Anthropic key stays on this device and goes straight to " +
   "Anthropic, never through our servers. Transcripts are looked up in our shared cache " +
-  "first, by video. A Supadata key is optional, and only used for transcripts when " +
-  "nothing else can fetch them.";
+  "first, by video, and fetched by our server when nothing else can.";
 
 export const BYO_KEY_NOTE_SHORT =
   "Generation is bring-your-own-key, and your key stays on this device.";
