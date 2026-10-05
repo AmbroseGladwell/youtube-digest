@@ -49,3 +49,15 @@ test("milestone cards show unless turned off, and a record from before the switc
   assert.equal(Settings.parse(older).showMilestoneCards, true);
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, showMilestoneCards: false }).showMilestoneCards, false);
 });
+
+test("usage is shared unless the account turned it off, and a record from before the switch reads as sharing", () => {
+  assert.equal(DEFAULT_SETTINGS.analyticsOptOut, false);
+
+  const { analyticsOptOut: _, analyticsOptOutChangedAt: __, ...older } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(older).analyticsOptOut, false);
+  assert.equal(Settings.parse(older).analyticsOptOutChangedAt, null);
+  const off = Settings.parse({ ...DEFAULT_SETTINGS, analyticsOptOut: true, analyticsOptOutChangedAt: "2026-10-04T09:00:00.000Z" });
+  assert.equal(off.analyticsOptOut, true);
+  assert.equal(off.analyticsOptOutChangedAt, "2026-10-04T09:00:00.000Z");
+});

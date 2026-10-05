@@ -3,9 +3,10 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
-import { answerAnalyticsConsent } from "../../useAnalyticsConsent.js";
+import { analyticsConsentSnapshot, answerAnalyticsConsent } from "../../useAnalyticsConsent.js";
+import { useAnalyticsDecline } from "../../useAnalyticsDecline.js";
 import type { ConsentAsk } from "../../util/consentAskOf.js";
-import { privacyPolicyUrl } from "../../util/privacyPolicyUrl.js";
+import { policyPageUrl } from "../../util/policyPageUrl.js";
 import styles from "./AnalyticsConsentPrompt.module.scss";
 import { analyticsConsentPromptTestIds } from "./AnalyticsConsentPromptTestIds.js";
 
@@ -23,6 +24,14 @@ export function AnalyticsConsentPrompt({ ask, panel = false }: AnalyticsConsentP
   const analytics = useAnalytics();
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";
+
+  const decline = useAnalyticsDecline();
+
+  const dontShare = () => {
+    const saidYesBefore = analyticsConsentSnapshot().consent?.answer === "share";
+    answerAnalyticsConsent("dontShare");
+    if (!saidYesBefore) decline();
+  };
 
   const share = () => {
     answerAnalyticsConsent("share");
@@ -52,7 +61,7 @@ export function AnalyticsConsentPrompt({ ask, panel = false }: AnalyticsConsentP
             {apiUrl !== null && (
               <a
                 className={styles.privacyLink}
-                href={privacyPolicyUrl(apiUrl)}
+                href={policyPageUrl(apiUrl, "privacy")}
                 {...(opensElsewhere ? { target: "_blank", rel: "noreferrer" } : {})}
                 data-testid={analyticsConsentPromptTestIds.privacyLink}
               >
@@ -69,7 +78,7 @@ export function AnalyticsConsentPrompt({ ask, panel = false }: AnalyticsConsentP
         <button
           type="button"
           className={styles.answer}
-          onClick={() => answerAnalyticsConsent("dontShare")}
+          onClick={dontShare}
           data-testid={analyticsConsentPromptTestIds.dontShare}
         >
           Don’t share

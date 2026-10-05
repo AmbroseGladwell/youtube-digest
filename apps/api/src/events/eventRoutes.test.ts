@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MAX_ANALYTICS_BATCH_EVENTS } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
+import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 
 const AT = "2026-09-26T08:59:58.000Z";
 const context = { surface: "extension", layout: "panel", appVersion: "0.4.1", platform: "macos" } as const;
@@ -235,5 +236,91 @@ test("an account sending more than sixty batches a minute is throttled", async (
 
   assert.equal(throttled.statusCode, 429);
   assert.equal(testApp.eventSink.captured.length, 60);
+  await testApp.close();
+});
+
+test("an account that turned sharing off has its events dropped on the server, whatever its devices send", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+  const account = await makeAccount(testApp);
+  await account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: { analyticsOptOut: true, analyticsOptOutChangedAt: AT, updatedAt: AT },
+  });
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/events",
+    body: { context, events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }] },
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.deepEqual(testApp.eventSink.captured, []);
+  assert.equal(lines.filter(({ msg }) => msg === "client event").length, 0);
+  assert.deepEqual(
+    lines.filter(({ msg }) => msg === "analytics opt-out set").map(({ analyticsOptOut }) => analyticsOptOut),
+    [true],
+  );
+  assert.equal(lines.filter(({ msg }) => msg === "client events dropped for opt-out").length, 1);
+  await testApp.close();
+});
+
+test("turning sharing back on lets the account's events through again", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  for (const [analyticsOptOut, updatedAt] of [
+    [true, "2026-09-26T09:00:00.000Z"],
+    [false, "2026-09-26T09:00:01.000Z"],
+  ] as const) {
+    await account.inject({
+      method: "PUT",
+      url: "/api/settings",
+      body: { analyticsOptOut, analyticsOptOutChangedAt: updatedAt, updatedAt },
+    });
+  }
+
+  await account.inject({
+    method: "POST",
+    url: "/api/events",
+    body: { context, events: [{ name: "mcp.consentScreen.shown", props: {}, at: AT }] },
+  });
+
+  assert.equal(testApp.eventSink.captured.length, 1);
+  await testApp.close();
+});
+
+test("a reader without an account saying no is one log line with the app's context and no id", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/events/declined",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    payload: { context },
+  });
+
+  assert.equal(response.statusCode, 204);
+  const [declined] = lines.filter(({ msg }) => msg === "analytics declined");
+  assert.deepEqual(
+    { surface: declined!.surface, layout: declined!.layout, accountId: declined!.accountId, anonymousId: declined!.anonymousId },
+    { surface: "extension", layout: "panel", accountId: undefined, anonymousId: undefined },
+  );
+  assert.deepEqual(testApp.eventSink.captured, []);
+  await testApp.close();
+});
+
+test("a decline carrying anything but the app's context is refused", async () => {
+  const testApp = await createTestApp();
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/events/declined",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    payload: { context, anonymousId: ANONYMOUS_ID },
+  });
+
+  assert.equal(response.statusCode, 400);
   await testApp.close();
 });

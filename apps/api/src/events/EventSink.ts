@@ -24,4 +24,6 @@ export interface EventSource {
 // (docs/architecture/analytics.md).
 export interface EventSink {
   capture(events: SinkEvent[], source: EventSource): Promise<void>;
+  // Ties what a reader shared without an account to the account they just made, once.
+  link(accountId: AccountId, anonymousId: string, at: Date): Promise<void>;
 }

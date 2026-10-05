@@ -44,3 +44,14 @@ test("every request carries a fresh id, and a refusal says which id it was sent 
   assert.ok(isSyncRequestError(refused));
   assert.equal(refused.requestId, "request-1");
 });
+
+test("a no is posted on its own, with the app's context and nothing else", async () => {
+  const { sent, fetch } = answering(204);
+  const api = createFetchEventsApi({ baseUrl: "https://overview.example", fetch });
+
+  await api.declined(batch.context);
+
+  assert.equal(sent[0]!.url, "https://overview.example/api/events/declined");
+  assert.deepEqual(JSON.parse(sent[0]!.init.body as string), { context: batch.context });
+  assert.equal((sent[0]!.init.headers as Record<string, string>).authorization, undefined);
+});

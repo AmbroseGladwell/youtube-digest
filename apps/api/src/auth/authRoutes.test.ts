@@ -454,3 +454,84 @@ test("a first name that is blank or too long is refused before anything is sent"
   assert.equal(testApp.mailer.sent.length, 0);
   await testApp.close();
 });
+
+const ANONYMOUS_ID = "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+
+const askToCreateSharing = (testApp: TestApp, surface: "web" | "extension", email = EMAIL) =>
+  testApp.app.inject({
+    method: "POST",
+    url: "/api/auth/magic-link",
+    payload: { email, surface, intent: "createAccount", firstName: "Ada", anonymousId: ANONYMOUS_ID },
+  });
+
+test("a reader who said yes without an account has what they shared linked to the account they make, once", async () => {
+  const testApp = await createTestApp();
+  await askToCreateSharing(testApp, "web");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.deepEqual(testApp.eventSink.links, [{ accountId: response.json().accountId, anonymousId: ANONYMOUS_ID }]);
+  await testApp.close();
+});
+
+test("an extension's create-account link links the id when the browser opens it", async () => {
+  const testApp = await createTestApp();
+  await askToCreateSharing(testApp, "extension");
+
+  await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(testApp.eventSink.links.length, 1);
+  await testApp.close();
+});
+
+test("an account that already existed is never linked to an anonymous id", async () => {
+  const testApp = await createTestApp();
+  await signInOnTheWeb(testApp);
+  testApp.clock.advance(2 * MINUTE_MS);
+
+  await askToCreateSharing(testApp, "web");
+  await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.deepEqual(testApp.eventSink.links, []);
+  await testApp.close();
+});
+
+test("an anonymous id sent with an ordinary sign-in is not kept", async () => {
+  const testApp = await createTestApp();
+  await testApp.app.inject({
+    method: "POST",
+    url: "/api/auth/magic-link",
+    payload: { email: EMAIL, surface: "web", anonymousId: ANONYMOUS_ID },
+  });
+
+  await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.deepEqual(testApp.eventSink.links, []);
+  assert.deepEqual(await testApp.sql.query("select anonymous_id from magic_links"), [{ anonymous_id: null }]);
+  await testApp.close();
+});
+
+test("an anonymous id that isn't a random id is refused before anything is sent", async () => {
+  const testApp = await createTestApp();
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/auth/magic-link",
+    payload: { email: EMAIL, surface: "web", intent: "createAccount", anonymousId: "reader@example.com" },
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(testApp.mailer.sent.length, 0);
+  await testApp.close();
+});
+
+test("the analytics service being down never fails creating the account", async () => {
+  const testApp = await createTestApp();
+  testApp.eventSink.failing = true;
+  await askToCreateSharing(testApp, "web");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(response.statusCode, 200);
+  await testApp.close();
+});

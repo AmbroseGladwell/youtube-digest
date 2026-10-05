@@ -55,6 +55,12 @@
   @include auth.primary;
 }
 
+.submitGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .note {
   @include auth.note;
 }
@@ -82,8 +88,9 @@
   }
 }
 
-// Design 10b: in the panel the action sits at the foot, under its note, full width.
-.panel {
+// Designs 10b and 62j: in the panel and on a phone the action sits at the foot, under its
+// note and the terms, full width, with the way to switch centred under it.
+.footed {
   flex: 1;
   gap: 1.125rem;
 
