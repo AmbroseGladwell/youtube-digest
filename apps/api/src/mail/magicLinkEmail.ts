@@ -1,4 +1,5 @@
 import type { MagicLinkMail } from "./Mailer.js";
+import { transactionalEmailHtml } from "./transactionalEmailHtml.js";
 
 export interface EmailContent {
   subject: string;
@@ -6,35 +7,60 @@ export interface EmailContent {
   html: string;
 }
 
-const escape = (value: string): string =>
-  value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
-
-// Plain words and one link. The extension's mail says where the code will appear, because
-// the tab the link opens is not the thing that asked (docs/features/sign-in.md).
+// Design OV-88. The extension's mail says where the code will appear, because the tab the
+// link opens is not the thing that asked (docs/features/sign-in.md).
 export function magicLinkEmail({ link, surface, purpose, firstName }: MagicLinkMail): EmailContent {
   const creating = purpose === "createAccount";
+  const siteUrl = new URL(link).origin;
+  const subject = creating ? "Finish creating your account on The Overview" : "Sign in to The Overview";
   const greeting = creating && firstName !== null ? `Hi ${firstName},` : null;
-  const opening = creating
+  const body = creating
     ? "Here is your link to finish creating your account on The Overview."
     : "Here is your link to sign in to The Overview.";
-  const linkLabel = creating ? "Create my account" : "Sign in";
+  const label = creating ? "Create my account" : "Sign in";
   const finish =
     surface === "extension"
       ? "The page it opens will show a code to enter in the extension."
       : "It signs in the browser you open it in.";
-  const closing = "If you didn't ask for this, ignore it: nothing happens until the link is opened.";
-  const expiry = `It works once, for the next fifteen minutes. ${finish}`;
+  const notes = [
+    `It works once, for the next fifteen minutes. ${finish}`,
+    "If you didn’t ask for this, ignore it: nothing happens until the link is opened.",
+  ];
+  const reason = creating
+    ? "You’re getting this because someone asked to create an account on The Overview with this address."
+    : "You’re getting this because someone asked to sign in to The Overview with this address.";
 
-  const lines = [...(greeting === null ? [] : [greeting, ""]), opening, "", link, "", expiry, "", closing];
+  const text = [
+    ...(greeting === null ? [] : [greeting, ""]),
+    body,
+    "",
+    `${label}:`,
+    link,
+    "",
+    notes[0],
+    "",
+    notes[1],
+    "",
+    "—",
+    `The Overview · ${siteUrl}`,
+    reason,
+  ].join("\n");
+
   return {
-    subject: creating ? "Finish creating your account on The Overview" : "Sign in to The Overview",
-    text: lines.join("\n"),
-    html: [
-      ...(greeting === null ? [] : [`<p>${escape(greeting)}</p>`]),
-      `<p>${escape(opening)}</p>`,
-      `<p><a href="${escape(link)}">${linkLabel}</a></p>`,
-      `<p>${escape(expiry)}</p>`,
-      `<p>${escape(closing)}</p>`,
-    ].join("\n"),
+    subject,
+    text,
+    html: transactionalEmailHtml({
+      subject,
+      preview: creating
+        ? "Your link to finish creating your account, valid for 15 minutes."
+        : "Your sign-in link, valid for 15 minutes.",
+      greeting,
+      heading: creating ? "Finish creating your account" : subject,
+      body,
+      action: { label, link },
+      notes,
+      reason,
+      siteUrl,
+    }),
   };
 }
