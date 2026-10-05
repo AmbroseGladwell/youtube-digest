@@ -10,6 +10,7 @@ import { createPostHogEventSink } from "./events/postHogEventSink.js";
 import { createLogger } from "./logs/createLogger.js";
 import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
+import { createTranscriptServiceSetup } from "./transcripts/createTranscriptServiceSetup.js";
 
 let config;
 try {
@@ -44,7 +45,18 @@ const pool = new pg.Pool({ connectionString: config.databaseUrl });
 pool.on("error", (error) => logger.error({ err: error }, "database connection lost"));
 const sql = createPgSqlClient(pool);
 const applied = await runMigrations(sql);
-const app = await buildApp({ config, sql, mailer: createMailer(config.mail), audio, eventSink, errorSink, logger });
+const transcriptService =
+  config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);
+const app = await buildApp({
+  config,
+  sql,
+  mailer: createMailer(config.mail),
+  audio,
+  transcriptService,
+  eventSink,
+  errorSink,
+  logger,
+});
 app.log.info({ applied }, "migrations applied");
 app.log.info({ transport: config.mail.transport, appUrl: config.appUrl }, "magic links");
 app.log.info(
@@ -55,6 +67,15 @@ app.log.info(
         store: config.audio.store.kind === "r2" ? `r2:${config.audio.store.bucket}` : config.audio.store.dir,
       },
   "narration",
+);
+app.log.info(
+  config.transcriptService === null
+    ? "TRANSCRIPT_SERVICE is off: the server fetches no transcripts itself"
+    : {
+        proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
+        proxyDailyFetches: config.transcriptService.proxyDailyFetches,
+      },
+  "transcript service",
 );
 app.log.info(
   postHog === null ? "POSTHOG_API_KEY is not set: client events and errors are logged only" : { host: postHog.host, environment },

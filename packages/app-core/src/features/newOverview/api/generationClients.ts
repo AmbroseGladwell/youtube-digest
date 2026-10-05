@@ -1,9 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createAnthropicGenerationClient, type GenerationClient } from "@overview/generation";
 import type { AnthropicModel } from "@overview/domain";
-import { createFetchSharedTranscriptApi } from "@overview/sync";
+import { createFetchServiceTranscriptApi, createFetchSharedTranscriptApi } from "@overview/sync";
 import { createSupadataClient, type YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
+import { serviceTranscriptSource } from "../../transcripts/api/serviceTranscriptSource.js";
 import { sharedCacheTranscriptSource } from "../../transcripts/api/sharedCacheTranscriptSource.js";
 import { supadataTranscriptSource } from "../../transcripts/api/supadataTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
@@ -24,6 +25,9 @@ export interface TranscriptSourceOptions {
   sharedCacheApiUrl: string | null;
   youTubeFetch: YouTubeFetch | null;
   supadataApiKey: string | null;
+  // Where our own server is asked to fetch, last, and the session it counts against: none
+  // counts against the reader's address. Null never asks it.
+  service: { apiUrl: string; token: string | null } | null;
 }
 
 // The rungs this surface can actually reach, in the order they are asked. The free ones
@@ -38,5 +42,12 @@ export function createTranscriptSources(options: TranscriptSourceOptions): Trans
     ...(options.supadataApiKey === null
       ? []
       : [supadataTranscriptSource(createSupadataClient({ apiKey: options.supadataApiKey }))]),
+    ...(options.service === null
+      ? []
+      : [
+          serviceTranscriptSource(
+            createFetchServiceTranscriptApi({ baseUrl: options.service.apiUrl, token: options.service.token }),
+          ),
+        ]),
   ];
 }

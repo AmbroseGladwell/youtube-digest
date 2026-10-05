@@ -22,7 +22,7 @@ export const watchedTranscriptQueryOptions = (
     // cache: asking it would tell our server every video merely watched
     // (docs/features/shared-transcript-cache.md).
     queryFn: (): Promise<VideoId | null> => {
-      const sources = freeTranscriptSources(createTranscriptSources({ ...sourceOptions, sharedCacheApiUrl: null }));
+      const sources = freeTranscriptSources(createTranscriptSources({ ...sourceOptions, sharedCacheApiUrl: null, service: null }));
       if (url === null || sources.length === 0) return Promise.resolve(null);
       return resolveVideo(url, { sources, transcriptStore }).then((resolved) => resolved.video.id);
     },

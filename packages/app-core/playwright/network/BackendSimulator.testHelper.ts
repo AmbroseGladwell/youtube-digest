@@ -118,6 +118,7 @@ export class BackendSimulator {
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
   #sharedTranscripts = new Map<string, StoredTranscript>();
+  #serviceTranscripts: Map<string, StoredTranscript> | null = null;
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
@@ -443,6 +444,49 @@ export class BackendSimulator {
         onError: () => ({
           status: 503,
           body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
+    await this.#page.route("**/api/service-transcripts", (route) =>
+      this.#respond(route, EndpointKey.SERVICE_TRANSCRIPT_STATUS, {
+        onDefault: () => ({ status: 200, body: { available: this.#serviceTranscripts !== null } }),
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the server is not reachable" } },
+        }),
+      }),
+    );
+
+    // What our server fetched lands in the shared cache, so the next reader reads it there.
+    await this.#page.route("**/api/service-transcripts/*", (route) =>
+      this.#respond(route, EndpointKey.SERVICE_TRANSCRIPT, {
+        onDefault: () => {
+          if (this.#serviceTranscripts === null) {
+            return { status: 503, body: { error: { code: "unavailable", message: "Simulated: the service is off" } } };
+          }
+          const videoId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          const fetched = this.#serviceTranscripts.get(videoId);
+          if (fetched === undefined) {
+            return {
+              status: 422,
+              body: {
+                error: { code: "transcript_unavailable", message: "this video has no captions", details: { failure: "no-captions" } },
+              },
+            };
+          }
+          this.#sharedTranscripts.set(videoId, fetched);
+          return { status: 200, body: fetched };
+        },
+        onError: () => ({
+          status: 422,
+          body: {
+            error: {
+              code: "transcript_unavailable",
+              message: "Simulated: our server has fetched all the transcripts it can for today.",
+              details: { failure: "budget-exhausted" },
+            },
+          },
         }),
       }),
     );
@@ -913,6 +957,13 @@ export class BackendSimulator {
     seedShared: (transcript: StoredTranscript): void => {
       this.#sharedTranscripts.set(transcript.videoId, transcript);
     },
+    // Turns our own server's fetching on, answering with this transcript for its video.
+    // Without it the server says the service is off (docs/architecture/server-side-transcripts.md).
+    seedService: (transcript?: StoredTranscript): void => {
+      this.#serviceTranscripts ??= new Map();
+      if (transcript !== undefined) this.#serviceTranscripts.set(transcript.videoId, transcript);
+    },
+    isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
   };
 
   transcriptStore = {

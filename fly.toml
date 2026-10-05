@@ -30,6 +30,10 @@ primary_region = "lhr"
   # Tags every event passed on to PostHog; nothing is passed on until POSTHOG_API_KEY is set
   # (docs/architecture/analytics.md, "Turning it on").
   ANALYTICS_ENVIRONMENT = "production"
+  # Our server fetches a transcript when every other rung fails, through the proxy named in the
+  # TRANSCRIPT_PROXY_URL secret, up to the default 1,000 proxied fetches a day
+  # (docs/architecture/server-side-transcripts.md).
+  TRANSCRIPT_SERVICE = "on"
 
 # Renders any missing voice sample before the new version goes live
 # (docs/features/narration-voice.md, "The samples").

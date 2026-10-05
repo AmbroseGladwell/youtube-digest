@@ -5,6 +5,7 @@ import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
 import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { useKnownApiUrl } from "../../sync/useKnownApiUrl.js";
+import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { useErrorReporter } from "../../errors/ErrorReporterContext.js";
@@ -26,6 +27,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
   const settingsQuery = useSettingsQuery();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
   const player = usePlayer();
   const reporter = useErrorReporter();
 
@@ -42,6 +44,7 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
             sharedCacheApiUrl: knownApiUrl,
             youTubeFetch,
             supadataApiKey: apiKeys.supadataApiKey,
+            service: knownApiUrl === null ? null : { apiUrl: knownApiUrl, token: connection.token },
           }),
           generationClient: createGenerationClient(
             apiKeys.anthropicApiKey,

@@ -26,6 +26,10 @@ export async function runMigrations(
     .filter((entry): entry is { file: string; match: RegExpExecArray } => entry.match !== null)
     .map(({ file, match }) => ({ file, version: Number(match[1]), name: match[2]! }))
     .sort((a, b) => a.version - b.version);
+  const clash = files.find((entry, index) => index > 0 && files[index - 1]!.version === entry.version);
+  if (clash !== undefined) {
+    throw new Error(`two migrations share version ${clash.version}, so one of them would never run`);
+  }
 
   const applied: AppliedMigration[] = [];
   for (const { file, version, name } of files) {

@@ -200,5 +200,7 @@ No video id or address is logged with these.
   rung now leads.
 - **Let a web reader with no key make a note.** `useGenerationReadiness` still asks for a
   rung that can answer every video, and a cache can only answer the videos someone
-  stored. The extension bridge (OV-54) and the server-side service (OV-55) are the rungs
-  that change that.
+  stored. The server-side service now does that when it is on
+  (`docs/architecture/server-side-transcripts.md`). Its fetches go into this cache
+  already confirmed, because nobody but our server touched them. The extension bridge
+  (OV-54) is the other rung that will.

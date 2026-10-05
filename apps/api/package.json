@@ -2,7 +2,7 @@
   "name": "@overview/api",
   "version": "0.0.0",
   "private": true,
-  "description": "The sync API: Fastify on Postgres, the server half of the sync engine (docs/architecture/api.md, docs/features/sync-api.md). @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "description": "The sync API: Fastify on Postgres, the server half of the sync engine (docs/architecture/api.md, docs/features/sync-api.md). @overview is a placeholder scope \u2014 product naming is parked (docs/architecture/v1-architecture-decisions.md).",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -13,18 +13,21 @@
     "mint-session": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/mintSession.js",
     "set-plan": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/setPlan.js",
     "seed-voice-samples": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/seedVoiceSamples.js",
-    "forget-shared-transcript": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/forgetSharedTranscript.js"
+    "forget-shared-transcript": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/forgetSharedTranscript.js",
+    "proxy-sanity-check": "npm run build && node dist/scripts/proxySanityCheck.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@fastify/static": "^10.1.5",
     "@overview/domain": "*",
+    "@overview/transcripts": "*",
     "@resvg/resvg-js": "^2.6.2",
     "aws4fetch": "^1.0.20",
     "fastify": "^5.12.5",
     "fastify-plugin": "^6.0.0",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
+    "undici": "^7.30.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

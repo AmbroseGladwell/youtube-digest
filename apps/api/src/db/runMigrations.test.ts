@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { copyFile, mkdtemp, readdir } from "node:fs/promises";
+import { copyFile, mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -31,6 +31,18 @@ test("a second run applies nothing, so starting the server twice is safe", async
   await sql.close();
 });
 
+// Two branches each taking the next free number is how one of them gets skipped in
+// production without a word.
+test("two migrations with one version refuse to run, rather than skipping one", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "migrations-"));
+  await writeFile(join(dir, "V0001__first.sql"), "create table first_one (id int)");
+  await writeFile(join(dir, "V0001__second.sql"), "create table second_one (id int)");
+  const sql = createPgliteSqlClient(new PGlite());
+
+  await assert.rejects(runMigrations(sql, pathToFileURL(`${dir}/`)), /two migrations share version 1/);
+  await sql.close();
+});
+
 test("the tables the migrations create are there to be used", async () => {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql);
@@ -52,9 +64,10 @@ test("the tables the migrations create are there to be used", async () => {
       "oauth_clients",
       "records",
       "schema_migrations",
+      "service_transcript_usage",
       "sessions",
       "shared_transcripts",
-    "shares",
+      "shares",
       "transcript_contributions",
       "voice_samples",
     ],

@@ -37,6 +37,12 @@ const ConfigEnv = z
     R2_BUCKET: z.string().min(3).optional(),
     R2_ACCESS_KEY_ID: z.string().min(1).optional(),
     R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    TRANSCRIPT_SERVICE: z.enum(["off", "on"]).default("off"),
+    TRANSCRIPT_PROXY_URL: z
+      .url()
+      .refine((value) => value.startsWith("http://") || value.startsWith("https://"), "must be an http(s) proxy")
+      .optional(),
+    TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
@@ -85,6 +91,10 @@ export type MailConfig =
 // makes; otherwise /api/audio says it is unavailable (docs/features/tts-pre-rendered-speech.md).
 export type AudioStoreConfig = ({ kind: "r2" } & R2Settings) | { kind: "file"; dir: string };
 
+// Our own server fetching transcripts: off unless asked for, and through the proxy only
+// when one is configured (docs/architecture/server-side-transcripts.md).
+export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetches: number } | null;
+
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
 // Analytics are forwarded only when there is a PostHog project to forward them to;
@@ -106,6 +116,7 @@ export interface Config {
   staticRoot: string | null;
   clientIpHeader: string | null;
   audio: AudioConfig;
+  transcriptService: TranscriptServiceConfig;
   analytics: AnalyticsConfig;
   // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
@@ -157,6 +168,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
                     secretAccessKey: data.R2_SECRET_ACCESS_KEY!,
                   },
           },
+    transcriptService:
+      data.TRANSCRIPT_SERVICE === "off"
+        ? null
+        : { proxyUrl: data.TRANSCRIPT_PROXY_URL ?? null, proxyDailyFetches: data.TRANSCRIPT_PROXY_DAILY_FETCHES },
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
       postHog,

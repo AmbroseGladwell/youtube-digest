@@ -80,6 +80,7 @@ export const CaptureFailure = z.enum([
   "source-unavailable",
   "malformed-response",
   "source-unsupported",
+  "budget-exhausted",
   "noTranscriptSource",
   "generation",
   "unknown",

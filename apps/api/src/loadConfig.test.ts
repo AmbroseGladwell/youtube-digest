@@ -17,9 +17,31 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     staticRoot: null,
     clientIpHeader: null,
     audio: null,
+    transcriptService: null,
     analytics: { environment: "development", postHog: null },
     logs: null,
   });
+});
+
+test("our own server fetches transcripts only when switched on, through the proxy only when one is named", () => {
+  assert.deepEqual(loadConfig({ DATABASE_URL, TRANSCRIPT_SERVICE: "on" }).transcriptService, {
+    proxyUrl: null,
+    proxyDailyFetches: 1000,
+  });
+  assert.deepEqual(
+    loadConfig({
+      DATABASE_URL,
+      TRANSCRIPT_SERVICE: "on",
+      TRANSCRIPT_PROXY_URL: "http://user-{session}:pass@gate.example.com:7000",
+      TRANSCRIPT_PROXY_DAILY_FETCHES: "300",
+    }).transcriptService,
+    { proxyUrl: "http://user-{session}:pass@gate.example.com:7000", proxyDailyFetches: 300 },
+  );
+  assert.equal(
+    loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "http://user:pass@gate.example.com:7000" }).transcriptService,
+    null,
+  );
+  assert.throws(() => loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "socks5://gate.example.com:7000" }), ConfigError);
 });
 
 test("logs are shipped to PostHog under the analytics key, and a bad OTEL variable stops the server starting", () => {

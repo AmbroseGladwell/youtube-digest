@@ -37,12 +37,16 @@ import { RecordsRepository } from "./records/RecordsRepository.js";
 import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
+import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { shareRoutes } from "./routes/shareRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
 import { SharesRepository } from "./shares/SharesRepository.js";
+import type { ServiceFetches } from "./transcripts/fetchThroughService.js";
+import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
+import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
@@ -68,11 +72,19 @@ export interface AudioSetup {
   runWorkers: boolean;
 }
 
+// Our own server fetching transcripts, the last rung; absent, it says it is unavailable
+// (docs/architecture/server-side-transcripts.md).
+export interface TranscriptServiceSetup {
+  fetches: ServiceFetches;
+  proxyDailyFetches: number;
+}
+
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
   mailer: Mailer;
   audio?: AudioSetup | null;
+  transcriptService?: TranscriptServiceSetup | null;
   // Where checked analytics events are passed on to; absent, they are only logged.
   eventSink?: EventSink | null;
   // Where checked client errors are passed on to; absent, they are only logged.
@@ -102,6 +114,7 @@ export async function buildApp({
   sql: untimedSql,
   mailer,
   audio = null,
+  transcriptService = null,
   eventSink = null,
   errorSink = null,
   clock = () => new Date(),
@@ -179,6 +192,19 @@ export async function buildApp({
       topicRoutes(api, records);
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
+      serviceTranscriptRoutes(api, {
+        service:
+          transcriptService === null
+            ? null
+            : new ServiceTranscripts({
+                ...transcriptService,
+                usage: new ServiceUsageRepository(sql),
+                transcripts,
+                clock,
+              }),
+        sql,
+        clock,
+      });
       shareRoutes(api, shares, config.appUrl);
       eventRoutes(api, { sink: eventSink, records, clock });
       sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
