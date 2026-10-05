@@ -28,6 +28,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
 | The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
 | Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
+| Our own server fetching a transcript, the ladder's last rung: direct, then through the residential proxy, under daily quotas and a proxy budget; the check through the real proxy | `migrations/V0012__service_transcript_usage.sql`, `src/transcripts/`, `src/routes/serviceTranscriptRoutes.ts`, `src/scripts/proxySanityCheck.ts`; `docs/architecture/server-side-transcripts.md` |
 | A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
 | The app's analytics at `POST /api/events`, from a session or under the anonymous id a reader without an account agreed to, checked against the catalogue, logged, and passed on to PostHog when there is a key | `packages/domain`: `analyticsEvents.ts`, `AnalyticsEventBatch.ts`; `src/events/`; `docs/architecture/analytics.md` |
 | The app's errors at `POST /api/errors`, with or without a session, redacted again, logged, and passed on to PostHog's error tracking when there is a key | `packages/domain`: `ClientErrorBatch.ts`, `redactErrorMessage.ts`; `src/errors/`; `docs/architecture/errors-and-logs.md` |
@@ -37,7 +38,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql
   assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
