@@ -66,6 +66,25 @@ test("signing in with a web link answers what the cookie now carries, with no na
   });
 });
 
+test("signing in with the code from a web mail posts the address with it and answers what the cookie carries", async () => {
+  const { sent, fetch } = answering(200, {
+    surface: "web",
+    accountId: "account-a",
+    email: "reader@example.com",
+    firstName: "Ada",
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch });
+
+  const signedIn = await api.signInWithEmailCode("reader@example.com", "ABCD-EFGH");
+
+  assert.equal(signedIn.surface, "web");
+  assert.equal(signedIn.firstName, "Ada");
+  assert.equal(sent[0]!.url, "https://overview.example/api/auth/email-code");
+  assert.equal(sent[0]!.method, "POST");
+  assert.deepEqual(sent[0]!.body, { email: "reader@example.com", code: "ABCD-EFGH" });
+});
+
 test("signing in with an extension link answers a code to exchange, not a session", async () => {
   const { fetch } = answering(200, {
     surface: "extension",

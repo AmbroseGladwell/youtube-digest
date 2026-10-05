@@ -205,6 +205,46 @@ test.describe("signing in on the web", () => {
     test.expect(backendSimulator.auth.signInAttempts()).toEqual(["the-token-from-the-email"]);
   });
 
+  // For a mail read somewhere other than this browser, the code printed in it signs this
+  // tab in the way the link would (docs/features/sign-in.md, "A code in the web mail").
+  test("the code from the email signs this browser in, goes to the library, and the menu says who", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.auth.accountIsNamed("Ada");
+    await launcher.launch({ sync: true });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.requestLink(SIMULATED_EMAIL);
+
+    await signIn.chooseCodeFromEmail();
+    await signIn.verifyAsksForCode(SIMULATED_EMAIL);
+    await signIn.verifyHeadingHasFocus();
+    await signIn.verifySubmitReads("Sign in");
+    await signIn.enterCode("abcd-efgh");
+
+    await launcher.homePage.verifyIsShown();
+    const menu = await launcher.appShell.accountMenu.open();
+    await menu.verifySignedInAs("Ada", SIMULATED_EMAIL);
+    test.expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: "abcd-efgh" }]);
+  });
+
+  test("a wrong code from the email is said in place, and a different email goes back to the form", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.simulateEndpointError(EndpointKey.AUTH_EMAIL_CODE);
+    await launcher.launch({ sync: true });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+    await signIn.requestLink(SIMULATED_EMAIL);
+    await signIn.chooseCodeFromEmail();
+
+    await signIn.enterCode("WRONG-CODE");
+
+    await signIn.verifyCodeErrorReads(/wrong, has expired, or was already used/);
+    await signIn.useDifferentEmail();
+    await signIn.verifyAsksForEmail("Sign in");
+  });
+
   // The tab the link opened in is the messenger, not the shell that asked: it shows the
   // code and stays signed out (docs/features/sign-in.md).
   test("a link asked for from the extension shows a code on the web and signs nothing in here", async ({
@@ -311,6 +351,20 @@ test.describe("creating an account on the web", () => {
 
     await createAccount.verifyFieldErrorReads("Tell us what to call you.");
     test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_MAGIC_LINK)).toBe(0);
+  });
+
+  test("the code from a create-account email finishes creating the account", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
+    await signIn.typeFirstName("Ada");
+    await signIn.requestLink(SIMULATED_EMAIL);
+
+    await signIn.chooseCodeFromEmail();
+    await signIn.verifySubmitReads("Create account");
+    await signIn.enterCode("ABCD-EFGH");
+
+    await launcher.homePage.verifyIsShown();
+    test.expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: "ABCD-EFGH" }]);
   });
 
   test("the two pages lead to each other", async ({ launcher }) => {

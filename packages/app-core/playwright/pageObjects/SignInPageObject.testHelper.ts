@@ -82,6 +82,9 @@ export class SignInPageObject extends PageObject {
       await expect(this.get(checkEmailTestIds.email)).toHaveText(email);
     });
 
+  chooseCodeFromEmail = () =>
+    this.step("chooseCodeFromEmail", () => this.click(checkEmailTestIds.enterCodeButton));
+
   verifyKickerReads = (text: string) =>
     this.step(`verifyKickerReads ${text}`, () => expect(this.get(authScreenTestIds.kicker)).toHaveText(text));
 
@@ -108,6 +111,9 @@ export class SignInPageObject extends PageObject {
       await this.expectToBeVisible(enterCodeTestIds.root);
       await expect(this.get(enterCodeTestIds.email)).toHaveText(email);
     });
+
+  verifySubmitReads = (label: string) =>
+    this.step(`verifySubmitReads ${label}`, () => expect(this.get(enterCodeTestIds.connectButton)).toHaveText(label));
 
   enterCode = (code: string) =>
     this.step(`enterCode ${code}`, async () => {

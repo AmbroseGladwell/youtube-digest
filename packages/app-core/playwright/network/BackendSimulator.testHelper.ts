@@ -124,6 +124,7 @@ export class BackendSimulator {
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
+  #emailCodeAttempts: { email: string; code: string }[] = [];
   #linkCodeServers: string[] = [];
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
@@ -282,6 +283,25 @@ export class BackendSimulator {
                     firstName: this.#accountFirstName,
                     expiresAt,
                   },
+          };
+        },
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/auth/email-code", (route) =>
+      this.#respond(route, EndpointKey.AUTH_EMAIL_CODE, {
+        onDefault: () => {
+          this.#emailCodeAttempts.push(route.request().postDataJSON() as { email: string; code: string });
+          return {
+            status: 200,
+            body: {
+              surface: "web",
+              accountId: SIMULATED_ACCOUNT_ID,
+              email: SIMULATED_EMAIL,
+              firstName: this.#accountFirstName,
+              expiresAt,
+            },
           };
         },
         onError: spent,
@@ -833,6 +853,7 @@ export class BackendSimulator {
   auth = {
     magicLinkRequests: (): MagicLinkRequest[] => [...this.#magicLinkRequests],
     signInAttempts: (): string[] => [...this.#signInAttempts],
+    emailCodeAttempts: (): { email: string; code: string }[] => [...this.#emailCodeAttempts],
     linkCodeServers: (): string[] => [...this.#linkCodeServers],
     linkWasAskedForFrom: (surface: AuthSurface): void => {
       this.#linkSurface = surface;

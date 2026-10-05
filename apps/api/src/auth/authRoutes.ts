@@ -1,5 +1,6 @@
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
+  EmailCodeRequest,
   LinkCodeRequest,
   MagicLinkRequest,
   SignInRequest,
@@ -16,7 +17,7 @@ import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { accountExists } from "./accountExists.js";
 import { consumeLinkCode } from "./consumeLinkCode.js";
-import { consumeMagicLink } from "./consumeMagicLink.js";
+import { consumeMagicLink, consumeMagicLinkCode, type ConsumedMagicLink } from "./consumeMagicLink.js";
 import { createSessionForAccount } from "./createSession.js";
 import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { issueLinkCode } from "./issueLinkCode.js";
@@ -39,6 +40,11 @@ const PUBLIC = { config: { public: true } };
 
 const emailOf = (request: FastifyRequest): string | null => {
   const parsed = MagicLinkRequest.safeParse(request.body);
+  return parsed.success ? normaliseEmail(parsed.data.email) : null;
+};
+
+const codeEmailOf = (request: FastifyRequest): string | null => {
+  const parsed = EmailCodeRequest.safeParse(request.body);
   return parsed.success ? normaliseEmail(parsed.data.email) : null;
 };
 
@@ -75,6 +81,7 @@ export function authRoutes(
       await mailer.sendMagicLink({
         to: issued.email,
         link: signInLink(appUrl, issued.token, surface === "web" ? returnTo : null),
+        code: issued.code,
         surface,
         purpose,
         firstName: creating ? firstName : null,
@@ -85,13 +92,12 @@ export function authRoutes(
     return reply.status(202).send({ accepted: true });
   });
 
-  app.post("/auth/sign-in", { ...PUBLIC, preHandler: perAddress(rateLimits.signInPerAddress) }, async (request, reply) => {
-    const { token } = parseOrThrow(SignInRequest, request.body, "The sign-in");
-    const now = clock();
-    const link = await consumeMagicLink(sql, token, now);
-    if (link === null) {
-      throw new ApiError("link_invalid", "This link has expired or was already used");
-    }
+  const signInWith = async (
+    link: ConsumedMagicLink,
+    now: Date,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<SignedIn> => {
     const account = await findOrCreateAccount(sql, link.email, link.firstName);
     request.log.info(
       { accountId: account.id, created: account.created, intent: link.intent, surface: link.surface },
@@ -128,6 +134,28 @@ export function authRoutes(
       expiresAt: session.expiresAt,
     };
     return signedIn;
+  };
+
+  app.post("/auth/sign-in", { ...PUBLIC, preHandler: perAddress(rateLimits.signInPerAddress) }, async (request, reply) => {
+    const { token } = parseOrThrow(SignInRequest, request.body, "The sign-in");
+    const now = clock();
+    const link = await consumeMagicLink(sql, token, now);
+    if (link === null) {
+      throw new ApiError("link_invalid", "This link has expired or was already used");
+    }
+    return signInWith(link, now, request, reply);
+  });
+
+  const emailCodeLimits = [perAddress(rateLimits.emailCodePerAddress), rateLimitHook(rateLimits.emailCodePerEmail, codeEmailOf, clock)];
+
+  app.post("/auth/email-code", { ...PUBLIC, preHandler: emailCodeLimits }, async (request, reply) => {
+    const { email, code } = parseOrThrow(EmailCodeRequest, request.body, "The email code");
+    const now = clock();
+    const link = await consumeMagicLinkCode(sql, email, code, now);
+    if (link === null) {
+      throw new ApiError("link_invalid", "That code is wrong, has expired, or was already used");
+    }
+    return signInWith(link, now, request, reply);
   });
 
   app.post("/auth/link-code", { ...PUBLIC, preHandler: perAddress(rateLimits.linkCodePerAddress) }, async (request) => {
