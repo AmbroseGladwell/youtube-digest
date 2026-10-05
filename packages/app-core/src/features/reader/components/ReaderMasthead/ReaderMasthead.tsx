@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import { useRef, useState, type Ref } from "react";
 import { Link } from "react-router";
 import { NOVELTY_LABEL, type Overview } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
@@ -8,6 +8,7 @@ import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/Favou
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
+import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import styles from "./ReaderMasthead.module.scss";
@@ -73,6 +74,10 @@ export function ReaderMasthead({
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
   const analytics = useReaderAnalytics();
+  const dubiousFlag = useRef<HTMLButtonElement | null>(null);
+  const [explainingDubious, setExplainingDubious] = useState(false);
+  const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
+  const dubiousLabel = dubiousClaimCount > 1 ? `${dubiousClaimCount} dubious claims` : "Dubious claim";
 
   return (
     <header
@@ -173,12 +178,44 @@ export function ReaderMasthead({
           )}
           {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
           {overview.verdict?.dubious && (
-            <span className={styles.dubious}>
+            <button
+              type="button"
+              ref={dubiousFlag}
+              className={`${styles.dubious} ${explainingDubious ? styles.dubiousOpen : ""}`}
+              onClick={() => {
+                if (!explainingDubious) {
+                  analytics.dubiousReasons.opened({ reasonsSaved: dubiousClaimCount });
+                }
+                setExplainingDubious(!explainingDubious);
+              }}
+              aria-expanded={explainingDubious}
+              aria-controls={DUBIOUS_REASONS_PANEL_ID}
+              data-testid={readerMastheadTestIds.dubiousFlag}
+            >
               <StrokeIcon name="alert" size={13} />
-              Dubious claim
-            </span>
+              <span className={styles.dubiousWords}>{dubiousLabel}</span>
+              {dubiousClaimCount > 1 && (
+                <span className={styles.dubiousCount} aria-hidden="true">
+                  {dubiousClaimCount}
+                </span>
+              )}
+              <StrokeIcon name={explainingDubious ? "chevronUp" : "chevronDown"} size={14} />
+            </button>
           )}
         </p>
+
+        {explainingDubious && overview.verdict !== null && (
+          <div className={styles.dubiousReasons}>
+            <DubiousReasonsPanel
+              dubiousClaims={overview.verdict.dubiousClaims}
+              video={overview.video}
+              onClose={() => {
+                setExplainingDubious(false);
+                dubiousFlag.current?.focus();
+              }}
+            />
+          </div>
+        )}
 
         <TopicLine
           overview={overview}

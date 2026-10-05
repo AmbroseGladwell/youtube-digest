@@ -71,7 +71,7 @@ test("a thin overview never carries a verdict, even if the model produced one", 
     {
       ...baseOutput,
       thin: true,
-      verdict: { novelty: "novel", dubious: false, reasoning: "x", similarToIndices: [] },
+      verdict: { novelty: "novel", dubiousClaims: [], reasoning: "x", similarToIndices: [] },
     },
     meta,
   );
@@ -83,12 +83,69 @@ test("similarToIndices resolve to the matching past claim, out-of-range indices 
     baseInput,
     {
       ...baseOutput,
-      verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarToIndices: [0, 5, -1] },
+      verdict: { novelty: "recycled", dubiousClaims: [], reasoning: "x", similarToIndices: [0, 5, -1] },
     },
     meta,
   );
   assert.equal(overview.verdict?.similarTo.length, 1);
   assert.equal(overview.verdict?.similarTo[0]?.title, "An older video");
+});
+
+const DUBIOUS_CLAIM = {
+  claim: "Here is the technique.",
+  basis: "contradictsSettled" as const,
+  reason: "Nothing settled backs it.",
+  segmentIndex: 1,
+};
+
+test("a verdict naming a dubious claim is dubious, and the claim's segment resolves to the transcript's real timestamp", () => {
+  const overview = assembleOverview(
+    baseInput,
+    { ...baseOutput, verdict: { novelty: "novel", dubiousClaims: [DUBIOUS_CLAIM], reasoning: "x", similarToIndices: [] } },
+    meta,
+  );
+  assert.equal(overview.verdict?.dubious, true);
+  assert.deepEqual(overview.verdict?.dubiousClaims, [
+    { claim: "Here is the technique.", basis: "contradictsSettled", reason: "Nothing settled backs it.", startMs: 2000 },
+  ]);
+});
+
+test("a verdict naming no dubious claim is not dubious", () => {
+  const overview = assembleOverview(
+    baseInput,
+    { ...baseOutput, verdict: { novelty: "novel", dubiousClaims: [], reasoning: "x", similarToIndices: [] } },
+    meta,
+  );
+  assert.equal(overview.verdict?.dubious, false);
+  assert.deepEqual(overview.verdict?.dubiousClaims, []);
+});
+
+test("a dubious claim made without a transcript has no moment", () => {
+  const overview = assembleOverview(
+    { ...baseInput, transcript: [] },
+    {
+      ...baseOutput,
+      chapters: [],
+      verdict: { novelty: "novel", dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: null }], reasoning: "x", similarToIndices: [] },
+    },
+    meta,
+  );
+  assert.equal(overview.verdict?.dubiousClaims?.[0]?.startMs, null);
+});
+
+test("a dubious claim pointing past the transcript is a generation error, not a silent clamp", () => {
+  assert.throws(
+    () =>
+      assembleOverview(
+        baseInput,
+        {
+          ...baseOutput,
+          verdict: { novelty: "novel", dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: 99 }], reasoning: "x", similarToIndices: [] },
+        },
+        meta,
+      ),
+    GenerationError,
+  );
 });
 
 test("selling and how-to-apply pass through untouched when present", () => {

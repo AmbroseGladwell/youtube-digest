@@ -147,6 +147,12 @@ co-occur: with neither exposed as data, there's nothing left to combine — the
 model just has to avoid mislabelling ordinary novel content as `dubious`, which is a
 generation-prompt instruction, not a schema concern.
 
+**Later: the flag says why, and is derived rather than asked for.** The model now lists
+the claims that clear the bar, at most three, each with a basis (one of the same two),
+a reason and the transcript segment where it is said, and `dubious` is whether that list
+is non-empty. The flag is still one visible bit at the same bar; pressing it opens the
+reasons. See `docs/features/dubious-reasons.md`.
+
 **Decision: `dubious` doesn't suppress generation, it hides the result.** How to apply
 is generated every time regardless of `dubious` — the schema doesn't conditionally
 drop the field based on a value computed in the same call. When `dubious` fires, the

@@ -2,6 +2,7 @@ import type { Novelty, SellingType, WatchAnswer } from "@overview/domain";
 import type { SuggestedTopicShape } from "./sections/filingSection.js";
 import type { SegmentRangeShape } from "./sections/watchAnywaySection.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
+import type { DubiousClaimShape } from "./sections/verdictSection.js";
 
 export interface GeneratedOutput {
   inOneLine: string;
@@ -14,7 +15,7 @@ export interface GeneratedOutput {
   tags: string[];
   verdict?: {
     novelty: Novelty;
-    dubious: boolean;
+    dubiousClaims: DubiousClaimShape[];
     reasoning: string;
     similarToIndices: number[];
   };

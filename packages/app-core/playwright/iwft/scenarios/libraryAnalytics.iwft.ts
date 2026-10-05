@@ -17,7 +17,7 @@ const seed = (backendSimulator: BackendSimulator) => {
   const grid = makeOverview({
     topicIds: [ENERGY.id],
     video: { ...makeOverview().video, title: "Grid batteries" },
-    verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
+    verdict: { novelty: "recycled", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   backendSimulator.overviews.seed(grid);
   backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "Sourdough" } }));

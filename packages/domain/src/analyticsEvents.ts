@@ -5,7 +5,7 @@ import { Plan } from "./Plan.js";
 import { AnthropicModel } from "./AnthropicModel.js";
 import { AuthIntent } from "./AuthIntent.js";
 import { NarrationVoice } from "./NarrationVoice.js";
-import { Novelty } from "./Verdict.js";
+import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
@@ -212,6 +212,13 @@ export const analyticsEvents = {
         from: OverviewControl,
       }),
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
+    },
+    dubiousReasons: {
+      opened: event("The reader opens why the overview is marked dubious, with how many reasons it saved; none means it was made before reasons were", {
+        reasonsSaved: z.number().int().min(0).max(MAX_DUBIOUS_CLAIMS),
+      }),
+      momentFollowed: event("The reader goes to a dubious claim's moment in the video", { by: VideoReach }),
+      markedWrong: event("The reader says the dubious flag looks wrong"),
     },
     actionsMenu: {
       opened: event("The reader opens the overview's ⋯ menu"),

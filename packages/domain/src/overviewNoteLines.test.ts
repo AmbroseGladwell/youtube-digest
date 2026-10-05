@@ -39,6 +39,7 @@ test("shows the verdict as its label followed by the reasoning, and speaks only 
       verdict: {
         novelty: "recycled",
         dubious: false,
+        dubiousClaims: [],
         reasoning: "Standard advice.",
         similarTo: [],
       },
@@ -146,7 +147,7 @@ const spokenIn = (lines: ReturnType<typeof overviewNoteLines>, section: string) 
 test("speaks each heading in its own words while showing the heading unchanged", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      verdict: { novelty: "novel", dubious: false, reasoning: "New.", similarTo: [] },
+      verdict: { novelty: "novel", dubious: false, dubiousClaims: [], reasoning: "New.", similarTo: [] },
       howToApply: { items: ["Do it."] },
       selling: { type: "own_paid_product", detail: "A course.", compromisesContent: false },
       watchAnyway: { answer: "no", reason: "Covered.", range: null },

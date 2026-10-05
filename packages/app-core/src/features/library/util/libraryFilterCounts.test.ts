@@ -15,14 +15,14 @@ describe("libraryFilterCounts", () => {
       makeOverviewWithState(
         {
           topicIds: [FITNESS],
-          verdict: { novelty: "novel", dubious: false, reasoning: "x", similarTo: [] },
+          verdict: { novelty: "novel", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
         },
         { read: true },
       ),
       makeOverviewWithState(
         {
           topicIds: [FITNESS, FINANCE],
-          verdict: { novelty: "recycled", dubious: true, reasoning: "x", similarTo: [] },
+          verdict: { novelty: "recycled", dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] },
         },
         { favourite: true },
       ),

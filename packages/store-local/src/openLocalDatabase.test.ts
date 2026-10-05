@@ -78,7 +78,7 @@ test("opening a database written before the novelty rename drops the stored over
   const before = await openVersionOneDatabase(indexedDB);
   await put(before, OVERVIEWS_STORE, {
     id: "overview-1",
-    verdict: { novelty: "competent_not_new", dubious: false, reasoning: "x", similarTo: [] },
+    verdict: { novelty: "competent_not_new", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   await put(before, OVERVIEW_STATES_STORE, { overviewId: "overview-1", read: true, favourite: true });
   before.close();

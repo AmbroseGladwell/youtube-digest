@@ -95,7 +95,7 @@ export function sampleLibrary(): SampleLibrary {
         keyPoints: sample.points,
         topicIds: [TopicId.parse(topic.id)],
         tags: sample.tags,
-        verdict: { novelty: NOVELTY[sample.verdict]!, dubious: false, reasoning: sample.reasoning, similarTo: [] },
+        verdict: { novelty: NOVELTY[sample.verdict]!, dubious: false, dubiousClaims: [], reasoning: sample.reasoning, similarTo: [] },
         selling: sample.sells
           ? { type: "own_paid_product", detail: sample.selling, compromisesContent: false }
           : { type: "none", detail: "", compromisesContent: false },

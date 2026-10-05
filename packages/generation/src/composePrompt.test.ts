@@ -210,6 +210,25 @@ test("keeps the verdict reasoning off its own label and the watch reason off the
   assert.ok(systemPrompt.includes("never restate yes, no, or skip in it"));
 });
 
+test("asks for each dubious claim's moment as a transcript segment, never a time", () => {
+  const { systemPrompt, schema } = composePrompt(baseInput);
+  const verdict = schema.shape.verdict as z.ZodObject;
+  const dubiousClaim = { claim: "A claim.", basis: "contradictsSettled", reason: "A reason.", segmentIndex: 0 };
+
+  assert.ok(systemPrompt.includes("Never estimate a time: the segment number is the position."));
+  assert.equal(z.safeParse(verdict.shape.dubiousClaims!, [dubiousClaim]).success, true);
+  assert.equal(z.safeParse(verdict.shape.dubiousClaims!, [{ ...dubiousClaim, segmentIndex: 999 }]).success, false);
+});
+
+test("names at most three dubious claims", () => {
+  const { schema } = composePrompt(baseInput);
+  const verdict = schema.shape.verdict as z.ZodObject;
+  const dubiousClaim = { claim: "A claim.", basis: "conflictOfInterest", reason: "A reason.", segmentIndex: 0 };
+
+  assert.equal(z.safeParse(verdict.shape.dubiousClaims!, Array(3).fill(dubiousClaim)).success, true);
+  assert.equal(z.safeParse(verdict.shape.dubiousClaims!, Array(4).fill(dubiousClaim)).success, false);
+});
+
 test("asks for fewer words than it enforces, so a near miss does not fail the overview", () => {
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");

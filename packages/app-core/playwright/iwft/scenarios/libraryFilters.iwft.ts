@@ -32,11 +32,11 @@ test("the list head drops to the singular on a library of one", async ({ launche
 test("the novelty filter narrows the visible cards", async ({ launcher, backendSimulator }) => {
   const novel = makeOverview({
     video: { ...makeOverview().video, title: "Novel video" },
-    verdict: { novelty: "novel", dubious: false, reasoning: "x", similarTo: [] },
+    verdict: { novelty: "novel", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   const recycled = makeOverview({
     video: { ...makeOverview().video, title: "Recycled video" },
-    verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
+    verdict: { novelty: "recycled", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   backendSimulator.overviews.seed(novel);
   backendSimulator.overviews.seed(recycled);
@@ -92,7 +92,7 @@ test("filters combine with AND: a video matching only one active filter stays hi
 }) => {
   const matchesNeither = makeOverview({
     video: { ...makeOverview().video, title: "Wrong video" },
-    verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
+    verdict: { novelty: "recycled", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   backendSimulator.overviews.seed(matchesNeither);
 

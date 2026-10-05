@@ -26,7 +26,7 @@ test("the verdict is never in the preview, however blunt it is", () => {
   const preview = sharePreview(
     noteOf(
       makeOverview({
-        verdict: { novelty: "recycled", dubious: true, reasoning: "Every claim here is secondhand.", similarTo: [] },
+        verdict: { novelty: "recycled", dubious: true, dubiousClaims: null, reasoning: "Every claim here is secondhand.", similarTo: [] },
       }),
     ),
   );

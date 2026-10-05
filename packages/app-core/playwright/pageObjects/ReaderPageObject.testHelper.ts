@@ -20,6 +20,7 @@ import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedC
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
+import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
@@ -451,6 +452,37 @@ export class ReaderPageObject extends PageObject {
       await this.openActionsMenu();
       await expect(this.get(overviewActionsMenuTestIds.copyLinkItem)).toHaveText(label);
     });
+
+  clickDubiousFlag = (): Promise<DubiousReasonsPanelPageObject> =>
+    this.step("clickDubiousFlag", async () => {
+      await this.click(readerMastheadTestIds.dubiousFlag);
+      await expect(this.get(readerMastheadTestIds.dubiousFlag)).toHaveAttribute("aria-expanded", "true");
+      return new DubiousReasonsPanelPageObject(this.testContext).verifyIsShown();
+    });
+
+  clickDubiousFlagToClose = () =>
+    this.step("clickDubiousFlagToClose", async () => {
+      await this.click(readerMastheadTestIds.dubiousFlag);
+      await expect(this.get(readerMastheadTestIds.dubiousFlag)).toHaveAttribute("aria-expanded", "false");
+    });
+
+  openDubiousReasonsByKeyboard = (): Promise<DubiousReasonsPanelPageObject> =>
+    this.step("openDubiousReasonsByKeyboard", async () => {
+      await this.get(readerMastheadTestIds.dubiousFlag).focus();
+      await this.page.keyboard.press("Enter");
+      return new DubiousReasonsPanelPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyDubiousFlagIsNamed = (name: string) =>
+    this.step(`verifyDubiousFlagIsNamed ${name}`, () =>
+      expect(this.get(readerMastheadTestIds.dubiousFlag)).toHaveAccessibleName(name),
+    );
+
+  verifyDubiousFlagIsFocused = () =>
+    this.step("verifyDubiousFlagIsFocused", () => expect(this.get(readerMastheadTestIds.dubiousFlag)).toBeFocused());
+
+  verifyHasNoDubiousFlag = () =>
+    this.step("verifyHasNoDubiousFlag", () => this.expectNotToBeVisible(readerMastheadTestIds.dubiousFlag));
 
   clickDeleteOverview = (): Promise<DeleteOverviewDialogPageObject> =>
     this.step("clickDeleteOverview", async () => {

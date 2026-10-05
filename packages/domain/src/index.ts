@@ -34,6 +34,7 @@ export * from "./shareLink.js";
 export * from "./sharePreview.js";
 export * from "./Share.js";
 export * from "./noveltyLabel.js";
+export * from "./dubiousBasisLabel.js";
 export * from "./sellingLabel.js";
 export * from "./watchAnywayLabel.js";
 export * from "./wordCount.js";

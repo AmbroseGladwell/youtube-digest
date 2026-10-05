@@ -21,7 +21,7 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     tags: ["iwft-fixture", "simulated-video", "test-data"],
     verdict: {
       novelty: "novel",
-      dubious: false,
+      dubiousClaims: [],
       reasoning: "This is fixture reasoning text, not a real judgment.",
       similarToIndices: [],
     },

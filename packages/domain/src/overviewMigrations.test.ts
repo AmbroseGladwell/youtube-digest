@@ -89,6 +89,17 @@ test("a record from before chapters existed reads with chapters null, which the 
   assert.equal(Overview.parse(migrated).chapters, null);
 });
 
+test("a dubious record from before reasons existed reads with no claims saved, rather than with none found", () => {
+  const migrated = Overview.parse(migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS));
+  assert.equal(migrated.verdict?.dubious, true);
+  assert.equal(migrated.verdict?.dubiousClaims, null);
+});
+
+test("a record with no verdict is left without one", () => {
+  const thin = { ...(corpusAt(4) as Record<string, unknown>), verdict: null };
+  assert.equal((applyRecordMigration(thin, OVERVIEW_MIGRATIONS[3]!) as { verdict: unknown }).verdict, null);
+});
+
 test("the filled video fields are null rather than absent, which is what every reader guards on", () => {
   const migrated = migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS) as {
     video: Record<string, unknown>;

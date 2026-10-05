@@ -31,7 +31,7 @@ describe("buildSearchHaystack", () => {
 
   it("includes verdict reasoning and selling detail when present", () => {
     const overview = makeOverview({
-      verdict: { novelty: "recycled", dubious: true, reasoning: "Contradicts settled anatomy.", similarTo: [] },
+      verdict: { novelty: "recycled", dubious: true, dubiousClaims: null, reasoning: "Contradicts settled anatomy.", similarTo: [] },
       selling: { type: "own_paid_product", detail: "Pitches a Patreon course.", compromisesContent: true },
     });
 

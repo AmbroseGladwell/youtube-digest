@@ -15,6 +15,7 @@ export type StrokeIconName =
   | "arrowUp"
   | "arrowDown"
   | "alert"
+  | "flag"
   | "chevronDown"
   | "chevronUp"
   | "chevronRight"
@@ -128,6 +129,9 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
       <path d="M12 9v4" />
       <path d="M12 17h.01" />
     </>
+  ),
+  flag: (
+    <path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.33 2q2 0 3.67-1.33a1 1 0 0 1 1.6.8v9.06a1 1 0 0 1-.4.8A6 6 0 0 1 16.67 15c-2.33 0-4.33-2-7.33-2q-2 0-3.67 1.33" />
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronUp: <path d="m18 15-6-6-6 6" />,

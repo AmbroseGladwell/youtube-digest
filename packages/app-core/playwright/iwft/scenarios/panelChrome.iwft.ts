@@ -30,6 +30,7 @@ const LONG_NOTE_POINTS = Array.from(
 const VERDICT = {
   novelty: "novel" as const,
   dubious: true,
+  dubiousClaims: null,
   reasoning: "Nobody else has said this.",
   similarTo: [],
 };

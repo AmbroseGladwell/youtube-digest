@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { Overview } from "./Overview.js";
+import type { DubiousClaim } from "./Verdict.js";
 
 const OVERVIEW_ID = randomUUID();
 const BUSINESS_TOPIC_ID = randomUUID();
@@ -55,7 +56,7 @@ test("a thin overview is rejected if it still carries a verdict", () => {
     Overview.parse({
       ...baseOverview,
       thin: true,
-      verdict: { novelty: "novel", dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "novel", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
     }),
   );
 });
@@ -64,11 +65,39 @@ test("dubious is a plain boolean — no overreaching/unverified values are expos
   const verdict = (dubious: boolean) => ({
     novelty: "novel" as const,
     dubious,
+    dubiousClaims: null,
     reasoning: "x",
     similarTo: [],
   });
   assert.doesNotThrow(() => Overview.parse({ ...baseOverview, verdict: verdict(false) }));
   assert.doesNotThrow(() => Overview.parse({ ...baseOverview, verdict: verdict(true) }));
+});
+
+const DUBIOUS_CLAIM: DubiousClaim = {
+  claim: "Cold plunges double your testosterone.",
+  basis: "contradictsSettled",
+  reason: "The studies he cites measured a short-lived spike, not a doubling.",
+  startMs: 61_000,
+};
+const verdictWithClaims = (dubious: boolean, dubiousClaims: DubiousClaim[] | null) => ({
+  ...baseOverview,
+  verdict: { novelty: "novel" as const, dubious, dubiousClaims, reasoning: "x", similarTo: [] },
+});
+
+test("a verdict is dubious exactly when it names a dubious claim", () => {
+  assert.doesNotThrow(() => Overview.parse(verdictWithClaims(true, [DUBIOUS_CLAIM])));
+  assert.doesNotThrow(() => Overview.parse(verdictWithClaims(false, [])));
+  assert.throws(() => Overview.parse(verdictWithClaims(true, [])));
+  assert.throws(() => Overview.parse(verdictWithClaims(false, [DUBIOUS_CLAIM])));
+});
+
+test("a verdict names at most three dubious claims", () => {
+  assert.doesNotThrow(() => Overview.parse(verdictWithClaims(true, [DUBIOUS_CLAIM, DUBIOUS_CLAIM, DUBIOUS_CLAIM])));
+  assert.throws(() => Overview.parse(verdictWithClaims(true, [DUBIOUS_CLAIM, DUBIOUS_CLAIM, DUBIOUS_CLAIM, DUBIOUS_CLAIM])));
+});
+
+test("a dubious claim made without a transcript has no moment to link to", () => {
+  assert.doesNotThrow(() => Overview.parse(verdictWithClaims(true, [{ ...DUBIOUS_CLAIM, startMs: null }])));
 });
 
 test("selling toggled off (null) and selling that ran and found nothing ({type: 'none'}) are different, both valid, states", () => {
@@ -205,6 +234,7 @@ test("the business/adaptability sample's real content, filed under two topics, v
       verdict: {
         novelty: "established",
         dubious: false,
+        dubiousClaims: [],
         reasoning:
           "The career advice is honest, but the macro half is delivered as diagnosis with no counter-case offered.",
         similarTo: [],

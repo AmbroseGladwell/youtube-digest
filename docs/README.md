@@ -66,6 +66,9 @@ Five folders, five different questions.
 - `chapters.md` — the reader's third tab: chapters as a structural prompt section timed
   from the transcript, why the model names a segment and never a time, what a range does
   on each surface, and how a chapter opens the transcript at its start.
+- `dubious-reasons.md` — why a note is dubious: the claims behind the flag, each with
+  its basis, a reason and its moment in the video; the flag derived from them, notes from
+  before saying so, and the panel the flag opens under the byline.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
