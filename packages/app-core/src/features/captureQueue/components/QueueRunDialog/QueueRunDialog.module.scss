@@ -1,0 +1,61 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.thumbnail {
+  flex: none;
+  width: 6.5rem;
+  border-radius: 10px;
+}
+
+.sourceText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.kicker {
+  @include controls.section-label;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+  font-size: 1.3125rem;
+}
+
+.close {
+  @include controls.surface-pill;
+  @include controls.circle(2.25rem);
+}
+
+.foot {
+  margin: 0;
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.elapsed {
+  font-variant-numeric: tabular-nums;
+}

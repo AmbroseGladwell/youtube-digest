@@ -88,10 +88,14 @@ export class RecordsRepository {
     });
   }
 
-  async listChanges(accountId: AccountId, since: number, limit: number): Promise<ChangesPage> {
+  // Only the kinds the caller knows: a client built before a kind refuses a page that holds
+  // one (docs/features/sync-api.md, "A kind a client was built before").
+  async listChanges(accountId: AccountId, since: number, limit: number, kinds: readonly RecordKind[]): Promise<ChangesPage> {
     const rows = await this.#sql.query<RecordRow>(
-      `select ${RECORD_COLUMNS} from records where account_id = $1 and seq > $2 order by seq limit $3`,
-      [accountId, since, limit + 1],
+      `select ${RECORD_COLUMNS} from records
+       where account_id = $1 and seq > $2 and kind = any($4::text[])
+       order by seq limit $3`,
+      [accountId, since, limit + 1, kinds],
     );
     const changes = rows.slice(0, limit).map(storedRecordFromRow);
     return {

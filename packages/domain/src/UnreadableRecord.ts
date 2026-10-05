@@ -4,7 +4,7 @@ import { salvageOverview, type SalvagedOverview } from "./SalvagedOverview.js";
 // the record, and stay until a migration is written (docs/features/record-migrations.md).
 export type UnreadableReason = "future-version" | "unmigratable" | "invalid";
 
-export type UnreadableRecordKind = "overview" | "overviewState" | "topic" | "settings";
+export type UnreadableRecordKind = "overview" | "overviewState" | "topic" | "settings" | "followedPlaylist";
 
 export interface UnreadableRecord {
   kind: UnreadableRecordKind;

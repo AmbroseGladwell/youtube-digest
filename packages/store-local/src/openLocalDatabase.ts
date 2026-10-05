@@ -1,10 +1,13 @@
 import { LocalDatabaseBlockedError } from "./LocalDatabaseBlockedError.js";
 import {
+  CAPTURE_QUEUE_STORE,
   DATABASE_NAME,
   DATABASE_VERSION,
+  FOLLOWED_PLAYLISTS_STORE,
   OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
+  PLAYLIST_CHECKS_STORE,
   SETTINGS_STORE,
   SYNC_META_STORE,
   SYNC_REVISIONS_STORE,
@@ -58,6 +61,15 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
       if (!db.objectStoreNames.contains(SYNC_META_STORE)) {
         db.createObjectStore(SYNC_META_STORE);
+      }
+      if (!db.objectStoreNames.contains(FOLLOWED_PLAYLISTS_STORE)) {
+        db.createObjectStore(FOLLOWED_PLAYLISTS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(PLAYLIST_CHECKS_STORE)) {
+        db.createObjectStore(PLAYLIST_CHECKS_STORE, { keyPath: "playlistId" });
+      }
+      if (!db.objectStoreNames.contains(CAPTURE_QUEUE_STORE)) {
+        db.createObjectStore(CAPTURE_QUEUE_STORE, { keyPath: "videoId" });
       }
     };
 

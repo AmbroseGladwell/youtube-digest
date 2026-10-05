@@ -38,7 +38,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql, …, V0015__followed_playlist_records.sql
   assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
@@ -59,8 +59,9 @@ apps/api/
     errors/              POST /api/errors, the ErrorSink seam, PostHog's error tracking
     postHog/             PostHog's one batch call, shared by events and errors
     logs/                pino with a route-only request log, written to stdout and to an OTLP log endpoint
+    playlists/           reading a YouTube playlist whole through the Data API, and telling a private one from a missing one
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
-    routes/              changes, overviews, topics, settings, transcripts, audio, shares
+    routes/              changes, overviews, topics, settings, followed playlists, playlists, transcripts, audio, shares
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
@@ -73,9 +74,11 @@ event sink that record, and `server.ts` is the only place the environment is rea
 
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
-a session unless it says otherwise; seven do: `GET /api/health`, `GET /api/handshake`, the
+a session unless it says otherwise; eight do: `GET /api/health`, `GET /api/handshake`, the
 three `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
 which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
+`GET /api/playlists/:id`, which reads a public or unlisted playlist for anyone following
+one (`docs/features/playlists.md`),
 and anything outside `/api`: the web app's files, the OAuth routes MCP clients call,
 which have their own tokens and never resolve a session (`docs/features/mcp-connector.md`),
 and `/s/<token>`, the shared copy of an overview, which is read by the people the reader
@@ -247,10 +250,12 @@ sends:
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |
+| `playlist_private` | 422 | the playlist asked for is private on YouTube, so it can't be read (`docs/features/playlists.md`) |
+| `playlist_not_found` | 404 | there is no playlist with that id, or it was deleted |
 | `transcript_unavailable` | 422 | our own server could not fetch a video's transcript; `details.failure` names the `TranscriptFetchFailure`, `budget-exhausted` included (`docs/architecture/server-side-transcripts.md`) |
 | `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
-| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off |
+| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off; a playlist asked of a server with no YouTube key |
 
 **426 was considered for the floor and rejected.** RFC 9110 reserves it for a protocol
 upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated,
@@ -291,6 +296,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
+| `playlistAddress` | 120 | hour, per address | `GET /api/playlists/:id`: each read spends YouTube Data API quota shared by every reader (`docs/features/playlists.md`) |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
 | `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session, and `POST /api/events/declined`: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |
@@ -392,6 +398,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_SERVICE` | `off` | `on` lets the server fetch transcripts itself, as the ladder's last rung; `off` answers `unavailable`, and says so at startup (`docs/architecture/server-side-transcripts.md`) |
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
+| `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |

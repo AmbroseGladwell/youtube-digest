@@ -14,6 +14,10 @@ import {
   type AnalyticsEventBatch,
   type SharedPageEventBatch,
   type ClientErrorBatch,
+  type FollowedPlaylist,
+  type PlaylistCheck,
+  type PlaylistLookup,
+  type QueuedCapture,
   type AuthSurface,
   type Connection,
   type ConnectionRequest,
@@ -143,6 +147,10 @@ export class BackendSimulator {
   #declines: AnalyticsDeclined[] = [];
   #sharedPageEventBatches: Array<{ token: string; batch: SharedPageEventBatch }> = [];
   #errorBatches: ClientErrorBatch[] = [];
+  #playlists = new Map<string, PlaylistLookup | "private">();
+  #seedFollowed: FollowedPlaylist[] = [];
+  #seedChecks: PlaylistCheck[] = [];
+  #seedQueue: QueuedCapture[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -185,6 +193,9 @@ export class BackendSimulator {
     seedUnreadable: this.#seedUnreadable,
     seedTopics: this.#seedTopics,
     seedTranscripts: this.#seedTranscripts,
+    seedFollowedPlaylists: this.#seedFollowed,
+    seedPlaylistChecks: this.#seedChecks,
+    seedQueue: this.#seedQueue,
   });
 
   handleNetworking = async (): Promise<void> => {
@@ -422,6 +433,26 @@ export class BackendSimulator {
         onError: () => ({
           status: 503,
           body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
+
+    await this.#page.route("**/api/playlists/*", (route) =>
+      this.#respond(route, EndpointKey.PLAYLIST_LOOKUP, {
+        onDefault: () => {
+          const playlistId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          const held = this.#playlists.get(playlistId);
+          if (held === undefined) {
+            return { status: 404, body: { error: { code: "playlist_not_found", message: "Simulated: no such playlist" } } };
+          }
+          if (held === "private") {
+            return { status: 422, body: { error: { code: "playlist_private", message: "Simulated: that playlist is private" } } };
+          }
+          return { status: 200, body: held };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: this server does not read YouTube playlists" } },
         }),
       }),
     );
@@ -946,6 +977,28 @@ export class BackendSimulator {
       this.#serviceTranscripts = null;
     },
     isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
+  };
+
+  // YouTube's side of a playlist, as /api/playlists/:id answers for it, and what this library
+  // already follows and has queued (docs/features/playlists.md, docs/features/capture-queue.md).
+  playlists = {
+    seed: (lookup: PlaylistLookup): void => {
+      this.#playlists.set(lookup.id, lookup);
+    },
+    seedPrivate: (playlistId: string): void => {
+      this.#playlists.set(playlistId, "private");
+    },
+    seedFollowed: (playlist: FollowedPlaylist): void => {
+      this.#seedFollowed.push(playlist);
+    },
+    seedCheck: (check: PlaylistCheck): void => {
+      this.#seedChecks.push(check);
+    },
+    seedQueued: (capture: QueuedCapture): void => {
+      this.#seedQueue.push(capture);
+    },
+    listFollowed: () => this.#page.evaluate(() => window.__iwftStores__.followedPlaylistStore.listFollowed()),
+    listQueue: () => this.#page.evaluate(() => window.__iwftStores__.captureQueueStore.listQueue()),
   };
 
   transcriptStore = {

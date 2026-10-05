@@ -1,0 +1,44 @@
+@use "../../theme/controls.scss" as controls;
+
+// What the playlist flow's parts share: the card on the dialog's own ground, the pills at
+// the three places they stack (design 27c–27h).
+
+@mixin inset-card {
+  background: var(--ground);
+  border-radius: 18px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@mixin actions($stacked) {
+  display: flex;
+  gap: 0.5rem;
+
+  @if $stacked {
+    flex-direction: column;
+    align-items: stretch;
+  } @else {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+@mixin primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
+  min-height: 2.625rem;
+}
+
+@mixin secondary {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+  min-height: 2.625rem;
+}
+
+@mixin ghost {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+  min-height: 2.625rem;
+}

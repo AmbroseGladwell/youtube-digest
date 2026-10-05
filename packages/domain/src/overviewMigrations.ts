@@ -91,12 +91,25 @@ const fillDubiousClaimsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// Derivable: every overview made before playlists could be followed was asked for on its
+// own (docs/features/playlists.md).
+const fillFromPlaylistAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 7,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "fromPlaylist" in record ? record : { ...record, fromPlaylist: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
   fillChaptersAddedAfterTheFirstNotes,
   moveToTheNewScaleAndTimedKeyPoints,
   fillDubiousClaimsAddedAfterTheFirstNotes,
+  fillFromPlaylistAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

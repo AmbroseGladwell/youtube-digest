@@ -23,6 +23,7 @@ import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
+import { playlistFromLineTestIds } from "../../src/features/playlists/components/PlaylistFromLine/PlaylistFromLineTestIds.js";
 
 export class ReaderPageObject extends PageObject {
   verifyIsShown = (): Promise<ReaderPageObject> =>
@@ -30,6 +31,19 @@ export class ReaderPageObject extends PageObject {
       await this.expectToBeVisible(readerPageTestIds.root);
       return this;
     });
+
+  verifyFromLine = (text: string | null, manage: boolean) =>
+    this.step(`verifyFromLine ${text} ${manage}`, async () => {
+      if (text === null) {
+        await this.expectToHaveCount(playlistFromLineTestIds.root, 0);
+        return;
+      }
+      await expect(this.get(playlistFromLineTestIds.root)).toContainText(text);
+      if (manage) await this.expectToBeVisible(playlistFromLineTestIds.manageLink);
+      else await this.expectToHaveCount(playlistFromLineTestIds.manageLink, 0);
+    });
+
+  openManagePlaylists = () => this.step("openManagePlaylists", () => this.click(playlistFromLineTestIds.manageLink));
 
   verifyTitle = (title: string) =>
     this.step(`verifyTitle ${title}`, () =>

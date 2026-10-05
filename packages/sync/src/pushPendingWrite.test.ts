@@ -201,3 +201,34 @@ test("a transcript a server without the route answers 404 for is parked, not tak
 
   assert.equal(outcome.result, "stuck");
 });
+
+test("a followed playlist goes to POST /followed-playlists with the revision this device knows, and retries as an overview does", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("saveFollowedPlaylist", { code: "already_exists", details: { rev: 3 } });
+  const record = { id: "PLpsychology", schemaVersion: 1, updatedAt: AT };
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "followedPlaylist", id: "PLpsychology", change: { op: "replace", record } }),
+    null,
+    storage,
+  );
+
+  assert.equal(outcome.result, "written");
+  assert.deepEqual(api.callsTo("saveFollowedPlaylist").map((call) => call.args[1]), [null, 3]);
+  assert.deepEqual(api.callsTo("createOverview"), []);
+});
+
+test("unfollowing deletes the followed playlist, not an overview", async () => {
+  const api = new ScriptedSyncApi();
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "followedPlaylist", id: "PLpsychology", change: { op: "delete" } }),
+    2,
+    storage,
+  );
+
+  assert.deepEqual(outcome, { result: "gone" });
+  assert.deepEqual(api.calls, [{ method: "deleteFollowedPlaylist", args: ["PLpsychology"] }]);
+});

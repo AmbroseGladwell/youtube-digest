@@ -83,6 +83,14 @@ Five folders, five different questions.
   sample of the same passage per voice made on deploy and cleared 30 days after it is
   superseded, the choice saved on pick, and older notes that keep their voice until
   re-recorded.
+- `playlists.md` — following a public or unlisted YouTube playlist by pasting its link: what
+  a paste field does with each kind of link, reading a playlist through our server and
+  telling a private one from a missing one, the preview and its estimate counted in code,
+  followed playlists synced and what each device has seen kept on it, checking on opening,
+  Settings › YouTube playlists, unfollowing, and the From line an overview keeps.
+- `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
+  time, oldest first, while the app is open; the library's queue group, the queue page and
+  the strip's six states; what needs attention and why; and waiting without a key.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.

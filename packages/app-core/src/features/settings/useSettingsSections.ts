@@ -24,6 +24,8 @@ import { useSync } from "../sync/SyncContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useSettingsQuery } from "./queries/settingsQuery.js";
+import { useFollowedPlaylistsQuery } from "../playlists/queries/followedPlaylistsQuery.js";
+import { followingRowValue } from "../playlists/util/followedPlaylistLines.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
 import {
   aboutRowValue,
@@ -60,6 +62,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const surface = useSurface();
   const knownApiUrl = useKnownApiUrl();
   const shareUsage = useShareUsageState();
+  const followed = useFollowedPlaylistsQuery();
 
   return [
     ...(sync.available
@@ -93,6 +96,15 @@ export function useSettingsSections(): SettingsSectionSummary[] {
               count: connections.data?.length,
               countFailed: connections.isError,
             }),
+          },
+        ]
+      : []),
+    ...(knownApiUrl !== null
+      ? [
+          {
+            id: "playlists" as const,
+            title: "YouTube playlists",
+            value: followed.isSuccess ? followingRowValue(followed.data.length) : CHECKING_ROW_VALUE,
           },
         ]
       : []),

@@ -163,7 +163,7 @@ test.describe("Settings › Connections", () => {
     await launcher.launch({ sync: false });
     const settings = await launcher.appShell.openSettings();
 
-    await settings.verifyRowsAre(["keys", "milestones", "plan", "privacy"]);
+    await settings.verifyRowsAre(["keys", "playlists", "milestones", "plan", "privacy"]);
   });
 
   test("the Plus panel's connection line opens the section", async ({ launcher }) => {

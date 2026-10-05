@@ -1,0 +1,47 @@
+@use "../../playlists" as playlists;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.status {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.84375rem;
+  color: var(--muted);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-badge);
+  background: var(--brand);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.skeletonCard {
+  @include playlists.inset-card;
+  gap: 0.625rem;
+}
+
+.bar {
+  display: block;
+  height: 0.75rem;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--accent);
+}

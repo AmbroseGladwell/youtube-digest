@@ -10,6 +10,7 @@ import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import { seedVoiceSamples, type SeededVoiceSamples } from "../audio/seedVoiceSamples.js";
 import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { buildApp, type AppConfig, type TranscriptServiceSetup } from "../buildApp.js";
+import type { PlaylistReader } from "../playlists/PlaylistReader.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -47,6 +48,7 @@ export interface TestAppOptions {
   logger?: FastifyBaseLogger;
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
+  playlistReader?: PlaylistReader;
 }
 
 export const TEST_APP_URL = "https://overview.test";
@@ -55,7 +57,7 @@ export const TEST_APP_URL = "https://overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true, logger, slowQueryMs, transcriptService }: TestAppOptions = {},
+  { narration = true, logger, slowQueryMs, transcriptService, playlistReader }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(new PGlite());
   await runMigrations(sql);
@@ -76,6 +78,7 @@ export async function createTestApp(
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
     transcriptService: transcriptService ?? null,
+    playlistReader: playlistReader ?? null,
     eventSink,
     errorSink,
     clock: () => clock.now,

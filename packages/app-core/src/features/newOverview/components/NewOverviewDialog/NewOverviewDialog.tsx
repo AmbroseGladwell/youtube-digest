@@ -8,7 +8,14 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { CaptureReasonField } from "../CaptureReasonField/CaptureReasonField.js";
-import { GenerateOverviewForm } from "../GenerateOverviewForm/GenerateOverviewForm.js";
+import { GenerateOverviewForm, playlistTargetOf } from "../GenerateOverviewForm/GenerateOverviewForm.js";
+import {
+  PlaylistFollowFlow,
+  type PlaylistFlowEntry,
+  type PlaylistTarget,
+} from "../../../playlists/components/PlaylistFollowFlow/PlaylistFollowFlow.js";
+import { usePlaylistApi } from "../../../playlists/usePlaylistApi.js";
+import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
 import { newOverviewDialogTestIds } from "./NewOverviewDialogTestIds.js";
@@ -16,6 +23,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export interface NewOverviewDialogProps {
   open: boolean;
+  prefill: string | null;
   run: NewOverviewRun | null;
   onSubmit: (url: string) => void;
   onClose: () => void;
@@ -29,6 +37,7 @@ const HEADING_ID = "NewOverviewDialog-heading";
 
 export function NewOverviewDialog({
   open,
+  prefill,
   run,
   onSubmit,
   onClose,
@@ -40,6 +49,9 @@ export function NewOverviewDialog({
   const dialog = useRef<HTMLDialogElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
   const [url, setUrl] = useState("");
+  const [playlist, setPlaylist] = useState<{ target: PlaylistTarget; pastedUrl: string; from: PlaylistFlowEntry } | null>(null);
+  const playlistsAvailable = usePlaylistApi() !== null;
+  const phone = useIsPhone();
 
   // Native <dialog> rather than a hand-rolled overlay: showModal() is what makes the page
   // behind it inert and keeps focus inside, and Escape arrives as a cancel event.
@@ -50,14 +62,18 @@ export function NewOverviewDialog({
     }
     if (open && !element.open) {
       if (run === null) {
-        setUrl(activeVideoUrl ?? "");
+        const handedOver = prefill ?? activeVideoUrl ?? "";
+        setUrl(handedOver);
+        const target = prefill !== null && playlistsAvailable ? playlistTargetOf(prefill) : null;
+        setPlaylist(target === null ? null : { target, pastedUrl: prefill!, from: "home" });
       }
       element.showModal();
     }
     if (!open && element.open) {
       element.close();
+      setPlaylist(null);
     }
-  }, [open, activeVideoUrl]);
+  }, [open, activeVideoUrl, prefill]);
 
   const inProgress = run !== null && run.overview === null && run.error === null;
 
@@ -104,7 +120,42 @@ export function NewOverviewDialog({
       <div className={styles.panel}>
         <span className={styles.handle} aria-hidden="true" />
 
-        {run === null || run.error !== null ? (
+        {playlist !== null && run === null ? (
+          <>
+            <div className={styles.head}>
+              <h2 className={styles.heading} id={HEADING_ID}>
+                New overview
+              </h2>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={closeForm}
+                aria-label="Close"
+                data-testid={newOverviewDialogTestIds.closeButton}
+              >
+                <StrokeIcon name="close" size={16} />
+              </button>
+            </div>
+            <PlaylistFollowFlow
+              target={playlist.target}
+              pastedUrl={playlist.pastedUrl}
+              from={playlist.from}
+              stacked={phone}
+              onJustThisVideo={(videoUrl) => {
+                setPlaylist(null);
+                handleSubmit(videoUrl);
+              }}
+              onPasteAnother={() => {
+                setPlaylist(null);
+                setUrl("");
+              }}
+              onDone={() => {
+                setPlaylist(null);
+                onDismiss();
+              }}
+            />
+          </>
+        ) : run === null || run.error !== null ? (
           <>
             <div className={styles.head}>
               <h2 className={styles.heading} id={HEADING_ID}>
@@ -125,6 +176,7 @@ export function NewOverviewDialog({
               onUrlChange={setUrl}
               onSubmit={handleSubmit}
               onCancel={closeForm}
+              onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
               generationError={run?.error ?? null}
             />
           </>

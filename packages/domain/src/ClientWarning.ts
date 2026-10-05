@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { API_ERROR_CODES } from "./ApiErrorCode.js";
 import { RequestId } from "./RequestId.js";
+import { QueuedCaptureProblem } from "./QueuedCapture.js";
 
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
@@ -40,6 +41,26 @@ export const ClientWarning = z.discriminatedUnion("name", [
       // anyway, with this much left unsent and refused (docs/features/account-libraries.md).
       pending: z.number().int().nonnegative(),
       stuck: z.number().int().nonnegative(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("playlistCheckFailed"),
+      // A followed playlist could not be checked for new videos on opening; the others were
+      // (docs/features/playlists.md, "Checking on opening").
+      outcome: z.enum(["private", "gone", "failed"]),
+      requestId: RequestId.optional(),
+      apiErrorCode: z.string().max(64).optional(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("queuedCaptureFailed"),
+      // A video the queue took from a followed playlist could not be made, and why, as the
+      // reader is told (docs/features/capture-queue.md, "Needs attention").
+      problem: QueuedCaptureProblem,
       at: z.iso.datetime(),
     })
     .strict(),

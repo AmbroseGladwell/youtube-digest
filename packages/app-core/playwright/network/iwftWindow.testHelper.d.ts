@@ -7,6 +7,8 @@ import type { IwftActiveVideoSource } from "./IwftActiveVideoSource.testHelper.j
 import type { IwftPlaybackSource } from "./IwftPlaybackSource.testHelper.js";
 import type { IwftRunBridge } from "./IwftRunBridge.testHelper.js";
 import type { YouTubeFetch } from "@overview/transcripts";
+import type { InMemoryCaptureQueueStore } from "../../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
+import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
@@ -21,6 +23,8 @@ declare global {
       overviewStore: InMemoryOverviewStore;
       settingsStore: InMemorySettingsStore;
       transcriptStore: InMemoryTranscriptStore;
+      followedPlaylistStore: InMemoryFollowedPlaylistStore;
+      captureQueueStore: InMemoryCaptureQueueStore;
       syncStorage: InMemorySyncStorage | null;
     };
     // Every library opened so far, by account, the no-account one under null.

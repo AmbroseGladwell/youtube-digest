@@ -52,6 +52,7 @@ import { savedHere } from "../../accountLibraries/util/libraryPlace.js";
 import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
+import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
 
 // Below this width the rail is a sheet behind the filter button, so a milestone sits at
 // the top of the list instead (LibraryPage.module.scss; "OV-34 3 Phone and Panel" 34ad).
@@ -334,6 +335,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               </button>
             )}
           </div>
+
+          <LibraryQueueGroup />
 
           {railIsSheet && milestoneStack}
 

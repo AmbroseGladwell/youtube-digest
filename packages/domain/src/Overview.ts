@@ -8,6 +8,7 @@ import { Selling } from "./Selling.js";
 import { HowToApply } from "./HowToApply.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 import { Chapters } from "./Chapter.js";
+import { PlaylistOrigin } from "./PlaylistOrigin.js";
 
 // Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
 // in its own table, keyed by overview id, because this record can be replaced
@@ -22,6 +23,8 @@ export const Overview = z
     // the video, which is a separate future feature the word "note" is kept free for
     // (docs/architecture/v1-architecture-decisions.md, docs/features/capture-reason.md).
     captureReason: z.string().nullable(),
+    // Null for an overview the reader asked for one video at a time (docs/features/playlists.md).
+    fromPlaylist: PlaylistOrigin.nullable(),
   })
   .extend(CoreFields.shape)
   .extend(Filing.shape)

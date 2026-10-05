@@ -39,6 +39,7 @@ export enum EndpointKey {
   EVENTS_DECLINED = "EVENTS_DECLINED",
   SHARED_PAGE_EVENTS = "SHARED_PAGE_EVENTS",
   ERRORS = "ERRORS",
+  PLAYLIST_LOOKUP = "PLAYLIST_LOOKUP",
 }
 
 export enum EndpointBehaviour {

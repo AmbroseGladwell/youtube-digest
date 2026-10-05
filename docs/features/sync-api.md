@@ -27,7 +27,7 @@ here departs from one there, it says so.
 records (account_id, kind, id, schema_version, rev, seq, updated_at, stored_at, deleted, body)
   primary key (account_id, kind, id)
   unique (account_id, seq)
-  kind in ('overview', 'overviewState', 'topic', 'settings')
+  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist')
   updated_at matches the fixed-width Z form, and is null only on a tombstone
   deleted = (body is null)
 ```
@@ -171,6 +171,21 @@ ask again. Each change is `{ kind, id, schemaVersion, rev, seq, updatedAt, delet
 with `body` present only on a live record. A record the caller's version cannot read is
 returned all the same: holding it back is the client's rule, and the feed is not the place
 to hide data from the account that owns it.
+
+### A kind a client was built before
+
+A kind is different. A client built before a kind existed parses every change against the
+kinds it knows, and one it has never heard of would fail the whole page. So the feed
+sends only the kinds the caller's `CLIENT_VERSION` knows: `CLIENT_SCHEMA_VERSIONS` gives a
+kind version 0 (`UNKNOWN_KIND_SCHEMA_VERSION`) for every client version before the one
+that added it, and `listChanges` filters on the rest in SQL, so `next` still moves past
+what it held back. Such a client pulled past records it never saw, which is why a library
+keeps the kinds its cursor was pulled with and starts again from 0 once it knows more
+(`sync-client.md`, "What comes down"). `followedPlaylist`, added at client version 4, is
+the first kind this applies to (`docs/features/playlists.md`).
+
+Followed playlists are written by `POST /api/followed-playlists`, replace-with-`If-Match`
+as an overview is, and unfollowed by `DELETE /api/followed-playlists/:id`, a tombstone.
 
 ## Rejected alternatives
 

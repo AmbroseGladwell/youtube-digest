@@ -1,0 +1,60 @@
+// The centred dialog that becomes a bottom sheet on a phone (design 3a/3b), for a dialog
+// that is not the New dialog itself: the playlist preview from Settings and the queue's
+// Details (docs/features/playlists.md, docs/features/capture-queue.md).
+
+@mixin dialog-shell {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+
+  &::backdrop {
+    background: var(--scrim);
+  }
+
+  @media (max-width: 47.9375rem) {
+    margin: auto 0 0;
+    width: 100%;
+  }
+}
+
+@mixin dialog-panel {
+  width: min(33.75rem, calc(100vw - 2.5rem));
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  background: var(--dialog);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  padding: 1.375rem 1.5rem 1.625rem 1.75rem;
+
+  @media (max-width: 47.9375rem) {
+    width: 100%;
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    padding: 0.75rem 1.25rem 1.75rem;
+  }
+}
+
+@mixin dialog-handle {
+  display: none;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  align-self: center;
+
+  @media (max-width: 47.9375rem) {
+    display: block;
+  }
+}
+
+@mixin dialog-heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}

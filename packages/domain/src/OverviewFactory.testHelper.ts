@@ -16,6 +16,7 @@ export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   },
   savedAt: new Date().toISOString(),
   captureReason: null,
+  fromPlaylist: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,

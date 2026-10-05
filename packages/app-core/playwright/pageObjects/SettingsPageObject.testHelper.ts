@@ -9,6 +9,7 @@ import { settingsSectionTestIds } from "../../src/features/settings/components/S
 import { settingsSectionListTestIds } from "../../src/features/settings/components/SettingsSectionList/SettingsSectionListTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ConnectionsSectionPageObject } from "./ConnectionsSectionPageObject.testHelper.js";
+import { PlaylistsSectionPageObject } from "./PlaylistsSectionPageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SharedLinksPanelPageObject } from "./SharedLinksPanelPageObject.testHelper.js";
@@ -18,6 +19,10 @@ import { MilestonesSectionPageObject } from "./MilestonesSectionPageObject.testH
 export class SettingsPageObject extends PageObject {
   get apiKeysPanel(): ApiKeysPanelPageObject {
     return new ApiKeysPanelPageObject(this.testContext);
+  }
+
+  get playlists(): PlaylistsSectionPageObject {
+    return new PlaylistsSectionPageObject(this.testContext);
   }
 
   get connections(): ConnectionsSectionPageObject {

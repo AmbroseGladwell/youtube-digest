@@ -148,6 +148,14 @@ Each page of the feed is applied with the cursor that follows it in one IndexedD
 transaction: a crash between the two cannot leave a record applied and pulled again, or a
 cursor past a record that never landed.
 
+A cursor is only good for the kinds it was pulled with, because the server holds back a
+kind the client did not know (`sync-api.md`, "A kind a client was built before"). The
+library keeps that list beside the cursor (`cursorKinds`), and a cursor pulled before the
+list was kept counts as the first four kinds. When this build knows a kind the cursor was
+not pulled with, `cursor()` answers 0 and the next cycle pulls everything once, which is
+idempotent. A pulled tombstone for a followed playlist also forgets what this device had
+seen of it and its waiting videos (`docs/features/playlists.md`, "Unfollowing").
+
 A pulled record is written **raw**, stamps put back beside the body as the server took
 them off, and the reader's next read runs the chain as it does for every record. A record
 from a newer client arrives, is quarantined as `future-version`, and reaches the library

@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { generateOverviewFormTestIds } from "../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
+import { playlistLinkChoiceTestIds } from "../../src/features/playlists/components/PlaylistLinkChoice/PlaylistLinkChoiceTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class GenerateOverviewFormPageObject extends PageObject {
@@ -17,6 +18,29 @@ export class GenerateOverviewFormPageObject extends PageObject {
 
   fillUrl = (url: string) =>
     this.step(`fillUrl ${url}`, () => this.get(generateOverviewFormTestIds.urlInput).fill(url));
+
+  // A paste, rather than typing, which is what the field checks a link on.
+  pasteUrl = (url: string) =>
+    this.step(`pasteUrl ${url}`, async () => {
+      const input = this.get(generateOverviewFormTestIds.urlInput);
+      await input.focus();
+      await input.evaluate((element, text) => {
+        const data = new DataTransfer();
+        data.setData("text", text);
+        element.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+      }, url);
+    });
+
+  verifyOffersVideoOrPlaylist = (playlistDetail: string) =>
+    this.step(`verifyOffersVideoOrPlaylist ${playlistDetail}`, async () => {
+      await this.expectToBeVisible(playlistLinkChoiceTestIds.root);
+      await expect(this.get(playlistLinkChoiceTestIds.playlistButton)).toContainText(playlistDetail);
+      await this.expectToHaveCount(generateOverviewFormTestIds.generateButton, 0);
+    });
+
+  chooseJustThisVideo = () => this.step("chooseJustThisVideo", () => this.click(playlistLinkChoiceTestIds.videoButton));
+
+  chooseWholePlaylist = () => this.step("chooseWholePlaylist", () => this.click(playlistLinkChoiceTestIds.playlistButton));
 
   clickGenerate = () => this.step("clickGenerate", () => this.click(generateOverviewFormTestIds.generateButton));
 

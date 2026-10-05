@@ -1,0 +1,98 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Recessed rather than raised: the group sits a step below the ground the tiles stand on,
+// so nothing in it reads as a finished overview (design 27i).
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ground), var(--ink) 3%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.25rem 0.375rem 0 0.625rem;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.count {
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sub {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.headActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.seeQueue {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+}
+
+.fold {
+  @include controls.ghost-pill;
+  @include controls.circle(2rem);
+  color: var(--muted);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.attention {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface);
+  }
+}
+
+.attentionDetail {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+@media (pointer: coarse) {
+  .fold {
+    @include controls.circle(2.75rem);
+  }
+}

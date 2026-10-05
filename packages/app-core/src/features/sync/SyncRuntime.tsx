@@ -23,6 +23,8 @@ import type { SignOutOptions, SignOutOutcome } from "./types/SignOutOutcome.js";
 import { signOutNoticeFor } from "./util/signOutNoticeFor.js";
 import { signOutOutcomeOf } from "./util/signOutOutcomeOf.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
+import { playlistKeys } from "../playlists/playlistKeys.js";
+import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 
 // How long sign-out waits for its last cycle before going anyway: it always completes.
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
@@ -69,6 +71,8 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
         void queryClient.invalidateQueries({ queryKey: topicKeys.all });
         void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+        void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
+        void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
       },
     });
     const unsubscribe = started.subscribe(setStatus);

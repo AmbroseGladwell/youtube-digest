@@ -9,6 +9,9 @@ import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testH
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testHelper.js";
 import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
+import { CaptureQueueStripPageObject } from "./CaptureQueueStripPageObject.testHelper.js";
+import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
+import { QueuePageObject } from "./QueuePageObject.testHelper.js";
 
 export class AppShellPageObject extends PageObject {
   get accountMenu(): AccountMenuPageObject {
@@ -25,6 +28,18 @@ export class AppShellPageObject extends PageObject {
 
   get generationStatusStrip(): GenerationStatusStripPageObject {
     return new GenerationStatusStripPageObject(this.testContext);
+  }
+
+  get queueStrip(): CaptureQueueStripPageObject {
+    return new CaptureQueueStripPageObject(this.testContext);
+  }
+
+  get playlistFlow(): PlaylistFollowFlowPageObject {
+    return new PlaylistFollowFlowPageObject(this.testContext);
+  }
+
+  get queuePage(): QueuePageObject {
+    return new QueuePageObject(this.testContext);
   }
 
   get staleClientBanner(): StaleClientBannerPageObject {

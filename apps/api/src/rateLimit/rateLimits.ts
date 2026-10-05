@@ -16,6 +16,7 @@ export const rateLimits = {
   mcpPerAccount: { name: "mcpAccount", limit: 120, windowMs: MINUTE_MS },
   sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
   serviceTranscriptPerAddress: { name: "serviceTranscriptAddress", limit: 60, windowMs: HOUR_MS },
+  playlistPerAddress: { name: "playlistAddress", limit: 120, windowMs: HOUR_MS },
   eventsPerAccount: { name: "eventsAccount", limit: 60, windowMs: MINUTE_MS },
   anonymousEventsPerAddress: { name: "anonymousEventsAddress", limit: 60, windowMs: MINUTE_MS },
   sharedPageEventsPerAddress: { name: "sharedPageEventsAddress", limit: 60, windowMs: MINUTE_MS },

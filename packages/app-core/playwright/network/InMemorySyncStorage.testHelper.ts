@@ -1,4 +1,5 @@
 import {
+  FollowedPlaylist,
   Overview,
   OverviewState,
   Settings,
@@ -11,6 +12,7 @@ import {
   type SyncStorage,
   type WriteAcknowledgement,
 } from "@overview/domain";
+import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
@@ -31,6 +33,7 @@ export class InMemorySyncStorage implements SyncStorage {
     private readonly overviewStore: InMemoryOverviewStore,
     private readonly settingsStore: InMemorySettingsStore,
     private readonly transcriptStore: InMemoryTranscriptStore,
+    private readonly followedPlaylistStore: InMemoryFollowedPlaylistStore,
   ) {}
 
   async isEnrolled() {
@@ -86,6 +89,7 @@ export class InMemorySyncStorage implements SyncStorage {
       }
       if (change.deleted || change.body === undefined) {
         if (change.kind === "overview") await this.overviewStore.deleteOverview(change.id as never);
+        if (change.kind === "followedPlaylist") await this.followedPlaylistStore.unfollow(change.id as never);
         continue;
       }
       switch (change.kind) {
@@ -100,6 +104,9 @@ export class InMemorySyncStorage implements SyncStorage {
           break;
         case "settings":
           this.settingsStore.seedSettings(Settings.parse(change.body));
+          break;
+        case "followedPlaylist":
+          this.followedPlaylistStore.seedFollowed(FollowedPlaylist.parse(change.body));
           break;
       }
     }

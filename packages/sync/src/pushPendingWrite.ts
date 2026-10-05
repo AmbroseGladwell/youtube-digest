@@ -49,9 +49,14 @@ async function send(
   const { change } = entry;
   switch (change.op) {
     case "replace":
-      return entry.kind === "topic"
-        ? createTopic(api, change.record)
-        : replaceOverview(api, change.record, knownRev);
+      switch (entry.kind) {
+        case "topic":
+          return createTopic(api, change.record);
+        case "followedPlaylist":
+          return replaceWithRetry((ifMatch) => api.saveFollowedPlaylist(change.record, ifMatch), knownRev);
+        default:
+          return replaceWithRetry((ifMatch) => api.createOverview(change.record, ifMatch), knownRev);
+      }
     case "topics":
       return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt));
     case "captureReason":
@@ -61,7 +66,7 @@ async function send(
     case "settings":
       return written(await api.updateSettings(change.patch, entry.updatedAt));
     case "delete": {
-      await api.deleteOverview(entry.id);
+      await (entry.kind === "followedPlaylist" ? api.deleteFollowedPlaylist(entry.id) : api.deleteOverview(entry.id));
       return { result: "gone" };
     }
     case "transcript": {
@@ -81,15 +86,14 @@ const isFieldWrite = ({ change }: OutboxEntry): boolean => change.op !== "replac
 const revisionNamedBy = (error: unknown): number | null =>
   isSyncRequestError(error) && typeof error.details?.rev === "number" ? error.details.rev : null;
 
-async function replaceOverview(
-  api: SyncApi,
-  record: Record<string, unknown>,
+async function replaceWithRetry(
+  replace: (ifMatch: number | null) => Promise<WrittenRecord>,
   knownRev: number | null,
 ): Promise<PushOutcome> {
   let ifMatch = knownRev;
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return written(await api.createOverview(record, ifMatch));
+      return written(await replace(ifMatch));
     } catch (error) {
       const named = revisionNamedBy(error);
       if (named === null || attempt >= REPLACE_ATTEMPTS) {

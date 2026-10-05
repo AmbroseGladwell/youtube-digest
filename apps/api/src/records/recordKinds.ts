@@ -1,5 +1,7 @@
 import type { z } from "zod";
 import {
+  FOLLOWED_PLAYLIST_MIGRATIONS,
+  FollowedPlaylist,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
   Overview,
@@ -24,4 +26,5 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   overviewState: { schema: OverviewState, migrations: OVERVIEW_STATE_MIGRATIONS },
   topic: { schema: Topic, migrations: TOPIC_MIGRATIONS },
   settings: { schema: Settings, migrations: SETTINGS_MIGRATIONS },
+  followedPlaylist: { schema: FollowedPlaylist, migrations: FOLLOWED_PLAYLIST_MIGRATIONS },
 };
