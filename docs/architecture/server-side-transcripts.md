@@ -191,15 +191,16 @@ and these numbers are for spotting trends.
 
 ## Turning it on
 
-1. Create a Decodo residential account and prepay $4.
-2. Add `TRANSCRIPT_PROXY_URL` to `overview-prod` in Bitwarden and to `.env.prod.tpl`, then
-   `task deploy:secrets` (`docs/conventions/secrets.md`).
-3. Set `TRANSCRIPT_SERVICE = "on"` in `fly.toml`'s `[env]`, and deploy. The startup log
-   line `transcript service` names the proxy host and the cap.
+It is on in production from OV-55: `TRANSCRIPT_SERVICE = "on"` in `fly.toml`, and
+`TRANSCRIPT_PROXY_URL` in `.env.prod.tpl` and in Bitwarden's `overview-prod` (and
+`overview-dev`, for the check below). Locally it stays off unless `.env.local` says
+otherwise.
 
-It is deliberately not in either template yet. A placeholder Bitwarden doesn't hold
-refuses the whole render, and that would break `task secrets` for every worktree before
-the account exists.
+- **To switch it off,** set `TRANSCRIPT_SERVICE = "off"` and deploy. Every other rung is
+  untouched, and clients stop offering this one at their next status read.
+- **To change provider,** replace the secret and run `task deploy:secrets`.
+- **After a deploy,** the startup line `transcript service` names the proxy host and the
+  cap.
 
 ## Checking it by hand
 
