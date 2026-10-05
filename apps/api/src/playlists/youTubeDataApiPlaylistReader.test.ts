@@ -92,10 +92,15 @@ test("the quota a read spent is logged: one unit for the playlist and one for ea
   assert.equal(line?.entries, 3);
 });
 
-test("the API key is sent with every Data API call and never to oEmbed", async () => {
-  const { fake, reader: read } = reader([]);
+test("the API key goes in a header on every Data API call, never in a URL, and never to oEmbed", async () => {
+  const { fake, reader: read } = reader([psychology]);
+  await read.read(PlaylistId.parse("PLpsychology"), silent);
   await assert.rejects(read.read(PlaylistId.parse("PLmissing"), silent));
-  const [dataApi, oEmbed] = fake.requests;
-  assert.equal(new URL(dataApi!.url).searchParams.get("key"), FAKE_API_KEY);
-  assert.equal(new URL(oEmbed!.url).searchParams.get("key"), null);
+
+  const dataApi = fake.requests.filter((request) => request.url.startsWith("https://www.googleapis.com/"));
+  const oEmbed = fake.requests.filter((request) => request.url.includes("/oembed"));
+  assert.ok(dataApi.length > 0 && oEmbed.length > 0);
+  assert.ok(dataApi.every((request) => request.headers["x-goog-api-key"] === FAKE_API_KEY));
+  assert.ok(fake.requests.every((request) => !request.url.includes(FAKE_API_KEY)));
+  assert.ok(oEmbed.every((request) => request.headers["x-goog-api-key"] === undefined));
 });

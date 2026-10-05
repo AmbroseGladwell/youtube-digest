@@ -76,10 +76,12 @@ export function youTubeDataApiPlaylistReader({
   youTubeFetch: YouTubeFetch;
 }): PlaylistReader {
   const get = async <T>(path: string, params: Record<string, string>, schema: z.ZodType<T>) => {
+    // In a header rather than the query, so the key is never part of a URL that a log, a
+    // proxy or an error message could carry (Google's API key best practices).
     const response = await youTubeFetch({
-      url: `${DATA_API}/${path}?${query({ ...params, key: apiKey })}`,
+      url: `${DATA_API}/${path}?${query(params)}`,
       method: "GET",
-      headers: { accept: "application/json" },
+      headers: { accept: "application/json", "x-goog-api-key": apiKey },
     });
     if (response.status === 404) return null;
     if (response.status !== 200) {

@@ -41,7 +41,7 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
       if (playlist === undefined) return { status: 404, body: "Not Found" };
       return playlist.privacyStatus === "private" ? { status: 401, body: "Unauthorized" } : json(200, { title: playlist.title });
     }
-    if (url.searchParams.get("key") !== FAKE_API_KEY) {
+    if (request.headers["x-goog-api-key"] !== FAKE_API_KEY || url.searchParams.has("key")) {
       return json(400, { error: { code: 400, message: "API key not valid." } });
     }
     const visible = (id: string | null) =>
