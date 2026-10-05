@@ -1,0 +1,90 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../connections/consent" as consent;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  @include consent.card;
+}
+
+.intro {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.label {
+  @include consent.label;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.emptyBody {
+  @include consent.note;
+  font-size: 0.875rem;
+}
+
+.field {
+  @include controls.field-pill;
+  background: var(--ground);
+  padding: 0.3125rem 0.3125rem 0.3125rem 1.125rem;
+}
+
+.input {
+  @include controls.field-input;
+}
+
+.lookUp {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  flex: none;
+}
+
+.help {
+  @include consent.note;
+  font-size: 0.78125rem;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--accent);
+}
+
+.inline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inlineBack {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+  align-self: flex-start;
+  margin-left: -0.875rem;
+  color: var(--muted);
+}

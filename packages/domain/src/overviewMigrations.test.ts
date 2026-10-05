@@ -134,3 +134,14 @@ test("an overview without a verdict keeps none", () => {
   const thin = { ...atVersion4, thin: true, verdict: null };
   assert.equal(Overview.parse(migrateRecord(thin, OVERVIEW_MIGRATIONS)).verdict, null);
 });
+
+test("a record from before playlists could be followed reads as asked for on its own", () => {
+  const migrated = Overview.parse(migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS));
+  assert.equal(migrated.fromPlaylist, null);
+});
+
+test("a record that already names its playlist keeps it", () => {
+  const fromPlaylist = { id: "PLx", title: "Psychology" };
+  const named = { ...(corpusAt(6) as Record<string, unknown>), fromPlaylist };
+  assert.deepEqual((applyRecordMigration(named, OVERVIEW_MIGRATIONS[5]!) as { fromPlaylist: unknown }).fromPlaylist, fromPlaylist);
+});

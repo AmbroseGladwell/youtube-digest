@@ -82,7 +82,7 @@ test("signed out, there is no narration to choose a voice for, so there is no vo
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyRowsAre(["keys", "milestones", "plan", "privacy"]);
+  await settings.verifyRowsAre(["keys", "playlists", "milestones", "plan", "privacy"]);
   await settings.voicePicker.verifyIsAbsent();
   await launcher.openPage(Routes.settingsSection("voice"));
   await settings.verifySectionIsShown("keys");

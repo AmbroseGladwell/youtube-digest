@@ -57,6 +57,7 @@ export function assembleOverview(
     video: input.video,
     savedAt: meta.savedAt,
     captureReason: input.captureReason,
+    fromPlaylist: null,
     inOneLine: output.inOneLine,
     coreClaim: output.coreClaim,
     thin: output.thin,

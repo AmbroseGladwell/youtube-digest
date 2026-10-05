@@ -7,6 +7,7 @@ import { AuthIntent } from "./AuthIntent.js";
 import { NarrationVoice } from "./NarrationVoice.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
+import { QueuedCaptureProblem } from "./QueuedCapture.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
 // that could carry a URL, a video id or a sentence the reader wrote
@@ -88,6 +89,12 @@ export const CaptureFailure = z.enum([
 ]);
 export type CaptureFailure = z.infer<typeof CaptureFailure>;
 const RunState = z.enum(["running", "ready", "failed"]);
+// Why a pasted playlist could not be followed, as the reader was told
+// (docs/features/playlists.md, "Playlists that can't be followed").
+const PlaylistRefusal = z.enum(["private", "gone", "watchLater", "liked", "mix", "lookupFailed", "unavailable"]);
+// Where a playlist was pasted: a paste field that also takes videos, or Settings.
+const PlaylistEntryPoint = z.enum(["dialog", "home", "settings"]);
+const QueueControl = z.enum(["strip", "page"]);
 // Which of the app's dead ends a reader was on, named because its title is copy
 // (docs/features/error-state.md).
 export const ErrorScreen = z.enum([
@@ -119,7 +126,18 @@ export const AccountMenuItem = z.enum([
   "createAccount",
 ]);
 export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
-export const SettingsSection = z.enum(["account", "voice", "keys", "connections", "milestones", "shared", "plan", "privacy", "about"]);
+export const SettingsSection = z.enum([
+  "account",
+  "voice",
+  "keys",
+  "connections",
+  "playlists",
+  "milestones",
+  "shared",
+  "plan",
+  "privacy",
+  "about",
+]);
 const LinkCodeFrom = z.enum(["emailLink", "webApp"]);
 const SignInCodeFrom = z.enum(["emailLink", "webApp", "emailCode"]);
 export const OverviewMenuItem = z.enum([
@@ -473,6 +491,57 @@ export const analyticsEvents = {
       readChosen: event("The reader opens the overview the library already holds for this video", {
         overviewId: OverviewId,
       }),
+    },
+  },
+  playlists: {
+    link: {
+      choiceMade: event("The reader says whether a video link inside a playlist meant the video or the whole playlist", {
+        choice: z.enum(["video", "playlist"]),
+      }),
+    },
+    preview: {
+      followed: event(
+        "The reader follows a playlist from its preview, with or without the videos already in it; the counts are the app's",
+        { from: PlaylistEntryPoint, backfill: z.boolean(), videos: z.number().int().nonnegative(), queued: z.number().int().nonnegative() },
+      ),
+      cancelled: event("The reader closes a playlist's preview without following it", { from: PlaylistEntryPoint }),
+      refused: event("A pasted playlist could not be followed, and the reader was told why", {
+        from: PlaylistEntryPoint,
+        reason: PlaylistRefusal,
+      }),
+    },
+    settings: {
+      lookupChosen: event("The reader looks up a playlist to follow from Settings › YouTube playlists"),
+      unfollowAsked: event("The reader asks to unfollow a playlist, before confirming"),
+      unfollowed: event("The reader unfollows a playlist, and how many of its waiting videos went with it", {
+        waitingRemoved: z.number().int().nonnegative(),
+      }),
+      unfollowKept: event("The reader keeps following a playlist after asking to unfollow it"),
+    },
+    fromLine: {
+      playlistOpened: event("The reader opens, on YouTube, the playlist an overview came from", { overviewId: OverviewId }),
+      manageChosen: event("The reader follows Manage from an overview's From line to Settings", { overviewId: OverviewId }),
+    },
+  },
+  queue: {
+    controls: {
+      paused: event("The reader pauses the capture queue", { from: QueueControl }),
+      resumed: event("The reader resumes the capture queue", { from: QueueControl }),
+      opened: event("The reader opens the queue page", { from: z.enum(["strip", "libraryGroup", "attention"]) }),
+      folded: event("The reader folds the library's queue group into the strip, or unfolds it", { folded: z.boolean() }),
+      detailsOpened: event("The reader opens the progress of the video the queue is making"),
+      keysLinkFollowed: event("The reader follows the queue's link to add an API key", { from: QueueControl }),
+      clearAsked: event("The reader asks to clear the queue, before confirming"),
+      cleared: event("The reader clears the queue, and how many waiting videos went", {
+        removed: z.number().int().nonnegative(),
+      }),
+      clearKept: event("The reader keeps the queue after asking to clear it"),
+      doneDismissed: event("The reader dismisses the strip saying the queue is done"),
+    },
+    item: {
+      removed: event("The reader takes one waiting video out of the queue"),
+      retried: event("The reader tries a video that could not be made again", { problem: QueuedCaptureProblem }),
+      dismissed: event("The reader dismisses a video that was skipped or could not be made", { problem: QueuedCaptureProblem }),
     },
   },
   library: {

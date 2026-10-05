@@ -11,6 +11,7 @@ import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
+import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
 import styles from "./ReaderMasthead.module.scss";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
@@ -246,6 +247,8 @@ export function ReaderMasthead({
             </span>
           )}
         </p>
+
+        <PlaylistFromLine overview={overview} />
       </div>
     </header>
   );

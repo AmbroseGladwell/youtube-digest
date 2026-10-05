@@ -4,6 +4,8 @@ export * from "./IndexedDbStoreOptions.js";
 export * from "./IndexedDbOverviewStore.js";
 export * from "./IndexedDbSettingsStore.js";
 export * from "./IndexedDbTranscriptStore.js";
+export * from "./IndexedDbFollowedPlaylistStore.js";
+export * from "./IndexedDbCaptureQueueStore.js";
 export * from "./IndexedDbSyncStorage.js";
 export * from "./localDatabaseName.js";
 export * from "./openLocalLibrary.js";

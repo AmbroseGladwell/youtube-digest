@@ -43,6 +43,7 @@ const ConfigEnv = z
       .refine((value) => value.startsWith("http://") || value.startsWith("https://"), "must be an http(s) proxy")
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
+    YOUTUBE_API_KEY: z.string().min(1).optional(),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
@@ -117,6 +118,9 @@ export interface Config {
   clientIpHeader: string | null;
   audio: AudioConfig;
   transcriptService: TranscriptServiceConfig;
+  // The YouTube Data API key playlists are read with, or null to read none
+  // (docs/features/playlists.md).
+  youTubeApiKey: string | null;
   analytics: AnalyticsConfig;
   // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
@@ -172,6 +176,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       data.TRANSCRIPT_SERVICE === "off"
         ? null
         : { proxyUrl: data.TRANSCRIPT_PROXY_URL ?? null, proxyDailyFetches: data.TRANSCRIPT_PROXY_DAILY_FETCHES },
+    youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
       postHog,

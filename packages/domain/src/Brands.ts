@@ -11,3 +11,8 @@ export type TopicId = z.infer<typeof TopicId>;
 // (docs/features/transcript-storage.md).
 export const VideoId = z.string().min(1).brand("VideoId");
 export type VideoId = z.infer<typeof VideoId>;
+
+// YouTube's own id for a playlist: the value of a link's list= parameter
+// (docs/features/playlists.md).
+export const PlaylistId = z.string().min(1).brand("PlaylistId");
+export type PlaylistId = z.infer<typeof PlaylistId>;

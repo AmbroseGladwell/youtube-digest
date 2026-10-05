@@ -10,7 +10,10 @@ import { topicKeys } from "../overviews/topicKeys.js";
 import { useSync } from "../sync/SyncContext.js";
 import { moveReadingPositions } from "../transcripts/readingPositionStorage.js";
 import { LibraryMoveProvider } from "./LibraryMoveContext.js";
+import { moveFollowingInto } from "./moveFollowingInto.js";
 import { moveLibraryInto } from "./moveLibraryInto.js";
+import { playlistKeys } from "../playlists/playlistKeys.js";
+import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 import type { LibraryMove } from "./types/LibraryMove.js";
 
 // Signed in, once the account's library has pulled, what this device made without an
@@ -36,6 +39,10 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
       const left = await openLibrary(null, { shown: false });
       try {
         const result = await moveLibraryInto(left.stores, stores);
+        if ((await moveFollowingInto(left.stores, stores)).playlists > 0) {
+          void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
+          void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
+        }
         if (result.moved + result.alreadyThere === 0) return;
         moveReadingPositions(result.videoIds, accountId);
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });

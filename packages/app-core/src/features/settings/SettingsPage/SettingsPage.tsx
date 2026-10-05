@@ -5,6 +5,7 @@ import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js"
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
+import { PlaylistsSection } from "../../playlists/components/PlaylistsSection/PlaylistsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
 import {
   SHARED_LINKS_STANDFIRST,
@@ -40,6 +41,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   voice: NARRATION_VOICE_STANDFIRST,
   keys: BYO_KEY_NOTE,
   connections: null,
+  playlists: null,
   milestones: MILESTONES_STANDFIRST,
   shared: SHARED_LINKS_STANDFIRST,
   plan: null,
@@ -57,6 +59,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <ApiKeysSection />;
     case "connections":
       return <ConnectionsSection />;
+    case "playlists":
+      return <PlaylistsSection />;
     case "milestones":
       return <MilestonesSection />;
     case "shared":

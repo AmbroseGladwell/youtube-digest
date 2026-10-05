@@ -10,3 +10,5 @@ POSTHOG_API_KEY=${POSTHOG_API_KEY}
 # The residential proxy our server fetches transcripts through, {session} left in for the code
 # to fill (docs/architecture/server-side-transcripts.md).
 TRANSCRIPT_PROXY_URL=${TRANSCRIPT_PROXY_URL}
+# The YouTube Data API key followed playlists are read with (docs/features/playlists.md).
+YOUTUBE_API_KEY=${YOUTUBE_API_KEY}

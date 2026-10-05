@@ -16,6 +16,7 @@ import { SignedOutLibrary } from "../../accountLibraries/components/SignedOutLib
 import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
+import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -75,6 +76,7 @@ function LibraryHome() {
   if (overviewsQuery.data.length === 0) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
+        <LibraryQueueGroup />
         <FirstRunHero />
       </div>
     );

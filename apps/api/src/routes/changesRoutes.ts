@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { SYNCED_RECORD_KINDS, UNKNOWN_KIND_SCHEMA_VERSION } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
@@ -23,7 +24,9 @@ const change = (record: StoredRecord) => ({
 export function changesRoutes(app: FastifyInstance, records: RecordsRepository): void {
   app.get("/changes", async (request) => {
     const { since, limit } = parseOrThrow(ChangesQuery, request.query, "The changes query");
-    const page = await records.listChanges(request.session!.accountId, since, limit);
+    const { schemaVersions } = request.client!;
+    const kinds = SYNCED_RECORD_KINDS.filter((kind) => schemaVersions[kind] > UNKNOWN_KIND_SCHEMA_VERSION);
+    const page = await records.listChanges(request.session!.accountId, since, limit, kinds);
     request.log.info({ since, next: page.next, count: page.changes.length, more: page.more }, "changes served");
     return { changes: page.changes.map(change), next: page.next, more: page.more };
   });

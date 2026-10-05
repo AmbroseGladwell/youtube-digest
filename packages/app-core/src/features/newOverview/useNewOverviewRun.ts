@@ -16,7 +16,11 @@ export interface StartOverviewRunOptions {
 export interface NewOverviewRunController {
   run: NewOverviewRun | null;
   dialogOpen: boolean;
+  // A link handed over by another paste field, which the dialog opens on: the home page's
+  // field passes a playlist link here rather than starting a run (docs/features/playlists.md).
+  prefill: string | null;
   open: () => void;
+  openWith: (url: string) => void;
   close: () => void;
   start: (url: string, options: StartOverviewRunOptions) => void;
   dismiss: () => void;
@@ -34,6 +38,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
   const analytics = useAnalytics();
   const [run, setRun] = useState<NewOverviewRun | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [prefill, setPrefill] = useState<string | null>(null);
   const runIdRef = useRef(0);
   // The draft is read by the pipeline at the moment it writes the record, and by a blur
   // after the record exists, so both need the latest keystroke rather than a render's.
@@ -147,7 +152,14 @@ export function useNewOverviewRun(): NewOverviewRunController {
     }
   }, [commitDraftOnto]);
 
-  const open = useCallback(() => setDialogOpen(true), []);
+  const open = useCallback(() => {
+    setPrefill(null);
+    setDialogOpen(true);
+  }, []);
+  const openWith = useCallback((url: string) => {
+    setPrefill(url);
+    setDialogOpen(true);
+  }, []);
   const close = useCallback(() => setDialogOpen(false), []);
   const dismiss = useCallback(() => {
     runIdRef.current += 1;
@@ -158,7 +170,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
   return {
     run,
     dialogOpen,
+    prefill,
     open,
+    openWith,
     close,
     start,
     dismiss,

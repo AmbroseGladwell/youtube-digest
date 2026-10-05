@@ -36,7 +36,10 @@ import { rateLimits } from "./rateLimit/rateLimits.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
+import { followedPlaylistRoutes } from "./routes/followedPlaylistRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
+import { playlistRoutes } from "./routes/playlistRoutes.js";
+import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { shareRoutes } from "./routes/shareRoutes.js";
@@ -85,6 +88,9 @@ export interface BuildAppOptions {
   mailer: Mailer;
   audio?: AudioSetup | null;
   transcriptService?: TranscriptServiceSetup | null;
+  // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
+  // unavailable (docs/features/playlists.md).
+  playlistReader?: PlaylistReader | null;
   // Where checked analytics events are passed on to; absent, they are only logged.
   eventSink?: EventSink | null;
   // Where checked client errors are passed on to; absent, they are only logged.
@@ -115,6 +121,7 @@ export async function buildApp({
   mailer,
   audio = null,
   transcriptService = null,
+  playlistReader = null,
   eventSink = null,
   errorSink = null,
   clock = () => new Date(),
@@ -190,6 +197,8 @@ export async function buildApp({
       const transcripts = new TranscriptsRepository(sql, clock);
       overviewRoutes(api, records, transcripts);
       topicRoutes(api, records);
+      followedPlaylistRoutes(api, records);
+      playlistRoutes(api, { reader: playlistReader, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       serviceTranscriptRoutes(api, {

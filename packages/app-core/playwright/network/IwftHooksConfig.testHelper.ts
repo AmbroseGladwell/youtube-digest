@@ -1,8 +1,11 @@
 import type { DeviceAccountHistory } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import type {
+  FollowedPlaylist,
   Overview,
   OverviewState,
+  PlaylistCheck,
+  QueuedCapture,
   Settings,
   StoredTranscript,
   Topic,
@@ -32,6 +35,11 @@ export interface IwftHooksConfig {
   seedUnreadable?: UnreadableRecord[];
   seedTranscripts?: StoredTranscript[];
   seedSettings?: Partial<Settings>;
+  // Playlists this library follows, what this device has seen of them, and its queue
+  // (docs/features/playlists.md, docs/features/capture-queue.md).
+  seedFollowedPlaylists?: FollowedPlaylist[];
+  seedPlaylistChecks?: PlaylistCheck[];
+  seedQueue?: QueuedCapture[];
   // Store reads told to throw, for the dead-end screen's own scenarios.
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;

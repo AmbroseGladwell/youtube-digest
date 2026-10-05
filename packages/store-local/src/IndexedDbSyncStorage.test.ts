@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
+import { makeFollowedPlaylist, makeOverview, makeQueuedCapture, makeStoredTranscript } from "@overview/store-conformance";
 import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
@@ -10,6 +10,8 @@ import {
   VideoId,
   type RecordChange,
 } from "@overview/domain";
+import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
+import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
@@ -20,6 +22,8 @@ import {
   OVERVIEW_STATES_STORE,
   SETTINGS_KEY,
   SETTINGS_STORE,
+  SYNC_CURSOR_KEY,
+  SYNC_META_STORE,
   SYNC_REVISIONS_STORE,
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
@@ -456,4 +460,57 @@ test("a transcript is pushed while a note uses its video, and not once that note
   assert.deepEqual(await storage.transcriptToPush(transcript.videoId), transcript);
   await overviews.deleteOverview(overview.id);
   assert.equal(await storage.transcriptToPush(transcript.videoId), null);
+});
+
+test("enrolling journals the playlists this library follows", async () => {
+  const db = await openTestDatabase();
+  await new IndexedDbFollowedPlaylistStore(db).saveFollowed(makeFollowedPlaylist());
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  const [entry] = await recordsPending(storage);
+  assert.equal(entry?.kind, "followedPlaylist");
+  assert.equal(entry?.id, "PLpsychology");
+  assert.equal(entry?.change.op, "replace");
+});
+
+test("a pulled playlist is followed on this device too", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const playlist = makeFollowedPlaylist();
+
+  await storage.applyChanges([change({ kind: "followedPlaylist", id: playlist.id, body: { ...playlist } })], 4);
+
+  assert.deepEqual(await new IndexedDbFollowedPlaylistStore(db).listFollowed(), [playlist]);
+});
+
+test("another device unfollowing takes this device's check and waiting videos with it, and leaves what needs attention", async () => {
+  const db = await openEnrolledDatabase();
+  const followed = new IndexedDbFollowedPlaylistStore(db);
+  const queue = new IndexedDbCaptureQueueStore(db);
+  const playlist = makeFollowedPlaylist();
+  await followed.saveCheck({ playlistId: playlist.id, seenVideoIds: [], checkedAt: playlist.followedAt });
+  await queue.enqueue([
+    makeQueuedCapture({ videoId: VideoId.parse("waiting") }),
+    makeQueuedCapture({ videoId: VideoId.parse("failed"), status: "failed", problem: "noCaptions" }),
+  ]);
+
+  await new IndexedDbSyncStorage(db, { now }).applyChanges(
+    [change({ kind: "followedPlaylist", id: playlist.id, deleted: true })],
+    5,
+  );
+
+  assert.equal(await followed.getCheck(playlist.id), null);
+  assert.deepEqual((await queue.listQueue()).map((queued) => queued.videoId), ["failed"]);
+});
+
+test("a cursor pulled before this client knew every kind starts again from the beginning, once", async () => {
+  const db = await openEnrolledDatabase();
+  await putRaw(db, SYNC_META_STORE, 40, SYNC_CURSOR_KEY);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  assert.equal(await storage.cursor(), 0);
+  await storage.applyChanges([], 40);
+  assert.equal(await storage.cursor(), 40);
 });

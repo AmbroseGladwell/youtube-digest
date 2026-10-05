@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalYouTubeUrl, extractYouTubeVideoId, isYouTubeUrl } from "./parseYouTubeUrl.js";
+import { canonicalYouTubeUrl, extractYouTubeVideoId, isYouTubeUrl, youTubeLink } from "./parseYouTubeUrl.js";
 
 describe("extractYouTubeVideoId", () => {
   it("reads the v= param from a standard watch URL", () => {
@@ -85,5 +85,47 @@ describe("isYouTubeUrl", () => {
   it("mirrors extractYouTubeVideoId's success/failure", () => {
     expect(isYouTubeUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
     expect(isYouTubeUrl("https://vimeo.com/12345")).toBe(false);
+  });
+});
+
+describe("youTubeLink", () => {
+  const WATCH = "https://www.youtube.com/watch?v=k3Gw0Nhk2Ls";
+
+  it("a plain watch link is a video, at its canonical address", () => {
+    expect(youTubeLink(`${WATCH}&si=share`)).toEqual({ kind: "video", videoUrl: WATCH });
+  });
+
+  it("a playlist link is a playlist", () => {
+    expect(youTubeLink("https://www.youtube.com/playlist?list=PLFs4vir_WsTwEd")).toEqual({
+      kind: "playlist",
+      playlistId: "PLFs4vir_WsTwEd",
+    });
+  });
+
+  it("a watch link inside a playlist could mean either, so it names both", () => {
+    expect(youTubeLink(`${WATCH}&list=PLFs4vir_WsTwEd&index=3`)).toEqual({
+      kind: "videoInPlaylist",
+      videoUrl: WATCH,
+      playlistId: "PLFs4vir_WsTwEd",
+    });
+  });
+
+  it("Watch Later and Liked videos can't be followed, so their own links say so", () => {
+    expect(youTubeLink("https://www.youtube.com/playlist?list=WL")).toEqual({ kind: "unfollowable", list: "watchLater", videoUrl: null });
+    expect(youTubeLink("https://www.youtube.com/playlist?list=LL")).toEqual({ kind: "unfollowable", list: "liked", videoUrl: null });
+  });
+
+  it("a video watched from Watch Later is just the video: there is no playlist to offer", () => {
+    expect(youTubeLink(`${WATCH}&list=WL&index=4`)).toEqual({ kind: "video", videoUrl: WATCH });
+  });
+
+  it("a Mix can't be followed, but keeps the video it opens", () => {
+    expect(youTubeLink(`${WATCH}&list=RDk3Gw0Nhk2Ls`)).toEqual({ kind: "unfollowable", list: "mix", videoUrl: WATCH });
+  });
+
+  it("anything else is not a YouTube link at all", () => {
+    expect(youTubeLink("https://vimeo.com/123")).toBeNull();
+    expect(youTubeLink("not a link")).toBeNull();
+    expect(youTubeLink("https://www.youtube.com/@veritasium")).toBeNull();
   });
 });

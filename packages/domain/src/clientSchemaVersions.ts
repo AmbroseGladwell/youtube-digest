@@ -10,9 +10,10 @@ export interface ClientSchemaVersions {
 // registry; clientSchemaVersions.test.ts fails if a registry moves without one
 // (docs/architecture/api.md).
 export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
-  { clientVersion: 1, schemaVersions: { overview: 4, overviewState: 1, topic: 1, settings: 1 } },
-  { clientVersion: 2, schemaVersions: { overview: 5, overviewState: 1, topic: 1, settings: 1 } },
-  { clientVersion: 3, schemaVersions: { overview: 6, overviewState: 1, topic: 1, settings: 1 } },
+  { clientVersion: 1, schemaVersions: { overview: 4, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
+  { clientVersion: 2, schemaVersions: { overview: 5, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
+  { clientVersion: 3, schemaVersions: { overview: 6, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
+  { clientVersion: 4, schemaVersions: { overview: 7, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 1 } },
 ];
 
 export function schemaVersionsForClient(clientVersion: number): SchemaVersions {

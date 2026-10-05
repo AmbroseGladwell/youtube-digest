@@ -12,6 +12,8 @@ export interface SyncApi {
   deleteOverview(id: string): Promise<WrittenRecord | null>;
   createTopic(record: Record<string, unknown>): Promise<WrittenRecord>;
   updateSettings(patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
+  saveFollowedPlaylist(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
+  deleteFollowedPlaylist(id: string): Promise<WrittenRecord | null>;
   saveTranscript(transcript: StoredTranscript): Promise<void>;
   // Null when the account keeps no transcript for the video.
   getTranscript(videoId: string): Promise<StoredTranscript | null>;

@@ -1,0 +1,143 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 27k: the generation strip's card (3c), inset from the window, with the bar at its
+// foot while a video is being made.
+.root {
+  position: relative;
+  margin: 0 1.25rem 1.25rem;
+  padding: 0.875rem 0.75rem 0.875rem 1.25rem;
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.compact {
+  margin: 0 1rem 0.75rem;
+  padding: 0.75rem 0.5rem 0.75rem 0.875rem;
+  gap: 0.625rem;
+}
+
+.text {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  font-size: 0.84375rem;
+}
+
+.lead {
+  flex: none;
+  display: inline-flex;
+  color: var(--label);
+}
+
+.leadWarn {
+  color: var(--accent);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-badge);
+  background: var(--brand);
+}
+
+.words {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.compact .words {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.title {
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  min-width: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact .meta {
+  max-width: 100%;
+  font-size: 0.78125rem;
+}
+
+.attention {
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ghostAction {
+  @include controls.ghost-pill;
+  padding: 0.4375rem 0.625rem;
+  font-size: 0.8125rem;
+
+  &:hover:not(:disabled) {
+    background: var(--stone-tint);
+  }
+}
+
+.primaryAction {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+}
+
+.iconAction {
+  @include controls.ghost-pill;
+  @include controls.circle(2.25rem);
+  color: var(--muted);
+
+  &:hover:not(:disabled) {
+    background: var(--stone-tint);
+    color: var(--ink);
+  }
+}
+
+.compact .iconAction {
+  @include controls.circle(2.75rem);
+}
+
+.barTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  transition: width var(--motion-travel) var(--motion-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barFill {
+    transition: none;
+  }
+}

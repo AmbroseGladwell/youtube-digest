@@ -5,7 +5,7 @@ import { ConfigError, loadConfig } from "./loadConfig.js";
 
 const DATABASE_URL = "postgres://overview:secret@localhost:5432/overview";
 
-test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, trusts the socket's address, narrates nothing, and forwards no analytics", () => {
+test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vouches for no origin, mails to the log, trusts the socket's address, narrates nothing, reads no playlists, and forwards no analytics", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL }), {
     databaseUrl: DATABASE_URL,
     port: 3000,
@@ -18,9 +18,14 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     clientIpHeader: null,
     audio: null,
     transcriptService: null,
+    youTubeApiKey: null,
     analytics: { environment: "development", postHog: null },
     logs: null,
   });
+});
+
+test("playlists are read only with a YouTube Data API key", () => {
+  assert.equal(loadConfig({ DATABASE_URL, YOUTUBE_API_KEY: "AIza-test" }).youTubeApiKey, "AIza-test");
 });
 
 test("our own server fetches transcripts only when switched on, through the proxy only when one is named", () => {

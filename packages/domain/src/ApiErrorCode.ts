@@ -9,6 +9,8 @@ export const API_ERROR_CODES = {
   record_newer_than_client: 409,
   revision_mismatch: 412,
   transcript_unavailable: 422,
+  playlist_private: 422,
+  playlist_not_found: 404,
   too_many_requests: 429,
   internal_error: 500,
   unavailable: 503,

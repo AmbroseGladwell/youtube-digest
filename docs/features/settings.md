@@ -17,6 +17,7 @@ In order, each with the value its row shows:
 | Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
 | API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
 | Connections | `/settings/connections` | "N connected" or "None" on Plus, "Needs Plus", or "Sign in first" | the shell can sync |
+| YouTube playlists | `/settings/playlists` | "Following 3" or "None" | there is a server to read playlists through (`playlists.md`) |
 | Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
 | Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
 | Plan | `/settings/plan` | Free or Plus | always |
@@ -31,10 +32,11 @@ each panel already reads.
 Plan is its own section rather than part of Account, so a Free reader with no account still
 finds it. It comes after Connections: below the things people change, above About.
 
-New sections go here: Personalisation (OV-46) after Narration voice, YouTube playlists
-(OV-27) beside Connections. Privacy sits between Plan and About (`analytics-consent.md`). About
+New sections go here: Personalisation (OV-46) after Narration voice. YouTube playlists sits
+after Connections. Privacy sits between Plan and About (`analytics-consent.md`). About
 stays last, with the privacy policy and terms linked under the version. Connections is described in
-`mcp-connector.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.
+`mcp-connector.md`, YouTube playlists in `playlists.md`, Milestones in `time-saved.md`, Shared links
+in `sharing.md`.
 
 ## Two panes, or a list then a page
 

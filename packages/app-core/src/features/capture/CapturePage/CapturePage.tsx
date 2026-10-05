@@ -28,6 +28,8 @@ import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
 import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
+import { useCaptureQueueController } from "../../captureQueue/CaptureQueueContext.js";
+import { CaptureQueueStripView } from "../../captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -50,6 +52,7 @@ export function CapturePage() {
   const signedOutWithNothingHere = useSignedOutHere() && heldHere === 0;
   const sync = useSync();
   const libraryMoved = useLibraryMove().move !== null;
+  const captureQueue = useCaptureQueueController();
 
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
@@ -101,10 +104,20 @@ export function CapturePage() {
 
   return (
     <div
-      className={`${styles.root} ${accountStrip === null && consentStrip === null && !libraryMoved ? "" : styles.withStrip}`}
+      className={`${styles.root} ${accountStrip === null && consentStrip === null && !libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
       data-testid={capturePageTestIds.root}
     >
-      {libraryMoved ? (
+      {captureQueue.strip !== null ? (
+        <CaptureQueueStripView
+          strip={captureQueue.strip}
+          compact
+          folded={null}
+          onPause={() => captureQueue.setPaused(true)}
+          onResume={() => captureQueue.setPaused(false)}
+          onDetails={() => undefined}
+          onDismiss={captureQueue.dismissStrip}
+        />
+      ) : libraryMoved ? (
         <LibraryMoveNotice panel />
       ) : consentStrip !== null ? (
         <AnalyticsConsentStripSlot strip={consentStrip} panel />

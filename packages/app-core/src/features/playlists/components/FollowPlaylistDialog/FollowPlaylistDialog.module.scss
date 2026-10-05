@@ -1,0 +1,30 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+}
+
+.close {
+  @include controls.surface-pill;
+  @include controls.circle(2.25rem);
+}

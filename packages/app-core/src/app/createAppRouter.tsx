@@ -2,6 +2,7 @@ import type { createBrowserRouter } from "react-router";
 import { AppShell } from "../shell/AppShell/AppShell.js";
 import { HomePage } from "../features/home/HomePage/HomePage.js";
 import { ReaderPage } from "../features/reader/ReaderPage/ReaderPage.js";
+import { QueuePage } from "../features/captureQueue/QueuePage/QueuePage.js";
 import { SettingsPage } from "../features/settings/SettingsPage/SettingsPage.js";
 import { SETTINGS_SECTION_IDS } from "../features/settings/SettingsSectionId.js";
 import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/ConnectExtensionPage.js";
@@ -35,6 +36,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
       children: [
         { path: Routes.home(), element: <HomePage /> },
         { path: Routes.overview(`:${RouteParams.overviewId}`), element: <ReaderPage /> },
+        { path: Routes.queue(), element: <QueuePage /> },
         { path: Routes.settings(), element: <SettingsPage /> },
         ...SETTINGS_SECTION_IDS.map((section) => ({
           path: Routes.settingsSection(section),

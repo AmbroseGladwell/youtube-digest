@@ -1,10 +1,19 @@
 import { createContext, useContext } from "react";
-import type { OverviewStore, SettingsStore, SyncStorage, TranscriptStore } from "@overview/domain";
+import type {
+  CaptureQueueStore,
+  FollowedPlaylistStore,
+  OverviewStore,
+  SettingsStore,
+  SyncStorage,
+  TranscriptStore,
+} from "@overview/domain";
 
 export interface Stores {
   overviewStore: OverviewStore;
   settingsStore: SettingsStore;
   transcriptStore: TranscriptStore;
+  followedPlaylistStore: FollowedPlaylistStore;
+  captureQueueStore: CaptureQueueStore;
   // Null is a shell whose library cannot sync at all, and every sync control hides itself
   // rather than offering something that cannot work (docs/features/sync-client.md).
   syncStorage: SyncStorage | null;

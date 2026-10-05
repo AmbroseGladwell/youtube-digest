@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
@@ -25,6 +25,11 @@ import { WriteFloorWall } from "../../features/sync/components/WriteFloorWall/Wr
 import { useSync } from "../../features/sync/SyncContext.js";
 import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
+import { useIsPhone } from "../../util/useIsPhone.js";
+import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueContext.js";
+import { CaptureQueueStripView } from "../../features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
+import { QueueRunDialog } from "../../features/captureQueue/components/QueueRunDialog/QueueRunDialog.js";
+import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
 import {
   navigationDirection,
   shouldAnimateNavigation,
@@ -70,6 +75,12 @@ export function AppShell() {
   // (docs/features/overview-redesign.md, "Generating in the background").
   const newOverview = useNewOverviewRun();
   const analytics = useAnalytics();
+  const isPhone = useIsPhone();
+  const readerRun = newOverview.run;
+  const captureQueue = useCaptureQueue({
+    readerRunActive: readerRun !== null && readerRun.overview === null && readerRun.error === null,
+  });
+  const [queueDetailsOpen, setQueueDetailsOpen] = useState(false);
 
   const panelOpened = useRef(false);
   useEffect(() => {
@@ -93,122 +104,145 @@ export function AppShell() {
 
   return (
     <NewOverviewRunProvider value={newOverview}>
-      <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
-        <header
-          className={styles.masthead}
-          ref={mastheadHeight.measured}
-          data-testid={appShellTestIds.masthead}
-        >
-          <div className={styles.bar}>
-            <Link
-              className={styles.brand}
-              to={Routes.home()}
-              onClick={() => analytics.app.masthead.homeChosen()}
-              data-testid={appShellTestIds.brand}
-            >
-              <OverviewMark />
-              <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
-                {isPanel ? "Overview" : "The Overview"}
-              </h1>
-            </Link>
+      <CaptureQueueProvider value={captureQueue}>
+        <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
+          <header
+            className={styles.masthead}
+            ref={mastheadHeight.measured}
+            data-testid={appShellTestIds.masthead}
+          >
+            <div className={styles.bar}>
+              <Link
+                className={styles.brand}
+                to={Routes.home()}
+                onClick={() => analytics.app.masthead.homeChosen()}
+                data-testid={appShellTestIds.brand}
+              >
+                <OverviewMark />
+                <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
+                  {isPanel ? "Overview" : "The Overview"}
+                </h1>
+              </Link>
 
-            {isPanel ? (
-              <span className={styles.panelActions}>
-                <AccountMenu />
-              </span>
-            ) : (
-              <>
-                <nav className={styles.nav} aria-label="Sections">
-                  <NavLink
-                    className={({ isActive }) =>
-                      `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-                    }
-                    to={Routes.home()}
-                    viewTransition={animateNavigation}
-                    onClick={() => analytics.app.masthead.overviewsChosen()}
-                    end
-                  >
-                    Overviews
-                  </NavLink>
-                </nav>
-
-                <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
-                  <button
-                    type="button"
-                    className={styles.newOverviewButton}
-                    onClick={() => {
-                      analytics.capture.newOverviewDialog.opened({ from: "newButton" });
-                      newOverview.open();
-                    }}
-                    aria-haspopup="dialog"
-                    aria-expanded={newOverview.dialogOpen}
-                    data-testid={appShellTestIds.newOverviewButton}
-                  >
-                    <StrokeIcon name="plus" />
-                    New
-                  </button>
+              {isPanel ? (
+                <span className={styles.panelActions}>
                   <AccountMenu />
                 </span>
-                {onAuthPage && (
-                  <Link
-                    className={styles.notNowLink}
-                    to={Routes.home()}
-                    viewTransition={animateNavigation}
-                    onClick={() => analytics.app.masthead.notNowChosen()}
-                    data-testid={appShellTestIds.notNowLink}
-                  >
-                    Not now
-                  </Link>
-                )}
-              </>
+              ) : (
+                <>
+                  <nav className={styles.nav} aria-label="Sections">
+                    <NavLink
+                      className={({ isActive }) =>
+                        `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+                      }
+                      to={Routes.home()}
+                      viewTransition={animateNavigation}
+                      onClick={() => analytics.app.masthead.overviewsChosen()}
+                      end
+                    >
+                      Overviews
+                    </NavLink>
+                  </nav>
+
+                  <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
+                    <button
+                      type="button"
+                      className={styles.newOverviewButton}
+                      onClick={() => {
+                        analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                        newOverview.open();
+                      }}
+                      aria-haspopup="dialog"
+                      aria-expanded={newOverview.dialogOpen}
+                      data-testid={appShellTestIds.newOverviewButton}
+                    >
+                      <StrokeIcon name="plus" />
+                      New
+                    </button>
+                    <AccountMenu />
+                  </span>
+                  {onAuthPage && (
+                    <Link
+                      className={styles.notNowLink}
+                      to={Routes.home()}
+                      viewTransition={animateNavigation}
+                      onClick={() => analytics.app.masthead.notNowChosen()}
+                      data-testid={appShellTestIds.notNowLink}
+                    >
+                      Not now
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
+
+            <StaleClientBanner />
+
+            {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
+              <GenerationStatusStrip
+                run={newOverview.run}
+                onDetails={newOverview.open}
+                onDismiss={newOverview.dismiss}
+                onReadOverview={readOverview}
+              />
+            ) : !isPanel && !newOverview.run && captureQueue.strip !== null ? (
+              <CaptureQueueStripView
+                strip={captureQueue.strip}
+                compact={isPhone}
+                folded={
+                  onHome && captureQueue.folded
+                    ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
+                    : null
+                }
+                onPause={() => captureQueue.setPaused(true)}
+                onResume={() => captureQueue.setPaused(false)}
+                onDetails={() => setQueueDetailsOpen(true)}
+                onDismiss={captureQueue.dismissStrip}
+              />
+            ) : (
+              !isPanel &&
+              !newOverview.run &&
+              (libraryMoved ? (
+                <LibraryMoveNotice />
+              ) : consentStrip !== null ? (
+                <AnalyticsConsentStripSlot strip={consentStrip} />
+              ) : (
+                accountStrip !== null && <AccountStrip kind={accountStrip} />
+              ))
             )}
+          </header>
+
+          <div className={styles.pane} data-testid={appShellTestIds.pane}>
+            {belowWriteFloor ? <WriteFloorWall generating={newOverview.run !== null} /> : <Outlet />}
           </div>
 
-          <StaleClientBanner />
+          <MiniPlayer />
 
-          {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
-            <GenerationStatusStrip
+          <SignOutNotice />
+
+          <ScrollRestoration />
+
+          {!isPanel && (
+            <NewOverviewDialog
+              open={newOverview.dialogOpen}
+              prefill={newOverview.prefill}
               run={newOverview.run}
-              onDetails={newOverview.open}
+              onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
+              onClose={newOverview.close}
               onDismiss={newOverview.dismiss}
               onReadOverview={readOverview}
+              onCaptureReasonChange={newOverview.setCaptureReason}
+              onCaptureReasonCommit={newOverview.commitCaptureReason}
             />
-          ) : (
-            !isPanel &&
-            !newOverview.run &&
-            (libraryMoved ? (
-              <LibraryMoveNotice />
-            ) : consentStrip !== null ? (
-              <AnalyticsConsentStripSlot strip={consentStrip} />
-            ) : (
-              accountStrip !== null && <AccountStrip kind={accountStrip} />
-            ))
           )}
-        </header>
 
-        <div className={styles.pane} data-testid={appShellTestIds.pane}>
-          {belowWriteFloor ? <WriteFloorWall generating={newOverview.run !== null} /> : <Outlet />}
-        </div>
-
-        <MiniPlayer />
-
-        <SignOutNotice />
-
-        <ScrollRestoration />
-
-        {!isPanel && (
-          <NewOverviewDialog
-            open={newOverview.dialogOpen}
-            run={newOverview.run}
-            onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
-            onClose={newOverview.close}
-            onDismiss={newOverview.dismiss}
-            onReadOverview={readOverview}
-            onCaptureReasonChange={newOverview.setCaptureReason}
-            onCaptureReasonCommit={newOverview.commitCaptureReason}
+          <QueueRunDialog
+            making={captureQueue.making}
+            open={queueDetailsOpen}
+            onClose={() => setQueueDetailsOpen(false)}
           />
-        )}
-      </div>
+        </div>
+      </CaptureQueueProvider>
     </NewOverviewRunProvider>
   );
 }

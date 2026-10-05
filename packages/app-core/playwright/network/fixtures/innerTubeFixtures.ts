@@ -51,17 +51,20 @@ export function makeJson3Fixture() {
 // What our own server hands back for the fixture video. It fetches through InnerTube too,
 // so this is the same player response and captions run through the same mapping, and the
 // reader's transcript tab does not depend on which rung fetched them.
-export function makeServiceTranscriptFixture(): StoredTranscript {
-  const url = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
+// Another video than the fixture's own is the same captions under its own id and title, so
+// a queue can be made of several (docs/features/capture-queue.md).
+export function makeServiceTranscriptFixture(videoId: string = IWFT_VIDEO_ID, title?: string): StoredTranscript {
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  const video = mapPlayerResponseToVideoSource(
+    PlayerResponse.parse(makePlayerResponseFixture()),
+    url,
+    PlayerResponse.parse(makeMicroformatFixture()),
+  );
   return {
-    videoId: VideoId.parse(IWFT_VIDEO_ID),
+    videoId: VideoId.parse(videoId),
     segments: mapJson3ToSegments(JSON.stringify(makeJson3Fixture())),
     generated: false,
     fetchedAt: "2026-01-01T00:00:00.000Z",
-    video: mapPlayerResponseToVideoSource(
-      PlayerResponse.parse(makePlayerResponseFixture()),
-      url,
-      PlayerResponse.parse(makeMicroformatFixture()),
-    ),
+    video: { ...video, id: VideoId.parse(videoId), url, ...(title === undefined ? {} : { title }) },
   };
 }

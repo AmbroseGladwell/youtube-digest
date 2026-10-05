@@ -1,0 +1,51 @@
+@use "../../playlists" as playlists;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.25rem;
+}
+
+.bar {
+  width: 2rem;
+  height: 0.25rem;
+  border-radius: 2px;
+  background: var(--brand);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.actions {
+  @include playlists.actions(false);
+}
+
+.actionsStacked {
+  @include playlists.actions(true);
+}
+
+.primary {
+  @include playlists.primary;
+}
+
+.secondary {
+  @include playlists.secondary;
+}
+
+.ghost {
+  @include playlists.ghost;
+}

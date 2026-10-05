@@ -2,10 +2,13 @@ import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_OVERVIEW_STATE,
   DEFAULT_SETTINGS,
+  FOLLOWED_PLAYLIST_MIGRATIONS,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
   SETTINGS_MIGRATIONS,
+  QueuedCapture,
   StoredTranscript,
+  SYNCED_RECORD_KINDS,
   TOPIC_MIGRATIONS,
   migrateStoredRecord,
   readStoredRecord,
@@ -23,12 +26,16 @@ import {
   type WriteAcknowledgement,
 } from "@overview/domain";
 import {
+  CAPTURE_QUEUE_STORE,
+  FOLLOWED_PLAYLISTS_STORE,
   OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
+  PLAYLIST_CHECKS_STORE,
   SETTINGS_KEY,
   SETTINGS_STORE,
   SYNC_CURSOR_KEY,
+  SYNC_CURSOR_KINDS_KEY,
   SYNC_ENROLLED_KEY,
   SYNC_META_STORE,
   SYNC_REVISIONS_STORE,
@@ -44,6 +51,7 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   overviewState: OVERVIEW_STATES_STORE,
   topic: TOPICS_STORE,
   settings: SETTINGS_STORE,
+  followedPlaylist: FOLLOWED_PLAYLISTS_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -51,6 +59,7 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   overviewState: "overviewId",
   topic: "id",
   settings: null,
+  followedPlaylist: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -58,10 +67,16 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   overviewState: OVERVIEW_STATE_MIGRATIONS,
   topic: TOPIC_MIGRATIONS,
   settings: SETTINGS_MIGRATIONS,
+  followedPlaylist: FOLLOWED_PLAYLIST_MIGRATIONS,
 };
+
+// What every library that pulled before the cursor's kinds were kept was pulled with.
+const KINDS_BEFORE_THEY_WERE_KEPT: readonly string[] = ["overview", "overviewState", "topic", "settings"];
 
 const BOOKKEEPING_STORES = [OUTBOX_STORE, SYNC_REVISIONS_STORE, SYNC_META_STORE];
 const EVERY_STORE = [...Object.values(RECORD_STORES), ...BOOKKEEPING_STORES];
+// What a followed playlist left on this device, which goes when another device unfollows it.
+const FOLLOWING_STORES = [PLAYLIST_CHECKS_STORE, CAPTURE_QUEUE_STORE];
 const ENROLMENT_STORES = [...EVERY_STORE, TRANSCRIPTS_STORE];
 
 export interface IndexedDbSyncStorageOptions {
@@ -142,12 +157,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const overviews = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll());
     const states = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEW_STATES_STORE).getAll());
     const topics = promisifyRequest<unknown[]>(transaction.objectStore(TOPICS_STORE).getAll());
+    const followed = promisifyRequest<unknown[]>(transaction.objectStore(FOLLOWED_PLAYLISTS_STORE).getAll());
     const settings = promisifyRequest<unknown>(transaction.objectStore(SETTINGS_STORE).get(SETTINGS_KEY));
 
     const now = this.#now();
     return [
       ...(await overviews).flatMap((raw) => wholeRecordWrite("overview", raw, "savedAt", now)),
       ...(await topics).flatMap((raw) => wholeRecordWrite("topic", raw, "createdAt", now)),
+      ...(await followed).flatMap((raw) => wholeRecordWrite("followedPlaylist", raw, "followedAt", now)),
       ...(await states).flatMap((raw) => stateWrite(raw, now)),
       ...settingsWrite(await settings, now),
     ];
@@ -161,8 +178,13 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
   async cursor(): Promise<number> {
     const meta = this.#db.transaction(SYNC_META_STORE, "readonly").objectStore(SYNC_META_STORE);
-    const cursor = await promisifyRequest<unknown>(meta.get(SYNC_CURSOR_KEY));
-    return typeof cursor === "number" ? cursor : 0;
+    const [cursor, kinds] = await Promise.all([
+      promisifyRequest<unknown>(meta.get(SYNC_CURSOR_KEY)),
+      promisifyRequest<unknown>(meta.get(SYNC_CURSOR_KINDS_KEY)),
+    ]);
+    const pulledWith = Array.isArray(kinds) ? kinds : KINDS_BEFORE_THEY_WERE_KEPT;
+    const coversEveryKind = SYNCED_RECORD_KINDS.every((kind) => pulledWith.includes(kind));
+    return typeof cursor === "number" && coversEveryKind ? cursor : 0;
   }
 
   async listPending(): Promise<OutboxEntry[]> {
@@ -223,7 +245,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
   // never landed. Pending local writes go back on top of what was pulled
   // (docs/features/sync-client.md).
   async applyChanges(changes: RecordChange[], next: number): Promise<void> {
-    const transaction = this.#db.transaction(EVERY_STORE, "readwrite");
+    const transaction = this.#db.transaction([...EVERY_STORE, ...FOLLOWING_STORES], "readwrite");
     const pending = groupPending(
       await promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
     );
@@ -236,6 +258,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       if (change.deleted || change.body === undefined) {
         store.delete(key);
         if (change.kind === "overview") transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
+        if (change.kind === "followedPlaylist") await forgetFollowing(transaction, change.id);
         revisions.delete([change.kind, change.id]);
         continue;
       }
@@ -257,6 +280,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     }
 
     transaction.objectStore(SYNC_META_STORE).put(next, SYNC_CURSOR_KEY);
+    transaction.objectStore(SYNC_META_STORE).put([...SYNCED_RECORD_KINDS], SYNC_CURSOR_KINDS_KEY);
     await promisifyTransaction(transaction);
   }
 }
@@ -298,7 +322,7 @@ function writtenAt(raw: Record<string, unknown>, creationKey: string | null, now
 }
 
 function wholeRecordWrite(
-  kind: "overview" | "topic",
+  kind: "overview" | "topic" | "followedPlaylist",
   raw: unknown,
   creationKey: string,
   now: Date,
@@ -347,6 +371,19 @@ function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
       change: { op: "settings", patch },
     },
   ];
+}
+
+// What this device had seen of a playlist, and what it still had waiting from it. A video
+// that needs the reader's attention stays until they dismiss it (docs/features/playlists.md).
+async function forgetFollowing(transaction: IDBTransaction, playlistId: string): Promise<void> {
+  transaction.objectStore(PLAYLIST_CHECKS_STORE).delete(playlistId);
+  const queue = transaction.objectStore(CAPTURE_QUEUE_STORE);
+  for (const raw of await promisifyRequest<unknown[]>(queue.getAll())) {
+    const parsed = QueuedCapture.safeParse(raw);
+    if (parsed.success && parsed.data.status === "waiting" && parsed.data.fromPlaylist.id === playlistId) {
+      queue.delete(parsed.data.videoId);
+    }
+  }
 }
 
 function readableTranscript(raw: unknown): StoredTranscript | null {

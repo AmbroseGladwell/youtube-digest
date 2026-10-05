@@ -7,6 +7,8 @@ import type { SettingsSectionId } from "../features/settings/SettingsSectionId.j
 export const Routes = {
   home: () => "/",
   settings: () => "/settings",
+  // The capture queue's own page (docs/features/capture-queue.md).
+  queue: () => "/queue",
   settingsSection: (section: SettingsSectionId) => `/settings/${section}`,
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,

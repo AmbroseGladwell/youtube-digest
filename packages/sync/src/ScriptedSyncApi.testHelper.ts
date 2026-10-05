@@ -87,6 +87,14 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("updateSettings", [patch, updatedAt], () => this.#written("settings"));
   }
 
+  async saveFollowedPlaylist(record: Record<string, unknown>, ifMatch: number | null) {
+    return this.#answer("saveFollowedPlaylist", [record, ifMatch], () => this.#written(String(record.id)));
+  }
+
+  async deleteFollowedPlaylist(id: string) {
+    return this.#answer("deleteFollowedPlaylist", [id], () => null);
+  }
+
   async saveTranscript(transcript: StoredTranscript) {
     return this.#answer("saveTranscript", [transcript], () => {
       this.transcripts.set(transcript.videoId, transcript);

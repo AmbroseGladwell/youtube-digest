@@ -4,6 +4,7 @@ import {
   type CaptureTranscriptSource,
   type Overview,
   type OverviewStore,
+  type PlaylistOrigin,
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
@@ -40,6 +41,9 @@ export interface RunOverviewGenerationOptions {
   // Read at the moment the record is written, not when the run starts: the reason is
   // typed while the overview is being made (docs/features/capture-reason.md).
   captureReason?: (() => string) | undefined;
+  // Set for a video the capture queue took from a followed playlist
+  // (docs/features/playlists.md, "The From line").
+  fromPlaylist?: PlaylistOrigin | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -80,9 +84,11 @@ export async function runOverviewGeneration(
   );
 
   stopIfCancelled();
-  const saved = options.captureReason
-    ? { ...overview, captureReason: captureReasonFromDraft(options.captureReason()) }
-    : overview;
+  const saved = {
+    ...overview,
+    ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),
+    ...(options.fromPlaylist ? { fromPlaylist: options.fromPlaylist } : {}),
+  };
   await deps.overviewStore.saveOverview(saved);
 
   return saved;

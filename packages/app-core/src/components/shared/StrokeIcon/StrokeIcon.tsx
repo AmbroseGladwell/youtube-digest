@@ -48,7 +48,12 @@ export type StrokeIconName =
   | "chart"
   | "refreshCw"
   | "cloudUpload"
-  | "wifiOff";
+  | "wifiOff"
+  | "listVideo"
+  | "pause"
+  | "trash"
+  | "ban"
+  | "video";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -325,6 +330,39 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
       <path d="M21 3v5h-5" />
       <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
       <path d="M8 16H3v5" />
+    </>
+  ),
+  listVideo: (
+    <>
+      <path d="M12 12H3" />
+      <path d="M16 6H3" />
+      <path d="M12 18H3" />
+      <path d="m16 12 5 3-5 3v-6Z" />
+    </>
+  ),
+  pause: (
+    <>
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </>
+  ),
+  ban: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 15 6-6" />
+    </>
+  ),
+  video: (
+    <>
+      <rect x="2" y="4" width="20" height="16" rx="4" />
+      <path d="m10 9 5 3-5 3z" />
     </>
   ),
 };

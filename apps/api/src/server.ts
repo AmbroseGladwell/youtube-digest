@@ -11,6 +11,8 @@ import { createLogger } from "./logs/createLogger.js";
 import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
 import { createTranscriptServiceSetup } from "./transcripts/createTranscriptServiceSetup.js";
+import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
+import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylistReader.js";
 
 let config;
 try {
@@ -53,6 +55,10 @@ const app = await buildApp({
   mailer: createMailer(config.mail),
   audio,
   transcriptService,
+  playlistReader:
+    config.youTubeApiKey === null
+      ? null
+      : youTubeDataApiPlaylistReader({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
   eventSink,
   errorSink,
   logger,
@@ -76,6 +82,10 @@ app.log.info(
         proxyDailyFetches: config.transcriptService.proxyDailyFetches,
       },
   "transcript service",
+);
+app.log.info(
+  config.youTubeApiKey === null ? "YOUTUBE_API_KEY is not set: playlists cannot be followed" : { source: "YouTube Data API" },
+  "playlists",
 );
 app.log.info(
   postHog === null ? "POSTHOG_API_KEY is not set: client events and errors are logged only" : { host: postHog.host, environment },

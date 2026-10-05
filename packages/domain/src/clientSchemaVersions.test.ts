@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION } from "./clientVersion.js";
 import { CLIENT_SCHEMA_VERSIONS, schemaVersionsForClient } from "./clientSchemaVersions.js";
-import { CURRENT_SCHEMA_VERSIONS, SYNCED_RECORD_KINDS } from "./SchemaVersions.js";
+import { CURRENT_SCHEMA_VERSIONS, SYNCED_RECORD_KINDS, UNKNOWN_KIND_SCHEMA_VERSION } from "./SchemaVersions.js";
 
 test("the row for the current client version matches the registries, so a registry cannot move without a new row", () => {
   assert.deepEqual(schemaVersionsForClient(CLIENT_VERSION), CURRENT_SCHEMA_VERSIONS);
@@ -31,4 +31,14 @@ test("a client version above the table is treated as knowing the last row", () =
 
 test("a client version below the first row is treated as the first row rather than as nothing", () => {
   assert.deepEqual(schemaVersionsForClient(0), CLIENT_SCHEMA_VERSIONS[0]!.schemaVersions);
+});
+
+test("a kind is unknown to every client version before the one that added it, and known from then on", () => {
+  for (const kind of SYNCED_RECORD_KINDS) {
+    const firstKnown = CLIENT_SCHEMA_VERSIONS.findIndex((row) => row.schemaVersions[kind] > UNKNOWN_KIND_SCHEMA_VERSION);
+    assert.ok(firstKnown >= 0, kind);
+    CLIENT_SCHEMA_VERSIONS.slice(firstKnown).forEach((row) =>
+      assert.ok(row.schemaVersions[kind] > UNKNOWN_KIND_SCHEMA_VERSION, `${kind} at ${row.clientVersion}`),
+    );
+  }
 });
