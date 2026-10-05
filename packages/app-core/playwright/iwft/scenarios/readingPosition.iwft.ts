@@ -9,7 +9,7 @@ import { makeCaptionRun } from "../../../src/features/transcripts/types/Transcri
 const VIDEO_ID = VideoId.parse("longVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=longVideo1";
 const OTHER_VIDEO_ID = VideoId.parse("longVideo2");
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 const longTranscript = (): TranscriptSegment[] =>
   Array.from({ length: 30 }, (_, index) =>

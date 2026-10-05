@@ -4,7 +4,6 @@ import type { YouTubeFetch } from "@overview/transcripts";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
 import { useStores } from "../../../stores/StoresContext.js";
-import { useApiKeys } from "../../apiKeys/useApiKeys.js";
 import { createTranscriptSources } from "../../newOverview/api/generationClients.js";
 import { resolveVideo } from "../api/resolveVideo.js";
 import { transcriptKeys } from "../transcriptKeys.js";
@@ -12,7 +11,7 @@ import { freeTranscriptSources } from "../util/freeTranscriptSources.js";
 
 export const watchedTranscriptQueryOptions = (
   transcriptStore: TranscriptStore,
-  sourceOptions: { youTubeFetch: YouTubeFetch | null; supadataApiKey: string | null },
+  sourceOptions: { youTubeFetch: YouTubeFetch | null },
   url: string | null,
 ) =>
   queryOptions({
@@ -38,14 +37,7 @@ export const watchedTranscriptQueryOptions = (
 
 export const useWatchedTranscriptQuery = () => {
   const { transcriptStore } = useStores();
-  const { apiKeys } = useApiKeys();
   const watchedUrl = useActiveVideoUrl();
   const youTubeFetch = useYouTubeFetch();
-  return useQuery(
-    watchedTranscriptQueryOptions(
-      transcriptStore,
-      { youTubeFetch, supadataApiKey: apiKeys.supadataApiKey },
-      watchedUrl,
-    ),
-  );
+  return useQuery(watchedTranscriptQueryOptions(transcriptStore, { youTubeFetch }, watchedUrl));
 };

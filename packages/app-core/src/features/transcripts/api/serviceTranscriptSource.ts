@@ -28,7 +28,7 @@ function asServiceError(error: unknown): TranscriptFetchError | null {
   }
   if (error.code === "too_many_requests" && error.details?.daily === true) {
     return serviceError(
-      "You've used today's transcripts from our server. The extension, or a Supadata key, can still fetch this one, or try again tomorrow.",
+      "You've used today's transcripts from our server. The extension can still fetch this one, or try again tomorrow.",
       TranscriptFetchFailure.RATE_LIMITED,
       error,
     );

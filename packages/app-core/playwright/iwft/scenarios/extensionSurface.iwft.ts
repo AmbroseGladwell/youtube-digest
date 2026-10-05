@@ -1,9 +1,9 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 test("the extension says its library is its own, where an empty shelf would otherwise be a mystery", async ({
   launcher,
@@ -32,7 +32,7 @@ test("a run in the side panel admits that closing the panel stops it, unlike clo
   backendSimulator,
 }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
-  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS, surface: "extension" });
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS, surface: "extension", youTubeFetch: true });
   await form.submitUrl(VALID_URL);
 
   await launcher.appShell.newOverviewDialog.verifyFootNote(/Closing the side panel does stop it\./);

@@ -1,6 +1,6 @@
 import type { StoredTranscript, TranscriptSegment, VideoId, VideoSource } from "@overview/domain";
 
-export type TranscriptTier = "shared-cache" | "extension" | "supadata" | "service";
+export type TranscriptTier = "shared-cache" | "extension" | "service";
 
 // Whether reaching this rung can cost the user anything. The background prefetch is handed
 // only the free rungs, so "the background never spends" is a property of what it can reach

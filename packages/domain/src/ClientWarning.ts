@@ -4,7 +4,7 @@ import { RequestId } from "./RequestId.js";
 
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
-const TranscriptRung = z.enum(["shared-cache", "extension", "supadata", "service"]);
+const TranscriptRung = z.enum(["shared-cache", "extension", "service"]);
 
 // What the app did when something it depends on let it down and it carried on anyway: a
 // line in the server's logs at warn, never an error-tracking issue and never an event

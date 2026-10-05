@@ -1,10 +1,10 @@
 # Where a transcript comes from
 
 `docs/architecture/v1-architecture-decisions.md` pinned transcript retrieval to Supadata,
-BYO-key, and said plainly that server-side retrieval was "a deliberate v1 deferral, not a
-rejection". This is the file that reopens it. The architecture-level decision, including
-the YouTube-ToS question, belongs in `docs/architecture/`; this file is how retrieval
-works in the code.
+BYO-key (since removed, see "Supadata, removed" below), and said plainly that server-side
+retrieval was "a deliberate v1 deferral, not a rejection". This is the file that reopens
+it. The architecture-level decision, including the YouTube-ToS question, belongs in
+`docs/architecture/`; this file is how retrieval works in the code.
 
 ## The constraint the whole design hangs off
 
@@ -30,7 +30,6 @@ A source is asked only if the one before it could not answer.
 |---|---|---|
 | the shared cache | a row read | nobody |
 | the user's own extension | nothing | the user, from their own IP |
-| a BYO Supadata key | the user's credits | Supadata |
 | our own service | a residential proxy | us |
 
 Two properties follow, and both are the point:
@@ -42,22 +41,19 @@ Two properties follow, and both are the point:
   enter the corpus rather than users times videos.
 
 The shared cache (`docs/features/shared-transcript-cache.md`), the extension's own
-InnerTube fetch, Supadata and our own service (`docs/architecture/server-side-transcripts.md`)
+InnerTube fetch and our own service (`docs/architecture/server-side-transcripts.md`)
 are built. The web app asking the extension is not, and the shape of the interface is what
 makes it additive rather than a rewrite.
 
 ### Why the rung is one method
 
 `resolveVideo` used to fetch metadata, ask the store whether the captions were already
-held, and only then buy them. That gap exists **because Supadata bills the two halves
-separately** — see `docs/features/transcript-storage.md`. A source that returns both in
-one free call has no such gap and should not have to pretend it has one.
+held, and only then buy them, because the first provider billed the two halves
+separately. A source that returns both in one call has no such gap and should not have to
+pretend it has one.
 
 So a rung is a single `resolve()`, and the probe it needs is handed to it
-(`TranscriptSourceContext.readHeldTranscript`) rather than built into the walker. The
-Supadata rung still does metadata → probe → captions internally; nothing about the
-credit-saving behaviour changed, and the IWFT call-count assertions that guard it did not
-move.
+(`TranscriptSourceContext.readHeldTranscript`) rather than built into the walker.
 
 The walker keeps the outer probe — the one that answers from the store without contacting
 anything — and owns the single write-back, so a record stored before metadata was kept
@@ -85,42 +81,24 @@ rather than having tried and lost — no key, or a surface with no CORS exemptio
 reader should never be told about it, which is why `transcriptFailureMessage` prefers the
 last rung that actually tried.
 
-## Three bugs the port fixed, each pinned by a test
-
-These were live, and each one either cost money or told a caller something untrue.
-
-- **The ASR fallback threw the provider's own error.** The `mode=generate` call sat
-  outside the `try` that wrapped the native one, so the contract "this rejects with a
-  `TranscriptFetchError`" held for one path and not the other. Anything downstream
-  branching on `instanceof` missed it.
-- **A metadata failure was never wrapped at all**, so the provider's raw message reached
-  the UI.
-- **A retry re-submitted the whole job.** `withSingleRetry` wrapped submit *and* poll, so
-  a failed status read abandoned a job that was still running and started a second one —
-  a second credit, for a request that had not failed. Now only the submit is retried, and
-  a transient status read is one lost tick. Status reads cost nothing, so another tick is
-  free.
-
 ## What `generated` means, and why it was wrong
 
 `StoredTranscript.generated` drives the `Auto-generated` label in the reader's
-transcript tab. It was set from *which Supadata mode answered*: `native` meant `false`,
-`generate` meant `true`.
+transcript tab. It was once set from *which Supadata mode answered*: `native` meant
+`false`, `generate` meant `true`.
 
-That is not the same question. Supadata's `native` mode returns whatever caption track
-exists on the platform — **including YouTube's own ASR track**. So a video whose only
-captions are machine-heard succeeds on `native`, never reaches `generate`, and is stored
-as though a human wrote it.
+That is not the same question. Supadata's `native` mode returned whatever caption track
+existed on the platform — **including YouTube's own ASR track**. So a video whose only
+captions were machine-heard succeeded on `native`, never reached `generate`, and was
+stored as though a human wrote it.
 
 This is measurable rather than theoretical: of the four still-available videos in
 `samples/`, **three have only an ASR track**. Three of the five notes this repo ships as
 its reference corpus are machine-transcribed and have never carried the label that
 explains why they read the way they do.
 
-The Supadata rung cannot tell the difference — the information is not in its response.
-InnerTube can: `captionTracks[].kind === "asr"` is per-track and unambiguous. So
-`generated` means **"not written by a human"**, whichever rung fetched it, and the
-Supadata rung is simply the one that cannot always tell. Existing rows are
+InnerTube can tell: `captionTracks[].kind === "asr"` is per-track and unambiguous. So
+`generated` means **"not written by a human"**. Rows stored by the old rung are
 wrong-but-harmless and correct themselves on a re-fetch.
 
 ## Rungs are built per resolve, never hoisted
@@ -130,42 +108,6 @@ it. Caption URLs from YouTube are signed and expire within hours, so a long-live
 holding a cached player response would eventually serve a 403 that looks exactly like
 client drift. Building per resolve makes that impossible rather than unlikely.
 
-## The Supadata rung sends one header, and not through the SDK
-
-The web app has no free rung, so on a phone the Supadata rung is the only one, and it
-never worked from an iPhone. `@supadata/js` puts `User-Agent: supadata-js/<version>` on
-every request. Supadata's CORS preflight answers with a fixed allow-list of headers —
-`Authorization, Content-Type, Accept, Origin, X-Requested-With, x-api-key` — and
-`User-Agent` is not on it. What happens next depends on the engine, reproduced against
-the live API from a plain `http://localhost` page:
-
-| Engine | SDK's headers | `x-api-key` alone |
-|---|---|---|
-| WebKit | refused: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers" | reaches Supadata |
-| Chromium | reaches Supadata (it drops `User-Agent` from `fetch` silently) | reaches Supadata |
-
-Every browser on iOS is WebKit, Chrome included. The refusal surfaces as
-`TypeError: Load failed`, which `asTranscriptFetchError` wraps as "transcript fetch
-failed" — nothing on screen says CORS, and no credit is spent, because the request never
-left the phone.
-
-Two things hid it. The extension lists `https://api.supadata.ai/*` in `host_permissions`,
-which exempts its panel from CORS entirely, so desktop use never went through a preflight.
-And the IWFT suite runs in Chromium against a simulator that answers routed requests, so
-it can see neither the engine nor the preflight.
-
-So the SDK's transport is not used. `createSupadataClient` is a `fetch` that sends
-`x-api-key` and nothing else, builds the same URLs the SDK built (the simulator's routes
-did not have to move), and raises the SDK's own `SupadataError` from an error body so the
-failure mapping above is untouched. The SDK is still the source of the types and of that
-error class; `SupadataClient` is the whole of it this package touches. A unit test asserts
-the header set is exactly the one key, because that set is the invariant.
-
-`packages/transcripts/scripts/supadataBrowserCheck.ts` is the check no fixture can be:
-it launches real WebKit and Chromium, and makes the app's request against the live API
-with a dummy key. A 401 means the request got there; a blocked one never left the
-browser. Run it when the client, or Supadata's CORS policy, changes.
-
 ## The InnerTube fetcher
 
 `fetchInnerTubeTranscript` is the free path. It takes an injected `YouTubeFetch` rather
@@ -173,8 +115,8 @@ than calling `fetch` itself, so this package never imports `chrome.*` and the sa
 runs in the extension worker, in Node, and under a test that intercepts the request.
 
 **One player call serves both halves.** `POST /youtubei/v1/player` returns `videoDetails`
-and the caption track list together, so the two-call shape Supadata bills for simply does
-not arise. A test asserts the call count rather than trusting it.
+and the caption track list together, so a metadata call and a captions call are never
+two separate costs. A test asserts the call count rather than trusting it.
 
 **The clients are data, tried in order.** `DEFAULT_CAPTION_CLIENTS` is ANDROID then IOS.
 They are overridable at the call, because these version strings drift and a stale one
@@ -280,7 +222,8 @@ one thing in the bridge with its own test file.
 
 A transcript no longer has one source, so "have you pasted both keys" became the wrong
 question. `useGenerationReadiness` asks the right one: an Anthropic key, **plus at least
-one rung that can answer**. A shell that can reach YouTube needs no transcript key at all.
+one rung that can answer** — a shell that can reach YouTube, or a server that says its
+fetching is on. Nothing but the Anthropic key is ever asked for.
 
 `hasRequiredApiKeys` is gone rather than redefined — it asserted "required" of something
 that is now conditional, and a name that lies is worse than a rename.
@@ -305,9 +248,9 @@ Two consequences, both deliberate:
 
 - **It needs no key.** Noticing the video and grabbing its captions costs nothing, so a
   browser that can reach YouTube does it unconditionally.
-- **With only a metered rung it does not run at all.** That is a real change for today's
-  key holders: browsing stops costing credits, and also stops pre-warming. They lose
-  nothing they cannot get by pressing Create.
+- **With only a metered rung it does not run at all.** The web app, whose only fetching
+  rung is our server, never prefetches; it loses nothing it cannot get by pressing
+  Create.
 
 ## What the app says about all this
 
@@ -315,17 +258,14 @@ Supadata stopped being required, so three surfaces had to stop implying it was.
 
 `byoKeyNote.ts` was wrong twice — "both keys", and "never through our servers", the second
 of which stayed true only until the shared cache landed. It now says both halves: the key
-never passes through us, and the video is looked up in the shared cache first.
+never passes through us, and the video is looked up in the shared cache first and fetched
+by our server when nothing else can.
 
 `transcriptSourceNote.ts` holds what is missing in the words of the thing that is missing,
 in one module, because the same three states are rendered by the dialog and by the empty
 library and must not drift apart.
 
-The Settings panel marks the Supadata key optional and reports which of three things is
-true of it: not needed here, saved but not in use, or the only thing that could fetch a
-transcript on this browser. The middle one matters most — it is the degrade-visibly rule
-pointed the other way, telling someone what the app will actually do rather than leaving
-them to infer it from a bill that never arrives.
+The Settings panel asks for the Anthropic key and nothing else.
 
 ## The web app has no free rung, and the trigger for giving it one is named
 
@@ -376,10 +316,22 @@ grounds that it "makes the web app inert in any browser without the extension in
 The next reader will find that line and think this contradicts it, so: it rejected the
 bridge as **the mechanism for merging the two libraries**, where a missing extension
 leaves the app with nothing to show. Here it is one rung of four. Remove it and the web
-app still resolves through the shared cache, a Supadata key, or the service. Nothing goes
+app still resolves through the shared cache or the service. Nothing goes
 inert, and what is missing costs money rather than function.
 
 ## What is not built
 
 - The web app's own free path, above. Its prerequisite is now met: the extension has the
   store's id (`docs/architecture/deploy.md`, "The extension").
+
+## Supadata, removed
+
+Supadata was the first source and, until OV-55, the web app's only one: a BYO key, called
+from the browser. Once our own server became the last rung, the key was only a detour on
+the way to it, so OV-91 removed the rung, the Settings field, the `@supadata/js` dependency
+and the extension's host permission for `api.supadata.ai`.
+
+What that gave up is deliberate. Supadata's `mode=generate` transcribed videos with no
+caption track at all; those now fail with `no-captions`, and no rung can fetch them. And a
+key holder used to fetch without limit, where every reader without the extension now
+counts against `serviceTranscriptQuotas`.

@@ -48,9 +48,7 @@ intro with no words before the first caption, and neither is part of any chapter
 first chapter starts wherever the first caption starts, which may not be 0:00, and the
 last ends with the final caption, which may be short of the video's length. The
 transcript tab already prints the same times, so the two tabs agree on where the words
-are. `video.durationMs` is not consulted at all, which also sidesteps the fact that a
-Supadata duration is caption-derived and was measured falling short of the captions
-(`docs/architecture/v1-architecture-decisions.md`).
+are. `video.durationMs` is not consulted at all.
 
 The schema carries the ordering as a refinement — the first chapter starts at segment 0,
 each starts after the one before it — which is not expressible in the JSON Schema the model

@@ -1,9 +1,9 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 test("a successful generation ends up in the library, and opens in the reader when asked", async ({
   launcher,
@@ -39,11 +39,11 @@ test("the transcript-fetch phase surfaces its error, and generation never reache
   launcher,
   backendSimulator,
 }) => {
-  backendSimulator.simulateEndpointError(EndpointKey.SUPADATA_METADATA);
+  backendSimulator.simulateEndpointError(EndpointKey.SERVICE_TRANSCRIPT);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl(VALID_URL);
-  await form.verifyGenerationError("Unauthorized");
+  await form.verifyGenerationError("Simulated: our server has fetched all the transcripts it can for today.");
 
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
@@ -52,7 +52,7 @@ test("a stalled transcript fetch holds the first step there, with nothing claime
   launcher,
   backendSimulator,
 }) => {
-  backendSimulator.simulateEndpointStalled(EndpointKey.SUPADATA_METADATA);
+  backendSimulator.simulateEndpointStalled(EndpointKey.SERVICE_TRANSCRIPT);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
 

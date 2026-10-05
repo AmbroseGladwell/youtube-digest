@@ -1,18 +1,18 @@
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const ANOTHER_WATCHED_URL = "https://www.youtube.com/watch?v=anotherVideoId";
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 // The panel of a browser that can reach YouTube, which is what an extension always is.
 const PANEL = { apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true } as const;
 
 test("the side panel opens on the video in front of it, and that link is the one it generates from", async ({
   launcher,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
+  await launcher.launch(PANEL);
   const dialog = await launcher.appShell.openNewOverview();
 
   await dialog.form.verifyUrlInputHolds(WATCHED_URL);
@@ -43,7 +43,7 @@ test("a side panel open on something that isn't a video says so by offering noth
 test("moving to another video offers the new one rather than swapping the link you were about to spend on", async ({
   launcher,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
+  await launcher.launch(PANEL);
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.verifyUrlInputHolds(WATCHED_URL);
 
@@ -116,26 +116,29 @@ test("the panel fetches the captions with no key at all, because the free path c
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
-test("with only a paid rung, nothing is bought for a video nobody asked about", async ({
+test("with only our server's metered rung, nothing is fetched for a video nobody asked about", async ({
   launcher,
   backendSimulator,
 }) => {
-  await launcher.launch({ apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL });
+  await launcher.launch({
+    apiKeys: API_KEYS,
+    surface: "extension",
+    activeVideoUrl: WATCHED_URL,
+    defaultApiUrl: "https://overview.test",
+  });
   await launcher.appShell.openNewOverview();
 
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
 });
 
-test("the web app, which sees no video, buys nothing in the background either", async ({
+test("the web app, which sees no video, fetches nothing in the background either", async ({
   launcher,
   backendSimulator,
 }) => {
   await launcher.launch({ apiKeys: API_KEYS, surface: "web" });
   await launcher.appShell.openNewOverview();
 
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
 });
 
 test("a video the panel already looked up costs one metadata call, not one for it and another for the note", async ({

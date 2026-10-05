@@ -2,7 +2,7 @@ import type { StoredTranscript, TranscriptSegment } from "@overview/domain";
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -13,7 +13,7 @@ import {
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 // Nine captions, in three runs of the length YouTube actually emits — which the reader
 // merges into the three blocks below (docs/features/transcript-storage.md).
@@ -241,14 +241,14 @@ test("a generation that fails still leaves the transcript stored, so a retry doe
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
   expect(stored?.segments).toHaveLength(3);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 
   backendSimulator.simulateEndpointDefault(EndpointKey.ANTHROPIC_MESSAGES);
   await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
 
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 });
 
 test("a second note on a video already in the library reads the stored captions rather than buying them again", async ({
@@ -269,8 +269,8 @@ test("a second note on a video already in the library reads the stored captions 
   await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
 
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(0);
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
 

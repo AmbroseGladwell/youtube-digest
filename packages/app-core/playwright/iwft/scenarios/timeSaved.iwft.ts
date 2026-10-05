@@ -7,7 +7,7 @@ import {
   makeOverview,
   makeOverviewState,
 } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { MILESTONE_LINES } from "../../../src/features/timeSaved/util/milestoneLines.js";
 
 const SIGNED_IN = {

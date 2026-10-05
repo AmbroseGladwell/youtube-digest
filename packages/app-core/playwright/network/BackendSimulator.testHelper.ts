@@ -39,11 +39,12 @@ import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
 } from "./fixtures/anthropicFixtures.js";
-import { makeMetadataFixture, makeTranscriptFixture } from "./fixtures/supadataFixtures.js";
 import {
+  IWFT_VIDEO_ID,
   makeJson3Fixture,
   makeMicroformatFixture,
   makePlayerResponseFixture,
+  makeServiceTranscriptFixture,
 } from "./fixtures/innerTubeFixtures.js";
 import type {} from "./iwftWindow.testHelper.js";
 
@@ -118,7 +119,8 @@ export class BackendSimulator {
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
   #sharedTranscripts = new Map<string, StoredTranscript>();
-  #serviceTranscripts: Map<string, StoredTranscript> | null = null;
+  // On, as it is in production, answering for the fixture video; null is the service off.
+  #serviceTranscripts: Map<string, StoredTranscript> | null = new Map([[IWFT_VIDEO_ID, makeServiceTranscriptFixture()]]);
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
@@ -212,30 +214,6 @@ export class BackendSimulator {
         onDefault: () => ({ status: 200, body: makeJson3Fixture() }),
         // An empty track is a gated one, not a video without captions.
         onError: () => ({ status: 200, body: { events: [] } }),
-      }),
-    );
-
-    await this.#page.route("**/api.supadata.ai/v1/metadata**", (route) =>
-      this.#respond(route, EndpointKey.SUPADATA_METADATA, {
-        onDefault: () => ({ status: 200, body: makeMetadataFixture() }),
-        onError: () => ({
-          status: 401,
-          body: {
-            error: "invalid-request",
-            message: "Unauthorized",
-            details: "Simulated auth failure",
-          },
-        }),
-      }),
-    );
-
-    await this.#page.route("**/api.supadata.ai/v1/transcript**", (route) =>
-      this.#respond(route, EndpointKey.SUPADATA_TRANSCRIPT, {
-        onDefault: () => ({ status: 200, body: makeTranscriptFixture() }),
-        onError: () => ({
-          status: 400,
-          body: { error: "invalid-request", message: "Simulated transcript failure", details: "" },
-        }),
       }),
     );
 
@@ -957,11 +935,15 @@ export class BackendSimulator {
     seedShared: (transcript: StoredTranscript): void => {
       this.#sharedTranscripts.set(transcript.videoId, transcript);
     },
-    // Turns our own server's fetching on, answering with this transcript for its video.
-    // Without it the server says the service is off (docs/architecture/server-side-transcripts.md).
-    seedService: (transcript?: StoredTranscript): void => {
+    // What our own server answers with for this transcript's video
+    // (docs/architecture/server-side-transcripts.md).
+    seedService: (transcript: StoredTranscript): void => {
       this.#serviceTranscripts ??= new Map();
-      if (transcript !== undefined) this.#serviceTranscripts.set(transcript.videoId, transcript);
+      this.#serviceTranscripts.set(transcript.videoId, transcript);
+    },
+    // A server with its fetching switched off, which says so before anything is asked.
+    serviceIsOff: (): void => {
+      this.#serviceTranscripts = null;
     },
     isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
   };

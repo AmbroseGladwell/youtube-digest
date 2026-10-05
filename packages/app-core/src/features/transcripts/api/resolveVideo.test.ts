@@ -52,7 +52,7 @@ describe("resolveVideo's warnings", () => {
     const { outcome, warnings } = await resolvingWith([
       rung("shared-cache", "no-answer"),
       rung("extension", "throws"),
-      rung("supadata", "answers"),
+      rung("service", "answers"),
     ]);
 
     expect(outcome).toBe("resolved");
@@ -63,7 +63,7 @@ describe("resolveVideo's warnings", () => {
           { rung: "shared-cache", outcome: "no-answer" },
           { rung: "extension", outcome: "failed" },
         ],
-        answeredBy: "supadata",
+        answeredBy: "service",
       },
     ]);
   });

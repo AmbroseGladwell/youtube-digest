@@ -4,7 +4,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 
 const VIDEO_ID = "watchedVideo1";
 const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 const RANGE = { startMs: 200_000, endMs: 310_000 };
 
