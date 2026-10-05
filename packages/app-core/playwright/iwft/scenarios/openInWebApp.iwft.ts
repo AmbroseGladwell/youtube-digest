@@ -4,7 +4,7 @@ import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSim
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const VIDEO_URL = "https://www.youtube.com/watch?v=webAppVideo01";
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 const SERVER = "https://sync.test";
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };

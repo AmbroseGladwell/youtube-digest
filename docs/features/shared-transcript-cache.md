@@ -2,8 +2,7 @@
 
 The first rung of the ladder in `docs/features/transcript-retrieval.md`. A video's captions
 are the same for every reader, so once two accounts have each fetched the same words,
-nobody needs to fetch them again. A hit costs one row read, and nobody contacts YouTube or
-Supadata. So a video's third reader onward benefits, and its first two never do.
+nobody needs to fetch them again. A hit costs one row read, and nobody contacts YouTube. So a video's third reader onward benefits, and its first two never do.
 
 Only transcripts are shared. An overview is personal to the reader it was written for
 (`docs/architecture/architecture-options.md`), and nothing about one goes near this.
@@ -101,11 +100,6 @@ What this does and doesn't stop:
 - **A rival copy doesn't displace a confirmed one.** A third account uploading different
   words starts its own unconfirmed copy beside it. If a written copy and a machine-heard
   one are both confirmed, the written one is served.
-
-**Unverified: that InnerTube and Supadata give the same words for one track.** Supadata's
-native mode returns YouTube's own track, so they should match, but that hasn't been
-compared on a real video. If they differ, a mixed pair never confirms. That fails safe:
-the copy waits for two fetches from the same kind of source.
 
 **Two readers get the same track.** InnerTube is always asked with `hl: "en"`, and
 `selectCaptionTrack` is deterministic, so two readers' fetches can agree at all. A rung

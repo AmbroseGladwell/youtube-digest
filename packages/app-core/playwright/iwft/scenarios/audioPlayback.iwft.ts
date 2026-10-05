@@ -1,7 +1,7 @@
 import { expect, test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const NOTE = makeOverview({
@@ -22,7 +22,7 @@ const SIGNED_IN = {
 };
 
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 test("narration that exists says so before the first press, and plays on its own timings", async ({
   launcher,

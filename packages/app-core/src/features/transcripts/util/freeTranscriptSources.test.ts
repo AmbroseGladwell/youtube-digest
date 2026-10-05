@@ -14,13 +14,13 @@ describe("freeTranscriptSources", () => {
     const kept = freeTranscriptSources([
       source("shared-cache", "free"),
       source("extension", "free"),
-      source("supadata", "metered"),
+      source("service", "metered"),
     ]);
 
     expect(kept.map((rung) => rung.tier)).toEqual(["shared-cache", "extension"]);
   });
 
   it("leaves nothing to ask when every rung would spend, rather than picking the cheapest", () => {
-    expect(freeTranscriptSources([source("supadata", "metered")])).toEqual([]);
+    expect(freeTranscriptSources([source("service", "metered")])).toEqual([]);
   });
 });

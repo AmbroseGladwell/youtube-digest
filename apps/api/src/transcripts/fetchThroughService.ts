@@ -42,7 +42,7 @@ const isWorthTheProxy = (error: unknown): error is TranscriptFetchError =>
 
 export const budgetExhausted = () =>
   new TranscriptFetchError(
-    "Our server has fetched all the transcripts it can for today. The extension, or a Supadata key, can still fetch this one, or try again tomorrow.",
+    "Our server has fetched all the transcripts it can for today. The extension can still fetch this one, or try again tomorrow.",
     { failure: TranscriptFetchFailure.BUDGET_EXHAUSTED, sourceId: "service" },
   );
 

@@ -49,16 +49,6 @@
   @extend %secondaryNote;
 }
 
-.fieldNote {
-  @extend %secondaryNote;
-}
-
-.optional {
-  margin-left: 0.25rem;
-  font-weight: 400;
-  color: var(--muted);
-}
-
 .saveButton {
   @include controls.action-pill;
   @include controls.pill-md;

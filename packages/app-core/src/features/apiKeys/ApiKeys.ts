@@ -6,13 +6,11 @@ import { z } from "zod";
 // device-local storage rather than living on the type that's designed to sync.
 export const ApiKeys = z.object({
   anthropicApiKey: z.string().nullable(),
-  supadataApiKey: z.string().nullable(),
 });
 export type ApiKeys = z.infer<typeof ApiKeys>;
 
 export const DEFAULT_API_KEYS: ApiKeys = {
   anthropicApiKey: null,
-  supadataApiKey: null,
 };
 
 // What generation needs is not a fixed pair of keys any more: a browser that fetches its

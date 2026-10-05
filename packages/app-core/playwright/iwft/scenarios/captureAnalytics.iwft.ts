@@ -1,12 +1,12 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
-  apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
+  apiKeys: { anthropicApiKey: "sk-ant-test" },
 };
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
@@ -34,7 +34,7 @@ test("making an overview is counted from asking to reading it, with where it was
         props: {
           overviewId: overview!.id,
           from: "dialog",
-          transcriptSource: "supadata",
+          transcriptSource: "service",
           durationMs: expect.any(Number),
           reasonGiven: false,
         },

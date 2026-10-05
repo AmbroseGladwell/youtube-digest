@@ -1,6 +1,6 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const NOTE = makeOverview({
@@ -216,7 +216,7 @@ test("the tabs come to rest on the masthead's lower edge, and follow it when it 
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const library = await launcher.launchExpectingLibrary({
-    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" },
+    apiKeys: { anthropicApiKey: "sk-ant-test" },
   });
 
   const reader = await library.nthCard(0).openReader();

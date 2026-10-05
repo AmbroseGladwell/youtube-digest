@@ -8,7 +8,7 @@ import { makeCaptionRun } from "../../../src/features/transcripts/types/Transcri
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(["The opening claim,", "made in the first few seconds", "of the video."], {

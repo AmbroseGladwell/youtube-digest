@@ -1,10 +1,10 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 const PHONE = { width: 390, height: 780 };
 const DESKTOP = { width: 1280, height: 900 };
 
@@ -128,7 +128,7 @@ test("the strip's Details reopens the same run rather than starting a second one
 
   await dialog.verifyIsShown();
   await dialog.verifyStepState("01", "done");
-  expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_METADATA)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 });
 
 test("cancelling a run saves nothing, even once the call it was waiting on comes back", async ({

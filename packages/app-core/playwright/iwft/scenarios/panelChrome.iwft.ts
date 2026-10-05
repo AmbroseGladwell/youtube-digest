@@ -8,7 +8,7 @@ import { makeCaptionRun } from "../../../src/features/transcripts/types/Transcri
 
 const VIDEO_ID = VideoId.parse("watchedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=watchedVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };
 

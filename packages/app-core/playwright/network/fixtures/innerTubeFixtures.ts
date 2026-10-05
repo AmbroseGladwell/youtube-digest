@@ -1,9 +1,10 @@
-import { IWFT_VIDEO_ID } from "./supadataFixtures.js";
+import { VideoId, type StoredTranscript } from "@overview/domain";
+import { mapJson3ToSegments, mapPlayerResponseToVideoSource, PlayerResponse } from "@overview/transcripts";
+
+export const IWFT_VIDEO_ID = "iwftVideoId1";
 
 export const IWFT_CAPTION_BASE_URL = `https://www.youtube.com/api/timedtext?v=${IWFT_VIDEO_ID}&lang=en&fmt=srv3`;
 
-// The same three cues the Supadata fixture carries, so what the reader's transcript tab
-// makes of them does not depend on which rung fetched them.
 export function makePlayerResponseFixture(overrides: Record<string, unknown> = {}) {
   return {
     playabilityStatus: { status: "OK" },
@@ -44,5 +45,23 @@ export function makeJson3Fixture() {
       { tStartMs: 3000, dDurationMs: 4000, segs: [{ utf8: "Here is the one claim this video makes." }] },
       { tStartMs: 7000, dDurationMs: 3000, segs: [{ utf8: "And here is how you could apply it." }] },
     ],
+  };
+}
+
+// What our own server hands back for the fixture video. It fetches through InnerTube too,
+// so this is the same player response and captions run through the same mapping, and the
+// reader's transcript tab does not depend on which rung fetched them.
+export function makeServiceTranscriptFixture(): StoredTranscript {
+  const url = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
+  return {
+    videoId: VideoId.parse(IWFT_VIDEO_ID),
+    segments: mapJson3ToSegments(JSON.stringify(makeJson3Fixture())),
+    generated: false,
+    fetchedAt: "2026-01-01T00:00:00.000Z",
+    video: mapPlayerResponseToVideoSource(
+      PlayerResponse.parse(makePlayerResponseFixture()),
+      url,
+      PlayerResponse.parse(makeMicroformatFixture()),
+    ),
   };
 }

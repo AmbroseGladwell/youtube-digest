@@ -1,11 +1,11 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/supadataFixtures.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { VideoId } from "@overview/domain";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test", supadataApiKey: "sd-test" };
+const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 
@@ -157,7 +157,7 @@ test("the panel creates with the Anthropic key alone, and asks for no transcript
   launcher,
 }) => {
   const capture = await launcher.launchPanel({
-    apiKeys: { anthropicApiKey: "sk-ant-test", supadataApiKey: null },
+    apiKeys: { anthropicApiKey: "sk-ant-test" },
     activeVideoUrl: WATCHED_URL,
     youTubeFetch: true,
   });
@@ -168,7 +168,7 @@ test("the panel creates with the Anthropic key alone, and asks for no transcript
 
 test("the panel still asks when it is the Anthropic key that is missing", async ({ launcher }) => {
   const capture = await launcher.launchPanel({
-    apiKeys: { anthropicApiKey: null, supadataApiKey: "sd-test" },
+    apiKeys: { anthropicApiKey: null },
     activeVideoUrl: WATCHED_URL,
     youTubeFetch: true,
   });
