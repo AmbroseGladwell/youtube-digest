@@ -210,8 +210,10 @@ proxy, to compare. Run it with the secret injected rather than written anywhere:
 only thing that can catch a provider's username format changing, so a person runs it
 whenever the proxy URL does.
 
-The direct path was run on 5 Oct 2026 from a residential connection: 903 segments in
-360 ms. The proxied path has not been run, because no account existed yet.
+Both paths were run on 5 Oct 2026 against `tL9Lw250spc` (a 36-minute video, 903 segments).
+Direct from a residential connection took 360 ms. Through Decodo, on a GB exit with one
+sticky session, it took 1,271 ms, and all three requests answered 200 with no bot check.
+Each run carried about 563 KB of bodies.
 
 ## What is not built
 
