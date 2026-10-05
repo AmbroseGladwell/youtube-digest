@@ -14,4 +14,6 @@ export class AnalyticsConsentNoticePageObject extends PageObject {
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectNotToBeVisible(analyticsConsentNoticeTestIds.root));
 
   dismiss = () => this.step("dismiss", () => this.click(analyticsConsentNoticeTestIds.dismiss));
+
+  openSettings = () => this.step("openSettings", () => this.click(analyticsConsentNoticeTestIds.settingsLink));
 }

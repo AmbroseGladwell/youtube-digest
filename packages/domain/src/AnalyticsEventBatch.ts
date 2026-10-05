@@ -54,6 +54,11 @@ export const AnalyticsEventBatch = z
   .strict();
 export type AnalyticsEventBatch = z.infer<typeof AnalyticsEventBatch>;
 
+// A reader without an account saying no: what app it came from and nothing else, so declines
+// can be counted with no id (docs/features/analytics-consent.md).
+export const AnalyticsDeclined = z.object({ context: AnalyticsContext }).strict();
+export type AnalyticsDeclined = z.infer<typeof AnalyticsDeclined>;
+
 // From a shared link, with or without an account. The view id is made for the page load and
 // held in memory, so one visit's events read together and nothing is kept on the device
 // (docs/architecture/analytics.md, "The shared page").

@@ -18,6 +18,9 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     if (Object.keys(patch).length === 0) {
       throw new ApiError("invalid_request", "The settings patch changes nothing");
     }
+    if (patch.analyticsOptOut !== undefined) {
+      request.log.info({ analyticsOptOut: patch.analyticsOptOut }, "analytics opt-out set");
+    }
     if (patch.narrationVoice !== undefined) {
       request.log.info({ narrationVoice: patch.narrationVoice }, "narration voice chosen");
     }

@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { FirstName, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
+import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { isUrl } from "../../util/isUrl.js";
 import { looksLikeEmail } from "../../util/looksLikeEmail.js";
@@ -24,6 +25,8 @@ export interface EmailLinkFormProps {
   askForServer?: "never" | "always" | "onRequest";
   initialServerUrl?: string | null;
   note: string | null;
+  // Small print read before the button, directly above it (design 62j).
+  aboveSubmit?: ReactNode;
   switchLink?: ReactNode;
   sending: boolean;
   refused: string | null;
@@ -40,6 +43,7 @@ export function EmailLinkForm({
   initialServerUrl = null,
   askForServer = "never",
   note,
+  aboveSubmit,
   switchLink,
   sending,
   refused,
@@ -47,6 +51,8 @@ export function EmailLinkForm({
 }: EmailLinkFormProps) {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
+  const isPhone = useIsPhone();
+  const footed = isPanel || isPhone;
   const ids = useId();
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName ?? "");
@@ -111,7 +117,7 @@ export function EmailLinkForm({
 
   return (
     <form
-      className={`${styles.root} ${isPanel ? styles.panel : ""}`}
+      className={`${styles.root} ${footed ? styles.footed : ""}`}
       onSubmit={submit}
       noValidate
       data-testid={emailLinkFormTestIds.root}
@@ -140,7 +146,7 @@ export function EmailLinkForm({
           <label className={styles.label}>
             <span className={styles.labelRow}>
               <span className={styles.labelText}>First name</span>
-              {!isPanel && <span className={styles.labelHint}>So we know what to call you</span>}
+              {!footed && <span className={styles.labelHint}>So we know what to call you</span>}
             </span>
             <span className={`${styles.field} ${problem?.field === "firstName" ? styles.fieldInvalid : ""}`}>
               <StrokeIcon name="user" size={16} />
@@ -194,15 +200,19 @@ export function EmailLinkForm({
         </button>
       )}
 
-      {isPanel ? (
+      {footed ? (
         <div className={styles.footer}>
           {noteLine}
+          {aboveSubmit}
           {button}
           {switchLine}
         </div>
       ) : (
         <>
-          <div>{button}</div>
+          <div className={styles.submitGroup}>
+            {aboveSubmit}
+            <div>{button}</div>
+          </div>
           {noteLine}
           {switchLine}
         </>

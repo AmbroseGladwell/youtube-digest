@@ -267,7 +267,13 @@ many overviews are saved only here instead (`docs/features/account-libraries.md`
 `Sign in again` and the button does.
 
 **On a phone (9e).** The sign-in and create-account pages swap the bar's actions for a
-single `Not now`.
+single `Not now`, and, as in the panel, the button sits at the form's foot, full width, with
+the way to switch centred under it (62j). The design pins that foot to the bottom of the
+screen; the app keeps it under the fields.
+
+**Creating an account** carries one line above the button saying what it agrees to, and a
+reader who said yes to sharing usage sends their anonymous id with the request
+(`docs/features/analytics-consent.md`, "Creating an account").
 
 **Sign-out** runs one last sync cycle, ten seconds at most, tells the server, and then
 signs this device out whether or not it answered; what it couldn't send is said afterwards. A session the server could not be told about

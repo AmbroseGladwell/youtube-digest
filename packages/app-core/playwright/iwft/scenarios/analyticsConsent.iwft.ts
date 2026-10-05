@@ -78,6 +78,30 @@ test.describe("asking a reader without an account", () => {
     test.expect(backendSimulator.analytics.batches()).toEqual([]);
   });
 
+  test("a no is told to the server once, with the app's context and no id", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch(NEVER_ASKED);
+
+    await launcher.analyticsConsentPrompt.dontShare();
+
+    await test.expect.poll(() => backendSimulator.analytics.declines()).toEqual([
+      { context: { surface: "web", layout: "full", appVersion: null, platform: test.expect.any(String) } },
+    ]);
+  });
+
+  test("a yes is not a decline", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch(NEVER_ASKED);
+    await launcher.analyticsConsentPrompt.share();
+
+    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("analyticsConsent.prompt.accepted");
+    test.expect(backendSimulator.analytics.declines()).toEqual([]);
+  });
+
   test("closing the notice gives the slot back to the account offer", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(makeOverview());
     await launcher.launchExpectingLibrary({ sync: true, ...NEVER_ASKED });

@@ -1,0 +1,113 @@
+// Designs 62d–62h: two cards on the section's ground, the switch in the first and error
+// reports, with no switch, in the second; the policy links at the foot.
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.75rem;
+}
+
+.switchText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.switchLabel {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.status {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.card .cardLabel {
+  margin: 0 0 -0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.links {
+  padding: 2px 4px;
+}
+
+// Off is drawn with a ring and a muted knob, so it reads as off and not as missing.
+.switch {
+  flex: none;
+  display: flex;
+  justify-content: flex-start;
+  width: 46px;
+  height: 28px;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+  cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+
+  &[aria-checked="true"] {
+    justify-content: flex-end;
+    background: var(--label);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.knob {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-badge);
+  background: var(--muted);
+
+  .switch[aria-checked="true"] & {
+    background: var(--ground);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .switch {
+    width: 52px;
+    height: 32px;
+  }
+
+  .knob {
+    width: 26px;
+    height: 26px;
+  }
+}

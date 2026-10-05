@@ -28,8 +28,16 @@ export async function issueMagicLink(
     surface,
     intent,
     firstName,
+    anonymousId,
     now,
-  }: { email: string; surface: AuthSurface; intent: AuthIntent; firstName: string | null; now: Date },
+  }: {
+    email: string;
+    surface: AuthSurface;
+    intent: AuthIntent;
+    firstName: string | null;
+    anonymousId: string | null;
+    now: Date;
+  },
 ): Promise<IssuedMagicLink | null> {
   const email = normaliseEmail(rawEmail);
   const recent = await sql.query<{ id: string }>(
@@ -42,9 +50,9 @@ export async function issueMagicLink(
   const token = generateToken();
   const expiresAt = new Date(now.getTime() + MAGIC_LINK_TTL_MS).toISOString();
   await sql.query(
-    `insert into magic_links (email, surface, intent, first_name, token_hash, created_at, expires_at)
-       values ($1, $2, $3, $4, $5, $6::timestamptz, $7::timestamptz)`,
-    [email, surface, intent, firstName, hashToken(token), now.toISOString(), expiresAt],
+    `insert into magic_links (email, surface, intent, first_name, anonymous_id, token_hash, created_at, expires_at)
+       values ($1, $2, $3, $4, $5, $6, $7::timestamptz, $8::timestamptz)`,
+    [email, surface, intent, firstName, anonymousId, hashToken(token), now.toISOString(), expiresAt],
   );
   return { email, token, expiresAt };
 }

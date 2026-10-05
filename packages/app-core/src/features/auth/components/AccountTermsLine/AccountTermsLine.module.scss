@@ -1,0 +1,28 @@
+// Design 62j: the page's small print, flush left with the form on a wide screen and centred
+// with the button on a phone and in the panel.
+.root {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--accent-hover);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .root {
+    max-width: none;
+    text-align: center;
+  }
+}

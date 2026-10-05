@@ -1,3 +1,4 @@
+import { PrivacySectionPageObject } from "./PrivacySectionPageObject.testHelper.js";
 import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
@@ -21,6 +22,10 @@ export class SettingsPageObject extends PageObject {
 
   get connections(): ConnectionsSectionPageObject {
     return new ConnectionsSectionPageObject(this.testContext);
+  }
+
+  get privacySection(): PrivacySectionPageObject {
+    return new PrivacySectionPageObject(this.testContext);
   }
 
   get syncPanel(): SyncPanelPageObject {

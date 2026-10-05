@@ -22,6 +22,7 @@ import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { issueLinkCode } from "./issueLinkCode.js";
 import { issueMagicLink } from "./issueMagicLink.js";
 import { normaliseEmail } from "./normaliseEmail.js";
+import type { EventSink } from "../events/EventSink.js";
 import { sessionCookie } from "./sessionCookie.js";
 
 export interface AuthRoutesOptions {
@@ -31,6 +32,7 @@ export interface AuthRoutesOptions {
   appUrl: string;
   sessionTtlDays: number;
   sessionCookieSecure: boolean;
+  eventSink: EventSink | null;
 }
 
 const PUBLIC = { config: { public: true } };
@@ -46,18 +48,25 @@ const emailOf = (request: FastifyRequest): string | null => {
 // (docs/features/sign-in.md).
 export function authRoutes(
   app: FastifyInstance,
-  { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure }: AuthRoutesOptions,
+  { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure, eventSink }: AuthRoutesOptions,
 ): void {
   const perAddress = (rateLimit: RateLimit) => rateLimitHook(rateLimit, (request) => request.clientAddress, clock);
   const magicLinkLimits = [perAddress(rateLimits.magicLinkPerAddress), rateLimitHook(rateLimits.magicLinkPerEmail, emailOf, clock)];
 
   app.post("/auth/magic-link", { ...PUBLIC, preHandler: magicLinkLimits }, async (request, reply) => {
-    const { email, surface, intent, firstName = null, returnTo = null } = parseOrThrow(
+    const { email, surface, intent, firstName = null, returnTo = null, anonymousId } = parseOrThrow(
       MagicLinkRequest,
       request.body,
       "The sign-in request",
     );
-    const issued = await issueMagicLink(sql, { email, surface, intent, firstName, now: clock() });
+    const issued = await issueMagicLink(sql, {
+      email,
+      surface,
+      intent,
+      firstName,
+      anonymousId: intent === "createAccount" ? (anonymousId ?? null) : null,
+      now: clock(),
+    });
     if (issued === null) {
       request.log.warn({ surface, intent, reason: "cooldown" }, "magic link held back");
     } else {
@@ -88,6 +97,12 @@ export function authRoutes(
       { accountId: account.id, created: account.created, intent: link.intent, surface: link.surface },
       account.created ? "account created" : "signed in",
     );
+    if (account.created && link.anonymousId !== null && eventSink !== null) {
+      void eventSink.link(account.id, link.anonymousId, now).then(
+        () => request.log.info({ accountId: account.id }, "anonymous id linked"),
+        (error: unknown) => request.log.warn({ accountId: account.id, error: String(error) }, "anonymous id not linked"),
+      );
+    }
     if (link.surface === "extension") {
       const code = await issueLinkCode(sql, account.id, now);
       const signedIn: SignedIn = {

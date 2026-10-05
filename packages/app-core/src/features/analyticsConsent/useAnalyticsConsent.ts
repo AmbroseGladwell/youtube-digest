@@ -30,16 +30,20 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Date()): void {
-  const { consent } = analyticsConsentSnapshot();
+// A yes always makes a new id: one that was deleted by a no is never used again. An answer
+// from Settings says nothing in the library's slot, where 62c's notice is for the prompt.
+export function answerAnalyticsConsent(
+  answer: ConsentAnswer,
+  { now = new Date(), notice = true }: { now?: Date; notice?: boolean } = {},
+): void {
   update({
     consent: {
       answer,
       answeredAt: now.toISOString(),
       purposesVersion: currentPurposes().version,
-      anonymousId: answer === "share" ? (consent?.anonymousId ?? crypto.randomUUID()) : null,
+      anonymousId: answer === "share" ? crypto.randomUUID() : null,
     },
-    justAnswered: answer,
+    justAnswered: notice ? answer : analyticsConsentSnapshot().justAnswered,
   });
 }
 

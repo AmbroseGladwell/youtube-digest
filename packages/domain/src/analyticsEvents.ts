@@ -363,6 +363,12 @@ export const analyticsEvents = {
         { asked: z.enum(["first", "again"]) },
       ),
     },
+    settings: {
+      switched: event(
+        "The reader turns Share usage on or off in Settings › Privacy; sent before an off takes effect, so it is the last event under that yes",
+        { on: z.boolean() },
+      ),
+    },
   },
   settings: {
     page: {
