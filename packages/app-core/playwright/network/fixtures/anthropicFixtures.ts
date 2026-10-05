@@ -22,7 +22,7 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     verdict: {
       novelty: "original",
       standsOut: { text: "A new idea.", range: { startSegmentIndex: 1, endSegmentIndex: 1 } },
-      dubious: false,
+      dubiousClaims: [],
       reasoning: "This is fixture reasoning text, not a real judgment.",
       similarToIndices: [],
     },

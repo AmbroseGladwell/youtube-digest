@@ -74,6 +74,7 @@ test("nothing the reader wrote for themselves is in the page", async () => {
         novelty: "common_knowledge",
         standsOut: null,
         dubious: true,
+        dubiousClaims: null,
         reasoning: "Every claim here is secondhand.",
         similarTo: [],
       },
@@ -97,7 +98,7 @@ test("a blunt verdict is in the copy but never in the preview a chat app shows",
   const made = await publish(
     account,
     makeOverview({
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Every claim here is secondhand.", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Every claim here is secondhand.", similarTo: [] },
     }),
   );
 

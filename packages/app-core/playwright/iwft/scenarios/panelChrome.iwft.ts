@@ -31,6 +31,7 @@ const VERDICT = {
   novelty: "original" as const,
   standsOut: { text: "A new idea.", range: null },
   dubious: true,
+  dubiousClaims: null,
   reasoning: "Nobody else has said this.",
   similarTo: [],
 };

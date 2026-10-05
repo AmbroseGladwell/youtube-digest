@@ -75,11 +75,28 @@ const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
   },
 };
 
+// Not derivable either: an older note says it is dubious but never said why, and the reader
+// is told no reason was saved rather than shown an empty panel (docs/features/dubious-reasons.md).
+const fillDubiousClaimsAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 6,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    const { verdict } = record as { verdict?: unknown };
+    if (typeof verdict !== "object" || verdict === null || "dubiousClaims" in verdict) {
+      return record;
+    }
+    return { ...record, verdict: { ...verdict, dubiousClaims: null } };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
   fillChaptersAddedAfterTheFirstNotes,
   moveToTheNewScaleAndTimedKeyPoints,
+  fillDubiousClaimsAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

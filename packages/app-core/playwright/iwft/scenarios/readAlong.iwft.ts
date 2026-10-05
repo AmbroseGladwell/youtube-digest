@@ -8,7 +8,7 @@ const NOTE = makeOverview({
   coreClaim: "The economy may finally be improving.",
   keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
   howToApply: { items: ["Re-run the hiring forecast.", "Ask what the growth figure excludes."] },
-  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard synthesis.", similarTo: [] },
+  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard synthesis.", similarTo: [] },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 

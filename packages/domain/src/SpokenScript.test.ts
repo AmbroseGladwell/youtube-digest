@@ -6,7 +6,7 @@ import { MAX_SPOKEN_SCRIPT_CHARACTERS, SpokenScript, spokenScript } from "./Spok
 
 test("speaks every note line in order, headings included, so a timing's index is a line's", () => {
   const overview = makeOverview({
-    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard advice.", similarTo: [] },
+    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
     howToApply: { items: ["Do the thing."] },
   });
 
@@ -36,7 +36,7 @@ test("leaves the opening out when the video names nothing to open with", () => {
 
 test("passes over the verdict label and its footnote with empty entries rather than dropping their lines", () => {
   const overview = makeOverview({
-    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard advice.", similarTo: [] },
+    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
   });
 
   const script = spokenScript(overview).slice(1);

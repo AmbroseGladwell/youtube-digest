@@ -17,6 +17,7 @@ const privateOverview = () =>
       novelty: "common_knowledge",
       standsOut: null,
       dubious: false,
+      dubiousClaims: [],
       reasoning: "The capacity-market argument is well sourced.",
       similarTo: [{ overviewId: SIMILAR_ID, title: "What a capacity market actually pays for" }],
     },

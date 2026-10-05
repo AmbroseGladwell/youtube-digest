@@ -141,10 +141,37 @@ test("a share made before OV-83 reads as common knowledge with untimed key point
   assert.deepEqual(rows, [
     {
       token: "withVerdict00000",
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Secondhand.", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Secondhand.", similarTo: [] },
       key_points: untimed,
     },
     { token: "withoutVerdict00", verdict: null, key_points: untimed },
+  ]);
+  await sql.close();
+});
+
+test("a share made before dubious claims were saved reads as having none saved, and one without a verdict keeps none", async () => {
+  const sql = createPgliteSqlClient(new PGlite());
+  await runMigrations(sql, await migrationsBefore(14));
+  const accountId = "a0000000-0000-4000-8000-000000000001";
+  await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);
+  const share = (token: string, verdict: unknown) =>
+    sql.query(
+      `insert into shares (token, account_id, overview_id, snapshot, content_hash, shared_at, updated_at)
+       values ($1, $2, gen_random_uuid(), $3::jsonb, 'hash', now(), now())`,
+      [token, accountId, JSON.stringify({ note: { verdict }, transcript: null, narration: null })],
+    );
+  const verdict = { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Secondhand.", similarTo: [] };
+  await share("withVerdict00000", verdict);
+  await share("withoutVerdict00", null);
+
+  await runMigrations(sql);
+
+  const rows = await sql.query<{ token: string; verdict: unknown }>(
+    "select token, snapshot -> 'note' -> 'verdict' as verdict from shares order by token",
+  );
+  assert.deepEqual(rows, [
+    { token: "withVerdict00000", verdict: { ...verdict, dubiousClaims: null } },
+    { token: "withoutVerdict00", verdict: null },
   ]);
   await sql.close();
 });

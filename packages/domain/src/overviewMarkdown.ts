@@ -1,8 +1,10 @@
+import { DUBIOUS_BASIS_LABEL } from "./dubiousBasisLabel.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { Overview } from "./Overview.js";
 import type { TimeRange } from "./WatchAnyway.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
+import type { DubiousClaim } from "./Verdict.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
@@ -38,13 +40,26 @@ export function overviewMarkdown(overview: Overview): string {
   section(overview.thin ? "No clear claim" : "Core claim", overview.coreClaim);
 
   if (overview.verdict !== null) {
-    const { novelty, standsOut, dubious, reasoning, similarTo } = overview.verdict;
+    const { novelty, standsOut, dubious, dubiousClaims, reasoning, similarTo } = overview.verdict;
     const lines = [`${NOVELTY_LABEL[novelty]}${dubious ? ", and dubious" : ""}. ${reasoning}`];
     if (standsOut !== null) {
       const at = standsOut.range === null ? "" : ` (${stretch(video.url, standsOut.range)})`;
       lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}`);
     }
     lines.push(`_${NOVELTY_BASIS}_`);
+    if (dubious && dubiousClaims === null) {
+      lines.push("Why it is dubious: no reason was saved with this overview.");
+    }
+    if (dubiousClaims !== null && dubiousClaims.length > 0) {
+      const claimLine = (dubiousClaim: DubiousClaim) =>
+        [
+          dubiousClaim.startMs === null ? null : moment(video.url, dubiousClaim.startMs),
+          `“${dubiousClaim.claim}”: ${DUBIOUS_BASIS_LABEL[dubiousClaim.basis]}. ${dubiousClaim.reason}`,
+        ]
+          .filter((part) => part !== null)
+          .join(" ");
+      lines.push(`Why it is dubious:\n\n${bullets(dubiousClaims.map(claimLine))}`);
+    }
     if (similarTo.length > 0) {
       lines.push(`Similar to: ${similarTo.map((similar) => `${similar.title} (${similar.overviewId})`).join("; ")}`);
     }

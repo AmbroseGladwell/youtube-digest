@@ -5,6 +5,7 @@ import {
   Verdict,
   WatchAnyway,
   type Chapter,
+  type DubiousClaim,
   type Novelty,
   type StandsOut,
   type OverviewId,
@@ -12,6 +13,7 @@ import {
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput, GeneratedTimedText } from "./GeneratedOutput.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
+import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 
 export function assembleOverview(
@@ -28,7 +30,8 @@ export function assembleOverview(
       ? Verdict.parse({
           novelty: output.verdict.novelty,
           standsOut: resolveStandsOut(input, output.verdict.novelty, output.verdict.standsOut),
-          dubious: output.verdict.dubious,
+          dubious: output.verdict.dubiousClaims.length > 0,
+          dubiousClaims: resolveDubiousClaims(input, output.verdict.dubiousClaims),
           reasoning: output.verdict.reasoning,
           similarTo: output.verdict.similarToIndices
             .filter((i) => i >= 0 && i < input.pastClaims.length)
@@ -117,6 +120,22 @@ function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chap
       startMs: segmentAt(chapter.startSegmentIndex).startMs,
       endMs: next ? segmentAt(next.startSegmentIndex).startMs : lastCaptionEndsMs,
     };
+  });
+}
+
+function resolveDubiousClaims(input: GenerationInput, dubiousClaims: DubiousClaimShape[]): DubiousClaim[] {
+  return dubiousClaims.map(({ segmentIndex, ...dubiousClaim }) => {
+    if (segmentIndex === null) {
+      return { ...dubiousClaim, startMs: null };
+    }
+    const segment = input.transcript[segmentIndex];
+    if (!segment) {
+      throw new GenerationError(
+        `a dubious claim referenced a segment index out of bounds: ${segmentIndex} ` +
+          `(transcript has ${input.transcript.length} segments)`,
+      );
+    }
+    return { ...dubiousClaim, startMs: segment.startMs };
   });
 }
 

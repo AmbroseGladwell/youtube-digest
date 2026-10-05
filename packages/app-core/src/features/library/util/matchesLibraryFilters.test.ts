@@ -24,7 +24,7 @@ describe("matchesLibraryFilters", () => {
 
   it("filters by novelty, and thin overviews with no verdict never match a specific novelty", () => {
     const withVerdict = makeOverviewWithState({
-      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
     });
     const thin = makeOverviewWithState({ thin: true, verdict: null });
 
@@ -36,10 +36,10 @@ describe("matchesLibraryFilters", () => {
     const favourite = makeOverviewWithState({}, { favourite: true });
     const plain = makeOverviewWithState({}, { favourite: false });
     const dubious = makeOverviewWithState({
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] },
     });
     const sound = makeOverviewWithState({
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
     });
 
     expect(matchesLibraryFilters(favourite, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(true);

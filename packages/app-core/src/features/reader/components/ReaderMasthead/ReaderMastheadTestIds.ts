@@ -9,4 +9,5 @@ export const readerMastheadTestIds = {
   readAloudButton: "ReaderMasthead.readAloudButton",
   listenButton: "ReaderMasthead.listenButton",
   readButton: "ReaderMasthead.readButton",
+  dubiousFlag: "ReaderMasthead.dubiousFlag",
 };

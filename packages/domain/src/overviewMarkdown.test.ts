@@ -28,6 +28,14 @@ const FULL = makeOverview({
     novelty: "original",
     standsOut: { text: "Cueing the float as the hips snapping shut.", range: { startMs: 95_000, endMs: 140_000 } },
     dubious: true,
+    dubiousClaims: [
+      {
+        claim: "Swinging decompresses your spine.",
+        basis: "contradictsSettled",
+        reason: "Loaded hinging compresses the spine; nothing is offered for the opposite.",
+        startMs: 301_000,
+      },
+    ],
     reasoning: "The spinal claim is asserted rather than sourced.",
     similarTo: [{ overviewId: SIMILAR_ID, title: "Hinge before you load" }],
   },
@@ -105,6 +113,21 @@ test("names what stands out, and says what the novelty was judged against", () =
     ),
   );
   assert.ok(markdown.includes(`_${NOVELTY_BASIS}_`));
+});
+
+test("says why a verdict is dubious, each claim linked to its moment in the video", () => {
+  assert.ok(
+    overviewMarkdown(FULL).includes(
+      "Why it is dubious:\n\n- [5:01](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=301) “Swinging decompresses your spine.”: " +
+        "Contradicts settled evidence. Loaded hinging compresses the spine; nothing is offered for the opposite.",
+    ),
+  );
+});
+
+test("says no reason was saved for a dubious verdict from before reasons existed", () => {
+  const markdown = overviewMarkdown({ ...FULL, verdict: { ...FULL.verdict!, dubiousClaims: null } });
+
+  assert.ok(markdown.includes("Why it is dubious: no reason was saved with this overview."));
 });
 
 test("leaves out every optional section a sparse note does not have", () => {

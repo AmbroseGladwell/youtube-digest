@@ -41,6 +41,7 @@ test("shows the verdict as its label, what it was judged against as a footnote, 
         novelty: "common_knowledge",
         standsOut: null,
         dubious: false,
+        dubiousClaims: [],
         reasoning: "Standard advice.",
         similarTo: [],
       },
@@ -62,6 +63,7 @@ test("names what stands out after the label, speaks it, and carries the stretch 
         novelty: "fresh_angle",
         standsOut: { text: "A worked spreadsheet for the drawdown.", range: { startMs: 60_000, endMs: 90_000 } },
         dubious: false,
+        dubiousClaims: [],
         reasoning: "Standard advice otherwise.",
         similarTo: [],
       },
@@ -169,7 +171,7 @@ const spokenIn = (lines: ReturnType<typeof overviewNoteLines>, section: string) 
 test("speaks each heading in its own words while showing the heading unchanged", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      verdict: { novelty: "original", standsOut: { text: "A new trial.", range: null }, dubious: false, reasoning: "New.", similarTo: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new trial.", range: null }, dubious: false, dubiousClaims: [], reasoning: "New.", similarTo: [] },
       howToApply: { items: ["Do it."] },
       selling: { type: "own_paid_product", detail: "A course.", compromisesContent: false },
       watchAnyway: { answer: "no", reason: "Covered.", range: null },
