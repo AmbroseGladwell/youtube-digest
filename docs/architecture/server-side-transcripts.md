@@ -77,8 +77,13 @@ replaced with a fresh id per resolve, which is how Decodo (and most providers) p
 sticky exit address in the username:
 
 ```
-http://user-<username>-country-gb-session-{session}-sesstime-1:<password>@gate.decodo.com:7000
+http://user-<username>-country-gb-session-{session}-sessionduration-1:<password>@gate.decodo.com:7000
 ```
+
+That is Decodo's documented format (help.decodo.com, "Advanced Parameters"): the one proxy
+user the dashboard gives you, with parameters added to its name. The dashboard's own
+"Endpoints" list is sticky by port instead (`gb.decodo.com:30001` and up, no session in
+the name), which this code can't rotate, so build the URL by hand.
 
 Switching provider is changing that one value. Exit country GB or US, because the
 InnerTube request already asks for `hl: "en"`, `gl: "US"`.
