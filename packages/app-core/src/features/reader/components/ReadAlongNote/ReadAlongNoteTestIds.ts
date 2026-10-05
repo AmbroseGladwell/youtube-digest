@@ -4,5 +4,4 @@ export const readAlongNoteTestIds = {
   lineText: "ReadAlongNote.lineText",
   bullet: "ReadAlongNote.bullet",
   activeLine: "ReadAlongNote.activeLine",
-  startTime: "ReadAlongNote.startTime",
 };

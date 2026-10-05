@@ -15,14 +15,14 @@ describe("libraryFilterCounts", () => {
       makeOverviewWithState(
         {
           topicIds: [FITNESS],
-          verdict: { novelty: "novel", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+          verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
         },
         { read: true },
       ),
       makeOverviewWithState(
         {
           topicIds: [FITNESS, FINANCE],
-          verdict: { novelty: "recycled", dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] },
+          verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] },
         },
         { favourite: true },
       ),
@@ -36,7 +36,7 @@ describe("libraryFilterCounts", () => {
       dubious: 1,
       unreadable: 0,
       byTopic: { [FITNESS]: 2, [FINANCE]: 1 },
-      byNovelty: { novel: 1, recycled: 1 },
+      byNovelty: { original: 1, common_knowledge: 1 },
     });
   });
 

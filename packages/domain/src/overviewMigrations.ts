@@ -54,10 +54,31 @@ const fillChaptersAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// The novelty half is not derivable: the old scale's middle bucket splits across the new
+// one, and only the developer's own overviews were ever written on it. The key points half
+// is: each keeps its words and has no stretch of the video yet
+// (docs/features/novelty-scale.md).
+const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
+  newSchemaVersion: 5,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    const { verdict, keyPoints } = record as { verdict?: unknown; keyPoints?: unknown };
+    return {
+      ...record,
+      ...(Array.isArray(keyPoints) ? { keyPoints: keyPoints.map((text) => ({ text, range: null })) } : {}),
+      ...(typeof verdict === "object" && verdict !== null
+        ? { verdict: { ...verdict, novelty: "common_knowledge", standsOut: null } }
+        : {}),
+    };
+  },
+};
+
 // Not derivable either: an older note says it is dubious but never said why, and the reader
 // is told no reason was saved rather than shown an empty panel (docs/features/dubious-reasons.md).
 const fillDubiousClaimsAddedAfterTheFirstNotes: RecordMigration = {
-  newSchemaVersion: 5,
+  newSchemaVersion: 6,
   alterRecord: (record) => {
     if (typeof record !== "object" || record === null) {
       return record;
@@ -74,6 +95,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
   fillChaptersAddedAfterTheFirstNotes,
+  moveToTheNewScaleAndTimedKeyPoints,
   fillDubiousClaimsAddedAfterTheFirstNotes,
 ];
 

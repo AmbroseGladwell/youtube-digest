@@ -25,7 +25,11 @@ interface SampleRecord {
   myNote: string;
 }
 
-const NOVELTY: Record<string, Novelty> = { NOVEL: "novel", "SOLID BUT FAMILIAR": "established", RECYCLED: "recycled" };
+const NOVELTY: Record<string, Novelty> = {
+  NOVEL: "original",
+  "SOLID BUT FAMILIAR": "common_knowledge",
+  RECYCLED: "common_knowledge",
+};
 const WATCH: Record<string, WatchAnswer> = { Yes: "yes", No: "no" };
 const ITEM_START = /^\s*(?:\d+\.|-)\s+/;
 
@@ -92,10 +96,10 @@ export function sampleLibrary(): SampleLibrary {
         inOneLine: sample.synopsis,
         coreClaim: sample.claim,
         thin: false,
-        keyPoints: sample.points,
+        keyPoints: sample.points.map((text) => ({ text, range: null })),
         topicIds: [TopicId.parse(topic.id)],
         tags: sample.tags,
-        verdict: { novelty: NOVELTY[sample.verdict]!, dubious: false, dubiousClaims: [], reasoning: sample.reasoning, similarTo: [] },
+        verdict: { novelty: NOVELTY[sample.verdict]!, standsOut: null, dubious: false, dubiousClaims: [], reasoning: sample.reasoning, similarTo: [] },
         selling: sample.sells
           ? { type: "own_paid_product", detail: sample.selling, compromisesContent: false }
           : { type: "none", detail: "", compromisesContent: false },

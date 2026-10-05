@@ -96,8 +96,8 @@ test("a dubious record from before reasons existed reads with no claims saved, r
 });
 
 test("a record with no verdict is left without one", () => {
-  const thin = { ...(corpusAt(4) as Record<string, unknown>), verdict: null };
-  assert.equal((applyRecordMigration(thin, OVERVIEW_MIGRATIONS[3]!) as { verdict: unknown }).verdict, null);
+  const thin = { ...(corpusAt(5) as Record<string, unknown>), verdict: null };
+  assert.equal((applyRecordMigration(thin, OVERVIEW_MIGRATIONS[4]!) as { verdict: unknown }).verdict, null);
 });
 
 test("the filled video fields are null rather than absent, which is what every reader guards on", () => {
@@ -108,4 +108,29 @@ test("the filled video fields are null rather than absent, which is what every r
     assert.ok(field in migrated.video, `${field} is absent`);
     assert.equal(migrated.video[field], null);
   }
+});
+
+test("every verdict on the old scale reads as common knowledge, with nothing named as standing out", () => {
+  for (const oldNovelty of ["novel", "established", "recycled"]) {
+    const atVersion4 = corpusAt(4) as { verdict: Record<string, unknown> };
+    const old = { ...atVersion4, verdict: { ...atVersion4.verdict, novelty: oldNovelty } };
+    const { verdict } = Overview.parse(migrateRecord(old, OVERVIEW_MIGRATIONS));
+    assert.equal(verdict?.novelty, "common_knowledge");
+    assert.equal(verdict?.standsOut, null);
+  }
+});
+
+test("each key point keeps its words, with no stretch of the video yet", () => {
+  const atVersion4 = corpusAt(4) as { keyPoints: string[] };
+  const { keyPoints } = Overview.parse(migrateRecord(atVersion4, OVERVIEW_MIGRATIONS));
+  assert.deepEqual(
+    keyPoints,
+    atVersion4.keyPoints.map((text) => ({ text, range: null })),
+  );
+});
+
+test("an overview without a verdict keeps none", () => {
+  const atVersion4 = corpusAt(4) as Record<string, unknown>;
+  const thin = { ...atVersion4, thin: true, verdict: null };
+  assert.equal(Overview.parse(migrateRecord(thin, OVERVIEW_MIGRATIONS)).verdict, null);
 });

@@ -103,6 +103,8 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 transcriptSource: transcriptSource ?? "stored",
                 durationMs: Date.now() - startedAt,
                 reasonGiven: saved.captureReason !== null,
+                novelty: saved.verdict?.novelty ?? "none",
+                standsOut: saved.verdict?.standsOut != null,
               });
               setRun((current) =>
                 current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },

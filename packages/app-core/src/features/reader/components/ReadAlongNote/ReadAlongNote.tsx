@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
-import type { NoteLine } from "@overview/domain";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useEffect, useRef, type ReactNode } from "react";
+import type { NoteLine, TimeRange } from "@overview/domain";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
@@ -8,10 +7,8 @@ import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
-  // Design 2b: where each line starts in the narration, shown beside a line under the
-  // pointer. Null when there is no narration to seek, which is the pacer's case.
-  lineStartLabels?: string[] | null;
   onSelectLine: (index: number) => void;
+  renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
 }
 
 // Design 4a numbers the key points rather than bulleting them, so each list line carries
@@ -50,8 +47,8 @@ const keepInTopThird = (line: HTMLElement) => {
   line.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-export function ReadAlongNote({ lines, activeIndex, lineStartLabels = null, onSelectLine }: ReadAlongNoteProps) {
-  const activeLine = useRef<HTMLButtonElement | null>(null);
+export function ReadAlongNote({ lines, activeIndex, onSelectLine, renderRange }: ReadAlongNoteProps) {
+  const activeLine = useRef<HTMLDivElement | null>(null);
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
 
@@ -61,44 +58,50 @@ export function ReadAlongNote({ lines, activeIndex, lineStartLabels = null, onSe
     }
   }, [activeIndex]);
 
+  const select = (index: number) => {
+    analytics.readAlong.lineChosen();
+    onSelectLine(index);
+  };
+
   return (
     <div className={styles.root} data-testid={readAlongNoteTestIds.root}>
       {lines.map((line, index) => {
         const active = index === activeIndex;
         return (
-          <button
+          <div
             key={`${line.section}-${index}`}
-            type="button"
             ref={active ? activeLine : null}
-            className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
+            className={`${styles.line} ${line.heading ? styles.headingLine : line.footnote ? styles.footnoteLine : styles.bodyLine} ${
               line.bullet ? styles.bulletLine : ""
             } ${active ? styles.lineActive : ""}`}
-            aria-current={active}
-            onClick={() => {
-              analytics.readAlong.lineChosen();
-              onSelectLine(index);
-            }}
+            onClick={() => select(index)}
+            data-read-along-line
             data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
           >
-            {lineStartLabels?.[index] !== undefined && (
-              <span className={styles.startTime} aria-hidden="true" data-testid={readAlongNoteTestIds.startTime}>
-                <StrokeIcon name="circlePlay" size={13} />
-                {lineStartLabels[index]}
-              </span>
-            )}
             {line.bullet && (
-              <span
-                className={styles.bullet}
-                aria-hidden="true"
-                data-testid={readAlongNoteTestIds.bullet}
-              >
+              <span className={styles.bullet} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet}>
                 {numbers[index]}.
               </span>
             )}
-            <span className={styles.lineText} data-testid={readAlongNoteTestIds.lineText}>
-              {line.text}
+            <span className={styles.lineBody}>
+              <span
+                role="button"
+                tabIndex={0}
+                className={styles.lineText}
+                aria-current={active}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    select(index);
+                  }
+                }}
+                data-testid={readAlongNoteTestIds.lineText}
+              >
+                {line.text}
+              </span>
+              {line.range && renderRange?.(line, line.range, active)}
             </span>
-          </button>
+          </div>
         );
       })}
     </div>

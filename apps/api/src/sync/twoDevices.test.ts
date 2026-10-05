@@ -179,7 +179,7 @@ test("a write the server refuses is kept and counted as stuck, and the rest of t
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const good = makeOverview();
-  const bad = makeOverview({ keyPoints: ["only one"] });
+  const bad = makeOverview({ keyPoints: [{ text: "only one", range: null }] });
   const laptop = await makeDevice(testApp, account, {
     before: async ({ overviews }) => {
       await overviews.saveOverview(bad);

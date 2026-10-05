@@ -71,7 +71,8 @@ test("nothing the reader wrote for themselves is in the page", async () => {
       captureReason: "Read before the Thursday review.",
       tags: ["energy-policy", "nuclear", "grids"],
       verdict: {
-        novelty: "recycled",
+        novelty: "common_knowledge",
+        standsOut: null,
         dubious: true,
         dubiousClaims: null,
         reasoning: "Every claim here is secondhand.",
@@ -97,7 +98,7 @@ test("a blunt verdict is in the copy but never in the preview a chat app shows",
   const made = await publish(
     account,
     makeOverview({
-      verdict: { novelty: "recycled", dubious: true, dubiousClaims: null, reasoning: "Every claim here is secondhand.", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Every claim here is secondhand.", similarTo: [] },
     }),
   );
 

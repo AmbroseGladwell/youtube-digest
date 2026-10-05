@@ -33,7 +33,7 @@ const SELLING_LABEL: Record<string, string> = {
 };
 
 // Design 10a: a thumbnail-first row on a raised tile. Every verdict is the same stone
-// chip, so a library that is three-quarters recycled reads calm; a row already read
+// chip, so a library that is three-quarters common knowledge reads calm; a row already read
 // recedes to the muted ink instead (docs/features/stone-theme.md).
 export function LibraryOverviewCard({
   overviewWithState,

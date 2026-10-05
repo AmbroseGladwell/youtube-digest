@@ -8,9 +8,9 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     coreClaim: "The simulated technique works because the fixture says so.",
     thin: false,
     keyPoints: [
-      "The video opens with a greeting.",
-      "It states one claim.",
-      "It closes with how to apply that claim.",
+      { text: "The video opens with a greeting.", range: null },
+      { text: "It states one claim.", range: null },
+      { text: "It closes with how to apply that claim.", range: null },
     ],
     chapters: [
       { title: "The greeting", summary: "The simulated creator says hello.", startSegmentIndex: 0 },
@@ -20,7 +20,8 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     suggestedTopic: null,
     tags: ["iwft-fixture", "simulated-video", "test-data"],
     verdict: {
-      novelty: "novel",
+      novelty: "original",
+      standsOut: { text: "A new idea.", range: { startSegmentIndex: 1, endSegmentIndex: 1 } },
       dubiousClaims: [],
       reasoning: "This is fixture reasoning text, not a real judgment.",
       similarToIndices: [],

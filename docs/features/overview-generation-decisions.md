@@ -50,6 +50,10 @@ shape and the reasons are in `docs/features/chapters.md`.
 
 ## The verdict scale: two axes, one blunt label
 
+> **Superseded for novelty by `novelty-scale.md` (OV-83).** The scale below became Common
+> knowledge / Fresh angle / Original, judged against the field and never against the
+> reader's library. The `dubious` half and the `THIN` gate are unchanged.
+
 **Evidence the single scale conflates two things.** Across the 30-note prototype
 library, one bucket (`SOLID BUT FAMILIAR`) holds 77% and two buckets (`THIN`,
 `DUBIOUS`) have never fired. Reading the actual reasoning text behind every
@@ -182,6 +186,9 @@ still expected to name the specific dish, not "try incorporating more variety in
 your cooking."
 
 ## Personal-library novelty, not just world knowledge
+
+> **Narrowed by `novelty-scale.md` (OV-83).** Past claims still go into the call, but only
+> to fill `similarTo`. The novelty label no longer draws on them.
 
 **How the prototype actually produces "novel" vs. "familiar" today: almost entirely
 the model's general sense of the genre, not a comparison against anything this
@@ -431,6 +438,9 @@ model still only ever sees caption text at that offset, never the frame — it o
 fixes where a real Yes or partial-Yes can point to.
 
 ## In one line, Core claim, Key points
+
+> Each key point now also carries the stretch of the video it comes from, as segment
+> numbers resolved to times by code. See `novelty-scale.md`, "What stands out".
 
 **In one line's "roughly how long" clause has been dead instruction from the start.**
 The prompt asks for three things — who's talking, roughly how long, and what

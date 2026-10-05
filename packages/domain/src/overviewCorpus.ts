@@ -76,8 +76,15 @@ const version4 = {
 
 const version5 = {
   ...version4,
-  verdict: { ...version4.verdict, dubiousClaims: null },
+  keyPoints: version4.keyPoints.map((text) => ({ text, range: null })),
+  verdict: { ...version4.verdict, novelty: "common_knowledge", standsOut: null },
   schemaVersion: 5,
+};
+
+const version6 = {
+  ...version5,
+  verdict: { ...version5.verdict, dubiousClaims: null },
+  schemaVersion: 6,
 };
 
 // One curated record per version, exercising every field at that version — which an
@@ -89,4 +96,5 @@ export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unk
   [3, version3],
   [4, version4],
   [5, version5],
+  [6, version6],
 ]);

@@ -57,6 +57,7 @@ const Direction = z.enum(["previous", "next"]);
 const SkipDirection = z.enum(["back", "forward"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
+const RangeReach = z.enum([...VideoReach.options, "transcript"]);
 const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
@@ -142,10 +143,14 @@ export const overviewPageEvents = {
   },
   readAlong: {
     lineChosen: event("The reader picks a line of the note to listen from"),
+    rangeFollowed: event("The reader goes to the stretch of the video a key point or what stands out comes from", {
+      line: z.enum(["keyPoint", "standsOut"]),
+      by: RangeReach,
+    }),
   },
   watchAnyway: {
     followed: event("The reader goes to the stretch of the video the verdict says is worth watching", {
-      by: VideoReach,
+      by: RangeReach,
     }),
   },
   chapters: {
@@ -416,13 +421,18 @@ export const analyticsEvents = {
   capture: {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
-      finished: event("An overview the reader asked for is made and saved; its duration measured by the app", {
-        overviewId: OverviewId,
-        from: CaptureEntry,
-        transcriptSource: CaptureTranscriptSource,
-        durationMs: z.number().int().nonnegative(),
-        reasonGiven: z.boolean(),
-      }),
+      finished: event(
+        "An overview the reader asked for is made and saved, with the novelty it came out at and whether it named what stands out; its duration measured by the app",
+        {
+          overviewId: OverviewId,
+          from: CaptureEntry,
+          transcriptSource: CaptureTranscriptSource,
+          durationMs: z.number().int().nonnegative(),
+          reasonGiven: z.boolean(),
+          novelty: z.enum([...Novelty.options, "none"]),
+          standsOut: z.boolean(),
+        },
+      ),
       failed: event("An overview the reader asked for could not be made, and why", {
         from: CaptureEntry,
         failure: CaptureFailure,

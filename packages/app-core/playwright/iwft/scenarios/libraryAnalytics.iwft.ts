@@ -17,7 +17,7 @@ const seed = (backendSimulator: BackendSimulator) => {
   const grid = makeOverview({
     topicIds: [ENERGY.id],
     video: { ...makeOverview().video, title: "Grid batteries" },
-    verdict: { novelty: "recycled", dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   backendSimulator.overviews.seed(grid);
   backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "Sourdough" } }));
@@ -32,14 +32,14 @@ test("filtering names a topic by its id and a verdict by its value, and says whe
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
 
   await library.filterPanel.clickTopicChip(ENERGY.id);
-  await library.filterPanel.clickNoveltyChip("recycled");
+  await library.filterPanel.clickNoveltyChip("common_knowledge");
 
   await expect
     .poll(() => libraryEvents(backendSimulator))
     .toEqual([
       { name: "library.filters.topicChosen", props: { topicId: ENERGY.id, from: "panel" } },
       { name: "library.filters.moreShown", props: { shown: true } },
-      { name: "library.filters.noveltyChosen", props: { novelty: "recycled", from: "panel" } },
+      { name: "library.filters.noveltyChosen", props: { novelty: "common_knowledge", from: "panel" } },
     ]);
 });
 

@@ -37,6 +37,8 @@ test("making an overview is counted from asking to reading it, with where it was
           transcriptSource: "service",
           durationMs: expect.any(Number),
           reasonGiven: false,
+          novelty: "original",
+          standsOut: true,
         },
       },
       { name: "capture.newOverviewDialog.readChosen", props: { overviewId: overview!.id, from: "dialog" } },

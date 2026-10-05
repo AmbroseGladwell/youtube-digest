@@ -68,7 +68,7 @@ test("search_overviews filters by topic name, verdict and saved date", async () 
   const { testApp, library, client } = await connectedToSamples();
 
   const byTopic = await client.callTool("search_overviews", { topic: "Finance" });
-  const byVerdict = await client.callTool("search_overviews", { verdict: "novel" });
+  const byVerdict = await client.callTool("search_overviews", { verdict: "original" });
   const byDate = await client.callTool("search_overviews", { savedTo: "2026-09-01" });
 
   assert.ok(byTopic.text.includes(note(library, "finance").overview.id));

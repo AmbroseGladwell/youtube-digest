@@ -32,7 +32,7 @@ test("a well-formed response from the client assembles into a valid Overview", a
     inOneLine: "A short description.",
     coreClaim: "The core claim.",
     thin: false,
-    keyPoints: ["one", "two", "three"],
+    keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
     chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
     matchedTopicNames: [],
     suggestedTopic: null,
@@ -61,7 +61,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
         inOneLine: Array(30).fill("word").join(" "),
         coreClaim: "The core claim.",
         thin: false,
-        keyPoints: ["one", "two", "three"],
+        keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
         chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
         matchedTopicNames: [],
         suggestedTopic: null,
@@ -75,7 +75,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       inOneLine: "A short description.",
       coreClaim: "The core claim.",
       thin: false,
-      keyPoints: ["one", "two", "three"],
+      keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
       chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
       matchedTopicNames: [],
       suggestedTopic: null,
@@ -101,7 +101,7 @@ test("two consecutive schema failures surface as one GenerationError, not an inf
 });
 
 test("a key points list past the cap is sent back to be trimmed, with the attempt it came from", async () => {
-  const ninePoints = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const ninePoints = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"].map((text) => ({ text, range: null }));
   let calls = 0;
   const client: GenerationClient = async ({ userMessage }) => {
     calls++;

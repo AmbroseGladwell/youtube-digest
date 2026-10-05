@@ -42,7 +42,7 @@ const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
   coreClaim: "The core claim of the video.",
   thin: false,
-  keyPoints: ["one", "two", "three"],
+  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
@@ -71,7 +71,7 @@ test("a thin overview never carries a verdict, even if the model produced one", 
     {
       ...baseOutput,
       thin: true,
-      verdict: { novelty: "novel", dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
     },
     meta,
   );
@@ -83,12 +83,54 @@ test("similarToIndices resolve to the matching past claim, out-of-range indices 
     baseInput,
     {
       ...baseOutput,
-      verdict: { novelty: "recycled", dubiousClaims: [], reasoning: "x", similarToIndices: [0, 5, -1] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [0, 5, -1] },
     },
     meta,
   );
   assert.equal(overview.verdict?.similarTo.length, 1);
   assert.equal(overview.verdict?.similarTo[0]?.title, "An older video");
+});
+
+test("common knowledge never names what stands out, even if the model did", () => {
+  const overview = assembleOverview(
+    baseInput,
+    {
+      ...baseOutput,
+      verdict: { novelty: "common_knowledge", standsOut: { text: "Nothing much.", range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+    },
+    meta,
+  );
+  assert.equal(overview.verdict?.standsOut, null);
+});
+
+test("a fresh angle keeps what stands out, and a blank one reads as missing", () => {
+  const verdict = (text: string) =>
+    assembleOverview(
+      baseInput,
+      {
+        ...baseOutput,
+        verdict: { novelty: "fresh_angle", standsOut: { text, range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      },
+      meta,
+    ).verdict;
+  assert.deepEqual(verdict(" A worked drawdown spreadsheet. ")?.standsOut, { text: "A worked drawdown spreadsheet.", range: null });
+  assert.equal(verdict("  ")?.standsOut, null);
+});
+
+test("what stands out is timed from the transcript, and a range that does not fit is dropped rather than failing the overview", () => {
+  const standsOut = (range: { startSegmentIndex: number; endSegmentIndex: number }) =>
+    assembleOverview(
+      baseInput,
+      {
+        ...baseOutput,
+        verdict: { novelty: "original", standsOut: { text: "A trial.", range }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      },
+      meta,
+    ).verdict?.standsOut;
+
+  assert.deepEqual(standsOut({ startSegmentIndex: 1, endSegmentIndex: 2 })?.range, { startMs: 2000, endMs: 9000 });
+  assert.equal(standsOut({ startSegmentIndex: 1, endSegmentIndex: 3 })?.range, null);
+  assert.equal(standsOut({ startSegmentIndex: 2, endSegmentIndex: 1 })?.range, null);
 });
 
 const DUBIOUS_CLAIM = {
@@ -101,7 +143,7 @@ const DUBIOUS_CLAIM = {
 test("a verdict naming a dubious claim is dubious, and the claim's segment resolves to the transcript's real timestamp", () => {
   const overview = assembleOverview(
     baseInput,
-    { ...baseOutput, verdict: { novelty: "novel", dubiousClaims: [DUBIOUS_CLAIM], reasoning: "x", similarToIndices: [] } },
+    { ...baseOutput, verdict: { novelty: "original", standsOut: null, dubiousClaims: [DUBIOUS_CLAIM], reasoning: "x", similarToIndices: [] } },
     meta,
   );
   assert.equal(overview.verdict?.dubious, true);
@@ -113,7 +155,7 @@ test("a verdict naming a dubious claim is dubious, and the claim's segment resol
 test("a verdict naming no dubious claim is not dubious", () => {
   const overview = assembleOverview(
     baseInput,
-    { ...baseOutput, verdict: { novelty: "novel", dubiousClaims: [], reasoning: "x", similarToIndices: [] } },
+    { ...baseOutput, verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] } },
     meta,
   );
   assert.equal(overview.verdict?.dubious, false);
@@ -126,7 +168,7 @@ test("a dubious claim made without a transcript has no moment", () => {
     {
       ...baseOutput,
       chapters: [],
-      verdict: { novelty: "novel", dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: null }], reasoning: "x", similarToIndices: [] },
+      verdict: { novelty: "original", standsOut: null, dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: null }], reasoning: "x", similarToIndices: [] },
     },
     meta,
   );
@@ -140,7 +182,7 @@ test("a dubious claim pointing past the transcript is a generation error, not a 
         baseInput,
         {
           ...baseOutput,
-          verdict: { novelty: "novel", dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: 99 }], reasoning: "x", similarToIndices: [] },
+          verdict: { novelty: "original", standsOut: null, dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: 99 }], reasoning: "x", similarToIndices: [] },
         },
         meta,
       ),

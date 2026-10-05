@@ -6,10 +6,12 @@ import {
   WatchAnyway,
   type Chapter,
   type DubiousClaim,
+  type Novelty,
+  type StandsOut,
   type OverviewId,
 } from "@overview/domain";
 import type { GenerationInput } from "./GenerationInput.js";
-import type { GeneratedOutput } from "./GeneratedOutput.js";
+import type { GeneratedOutput, GeneratedTimedText } from "./GeneratedOutput.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
@@ -27,6 +29,7 @@ export function assembleOverview(
     !output.thin && output.verdict
       ? Verdict.parse({
           novelty: output.verdict.novelty,
+          standsOut: resolveStandsOut(input, output.verdict.novelty, output.verdict.standsOut),
           dubious: output.verdict.dubiousClaims.length > 0,
           dubiousClaims: resolveDubiousClaims(input, output.verdict.dubiousClaims),
           reasoning: output.verdict.reasoning,
@@ -57,7 +60,7 @@ export function assembleOverview(
     inOneLine: output.inOneLine,
     coreClaim: output.coreClaim,
     thin: output.thin,
-    keyPoints: output.keyPoints,
+    keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, point.range) })),
     topicIds,
     tags: output.tags,
     verdict,
@@ -66,6 +69,32 @@ export function assembleOverview(
     watchAnyway,
     chapters: resolveChapters(input, output.chapters),
   });
+}
+
+// docs/features/novelty-scale.md, "What stands out".
+function resolveStandsOut(
+  input: GenerationInput,
+  novelty: Novelty,
+  standsOut: GeneratedTimedText | null,
+): StandsOut | null {
+  const text = standsOut?.text.trim() ?? "";
+  if (novelty === "common_knowledge" || text === "") {
+    return null;
+  }
+  return { text, range: resolveOptionalRange(input, standsOut?.range ?? null) };
+}
+
+// A stretch a line merely points at: one that doesn't fit the transcript loses its jump
+// rather than failing the overview (docs/features/novelty-scale.md).
+function resolveOptionalRange(
+  input: GenerationInput,
+  range: { startSegmentIndex: number; endSegmentIndex: number } | null,
+): { startMs: number; endMs: number } | null {
+  const fits =
+    range !== null &&
+    range.startSegmentIndex <= range.endSegmentIndex &&
+    range.endSegmentIndex < input.transcript.length;
+  return fits ? resolveRange(input, range) : null;
 }
 
 // Each chapter ends where the next begins, and the last where the words do, not where

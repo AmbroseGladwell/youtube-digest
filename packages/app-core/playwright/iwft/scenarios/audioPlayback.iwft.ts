@@ -7,9 +7,9 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: ["Growth beat expectations.", "Productivity is moving.", "Hiring intent has turned."],
+  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
   howToApply: { items: ["Re-run the hiring forecast."] },
-  verdict: { novelty: "recycled", dubious: false, dubiousClaims: [], reasoning: "Standard synthesis.", similarTo: [] },
+  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard synthesis.", similarTo: [] },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
@@ -192,15 +192,6 @@ test("reaching the end offers to play again and to mark the note read", async ({
   await reader.verifyPlayButtonReads("Play again");
   await reader.clickBarAction("markRead");
   await reader.verifyIsRead(true);
-});
-
-test("a narrated line carries where it starts, for seeking by pointer", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(NOTE);
-  backendSimulator.narration.seedReady(NOTE);
-  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-  const reader = await library.nthCard(0).openReader();
-
-  await reader.verifyLineStartTimesAreShown(true);
 });
 
 test("Listen in the library plays in place, and the mini-player follows you into the note", async ({

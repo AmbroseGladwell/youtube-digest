@@ -31,7 +31,8 @@ const CLAIMS: DubiousClaim[] = [
 const seedNote = (backendSimulator: BackendSimulator, dubiousClaims: DubiousClaim[] | null) => {
   const overview = makeOverview({
     verdict: {
-      novelty: "recycled",
+      novelty: "common_knowledge",
+      standsOut: null,
       dubious: dubiousClaims === null || dubiousClaims.length > 0,
       dubiousClaims,
       reasoning: "Familiar advice, oversold.",
@@ -195,7 +196,8 @@ test("a freshly generated dubious overview explains itself, its moment timed fro
 }) => {
   backendSimulator.setGeneratedOutputOverrides({
     verdict: {
-      novelty: "recycled",
+      novelty: "common_knowledge",
+      standsOut: null,
       dubiousClaims: [
         {
           claim: "The simulated technique works because the fixture says so.",

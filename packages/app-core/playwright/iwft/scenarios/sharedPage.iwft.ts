@@ -144,6 +144,7 @@ test("the stretch worth watching offers a way into the video at that moment", as
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   const page = await launcher.sharedOverviewPage.verifyIsShown();
 
+  await page.openLineTime("6:05–8:20");
   await page.verifyOffersToWatchFrom("Watch from 6:05", "https://www.youtube.com/watch?v=example&t=365");
 });
 

@@ -206,8 +206,16 @@ test("asks the key points to keep the specifics and any caveat the video raises"
 
 test("keeps the verdict reasoning off its own label and the watch reason off the answer", () => {
   const { systemPrompt } = composePrompt(baseInput);
-  assert.ok(systemPrompt.includes("Never begin the reasoning with\nthe novelty word itself"));
+  assert.ok(systemPrompt.includes("Never begin the reasoning with the novelty word itself"));
   assert.ok(systemPrompt.includes("never restate yes, no, or skip in it"));
+});
+
+test("judges novelty against the field, never against the reader's own library", () => {
+  const { systemPrompt } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("never against the reader's past overviews below"));
+  for (const level of ["COMMON_KNOWLEDGE", "FRESH_ANGLE", "ORIGINAL"]) {
+    assert.ok(systemPrompt.includes(`- ${level}:`), `no rubric entry for ${level}`);
+  }
 });
 
 test("asks for each dubious claim's moment as a transcript segment, never a time", () => {
@@ -233,10 +241,11 @@ test("asks for fewer words than it enforces, so a near miss does not fail the ov
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
+  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, range: null }));
 
   assert.ok(KEY_POINT_TARGET_WORDS < KEY_POINT_MAX_WORDS);
   assert.ok(HOW_TO_APPLY_TARGET_WORDS < HOW_TO_APPLY_MAX_WORDS);
-  assert.equal(accepts("keyPoints", [words(KEY_POINT_TARGET_WORDS + 1), "Two.", "Three."]), true);
+  assert.equal(accepts("keyPoints", points(words(KEY_POINT_TARGET_WORDS + 1))), true);
   assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_TARGET_WORDS + 1)] }), true);
 });
 
@@ -244,9 +253,10 @@ test("refuses a key point or an action over its hard word ceiling, so the retry 
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
+  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, range: null }));
 
-  assert.equal(accepts("keyPoints", [words(KEY_POINT_MAX_WORDS), "Two.", "Three."]), true);
-  assert.equal(accepts("keyPoints", [words(KEY_POINT_MAX_WORDS + 1), "Two.", "Three."]), false);
+  assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS))), true);
+  assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS + 1))), false);
   assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS)] }), true);
   assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS + 1)] }), false);
 });

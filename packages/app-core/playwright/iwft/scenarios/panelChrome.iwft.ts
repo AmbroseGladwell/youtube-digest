@@ -28,7 +28,8 @@ const LONG_NOTE_POINTS = Array.from(
 );
 
 const VERDICT = {
-  novelty: "novel" as const,
+  novelty: "original" as const,
+  standsOut: { text: "A new idea.", range: null },
   dubious: true,
   dubiousClaims: null,
   reasoning: "Nobody else has said this.",
@@ -49,7 +50,7 @@ const seedNote = (backendSimulator: {
   backendSimulator.overviews.seed({
     ...overview,
     topicIds: [ENERGY.id],
-    keyPoints: LONG_NOTE_POINTS,
+    keyPoints: LONG_NOTE_POINTS.map((text) => ({ text, range: null })),
     verdict: VERDICT,
     thin: true,
     savedAt: "2026-09-16T00:00:00.000Z",
@@ -125,7 +126,7 @@ test("the panel keeps the judgement beside the topics and drops the dates", asyn
   const reader = await capture.openStoredOverview();
 
   await reader.verifyChannelReads("Practical Engineering");
-  await reader.verifyMastheadMentions(/Novel/);
+  await reader.verifyMastheadMentions(/Original/);
   await reader.verifyMastheadMentions(/Thin/);
   await reader.verifyMastheadMentions(/Dubious claim/);
 
@@ -154,7 +155,7 @@ test("the wide reader keeps all of it, having the width for it", async ({
 
   await reader.verifyPublishedReads("· published 1 Sept 2026");
   await reader.verifyMastheadMentions(/saved 16 Sep/);
-  await reader.verifyMastheadMentions(/Novel/);
+  await reader.verifyMastheadMentions(/Original/);
   await reader.verifyMastheadMentions(/Thin/);
   await reader.verifyMastheadMentions(/Dubious claim/);
 });
