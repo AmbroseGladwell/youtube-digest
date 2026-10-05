@@ -42,9 +42,9 @@ Two properties follow, and both are the point:
   enter the corpus rather than users times videos.
 
 The shared cache (`docs/features/shared-transcript-cache.md`), the extension's own
-InnerTube fetch and Supadata are built. The web app asking the extension, and our own
-service, are not, and the shape of the interface is what makes them additive rather than
-a rewrite.
+InnerTube fetch, Supadata and our own service (`docs/architecture/server-side-transcripts.md`)
+are built. The web app asking the extension is not, and the shape of the interface is what
+makes it additive rather than a rewrite.
 
 ### Why the rung is one method
 
@@ -329,8 +329,10 @@ them to infer it from a bill that never arrives.
 
 ## The web app has no free rung, and the trigger for giving it one is named
 
-Everything above is the extension's. **The web app still has only the Supadata rung**, so
-the copy tells a web user to install the extension and then cannot help them further. That
+Everything above is the extension's. **The web app's only free rung is our own server**
+(`docs/architecture/server-side-transcripts.md`), which is capped and can be switched off.
+With it off, the copy tells a web user to install the extension and then cannot help them
+further. That
 is the honest state rather than an oversight: a page on our origin cannot read YouTube,
 and the rung that would fix it needs something that does not exist yet.
 
@@ -379,6 +381,5 @@ inert, and what is missing costs money rather than function.
 
 ## What is not built
 
-- The service rung.
 - The web app's own free path, above. Its prerequisite is now met: the extension has the
   store's id (`docs/architecture/deploy.md`, "The extension").

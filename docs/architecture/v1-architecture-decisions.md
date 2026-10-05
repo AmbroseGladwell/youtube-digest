@@ -123,7 +123,8 @@ five real videos ran from 13.8s short to 1.5s long. A caption-derived figure pre
 runtime is precisely what `docs/prototype/constraints.md` exists to forbid, so the move off
 Supadata does not only make retrieval free, it **corrects a measurement**.
 
-The server-side deferral below still stands, and nothing built since is server-side. What
+The server-side deferral below was lifted by OV-55: `docs/architecture/server-side-transcripts.md`
+records the ToS position and how the last rung is bounded. What
 changed is why it is deferred: the extension removed the urgency for its own users, and
 the web app — which cannot fetch at all — is now the named reason a server will eventually
 be needed, rather than cost.
@@ -452,7 +453,8 @@ covers the other direction — the open that cannot start — and is likewise un
   auth doesn't need rework when it's built.
 - Per-video-type content templates (Idea 13) and suggested timestamp ranges (Idea 14).
 - Ads (Ideas 5, 6) on any surface.
-- Server-side transcript retrieval and its YouTube-ToS exposure.
+- ~~Server-side transcript retrieval and its YouTube-ToS exposure.~~ Built as the ladder's
+  last rung, off by default: `docs/architecture/server-side-transcripts.md`.
 - A headless capture-queue worker — the queue drains on next keyed-device-open.
 - ~~Backend testing conventions (Fastify API, the Python TTS service)~~ — decided with the
   first backend slice: `docs/conventions/backend-testing-guide.md`. The TTS service's, with

@@ -71,6 +71,7 @@ export * from "./clientSchemaVersions.js";
 export * from "./ApiErrorCode.js";
 export * from "./ApiErrorEnvelope.js";
 export * from "./Handshake.js";
+export * from "./ServiceTranscriptStatus.js";
 export * from "./OutboxEntry.js";
 export * from "./RecordChange.js";
 export * from "./SyncStorage.js";

@@ -10,4 +10,5 @@ export const transcriptKeys = {
   // Keyed by URL, not by video id: the point of this one is to answer before any call has
   // told us what the id is (docs/features/watching-detection.md).
   watched: (url: string | null) => [...transcriptKeys.all, "watched", url] as const,
+  serviceStatus: (apiUrl: string | null) => [...transcriptKeys.all, "serviceStatus", apiUrl] as const,
 };

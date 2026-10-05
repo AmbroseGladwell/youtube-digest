@@ -185,3 +185,66 @@ test("a shared cache that cannot be reached counts as a miss, not as a failed ru
   expect(backendSimulator.getCallCount(EndpointKey.SUPADATA_TRANSCRIPT)).toBe(1);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
+
+const serviceTranscript = () =>
+  makeStoredTranscript({
+    videoId: VideoId.parse(IWFT_VIDEO_ID),
+    segments: makeCaptionRun(["Fetched by our own server.", "Nobody else had it yet."], { startMs: 0, cueMs: 2000 }),
+  });
+
+// The definition of done for OV-55 (docs/architecture/server-side-transcripts.md).
+test("a web reader with no extension and no Supadata key gets an uncached video's transcript from our server", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedService(serviceTranscript());
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.transcripts.isShared(VideoId.parse(IWFT_VIDEO_ID))).toBe(true);
+  expect(await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID))).toMatchObject({
+    segments: serviceTranscript().segments,
+  });
+});
+
+test("a reader with a free rung never reaches our server's metered one", async ({ launcher, backendSimulator }) => {
+  backendSimulator.transcripts.seedService(serviceTranscript());
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY, youTubeFetch: true });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
+});
+
+test("a key holder whose key failed falls through to our server rather than failing the run", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedService(serviceTranscript());
+  backendSimulator.simulateEndpointError(EndpointKey.SUPADATA_METADATA);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: BOTH_KEYS });
+
+  await form.submitUrl(VIDEO_URL);
+  await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
+
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
+});
+
+test("once our server's budget for the day is spent, the reader is told what else can fetch it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedService(serviceTranscript());
+  backendSimulator.simulateEndpointError(EndpointKey.SERVICE_TRANSCRIPT);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
+
+  await form.submitUrl(VIDEO_URL);
+  await form.verifyGenerationError("Simulated: our server has fetched all the transcripts it can for today.");
+
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+});

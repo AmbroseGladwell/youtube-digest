@@ -246,9 +246,10 @@ sends:
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |
+| `transcript_unavailable` | 422 | our own server could not fetch a video's transcript; `details.failure` names the `TranscriptFetchFailure`, `budget-exhausted` included (`docs/architecture/server-side-transcripts.md`) |
 | `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
-| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service |
+| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off |
 
 **426 was considered for the floor and rejected.** RFC 9110 reserves it for a protocol
 upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated,
@@ -288,6 +289,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
+| `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
 | `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |
@@ -386,6 +388,9 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
 | `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |
 | `AUDIO_DIR` | | a directory to keep narration in instead, for working offline; `TTS_URL` needs this or R2 |
+| `TRANSCRIPT_SERVICE` | `off` | `on` lets the server fetch transcripts itself, as the ladder's last rung; `off` answers `unavailable`, and says so at startup (`docs/architecture/server-side-transcripts.md`) |
+| `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
+| `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |

@@ -2,7 +2,8 @@
 // it a fetch that reaches YouTube (docs/features/transcript-retrieval.md) — so these are
 // the endpoints the IWFT network layer intercepts. The rest are our own API: the sync
 // server's read side (docs/features/sync-client.md), the shared transcript cache
-// (docs/features/shared-transcript-cache.md), sign-in (docs/features/sign-in.md)
+// (docs/features/shared-transcript-cache.md), our own server fetching transcripts
+// (docs/architecture/server-side-transcripts.md), sign-in (docs/features/sign-in.md)
 // narration (docs/features/audio-player.md), connecting an assistant
 // (docs/features/mcp-connector.md), sharing (docs/features/sharing.md), analytics
 // (docs/architecture/analytics.md) and errors (docs/architecture/errors-and-logs.md).
@@ -16,6 +17,8 @@ export enum EndpointKey {
   SYNC_CHANGES = "SYNC_CHANGES",
   SYNC_TRANSCRIPT = "SYNC_TRANSCRIPT",
   SHARED_TRANSCRIPT = "SHARED_TRANSCRIPT",
+  SERVICE_TRANSCRIPT_STATUS = "SERVICE_TRANSCRIPT_STATUS",
+  SERVICE_TRANSCRIPT = "SERVICE_TRANSCRIPT",
   AUTH_MAGIC_LINK = "AUTH_MAGIC_LINK",
   AUTH_SIGN_IN = "AUTH_SIGN_IN",
   AUTH_LINK_CODE = "AUTH_LINK_CODE",

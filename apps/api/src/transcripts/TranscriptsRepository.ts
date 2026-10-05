@@ -97,6 +97,20 @@ export class TranscriptsRepository {
     });
   }
 
+  // Our own fetch needs no second account to agree with it: nobody but us touched it
+  // (docs/architecture/server-side-transcripts.md).
+  async putServiceFetched(transcript: StoredTranscript): Promise<void> {
+    const now = this.#clock().toISOString();
+    await this.#sql.query(
+      `insert into shared_transcripts (video_id, words_hash, body, stored_at, confirmed_at)
+       values ($1, $2, $3::jsonb, $4::timestamptz, $4::timestamptz)
+       on conflict (video_id, words_hash) do update set
+         confirmed_at = coalesce(shared_transcripts.confirmed_at, excluded.confirmed_at),
+         body = case when shared_transcripts.body -> 'video' is null then excluded.body else shared_transcripts.body end`,
+      [transcript.videoId, wordsHash(transcript), JSON.stringify(shareableTranscript(transcript)), now],
+    );
+  }
+
   async forgetUnnoted(accountId: AccountId): Promise<number> {
     return this.#sql.transaction(async (tx) => {
       const forgotten = await tx.query<{ video_id: string }>(

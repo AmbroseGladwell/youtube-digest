@@ -33,6 +33,7 @@ COPY --from=build /app/packages/sync/package.json packages/sync/
 COPY --from=build /app/packages/transcripts/package.json packages/transcripts/
 RUN npm ci --omit=dev --workspace apps/api --ignore-scripts && npm cache clean --force
 COPY --from=build /app/packages/domain/dist packages/domain/dist
+COPY --from=build /app/packages/transcripts/dist packages/transcripts/dist
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/api/migrations apps/api/migrations
 COPY --from=build /app/apps/api/assets apps/api/assets
