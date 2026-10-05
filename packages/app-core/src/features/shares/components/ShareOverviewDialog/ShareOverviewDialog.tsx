@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Share } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { shareStatusLine } from "../../util/shareStatusLine.js";
@@ -62,6 +62,7 @@ export function ShareOverviewDialog({
   }, [copied]);
 
   const analytics = useReaderAnalytics();
+  const linkFieldId = useId();
   const close = () => {
     analytics.shareDialog.closed();
     onClose();
@@ -209,7 +210,10 @@ export function ShareOverviewDialog({
           <div className={styles.linkField}>
             <StrokeIcon name="link" size={16} />
             <input
+              id={linkFieldId}
+              name="share-url"
               type="text"
+              autoComplete="off"
               readOnly
               aria-label="Share link"
               value={share.url}
