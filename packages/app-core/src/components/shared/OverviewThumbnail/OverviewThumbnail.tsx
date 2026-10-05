@@ -9,6 +9,7 @@ export interface OverviewThumbnailProps {
   video: VideoSource;
   className?: string | undefined;
   to?: string | undefined;
+  state?: unknown;
   onOpen?: (() => void) | undefined;
 }
 
@@ -18,7 +19,7 @@ export interface OverviewThumbnailProps {
 // model reads whatever was saved), so an overview saved before thumbnailUrl existed has
 // no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
-export function OverviewThumbnail({ video, className, to, onOpen }: OverviewThumbnailProps) {
+export function OverviewThumbnail({ video, className, to, state, onOpen }: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
   const animateNavigation = useShouldAnimateNavigation();
 
@@ -48,6 +49,7 @@ export function OverviewThumbnail({ video, className, to, onOpen }: OverviewThum
     <Link
       className={`${styles.thumbnail} ${styles.link} ${className ?? ""}`}
       to={to}
+      state={state}
       viewTransition={animateNavigation}
       aria-hidden="true"
       tabIndex={-1}
