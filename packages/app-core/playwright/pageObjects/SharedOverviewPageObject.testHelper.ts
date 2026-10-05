@@ -2,7 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { makeYourOwnAsideTestIds } from "../../src/features/sharedPage/components/MakeYourOwnAside/MakeYourOwnAsideTestIds.js";
 import { sharedOverviewGoneTestIds } from "../../src/features/sharedPage/components/SharedOverviewGone/SharedOverviewGoneTestIds.js";
 import { sharedPageHeaderTestIds } from "../../src/features/sharedPage/components/SharedPageHeader/SharedPageHeaderTestIds.js";
-import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
+import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRangeTag/LineRangeTagTestIds.js";
 import { sharedOverviewPageTestIds } from "../../src/features/sharedPage/SharedOverviewPage/SharedOverviewPageTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -56,9 +56,19 @@ export class SharedOverviewPageObject extends PageObject {
       }).toPass({ timeout: 2_000 });
     });
 
+  openLineTime = (label: string) =>
+    this.step(`openLineTime ${label}`, () => this.get(lineRangeTagTestIds.tag).filter({ hasText: new RegExp(`^${label}$`) }).click());
+
+  verifyOffersToReadInTranscript = (offered: boolean) =>
+    this.step(`verifyOffersToReadInTranscript ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(lineRangeTagTestIds.transcriptButton)
+        : this.expectNotToBeVisible(lineRangeTagTestIds.transcriptButton),
+    );
+
   verifyOffersToWatchFrom = (label: string, url: string) =>
     this.step(`verifyOffersToWatchFrom ${label}`, async () => {
-      const link = this.get(watchAnywayJumpTestIds.watchLink);
+      const link = this.get(lineRangeTagTestIds.watchLink);
       await expect(link).toHaveText(label);
       await expect(link).toHaveAttribute("href", url);
     });

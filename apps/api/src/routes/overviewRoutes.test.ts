@@ -99,7 +99,7 @@ test("an overview that fails the domain schema is refused with the reason", asyn
   const response = await account.inject({
     method: "POST",
     url: "/api/overviews",
-    body: storedOverview({ keyPoints: ["only one"] }),
+    body: storedOverview({ keyPoints: [{ text: "only one", range: null }] }),
   });
 
   assert.equal(response.statusCode, 400);

@@ -24,22 +24,22 @@ describe("matchesLibraryFilters", () => {
 
   it("filters by novelty, and thin overviews with no verdict never match a specific novelty", () => {
     const withVerdict = makeOverviewWithState({
-      verdict: { novelty: "novel", dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, reasoning: "x", similarTo: [] },
     });
     const thin = makeOverviewWithState({ thin: true, verdict: null });
 
-    expect(matchesLibraryFilters(withVerdict, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(true);
-    expect(matchesLibraryFilters(thin, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
+    expect(matchesLibraryFilters(withVerdict, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(true);
+    expect(matchesLibraryFilters(thin, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
   });
 
   it("filters by favourite, and by the dubious flag on the verdict", () => {
     const favourite = makeOverviewWithState({}, { favourite: true });
     const plain = makeOverviewWithState({}, { favourite: false });
     const dubious = makeOverviewWithState({
-      verdict: { novelty: "recycled", dubious: true, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "x", similarTo: [] },
     });
     const sound = makeOverviewWithState({
-      verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "x", similarTo: [] },
     });
 
     expect(matchesLibraryFilters(favourite, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(true);
@@ -91,7 +91,7 @@ describe("matchesLibraryFilters", () => {
     const entry = makeUnreadableEntry();
 
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "anything" })).toBe(false);
   });

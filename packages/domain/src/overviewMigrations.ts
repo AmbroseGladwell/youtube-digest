@@ -54,10 +54,32 @@ const fillChaptersAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// The novelty half is not derivable: the old scale's middle bucket splits across the new
+// one, and only the developer's own overviews were ever written on it. The key points half
+// is: each keeps its words and has no stretch of the video yet
+// (docs/features/novelty-scale.md).
+const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
+  newSchemaVersion: 5,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    const { verdict, keyPoints } = record as { verdict?: unknown; keyPoints?: unknown };
+    return {
+      ...record,
+      ...(Array.isArray(keyPoints) ? { keyPoints: keyPoints.map((text) => ({ text, range: null })) } : {}),
+      ...(typeof verdict === "object" && verdict !== null
+        ? { verdict: { ...verdict, novelty: "common_knowledge", standsOut: null } }
+        : {}),
+    };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
   fillChaptersAddedAfterTheFirstNotes,
+  moveToTheNewScaleAndTimedKeyPoints,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

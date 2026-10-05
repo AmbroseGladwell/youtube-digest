@@ -14,7 +14,8 @@ const privateOverview = () =>
     topicIds: [TopicId.parse("2f1c8e4a-9b76-4d35-8a21-6c0f5e3d7b94")],
     tags: ["energy-policy", "nuclear", "grids"],
     verdict: {
-      novelty: "established",
+      novelty: "common_knowledge",
+      standsOut: null,
       dubious: false,
       reasoning: "The capacity-market argument is well sourced.",
       similarTo: [{ overviewId: SIMILAR_ID, title: "What a capacity market actually pays for" }],

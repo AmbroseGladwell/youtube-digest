@@ -9,6 +9,7 @@ import {
   formatClock,
 } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";
@@ -33,7 +34,7 @@ import { useStopSharingMutation } from "../../shares/mutations/useStopSharingMut
 import { useOverviewShare } from "../../shares/useOverviewShare.js";
 import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
-import { WatchAnywayJump } from "../components/WatchAnywayJump/WatchAnywayJump.js";
+import { LineRangeTag } from "../components/LineRangeTag/LineRangeTag.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
@@ -85,6 +86,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     READER_MASTHEAD_HEIGHT_PROPERTY,
   );
   const isPanel = useIsPanel();
+  const isPhone = useIsPhone();
 
   // Two measurements, one element to publish them on. The setters are stable, so this
   // is too — a fresh arrow would tear both observers down on every render.
@@ -231,16 +233,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const steppedView = libraryViewFromState(location.state);
   const neighbours = overviewNeighbours(libraryQuery.data ?? [], overviewId, steppedView);
   const steppingState = steppedView?.stepOn(overviewId);
-  const range = overview.watchAnyway?.range ?? null;
   const timeSaved = overviewTimeSaved(overview);
   const savedChip =
     savedPhase !== "hidden" && timeSaved.kind === "counted" && timeSaved.minutes > 0
       ? { minutes: timeSaved.minutes, leaving: savedPhase === "leaving" }
       : null;
   const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
-  const narrated =
-    notePlayer.current && notePlayer.snapshot.source === "audio" && notePlayer.snapshot.availability === "ready";
-  const lineStartLabels = narrated ? notePlayer.snapshot.timings.lineStarts.map(formatClock) : null;
   const confirmDelete = () => {
     reader.deleteDialog.confirmed();
     setConfirmingDelete(false);
@@ -317,10 +315,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               <ReadAlongNote
                 lines={lines}
                 activeIndex={notePlayer.activeIndex}
-                lineStartLabels={lineStartLabels}
                 onSelectLine={notePlayer.selectLine}
+                renderRange={(line, range, active) => (
+                  <LineRangeTag
+                    line={line}
+                    range={range}
+                    video={overview.video}
+                    active={active}
+                    asSheet={isPhone && !isPanel}
+                    canReadTranscript={true}
+                    onOpenTranscriptAt={openTranscriptAt}
+                  />
+                )}
               />
-              {range !== null && <WatchAnywayJump range={range} video={overview.video} />}
               <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
                 {overview.tags.map((tag) => (
                   <span key={tag} className={styles.tag}>

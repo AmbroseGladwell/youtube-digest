@@ -26,7 +26,7 @@ const baseOverview = {
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
-  keyPoints: ["one", "two", "three"],
+  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
   topicIds: [] as string[],
   tags: ["one-tag", "two-tag", "three-tag"],
   verdict: null,
@@ -55,14 +55,15 @@ test("a thin overview is rejected if it still carries a verdict", () => {
     Overview.parse({
       ...baseOverview,
       thin: true,
-      verdict: { novelty: "novel", dubious: false, reasoning: "x", similarTo: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, reasoning: "x", similarTo: [] },
     }),
   );
 });
 
 test("dubious is a plain boolean — no overreaching/unverified values are exposed", () => {
   const verdict = (dubious: boolean) => ({
-    novelty: "novel" as const,
+    novelty: "original" as const,
+    standsOut: { text: "A new idea.", range: null },
     dubious,
     reasoning: "x",
     similarTo: [],
@@ -167,12 +168,12 @@ test("core claim allows up to 60 words but no more", () => {
 });
 
 test("key points must be 3 to 7 items: the old cap of 5 fell to a real two and a half hour debate", () => {
-  assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: ["one", "two"] }));
+  assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: [{ text: "one", range: null }, { text: "two", range: null }] }));
   assert.doesNotThrow(() =>
-    Overview.parse({ ...baseOverview, keyPoints: ["1", "2", "3", "4", "5", "6", "7"] }),
+    Overview.parse({ ...baseOverview, keyPoints: [{ text: "1", range: null }, { text: "2", range: null }, { text: "3", range: null }, { text: "4", range: null }, { text: "5", range: null }, { text: "6", range: null }, { text: "7", range: null }] }),
   );
   assert.throws(() =>
-    Overview.parse({ ...baseOverview, keyPoints: ["1", "2", "3", "4", "5", "6", "7", "8"] }),
+    Overview.parse({ ...baseOverview, keyPoints: [{ text: "1", range: null }, { text: "2", range: null }, { text: "3", range: null }, { text: "4", range: null }, { text: "5", range: null }, { text: "6", range: null }, { text: "7", range: null }, { text: "8", range: null }] }),
   );
 });
 
@@ -194,16 +195,17 @@ test("the business/adaptability sample's real content, filed under two topics, v
       coreClaim:
         "Naming a target job is the wrong advice in a period of rapid change, because what compounds is knowing your own nature, maximising your ability to learn, and staying adaptable enough to move as the paths shift.",
       keyPoints: [
-        "His refusal to name a job is the substance, not a dodge.",
-        "Adaptability over intelligence or effort.",
-        "Match the work to your nature, but do not ignore the money.",
-        "On inequality he argues a floor is in society's own interest.",
-        "On the UK he is blunt - over-indebted, under-productive, out of choices.",
+        { text: "His refusal to name a job is the substance, not a dodge.", range: null },
+        { text: "Adaptability over intelligence or effort.", range: null },
+        { text: "Match the work to your nature, but do not ignore the money.", range: null },
+        { text: "On inequality he argues a floor is in society's own interest.", range: null },
+        { text: "On the UK he is blunt - over-indebted, under-productive, out of choices.", range: null },
       ],
       topicIds: [BUSINESS_TOPIC_ID, FINANCE_TOPIC_ID],
       tags: ["careers", "ai", "adaptability", "ray-dalio", "debt-cycles", "uk-economy"],
       verdict: {
-        novelty: "established",
+        novelty: "common_knowledge",
+        standsOut: null,
         dubious: false,
         reasoning:
           "The career advice is honest, but the macro half is delivered as diagnosis with no counter-case offered.",

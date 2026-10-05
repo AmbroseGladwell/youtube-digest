@@ -5,7 +5,7 @@ import { readLibraryView, writeLibraryView } from "./libraryViewStorage.js";
 
 const FITNESS = TopicId.parse("11111111-1111-4111-8111-111111111111");
 const CHOSEN = {
-  filters: { topicId: FITNESS, novelty: "novel" as const, status: "all" as const, favourite: true, dubious: false, query: "" },
+  filters: { topicId: FITNESS, novelty: "original" as const, status: "all" as const, favourite: true, dubious: false, query: "" },
   sort: "title" as const,
 };
 

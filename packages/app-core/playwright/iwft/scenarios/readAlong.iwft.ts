@@ -6,9 +6,9 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: ["Growth beat expectations.", "Productivity is moving.", "Hiring intent has turned."],
+  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
   howToApply: { items: ["Re-run the hiring forecast.", "Ask what the growth figure excludes."] },
-  verdict: { novelty: "recycled", dubious: false, reasoning: "Standard synthesis.", similarTo: [] },
+  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard synthesis.", similarTo: [] },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
@@ -49,7 +49,7 @@ test("the note's two lists carry bullets, and the prose sections do not", async 
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyBulletedLinesRead([...NOTE.keyPoints, ...NOTE.howToApply!.items]);
+  await reader.verifyBulletedLinesRead([...NOTE.keyPoints.map((point) => point.text), ...NOTE.howToApply!.items]);
 });
 
 test("[ and ] step the reading mark forward and back a line at a time", async ({

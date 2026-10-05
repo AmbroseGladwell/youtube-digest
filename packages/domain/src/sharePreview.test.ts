@@ -26,11 +26,11 @@ test("the verdict is never in the preview, however blunt it is", () => {
   const preview = sharePreview(
     noteOf(
       makeOverview({
-        verdict: { novelty: "recycled", dubious: true, reasoning: "Every claim here is secondhand.", similarTo: [] },
+        verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Every claim here is secondhand.", similarTo: [] },
       }),
     ),
   );
 
   assert.equal(preview.description.includes("Every claim here is secondhand."), false);
-  assert.equal(preview.description.includes("Recycled"), false);
+  assert.equal(preview.description.includes("Common knowledge"), false);
 });

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { NOVELTY_BASIS } from "./noveltyLabel.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import {
   HOW_TO_APPLY_SECTION,
@@ -33,11 +34,12 @@ test("titles the claim section 'No clear claim' when the overview is thin", () =
   assert.ok(!noteSectionNames(lines).includes("Verdict"));
 });
 
-test("shows the verdict as its label followed by the reasoning, and speaks only the reasoning", () => {
+test("shows the verdict as its label, what it was judged against as a footnote, then the reasoning, and speaks only the reasoning", () => {
   const lines = overviewNoteLines(
     makeOverview({
       verdict: {
-        novelty: "recycled",
+        novelty: "common_knowledge",
+        standsOut: null,
         dubious: false,
         reasoning: "Standard advice.",
         similarTo: [],
@@ -47,15 +49,36 @@ test("shows the verdict as its label followed by the reasoning, and speaks only 
 
   assert.deepEqual(lines.filter((line) => line.section === "Verdict"), [
     { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict" },
-    { section: "Verdict", heading: false, bullet: false, text: "Recycled.", spoken: "" },
+    { section: "Verdict", heading: false, bullet: false, text: "Common knowledge.", spoken: "" },
+    { section: "Verdict", heading: false, bullet: false, text: NOVELTY_BASIS, spoken: "", footnote: true },
     { section: "Verdict", heading: false, bullet: false, text: "Standard advice." },
   ]);
+});
+
+test("names what stands out after the label, speaks it, and carries the stretch of the video it is in", () => {
+  const lines = overviewNoteLines(
+    makeOverview({
+      verdict: {
+        novelty: "fresh_angle",
+        standsOut: { text: "A worked spreadsheet for the drawdown.", range: { startMs: 60_000, endMs: 90_000 } },
+        dubious: false,
+        reasoning: "Standard advice otherwise.",
+        similarTo: [],
+      },
+    }),
+  );
+
+  assert.deepEqual(
+    lines.filter((line) => line.section === "Verdict" && !line.heading).map((line) => line.text),
+    ["Fresh angle.", "What stands out: A worked spreadsheet for the drawdown.", NOVELTY_BASIS, "Standard advice otherwise."],
+  );
+  assert.deepEqual(lines.find((line) => line.text.startsWith("What stands out"))?.range, { startMs: 60_000, endMs: 90_000 });
 });
 
 test("gives every key point and every action its own tappable line", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      keyPoints: ["one", "two", "three"],
+      keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
       howToApply: { items: ["do this", "then this"] },
     }),
   );
@@ -68,7 +91,7 @@ test("gives every key point and every action its own tappable line", () => {
 test("bullets the key points and the actions, leaving the mark out of the text", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      keyPoints: ["Growth beat expectations.", "two", "three"],
+      keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "two", range: null }, { text: "three", range: null }],
       howToApply: { items: ["do this", "and this"] },
     }),
   );
@@ -146,7 +169,7 @@ const spokenIn = (lines: ReturnType<typeof overviewNoteLines>, section: string) 
 test("speaks each heading in its own words while showing the heading unchanged", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      verdict: { novelty: "novel", dubious: false, reasoning: "New.", similarTo: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new trial.", range: null }, dubious: false, reasoning: "New.", similarTo: [] },
       howToApply: { items: ["Do it."] },
       selling: { type: "own_paid_product", detail: "A course.", compromisesContent: false },
       watchAnyway: { answer: "no", reason: "Covered.", range: null },
@@ -177,7 +200,7 @@ test("speaks 'No clear claim' as it is shown", () => {
 
 test("counts the key points aloud, then links them the way a person would", () => {
   const lines = overviewNoteLines(
-    makeOverview({ keyPoints: ["Sets beat weight.", "Rest matters.", "Sleep counts.", "Eat protein.", "Track it."] }),
+    makeOverview({ keyPoints: [{ text: "Sets beat weight.", range: null }, { text: "Rest matters.", range: null }, { text: "Sleep counts.", range: null }, { text: "Eat protein.", range: null }, { text: "Track it.", range: null }] }),
   );
 
   assert.equal(lines.find((line) => line.section === KEY_POINTS_SECTION && line.heading)?.spoken, "There are five key points");
@@ -191,7 +214,7 @@ test("counts the key points aloud, then links them the way a person would", () =
 });
 
 test("never repeats a linking word in a list of seven key points", () => {
-  const lines = overviewNoteLines(makeOverview({ keyPoints: ["A.", "B.", "C.", "D.", "E.", "F.", "G."] }));
+  const lines = overviewNoteLines(makeOverview({ keyPoints: [{ text: "A.", range: null }, { text: "B.", range: null }, { text: "C.", range: null }, { text: "D.", range: null }, { text: "E.", range: null }, { text: "F.", range: null }, { text: "G.", range: null }] }));
   const links = spokenIn(lines, KEY_POINTS_SECTION).map((spoken) => spoken.split(",")[0]);
 
   assert.equal(new Set(links).size, 7);
@@ -208,7 +231,7 @@ test("links actions as steps, and leaves a single action alone", () => {
 });
 
 test("keeps the capital on an acronym or 'I' after the ordering word", () => {
-  const lines = overviewNoteLines(makeOverview({ keyPoints: ["ETFs win.", "I said so.", "iPhones help."] }));
+  const lines = overviewNoteLines(makeOverview({ keyPoints: [{ text: "ETFs win.", range: null }, { text: "I said so.", range: null }, { text: "iPhones help.", range: null }] }));
 
   assert.deepEqual(spokenIn(lines, KEY_POINTS_SECTION), [
     "First, ETFs win.",
@@ -231,4 +254,15 @@ test("speaks each watch-it-anyway answer before the reason, the partial range in
     spoken({ answer: "partial", reason: "The demo.", range: { startMs: 750_000, endMs: 1_125_000 } }),
     ["Yes, it's worth watching one part, from 12 minutes 30 to 18 minutes 45. The demo."],
   );
+});
+
+test("the watch-anyway line carries the stretch worth watching, and a plain no carries none", () => {
+  const watchLine = (watchAnyway: WatchAnyway) =>
+    overviewNoteLines(makeOverview({ watchAnyway })).find((line) => line.section === "Watch it anyway?" && !line.heading);
+
+  assert.deepEqual(
+    watchLine({ answer: "partial", reason: "One stretch.", range: { startMs: 200_000, endMs: 310_000 } })?.range,
+    { startMs: 200_000, endMs: 310_000 },
+  );
+  assert.equal(watchLine({ answer: "no", reason: "Covered.", range: null })?.range, undefined);
 });

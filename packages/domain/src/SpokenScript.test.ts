@@ -6,7 +6,7 @@ import { MAX_SPOKEN_SCRIPT_CHARACTERS, SpokenScript, spokenScript } from "./Spok
 
 test("speaks every note line in order, headings included, so a timing's index is a line's", () => {
   const overview = makeOverview({
-    verdict: { novelty: "recycled", dubious: false, reasoning: "Standard advice.", similarTo: [] },
+    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard advice.", similarTo: [] },
     howToApply: { items: ["Do the thing."] },
   });
 
@@ -34,16 +34,17 @@ test("leaves the opening out when the video names nothing to open with", () => {
   assert.equal(script.length, overviewNoteLines(overview).length);
 });
 
-test("passes over the verdict label with an empty entry rather than dropping its line", () => {
+test("passes over the verdict label and its footnote with empty entries rather than dropping their lines", () => {
   const overview = makeOverview({
-    verdict: { novelty: "recycled", dubious: false, reasoning: "Standard advice.", similarTo: [] },
+    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, reasoning: "Standard advice.", similarTo: [] },
   });
 
   const script = spokenScript(overview).slice(1);
-  const labelIndex = overviewNoteLines(overview).findIndex((line) => line.text === "Recycled.");
+  const labelIndex = overviewNoteLines(overview).findIndex((line) => line.text === "Common knowledge.");
 
   assert.equal(script[labelIndex], "");
-  assert.equal(script[labelIndex + 1], "Standard advice.");
+  assert.equal(script[labelIndex + 1], "");
+  assert.equal(script[labelIndex + 2], "Standard advice.");
   assert.equal(SpokenScript.safeParse(script).success, true);
 });
 

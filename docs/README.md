@@ -61,6 +61,9 @@ Five folders, five different questions.
 ## `features/` — feature-specific design, one file per feature
 
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
+- `novelty-scale.md` — the verdict's three novelty levels and the What stands out line:
+  judged against the field rather than the reader's library, what the basis sentence
+  admits, and how overviews and shares from the old scale were carried over.
 - `overview-redesign.md` — what the editorial redesign changed, what it deliberately left out, and where the build departs from the design file.
 - `stone-theme.md` — the stone reskin: two oranges and what each is for, three pills, the raised tile, the hero's own field, and what the design file draws that was left out.
 - `chapters.md` — the reader's third tab: chapters as a structural prompt section timed

@@ -378,7 +378,7 @@ test.describe("in the panel's overview", () => {
 test.describe("the verdict filter", () => {
   test("folds under More filters, which says what is set while closed", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(
-      makeOverview({ verdict: { novelty: "novel", dubious: true, reasoning: "x", similarTo: [] } }),
+      makeOverview({ verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: true, reasoning: "x", similarTo: [] } }),
     );
     const library = await launcher.launchExpectingLibrary();
     await library.filterPanel.verifyVerdictIsFolded();

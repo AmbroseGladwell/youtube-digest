@@ -1,18 +1,21 @@
 import type { NoteLine } from "./NoteLine.js";
-import { NOVELTY_LABEL } from "./noveltyLabel.js";
+import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
-import type { WatchAnyway } from "./WatchAnyway.js";
+import type { TimeRange, WatchAnyway } from "./WatchAnyway.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
 export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
+export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
 
 interface Body {
   text: string;
   spoken?: string;
+  range?: TimeRange;
+  footnote?: boolean;
 }
 
 const keepsItsCapital = (word: string) =>
@@ -27,10 +30,10 @@ const KEY_POINT_LINKS = ["Then", "Also", "On top of that", "Next", "Beyond that"
 const ACTION_LINKS = ["Then"];
 
 // docs/features/tts-pre-rendered-speech.md, "The spoken script".
-const inOrder = (items: string[], middleLinks: string[]): Body[] =>
-  items.map((text, index) => {
+const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
+  items.map((item, index) => {
     if (items.length === 1) {
-      return { text };
+      return item;
     }
     const link =
       index === 0
@@ -38,8 +41,11 @@ const inOrder = (items: string[], middleLinks: string[]): Body[] =>
         : index === items.length - 1
           ? "And finally"
           : middleLinks[(index - 1) % middleLinks.length]!;
-    return { text, spoken: `${link}, ${afterOrdinal(text)}` };
+    return { ...item, spoken: `${link}, ${afterOrdinal(item.text)}` };
   });
+
+const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body =>
+  range === null ? { text } : { text, range };
 
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 
@@ -82,22 +88,27 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
   );
 
   if (overview.verdict) {
+    const { novelty, standsOut, reasoning } = overview.verdict;
     section("Verdict", { text: "Verdict", spoken: "The verdict" }, [
-      { text: `${NOVELTY_LABEL[overview.verdict.novelty]}.`, spoken: "" },
-      { text: overview.verdict.reasoning },
+      { text: `${NOVELTY_LABEL[novelty]}.`, spoken: "" },
+      ...(standsOut === null
+        ? []
+        : [withRange({ text: `${STANDS_OUT_LABEL}: ${standsOut.text}`, range: standsOut.range })]),
+      { text: NOVELTY_BASIS, spoken: "", footnote: true },
+      { text: reasoning },
     ]);
   }
 
   section(
     KEY_POINTS_SECTION,
     { text: KEY_POINTS_SECTION, spoken: keyPointsHeading(overview.keyPoints.length) },
-    inOrder(overview.keyPoints, KEY_POINT_LINKS),
+    inOrder(overview.keyPoints.map(withRange), KEY_POINT_LINKS),
     true,
   );
   section(
     HOW_TO_APPLY_SECTION,
     { text: HOW_TO_APPLY_SECTION, spoken: "How you could apply it" },
-    inOrder(overview.howToApply?.items ?? [], ACTION_LINKS),
+    inOrder((overview.howToApply?.items ?? []).map((text) => ({ text })), ACTION_LINKS),
     true,
   );
 
@@ -109,9 +120,9 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
 
   if (overview.watchAnyway) {
     const { watchAnyway } = overview;
-    section("Watch it anyway?", { text: "Watch it anyway?", spoken: "Should you watch it anyway?" }, [
+    section(WATCH_ANYWAY_SECTION, { text: WATCH_ANYWAY_SECTION, spoken: "Should you watch it anyway?" }, [
       {
-        text: `${WATCH_ANYWAY_LABEL[watchAnyway.answer]}. ${watchAnyway.reason}`.trim(),
+        ...withRange({ text: `${WATCH_ANYWAY_LABEL[watchAnyway.answer]}. ${watchAnyway.reason}`.trim(), range: watchAnyway.range }),
         spoken: `${spokenWatchAnswer(watchAnyway)} ${watchAnyway.reason}`.trim(),
       },
     ]);

@@ -21,10 +21,10 @@ describe("parseLibraryFilters", () => {
   });
 
   it("reads valid topic, verdict, status and q params", () => {
-    const params = new URLSearchParams({ topic: TOPIC, verdict: "novel", status: "read", q: "botox" });
+    const params = new URLSearchParams({ topic: TOPIC, verdict: "original", status: "read", q: "botox" });
     expect(parseLibraryFilters(params)).toEqual({
       topicId: TOPIC,
-      novelty: "novel",
+      novelty: "original",
       status: "read",
       favourite: false,
       dubious: false,
@@ -58,12 +58,12 @@ describe("applyLibraryFilterPatch", () => {
   });
 
   it("sets a param for a real value", () => {
-    const next = applyLibraryFilterPatch(new URLSearchParams(), { novelty: "recycled" });
-    expect(next.get("verdict")).toBe("recycled");
+    const next = applyLibraryFilterPatch(new URLSearchParams(), { novelty: "common_knowledge" });
+    expect(next.get("verdict")).toBe("common_knowledge");
   });
 
   it("removes the param when patched back to 'all', instead of writing the literal string", () => {
-    const withFilter = new URLSearchParams({ verdict: "recycled" });
+    const withFilter = new URLSearchParams({ verdict: "common_knowledge" });
     const next = applyLibraryFilterPatch(withFilter, { novelty: "all" });
     expect(next.has("verdict")).toBe(false);
   });
@@ -76,13 +76,13 @@ describe("applyLibraryFilterPatch", () => {
 
   it("leaves untouched params alone", () => {
     const params = new URLSearchParams({ status: "read" });
-    const next = applyLibraryFilterPatch(params, { novelty: "novel" });
+    const next = applyLibraryFilterPatch(params, { novelty: "original" });
     expect(next.get("status")).toBe("read");
-    expect(next.get("verdict")).toBe("novel");
+    expect(next.get("verdict")).toBe("original");
   });
 
   it("keeps the sort when every filter is cleared, since the order is not a filter", () => {
-    const params = new URLSearchParams({ sort: "title", verdict: "novel" });
+    const params = new URLSearchParams({ sort: "title", verdict: "original" });
     const next = applyLibraryFilterPatch(params, NO_LIBRARY_FILTERS);
     expect(next.get("sort")).toBe("title");
   });
@@ -102,9 +102,9 @@ describe("parseLibrarySort", () => {
 
 describe("applyLibrarySort", () => {
   it("writes a non-default sort and leaves the filters alone", () => {
-    const next = applyLibrarySort(new URLSearchParams({ verdict: "novel" }), "title");
+    const next = applyLibrarySort(new URLSearchParams({ verdict: "original" }), "title");
     expect(next.get("sort")).toBe("title");
-    expect(next.get("verdict")).toBe("novel");
+    expect(next.get("verdict")).toBe("original");
   });
 
   it("drops the param for the default order, rather than writing it", () => {
@@ -124,7 +124,7 @@ describe("hasLibraryViewParams", () => {
 
 describe("applyLibraryView", () => {
   it("writes a whole view, replacing every filter and the order, and reads back the same", () => {
-    const current = new URLSearchParams({ verdict: "novel", sort: "title", other: "kept" });
+    const current = new URLSearchParams({ verdict: "original", sort: "title", other: "kept" });
     const next = applyLibraryView(current, DEFAULT_LIBRARY_VIEW);
 
     expect(next.toString()).toBe("other=kept&status=unread");

@@ -12,7 +12,7 @@ export function buildSearchHaystack(overview: Overview): string {
     overview.verdict?.reasoning ?? "",
     overview.selling?.detail ?? "",
     ...(overview.howToApply?.items ?? []),
-    ...overview.keyPoints,
+    ...overview.keyPoints.map((point) => point.text),
     ...overview.tags,
   ]
     .join(" ")

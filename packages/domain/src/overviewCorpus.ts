@@ -74,6 +74,13 @@ const version4 = {
   schemaVersion: 4,
 };
 
+const version5 = {
+  ...version4,
+  keyPoints: version4.keyPoints.map((text) => ({ text, range: null })),
+  verdict: { ...version4.verdict, novelty: "common_knowledge", standsOut: null },
+  schemaVersion: 5,
+};
+
 // One curated record per version, exercising every field at that version — which an
 // arbitrary real record does not guarantee, and which is why these are written rather
 // than harvested from a dev profile (docs/features/record-migrations.md).
@@ -82,4 +89,5 @@ export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unk
   [2, version2],
   [3, version3],
   [4, version4],
+  [5, version5],
 ]);
