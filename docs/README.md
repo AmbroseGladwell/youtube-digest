@@ -12,6 +12,11 @@ Five folders, five different questions.
 
 - `architecture-options.md` — the models considered for a real build, and the trade-offs between them.
 - `v1-architecture-decisions.md` — what was actually decided: the free/paid split, the stack, hosting, data layer, and the monorepo layout.
+- `tiers.md` — what signed-out, free, BYO Plus and Plus readers can do: generation on our
+  key within a quota counted by the server, own-key overviews counted on a free account,
+  every feature free and volume paid for, the table of limits, what an own-key overview
+  costs us, price guidance, how the trial is counted, and
+  what the reader sees at the limit.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told

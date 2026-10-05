@@ -14,6 +14,10 @@ backend a shared `OverviewStore`/`AudioStore`-style interface talks to
 separate builds because upgrading a user from free to paid should be a data
 migration, not a different app.
 
+*Superseded on 2026-10-06 by `tiers.md` (OV-78): a reader with no key generates on ours,
+through our server, within a quota. The BYO-key path below still exists at every tier,
+counted on every account, at a higher number on the paid plans.*
+
 **Free tier is fully local.** BYO LLM key, local storage, no account, no server
 contact, no cost to us. This isn't a crippled version of the product — it's the
 degraded state the product already believes in: `docs/prototype/decisions.md` says "anything
@@ -62,6 +66,10 @@ plans to use `externally_connectable` to let the web app borrow the extension's 
 access as **one rung of four**, where a missing extension costs money rather than
 function and nothing goes inert. Different use, different verdict — noted here because
 the next reader will otherwise find this paragraph and think it was overruled quietly.
+
+*Revisited on 2026-10-06 by `tiers.md` (OV-78): generation on our key, counted per tier,
+beside BYO keys. The cost tension below is now ours, and OV-19 and OV-92 are where it gets
+answered.*
 
 **Generation stays BYO-key at every tier, for now.** We never hold an LLM provider
 key or run generation ourselves, at either tier. This is an explicit, revisitable
@@ -168,7 +176,7 @@ now that the transcript source carries YouTube's own per-segment timing; ads on 
 | 6 | Headless queue draining | Not required for v1. The capture queue drains next time a keyed device opens; no background worker needed. |
 | 7 | Browser support | Chrome/Edge only for v1. |
 | 8 | Auth method | Email magic-link. |
-| 9 | Personalisation vs. cost tension | Personalisation is kept, and the tension doesn't apply to us, because generation stays BYO-key (see above). |
+| 9 | Personalisation vs. cost tension | Personalisation is kept, and the tension doesn't apply to us, because generation stays BYO-key (see above). Revisited by `tiers.md`: generation on our key brings the tension back (OV-19). |
 
 ## New decisions, from reconciling the Ideas section
 
