@@ -9,7 +9,9 @@ export interface EmailContent {
 
 // Design OV-88. The extension's mail says where the code will appear, because the tab the
 // link opens is not the thing that asked (docs/features/sign-in.md).
-export function magicLinkEmail({ link, surface, purpose, firstName }: MagicLinkMail): EmailContent {
+// A web mail also carries a code, for when the mail is read somewhere other than the browser
+// that asked (docs/features/sign-in.md, "A code in the web mail").
+export function magicLinkEmail({ link, code, surface, purpose, firstName }: MagicLinkMail): EmailContent {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;
   const subject = creating ? "Finish creating your account on The Overview" : "Sign in to The Overview";
@@ -22,6 +24,7 @@ export function magicLinkEmail({ link, surface, purpose, firstName }: MagicLinkM
     surface === "extension"
       ? "The page it opens will show a code to enter in the extension."
       : "It signs in the browser you open it in.";
+  const codeLead = "Or enter this code on the page you asked from:";
   const notes = [
     `It works once, for the next fifteen minutes. ${finish}`,
     "If you didn’t ask for this, ignore it: nothing happens until the link is opened.",
@@ -37,6 +40,7 @@ export function magicLinkEmail({ link, surface, purpose, firstName }: MagicLinkM
     `${label}:`,
     link,
     "",
+    ...(code === null ? [] : [codeLead, code, ""]),
     notes[0],
     "",
     notes[1],
@@ -58,6 +62,7 @@ export function magicLinkEmail({ link, surface, purpose, firstName }: MagicLinkM
       heading: creating ? "Finish creating your account" : subject,
       body,
       action: { label, link },
+      code: code === null ? null : { lead: codeLead, value: code },
       notes,
       reason,
       siteUrl,

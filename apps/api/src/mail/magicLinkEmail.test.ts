@@ -5,6 +5,7 @@ import { magicLinkEmail } from "./magicLinkEmail.js";
 const mail = {
   to: "reader@example.com",
   link: "https://overview.example/sign-in#token=a&b",
+  code: null,
   surface: "web" as const,
   purpose: "signIn" as const,
   firstName: null,
@@ -49,6 +50,19 @@ test("a link asked for from the extension says where the code will appear", () =
     assert.ok(body.includes("It works once, for the next fifteen minutes. The page it opens will show a code to enter in the extension."));
   }
   assert.doesNotMatch(magicLinkEmail(mail).text, /code/);
+});
+
+test("a web mail with a code says it under the link, in the text and the html", () => {
+  const { html, text } = magicLinkEmail({ ...mail, code: "ABCD-EFGH" });
+  assert.ok(text.includes("\nOr enter this code on the page you asked from:\nABCD-EFGH\n"));
+  assert.ok(html.includes("Or enter this code on the page you asked from:"));
+  assert.match(html, /<p[^>]*>ABCD-EFGH<\/p>/);
+  assert.ok(html.indexOf("ABCD-EFGH") > html.indexOf("Paste this link"));
+});
+
+test("a mail with no code says nothing about one", () => {
+  const { html } = magicLinkEmail(mail);
+  assert.doesNotMatch(html, /enter this code/);
 });
 
 test("a link that creates an account says so and greets the reader by the name they gave", () => {

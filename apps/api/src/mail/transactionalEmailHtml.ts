@@ -5,6 +5,8 @@ export interface TransactionalEmailSlots {
   heading: string;
   body: string;
   action: { label: string; link: string };
+  // A code to type instead of following the link, said under the link with what it is for.
+  code: { lead: string; value: string } | null;
   notes: string[];
   reason: string;
   siteUrl: string;
@@ -82,6 +84,12 @@ export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
       ? ""
       : `<p class="ov-ink" style="margin: 0 0 10px; font-family: ${sans}; font-size: 16px; line-height: 24px; color: ${light.ink};">${escapeHtml(slots.greeting)}</p>`;
 
+  const code =
+    slots.code === null
+      ? ""
+      : `<p class="ov-ink" style="margin: 24px 0 8px; font-family: ${sans}; font-size: 15px; line-height: 22px; color: ${light.ink};">${escapeHtml(slots.code.lead)}</p>
+<p class="ov-ink" style="margin: 0; font-family: ${sans}; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0.12em; color: ${light.ink};">${escapeHtml(slots.code.value)}</p>`;
+
   const notes = slots.notes
     .map(
       (note, index) =>
@@ -138,6 +146,7 @@ ${greeting}
 </table>
 <p class="ov-muted" style="margin: 0 0 4px; font-family: ${sans}; font-size: 13.5px; line-height: 20px; color: ${light.muted};">Button not working? Paste this link into your browser:</p>
 <p style="margin: 0; font-family: ${sans}; font-size: 13.5px; line-height: 20px; word-break: break-all;"><a class="ov-link" href="${link}" style="color: ${light.link}; text-decoration: underline;">${link}</a></p>
+${code}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 20px;">
 <tr><td class="ov-rule" height="1" style="height: 1px; line-height: 1px; font-size: 1px; background-color: ${light.rule};">&nbsp;</td></tr>
 </table>

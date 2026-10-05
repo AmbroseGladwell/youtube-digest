@@ -13,7 +13,7 @@ the names that document gave them, it says so.
 |---|---|
 | Hashed one-time links, fifteen minutes, one per address per minute | `apps/api/migrations/V0003__magic_links_and_link_codes.sql`, `src/auth/issueMagicLink.ts`, `consumeMagicLink.ts` |
 | The link points at the web app, with the token in the fragment | `packages/domain/src/signInLink.ts` |
-| Three public routes: ask, sign in, exchange | `apps/api/src/auth/authRoutes.ts` |
+| Four public routes: ask, sign in, sign in by the mail's code, exchange | `apps/api/src/auth/authRoutes.ts` |
 | The cookie transport, as a second way onto the same `sessions` row | `src/auth/sessionCookie.ts`, `sessionPlugin.ts`, `sessionRoutes.ts` |
 | Link codes: eight characters, no look-alikes, ten minutes, once | `src/auth/linkCode.ts`, `issueLinkCode.ts`, `consumeLinkCode.ts` |
 | A code minted by a signed-in session, for the extension beside it | `src/auth/sessionRoutes.ts`, `packages/domain/src/LinkCode.ts`, `features/auth/ConnectExtensionPage/` |
@@ -27,6 +27,7 @@ the names that document gave them, it says so.
 | The extension remembering it is waiting for a code | `features/auth/usePendingSignIn.ts`, `types/PendingSignIn.ts` |
 | The settings panel: who is signed in, or the way to the two pages | `features/sync/components/SyncPanel/` |
 | Sign-out, and a connection that may hold no token | `features/sync/SyncRuntime.tsx`, `types/SyncConnection.ts` |
+| A code in the web mail, typed in place of opening the link | `migrations/V0015__magic_link_email_codes.sql`, `consumeMagicLink.ts`, `POST /api/auth/email-code`, `packages/domain/src/EmailCodeRequest.ts`, `features/auth/components/EnterCode/` |
 | The routes through the whole app over PGlite | `apps/api/src/auth/authRoutes.test.ts` |
 | The screens, in a browser, against a simulated server | `packages/app-core/playwright/iwft/scenarios/signIn.iwft.ts`, `sync.iwft.ts` |
 
@@ -52,6 +53,40 @@ the cookie as well, and it was decided against: the web app being signed in enro
 pushes its whole local library to the account, which is a thing the reader did not ask
 for by clicking a link in their mail on behalf of the extension. One link signs in the
 one shell that asked. The page says so.
+
+## A code in the web mail
+
+A web link signs in whichever browser opens it, which is not always the one that asked: the
+mail may be read on a phone, or in an app that opens links in a browser of its own. So a
+web mail carries a code as well as the link, under it: "Or enter this code on the page you
+asked from". `Check your email` says `Reading your email on another device? Enter the code
+from it`, a link-styled button like the extension's, so the link stays the page's one
+action. It leads to the same code screen the extension uses, with the address, `Use a
+different email` and `Email me a new code`; the button says `Sign in`, or `Create account`
+for a create-account mail.
+
+**The code is part of the link, not a second credential.** It is issued with the link,
+stored as `magic_links.code_hash` by the same `hashToken`, and spent by the same row's
+`consumed_at`: opening the link spends the code, typing the code spends the link, so one
+mail signs in once. It lives as long as the link, fifteen minutes, and makes the same
+account the link would, with the name a create-account link was asked with.
+
+**The code only works with the address it was sent to.** `POST /api/auth/email-code`
+takes `{ email, code }` and updates only a row for that address, so a guess has to name
+the address too. It answers exactly what a web link's `POST /api/auth/sign-in` answers,
+the cookie and `SignedIn`, and a wrong, spent or expired code is the same `410
+link_invalid`. The page lands the same way a link does: the library, or a consent screen
+it was asked from.
+
+**Guessing is limited per address as well as per caller.** The code has the link code's
+alphabet and forty bits. Ten guesses an hour at one address, from anywhere, against a
+code that lives fifteen minutes, is the limit that matters; thirty an hour per caller
+keeps one caller from walking through addresses (`docs/architecture/api.md`, "Rate
+limits").
+
+**An extension mail carries no code.** Its link already leads to one, made for the panel,
+and a second code in the mail that signed in a browser would be the wrong thing to type
+into the panel.
 
 ## Connecting the extension from the web app
 

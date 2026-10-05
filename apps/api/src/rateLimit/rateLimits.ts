@@ -10,6 +10,8 @@ export const rateLimits = {
   magicLinkPerAddress: { name: "magicLinkAddress", limit: 20, windowMs: HOUR_MS },
   magicLinkPerEmail: { name: "magicLinkEmail", limit: 10, windowMs: HOUR_MS },
   signInPerAddress: { name: "signInAddress", limit: 30, windowMs: HOUR_MS },
+  emailCodePerAddress: { name: "emailCodeAddress", limit: 30, windowMs: HOUR_MS },
+  emailCodePerEmail: { name: "emailCodeEmail", limit: 10, windowMs: HOUR_MS },
   linkCodePerAddress: { name: "linkCodeAddress", limit: 30, windowMs: HOUR_MS },
   oauthRegisterPerAddress: { name: "oauthRegisterAddress", limit: 20, windowMs: HOUR_MS },
   oauthTokenPerAddress: { name: "oauthTokenAddress", limit: 60, windowMs: MINUTE_MS },
