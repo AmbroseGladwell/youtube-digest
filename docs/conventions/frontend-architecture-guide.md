@@ -545,6 +545,39 @@ When a context must survive reload (a running timer, a draft):
 - Split contexts by update frequency. A timer ticking at 250ms goes in its own context
   from the controls, or every consumer re-renders four times a second.
 
+### 4.3 Every field names itself
+
+Browsers and password managers decide what a field is from its `name`, its `id`, its
+label and its `autocomplete`. If any of those is missing, autofill is hit and miss, and
+WCAG 1.3.5 (Identify Input Purpose) wants the right token on any field about the reader.
+So every text-like field (any input except a checkbox, radio, button or hidden one, plus
+`textarea` and `select`) has:
+
+- **A `name`**: stable, kebab-case, and the standard token where there is one (`email`,
+  `given-name`, `one-time-code`). Otherwise it says what the field holds: `video-url`,
+  `playlist-url`, `server-url`, `topic-name`, `library-search`.
+- **An `id`** from `useId()`, unless the component already has a fixed one, plus a label
+  that points at it: a wrapping `<label>`, `htmlFor`, or an `aria-label`.
+- **An `autocomplete`**: the standard token when the field is about the reader, and
+  `off` when suggestions would only get in the way (links, searches, topic names,
+  reasons, the server address).
+
+By kind:
+
+| Field | Add |
+|---|---|
+| Email | `type="email" autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}` |
+| Link | `type="url" autoComplete="off" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false}` |
+| Search | `type="search" autoComplete="off" enterKeyHint="search"` |
+| API key | `type="password" autoComplete="off" data-1p-ignore data-lpignore="true" data-bwignore` |
+
+Chrome ignores `autocomplete="off"` on a password field, so on its own it does not stop
+a password manager from offering to save an API key as the site's password. The
+`data-*` opt-outs are what 1Password, LastPass and Bitwarden check.
+
+`fieldAutofill.iwft.ts` checks every screen that has a field, using the page object's
+`verifyFieldsIdentifyThemselves`. A new screen with a field goes into that file as well.
+
 ---
 
 ## Part 5 — Review checklist
@@ -569,6 +602,7 @@ When a context must survive reload (a running timer, a draft):
 - [ ] `isMutating(...) === 1` guard before invalidating in `onSettled`.
 - [ ] Shape-matched skeletons, not spinners.
 - [ ] Two or fewer app-wide contexts; persisted state is schema-validated and user-scoped.
+- [ ] Every field has a `name`, an `id` with a label, and an `autocomplete`, and its screen is in `fieldAutofill.iwft.ts`.
 
 ---
 

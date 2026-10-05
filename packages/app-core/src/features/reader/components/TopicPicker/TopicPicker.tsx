@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useId, useRef, useState } from "react";
 import type { Topic, TopicId } from "@overview/domain";
 import { creatableTopicName, topicMatches } from "../../../overviews/util/topicMatches.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -32,6 +32,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
 
   const matches = topicMatches(topics, query);
   const analytics = useReaderAnalytics();
+  const searchId = useId();
   useTypingSettled(query, () => analytics.topics.searched({ matches: matches.length }));
   const creatable = creatableTopicName(topics, query);
   const selectedIds = new Set(selected.map((topic) => topic.id));
@@ -95,7 +96,11 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
       <div className={styles.searchRow}>
         <input
           ref={search}
+          id={searchId}
+          name="topic-search"
           type="search"
+          autoComplete="off"
+          enterKeyHint="done"
           className={styles.search}
           value={query}
           placeholder="Search or create a topic"

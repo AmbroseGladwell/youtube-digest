@@ -158,7 +158,13 @@ export function PlaylistsSection() {
           <input
             ref={field}
             id="follow-playlist-link"
+            name="playlist-url"
             type="url"
+            autoComplete="off"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={styles.input}
             placeholder="Paste a YouTube playlist link"
             value={link}

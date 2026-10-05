@@ -22,6 +22,7 @@ export function MakeYourOwnAside() {
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const headingId = useId();
+  const urlFieldId = useId();
   const analytics = useAnalytics();
   useTypingSettled(url, () => analytics.sharedPage.makeYourOwn.linkEntered({ recognised: isYouTubeUrl(url.trim()) }));
 
@@ -53,7 +54,14 @@ export function MakeYourOwnAside() {
       >
         <div className={styles.field}>
           <input
+            id={urlFieldId}
+            name="video-url"
             type="url"
+            autoComplete="off"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={url}
             placeholder="Paste a YouTube link"
             aria-label="YouTube link"

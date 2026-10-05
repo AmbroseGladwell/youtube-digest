@@ -63,9 +63,13 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
         </label>
         <input
           id="anthropic-api-key"
+          name="anthropic-api-key"
           className={styles.input}
           type="password"
           autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore
           value={anthropicApiKey}
           onChange={(event) => setAnthropicApiKey(event.target.value)}
           data-testid={apiKeysPanelTestIds.anthropicInput}
@@ -77,6 +81,7 @@ export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
         </label>
         <select
           id="generation-model"
+          name="generation-model"
           className={styles.input}
           autoComplete="off"
           value={modelDraft}

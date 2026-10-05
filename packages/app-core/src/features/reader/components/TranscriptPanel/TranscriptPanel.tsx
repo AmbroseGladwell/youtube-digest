@@ -2,6 +2,7 @@ import { transcriptBlocks, transcriptPlainText, formatTimestamp } from "@overvie
 import {
   Fragment,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -430,6 +431,7 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
   const found = search.matches.length;
   const input = useRef<HTMLInputElement | null>(null);
   const analytics = useOverviewPageAnalytics();
+  const searchId = useId();
 
   const clear = () => {
     analytics.transcript.searchCleared();
@@ -463,7 +465,11 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
       </span>
       <input
         ref={input}
+        id={searchId}
+        name="transcript-search"
         type="search"
+        autoComplete="off"
+        enterKeyHint="search"
         className={styles.searchInput}
         placeholder="Search words or phrases"
         aria-label="Search the transcript"
