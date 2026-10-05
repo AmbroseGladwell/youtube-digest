@@ -30,6 +30,7 @@ import {
   type DeviceAccountHistory,
 } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
+import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
 import { AnalyticsConsentNoticePageObject } from "../pageObjects/AnalyticsConsentNoticePageObject.testHelper.js";
 import { AnalyticsConsentPromptPageObject } from "../pageObjects/AnalyticsConsentPromptPageObject.testHelper.js";
 import { makeAnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
@@ -216,6 +217,10 @@ export class Launcher {
 
   get accountStrip(): AccountStripPageObject {
     return new AccountStripPageObject(this.testContext);
+  }
+
+  get accountTermsLine(): AccountTermsLinePageObject {
+    return new AccountTermsLinePageObject(this.testContext);
   }
 
   get analyticsConsentPrompt(): AnalyticsConsentPromptPageObject {

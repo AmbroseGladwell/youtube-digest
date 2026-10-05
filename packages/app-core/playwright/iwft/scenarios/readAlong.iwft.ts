@@ -135,6 +135,7 @@ test("marking read from the masthead is written to the store and survives going 
 }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
+  await library.showAll();
 
   const reader = await library.nthCard(0).openReader();
   await reader.clickMarkRead();

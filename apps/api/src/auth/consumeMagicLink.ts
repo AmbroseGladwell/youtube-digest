@@ -7,6 +7,7 @@ export interface ConsumedMagicLink {
   surface: AuthSurface;
   intent: AuthIntent;
   firstName: string | null;
+  anonymousId: string | null;
 }
 
 // One statement marks the link used and reads it, so two clicks on the same link cannot
@@ -16,10 +17,16 @@ export async function consumeMagicLink(
   token: string,
   now: Date,
 ): Promise<ConsumedMagicLink | null> {
-  const rows = await sql.query<{ email: string; surface: string; intent: string; first_name: string | null }>(
+  const rows = await sql.query<{
+    email: string;
+    surface: string;
+    intent: string;
+    first_name: string | null;
+    anonymous_id: string | null;
+  }>(
     `update magic_links set consumed_at = $2::timestamptz
       where token_hash = $1 and consumed_at is null and expires_at > $2::timestamptz
-      returning email, surface, intent, first_name`,
+      returning email, surface, intent, first_name, anonymous_id`,
     [hashToken(token), now.toISOString()],
   );
   const row = rows[0];
@@ -30,5 +37,6 @@ export async function consumeMagicLink(
         surface: AuthSurface.parse(row.surface),
         intent: AuthIntent.parse(row.intent),
         firstName: row.first_name,
+        anonymousId: row.anonymous_id,
       };
 }

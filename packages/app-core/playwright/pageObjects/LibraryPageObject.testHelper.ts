@@ -175,6 +175,28 @@ export class LibraryPageObject extends PageObject {
       expect(this.get(libraryPageTestIds.filterButton)).toBeFocused(),
     );
 
+  // Every filter off, the order kept: the way a scenario that seeds read notes sees them.
+  showAll = () => this.step("showAll", () => this.click(libraryPageTestIds.showAllButton));
+
+  resetView = () => this.step("resetView", () => this.click(libraryPageTestIds.resetViewButton));
+
+  verifyViewReads = (summary: string) =>
+    this.step(`verifyViewReads ${summary}`, () =>
+      expect(this.get(libraryPageTestIds.viewSummary)).toHaveText(summary),
+    );
+
+  verifyOffersReset = (offered: boolean) =>
+    this.step(`verifyOffersReset ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(libraryPageTestIds.resetViewButton)
+        : this.expectNotToBeVisible(libraryPageTestIds.resetViewButton),
+    );
+
+  verifyCaughtUp = () => this.step("verifyCaughtUp", () => this.expectToBeVisible(libraryPageTestIds.caughtUp));
+
+  showAllFromCaughtUp = () =>
+    this.step("showAllFromCaughtUp", () => this.click(libraryPageTestIds.caughtUpShowAllButton));
+
   verifyEmptyState = () => this.step("verifyEmptyState", () => this.expectToBeVisible(libraryPageTestIds.empty));
 
   expectCardCountToBe = (count: number) =>

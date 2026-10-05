@@ -15,7 +15,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Postgres behind one small interface, `pg` in production and PGlite in tests | `src/db/SqlClient.ts`, `createPgSqlClient.ts`, `createPgliteSqlClient.ts` |
 | SQL migrations in Flyway's naming, applied by an in-repo runner | `migrations/V*.sql`, `src/db/runMigrations.ts` |
 | Accounts and sessions; bearer tokens, hashed | `migrations/V0001__accounts_and_sessions.sql`, `src/auth/` |
-| Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `V0005__account_first_names_and_link_intents.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
+| Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `V0005__account_first_names_and_link_intents.sql`, `V0011__magic_link_anonymous_ids.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
 | Deny-by-default session plugin; routes opt out with `config: { public: true }` | `src/auth/sessionPlugin.ts` |
 | One client version on the wire, and the table that turns it into schema versions | `packages/domain`: `clientVersion.ts`, `clientSchemaVersions.ts` |
 | The handshake, and the write floor as a hook | `src/versions/handshakeRoutes.ts`, `writeFloorPlugin.ts` |
@@ -37,7 +37,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql
   assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
@@ -292,7 +292,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
-| `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |
+| `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session, and `POST /api/events/declined`: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |
 | `sharedPageEventsAddress` | 60 | minute, per address | `POST /api/shares/:token/events`: per address, because most people on a shared link have no account (`docs/architecture/analytics.md`, "The shared page") |
 | `errorsAddress` | 30 | minute, per address | `POST /api/errors`: per address, because most readers sending errors have no account (`docs/architecture/errors-and-logs.md`) |
 

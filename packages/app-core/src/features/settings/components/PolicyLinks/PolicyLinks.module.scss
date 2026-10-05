@@ -1,0 +1,17 @@
+.root {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.25rem;
+  font-size: 0.84375rem;
+}
+
+.link {
+  color: var(--accent);
+  font-weight: 600;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--accent-hover);
+  }
+}

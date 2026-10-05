@@ -232,6 +232,23 @@ ever needs more. `MAIL_FROM` is written the way a mail client shows a sender,
 `The Overview <signin@example.com>`, and `parseMailSender` takes it apart for Brevo's
 `sender` object. Nothing but `createMailer` knows which transport is in use.
 
+**The mail is a hand-written table template, not React Email or MJML (design OV-88).**
+`transactionalEmailHtml` is one shell of tables and inline styles that every
+transactional mail fills: an optional greeting, a heading, a line of body, one button,
+the link again as text, quieter notes, and the footer's reason. `magicLinkEmail` only
+chooses the words. One small layout did not justify a renderer and its dependencies, and
+a plain function keeps the server's build as it was. The button is a padded link on an
+orange cell with a VML roundrect for Outlook on Windows, and goes full width under 480px.
+Dark mode is a `color-scheme` meta and a `prefers-color-scheme` block (Apple Mail, iOS,
+Outlook.com); Gmail and the Outlook apps recolour on their own, and the orange button and
+transparent mark hold on either ground. The mark is `email-mark.png` in the web app's
+static files, read from the link's own origin; its `alt` is empty because the name sits
+beside it as live text, so with images off nothing is lost and nothing is read twice.
+Every value put into the HTML goes through `escapeHtml`. The plain-text part carries the
+same copy in the same order, with the link on its own line so it is never wrapped.
+Brevo's click and open tracking must be off in its transactional settings, so the link
+is never rewritten through Brevo's domain; nothing in the request turns them off.
+
 **Configuration refuses the combinations that would silently fail.** `MAIL_TRANSPORT`
 defaults to `log`. With `brevo`, a missing key or sender is refused at startup, and so
 is an `APP_URL` that is not https, because real mail to a real address must carry a
@@ -267,7 +284,13 @@ many overviews are saved only here instead (`docs/features/account-libraries.md`
 `Sign in again` and the button does.
 
 **On a phone (9e).** The sign-in and create-account pages swap the bar's actions for a
-single `Not now`.
+single `Not now`, and, as in the panel, the button sits at the form's foot, full width, with
+the way to switch centred under it (62j). The design pins that foot to the bottom of the
+screen; the app keeps it under the fields.
+
+**Creating an account** carries one line above the button saying what it agrees to, and a
+reader who said yes to sharing usage sends their anonymous id with the request
+(`docs/features/analytics-consent.md`, "Creating an account").
 
 **Sign-out** runs one last sync cycle, ten seconds at most, tells the server, and then
 signs this device out whether or not it answered; what it couldn't send is said afterwards. A session the server could not be told about

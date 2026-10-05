@@ -64,6 +64,7 @@ test.describe("the running total", () => {
   test("marking a row unread takes its saving back off", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(11));
     const library = await launcher.launchExpectingLibrary();
+    await library.showAll();
 
     await library.nthCard(0).clickMarkRead();
 
@@ -240,6 +241,7 @@ test.describe("milestones", () => {
     seedRead(backendSimulator, lasting(7));
     const library = await launcher.launchExpectingLibrary({ milestones: { "30m": { crossedAt: hoursAgo(1), dismissedAt: null } } });
     await library.milestones.verifyFrontCardIs("30 minutes");
+    await library.showAll();
 
     await library.cardWithTitle("7 minute video").clickMarkRead();
 
@@ -323,6 +325,7 @@ test.describe("in an overview", () => {
   test("an overview already read shows nothing on arrival", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(11));
     const library = await launcher.launchExpectingLibrary();
+    await library.showAll();
 
     const reader = await library.nthCard(0).openReader();
 

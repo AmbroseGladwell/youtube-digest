@@ -123,3 +123,19 @@ test("a reader with no account who agreed to share is counted under their anonym
   assert.equal(captured!.distinct_id, "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d");
   assert.equal(captured!.properties.$process_person_profile, false);
 });
+
+test("linking sends one $identify under the account, naming the anonymous id it replaces", async () => {
+  const { sent, fetch } = answering(200);
+  const sink = createPostHogEventSink({ apiKey: "phc_test", host: "https://eu.i.posthog.com", environment: "production", fetch });
+
+  await sink.link(ACCOUNT_ID, "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", new Date("2026-10-05T09:00:00.000Z"));
+
+  assert.deepEqual((sent[0]!.body as { batch: unknown[] }).batch, [
+    {
+      event: "$identify",
+      distinct_id: ACCOUNT_ID,
+      timestamp: "2026-10-05T09:00:00.000Z",
+      properties: { $anon_distinct_id: "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", environment: "production" },
+    },
+  ]);
+});

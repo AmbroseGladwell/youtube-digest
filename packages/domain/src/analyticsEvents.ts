@@ -60,8 +60,9 @@ const VideoReach = z.enum(["skip", "youtube"]);
 const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
-// Where a library filter was changed: the rail or its sheet, an applied chip's ×, or Clear all.
-const FilterControl = z.enum(["panel", "appliedChip", "clearAll"]);
+// Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
+// Reset, or the caught-up list's way out.
+const FilterControl = z.enum(["panel", "appliedChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
@@ -363,6 +364,12 @@ export const analyticsEvents = {
         { asked: z.enum(["first", "again"]) },
       ),
     },
+    settings: {
+      switched: event(
+        "The reader turns Share usage on or off in Settings › Privacy; sent before an off takes effect, so it is the last event under that yes",
+        { on: z.boolean() },
+      ),
+    },
   },
   settings: {
     page: {
@@ -464,9 +471,17 @@ export const analyticsEvents = {
       }),
       favouriteSwitched: event("The reader turns the favourites filter on or off", { on: z.boolean(), from: FilterControl }),
       dubiousSwitched: event("The reader turns the dubious-claims filter on or off", { on: z.boolean(), from: FilterControl }),
-      allCleared: event("The reader clears every library filter at once", { applied: z.number().int().nonnegative() }),
+      allCleared: event("The reader shows every overview, clearing every library filter at once", {
+        applied: z.number().int().nonnegative(),
+      }),
       allTopicsShown: event("The reader shows or hides the topics past the first few", { shown: z.boolean() }),
       moreShown: event("The reader shows or hides the rail's further filters", { shown: z.boolean() }),
+    },
+    view: {
+      reset: event("The reader resets the library to the default view", { applied: z.number().int().nonnegative() }),
+    },
+    caughtUp: {
+      allShown: event("The reader with nothing unread asks to see every overview"),
     },
     filterSheet: {
       opened: event("The reader opens the filter sheet on a narrow screen"),

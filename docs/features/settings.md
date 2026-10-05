@@ -20,6 +20,7 @@ In order, each with the value its row shows:
 | Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
 | Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
 | Plan | `/settings/plan` | Free or Plus | always |
+| Privacy | `/settings/privacy` | "Not chosen", "Sharing usage" or "Not sharing usage" | there is a server to send to (`analytics-consent.md`) |
 | About | `/settings/about` | the version | the shell knows its build |
 
 A section whose panel would show nothing is left out, both its row and its route. Its
@@ -31,8 +32,8 @@ Plan is its own section rather than part of Account, so a Free reader with no ac
 finds it. It comes after Connections: below the things people change, above About.
 
 New sections go here: Personalisation (OV-46) after Narration voice, YouTube playlists
-(OV-27) beside Connections, and Privacy (OV-62) between Plan and About, whose id is already
-reserved (`analytics-consent.md`). About stays last. Connections is described in
+(OV-27) beside Connections. Privacy sits between Plan and About (`analytics-consent.md`). About
+stays last, with the privacy policy and terms linked under the version. Connections is described in
 `mcp-connector.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.
 
 ## Two panes, or a list then a page
@@ -85,8 +86,8 @@ pane, uses neither.
   "The extension keeps its own library until you sign in." When the shell cannot sync, the
   Account section is hidden and the note goes with it. The extension's home page still says
   it.
-- **About shows only the build line for now.** It is its own section so that it has room to
-  grow. A privacy link will go there once there is a privacy page.
+- **About shows the build line and the privacy policy and terms links.** It is its own
+  section so that it has room to grow.
 - **No screenshot tests.** The card asks for screenshots at 1200, 390 and 400×600, but this
   repo has no screenshot harness yet. The layouts are covered by
   `settingsSections.iwft.ts` at desktop and phone widths, and by the panel scenarios.

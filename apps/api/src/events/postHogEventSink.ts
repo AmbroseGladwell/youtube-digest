@@ -26,5 +26,17 @@ export function createPostHogEventSink({ environment, ...options }: PostHogEvent
         })),
         options,
       ),
+    link: (accountId, anonymousId, at) =>
+      sendPostHogBatch(
+        [
+          {
+            event: "$identify",
+            distinct_id: accountId,
+            timestamp: at.toISOString(),
+            properties: { $anon_distinct_id: anonymousId, environment },
+          },
+        ],
+        options,
+      ),
   };
 }

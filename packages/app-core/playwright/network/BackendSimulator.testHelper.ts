@@ -10,6 +10,7 @@ import {
   ShareToken,
   spokenScript,
   type NarrationRender,
+  type AnalyticsDeclined,
   type AnalyticsEventBatch,
   type SharedPageEventBatch,
   type ClientErrorBatch,
@@ -137,6 +138,7 @@ export class BackendSimulator {
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
   #eventBatches: AnalyticsEventBatch[] = [];
+  #declines: AnalyticsDeclined[] = [];
   #sharedPageEventBatches: Array<{ token: string; batch: SharedPageEventBatch }> = [];
   #errorBatches: ClientErrorBatch[] = [];
 
@@ -713,6 +715,18 @@ export class BackendSimulator {
         }),
       }),
     );
+    await this.#page.route("**/api/events/declined", (route) =>
+      this.#respond(route, EndpointKey.EVENTS_DECLINED, {
+        onDefault: () => {
+          this.#declines.push(route.request().postDataJSON() as AnalyticsDeclined);
+          return { status: 204, body: undefined };
+        },
+        onError: () => ({
+          status: 503,
+          body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+        }),
+      }),
+    );
     await this.#page.route("**/api/shares/*/events", (route) =>
       this.#respond(route, EndpointKey.SHARED_PAGE_EVENTS, {
         onDefault: () => {
@@ -919,6 +933,8 @@ export class BackendSimulator {
     events: (): Array<{ name: string; props: Record<string, unknown> }> =>
       this.#eventBatches.flatMap(({ events }) => events.map(({ name, props }) => ({ name, props }))),
     eventNames: (): string[] => this.#eventBatches.flatMap(({ events }) => events.map(({ name }) => name)),
+    // What a reader without an account saying no told /api/events/declined.
+    declines: (): AnalyticsDeclined[] => [...this.#declines],
     // What a shared link's page told /api/shares/:token/events, with the token it was sent under.
     sharedPage: {
       batches: (): Array<{ token: string; batch: SharedPageEventBatch }> => [...this.#sharedPageEventBatches],
