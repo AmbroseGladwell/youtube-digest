@@ -270,8 +270,8 @@ Until then, events are logged on the server and go nowhere else.
 
 ## Not built
 
-- **The rest of consent:** the create-account line, linking the anonymous id at sign-up,
-  and the 30-day deletion (`docs/features/analytics-consent.md`, "Not built yet").
+- **The 30-day deletion** of anonymous data never linked to an account
+  (`docs/features/analytics-consent.md`, "Not built yet").
 - **The privacy policy page** is OV-79.
 - **The events other cards named:** time from play to first sound is OV-63, and the link
   shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,

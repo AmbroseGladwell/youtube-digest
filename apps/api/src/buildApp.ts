@@ -168,6 +168,7 @@ export async function buildApp({
         appUrl: config.appUrl,
         sessionTtlDays: config.sessionTtlDays,
         sessionCookieSecure,
+        eventSink,
       });
       connectionRoutes(api, { sql, clock, urls });
 
