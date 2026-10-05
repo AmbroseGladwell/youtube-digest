@@ -5,6 +5,7 @@ import type { LinkCode, LinkedSession, MagicLinkRequest, SessionInfo, SignedIn }
 export interface AuthApi {
   requestMagicLink(request: MagicLinkRequest): Promise<void>;
   signIn(token: string): Promise<SignedIn>;
+  signInWithEmailCode(email: string, code: string): Promise<SignedIn>;
   exchangeLinkCode(code: string): Promise<LinkedSession>;
   session(): Promise<SessionInfo>;
   issueLinkCode(): Promise<LinkCode>;

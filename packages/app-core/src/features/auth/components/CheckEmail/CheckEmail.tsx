@@ -12,10 +12,21 @@ export interface CheckEmailProps {
   resending: boolean;
   onDifferentEmail: () => void;
   onResend: () => void;
+  onEnterCode: () => void;
 }
 
-// Design 9c: what happens next, and the two ways out of waiting.
-export function CheckEmail({ email, intent, firstName, sentAt, resending, onDifferentEmail, onResend }: CheckEmailProps) {
+// Design 9c: what happens next, and the two ways out of waiting. The mail's code is the way
+// in for a reader whose mail opens somewhere other than this browser.
+export function CheckEmail({
+  email,
+  intent,
+  firstName,
+  sentAt,
+  resending,
+  onDifferentEmail,
+  onResend,
+  onEnterCode,
+}: CheckEmailProps) {
   const creating = intent === "createAccount";
   return (
     <AuthScreen
@@ -50,6 +61,12 @@ export function CheckEmail({ email, intent, firstName, sentAt, resending, onDiff
       </div>
       <p className={styles.note}>
         Nothing there? Check your spam folder. You can close this tab. The link opens a new one.
+      </p>
+      <p className={styles.note}>
+        Reading your email on another device?{" "}
+        <button type="button" className={styles.inline} onClick={onEnterCode} data-testid={checkEmailTestIds.enterCodeButton}>
+          Enter the code from it
+        </button>
       </p>
     </AuthScreen>
   );

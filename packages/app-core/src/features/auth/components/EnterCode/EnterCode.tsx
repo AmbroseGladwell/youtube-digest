@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { LINK_CODE_TTL_MINUTES } from "@overview/domain";
+import { LINK_CODE_TTL_MINUTES, MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
 import { isUrl } from "../../util/isUrl.js";
@@ -17,16 +17,28 @@ interface EnterCodeCommonProps {
 export type EnterCodeProps = EnterCodeCommonProps &
   (
     | { from: "emailLink"; email: string; sentAt: number; resending: boolean; onDifferentEmail: () => void; onResend: () => void }
+    | {
+        from: "emailCode";
+        intent: AuthIntent;
+        email: string;
+        sentAt: number;
+        resending: boolean;
+        onDifferentEmail: () => void;
+        onResend: () => void;
+      }
     | { from: "webApp"; initialServerUrl: string | null; onEmailInstead: () => void }
   );
 
 // Design 10c/10d: the link opens a tab that shows a code, and the code comes back here.
 // Reopening the panel lands here again until the code is used or could no longer work
 // (docs/features/sign-in.md, "Waiting for the code"). A code the signed-in web app made
-// comes in the same way, with no email behind it.
+// comes in the same way, with no email behind it. On the web, the code is the one printed in
+// the mail itself, for a mail read somewhere other than this browser
+// (docs/features/sign-in.md, "A code in the web mail").
 export function EnterCode(props: EnterCodeProps) {
   const { connecting, refused, onConnect } = props;
-  const fromEmail = props.from === "emailLink";
+  const fromEmail = props.from !== "webApp";
+  const inMail = props.from === "emailCode";
   const ids = useId();
   const [code, setCode] = useState("");
   const analytics = useAnalytics();
@@ -35,9 +47,11 @@ export function EnterCode(props: EnterCodeProps) {
   const [serverShown, setServerShown] = useState(props.from === "webApp" && props.initialServerUrl === null);
   const [serverInvalid, setServerInvalid] = useState(false);
   const problem = empty
-    ? fromEmail
-      ? "Enter the code from the page the link opened."
-      : "Enter the code the web app shows."
+    ? inMail
+      ? "Enter the code from the email."
+      : fromEmail
+        ? "Enter the code from the page the link opened."
+        : "Enter the code the web app shows."
     : refused;
 
   const connect = (event: FormEvent) => {
@@ -61,7 +75,12 @@ export function EnterCode(props: EnterCodeProps) {
       testId={enterCodeTestIds.root}
       title="Enter your code"
       lead={
-        fromEmail ? (
+        inMail ? (
+          <>
+            The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an
+            8-character code under the link. Type it here to sign in this browser.
+          </>
+        ) : fromEmail ? (
           <>
             Open the link we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>. The page
             it opens shows an 8-character code.
@@ -97,7 +116,9 @@ export function EnterCode(props: EnterCodeProps) {
           </label>
         )}
         <label className={styles.label}>
-          <span className={styles.labelText}>{fromEmail ? "Code from the email link" : "Code from the web app"}</span>
+          <span className={styles.labelText}>
+            {inMail ? "Code from the email" : fromEmail ? "Code from the email link" : "Code from the web app"}
+          </span>
           <input
             className={`${styles.code} ${problem !== null ? styles.codeInvalid : ""}`}
             type="text"
@@ -149,7 +170,7 @@ export function EnterCode(props: EnterCodeProps) {
               <ResendLinkButton
                 sentAt={props.sentAt}
                 sending={props.resending}
-                label="Email me a new link"
+                label={inMail ? "Email me a new code" : "Email me a new link"}
                 onResend={props.onResend}
               />
             </>
@@ -167,9 +188,11 @@ export function EnterCode(props: EnterCodeProps) {
 
         <div className={styles.footer}>
           <p className={styles.note}>
-            {refused === null && fromEmail
-              ? "You can close this panel to open your email. It'll be waiting here when you come back."
-              : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
+            {inMail
+              ? `The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
+              : refused === null && fromEmail
+                ? "You can close this panel to open your email. It'll be waiting here when you come back."
+                : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
           </p>
           <button
             type="submit"
@@ -177,7 +200,7 @@ export function EnterCode(props: EnterCodeProps) {
             disabled={connecting}
             data-testid={enterCodeTestIds.connectButton}
           >
-            Connect
+            {!inMail ? "Connect" : props.intent === "createAccount" ? "Create account" : "Sign in"}
           </button>
         </div>
       </form>

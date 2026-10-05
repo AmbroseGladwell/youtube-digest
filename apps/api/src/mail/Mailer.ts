@@ -7,6 +7,8 @@ export type MagicLinkPurpose = "signIn" | "createAccount";
 export interface MagicLinkMail {
   to: string;
   link: string;
+  // A web mail's code, for signing in a browser other than the one the link opens in.
+  code: string | null;
   surface: AuthSurface;
   purpose: MagicLinkPurpose;
   firstName: string | null;

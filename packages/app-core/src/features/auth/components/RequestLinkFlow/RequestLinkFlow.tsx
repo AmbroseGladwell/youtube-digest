@@ -13,6 +13,8 @@ import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { useExchangeLinkCodeMutation } from "../../mutations/useExchangeLinkCodeMutation.js";
 import { useRequestMagicLinkMutation } from "../../mutations/useRequestMagicLinkMutation.js";
+import { useSignInWithEmailCodeMutation } from "../../mutations/useSignInWithEmailCodeMutation.js";
+import { useWebSignInLanding } from "../../useWebSignInLanding.js";
 import type { PendingSignIn } from "../../types/PendingSignIn.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
 import { authFailureMessage, CODE_SPENT, LINK_SPENT } from "../../util/authFailureMessage.js";
@@ -63,8 +65,11 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const [refused, setRefused] = useState<string | null>(null);
   const [codeRefused, setCodeRefused] = useState<string | null>(null);
   const [codeFromWebApp, setCodeFromWebApp] = useState(false);
+  const [codeFromEmail, setCodeFromEmail] = useState(false);
   const requestLink = useRequestMagicLinkMutation();
   const exchangeCode = useExchangeLinkCodeMutation();
+  const signInWithCode = useSignInWithEmailCodeMutation();
+  const { land, landing } = useWebSignInLanding();
   const library = useOverviewsWithStateQuery();
   const overviewCount = library.data?.filter((entry) => entry.kind === "overview").length ?? 0;
   const libraryMove = useLibraryMove();
@@ -93,7 +98,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
     );
   }
 
-  if (sync.connected) {
+  if (sync.connected && !landing) {
     return <Navigate to={Routes.home()} replace />;
   }
 
@@ -143,12 +148,27 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
     );
   };
 
+  const signInWithEmailCode = (pending: PendingSignIn, code: string) => {
+    setCodeRefused(null);
+    signInWithCode.mutate(
+      { apiUrl: pending.apiUrl, email: pending.email, code },
+      {
+        onSuccess: (signedIn) => {
+          if (signedIn.surface === "web") land(pending.apiUrl, signedIn, returnTo);
+        },
+        onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
+      },
+    );
+  };
+
   const startOver = () => {
-    analytics.account.signIn.differentEmailChosen({ from: inExtension ? "enterCode" : "checkEmail" });
+    analytics.account.signIn.differentEmailChosen({ from: inExtension || codeFromEmail ? "enterCode" : "checkEmail" });
     setLastEmail(sent?.email ?? "");
     requestLink.reset();
     exchangeCode.reset();
+    signInWithCode.reset();
     setCodeRefused(null);
+    setCodeFromEmail(false);
     setSent(null);
   };
 
@@ -170,6 +190,23 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         />
       );
     }
+    if (codeFromEmail) {
+      return (
+        <EnterCode
+          key="emailCode"
+          from="emailCode"
+          intent={sent.intent}
+          email={sent.email}
+          sentAt={sent.sentAt}
+          connecting={signInWithCode.isPending || landing}
+          resending={requestLink.isPending}
+          refused={codeRefused}
+          onDifferentEmail={startOver}
+          onResend={resend}
+          onConnect={(code) => signInWithEmailCode(sent, code)}
+        />
+      );
+    }
     return (
       <CheckEmail
         email={sent.email}
@@ -179,6 +216,10 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         resending={requestLink.isPending}
         onDifferentEmail={startOver}
         onResend={resend}
+        onEnterCode={() => {
+          analytics.account.signIn.emailCodeChosen();
+          setCodeFromEmail(true);
+        }}
       />
     );
   }

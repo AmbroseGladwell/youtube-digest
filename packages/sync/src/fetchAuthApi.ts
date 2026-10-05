@@ -15,6 +15,8 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
       await answered(request("POST", "/auth/magic-link", Accepted, { body }));
     },
     signIn: (token) => answered(request("POST", "/auth/sign-in", SignedIn, { body: { token } })),
+    signInWithEmailCode: (email, code) =>
+      answered(request("POST", "/auth/email-code", SignedIn, { body: { email, code } })),
     exchangeLinkCode: (code) => answered(request("POST", "/auth/link-code", LinkedSession, { body: { code } })),
     session: () => answered(request("GET", "/session", SessionInfo)),
     issueLinkCode: () => answered(request("POST", "/session/link-code", LinkCode)),

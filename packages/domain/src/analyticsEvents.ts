@@ -139,6 +139,7 @@ export const SettingsSection = z.enum([
   "about",
 ]);
 const LinkCodeFrom = z.enum(["emailLink", "webApp"]);
+const SignInCodeFrom = z.enum(["emailLink", "webApp", "emailCode"]);
 export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
@@ -346,9 +347,10 @@ export const analyticsEvents = {
       }),
       switchChosen: event("The reader switches between signing in and creating an account", { to: AuthIntent }),
       serverFieldShown: event("The reader asks to name a different server to sign in to"),
-      codeSubmitted: event("The reader types a code into the extension to sign it in; never the code", {
-        from: LinkCodeFrom,
+      codeSubmitted: event("The reader types a code to sign in, into the extension or, from the mail, into the web app; never the code", {
+        from: SignInCodeFrom,
       }),
+      emailCodeChosen: event("The reader chooses to sign the web app in with the code from the mail rather than its link"),
       webAppCodeChosen: event("The reader chooses to sign the extension in with a code from the web app"),
       emailInsteadChosen: event("The reader goes back from entering a code to signing in by email"),
       welcomeDone: event("The reader leaves the welcome shown after signing in"),

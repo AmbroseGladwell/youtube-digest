@@ -21,6 +21,9 @@ const signIn = (testApp: TestApp, remoteAddress = HOME) =>
 const exchange = (testApp: TestApp, remoteAddress = HOME) =>
   testApp.app.inject({ method: "POST", url: "/api/auth/link-code", remoteAddress, payload: { code: "ABCD-EFGH" } });
 
+const enterEmailCode = (testApp: TestApp, email: string, remoteAddress = HOME) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/email-code", remoteAddress, payload: { email, code: "ABCD-EFGH" } });
+
 const spend = async (
   { limit }: RateLimit,
   request: (index: number) => Promise<LightMyRequestResponse>,
@@ -149,6 +152,26 @@ test("guessing link codes from one address is refused past its limit", async () 
   assert.ok(guesses.every((response) => response.json().error.code === "link_invalid"));
 
   assertThrottled(await exchange(testApp));
+  await testApp.close();
+});
+
+test("guessing an address's emailed code is refused past its limit, from any number of addresses", async () => {
+  const testApp = await createTestApp();
+  const guesses = await spend(rateLimits.emailCodePerEmail, (index) =>
+    enterEmailCode(testApp, "reader@example.com", `203.0.113.${index + 1}`),
+  );
+  assert.ok(guesses.every((response) => response.json().error.code === "link_invalid"));
+
+  assertThrottled(await enterEmailCode(testApp, " Reader@Example.com ", ELSEWHERE));
+  assert.equal((await enterEmailCode(testApp, "someone-else@example.com", ELSEWHERE)).json().error.code, "link_invalid");
+  await testApp.close();
+});
+
+test("guessing emailed codes from one address is refused past its limit", async () => {
+  const testApp = await createTestApp();
+  await spend(rateLimits.emailCodePerAddress, (index) => enterEmailCode(testApp, `reader${index}@example.com`));
+
+  assertThrottled(await enterEmailCode(testApp, "another@example.com"));
   await testApp.close();
 });
 

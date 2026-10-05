@@ -25,6 +25,9 @@ const askForLink = (testApp: TestApp, surface: "web" | "extension", email = EMAI
 const signIn = (testApp: TestApp, token: string) =>
   testApp.app.inject({ method: "POST", url: "/api/auth/sign-in", payload: { token } });
 
+const enterCode = (testApp: TestApp, code: string, email = EMAIL) =>
+  testApp.app.inject({ method: "POST", url: "/api/auth/email-code", payload: { email, code } });
+
 const exchange = (testApp: TestApp, code: string) =>
   testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code } });
 
@@ -184,6 +187,95 @@ test("a link older than fifteen minutes is refused, and so is a token nobody was
   assert.equal(expired.json().error.code, "link_invalid");
   assert.equal(unknown.json().error.code, "link_invalid");
   assert.equal(unknown.statusCode, expired.statusCode);
+  await testApp.close();
+});
+
+test("a web mail carries a code, kept only as its hash", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+
+  const code = testApp.mailer.lastCode();
+
+  assert.match(code, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  const [row] = await testApp.sql.query<{ code_hash: string }>("select code_hash from magic_links");
+  assert.equal(row!.code_hash, hashToken(code.replace("-", "")));
+  await testApp.close();
+});
+
+test("an extension mail carries no code, since its link leads to one", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "extension");
+
+  assert.equal(testApp.mailer.sent[0]!.code, null);
+  await testApp.close();
+});
+
+test("the code from a web mail signs the browser in with a cookie, however it was typed", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  const typed = ` ${testApp.mailer.lastCode().toLowerCase().replace("-", " ")} `;
+
+  const response = await enterCode(testApp, typed, " Reader@Example.com ");
+
+  assert.equal(response.statusCode, 200);
+  const session = await whoAmI(testApp, { cookie: cookiePair(response) });
+  assert.equal(session.json().email, EMAIL);
+  assert.deepEqual(response.json(), {
+    surface: "web",
+    accountId: session.json().accountId,
+    email: EMAIL,
+    firstName: null,
+    expiresAt: "2026-10-26T09:00:00.000Z",
+  });
+  await testApp.close();
+});
+
+test("one mail signs in once: the code spends the link, and the link spends the code", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  const token = testApp.mailer.lastToken();
+  const code = testApp.mailer.lastCode();
+
+  assert.equal((await enterCode(testApp, code)).statusCode, 200);
+  assert.equal((await enterCode(testApp, code)).json().error.code, "link_invalid");
+  assert.equal((await signIn(testApp, token)).json().error.code, "link_invalid");
+
+  testApp.clock.advance(MINUTE_MS);
+  await askForLink(testApp, "web");
+  assert.equal((await signIn(testApp, testApp.mailer.lastToken())).statusCode, 200);
+  const spent = await enterCode(testApp, testApp.mailer.lastCode());
+  assert.equal(spent.statusCode, 410);
+  assert.equal(spent.headers["set-cookie"], undefined);
+  await testApp.close();
+});
+
+test("a code works only with the address it was sent to, and only for fifteen minutes", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  const code = testApp.mailer.lastCode();
+
+  assert.equal((await enterCode(testApp, code, "someone-else@example.com")).json().error.code, "link_invalid");
+  assert.equal((await enterCode(testApp, "ABCD-EFGH")).json().error.code, "link_invalid");
+  testApp.clock.advance(16 * MINUTE_MS);
+  const expired = await enterCode(testApp, code);
+  assert.equal(expired.statusCode, 410);
+  assert.equal(expired.json().error.code, "link_invalid");
+  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  await testApp.close();
+});
+
+test("a create-account mail's code makes the account with the name it was asked with", async () => {
+  const testApp = await createTestApp();
+  await testApp.app.inject({
+    method: "POST",
+    url: "/api/auth/magic-link",
+    payload: { email: EMAIL, surface: "web", intent: "createAccount", firstName: "Ada" },
+  });
+
+  const response = await enterCode(testApp, testApp.mailer.lastCode());
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json().firstName, "Ada");
   await testApp.close();
 });
 

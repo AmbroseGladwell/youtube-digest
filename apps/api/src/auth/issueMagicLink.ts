@@ -7,6 +7,7 @@ import {
 import type { SqlClient } from "../db/SqlClient.js";
 import { generateToken } from "./generateToken.js";
 import { hashToken } from "./hashToken.js";
+import { formatLinkCode, generateLinkCode } from "./linkCode.js";
 import { normaliseEmail } from "./normaliseEmail.js";
 
 export const MAGIC_LINK_TTL_MS = MAGIC_LINK_TTL_MINUTES * 60 * 1000;
@@ -15,6 +16,8 @@ export const MAGIC_LINK_COOLDOWN_MS = MAGIC_LINK_COOLDOWN_SECONDS * 1000;
 export interface IssuedMagicLink {
   email: string;
   token: string;
+  // Only a web link carries one: an extension link already leads to a code of its own.
+  code: string | null;
   expiresAt: string;
 }
 
@@ -48,11 +51,22 @@ export async function issueMagicLink(
     return null;
   }
   const token = generateToken();
+  const code = surface === "web" ? generateLinkCode() : null;
   const expiresAt = new Date(now.getTime() + MAGIC_LINK_TTL_MS).toISOString();
   await sql.query(
-    `insert into magic_links (email, surface, intent, first_name, anonymous_id, token_hash, created_at, expires_at)
-       values ($1, $2, $3, $4, $5, $6, $7::timestamptz, $8::timestamptz)`,
-    [email, surface, intent, firstName, anonymousId, hashToken(token), now.toISOString(), expiresAt],
+    `insert into magic_links (email, surface, intent, first_name, anonymous_id, token_hash, code_hash, created_at, expires_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz)`,
+    [
+      email,
+      surface,
+      intent,
+      firstName,
+      anonymousId,
+      hashToken(token),
+      code === null ? null : hashToken(code),
+      now.toISOString(),
+      expiresAt,
+    ],
   );
-  return { email, token, expiresAt };
+  return { email, token, code: code === null ? null : formatLinkCode(code), expiresAt };
 }

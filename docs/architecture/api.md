@@ -23,7 +23,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Configuration from the environment, refused at startup when wrong | `src/loadConfig.ts` |
 | The extension's origin vouched for, from an allowlist in the environment | `src/http/corsPlugin.ts`, `allowedOriginsFromEnv.ts` |
 | A session minted from the command line, with no email involved | `src/scripts/mintSession.ts` |
-| Rate limits per address, per account, and on the three sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
+| Rate limits per address, per account, and on the four sign-in routes, answered `429` with `Retry-After` | `src/rateLimit/`; "Rate limits", below |
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
 | An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
 | The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
@@ -38,7 +38,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql, …, V0015__followed_playlist_records.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql, …, V0015__magic_link_email_codes.sql, V0016__followed_playlist_records.sql
   assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
@@ -46,7 +46,7 @@ apps/api/
     loadConfig.ts
     db/                  SqlClient and its two implementations; the migration runner
     http/                ApiError, the handler, parseOrThrow, If-Match and ETag helpers, CORS, the request id
-    auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, POST /api/session/link-code, the three /api/auth routes
+    auth/                accounts, sessions, the plugin, the cookie, GET/DELETE /api/session, POST /api/session/link-code, the four /api/auth routes
     mail/                the Mailer interface, the magic-link email, Brevo, the log
     versions/            client version parsing, the floor, the handshake, the write guards
     records/             the repository and the three pure write decisions
@@ -75,7 +75,7 @@ event sink that record, and `server.ts` is the only place the environment is rea
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
 a session unless it says otherwise; eight do: `GET /api/health`, `GET /api/handshake`, the
-three `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
+four `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
 which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
 `GET /api/playlists/:id`, which reads a public or unlisted playlist for anyone following
 one (`docs/features/playlists.md`),
@@ -290,6 +290,8 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
 | `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |
+| `emailCodeAddress` | 30 | hour, per address | `POST /api/auth/email-code` |
+| `emailCodeEmail` | 10 | hour, per normalised email | `POST /api/auth/email-code` |
 | `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
 | `oauthRegisterAddress` | 20 | hour, per address | `POST /oauth/register` |
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |

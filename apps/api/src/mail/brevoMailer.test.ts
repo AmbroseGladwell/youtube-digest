@@ -5,6 +5,7 @@ import { createBrevoMailer, MailDeliveryError } from "./brevoMailer.js";
 const mail = {
   to: "reader@example.com",
   link: "https://overview.example/sign-in#token=t",
+  code: null,
   surface: "web" as const,
   purpose: "signIn" as const,
   firstName: null,

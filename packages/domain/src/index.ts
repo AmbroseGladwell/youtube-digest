@@ -91,6 +91,7 @@ export * from "./authTimings.js";
 export * from "./FirstName.js";
 export * from "./MagicLinkRequest.js";
 export * from "./SignInRequest.js";
+export * from "./EmailCodeRequest.js";
 export * from "./SignedIn.js";
 export * from "./LinkCode.js";
 export * from "./LinkCodeRequest.js";

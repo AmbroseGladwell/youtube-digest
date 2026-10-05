@@ -1,17 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useEffect, useRef } from "react";
+import { useLocation } from "react-router";
 import { signInReturnFromSearch, signInTokenFromHash } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
-import type { ConsentPageLocationState } from "../../connections/ConsentPage/ConsentPage.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
-import { Routes } from "../../../app/Routes.js";
-import { useLibraryAccountId } from "../../../stores/LibraryAccountContext.js";
-import { useSharedPageIntent } from "../../sharedPage/useSharedPageIntent.js";
-import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { AuthScreen } from "../components/AuthScreen/AuthScreen.js";
 import { LinkCodeCard } from "../components/LinkCodeCard/LinkCodeCard.js";
 import { RequestLinkFlow } from "../components/RequestLinkFlow/RequestLinkFlow.js";
 import { useSignInMutation } from "../mutations/useSignInMutation.js";
+import { useWebSignInLanding } from "../useWebSignInLanding.js";
 import { authFailureMessage, LINK_SPENT } from "../util/authFailureMessage.js";
 import styles from "./SignInPage.module.scss";
 import { signInPageTestIds } from "./SignInPageTestIds.js";
@@ -23,15 +19,11 @@ import { signInPageTestIds } from "./SignInPageTestIds.js";
 // (docs/features/sign-in.md).
 export function SignInPage() {
   const { hash, search } = useLocation();
-  const navigate = useNavigate();
-  const { setConnection } = useSyncConnection();
   const signIn = useSignInMutation();
-  const finishSharedPageIntent = useSharedPageIntent();
+  const { land } = useWebSignInLanding();
   const token = signInTokenFromHash(hash);
   const apiUrl = globalThis.location?.origin ?? "";
   const started = useRef<string | null>(null);
-  const libraryAccountId = useLibraryAccountId();
-  const [landing, setLanding] = useState<{ accountId: string; returnTo: string | null } | null>(null);
 
   useEffect(() => {
     if (token === null || started.current === token) return;
@@ -40,35 +32,11 @@ export function SignInPage() {
       { apiUrl, token },
       {
         onSuccess: (signedIn) => {
-          if (signedIn.surface === "web") {
-            setConnection({
-              apiUrl,
-              token: null,
-              accountId: signedIn.accountId,
-              email: signedIn.email,
-              firstName: signedIn.firstName,
-            });
-            setLanding({ accountId: signedIn.accountId, returnTo: signInReturnFromSearch(search) });
-          }
+          if (signedIn.surface === "web") land(apiUrl, signedIn, signInReturnFromSearch(search));
         },
       },
     );
-  }, [token, search, apiUrl, signIn, setConnection]);
-
-  // Landing waits for the account's library to be the one open, so whatever the visitor
-  // started goes into it rather than the library being left (docs/features/account-libraries.md).
-  useEffect(() => {
-    if (landing === null || libraryAccountId !== landing.accountId) return;
-    setLanding(null);
-    const { returnTo } = landing;
-    const state: ConsentPageLocationState = { fromSignInLink: true };
-    // Whatever the visitor was doing on a shared page is finished either way; a link that
-    // names where to come back to still decides where they land
-    // (docs/features/sharing.md, docs/features/mcp-connector.md).
-    void finishSharedPageIntent().then((afterIntent) =>
-      returnTo === null ? navigate(afterIntent, { replace: true }) : navigate(returnTo, { replace: true, state }),
-    );
-  }, [landing, libraryAccountId, finishSharedPageIntent, navigate]);
+  }, [token, search, apiUrl, signIn, land]);
 
   if (token === null) {
     return <RequestLinkFlow intent="signIn" returnTo={signInReturnFromSearch(search)} />;
