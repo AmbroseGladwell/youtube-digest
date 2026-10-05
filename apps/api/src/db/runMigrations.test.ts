@@ -117,3 +117,34 @@ test("each account keeps the transcripts it stored before the shared cache, and 
   assert.deepEqual(counts, { confirmed: 0, contributions: 0 });
   await sql.close();
 });
+
+test("a share made before OV-83 reads as common knowledge with untimed key points, and one without a verdict keeps none", async () => {
+  const sql = createPgliteSqlClient(new PGlite());
+  await runMigrations(sql, await migrationsBefore(13));
+  const accountId = "a0000000-0000-4000-8000-000000000001";
+  await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);
+  const share = (token: string, verdict: unknown, keyPoints = ["One.", "Two.", "Three."]) =>
+    sql.query(
+      `insert into shares (token, account_id, overview_id, snapshot, content_hash, shared_at, updated_at)
+       values ($1, $2, gen_random_uuid(), $3::jsonb, 'hash', now(), now())`,
+      [token, accountId, JSON.stringify({ note: { verdict, keyPoints }, transcript: null, narration: null })],
+    );
+  await share("withVerdict00000", { novelty: "recycled", dubious: true, reasoning: "Secondhand.", similarTo: [] });
+  await share("withoutVerdict00", null);
+
+  await runMigrations(sql);
+
+  const rows = await sql.query<{ token: string; verdict: unknown; key_points: unknown }>(
+    "select token, snapshot -> 'note' -> 'verdict' as verdict, snapshot -> 'note' -> 'keyPoints' as key_points from shares order by token",
+  );
+  const untimed = ["One.", "Two.", "Three."].map((text) => ({ text, range: null }));
+  assert.deepEqual(rows, [
+    {
+      token: "withVerdict00000",
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Secondhand.", similarTo: [] },
+      key_points: untimed,
+    },
+    { token: "withoutVerdict00", verdict: null, key_points: untimed },
+  ]);
+  await sql.close();
+});

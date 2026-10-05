@@ -17,13 +17,13 @@ describe("recordLibraryFilterChange", () => {
     const { recorded, filters } = recording();
 
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { topicId: FITNESS }, "panel");
-    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { novelty: "recycled" }, "panel");
+    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { novelty: "common_knowledge" }, "panel");
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { status: "unread" }, "panel");
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { dubious: true }, "panel");
 
     expect(recorded).toEqual([
       ["library.filters.topicChosen", { topicId: FITNESS, from: "panel" }],
-      ["library.filters.noveltyChosen", { novelty: "recycled", from: "panel" }],
+      ["library.filters.noveltyChosen", { novelty: "common_knowledge", from: "panel" }],
       ["library.filters.statusChosen", { status: "unread", from: "panel" }],
       ["library.filters.dubiousSwitched", { on: true, from: "panel" }],
     ]);

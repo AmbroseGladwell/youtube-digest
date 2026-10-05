@@ -17,7 +17,7 @@ describe("buildSearchHaystack", () => {
     publishedAt: null,
         thumbnailUrl: null,
       },
-      keyPoints: ["Jaw strain warning"],
+      keyPoints: [{ text: "Jaw strain warning", range: null }],
       tags: ["face-yoga"],
     });
 
@@ -31,7 +31,7 @@ describe("buildSearchHaystack", () => {
 
   it("includes verdict reasoning and selling detail when present", () => {
     const overview = makeOverview({
-      verdict: { novelty: "recycled", dubious: true, reasoning: "Contradicts settled anatomy.", similarTo: [] },
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, reasoning: "Contradicts settled anatomy.", similarTo: [] },
       selling: { type: "own_paid_product", detail: "Pitches a Patreon course.", compromisesContent: true },
     });
 

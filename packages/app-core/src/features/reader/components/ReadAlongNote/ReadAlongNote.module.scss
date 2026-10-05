@@ -32,6 +32,10 @@
   background: var(--surface);
 }
 
+.lineText {
+  cursor: pointer;
+}
+
 // Design 4a's section label: 13 semibold in the stone ink, with the section's own
 // room above it.
 .headingLine {
@@ -63,6 +67,23 @@
   gap: 0.5rem;
 }
 
+.lineBody {
+  min-width: 0;
+}
+
+.bulletLine + .bulletLine {
+  margin-top: 0.375rem;
+}
+
+// docs/features/novelty-scale.md, "What it is judged against": read once, not heard.
+.footnoteLine {
+  margin-top: 0.125rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .bullet {
   flex: none;
   min-width: 1.125rem;
@@ -87,33 +108,6 @@
 .lineActive .lineText {
   background: var(--stone-tint);
   color: var(--on-stone-tint);
-}
-
-// Design 2b: under the pointer a narrated line shows where it starts, hung in the margin
-// in the warning ink, so a click reads as "seek here". Only where there is a pointer to
-// hover with and a margin to hang it in.
-.startTime {
-  display: none;
-}
-
-@media (hover: hover) and (min-width: 62rem) {
-  .startTime {
-    position: absolute;
-    left: -3.625rem;
-    top: 0.3rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--accent);
-    font-size: 0.75rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    visibility: hidden;
-  }
-
-  .line:hover .startTime {
-    visibility: visible;
-  }
 }
 
 @media (max-width: 61.9375rem) {

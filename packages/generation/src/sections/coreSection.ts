@@ -1,5 +1,7 @@
+import { z } from "zod";
 import { CoreFields, wordCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
+import { SegmentRangeShape } from "./watchAnywaySection.js";
 
 export const KEY_POINT_TARGET_WORDS = 40;
 export const KEY_POINT_MAX_WORDS = 50;
@@ -47,11 +49,20 @@ Each is read aloud after a linking word such as "First," or "Then,", so
 never open a point with its own number, a label and a colon, or a heading.
 Good: "Adding sets grows the arms faster than adding weight, as long as
 each set is taken close to failure."
-Bad: "Volume over load."`,
-  schemaShape: () => ({
+Bad: "Volume over load."
+
+Give each point the stretch of the video it comes from, as
+startSegmentIndex/endSegmentIndex taken from the numbered transcript
+segments below, so the reader can go to it; don't estimate a time. Use
+null for a point the video builds across several places rather than in
+one stretch.`,
+  schemaShape: (input) => ({
     ...CoreFields.shape,
-    keyPoints: CoreFields.shape.keyPoints.element
-      .refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`)
+    keyPoints: z
+      .object({
+        text: z.string().refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`),
+        range: input.transcript.length === 0 ? z.null() : SegmentRangeShape.nullable(),
+      })
       .array()
       .min(3)
       .max(7),

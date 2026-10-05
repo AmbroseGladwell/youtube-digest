@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { OverviewId } from "./Brands.js";
+import { NOVELTY_BASIS } from "./noveltyLabel.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { overviewMarkdown } from "./overviewMarkdown.js";
 
@@ -21,10 +22,11 @@ const FULL = makeOverview({
   captureReason: "Watch again before the next session.",
   inOneLine: "A careful breakdown of the hip hinge.",
   coreClaim: "The swing is a hinge rather than a squat.",
-  keyPoints: ["Throw the bell back.", "Stand tall at the top.", "Hinge, don't squat."],
+  keyPoints: [{ text: "Throw the bell back.", range: null }, { text: "Stand tall at the top.", range: null }, { text: "Hinge, don't squat.", range: null }],
   tags: ["kettlebell", "hip-hinge", "technique"],
   verdict: {
-    novelty: "novel",
+    novelty: "original",
+    standsOut: { text: "Cueing the float as the hips snapping shut.", range: { startMs: 95_000, endMs: 140_000 } },
     dubious: true,
     reasoning: "The spinal claim is asserted rather than sourced.",
     similarTo: [{ overviewId: SIMILAR_ID, title: "Hinge before you load" }],
@@ -90,8 +92,19 @@ test("links the part worth watching to where it starts", () => {
 test("says when a verdict is dubious, and names the similar overviews by title and id", () => {
   const markdown = overviewMarkdown(FULL);
 
-  assert.ok(markdown.includes("Novel, and dubious. The spinal claim is asserted rather than sourced."));
+  assert.ok(markdown.includes("Original, and dubious. The spinal claim is asserted rather than sourced."));
   assert.ok(markdown.includes(`Similar to: Hinge before you load (${SIMILAR_ID})`));
+});
+
+test("names what stands out, and says what the novelty was judged against", () => {
+  const markdown = overviewMarkdown(FULL);
+
+  assert.ok(
+    markdown.includes(
+      "What stands out ([1:35–2:20](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=95)): Cueing the float as the hips snapping shut.",
+    ),
+  );
+  assert.ok(markdown.includes(`_${NOVELTY_BASIS}_`));
 });
 
 test("leaves out every optional section a sparse note does not have", () => {

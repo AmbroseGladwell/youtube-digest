@@ -28,7 +28,7 @@ const panelWatching = {
   playback: { videoId: VIDEO_ID, positionMs: 0, playing: true },
 };
 
-test("the stretch worth watching is printed as a range, under the paragraph that says so", async ({
+test("the stretch worth watching ends the paragraph that says so, as its whole range", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -36,7 +36,8 @@ test("the stretch worth watching is printed as a range, under the paragraph that
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyWatchAnywayRangeReads("3:20–5:10");
+  await reader.verifyLineTimesRead(["3:20–5:10"]);
+  await reader.verifyLineMenuIsOpen(false);
 });
 
 test("skipping moves the video to the start of that stretch, not to the end of it", async ({
@@ -47,8 +48,9 @@ test("skipping moves the video to the start of that stretch, not to the end of i
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
 
+  await reader.openLineTime("3:20–5:10");
   await reader.verifyOffersToWatchOnYouTube(false);
-  await reader.clickSkipToWatchAnyway();
+  await reader.clickSkipTo();
 
   await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([RANGE.startMs]);
 });
@@ -63,7 +65,8 @@ test("the web app offers the video at that moment, having no player of its own t
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyWatchAnywayRangeReads("3:20–5:10");
+  await reader.openLineTime("3:20–5:10");
+  await reader.verifyLineMenuRangeReads("3:20–5:10 in the video");
   await reader.verifyOffersToSkipTheVideo(false);
   await reader.verifyOffersToWatchFrom("Watch from 3:20", `${VIDEO_URL}&t=200`);
 });
@@ -79,7 +82,8 @@ test("a panel whose tab has moved to another video offers the video at that mome
   });
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyWatchAnywayRangeReads("3:20–5:10");
+  await reader.openLineTime("3:20–5:10");
+  await reader.verifyLineMenuRangeReads("3:20–5:10 in the video");
   await reader.verifyOffersToSkipTheVideo(false);
   await reader.verifyOffersToWatchFrom("Watch from 3:20", `${VIDEO_URL}&t=200`);
 });
@@ -92,5 +96,5 @@ test("a note with no stretch to point at shows none of it", async ({
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyHasNoWatchAnywayJump();
+  await reader.verifyLineTimesRead([]);
 });

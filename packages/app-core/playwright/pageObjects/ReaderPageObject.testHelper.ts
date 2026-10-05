@@ -13,7 +13,7 @@ import { overviewActionsMenuTestIds } from "../../src/features/reader/components
 import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
 import { TRANSCRIPT_REST_GAP } from "../../src/features/reader/components/TranscriptPanel/transcriptRestingLine.js";
-import { watchAnywayJumpTestIds } from "../../src/features/reader/components/WatchAnywayJump/WatchAnywayJumpTestIds.js";
+import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRangeTag/LineRangeTagTestIds.js";
 import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
@@ -105,7 +105,7 @@ export class ReaderPageObject extends PageObject {
           return { top: box.y, bottom: box.y + box.height };
         };
         const chip = await rowOf(this.get(readerMastheadTestIds.channel));
-        const novelty = await rowOf(this.page.getByText("Novel", { exact: true }));
+        const novelty = await rowOf(this.page.getByText("Original", { exact: true }));
         const dubious = await rowOf(this.page.getByText(/Dubious claim/));
 
         for (const beside of [novelty, dubious]) {
@@ -264,6 +264,15 @@ export class ReaderPageObject extends PageObject {
       ).toHaveText(texts),
     );
 
+  verifyNoteShowsLine = (text: string, shown: boolean) =>
+    this.step(`verifyNoteShowsLine ${text} ${shown}`, () => {
+      const line = this.get(readAlongNoteTestIds.line)
+        .or(this.get(readAlongNoteTestIds.activeLine))
+        .getByTestId(readAlongNoteTestIds.lineText)
+        .filter({ hasText: text });
+      return shown ? expect(line).toBeVisible() : expect(line).toHaveCount(0);
+    });
+
   clickLineWithText = (text: string) =>
     this.step(`clickLineWithText ${text}`, () =>
       this.get(readAlongNoteTestIds.line).filter({ hasText: text }).first().click(),
@@ -382,12 +391,6 @@ export class ReaderPageObject extends PageObject {
       await this.page.keyboard.press(key);
     });
 
-  verifyLineStartTimesAreShown = (shown: boolean) =>
-    this.step(`verifyLineStartTimesAreShown ${shown}`, () =>
-      shown
-        ? expect(this.get(readAlongNoteTestIds.startTime).first()).toBeAttached()
-        : this.expectToHaveCount(readAlongNoteTestIds.startTime, 0),
-    );
   clickRate = () => this.step("clickRate", () => this.click(readerPlayerBarTestIds.rateButton));
   clickFavourite = () =>
     this.step("clickFavourite", () => this.click(readerMastheadTestIds.favouriteButton));
@@ -707,19 +710,51 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(chaptersPanelTestIds.followingNote),
     );
 
-  verifyWatchAnywayRangeReads = (range: string) =>
-    this.step(`verifyWatchAnywayRangeReads ${range}`, () =>
-      expect(this.get(watchAnywayJumpTestIds.range)).toHaveText(range),
+  verifyLineTimesRead = (labels: string[]) =>
+    this.step(`verifyLineTimesRead ${labels.join(", ")}`, () =>
+      expect(this.get(lineRangeTagTestIds.tag)).toHaveText(labels),
     );
 
-  verifyHasNoWatchAnywayJump = () =>
-    this.step("verifyHasNoWatchAnywayJump", () =>
-      this.expectNotToBeVisible(watchAnywayJumpTestIds.root),
+  openLineTime = (label: string) =>
+    this.step(`openLineTime ${label}`, async () => {
+      const tag = this.get(lineRangeTagTestIds.tag).filter({ hasText: new RegExp(`^${label}$`) });
+      await tag.click();
+      await expect(tag).toHaveAttribute("aria-expanded", "true");
+    });
+
+  verifyLineMenuRangeReads = (range: string) =>
+    this.step(`verifyLineMenuRangeReads ${range}`, () =>
+      expect(this.get(lineRangeTagTestIds.menuRange)).toHaveText(range),
     );
+
+  verifyLineMenuIsOpen = (open: boolean) =>
+    this.step(`verifyLineMenuIsOpen ${open}`, () =>
+      open ? this.expectToBeVisible(lineRangeTagTestIds.menu) : this.expectNotToBeVisible(lineRangeTagTestIds.menu),
+    );
+
+  verifyLineTimeIsFocused = (label: string) =>
+    this.step(`verifyLineTimeIsFocused ${label}`, () =>
+      expect(this.get(lineRangeTagTestIds.tag).filter({ hasText: new RegExp(`^${label}$`) })).toBeFocused(),
+    );
+
+  verifyLineMenuNames = (lineText: string) =>
+    this.step(`verifyLineMenuNames ${lineText}`, () => expect(this.get(lineRangeTagTestIds.menu)).toContainText(lineText));
+
+  clickOutsideLineMenu = () =>
+    this.step("clickOutsideLineMenu", () => this.get(lineRangeTagTestIds.scrim).click({ position: { x: 10, y: 10 } }));
+
+  clickReadInTranscript = () =>
+    this.step("clickReadInTranscript", () => this.click(lineRangeTagTestIds.transcriptButton));
+
+  clickReadInTranscriptAt = (label: string) =>
+    this.step(`clickReadInTranscriptAt ${label}`, async () => {
+      await this.openLineTime(label);
+      await this.clickReadInTranscript();
+    });
 
   verifyOffersToWatchFrom = (label: string, url: string) =>
     this.step(`verifyOffersToWatchFrom ${label}`, async () => {
-      const link = this.get(watchAnywayJumpTestIds.watchLink);
+      const link = this.get(lineRangeTagTestIds.watchLink);
       await expect(link).toHaveText(label);
       await expect(link).toHaveAttribute("href", url);
       await expect(link).toHaveAttribute("target", "_blank");
@@ -729,19 +764,18 @@ export class ReaderPageObject extends PageObject {
   verifyOffersToWatchOnYouTube = (offered: boolean) =>
     this.step(`verifyOffersToWatchOnYouTube ${offered}`, () =>
       offered
-        ? this.expectToBeVisible(watchAnywayJumpTestIds.watchLink)
-        : this.expectNotToBeVisible(watchAnywayJumpTestIds.watchLink),
+        ? this.expectToBeVisible(lineRangeTagTestIds.watchLink)
+        : this.expectNotToBeVisible(lineRangeTagTestIds.watchLink),
     );
 
   verifyOffersToSkipTheVideo = (offered: boolean) =>
     this.step(`verifyOffersToSkipTheVideo ${offered}`, () =>
       offered
-        ? this.expectToBeVisible(watchAnywayJumpTestIds.skipButton)
-        : this.expectNotToBeVisible(watchAnywayJumpTestIds.skipButton),
+        ? this.expectToBeVisible(lineRangeTagTestIds.skipButton)
+        : this.expectNotToBeVisible(lineRangeTagTestIds.skipButton),
     );
 
-  clickSkipToWatchAnyway = () =>
-    this.step("clickSkipToWatchAnyway", () => this.click(watchAnywayJumpTestIds.skipButton));
+  clickSkipTo = () => this.step("clickSkipTo", () => this.click(lineRangeTagTestIds.skipButton));
 
   clickListen = () =>
     this.step("clickListen", () => this.click(readerMastheadTestIds.listenButton));

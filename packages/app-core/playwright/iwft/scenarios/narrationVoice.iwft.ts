@@ -7,7 +7,7 @@ import { Routes } from "../../../src/app/Routes.js";
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: ["Growth beat expectations.", "Productivity is moving.", "Hiring intent has turned."],
+  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
 });
 
 const SIGNED_IN = {

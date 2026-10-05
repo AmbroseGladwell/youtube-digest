@@ -8,7 +8,8 @@ import { ChaptersPanel } from "../../reader/components/ChaptersPanel/ChaptersPan
 import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
-import { WatchAnywayJump } from "../../reader/components/WatchAnywayJump/WatchAnywayJump.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import { LineRangeTag } from "../../reader/components/LineRangeTag/LineRangeTag.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import type { ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
@@ -56,6 +57,7 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
 function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
   const { note, transcript } = payload.snapshot;
   const [tab, setTab] = useState<ReaderTab>("Overview");
+  const isPhone = useIsPhone();
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
 
   const lines = useMemo(() => overviewNoteLines(note), [note]);
@@ -96,9 +98,6 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
 
   const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: false });
-  const narrated =
-    notePlayer.current && notePlayer.snapshot.source === "audio" && notePlayer.snapshot.availability === "ready";
-  const lineStartLabels = narrated ? notePlayer.snapshot.timings.lineStarts.map(formatClock) : null;
 
   return (
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
@@ -170,12 +169,19 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 <ReadAlongNote
                   lines={lines}
                   activeIndex={notePlayer.activeIndex}
-                  lineStartLabels={lineStartLabels}
-                  onSelectLine={notePlayer.selectLine}
+                    onSelectLine={notePlayer.selectLine}
+                  renderRange={(line, range, active) => (
+                    <LineRangeTag
+                      line={line}
+                      range={range}
+                      video={note.video}
+                      active={active}
+                      asSheet={isPhone}
+                      canReadTranscript={payload.snapshot.transcript !== null}
+                      onOpenTranscriptAt={openTranscriptAt}
+                    />
+                  )}
                 />
-                {note.watchAnyway?.range != null && (
-                  <WatchAnywayJump range={note.watchAnyway.range} video={note.video} />
-                )}
                 <div className={styles.tagRow}>
                   {note.tags.map((tag) => (
                     <span key={tag} className={styles.tag}>
