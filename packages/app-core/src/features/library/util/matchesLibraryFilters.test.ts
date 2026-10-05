@@ -4,7 +4,7 @@ import {
   makeOverviewWithState,
   makeUnreadableEntry,
 } from "../../overviews/types/OverviewFactory.testHelper.js";
-import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
 
 const FITNESS_TOPIC = TopicId.parse("11111111-1111-4111-8111-111111111111");
@@ -13,13 +13,13 @@ const FINANCE_TOPIC = TopicId.parse("22222222-2222-4222-8222-222222222222");
 describe("matchesLibraryFilters", () => {
   it("matches everything under the default (all) filters", () => {
     const entry = makeOverviewWithState();
-    expect(matchesLibraryFilters(entry, DEFAULT_LIBRARY_FILTERS)).toBe(true);
+    expect(matchesLibraryFilters(entry, NO_LIBRARY_FILTERS)).toBe(true);
   });
 
   it("filters by topic membership", () => {
     const entry = makeOverviewWithState({ topicIds: [FITNESS_TOPIC] });
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(true);
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FINANCE_TOPIC })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(true);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FINANCE_TOPIC })).toBe(false);
   });
 
   it("filters by novelty, and thin overviews with no verdict never match a specific novelty", () => {
@@ -28,8 +28,8 @@ describe("matchesLibraryFilters", () => {
     });
     const thin = makeOverviewWithState({ thin: true, verdict: null });
 
-    expect(matchesLibraryFilters(withVerdict, { ...DEFAULT_LIBRARY_FILTERS, novelty: "novel" })).toBe(true);
-    expect(matchesLibraryFilters(thin, { ...DEFAULT_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
+    expect(matchesLibraryFilters(withVerdict, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(true);
+    expect(matchesLibraryFilters(thin, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
   });
 
   it("filters by favourite, and by the dubious flag on the verdict", () => {
@@ -42,31 +42,31 @@ describe("matchesLibraryFilters", () => {
       verdict: { novelty: "recycled", dubious: false, reasoning: "x", similarTo: [] },
     });
 
-    expect(matchesLibraryFilters(favourite, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(true);
-    expect(matchesLibraryFilters(plain, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(false);
-    expect(matchesLibraryFilters(dubious, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(true);
-    expect(matchesLibraryFilters(sound, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(false);
+    expect(matchesLibraryFilters(favourite, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(true);
+    expect(matchesLibraryFilters(plain, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(false);
+    expect(matchesLibraryFilters(dubious, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(true);
+    expect(matchesLibraryFilters(sound, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(false);
   });
 
   it("filters by read status", () => {
     const unread = makeOverviewWithState({}, { read: false });
     const read = makeOverviewWithState({}, { read: true });
 
-    expect(matchesLibraryFilters(unread, { ...DEFAULT_LIBRARY_FILTERS, status: "unread" })).toBe(true);
-    expect(matchesLibraryFilters(unread, { ...DEFAULT_LIBRARY_FILTERS, status: "read" })).toBe(false);
-    expect(matchesLibraryFilters(read, { ...DEFAULT_LIBRARY_FILTERS, status: "read" })).toBe(true);
+    expect(matchesLibraryFilters(unread, { ...NO_LIBRARY_FILTERS, status: "unread" })).toBe(true);
+    expect(matchesLibraryFilters(unread, { ...NO_LIBRARY_FILTERS, status: "read" })).toBe(false);
+    expect(matchesLibraryFilters(read, { ...NO_LIBRARY_FILTERS, status: "read" })).toBe(true);
   });
 
   it("filters by a case-insensitive search query against the haystack", () => {
     const entry = makeOverviewWithState({ tags: ["platysma"] });
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, query: "PLATYSMA" })).toBe(true);
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, query: "keto" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "PLATYSMA" })).toBe(true);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "keto" })).toBe(false);
   });
 
   it("combines filters with AND, not OR", () => {
     const entry = makeOverviewWithState({ topicIds: [FITNESS_TOPIC] }, { read: false });
     expect(
-      matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" }),
+      matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" }),
     ).toBe(false);
   });
 
@@ -77,11 +77,11 @@ describe("matchesLibraryFilters", () => {
   it("keeps an unreadable record under an unfiltered view and under the filters its state can answer", () => {
     const favourited = makeUnreadableEntry({}, { favourite: true });
 
-    expect(matchesLibraryFilters(favourited, DEFAULT_LIBRARY_FILTERS)).toBe(true);
-    expect(matchesLibraryFilters(favourited, { ...DEFAULT_LIBRARY_FILTERS, favourite: true })).toBe(true);
+    expect(matchesLibraryFilters(favourited, NO_LIBRARY_FILTERS)).toBe(true);
+    expect(matchesLibraryFilters(favourited, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(true);
     expect(
       matchesLibraryFilters(makeUnreadableEntry({}, { read: true }), {
-        ...DEFAULT_LIBRARY_FILTERS,
+        ...NO_LIBRARY_FILTERS,
         status: "unread",
       }),
     ).toBe(false);
@@ -90,9 +90,9 @@ describe("matchesLibraryFilters", () => {
   it("drops an unreadable record from every filter that reads the overview itself", () => {
     const entry = makeUnreadableEntry();
 
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, dubious: true })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...DEFAULT_LIBRARY_FILTERS, query: "anything" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "novel" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "anything" })).toBe(false);
   });
 });

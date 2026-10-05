@@ -1,18 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
-import { DEFAULT_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import {
   applyLibraryFilterPatch,
   applyLibrarySort,
+  applyLibraryView,
+  hasLibraryViewParams,
+  isSameLibraryView,
   parseLibraryFilters,
   parseLibrarySort,
+  parseLibraryView,
 } from "./libraryFilterParams.js";
 
 const TOPIC = TopicId.parse("11111111-1111-4111-8111-111111111111");
 
 describe("parseLibraryFilters", () => {
   it("defaults to 'all' filters and an empty query with no params", () => {
-    expect(parseLibraryFilters(new URLSearchParams())).toEqual(DEFAULT_LIBRARY_FILTERS);
+    expect(parseLibraryFilters(new URLSearchParams())).toEqual(NO_LIBRARY_FILTERS);
   });
 
   it("reads valid topic, verdict, status and q params", () => {
@@ -29,7 +34,7 @@ describe("parseLibraryFilters", () => {
 
   it("falls back to 'all' for a malformed topic or verdict param, rather than throwing", () => {
     const params = new URLSearchParams({ topic: "not-a-uuid", verdict: "made-up" });
-    expect(parseLibraryFilters(params)).toEqual(DEFAULT_LIBRARY_FILTERS);
+    expect(parseLibraryFilters(params)).toEqual(NO_LIBRARY_FILTERS);
   });
 
   it("reads the favourite and dubious flags only from their exact param value", () => {
@@ -78,7 +83,7 @@ describe("applyLibraryFilterPatch", () => {
 
   it("keeps the sort when every filter is cleared, since the order is not a filter", () => {
     const params = new URLSearchParams({ sort: "title", verdict: "novel" });
-    const next = applyLibraryFilterPatch(params, DEFAULT_LIBRARY_FILTERS);
+    const next = applyLibraryFilterPatch(params, NO_LIBRARY_FILTERS);
     expect(next.get("sort")).toBe("title");
   });
 });
@@ -105,5 +110,37 @@ describe("applyLibrarySort", () => {
   it("drops the param for the default order, rather than writing it", () => {
     const next = applyLibrarySort(new URLSearchParams({ sort: "oldest" }), "newest");
     expect(next.has("sort")).toBe(false);
+  });
+});
+
+describe("hasLibraryViewParams", () => {
+  it("is true for a link that names any filter or the order, and false for one that names none", () => {
+    expect(hasLibraryViewParams(new URLSearchParams())).toBe(false);
+    expect(hasLibraryViewParams(new URLSearchParams({ other: "1" }))).toBe(false);
+    expect(hasLibraryViewParams(new URLSearchParams({ sort: "title" }))).toBe(true);
+    expect(hasLibraryViewParams(new URLSearchParams({ status: "unread" }))).toBe(true);
+  });
+});
+
+describe("applyLibraryView", () => {
+  it("writes a whole view, replacing every filter and the order, and reads back the same", () => {
+    const current = new URLSearchParams({ verdict: "novel", sort: "title", other: "kept" });
+    const next = applyLibraryView(current, DEFAULT_LIBRARY_VIEW);
+
+    expect(next.toString()).toBe("other=kept&status=unread");
+    expect(parseLibraryView(next)).toEqual(DEFAULT_LIBRARY_VIEW);
+  });
+});
+
+describe("isSameLibraryView", () => {
+  it("compares every filter and the order", () => {
+    expect(isSameLibraryView(DEFAULT_LIBRARY_VIEW, { ...DEFAULT_LIBRARY_VIEW })).toBe(true);
+    expect(isSameLibraryView(DEFAULT_LIBRARY_VIEW, { ...DEFAULT_LIBRARY_VIEW, sort: "oldest" })).toBe(false);
+    expect(
+      isSameLibraryView(DEFAULT_LIBRARY_VIEW, {
+        ...DEFAULT_LIBRARY_VIEW,
+        filters: { ...DEFAULT_LIBRARY_VIEW.filters, query: "grid" },
+      }),
+    ).toBe(false);
   });
 });

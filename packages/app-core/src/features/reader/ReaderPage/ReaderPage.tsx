@@ -19,7 +19,7 @@ import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOve
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithStateQuery.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
-import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
+import { libraryViewFromState } from "../../library/util/libraryViewState.js";
 import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { DeleteOverviewDialog } from "../components/DeleteOverviewDialog/DeleteOverviewDialog.js";
@@ -96,7 +96,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     [tabsHeight.host, readerMastheadHeight.host],
   );
   const [playerDocked, setPlayerDocked] = useState(false);
-  const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(useLocation().state));
+  const location = useLocation();
+  const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(location.state));
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
 
   // A chapter opens the transcript at its start; choosing the tab yourself opens it at
@@ -227,10 +228,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
-  const neighbours = overviewNeighbours(
-    orderLibraryEntriesBySavedAt(libraryQuery.data ?? []),
-    overviewId,
-  );
+  const steppedView = libraryViewFromState(location.state);
+  const neighbours = overviewNeighbours(libraryQuery.data ?? [], overviewId, steppedView);
+  const steppingState = steppedView?.stepOn(overviewId);
   const range = overview.watchAnyway?.range ?? null;
   const timeSaved = overviewTimeSaved(overview);
   const savedChip =
@@ -357,6 +357,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               <Link
                 className={styles.stepLink}
                 to={Routes.overview(neighbours.previousId)}
+                state={steppingState}
                 viewTransition={animateNavigation}
                 onClick={() => reader.page.neighbourFollowed({ direction: "previous" })}
                 data-testid={readerPageTestIds.previousLink}
@@ -374,6 +375,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               <Link
                 className={styles.stepLink}
                 to={Routes.overview(neighbours.nextId)}
+                state={steppingState}
                 viewTransition={animateNavigation}
                 onClick={() => reader.page.neighbourFollowed({ direction: "next" })}
                 data-testid={readerPageTestIds.nextLink}

@@ -49,7 +49,10 @@ test("the novelty filter narrows the visible cards", async ({ launcher, backendS
   await library.cardWithTitle("Novel video").verifyTitle("Novel video");
 });
 
-test("the read-status filter narrows the visible cards", async ({ launcher, backendSimulator }) => {
+test("the read-status filter is on from the start, and turning it off shows what has been read", async ({
+  launcher,
+  backendSimulator,
+}) => {
   const unread = makeOverview({ video: { ...makeOverview().video, title: "Unread video" } });
   const read = makeOverview({ video: { ...makeOverview().video, title: "Read video" } });
   backendSimulator.overviews.seed(unread);
@@ -57,9 +60,11 @@ test("the read-status filter narrows the visible cards", async ({ launcher, back
   backendSimulator.overviews.seedState(makeOverviewState(read.id, { read: true }));
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.clickStatusChip("unread");
   await library.expectCardCountToBe(1);
   await library.cardWithTitle("Unread video").verifyTitle("Unread video");
+
+  await library.filterPanel.clickStatusChip("unread");
+  await library.expectCardCountToBe(2);
 });
 
 test("the search box filters by a case-insensitive substring of the video title", async ({

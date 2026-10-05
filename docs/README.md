@@ -86,6 +86,9 @@ Five folders, five different questions.
 - `injected-button.md` — the Overview button in YouTube's own action row: why it wears
   their pill, where each of its four states gets its facts, and the three-document
   conversation behind it.
+- `library-view.md` — the list opens on unread or as the reader left it, per account and
+  device: saved views, URL wins, Reset and Show all, caught up, and the reader stepping
+  through the same view.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.

@@ -478,6 +478,9 @@ export class ReaderPageObject extends PageObject {
   clickNextOverview = () =>
     this.step("clickNextOverview", () => this.click(readerPageTestIds.nextLink));
 
+  clickPreviousOverview = () =>
+    this.step("clickPreviousOverview", () => this.click(readerPageTestIds.previousLink));
+
   verifyRateReads = (rate: string) =>
     this.step(`verifyRateReads ${rate}`, () =>
       expect(this.get(readerPlayerBarTestIds.rateButton)).toHaveText(rate),

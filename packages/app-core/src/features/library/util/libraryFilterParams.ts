@@ -1,8 +1,10 @@
 import { Novelty, TopicId } from "@overview/domain";
-import { DEFAULT_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
+import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
+const LIBRARY_VIEW_PARAMS = ["topic", "verdict", "status", "fav", "dubious", "q", "sort"];
 
 export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilters {
   const topicParam = searchParams.get("topic");
@@ -20,7 +22,7 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
     status,
     favourite: searchParams.get("fav") === "1",
     dubious: searchParams.get("dubious") === "1",
-    query: searchParams.get("q") ?? DEFAULT_LIBRARY_FILTERS.query,
+    query: searchParams.get("q") ?? NO_LIBRARY_FILTERS.query,
   };
 }
 
@@ -49,6 +51,22 @@ export function applyLibrarySort(current: URLSearchParams, sort: LibrarySort): U
   const next = new URLSearchParams(current);
   setOrDelete(next, "sort", sort === DEFAULT_LIBRARY_SORT ? undefined : sort);
   return next;
+}
+
+export function hasLibraryViewParams(searchParams: URLSearchParams): boolean {
+  return LIBRARY_VIEW_PARAMS.some((param) => searchParams.has(param));
+}
+
+export function parseLibraryView(searchParams: URLSearchParams): LibraryView {
+  return { filters: parseLibraryFilters(searchParams), sort: parseLibrarySort(searchParams) };
+}
+
+export function applyLibraryView(current: URLSearchParams, view: LibraryView): URLSearchParams {
+  return applyLibrarySort(applyLibraryFilterPatch(current, view.filters), view.sort);
+}
+
+export function isSameLibraryView(left: LibraryView, right: LibraryView): boolean {
+  return applyLibraryView(new URLSearchParams(), left).toString() === applyLibraryView(new URLSearchParams(), right).toString();
 }
 
 function setOrDelete(params: URLSearchParams, key: string, value: string | undefined): void {

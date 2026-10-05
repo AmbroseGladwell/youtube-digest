@@ -9,7 +9,7 @@ export interface LibraryFilters {
   query: string;
 }
 
-export const DEFAULT_LIBRARY_FILTERS: LibraryFilters = {
+export const NO_LIBRARY_FILTERS: LibraryFilters = {
   topicId: "all",
   novelty: "all",
   status: "all",

@@ -142,6 +142,57 @@
   color: var(--muted);
 }
 
+.viewLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.viewSummary {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.viewAction {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  color: var(--muted);
+}
+
+.caughtUp {
+  margin: 2.5rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.caughtUpTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.caughtUpBody {
+  margin: 0;
+  color: var(--muted);
+}
+
+.caughtUpAction {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+
+  margin-top: 0.5rem;
+}
+
 // The filter bar belongs to the phone layout alone: on desktop the rail is already on
 // screen, so a second row restating the same filters is noise.
 .filterBar {

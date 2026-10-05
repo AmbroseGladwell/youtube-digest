@@ -8,6 +8,7 @@ import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved } from "@overview/d
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
+import type { LibraryViewState } from "../../util/libraryViewState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
 
@@ -20,6 +21,7 @@ export interface LibraryOverviewCardProps {
   onToggleRead: () => void;
   playing: boolean;
   onListen: () => void;
+  readerState: LibraryViewState;
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
@@ -42,6 +44,7 @@ export function LibraryOverviewCard({
   onToggleRead,
   playing,
   onListen,
+  readerState,
 }: LibraryOverviewCardProps) {
   const animateNavigation = useShouldAnimateNavigation();
   const { overview, state } = overviewWithState;
@@ -70,6 +73,7 @@ export function LibraryOverviewCard({
         <OverviewThumbnail
           video={overview.video}
           to={readerPath}
+          state={readerState}
           onOpen={() => onOpen("thumbnail")}
           className={styles.thumbnail}
         />
@@ -96,6 +100,7 @@ export function LibraryOverviewCard({
           <Link
             className={styles.titleLink}
             to={readerPath}
+            state={readerState}
             viewTransition={animateNavigation}
             onClick={() => onOpen("title")}
             data-testid={libraryOverviewCardTestIds.titleLink}
