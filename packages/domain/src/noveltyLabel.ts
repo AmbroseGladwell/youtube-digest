@@ -10,4 +10,7 @@ export const NOVELTY_ORDER: Novelty[] = ["common_knowledge", "fresh_angle", "ori
 
 export const STANDS_OUT_LABEL = "What stands out";
 
-export const NOVELTY_BASIS = "Judged by the AI against what it knows of the field. Very recent work may be missed.";
+export const REASONING_LABEL = "Why";
+
+export const NOVELTY_BASIS =
+  "Judged by the AI against what it knows of the field. Very recent work may be missed and it can make mistakes.";

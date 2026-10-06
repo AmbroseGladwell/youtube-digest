@@ -68,9 +68,13 @@ across several places has no range, and so no jump. Both kinds are counted as
 Key points written before this change keep their words and have no range (migration 5,
 and `V0013` for shares).
 
-In the read-along note it follows the label and is spoken. The basis sentence sits just
-under it as a footnote, small and muted, and isn't spoken: it's there to read once, not to
-hear on every narration.
+In the read-along note the novelty label is a chip beside the Verdict heading, shown but
+not spoken. The fresh part comes first under the heading, under its own sub-label, What
+stands out, and is spoken with the sub-label in front of it. The reasoning comes next under a sub-label of its
+own, Why, which is the only one on a Common knowledge verdict (design "OV-94 Verdict
+Basis", 94a). Sub-labels are `NoteLine.label`: shown above the line's words, never tinted
+with them. The basis sentence closes the Verdict section, after the reasoning, small and
+muted, and isn't spoken: it's there to read once, not to hear on every narration.
 
 ## The time is the handle
 
@@ -105,8 +109,14 @@ it always had, and lifts its time onto a pill so there is visibly something to p
 
 ## What it is judged against
 
-"Judged by the AI against what it knows of the field. Very recent work may be missed." This
-sits under every verdict in the note, in plain text, so it can be read without a hover.
+"Judged by the AI against what it knows of the field. Very recent work may be missed and it
+can make mistakes." This sits under every verdict in the note, in plain text, so it can be read without a hover.
+It comes last, after the reasoning, in the reader, on the shared page and in the Markdown
+export alike. It was first placed just under What stands out, as the design had it, but
+the design had no reasoning paragraph: against a real verdict it split the label from the
+reasoning it explains (OV-94). Its last clause is OV-86's "can make mistakes" notice, folded
+in so the verdict carries one notice rather than two. It is a caption (`overviewNoteCaptions`), not a `NoteLine`,
+so it can't be tapped, tinted or timed, and the spoken script has no entry for it.
 Novelty is the model's judgement from its training, with no search behind it, so a
 genuinely recent development can come out as common knowledge, and the reverse can
 happen too. The sentence says so instead of implying a check the app never makes.

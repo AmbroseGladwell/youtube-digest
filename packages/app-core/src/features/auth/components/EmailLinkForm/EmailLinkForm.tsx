@@ -129,9 +129,15 @@ export function EmailLinkForm({
             <span className={`${styles.field} ${problem?.field === "server" ? styles.fieldInvalid : ""}`}>
               <StrokeIcon name="link" size={16} />
               <input
+                id={`${ids}-server`}
+                name="server-url"
                 className={styles.input}
                 type="url"
                 autoComplete="off"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={serverUrl}
                 onChange={(event) => setServerUrl(event.target.value)}
                 aria-invalid={problem?.field === "server"}
@@ -151,6 +157,8 @@ export function EmailLinkForm({
             <span className={`${styles.field} ${problem?.field === "firstName" ? styles.fieldInvalid : ""}`}>
               <StrokeIcon name="user" size={16} />
               <input
+                id={`${ids}-given-name`}
+                name="given-name"
                 className={styles.input}
                 type="text"
                 autoComplete="given-name"
@@ -171,9 +179,15 @@ export function EmailLinkForm({
           >
             <StrokeIcon name="mail" size={16} />
             <input
+              id={`${ids}-email`}
+              name="email"
               className={styles.input}
               type="email"
               autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder="you@example.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
