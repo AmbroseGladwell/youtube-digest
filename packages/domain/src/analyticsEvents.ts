@@ -64,7 +64,7 @@ const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "re
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
-const FilterControl = z.enum(["panel", "appliedChip", "clearAll", "reset", "caughtUp"]);
+const FilterControl = z.enum(["panel", "appliedChip", "searchChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
@@ -560,6 +560,10 @@ export const analyticsEvents = {
       }),
       favouriteSwitched: event("The reader turns the favourites filter on or off", { on: z.boolean(), from: FilterControl }),
       dubiousSwitched: event("The reader turns the dubious-claims filter on or off", { on: z.boolean(), from: FilterControl }),
+      // Never which tag: a tag is the reader's own word (docs/architecture/analytics.md).
+      tagChosen: event("The reader filters the library to one tag", { from: FilterControl }),
+      tagCleared: event("The reader stops filtering the library by tag", { from: FilterControl }),
+      allTagsShown: event("The reader shows or hides the tags past the first few", { shown: z.boolean() }),
       allCleared: event("The reader shows every overview, clearing every library filter at once", {
         applied: z.number().int().nonnegative(),
       }),

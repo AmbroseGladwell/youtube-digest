@@ -6,6 +6,8 @@ import type { SettingsSectionId } from "../features/settings/SettingsSectionId.j
 // literal, so adding more routes later doesn't mean hunting down inlined paths.
 export const Routes = {
   home: () => "/",
+  // The library filtered to one tag, as a note's tags link to it ("OV-84 1 On the Note").
+  taggedLibrary: (tag: string) => `/?${new URLSearchParams({ tag })}`,
   settings: () => "/settings",
   // The capture queue's own page (docs/features/capture-queue.md).
   queue: () => "/queue",

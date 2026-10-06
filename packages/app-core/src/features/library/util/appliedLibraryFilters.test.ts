@@ -28,7 +28,7 @@ describe("appliedLibraryFilters", () => {
 
   it("lists every active filter", () => {
     const applied = appliedLibraryFilters(
-      { topicId: FITNESS, novelty: "original", status: "unread", favourite: true, dubious: true, query: "gdp" },
+      { topicId: FITNESS, novelty: "original", status: "unread", favourite: true, dubious: true, tag: "saas", query: "gdp" },
       TOPICS,
     );
     expect(applied.map((chip) => chip.key)).toEqual([
@@ -37,6 +37,7 @@ describe("appliedLibraryFilters", () => {
       "status",
       "favourite",
       "dubious",
+      "tag",
       "query",
     ]);
   });

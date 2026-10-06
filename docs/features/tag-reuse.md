@@ -83,8 +83,34 @@ OVERVIEW_API_URL=https://… OVERVIEW_TOKEN=<session> task secrets:run -- npx ts
 `OVERVIEW_TOKEN` is a session for the account, minted with `npm run mint-session` against that
 environment's database (`docs/architecture/api.md`).
 
+## Filtering the library by tag (design 84g–84i)
+
+Tags join Verdict under **More filters** in the rail, as rows like the topic rows, `#saas`
+and its count, most used first and capped at six behind `Show all N`, with the active tag
+always listed (`cappedTags`, as `cappedTopics`). A library with no tags has no Tags group at
+all. Closed, the row's summary names the tag beside the verdict ("Any verdict · #saas").
+
+**One tag at a time.** Picking another swaps it, and picking the active one clears it. The
+filter is the URL's `tag` param, so a note's tag links to `Routes.taggedLibrary(tag)`, and
+arriving that way opens More filters, so the tag is never set out of sight.
+
+**The tag sits in the search field** as a removable chip (`Remove tag filter saas`), and the
+placeholder becomes "Search within": a search typed beside it narrows the tagged list. The
+count under the heading reads "14 tagged #saas", counting what is shown.
+
+A tag matches the note's own tags or the reader's `userTags`. An unreadable record never
+matches one, as it never matches a topic. The tag is not part of the saved view
+(`library-view.md`).
+
+**Where the build departs from the design.** On a phone, 84i draws the filter button beside
+the search field with a dot; the app keeps its existing filter bar above the list, whose
+button already fills while anything is set and whose applied chips include the tag. The
+running time-saved figure stays beside the count, which 84g leaves out.
+
 ## Counting
 
-`capture.newOverview.finished` carries `tagsReused` and `tagsAdded`: how many of the new note's
+`library.filters.tagChosen` and `tagCleared` count the filter by where it was set from, never
+which tag: a tag is the reader's own word, and an event may not carry one
+(`docs/architecture/analytics.md`). `capture.newOverview.finished` carries `tagsReused` and `tagsAdded`: how many of the new note's
 tags were already in the library when the run read it. The MCP connector gains `list_tags`
 (`mcp-connector.md`).

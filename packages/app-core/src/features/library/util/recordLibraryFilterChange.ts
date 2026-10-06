@@ -1,7 +1,7 @@
 import type { Analytics } from "../../analytics/createAnalytics.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 
-export type FilterControl = "panel" | "appliedChip" | "clearAll" | "reset" | "caughtUp";
+export type FilterControl = "panel" | "appliedChip" | "searchChip" | "clearAll" | "reset" | "caughtUp";
 
 // One event per filter the patch actually changes, named for the filter and carrying the
 // value it changed to: a topic by its id, a novelty or status by its own enum, never a label
@@ -28,5 +28,9 @@ export function recordLibraryFilterChange(
   }
   if (patch.dubious !== undefined && patch.dubious !== before.dubious) {
     analytics.dubiousSwitched({ on: patch.dubious, from });
+  }
+  if (patch.tag !== undefined && patch.tag !== before.tag) {
+    if (patch.tag === null) analytics.tagCleared({ from });
+    else analytics.tagChosen({ from });
   }
 }

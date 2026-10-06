@@ -57,6 +57,7 @@ export function readLibraryView(
       status: field("status", NO_LIBRARY_FILTERS.status),
       favourite: field("favourite", NO_LIBRARY_FILTERS.favourite),
       dubious: field("dubious", NO_LIBRARY_FILTERS.dubious),
+      tag: NO_LIBRARY_FILTERS.tag,
       query: NO_LIBRARY_FILTERS.query,
     },
     sort: field("sort", DEFAULT_LIBRARY_SORT),

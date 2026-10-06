@@ -3,6 +3,7 @@ import { NOVELTY_LABEL, NOVELTY_ORDER, type Novelty, type Topic } from "@overvie
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
 import type { LibraryFilters } from "../../types/LibraryFilters.js";
+import { cappedTags } from "../../util/cappedTags.js";
 import { cappedTopics } from "../../util/cappedTopics.js";
 import styles from "./FilterPanel.module.scss";
 import { filterPanelTestIds } from "./FilterPanelTestIds.js";
@@ -19,21 +20,32 @@ export interface FilterPanelProps {
 const MORE_PANEL_ID = "FilterPanel-more";
 
 // Closed, the row still says what is set, so a hidden filter is never a surprise
-// ("OV-34 2 Milestones" 34ab).
-const verdictSummary = (filters: LibraryFilters): string => {
-  const parts = [
+// ("OV-34 2 Milestones" 34ab, "OV-84 2 Library Filter" 84h).
+const moreSummary = (filters: LibraryFilters): string => {
+  const verdict = [
     ...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]),
     ...(filters.dubious ? ["Dubious only"] : []),
   ];
-  return parts.length === 0 ? "Any verdict" : parts.join(" · ");
+  return [...(verdict.length === 0 ? ["Any verdict"] : verdict), ...(filters.tag === null ? [] : [`#${filters.tag}`])].join(
+    " · ",
+  );
 };
 
 export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: FilterPanelProps) {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
-  const [moreShown, setMoreShown] = useState(false);
+  // A tag arriving from a note opens the group the tag is in (84g).
+  const [moreShown, setMoreShown] = useState(filters.tag !== null);
+  const [shownForTag, setShownForTag] = useState(filters.tag);
+  if (shownForTag !== filters.tag) {
+    setShownForTag(filters.tag);
+    if (filters.tag !== null) setMoreShown(true);
+  }
+  const [allTagsShown, setAllTagsShown] = useState(false);
   const analytics = useAnalytics();
   const capped = cappedTopics(topics, filters.topicId);
   const shownTopics = allTopicsShown ? topics : capped.shown;
+  const tags = cappedTags(counts.byTag, filters.tag);
+  const shownTags = allTagsShown ? counts.byTag : tags.shown;
 
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
@@ -121,7 +133,9 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
         >
           <span>More filters</span>
           <span className={styles.moreSummary}>
-            <span data-testid={filterPanelTestIds.moreFiltersSummary}>{verdictSummary(filters)}</span>
+            <span className={styles.moreSummaryText} data-testid={filterPanelTestIds.moreFiltersSummary}>
+              {moreSummary(filters)}
+            </span>
             <span className={`${styles.chevron} ${moreShown ? styles.chevronOpen : ""}`} aria-hidden="true">
               <StrokeIcon name="chevronDown" size={14} />
             </span>
@@ -160,6 +174,38 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
                 Dubious only
               </ListOption>
             </div>
+            {counts.byTag.length > 0 && (
+              <>
+                <p className={styles.label}>Tags</p>
+                <div className={styles.list} role="group" aria-label="Filter by tag">
+                  {shownTags.map(({ tag, count }) => (
+                    <ListOption
+                      key={tag}
+                      active={filters.tag === tag}
+                      count={count}
+                      onClick={() => onChange({ tag: filters.tag === tag ? null : tag })}
+                      testId={filterPanelTestIds.tagChip(tag)}
+                    >
+                      {`#${tag}`}
+                    </ListOption>
+                  ))}
+                </div>
+                {tags.hiddenCount > 0 && (
+                  <button
+                    type="button"
+                    className={styles.moreTopics}
+                    onClick={() => {
+                      analytics.library.filters.allTagsShown({ shown: !allTagsShown });
+                      setAllTagsShown(!allTagsShown);
+                    }}
+                    aria-expanded={allTagsShown}
+                    data-testid={filterPanelTestIds.showAllTagsButton}
+                  >
+                    {allTagsShown ? "Show fewer" : `Show all ${counts.byTag.length}`}
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

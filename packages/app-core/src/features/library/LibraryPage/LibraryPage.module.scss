@@ -120,6 +120,25 @@
   color: var(--muted);
 }
 
+// The tag being filtered by sits in the field as a removable chip, so a search typed
+// beside it reads as a search within it ("OV-84 2 Library Filter" 84g).
+.searchTag {
+  @include controls.chip;
+
+  flex: none;
+  height: 2rem;
+  gap: 0.125rem;
+  padding: 0 0.25rem 0 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.searchTagRemove {
+  @include controls.ghost-pill;
+  @include controls.circle(1.5rem);
+
+  color: inherit;
+}
+
 .searchInput {
   @include controls.field-input;
 

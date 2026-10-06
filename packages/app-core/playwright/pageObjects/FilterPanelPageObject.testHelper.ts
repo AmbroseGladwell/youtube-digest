@@ -36,6 +36,28 @@ export class FilterPanelPageObject extends PageObject {
       expect(this.get(filterPanelTestIds.moreFiltersSummary)).toHaveText(summary),
     );
 
+  clickTagChip = (tag: string) =>
+    this.step(`clickTagChip ${tag}`, async () => {
+      await this.openMoreFilters();
+      await this.click(filterPanelTestIds.tagChip(tag));
+    });
+
+  verifyMoreFiltersAreOpen = () =>
+    this.step("verifyMoreFiltersAreOpen", () =>
+      expect(this.get(filterPanelTestIds.moreFiltersButton)).toHaveAttribute("aria-expanded", "true"),
+    );
+
+  private tagGroup = () => this.page.getByRole("group", { name: "Filter by tag" });
+
+  verifyListsTags = (rows: string[]) =>
+    this.step(`verifyListsTags ${rows.join(", ")}`, () =>
+      expect(this.tagGroup().getByRole("button")).toHaveText(rows),
+    );
+
+  verifyOffersNoTags = () => this.step("verifyOffersNoTags", () => expect(this.tagGroup()).toHaveCount(0));
+
+  clickShowAllTags = () => this.step("clickShowAllTags", () => this.click(filterPanelTestIds.showAllTagsButton));
+
   clickStatusChip = (status: string) =>
     this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));
 

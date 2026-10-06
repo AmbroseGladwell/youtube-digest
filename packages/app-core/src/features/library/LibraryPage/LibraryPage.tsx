@@ -253,7 +253,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               <h1 className={styles.title}>Overviews</h1>
               <p className={styles.listCount}>
                 <span data-testid={libraryPageTestIds.listCount}>
-                  {libraryCountLine(counts, { savedHere: signedOutHere ? savedHere(surface) : null, phone })}
+                  {filters.tag === null
+                    ? libraryCountLine(counts, { savedHere: signedOutHere ? savedHere(surface) : null, phone })
+                    : `${visible.length} tagged #${filters.tag}`}
                 </span>
                 <span aria-hidden="true">·</span>
                 <button
@@ -286,10 +288,24 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             <span className={styles.searchIcon} aria-hidden="true">
               <StrokeIcon name="search" size={16} />
             </span>
+            {filters.tag !== null && (
+              <span className={styles.searchTag} data-testid={libraryPageTestIds.searchTagChip}>
+                #{filters.tag}
+                <button
+                  type="button"
+                  className={styles.searchTagRemove}
+                  onClick={() => changeFilters({ tag: null }, "searchChip")}
+                  aria-label={`Remove tag filter ${filters.tag}`}
+                  data-testid={libraryPageTestIds.removeSearchTagButton}
+                >
+                  <StrokeIcon name="close" size={12} />
+                </button>
+              </span>
+            )}
             <input
               type="search"
               className={styles.searchInput}
-              placeholder="Search claims, channels, tags"
+              placeholder={filters.tag === null ? "Search claims, channels, tags" : "Search within"}
               value={filters.query}
               onChange={(event) => changeFilters({ query: event.target.value })}
               aria-label="Search overviews"

@@ -202,6 +202,15 @@ export class LibraryPageObject extends PageObject {
   expectCardCountToBe = (count: number) =>
     this.step(`expectCardCountToBe ${count}`, () => this.expectToHaveCount(libraryOverviewCardTestIds.root, count));
 
+  verifySearchTagReads = (tag: string) =>
+    this.step(`verifySearchTagReads ${tag}`, () => expect(this.get(libraryPageTestIds.searchTagChip)).toHaveText(tag));
+
+  verifyNoSearchTag = () =>
+    this.step("verifyNoSearchTag", () => this.expectNotToBeVisible(libraryPageTestIds.searchTagChip));
+
+  removeSearchTag = () =>
+    this.step("removeSearchTag", () => this.click(libraryPageTestIds.removeSearchTagButton));
+
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () =>
       expect(this.get(libraryPageTestIds.listCount)).toHaveText(count),

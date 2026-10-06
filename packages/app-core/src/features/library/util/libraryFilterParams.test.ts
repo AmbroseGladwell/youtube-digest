@@ -28,6 +28,7 @@ describe("parseLibraryFilters", () => {
       status: "read",
       favourite: false,
       dubious: false,
+      tag: null,
       query: "botox",
     });
   });
@@ -35,6 +36,11 @@ describe("parseLibraryFilters", () => {
   it("falls back to 'all' for a malformed topic or verdict param, rather than throwing", () => {
     const params = new URLSearchParams({ topic: "not-a-uuid", verdict: "made-up" });
     expect(parseLibraryFilters(params)).toEqual(NO_LIBRARY_FILTERS);
+  });
+
+  it("reads a tag only when it is a tag as the library stores them", () => {
+    expect(parseLibraryFilters(new URLSearchParams({ tag: "micro-saas" })).tag).toBe("micro-saas");
+    expect(parseLibraryFilters(new URLSearchParams({ tag: "Micro SaaS" })).tag).toBeNull();
   });
 
   it("reads the favourite and dubious flags only from their exact param value", () => {
