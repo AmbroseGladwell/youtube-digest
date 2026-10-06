@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { Overview } from "@overview/domain";
 import { useSetOverviewCaptureReasonMutation } from "../../../overviews/mutations/useSetOverviewCaptureReasonMutation.js";
 import { captureReasonFromDraft } from "../../../overviews/util/captureReasonFromDraft.js";
@@ -31,6 +31,7 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
   }, [editing]);
 
   const analytics = useReaderAnalytics();
+  const fieldId = useId();
   const close = () => onEditingChange(false);
   const cancel = () => {
     analytics.captureReason.cancelled();
@@ -67,7 +68,10 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
         <span className={styles.label}>What are you hoping to take away?</span>
         <input
           ref={input}
+          id={fieldId}
+          name="capture-reason"
           type="text"
+          autoComplete="off"
           className={styles.input}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}

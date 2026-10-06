@@ -31,8 +31,11 @@ test("a fresh angle names what stands out, and says what it was judged against w
   const reader = await library.nthCard(0).openReader();
 
   await reader.verifyMastheadMentions(/Fresh angle/);
-  await reader.verifyNoteShowsLine("What stands out: A worked year-by-year drawdown spreadsheet.", true);
-  await reader.verifyNoteShowsLine(NOVELTY_BASIS, true);
+  await reader.verifyVerdictChipReads("Fresh angle");
+  await reader.verifyNoteLabelsRead(["What stands out", "Why"]);
+  await reader.verifyNoteShowsLine("A worked year-by-year drawdown spreadsheet.", true);
+  await reader.verifyNoteShowsLine(NOVELTY_BASIS, false);
+  await reader.verifyNoteCaptionReads(NOVELTY_BASIS);
 });
 
 test("what stands out ends with its start time, which opens a menu that reads the transcript there", async ({ launcher, backendSimulator }) => {
@@ -63,7 +66,7 @@ test("what stands out ends with its start time, which opens a menu that reads th
   await reader.verifyTargetTranscriptBlockReads(/Here is the spreadsheet/);
 });
 
-test("common knowledge names nothing as standing out", async ({ launcher, backendSimulator }) => {
+test("common knowledge names nothing as standing out, so Why is its only sub-label", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(
     makeOverview({
       verdict: {
@@ -81,7 +84,9 @@ test("common knowledge names nothing as standing out", async ({ launcher, backen
   const reader = await library.nthCard(0).openReader();
 
   await reader.verifyMastheadMentions(/Common knowledge/);
-  await reader.verifyNoteShowsLine("What stands out", false);
+  await reader.verifyVerdictChipReads("Common knowledge");
+  await reader.verifyNoteLabelsRead(["Why"]);
   await reader.verifyLineTimesRead([]);
-  await reader.verifyNoteShowsLine(NOVELTY_BASIS, true);
+  await reader.verifyNoteShowsLine(NOVELTY_BASIS, false);
+  await reader.verifyNoteCaptionReads(NOVELTY_BASIS);
 });

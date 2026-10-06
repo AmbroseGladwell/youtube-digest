@@ -291,6 +291,22 @@ link that opens. `APP_URL` defaults to `http://localhost:5173`, which is where
 `task run` puts the web app, and is the one origin the cookie is allowed to be
 `Secure`-less on.
 
+**The browser and password managers are told what each field is.** There is no password,
+so autofill here means the address and the code. The email field is `name="email"
+autocomplete="email"` with an email keyboard and no capitals or corrections; the first
+name is `given-name`; the code is `one-time-code`, which is what lets iOS and Android
+offer it from the message. The server address is a link field with `autocomplete="off"`.
+The rules every field follows are in `docs/conventions/frontend-architecture-guide.md`
+("Every field names itself"). A password or a passkey beside the link is a product
+decision this does not make.
+
+**The extension's side panel probably gets no autofill.** The panel is a
+`chrome-extension://` page. Chrome's own password and address autofill is built for
+web pages, and other extensions (1Password, Bitwarden) cannot inject into another
+extension's pages. Nobody has yet checked by hand whether either fills there. The
+fields carry the same attributes anyway, and the panel remembers the last server it
+was pointed at, so the field that matters most there is filled already.
+
 ## What the reader sees
 
 Every screen follows the third habit in `CLAUDE.md`: a control appears only where it can

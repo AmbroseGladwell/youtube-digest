@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
-import { MAX_SPOKEN_SCRIPT_CHARACTERS, SpokenScript, spokenScript } from "./SpokenScript.js";
+import { MAX_SPOKEN_SCRIPT_CHARACTERS, SpokenScript, spokenLines, spokenScript } from "./SpokenScript.js";
 
 test("speaks every note line in order, headings included, so a timing's index is a line's", () => {
   const overview = makeOverview({
@@ -34,18 +34,25 @@ test("leaves the opening out when the video names nothing to open with", () => {
   assert.equal(script.length, overviewNoteLines(overview).length);
 });
 
-test("passes over the verdict label and its footnote with empty entries rather than dropping their lines", () => {
+test("passes over a line shown but not spoken with an empty entry rather than dropping it", () => {
+  const script = spokenLines([
+    { section: "Verdict", heading: false, bullet: false, text: "Shown only.", spoken: "" },
+    { section: "Verdict", heading: false, bullet: false, text: "Standard advice." },
+  ]);
+
+  assert.deepEqual(script, ["", "Standard advice."]);
+  assert.equal(SpokenScript.safeParse(script).success, true);
+});
+
+test("speaks the Verdict heading without the novelty set beside it", () => {
   const overview = makeOverview({
     verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
   });
 
-  const script = spokenScript(overview).slice(1);
-  const labelIndex = overviewNoteLines(overview).findIndex((line) => line.text === "Common knowledge.");
+  const script = spokenScript(overview);
 
-  assert.equal(script[labelIndex], "");
-  assert.equal(script[labelIndex + 1], "");
-  assert.equal(script[labelIndex + 2], "Standard advice.");
-  assert.equal(SpokenScript.safeParse(script).success, true);
+  assert.ok(script.includes("The verdict"));
+  assert.ok(!script.some((line) => line.includes("Common knowledge")));
 });
 
 test("tidies the spoken text for speech", () => {

@@ -8,7 +8,9 @@
 // word counts read that.
 //
 // `range` is the stretch of the video a line is about, for the reader to jump to; narration
-// never reads it. A `footnote` is set small and muted, and is never a section's substance.
+// never reads it. A `label` is a sub-label set above the line's text and never part of it:
+// what the line is, not what it says. A heading's `chip` is set beside it, and is shown, never
+// spoken: the Verdict heading's novelty label.
 //
 // `spoken` is what narration says for the line when it differs from what the reader shows,
 // and an empty `spoken` is a line narration passes over (docs/features/tts-pre-rendered-speech.md).
@@ -21,5 +23,6 @@ export interface NoteLine {
   text: string;
   spoken?: string;
   range?: TimeRange;
-  footnote?: boolean;
+  label?: string;
+  chip?: string;
 }

@@ -104,7 +104,7 @@ test("says when a verdict is dubious, and names the similar overviews by title a
   assert.ok(markdown.includes(`Similar to: Hinge before you load (${SIMILAR_ID})`));
 });
 
-test("names what stands out, and says what the novelty was judged against", () => {
+test("names what stands out", () => {
   const markdown = overviewMarkdown(FULL);
 
   assert.ok(
@@ -112,7 +112,12 @@ test("names what stands out, and says what the novelty was judged against", () =
       "What stands out ([1:35–2:20](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=95)): Cueing the float as the hips snapping shut.",
     ),
   );
-  assert.ok(markdown.includes(`_${NOVELTY_BASIS}_`));
+});
+
+test("ends the verdict with what the novelty was judged against", () => {
+  const verdict = overviewMarkdown(FULL).split("## Verdict\n\n")[1]!.split("\n\n## ")[0]!;
+
+  assert.ok(verdict.endsWith(`_${NOVELTY_BASIS}_`));
 });
 
 test("says why a verdict is dubious, each claim linked to its moment in the video", () => {
