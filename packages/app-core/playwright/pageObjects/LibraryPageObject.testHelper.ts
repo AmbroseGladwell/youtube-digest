@@ -4,6 +4,7 @@ import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
@@ -121,14 +122,14 @@ export class LibraryPageObject extends PageObject {
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
-  // On a phone the rail is a sheet over the page, opened from the bar (design 2a).
+  // On a narrow screen the rail is a bottom sheet, opened from the button beside the search (84i).
   openFilters = () =>
     this.step("openFilters", async () => {
       await this.click(libraryPageTestIds.filterButton);
       await this.verifyFiltersAreOpen(true);
     });
 
-  // The sheet slides off the side rather than unmounting, so what says it is open is the
+  // The sheet slides off the bottom rather than unmounting, so what says it is open is the
   // button's own state and where the sheet has come to rest.
   verifyFiltersAreOpen = (open: boolean) =>
     this.step(`verifyFiltersAreOpen ${open}`, () =>
@@ -138,8 +139,8 @@ export class LibraryPageObject extends PageObject {
           String(open),
         );
         const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
-        const width = this.page.viewportSize()!.width;
-        expect(rail.x < width - 40).toBe(open);
+        const height = this.page.viewportSize()!.height;
+        expect(rail.y < height - 40).toBe(open);
       }).toPass({ timeout: 4_000 }),
     );
 
@@ -167,6 +168,18 @@ export class LibraryPageObject extends PageObject {
   closeFiltersWithEscape = () =>
     this.step("closeFiltersWithEscape", async () => {
       await this.page.keyboard.press("Escape");
+      await this.verifyFiltersAreOpen(false);
+    });
+
+  verifyFilterButtonSays = (label: string) =>
+    this.step(`verifyFilterButtonSays ${label}`, () =>
+      expect(this.get(libraryPageTestIds.filterButton)).toHaveAccessibleName(label),
+    );
+
+  showResults = (label: string) =>
+    this.step(`showResults ${label}`, async () => {
+      await expect(this.get(libraryPageTestIds.showResultsButton)).toHaveText(label);
+      await this.click(libraryPageTestIds.showResultsButton);
       await this.verifyFiltersAreOpen(false);
     });
 
@@ -201,6 +214,28 @@ export class LibraryPageObject extends PageObject {
 
   expectCardCountToBe = (count: number) =>
     this.step(`expectCardCountToBe ${count}`, () => this.expectToHaveCount(libraryOverviewCardTestIds.root, count));
+
+  verifyChipsRead = (chips: string[]) =>
+    this.step(`verifyChipsRead ${chips.join(", ")}`, () =>
+      expect(this.page.getByRole("group", { name: "Filters set" }).locator(":scope > span, :scope > button")).toHaveText(
+        chips,
+      ),
+    );
+
+  verifyNoChips = () => this.step("verifyNoChips", () => this.expectToHaveCount(libraryFilterChipsTestIds.root, 0));
+
+  removeChip = (key: string) => this.step(`removeChip ${key}`, () => this.click(libraryFilterChipsTestIds.removeButton(key)));
+
+  openMoreChips = () =>
+    this.step("openMoreChips", async () => {
+      await this.click(libraryFilterChipsTestIds.moreButton);
+      await this.verifyFiltersAreOpen(true);
+    });
+
+  verifySearchPlaceholderReads = (placeholder: string) =>
+    this.step(`verifySearchPlaceholderReads ${placeholder}`, () =>
+      expect(this.get(libraryPageTestIds.searchInput)).toHaveAttribute("placeholder", placeholder),
+    );
 
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () =>

@@ -16,13 +16,14 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   const query = filters.query.trim().toLowerCase();
 
   if (entry.kind === "unreadable") {
-    return filters.topicId === "all" && filters.novelty === "all" && !filters.dubious && !query;
+    return filters.topicId === "all" && filters.novelty === "all" && !filters.dubious && filters.tag === null && !query;
   }
 
   const { overview } = entry;
   if (filters.topicId !== "all" && !overview.topicIds.includes(filters.topicId)) return false;
   if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) return false;
   if (filters.dubious && !overview.verdict?.dubious) return false;
+  if (filters.tag !== null && !overview.tags.includes(filters.tag) && !state.userTags.includes(filters.tag)) return false;
   if (query && !buildSearchHaystack(overview).includes(query)) return false;
 
   return true;

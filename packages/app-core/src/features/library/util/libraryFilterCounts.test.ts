@@ -15,6 +15,7 @@ describe("libraryFilterCounts", () => {
       makeOverviewWithState(
         {
           topicIds: [FITNESS],
+          tags: ["saas", "pricing"],
           verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
         },
         { read: true },
@@ -22,11 +23,12 @@ describe("libraryFilterCounts", () => {
       makeOverviewWithState(
         {
           topicIds: [FITNESS, FINANCE],
+          tags: ["saas"],
           verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] },
         },
-        { favourite: true },
+        { favourite: true, userTags: ["pricing"] },
       ),
-      makeOverviewWithState({ thin: true, verdict: null }),
+      makeOverviewWithState({ thin: true, verdict: null, tags: [] }),
     ]);
 
     expect(counts).toEqual({
@@ -37,6 +39,10 @@ describe("libraryFilterCounts", () => {
       unreadable: 0,
       byTopic: { [FITNESS]: 2, [FINANCE]: 1 },
       byNovelty: { original: 1, common_knowledge: 1 },
+      byTag: [
+        { tag: "pricing", count: 2 },
+        { tag: "saas", count: 2 },
+      ],
     });
   });
 
@@ -70,6 +76,7 @@ describe("libraryFilterCounts", () => {
       unreadable: 0,
       byTopic: {},
       byNovelty: {},
+      byTag: [],
     });
   });
 });

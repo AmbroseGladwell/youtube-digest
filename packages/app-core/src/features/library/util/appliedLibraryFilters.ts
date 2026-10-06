@@ -41,6 +41,9 @@ export function appliedLibraryFilters(
   if (filters.dubious) {
     applied.push({ key: "dubious", label: "⚠ Dubious", clear: { dubious: false } });
   }
+  if (filters.tag !== null) {
+    applied.push({ key: "tag", label: `#${filters.tag}`, clear: { tag: null } });
+  }
   if (filters.query.trim() !== "") {
     applied.push({ key: "query", label: `“${filters.query.trim()}”`, clear: { query: "" } });
   }

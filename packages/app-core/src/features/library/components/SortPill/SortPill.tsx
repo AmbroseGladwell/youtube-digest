@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
-import { LIBRARY_SORTS, LIBRARY_SORT_LABEL, type LibrarySort } from "../../types/LibrarySort.js";
+import {
+  DEFAULT_LIBRARY_SORT,
+  LIBRARY_SORTS,
+  LIBRARY_SORT_LABEL,
+  LIBRARY_SORT_SHORT_LABEL,
+  type LibrarySort,
+} from "../../types/LibrarySort.js";
 import styles from "./SortPill.module.scss";
 import { sortPillTestIds } from "./SortPillTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -9,9 +15,12 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 export interface SortPillProps {
   sort: LibrarySort;
   onChange: (sort: LibrarySort) => void;
+  // The narrow layout's icon beside the search, which widens into a short name for any sort
+  // but the default (84v). The menu is the same either way.
+  compact?: boolean;
 }
 
-export function SortPill({ sort, onChange }: SortPillProps) {
+export function SortPill({ sort, onChange, compact = false }: SortPillProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -59,7 +68,11 @@ export function SortPill({ sort, onChange }: SortPillProps) {
       <button
         type="button"
         ref={trigger}
-        className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
+        className={
+          compact
+            ? `${styles.iconTrigger} ${sort === DEFAULT_LIBRARY_SORT ? "" : styles.iconTriggerWide}`
+            : `${styles.trigger} ${open ? styles.triggerOpen : ""}`
+        }
         onClick={() => {
           if (!open) analytics.library.sortPill.opened();
           setOpen(!open);
@@ -69,8 +82,17 @@ export function SortPill({ sort, onChange }: SortPillProps) {
         aria-expanded={open}
         data-testid={sortPillTestIds.trigger}
       >
-        {LIBRARY_SORT_LABEL[sort]}
-        <StrokeIcon name="chevronDown" />
+        {compact ? (
+          <>
+            <StrokeIcon name="sort" size={18} />
+            <span className={styles.shortLabel}>{LIBRARY_SORT_SHORT_LABEL[sort]}</span>
+          </>
+        ) : (
+          <>
+            {LIBRARY_SORT_LABEL[sort]}
+            <StrokeIcon name="chevronDown" />
+          </>
+        )}
       </button>
 
       {open && (

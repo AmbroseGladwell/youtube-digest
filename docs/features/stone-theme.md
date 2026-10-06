@@ -248,10 +248,12 @@ the app does not. The steppers wrap round rather than stopping at either end, wh
 
 ## The filter sheet
 
-On the wide layout the filter rail is part of the page. Under 992px it is a sheet that
-slides in over it, and two things follow from that. It starts below the bar — its
-padding-top is the measured `--masthead-height` plus a little — rather than sliding its
-own head underneath a bar that is fixed over the page. And while it is open it holds the
+On the wide layout the filter rail is part of the page. Under 992px it is a bottom sheet
+that rises over it, opened from the filter button beside the search ("OV-84 2 Library
+Filter" 84i), with "Clear all" and "Show N overviews" at its foot. Two things follow from
+that. It is never taller than the space under the bar — its max-height leaves the measured
+`--masthead-height` clear — so its head never slides underneath a bar that is fixed over the
+page. And while it is open it holds the
 keyboard: `useFocusTrap` wraps Tab and Shift+Tab inside the sheet, Escape closes it, and
 closing hands focus back to the button that opened it. Without the trap, tabbing past the
 last filter walks into a library the reader cannot see.

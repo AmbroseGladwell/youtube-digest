@@ -64,7 +64,7 @@ const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "re
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
-const FilterControl = z.enum(["panel", "appliedChip", "clearAll", "reset", "caughtUp"]);
+const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
@@ -243,6 +243,14 @@ export const analyticsEvents = {
       }),
       momentFollowed: event("The reader goes to a dubious claim's moment in the video", { by: VideoReach }),
       markedWrong: event("The reader says the dubious flag looks wrong"),
+    },
+    // Never which tag: a tag is the reader's own word (docs/architecture/analytics.md).
+    relatedByTag: {
+      tagFollowed: event("The reader follows one of the overview's tags to the library filtered by it"),
+      overviewOpened: event("The reader opens an overview listed as sharing tags with this one, and how many it shares", {
+        sharedTags: z.number().int().positive(),
+      }),
+      moreShown: event("The reader shows or hides the related overviews past the first three", { shown: z.boolean() }),
     },
     actionsMenu: {
       opened: event("The reader opens the overview's ⋯ menu"),
@@ -560,6 +568,10 @@ export const analyticsEvents = {
       }),
       favouriteSwitched: event("The reader turns the favourites filter on or off", { on: z.boolean(), from: FilterControl }),
       dubiousSwitched: event("The reader turns the dubious-claims filter on or off", { on: z.boolean(), from: FilterControl }),
+      // Never which tag: a tag is the reader's own word (docs/architecture/analytics.md).
+      tagChosen: event("The reader filters the library to one tag", { from: FilterControl }),
+      tagCleared: event("The reader stops filtering the library by tag", { from: FilterControl }),
+      allTagsShown: event("The reader shows or hides the tags past the first few", { shown: z.boolean() }),
       allCleared: event("The reader shows every overview, clearing every library filter at once", {
         applied: z.number().int().nonnegative(),
       }),
@@ -571,6 +583,24 @@ export const analyticsEvents = {
     },
     caughtUp: {
       allShown: event("The reader with nothing unread asks to see every overview"),
+    },
+    // Counts only: never a tag's name (docs/architecture/analytics.md).
+    manageTags: {
+      opened: event("The reader opens Manage tags from the rail"),
+      closed: event("The reader closes Manage tags"),
+      merged: event("The reader merges tags into one, with how many tags and how many overviews it changed", {
+        tags: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      renamed: event("The reader renames a tag, onto a tag that exists or not, and how many overviews it changed", {
+        intoExisting: z.boolean(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      deleted: event("The reader deletes tags, with how many tags and how many overviews it changed", {
+        tags: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      undone: event("The reader undoes the last change in Manage tags"),
     },
     filterSheet: {
       opened: event("The reader opens the filter sheet on a narrow screen"),
