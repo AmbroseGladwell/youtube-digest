@@ -153,6 +153,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(searchParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
+  // The search says itself, so it is not one of the filters the button counts (84i).
+  const setFilters = applied.filter((filter) => filter.key !== "query").length;
 
   // A row changed from the list stays where it is until the view changes, rather than
   // vanishing from under the pointer (docs/features/library-view.md).
@@ -164,40 +166,6 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
-      <div className={styles.filterBar}>
-        <button
-          type="button"
-          className={`${styles.filterButton} ${applied.length > 0 ? styles.filterButtonActive : ""}`}
-          onClick={() => {
-            analytics.library.filterSheet.opened();
-            setFiltersOpen(true);
-          }}
-          aria-label="Filters"
-          aria-expanded={filtersOpen}
-          data-testid={libraryPageTestIds.filterButton}
-        >
-          <StrokeIcon name="filter" size={17} />
-        </button>
-        <div className={styles.appliedRow}>
-          {applied.length === 0 ? (
-            <span className={styles.noFilters}>No filters</span>
-          ) : (
-            applied.map((chip) => (
-              <button
-                key={chip.key}
-                type="button"
-                className={styles.appliedChip}
-                onClick={() => changeFilters(chip.clear, "appliedChip")}
-                data-testid={libraryPageTestIds.appliedChip(chip.key)}
-              >
-                {chip.label}
-                <StrokeIcon name="close" size={12} />
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
       <div className={styles.grid}>
         <aside
           ref={rail}
@@ -205,15 +173,17 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           aria-label="Filters"
           data-testid={libraryPageTestIds.rail}
         >
+          <span className={styles.sheetHandle} aria-hidden="true" />
           <div className={styles.sheetHead}>
-            <span className={styles.sheetTitle}>Filters</span>
+            <h2 className={styles.sheetTitle}>Filters</h2>
             <button
               type="button"
-              className={styles.sheetDone}
+              className={styles.sheetClose}
               onClick={closeFilters}
+              aria-label="Close"
               data-testid={libraryPageTestIds.closeFiltersButton}
             >
-              Done
+              <StrokeIcon name="close" size={18} />
             </button>
           </div>
           <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
@@ -245,13 +215,20 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               }}
               data-testid={libraryPageTestIds.clearFiltersButton}
             >
-              Show all
+              Clear all
             </button>
-            <span className={styles.sheetCount}>
-              {visible.length} of {counts.total} shown
-              {counts.unreadable > 0 && ` · ${counts.unreadable} couldn't be read`}
-            </span>
+            <button
+              type="button"
+              className={styles.showResults}
+              onClick={closeFilters}
+              data-testid={libraryPageTestIds.showResultsButton}
+            >
+              Show {visible.length} {visible.length === 1 ? "overview" : "overviews"}
+            </button>
           </div>
+          {counts.unreadable > 0 && (
+            <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
+          )}
         </aside>
 
         <main className={styles.main}>
@@ -291,43 +268,59 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             />
           </div>
 
-          <div className={styles.search}>
-            <span className={styles.searchIcon} aria-hidden="true">
-              <StrokeIcon name="search" size={16} />
-            </span>
-            {filters.tag !== null && (
-              <span className={styles.searchTag} data-testid={libraryPageTestIds.searchTagChip}>
-                #{filters.tag}
-                <button
-                  type="button"
-                  className={styles.searchTagRemove}
-                  onClick={() => changeFilters({ tag: null }, "searchChip")}
-                  aria-label={`Remove tag filter ${filters.tag}`}
-                  data-testid={libraryPageTestIds.removeSearchTagButton}
-                >
-                  <StrokeIcon name="close" size={12} />
-                </button>
+          <div className={styles.searchRow}>
+            <div className={styles.search}>
+              <span className={styles.searchIcon} aria-hidden="true">
+                <StrokeIcon name="search" size={16} />
               </span>
-            )}
-            <input
-              type="search"
-              className={styles.searchInput}
-              placeholder={filters.tag === null ? "Search claims, channels, tags" : "Search within"}
-              value={filters.query}
-              onChange={(event) => changeFilters({ query: event.target.value })}
-              aria-label="Search overviews"
-              data-testid={libraryPageTestIds.searchInput}
-            />
-            {filters.query !== "" && (
-              <ClearFieldButton
-                label="Clear search"
-                onClick={() => {
-                  analytics.library.search.cleared();
-                  changeFilters({ query: "" });
-                }}
-                testId={libraryPageTestIds.clearSearchButton}
+              {filters.tag !== null && (
+                <span className={styles.searchTag} data-testid={libraryPageTestIds.searchTagChip}>
+                  #{filters.tag}
+                  <button
+                    type="button"
+                    className={styles.searchTagRemove}
+                    onClick={() => changeFilters({ tag: null }, "searchChip")}
+                    aria-label={`Remove tag filter ${filters.tag}`}
+                    data-testid={libraryPageTestIds.removeSearchTagButton}
+                  >
+                    <StrokeIcon name="close" size={12} />
+                  </button>
+                </span>
+              )}
+              <input
+                type="search"
+                className={styles.searchInput}
+                placeholder={filters.tag === null ? "Search claims, channels, tags" : "Search within"}
+                value={filters.query}
+                onChange={(event) => changeFilters({ query: event.target.value })}
+                aria-label="Search overviews"
+                data-testid={libraryPageTestIds.searchInput}
               />
-            )}
+              {filters.query !== "" && (
+                <ClearFieldButton
+                  label="Clear search"
+                  onClick={() => {
+                    analytics.library.search.cleared();
+                    changeFilters({ query: "" });
+                  }}
+                  testId={libraryPageTestIds.clearSearchButton}
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              className={styles.filterButton}
+              onClick={() => {
+                analytics.library.filterSheet.opened();
+                setFiltersOpen(true);
+              }}
+              aria-label={setFilters === 0 ? "Filters" : `Filters, ${setFilters} set`}
+              aria-expanded={filtersOpen}
+              data-testid={libraryPageTestIds.filterButton}
+            >
+              <StrokeIcon name="filter" size={17} />
+              {setFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+            </button>
           </div>
 
           <div className={styles.viewLine}>

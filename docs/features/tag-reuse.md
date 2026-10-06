@@ -126,10 +126,15 @@ A tag matches the note's own tags or the reader's `userTags`. An unreadable reco
 matches one, as it never matches a topic. The tag is not part of the saved view
 (`library-view.md`).
 
-**Where the build departs from the design.** On a phone, 84i draws the filter button beside
-the search field with a dot; the app keeps its existing filter bar above the list, whose
-button already fills while anything is set and whose applied chips include the tag. The
-running time-saved figure stays beside the count, which 84g leaves out.
+**Under 992px the filters are a bottom sheet** (84i), opened from a button beside the search
+field that carries a dot while any filter is set and names how many ("Filters, 2 set"); the
+search does not count, since the field shows it. The row of applied-filter chips that used to
+sit above the list is gone: the dot, the "Showing:" line and the tag's chip in the search say
+what is set. The sheet keeps every group, Verdict and Tags still behind More filters, and its
+foot is "Clear all" and "Show N overviews", which closes it. Filters apply as they are tapped.
+
+**Where the build departs from the design.** The running time-saved figure stays beside the
+count, which 84g leaves out.
 
 ## Manage tags: merge, rename, delete (design 84j–84n)
 
