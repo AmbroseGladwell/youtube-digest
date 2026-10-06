@@ -9,6 +9,7 @@ export const filterPanelTestIds = {
   dubiousChip: "FilterPanel.dubiousChip",
   tagChip: (tag: string) => `FilterPanel.tagChip.${tag}`,
   showAllTagsButton: "FilterPanel.showAllTagsButton",
+  manageTagsButton: "FilterPanel.manageTagsButton",
   moreFiltersButton: "FilterPanel.moreFiltersButton",
   moreFiltersSummary: "FilterPanel.moreFiltersSummary",
 };

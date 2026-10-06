@@ -26,11 +26,11 @@ test("the rail lists the library's tags under More filters, most used first, and
 
   await library.verifyCardOrder(["Side project to forty k", "Chrome extension money"]);
   await library.filterPanel.verifyMoreFiltersSummaryReads("Any verdict · #saas");
-  await library.verifySearchTagReads("#saas");
-  await library.verifyCountReads("2 tagged #saas");
+  await library.verifyChipsRead(["#saas"]);
+  await library.verifyCountReads("2 overviews tagged #saas · 2 unread");
 });
 
-test("one tag at a time: choosing another swaps it, and the chip in the search clears it", async ({
+test("one tag at a time: choosing another swaps it, and its chip under the search clears it", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -41,8 +41,8 @@ test("one tag at a time: choosing another swaps it, and the chip in the search c
   await library.filterPanel.clickTagChip("energy");
   await library.verifyCardOrder(["Nuclear in the UK"]);
 
-  await library.removeSearchTag();
-  await library.verifyNoSearchTag();
+  await library.removeChip("tag");
+  await library.verifyNoChips();
   await library.expectCardCountToBe(3);
 });
 
@@ -66,7 +66,7 @@ test("a link to a tag opens the library filtered to it, with the group it is in 
   await launcher.openPage(Routes.taggedLibrary("founder-interview"));
 
   await library.expectCardCountToBe(2);
-  await library.verifySearchTagReads("#founder-interview");
+  await library.verifyChipsRead(["#founder-interview", "Read and unread"]);
   await library.filterPanel.verifyMoreFiltersAreOpen();
 });
 

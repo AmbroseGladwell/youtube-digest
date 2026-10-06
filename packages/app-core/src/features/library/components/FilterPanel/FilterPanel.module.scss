@@ -93,7 +93,8 @@
   color: var(--muted);
 }
 
-.newTopic {
+.newTopic,
+.manageTags {
   @include controls.ghost-pill;
   @include controls.pill-sm;
 
@@ -135,6 +136,7 @@
 // Wraps rather than truncating: a summary cut short could hide the tag it exists to show.
 .moreSummaryText {
   min-width: 0;
+  white-space: normal;
   text-align: right;
   overflow-wrap: anywhere;
 }

@@ -21,8 +21,10 @@ restores that account's view.
 
 ## Show all, Reset, caught up
 
-A line over the list states the view in text ("Showing: Unread · Newest saved first"),
-with **Reset** (back to the default view) and **Show all** (every filter off, order kept).
+On a wide screen a line over the list states the view in text ("Showing: Unread · Newest
+saved first"), with **Reset** (back to the default view) and **Show all** (every filter off,
+order kept). Below 992px that line is gone: the chips under the search and the sheet's Clear
+all do its job (`tag-reuse.md`).
 The sheet's old "Clear all" is now "Show all". With Unread on and nothing unread, the list
 says "You're all caught up" and offers "Show all overviews". A brand-new library still
 gets the first-run hero.

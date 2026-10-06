@@ -33,11 +33,11 @@ describe("recordLibraryFilterChange", () => {
     const { recorded, filters } = recording();
 
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { tag: "saas" }, "panel");
-    recordLibraryFilterChange(filters, { ...NO_LIBRARY_FILTERS, tag: "saas" }, { tag: null }, "searchChip");
+    recordLibraryFilterChange(filters, { ...NO_LIBRARY_FILTERS, tag: "saas" }, { tag: null }, "filterChip");
 
     expect(recorded).toEqual([
       ["library.filters.tagChosen", { from: "panel" }],
-      ["library.filters.tagCleared", { from: "searchChip" }],
+      ["library.filters.tagCleared", { from: "filterChip" }],
     ]);
   });
 
