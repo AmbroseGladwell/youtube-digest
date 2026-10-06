@@ -61,6 +61,8 @@ async function send(
       return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt));
     case "captureReason":
       return written(await api.setOverviewCaptureReason(entry.id, change.captureReason, entry.updatedAt));
+    case "tags":
+      return written(await api.setOverviewTags(entry.id, change.tags, entry.updatedAt));
     case "state":
       return written(await api.setOverviewState(entry.id, change.patch, entry.updatedAt));
     case "settings":

@@ -1,15 +1,16 @@
-import { Novelty, TopicId } from "@overview/domain";
+import { Novelty, Tag, TopicId } from "@overview/domain";
 import { NO_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
 import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
-const LIBRARY_VIEW_PARAMS = ["topic", "verdict", "status", "fav", "dubious", "q", "sort"];
+const LIBRARY_VIEW_PARAMS = ["topic", "verdict", "status", "fav", "dubious", "tag", "q", "sort"];
 
 export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilters {
   const topicParam = searchParams.get("topic");
   const noveltyParam = searchParams.get("verdict");
   const statusParam = searchParams.get("status");
+  const tagParam = searchParams.get("tag");
 
   const topicId = topicParam && TopicId.safeParse(topicParam).success ? (topicParam as TopicId) : "all";
   const novelty = noveltyParam && Novelty.safeParse(noveltyParam).success ? (noveltyParam as Novelty) : "all";
@@ -22,6 +23,7 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
     status,
     favourite: searchParams.get("fav") === "1",
     dubious: searchParams.get("dubious") === "1",
+    tag: tagParam !== null && Tag.safeParse(tagParam).success ? tagParam : NO_LIBRARY_FILTERS.tag,
     query: searchParams.get("q") ?? NO_LIBRARY_FILTERS.query,
   };
 }
@@ -37,6 +39,7 @@ export function applyLibraryFilterPatch(
   if ("status" in patch) setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
   if ("favourite" in patch) setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
   if ("dubious" in patch) setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
+  if ("tag" in patch) setOrDelete(next, "tag", patch.tag ?? undefined);
   if ("query" in patch) setOrDelete(next, "q", patch.query || undefined);
 
   return next;

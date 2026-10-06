@@ -63,7 +63,7 @@ test("initialize answers with its own latest version when it does not know the c
   await testApp.close();
 });
 
-test("tools/list offers the five tools, each marked read-only, with a schema for its arguments", async () => {
+test("tools/list offers the six tools, each marked read-only, with a schema for its arguments", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await plusAccount(testApp));
 
@@ -73,7 +73,7 @@ test("tools/list offers the five tools, each marked read-only, with a schema for
 
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["search_overviews", "list_topics", "get_overview", "get_overviews", "get_transcript"],
+    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript"],
   );
   assert.ok(tools.every((tool) => tool.annotations.readOnlyHint && tool.inputSchema.type === "object"));
   await testApp.close();

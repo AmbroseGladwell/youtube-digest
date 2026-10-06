@@ -122,6 +122,9 @@ Five folders, five different questions.
   writes the document and the app renders it, the card image drawn per request and measured
   by the renderer that draws it, how a visitor hears the copy's own narration without an
   account, and the intent that survives making one.
+- `tag-reuse.md` — one tag vocabulary per library: the model offered the reader's 60 most used
+  tags, spelling and singular or plural folded in code onto tags that exist, aliases for merged
+  and deleted tags kept in Settings, merges that rewrite the notes, and the one-off re-tag.
 - `time-saved.md` — the running total of time saved by reading instead of watching: how it
   is counted and what it leaves out, the rolling figure and its breakdown, the "Saved you"
   moment, and the ten milestones with the rules for when each shows, stored on the account.

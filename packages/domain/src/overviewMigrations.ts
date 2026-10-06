@@ -103,6 +103,10 @@ const fillFromPlaylistAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// Additive: a note may now hold fewer than three tags, after the reader merges or deletes
+// them. Moving the number keeps an older client from quarantining one (docs/features/tag-reuse.md).
+const allowFewerThanThreeTags: RecordMigration = { newSchemaVersion: 8 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -110,6 +114,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   moveToTheNewScaleAndTimedKeyPoints,
   fillDubiousClaimsAddedAfterTheFirstNotes,
   fillFromPlaylistAddedAfterTheFirstNotes,
+  allowFewerThanThreeTags,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

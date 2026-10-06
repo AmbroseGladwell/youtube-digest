@@ -94,5 +94,16 @@ describe("matchesLibraryFilters", () => {
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "anything" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(false);
+  });
+
+  it("filters by a tag on the note or one the reader added", () => {
+    const tagged = makeOverviewWithState({ tags: ["saas", "pricing"] });
+    const userTagged = makeOverviewWithState({ tags: ["energy"] }, { userTags: ["saas"] });
+    const other = makeOverviewWithState({ tags: ["energy"] });
+
+    expect(matchesLibraryFilters(tagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
+    expect(matchesLibraryFilters(userTagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
+    expect(matchesLibraryFilters(other, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(false);
   });
 });

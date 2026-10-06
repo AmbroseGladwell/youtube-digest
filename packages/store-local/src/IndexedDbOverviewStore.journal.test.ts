@@ -67,6 +67,17 @@ test("a capture reason journals as its own field write", async () => {
   assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "captureReason", captureReason: "Because" });
 });
 
+test("retagging journals the tags as their own field write", async () => {
+  const db = await openEnrolledDatabase();
+  const store = new IndexedDbOverviewStore(db);
+  const overview = makeOverview();
+  await store.saveOverview(overview);
+
+  await store.setOverviewTags(overview.id, ["saas"]);
+
+  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "tags", tags: ["saas"] });
+});
+
 test("marking read journals only the fields the patch named", async () => {
   const db = await openEnrolledDatabase();
   const store = new IndexedDbOverviewStore(db);

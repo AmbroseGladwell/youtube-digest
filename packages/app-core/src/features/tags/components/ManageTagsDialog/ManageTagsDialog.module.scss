@@ -1,0 +1,413 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+// Design 84j–84n: a tall centred dialog on a desktop and a sheet on a phone, the list scrolling
+// between a fixed head and a fixed action bar.
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+
+  height: min(42rem, calc(100vh - 5rem));
+  gap: 0.875rem;
+  padding: 1.5rem 1.5rem 1.25rem 1.75rem;
+
+  @media (max-width: 47.9375rem) {
+    height: 92vh;
+    padding: 0.75rem 1.25rem 1.25rem;
+  }
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+
+  font-size: 1.75rem;
+}
+
+.subhead {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.close {
+  @include controls.ghost-pill;
+  @include controls.circle(2.25rem);
+
+  color: var(--muted);
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.84375rem;
+}
+
+.noticeText {
+  flex: 1;
+}
+
+.undo {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search {
+  @include controls.field-pill;
+
+  flex: 1;
+  min-width: 12rem;
+  height: 2.625rem;
+  padding: 0 0.5rem 0 1rem;
+  background: var(--surface);
+}
+
+.searchIcon {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.searchInput {
+  @include controls.field-input;
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+    display: none;
+  }
+}
+
+.sort {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  flex: none;
+}
+
+.sortOption {
+  @include controls.ghost-pill;
+
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.sortOptionOn,
+.sortOptionOn:hover {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0 -0.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row,
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-badge);
+  cursor: pointer;
+}
+
+.row {
+  padding: 0.625rem 0.75rem;
+}
+
+.row:hover {
+  background: var(--surface);
+}
+
+.rowSelected,
+.rowSelected:hover {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.checkbox,
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.box {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1.75px var(--muted);
+  color: transparent;
+}
+
+.checkbox:checked + .box {
+  background: var(--label);
+  box-shadow: none;
+  color: var(--ground);
+}
+
+.checkbox:focus-visible + .box,
+.radio:focus-visible + .dot {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.tagName {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.count {
+  font-size: 0.78125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowSelected .count,
+.choiceOn .count {
+  color: inherit;
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.84375rem;
+  color: var(--muted);
+}
+
+.renameRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border-radius: 1.375rem;
+  background: var(--stone-tint);
+}
+
+.renameForm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.renameInput {
+  @include controls.field-solo;
+
+  flex: 1;
+  height: 2.75rem;
+  border-color: var(--label);
+  font-size: 0.875rem;
+}
+
+.renameInput[aria-invalid="true"] {
+  border-color: var(--accent);
+}
+
+.renameStatus {
+  margin: 0;
+  padding: 0 0.375rem;
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--on-stone-tint);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  padding-top: 0.75rem;
+}
+
+.barHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.selectedCount {
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.barActions,
+.stepActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.secondary {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.quiet {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.step {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.back {
+  @include controls.quiet-control;
+
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0;
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.choices {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.legend {
+  padding: 0 0 0.5rem;
+
+  @include controls.section-label;
+}
+
+.choice {
+  padding: 0.6875rem 0.875rem;
+}
+
+.choiceOn {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.dot {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.75px var(--muted);
+}
+
+.radio:checked + .dot {
+  box-shadow: inset 0 0 0 5.5px var(--label);
+}
+
+.newNameLabel {
+  font-size: 0.90625rem;
+  color: var(--muted);
+}
+
+.newNameInput {
+  @include controls.field-input;
+
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.stepFoot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.primaryLarge {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.secondaryLarge {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}

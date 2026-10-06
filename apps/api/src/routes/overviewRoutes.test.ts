@@ -227,6 +227,41 @@ test("the capture reason is set and taken back off without touching the rest", a
   await testApp.close();
 });
 
+test("a note's tags are rewritten in place, and may number fewer than generation asks for", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const overview = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: overview });
+
+  const response = await account.inject({
+    method: "PUT",
+    url: `/api/overviews/${overview.id}/tags`,
+    body: { tags: ["saas"], updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 200);
+  const change = await account.change("overview", overview.id);
+  assert.deepEqual(change.body!.tags, ["saas"]);
+  assert.equal(change.body!.coreClaim, overview.coreClaim);
+  await testApp.close();
+});
+
+test("a tag that is not a stored tag is refused", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const overview = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: overview });
+
+  const response = await account.inject({
+    method: "PUT",
+    url: `/api/overviews/${overview.id}/tags`,
+    body: { tags: ["Micro SaaS"], updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 400);
+  await testApp.close();
+});
+
 test("state is made from the defaults on first touch, and a later patch keeps a newer client's fields", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

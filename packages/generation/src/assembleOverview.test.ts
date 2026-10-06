@@ -33,6 +33,8 @@ const baseInput: GenerationInput = {
     { id: fitnessId, name: "fitness", description: null, createdAt: new Date().toISOString() },
     { id: financeId, name: "finance", description: null, createdAt: new Date().toISOString() },
   ],
+  existingTags: [],
+  tagAliases: {},
   pastClaims: [
     { overviewId: OverviewId.parse(randomUUID()), title: "An older video", claim: "Do the thing." },
   ],
@@ -307,4 +309,20 @@ test("a topic the model suggested is not filed under, and does not reach the rec
     meta,
   );
   assert.deepEqual(overview.topicIds, []);
+});
+
+test("tags are spelled as the reader's library spells them, and a merged-away tag cannot return", () => {
+  const overview = assembleOverview(
+    {
+      ...baseInput,
+      existingTags: [
+        { tag: "startup", count: 4 },
+        { tag: "saas", count: 3 },
+      ],
+      tagAliases: { "micro-saas": "saas", nuclear: null },
+    },
+    { ...baseOutput, tags: ["startups", "micro-saas", "nuclear", "pricing"] },
+    meta,
+  );
+  assert.deepEqual(overview.tags, ["startup", "saas", "pricing"]);
 });

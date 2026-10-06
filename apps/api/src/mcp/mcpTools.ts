@@ -5,6 +5,7 @@ import {
   StoredTranscript,
   overviewMarkdown,
   sameTopicName,
+  tagUsage,
   transcriptBlocks,
   transcriptPlainText,
   type Topic,
@@ -130,6 +131,26 @@ const listTopics = mcpTool({
   },
 });
 
+const listTags = mcpTool({
+  name: "list_tags",
+  title: "List tags",
+  description:
+    "List the tags on the reader's overviews, most used first, with how many overviews carry each. Tags name a subject, so overviews that share one are about the same thing. A tag can be passed to search_overviews and get_overviews.",
+  input: z.object({}),
+  run: async (_input, { sql, accountId }) => {
+    const library = await readLibrary(sql, accountId);
+    const counted = tagUsage(
+      library.entries.map(({ overview, state }) => [...overview.tags, ...(state?.userTags ?? [])]),
+    );
+    return {
+      text: [
+        counted.length === 0 ? "The reader's overviews have no tags yet." : `${counted.length} tag(s):`,
+        ...counted.map(({ tag, count }) => `- ${tag}: ${count} overview(s)`),
+      ].join("\n"),
+    };
+  },
+});
+
 const getOverview = mcpTool({
   name: "get_overview",
   title: "Read one overview",
@@ -207,4 +228,4 @@ const getTranscript = mcpTool({
   },
 });
 
-export const mcpTools: readonly McpTool[] = [searchOverviews, listTopics, getOverview, getOverviews, getTranscript];
+export const mcpTools: readonly McpTool[] = [searchOverviews, listTopics, listTags, getOverview, getOverviews, getTranscript];

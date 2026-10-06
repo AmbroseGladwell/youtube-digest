@@ -1,4 +1,4 @@
-import type { Novelty, TopicId } from "@overview/domain";
+import { tagUsage, type Novelty, type TagCount, type TopicId } from "@overview/domain";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 
 export interface LibraryFilterCounts {
@@ -9,6 +9,7 @@ export interface LibraryFilterCounts {
   unreadable: number;
   byTopic: Record<string, number>;
   byNovelty: Record<string, number>;
+  byTag: TagCount[];
 }
 
 // total counts every record the library holds, readable or not: a library that says 28
@@ -39,5 +40,9 @@ export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCount
     if (novelty) byNovelty[novelty] = (byNovelty[novelty] ?? 0) + 1;
   }
 
-  return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty };
+  const byTag = tagUsage(
+    entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]),
+  );
+
+  return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag };
 }

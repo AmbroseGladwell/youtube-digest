@@ -30,6 +30,8 @@ function apply(record: Record<string, unknown>, entry: OutboxEntry): Record<stri
       return { ...record, topicIds: change.topicIds };
     case "captureReason":
       return { ...record, captureReason: change.captureReason };
+    case "tags":
+      return { ...record, tags: change.tags };
     case "state":
       return { ...record, ...change.patch };
     case "settings":

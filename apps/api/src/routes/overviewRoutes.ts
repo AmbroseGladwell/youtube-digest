@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { DEFAULT_OVERVIEW_STATE, OverviewId, OverviewState, TopicId } from "@overview/domain";
+import { DEFAULT_OVERVIEW_STATE, Filing, OverviewId, OverviewState, TopicId } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
 import { ifMatchOf, sendWritten, UpdatedAt } from "../http/writeHeaders.js";
@@ -13,6 +13,7 @@ import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
 const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt });
+const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt });
 const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt });
 const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
   .partial()
@@ -68,6 +69,21 @@ export function overviewRoutes(
             { patch: { captureReason }, updatedAt, ifMatch, defaults: null },
             request.client!,
           ),
+      },
+    ]);
+    return sendWritten(reply, written!);
+  });
+
+  app.put("/overviews/:id/tags", async (request, reply) => {
+    const { id } = parseOrThrow(Params, request.params, "The overview's id");
+    const { tags, updatedAt } = parseOrThrow(TagsPatch, request.body, "The tags patch");
+    const ifMatch = ifMatchOf(request);
+    const [written] = await records.write(request.session!.accountId, [
+      {
+        kind: "overview",
+        id,
+        decide: (current) =>
+          decideMerge("overview", current, { patch: { tags }, updatedAt, ifMatch, defaults: null }, request.client!),
       },
     ]);
     return sendWritten(reply, written!);

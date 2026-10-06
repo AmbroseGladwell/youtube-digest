@@ -23,6 +23,8 @@ const input: GenerationInput = {
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
   existingTopics: [],
   pastClaims: [],
+  existingTags: [],
+  tagAliases: {},
 };
 
 const meta = { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOString() };

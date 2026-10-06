@@ -54,6 +54,20 @@ test("someone without an account reads the shared overview, and is offered one o
   await page.verifyOffersTheWayIn();
 });
 
+test("a shared copy's tags are words under a Tags label, with nothing related, since there is no library behind it", async ({
+  launcher,
+}) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedPayload());
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+  await page.relatedByTag.verifyHeadingReads("Tags");
+  await page.relatedByTag.verifyTagsRead(["#energy-policy", "#nuclear", "#grids"]);
+  await page.relatedByTag.verifyNoTagLinks();
+  await page.relatedByTag.verifyNoRelated();
+});
+
 test("the sharer's own reason is nowhere on the page", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());

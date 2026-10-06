@@ -229,6 +229,23 @@ export function defineOverviewStoreConformanceSuite(
     assert.equal(await store.getOverview(overviewId), null);
   });
 
+  test(behaviour("setOverviewTags retags the overview without touching anything else on it"), async () => {
+    const store = await createStore();
+    const overview = makeOverview();
+    await store.saveOverview(overview);
+
+    await store.setOverviewTags(overview.id, ["saas"]);
+
+    assert.deepEqual(await store.getOverview(overview.id), { ...overview, tags: ["saas"] });
+  });
+
+  test(behaviour("setOverviewTags on an id nobody has saved does not create one"), async () => {
+    const store = await createStore();
+    const overviewId = OverviewId.parse(randomUUID());
+    await store.setOverviewTags(overviewId, ["saas"]);
+    assert.equal(await store.getOverview(overviewId), null);
+  });
+
   defineMigrationChecks(behaviour, createStoreUnderTest);
 }
 

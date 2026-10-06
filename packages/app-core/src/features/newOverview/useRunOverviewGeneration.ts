@@ -16,7 +16,7 @@ export const MISSING_ANTHROPIC_KEY = "Add your Anthropic API key first.";
 // ask, the reader's own key and model, and the library to save into. Shared by a run the
 // reader starts and by the capture queue (docs/features/capture-queue.md).
 export function useRunOverviewGeneration(apiKeys: ApiKeys) {
-  const { overviewStore, transcriptStore } = useStores();
+  const { overviewStore, settingsStore, transcriptStore } = useStores();
   const settingsQuery = useSettingsQuery();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
@@ -39,12 +39,13 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
           }),
           generationClient: createGenerationClient(apiKeys.anthropicApiKey, model),
           overviewStore,
+          settingsStore,
           transcriptStore,
           warn: (warning) => reporter.warn(warning),
         },
         options,
       );
     },
-    [apiKeys.anthropicApiKey, knownApiUrl, youTubeFetch, connection.token, model, overviewStore, transcriptStore, reporter],
+    [apiKeys.anthropicApiKey, knownApiUrl, youTubeFetch, connection.token, model, overviewStore, settingsStore, transcriptStore, reporter],
   );
 }

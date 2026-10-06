@@ -52,6 +52,13 @@ class InMemoryOverviewStore implements OverviewStore {
     }
   }
 
+  async setOverviewTags(overviewId: OverviewId, tags: string[]) {
+    const overview = this.#overviews.get(overviewId);
+    if (overview) {
+      this.#overviews.set(overviewId, { ...overview, tags });
+    }
+  }
+
   async deleteOverview(id: OverviewId) {
     this.#overviews.delete(id);
     this.#states.delete(id);

@@ -7,6 +7,9 @@ export const filterPanelTestIds = {
   newTopicButton: "FilterPanel.newTopicButton",
   showAllTopicsButton: "FilterPanel.showAllTopicsButton",
   dubiousChip: "FilterPanel.dubiousChip",
+  tagChip: (tag: string) => `FilterPanel.tagChip.${tag}`,
+  showAllTagsButton: "FilterPanel.showAllTagsButton",
+  manageTagsButton: "FilterPanel.manageTagsButton",
   moreFiltersButton: "FilterPanel.moreFiltersButton",
   moreFiltersSummary: "FilterPanel.moreFiltersSummary",
 };

@@ -11,10 +11,10 @@ export const libraryPageTestIds = {
   filterButton: "LibraryPage.filterButton",
   closeFiltersButton: "LibraryPage.closeFiltersButton",
   clearFiltersButton: "LibraryPage.clearFiltersButton",
+  showResultsButton: "LibraryPage.showResultsButton",
   viewSummary: "LibraryPage.viewSummary",
   resetViewButton: "LibraryPage.resetViewButton",
   showAllButton: "LibraryPage.showAllButton",
   caughtUp: "LibraryPage.caughtUp",
   caughtUpShowAllButton: "LibraryPage.caughtUpShowAllButton",
-  appliedChip: (key: string) => `LibraryPage.appliedChip.${key}`,
 };

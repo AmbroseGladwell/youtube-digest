@@ -147,6 +147,23 @@ export class IndexedDbOverviewStore implements OverviewStore {
     );
   }
 
+  async setOverviewTags(overviewId: OverviewId, tags: string[]) {
+    const raw = await this.#read(OVERVIEWS_STORE, overviewId);
+    if (raw === undefined) {
+      return;
+    }
+    const current = this.#writable("overview", overviewId, raw, OVERVIEW_MIGRATIONS);
+    const now = new Date();
+    await this.#write(
+      OVERVIEWS_STORE,
+      stampStoredRecord({ ...current, tags }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      "overview",
+      overviewId,
+      now,
+      { op: "tags", tags },
+    );
+  }
+
   // The state row goes with the overview, as it does on the server: ids are never reused,
   // so a surviving state would be a permanent orphan (docs/features/sync-api.md).
   async deleteOverview(id: OverviewId) {

@@ -29,6 +29,18 @@ describe("recordLibraryFilterChange", () => {
     ]);
   });
 
+  it("counts a tag being chosen and cleared without ever naming the tag", () => {
+    const { recorded, filters } = recording();
+
+    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { tag: "saas" }, "panel");
+    recordLibraryFilterChange(filters, { ...NO_LIBRARY_FILTERS, tag: "saas" }, { tag: null }, "filterChip");
+
+    expect(recorded).toEqual([
+      ["library.filters.tagChosen", { from: "panel" }],
+      ["library.filters.tagCleared", { from: "filterChip" }],
+    ]);
+  });
+
   it("counts only what the patch changed, so clearing everything names each filter that was on", () => {
     const { recorded, filters } = recording();
     const before = { ...NO_LIBRARY_FILTERS, topicId: FITNESS, favourite: true, query: "grid" };

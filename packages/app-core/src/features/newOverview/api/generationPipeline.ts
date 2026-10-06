@@ -1,10 +1,12 @@
 import {
   DEFAULT_SECTIONS_ENABLED,
   OverviewId,
+  tagUsage,
   type CaptureTranscriptSource,
   type Overview,
   type OverviewStore,
   type PlaylistOrigin,
+  type SettingsStore,
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
@@ -28,6 +30,7 @@ export interface GenerationPipelineDeps {
   warn?: VideoResolutionDeps["warn"];
   generationClient: GenerationClient;
   overviewStore: OverviewStore;
+  settingsStore: Pick<SettingsStore, "get">;
   transcriptStore: TranscriptStore;
 }
 
@@ -44,6 +47,9 @@ export interface RunOverviewGenerationOptions {
   // Set for a video the capture queue took from a followed playlist
   // (docs/features/playlists.md, "The From line").
   fromPlaylist?: PlaylistOrigin | undefined;
+  // How many of the note's tags were already in the library, counted against the library
+  // as the run saw it (docs/features/tag-reuse.md).
+  onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -62,10 +68,13 @@ export async function runOverviewGeneration(
 
   stopIfCancelled();
   options.onProgress?.({ video, transcriptWords, transcriptSource });
-  const [existingTopics, pastClaims] = await Promise.all([
+  const [existingTopics, pastClaims, library, settings] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
+    deps.overviewStore.listOverviews(),
+    deps.settingsStore.get(),
   ]);
+  const existingTags = tagUsage(library.map((overview) => overview.tags));
   const overview = await generateOverview(
     deps.generationClient,
     {
@@ -76,6 +85,8 @@ export async function runOverviewGeneration(
       sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
       existingTopics,
       pastClaims,
+      existingTags,
+      tagAliases: settings.tagAliases,
     },
     {
       id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
@@ -84,6 +95,9 @@ export async function runOverviewGeneration(
   );
 
   stopIfCancelled();
+  const known = new Set(existingTags.map(({ tag }) => tag));
+  const reused = overview.tags.filter((tag) => known.has(tag)).length;
+  options.onTagged?.({ reused, added: overview.tags.length - reused });
   const saved = {
     ...overview,
     ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),

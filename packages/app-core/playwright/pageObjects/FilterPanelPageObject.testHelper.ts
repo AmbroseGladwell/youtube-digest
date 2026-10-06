@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ManageTagsDialogPageObject } from "./ManageTagsDialogPageObject.testHelper.js";
 
 export class FilterPanelPageObject extends PageObject {
   // Verdict is folded under More filters, so reaching one of its rows opens that first.
@@ -35,6 +36,42 @@ export class FilterPanelPageObject extends PageObject {
     this.step(`verifyMoreFiltersSummaryReads ${summary}`, () =>
       expect(this.get(filterPanelTestIds.moreFiltersSummary)).toHaveText(summary),
     );
+
+  clickTagChip = (tag: string) =>
+    this.step(`clickTagChip ${tag}`, async () => {
+      await this.openMoreFilters();
+      await this.click(filterPanelTestIds.tagChip(tag));
+    });
+
+  verifyMoreFiltersAreOpen = () =>
+    this.step("verifyMoreFiltersAreOpen", () =>
+      expect(this.get(filterPanelTestIds.moreFiltersButton)).toHaveAttribute("aria-expanded", "true"),
+    );
+
+  private tagGroup = () => this.page.getByRole("group", { name: "Filter by tag" });
+
+  verifyListsTags = (rows: string[]) =>
+    this.step(`verifyListsTags ${rows.join(", ")}`, () =>
+      expect(this.tagGroup().getByRole("button")).toHaveText(rows),
+    );
+
+  verifyOffersNoTags = () => this.step("verifyOffersNoTags", () => expect(this.tagGroup()).toHaveCount(0));
+
+  openManageTags = (): Promise<ManageTagsDialogPageObject> =>
+    this.step("openManageTags", async () => {
+      await this.openMoreFilters();
+      await this.click(filterPanelTestIds.manageTagsButton);
+      return new ManageTagsDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersNoManageTags = () =>
+    this.step("verifyOffersNoManageTags", () => this.expectToHaveCount(filterPanelTestIds.manageTagsButton, 0));
+
+  clickShowAllTags = () =>
+    this.step("clickShowAllTags", async () => {
+      await this.click(filterPanelTestIds.showAllTagsButton);
+      await expect(this.get(filterPanelTestIds.showAllTagsButton)).toHaveAttribute("aria-expanded", "true");
+    });
 
   clickStatusChip = (status: string) =>
     this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));

@@ -19,6 +19,8 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
       written(request("PUT", `/overviews/${id}/topics`, WrittenRecord, { body: { topicIds, updatedAt } })),
     setOverviewCaptureReason: (id, captureReason, updatedAt) =>
       written(request("PUT", `/overviews/${id}/capture-reason`, WrittenRecord, { body: { captureReason, updatedAt } })),
+    setOverviewTags: (id, tags, updatedAt) =>
+      written(request("PUT", `/overviews/${id}/tags`, WrittenRecord, { body: { tags, updatedAt } })),
     setOverviewState: (id, patch, updatedAt) =>
       written(request("PUT", `/overviews/${id}/state`, WrittenRecord, { body: { ...patch, updatedAt } })),
     deleteOverview: (id) => request("DELETE", `/overviews/${id}`, WrittenRecord),

@@ -117,6 +117,19 @@ test("list_topics counts the overviews under each topic", async () => {
   await testApp.close();
 });
 
+test("list_tags counts the overviews carrying each tag, most used first", async () => {
+  const { testApp, library, client } = await connectedToSamples();
+
+  const { text } = await client.callTool("list_tags");
+
+  const tags = new Set(library.notes.flatMap(({ overview }) => overview.tags));
+  assert.match(text, new RegExp(`^${tags.size} tag\\(s\\):`));
+  for (const tag of tags) {
+    assert.ok(text.includes(`- ${tag}: `), tag);
+  }
+  await testApp.close();
+});
+
 test("get_overview returns every real note as Markdown, whichever way its actions were written", async () => {
   const { testApp, library, client } = await connectedToSamples();
   assert.deepEqual(new Set(library.notes.map((sample) => sample.actionStyle)), new Set(["numbered", "dashed"]));
