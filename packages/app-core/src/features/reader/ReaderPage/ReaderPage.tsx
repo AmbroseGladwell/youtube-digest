@@ -4,6 +4,7 @@ import {
   OverviewId,
   isUnreadableRecordError,
   overviewMetaParts,
+  overviewNoteCaptions,
   overviewNoteLines,
   overviewTimeSaved,
   formatClock,
@@ -122,6 +123,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   const overview = overviewQuery.data?.overview ?? null;
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
+  const captions = useMemo(() => (overview ? overviewNoteCaptions(overview) : {}), [overview]);
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
@@ -314,6 +316,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               />
               <ReadAlongNote
                 lines={lines}
+                captions={captions}
                 activeIndex={notePlayer.activeIndex}
                 onSelectLine={notePlayer.selectLine}
                 renderRange={(line, range, active) => (

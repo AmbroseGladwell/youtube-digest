@@ -46,7 +46,6 @@ export function overviewMarkdown(overview: Overview): string {
       const at = standsOut.range === null ? "" : ` (${stretch(video.url, standsOut.range)})`;
       lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}`);
     }
-    lines.push(`_${NOVELTY_BASIS}_`);
     if (dubious && dubiousClaims === null) {
       lines.push("Why it is dubious: no reason was saved with this overview.");
     }
@@ -63,6 +62,7 @@ export function overviewMarkdown(overview: Overview): string {
     if (similarTo.length > 0) {
       lines.push(`Similar to: ${similarTo.map((similar) => `${similar.title} (${similar.overviewId})`).join("; ")}`);
     }
+    lines.push(`_${NOVELTY_BASIS}_`);
     section("Verdict", lines.join("\n\n"));
   }
 
