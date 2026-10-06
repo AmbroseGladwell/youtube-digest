@@ -132,12 +132,11 @@
   color: var(--muted);
 }
 
-// A tag can be long, and the row is the rail's width.
+// Wraps rather than truncating: a summary cut short could hide the tag it exists to show.
 .moreSummaryText {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .chevron {

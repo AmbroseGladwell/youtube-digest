@@ -18,6 +18,7 @@ import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
@@ -26,6 +27,10 @@ import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { playlistFromLineTestIds } from "../../src/features/playlists/components/PlaylistFromLine/PlaylistFromLineTestIds.js";
 
 export class ReaderPageObject extends PageObject {
+  get relatedByTag(): RelatedByTagPageObject {
+    return new RelatedByTagPageObject(this.testContext);
+  }
+
   verifyIsShown = (): Promise<ReaderPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(readerPageTestIds.root);

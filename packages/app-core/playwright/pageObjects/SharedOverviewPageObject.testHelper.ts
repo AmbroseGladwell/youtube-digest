@@ -6,8 +6,13 @@ import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRa
 import { sharedOverviewPageTestIds } from "../../src/features/sharedPage/SharedOverviewPage/SharedOverviewPageTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 
 export class SharedOverviewPageObject extends PageObject {
+  get relatedByTag(): RelatedByTagPageObject {
+    return new RelatedByTagPageObject(this.testContext);
+  }
+
   verifyIsShown = (): Promise<SharedOverviewPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(sharedOverviewPageTestIds.root);

@@ -83,6 +83,30 @@ OVERVIEW_API_URL=https://… OVERVIEW_TOKEN=<session> task secrets:run -- npx ts
 `OVERVIEW_TOKEN` is a session for the account, minted with `npm run mint-session` against that
 environment's database (`docs/architecture/api.md`).
 
+## On the note: Related by tag (design 84a–84f)
+
+The last section of the Overview tab, after What it's selling. The note's tags are its heading
+row and each opens the library filtered to it; under them, the overviews that share the most
+tags with this one, newest first among equals (`relatedByTag`), up to eight, three shown and
+the rest behind `Show N more`, which keeps focus as it becomes `Show fewer`. Read ones stay in
+the list with the library's read treatment: the picture at half strength, the title muted and
+"Read" in words.
+
+**Tags are words, not pills.** `#saas` in the stone label ink, semibold, underlined on hover.
+Topic chips are filled pills and the library's main filter, so a tag never looks like one
+except as the active filter's chip in the search field.
+
+**With nothing related** the list and its button go and the label becomes "Tags"; the tags
+stay, and still link. A note with no tags has no section at all.
+
+**Where there is no library, tags are words.** In the side panel the tags are plain muted
+text, since there is no library there to land in, and the related rows still open their
+overview in the panel. The shared page shows the copy's tags the same way, under "Tags",
+and never a related list: it is someone else's view of one overview.
+
+A note's tags, here and when matching, are its own and the reader's `userTags` together
+(`overviewTags`).
+
 ## Filtering the library by tag (design 84g–84i)
 
 Tags join Verdict under **More filters** in the rail, as rows like the topic rows, `#saas`
@@ -109,7 +133,8 @@ running time-saved figure stays beside the count, which 84g leaves out.
 
 ## Counting
 
-`library.filters.tagChosen` and `tagCleared` count the filter by where it was set from, never
+`reader.relatedByTag.tagFollowed`, `overviewOpened` (with how many tags the two share) and
+`moreShown`, and `library.filters.tagChosen` and `tagCleared` count the filter by where it was set from, never
 which tag: a tag is the reader's own word, and an event may not carry one
 (`docs/architecture/analytics.md`). `capture.newOverview.finished` carries `tagsReused` and `tagsAdded`: how many of the new note's
 tags were already in the library when the run read it. The MCP connector gains `list_tags`

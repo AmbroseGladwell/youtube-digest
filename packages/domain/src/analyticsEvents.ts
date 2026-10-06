@@ -244,6 +244,14 @@ export const analyticsEvents = {
       momentFollowed: event("The reader goes to a dubious claim's moment in the video", { by: VideoReach }),
       markedWrong: event("The reader says the dubious flag looks wrong"),
     },
+    // Never which tag: a tag is the reader's own word (docs/architecture/analytics.md).
+    relatedByTag: {
+      tagFollowed: event("The reader follows one of the overview's tags to the library filtered by it"),
+      overviewOpened: event("The reader opens an overview listed as sharing tags with this one, and how many it shares", {
+        sharedTags: z.number().int().positive(),
+      }),
+      moreShown: event("The reader shows or hides the related overviews past the first three", { shown: z.boolean() }),
+    },
     actionsMenu: {
       opened: event("The reader opens the overview's ⋯ menu"),
       closed: event("The reader closes the overview's ⋯ menu without choosing anything"),

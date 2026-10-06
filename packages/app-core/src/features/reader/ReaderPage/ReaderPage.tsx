@@ -35,6 +35,10 @@ import { useOverviewShare } from "../../shares/useOverviewShare.js";
 import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { LineRangeTag } from "../components/LineRangeTag/LineRangeTag.js";
+import { RelatedByTag } from "../components/RelatedByTag/RelatedByTag.js";
+import { readableEntries } from "../../overviews/types/LibraryEntry.js";
+import { overviewTags } from "../../overviews/util/overviewTags.js";
+import { relatedByTag } from "../util/relatedByTag.js";
 import type { ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
@@ -328,13 +332,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   />
                 )}
               />
-              <div className={styles.tagRow} data-testid={readerPageTestIds.tagRow}>
-                {overview.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
+              <RelatedByTag
+                tags={overviewTags(overviewQuery.data)}
+                related={relatedByTag(overviewQuery.data, readableEntries(libraryQuery.data ?? []))}
+                tagsLink={!isPanel}
+                onTagFollowed={() => reader.relatedByTag.tagFollowed()}
+                onOverviewOpened={(sharedTags) => reader.relatedByTag.overviewOpened({ sharedTags })}
+                onMoreShown={(shown) => reader.relatedByTag.moreShown({ shown })}
+              />
             </div>
           )}
           {tab === "Transcript" && (
