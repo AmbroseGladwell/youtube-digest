@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
@@ -18,6 +18,7 @@ export function SignedOutLibrary() {
   const { ready, url, setUrl, validationError, generate } = useStartFromLink();
   const heading = useRef<HTMLHeadingElement | null>(null);
   const analytics = useAnalytics();
+  const urlFieldId = useId();
 
   useEffect(() => heading.current?.focus(), []);
 
@@ -55,7 +56,14 @@ export function SignedOutLibrary() {
                 <StrokeIcon name="link" size={18} />
               </span>
               <input
+                id={urlFieldId}
+                name="video-url"
                 type="url"
+                autoComplete="off"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 className={styles.input}
                 placeholder="Paste a YouTube link"
                 value={url}

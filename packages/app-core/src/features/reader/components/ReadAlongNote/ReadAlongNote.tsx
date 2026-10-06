@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import type { NoteLine, TimeRange } from "@overview/domain";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ReadAlongNote.module.scss";
@@ -8,6 +8,7 @@ export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
   onSelectLine: (index: number) => void;
+  captions?: Record<string, string>;
   renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
 }
 
@@ -47,7 +48,7 @@ const keepInTopThird = (line: HTMLElement) => {
   line.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-export function ReadAlongNote({ lines, activeIndex, onSelectLine, renderRange }: ReadAlongNoteProps) {
+export function ReadAlongNote({ lines, activeIndex, onSelectLine, captions = {}, renderRange }: ReadAlongNoteProps) {
   const activeLine = useRef<HTMLDivElement | null>(null);
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
@@ -67,41 +68,58 @@ export function ReadAlongNote({ lines, activeIndex, onSelectLine, renderRange }:
     <div className={styles.root} data-testid={readAlongNoteTestIds.root}>
       {lines.map((line, index) => {
         const active = index === activeIndex;
+        const caption = lines[index + 1]?.section === line.section ? undefined : captions[line.section];
         return (
-          <div
-            key={`${line.section}-${index}`}
-            ref={active ? activeLine : null}
-            className={`${styles.line} ${line.heading ? styles.headingLine : line.footnote ? styles.footnoteLine : styles.bodyLine} ${
-              line.bullet ? styles.bulletLine : ""
-            } ${active ? styles.lineActive : ""}`}
-            onClick={() => select(index)}
-            data-read-along-line
-            data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
-          >
-            {line.bullet && (
-              <span className={styles.bullet} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet}>
-                {numbers[index]}.
+          <Fragment key={`${line.section}-${index}`}>
+            <div
+              ref={active ? activeLine : null}
+              className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
+                line.bullet ? styles.bulletLine : ""
+              } ${active ? styles.lineActive : ""}`}
+              onClick={() => select(index)}
+              data-read-along-line
+              data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
+            >
+              {line.bullet && (
+                <span className={styles.bullet} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet}>
+                  {numbers[index]}.
+                </span>
+              )}
+              <span className={styles.lineBody}>
+                {line.label && (
+                  <span className={styles.lineLabel} data-testid={readAlongNoteTestIds.lineLabel}>
+                    {line.label}
+                  </span>
+                )}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className={styles.lineText}
+                  aria-current={active}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      select(index);
+                    }
+                  }}
+                  data-testid={readAlongNoteTestIds.lineText}
+                >
+                  {line.text}
+                </span>
+                {line.chip && (
+                  <span className={styles.chip} data-testid={readAlongNoteTestIds.chip}>
+                    {line.chip}
+                  </span>
+                )}
+                {line.range && renderRange?.(line, line.range, active)}
               </span>
+            </div>
+            {caption && (
+              <p className={styles.caption} data-testid={readAlongNoteTestIds.caption}>
+                {caption}
+              </p>
             )}
-            <span className={styles.lineBody}>
-              <span
-                role="button"
-                tabIndex={0}
-                className={styles.lineText}
-                aria-current={active}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    select(index);
-                  }
-                }}
-                data-testid={readAlongNoteTestIds.lineText}
-              >
-                {line.text}
-              </span>
-              {line.range && renderRange?.(line, line.range, active)}
-            </span>
-          </div>
+          </Fragment>
         );
       })}
     </div>

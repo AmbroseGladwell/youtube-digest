@@ -1,5 +1,5 @@
 import type { NoteLine } from "./NoteLine.js";
-import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
+import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
@@ -15,7 +15,8 @@ interface Body {
   text: string;
   spoken?: string;
   range?: TimeRange;
-  footnote?: boolean;
+  label?: string;
+  chip?: string;
 }
 
 const keepsItsCapital = (word: string) =>
@@ -89,13 +90,17 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
 
   if (overview.verdict) {
     const { novelty, standsOut, reasoning } = overview.verdict;
-    section("Verdict", { text: "Verdict", spoken: "The verdict" }, [
-      { text: `${NOVELTY_LABEL[novelty]}.`, spoken: "" },
+    section("Verdict", { text: "Verdict", spoken: "The verdict", chip: NOVELTY_LABEL[novelty] }, [
       ...(standsOut === null
         ? []
-        : [withRange({ text: `${STANDS_OUT_LABEL}: ${standsOut.text}`, range: standsOut.range })]),
-      { text: NOVELTY_BASIS, spoken: "", footnote: true },
-      { text: reasoning },
+        : [
+            {
+              ...withRange({ text: standsOut.text, range: standsOut.range }),
+              label: STANDS_OUT_LABEL,
+              spoken: `${STANDS_OUT_LABEL}: ${standsOut.text}`,
+            },
+          ]),
+      { text: reasoning, label: REASONING_LABEL },
     ]);
   }
 

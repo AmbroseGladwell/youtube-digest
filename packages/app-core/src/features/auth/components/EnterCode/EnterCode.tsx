@@ -97,9 +97,15 @@ export function EnterCode(props: EnterCodeProps) {
             <span className={`${styles.field} ${serverInvalid ? styles.fieldInvalid : ""}`}>
               <StrokeIcon name="link" size={16} />
               <input
+                id={`${ids}-server`}
+                name="server-url"
                 className={styles.input}
                 type="url"
                 autoComplete="off"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={serverUrl}
                 onChange={(event) => setServerUrl(event.target.value)}
                 aria-invalid={serverInvalid}
@@ -120,6 +126,8 @@ export function EnterCode(props: EnterCodeProps) {
             {inMail ? "Code from the email" : fromEmail ? "Code from the email link" : "Code from the web app"}
           </span>
           <input
+            id={`${ids}-code`}
+            name="one-time-code"
             className={`${styles.code} ${problem !== null ? styles.codeInvalid : ""}`}
             type="text"
             inputMode="text"

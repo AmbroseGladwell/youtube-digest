@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { NOVELTY_BASIS } from "./noveltyLabel.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import {
   HOW_TO_APPLY_SECTION,
@@ -34,7 +33,7 @@ test("titles the claim section 'No clear claim' when the overview is thin", () =
   assert.ok(!noteSectionNames(lines).includes("Verdict"));
 });
 
-test("shows the verdict as its label, what it was judged against as a footnote, then the reasoning, and speaks only the reasoning", () => {
+test("shows the novelty beside the Verdict heading, then the reasoning under Why, and speaks only the reasoning", () => {
   const lines = overviewNoteLines(
     makeOverview({
       verdict: {
@@ -49,14 +48,12 @@ test("shows the verdict as its label, what it was judged against as a footnote, 
   );
 
   assert.deepEqual(lines.filter((line) => line.section === "Verdict"), [
-    { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict" },
-    { section: "Verdict", heading: false, bullet: false, text: "Common knowledge.", spoken: "" },
-    { section: "Verdict", heading: false, bullet: false, text: NOVELTY_BASIS, spoken: "", footnote: true },
-    { section: "Verdict", heading: false, bullet: false, text: "Standard advice." },
+    { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict", chip: "Common knowledge" },
+    { section: "Verdict", heading: false, bullet: false, text: "Standard advice.", label: "Why" },
   ]);
 });
 
-test("names what stands out after the label, speaks it, and carries the stretch of the video it is in", () => {
+test("names what stands out first under its own sub-label, speaks it with the sub-label, and carries the stretch of the video it is in", () => {
   const lines = overviewNoteLines(
     makeOverview({
       verdict: {
@@ -72,9 +69,11 @@ test("names what stands out after the label, speaks it, and carries the stretch 
 
   assert.deepEqual(
     lines.filter((line) => line.section === "Verdict" && !line.heading).map((line) => line.text),
-    ["Fresh angle.", "What stands out: A worked spreadsheet for the drawdown.", NOVELTY_BASIS, "Standard advice otherwise."],
+    ["A worked spreadsheet for the drawdown.", "Standard advice otherwise."],
   );
-  assert.deepEqual(lines.find((line) => line.text.startsWith("What stands out"))?.range, { startMs: 60_000, endMs: 90_000 });
+  const standsOut = lines.find((line) => line.label === "What stands out");
+  assert.equal(standsOut?.spoken, "What stands out: A worked spreadsheet for the drawdown.");
+  assert.deepEqual(standsOut?.range, { startMs: 60_000, endMs: 90_000 });
 });
 
 test("gives every key point and every action its own tappable line", () => {

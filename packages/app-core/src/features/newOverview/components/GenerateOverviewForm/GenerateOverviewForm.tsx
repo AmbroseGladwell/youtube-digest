@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../../app/Routes.js";
@@ -63,6 +63,7 @@ export function GenerateOverviewForm({
   const keysReady = readiness === "ready";
   const [validationError, setValidationError] = useState<string | null>(null);
   const analytics = useAnalytics();
+  const urlFieldId = useId();
   useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "dialog" }),
   );
@@ -100,7 +101,14 @@ export function GenerateOverviewForm({
       <label className={styles.field}>
         <span className={styles.label}>YouTube link</span>
         <input
+          id={urlFieldId}
+          name="video-url"
           type="url"
+          autoComplete="off"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           className={styles.urlInput}
           placeholder={playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link"}
           value={url}

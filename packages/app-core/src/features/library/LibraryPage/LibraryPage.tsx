@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
@@ -94,6 +94,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
+  const searchId = useId();
   const searchSettled = useRef(() => {});
   useTypingSettled(view.filters.query, () => searchSettled.current());
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
@@ -303,7 +304,11 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               </span>
             )}
             <input
+              id={searchId}
+              name="library-search"
               type="search"
+              autoComplete="off"
+              enterKeyHint="search"
               className={styles.searchInput}
               placeholder={filters.tag === null ? "Search claims, channels, tags" : "Search within"}
               value={filters.query}
