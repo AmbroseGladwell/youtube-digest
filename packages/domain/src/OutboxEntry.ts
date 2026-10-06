@@ -8,6 +8,7 @@ export type OutboxChange =
   | { op: "replace"; record: Record<string, unknown> }
   | { op: "topics"; topicIds: string[] }
   | { op: "captureReason"; captureReason: string | null }
+  | { op: "tags"; tags: string[] }
   | { op: "state"; patch: Record<string, unknown> }
   | { op: "settings"; patch: Record<string, unknown> }
   | { op: "delete" }

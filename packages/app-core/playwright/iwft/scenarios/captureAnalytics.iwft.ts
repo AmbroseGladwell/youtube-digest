@@ -39,6 +39,8 @@ test("making an overview is counted from asking to reading it, with where it was
           reasonGiven: false,
           novelty: "original",
           standsOut: true,
+          tagsReused: 0,
+          tagsAdded: 3,
         },
       },
       { name: "capture.newOverviewDialog.readChosen", props: { overviewId: overview!.id, from: "dialog" } },

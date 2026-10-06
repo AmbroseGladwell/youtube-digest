@@ -8,6 +8,7 @@ export interface SyncApi {
   createOverview(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   setOverviewTopics(id: string, topicIds: string[], updatedAt: string): Promise<WrittenRecord>;
   setOverviewCaptureReason(id: string, captureReason: string | null, updatedAt: string): Promise<WrittenRecord>;
+  setOverviewTags(id: string, tags: string[], updatedAt: string): Promise<WrittenRecord>;
   setOverviewState(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteOverview(id: string): Promise<WrittenRecord | null>;
   createTopic(record: Record<string, unknown>): Promise<WrittenRecord>;

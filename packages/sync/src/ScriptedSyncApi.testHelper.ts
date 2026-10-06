@@ -71,6 +71,10 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("setOverviewCaptureReason", [id, captureReason, updatedAt], () => this.#written(id));
   }
 
+  async setOverviewTags(id: string, tags: string[], updatedAt: string) {
+    return this.#answer("setOverviewTags", [id, tags, updatedAt], () => this.#written(id));
+  }
+
   async setOverviewState(id: string, patch: Record<string, unknown>, updatedAt: string) {
     return this.#answer("setOverviewState", [id, patch, updatedAt], () => this.#written(id));
   }

@@ -442,7 +442,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, with the novelty it came out at and whether it named what stands out; its duration measured by the app",
+        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, and how many of its tags were already in the library; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -451,6 +451,8 @@ export const analyticsEvents = {
           reasonGiven: z.boolean(),
           novelty: z.enum([...Novelty.options, "none"]),
           standsOut: z.boolean(),
+          tagsReused: z.number().int().nonnegative(),
+          tagsAdded: z.number().int().nonnegative(),
         },
       ),
       failed: event("An overview the reader asked for could not be made, and why", {

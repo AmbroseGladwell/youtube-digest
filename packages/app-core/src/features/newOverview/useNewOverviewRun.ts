@@ -69,6 +69,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const { from } = options;
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
+      let tagging = { reused: 0, added: 0 };
       analytics.capture.newOverview.started({ from });
 
       draftRef.current = "";
@@ -95,6 +96,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
             }
           },
           isCancelled: () => !isCurrent(),
+          onTagged: (counted) => {
+            tagging = counted;
+          },
         },
         {
           onSuccess: (overview) => {
@@ -110,6 +114,8 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 reasonGiven: saved.captureReason !== null,
                 novelty: saved.verdict?.novelty ?? "none",
                 standsOut: saved.verdict?.standsOut != null,
+                tagsReused: tagging.reused,
+                tagsAdded: tagging.added,
               });
               setRun((current) =>
                 current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },

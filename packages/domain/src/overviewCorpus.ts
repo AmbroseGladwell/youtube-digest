@@ -93,6 +93,11 @@ const version7 = {
   schemaVersion: 7,
 };
 
+const version8 = {
+  ...version7,
+  schemaVersion: 8,
+};
+
 // One curated record per version, exercising every field at that version — which an
 // arbitrary real record does not guarantee, and which is why these are written rather
 // than harvested from a dev profile (docs/features/record-migrations.md).
@@ -104,4 +109,5 @@ export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unk
   [5, version5],
   [6, version6],
   [7, version7],
+  [8, version8],
 ]);

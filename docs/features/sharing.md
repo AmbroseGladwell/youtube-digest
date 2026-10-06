@@ -60,8 +60,9 @@ posted, and `shares.snapshot(token)` is what a test asserts against.
 left them out. They are not: the dialog's own "Kept private" list says reason, topics and
 read state and does not mention them, the reader's own Overview tab prints them, and they
 are written with the note rather than by the reader. A copy without them is not a whole
-overview — `Filing` requires at least three, so such a copy could not even be saved into a
-library, which is how the mistake was found.
+overview — at the time `Filing` required at least three, so such a copy could not even be
+saved into a library, which is how the mistake was found. (Since OV-84 a stored note may hold
+fewer, after the reader merges or deletes tags; `docs/features/tag-reuse.md`.)
 
 **The verdict's `similarTo` is dropped** even though the rest of the verdict is shared. It
 names the titles of the reader's *other* overviews, which the recipient has no business

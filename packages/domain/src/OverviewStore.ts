@@ -30,6 +30,8 @@ export interface OverviewStore {
   // (docs/features/record-migrations.md).
   setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]): Promise<void>;
   setOverviewCaptureReason(overviewId: OverviewId, captureReason: string | null): Promise<void>;
+  // A merge, rename or delete rewrites the note's tags in place (docs/features/tag-reuse.md).
+  setOverviewTags(overviewId: OverviewId, tags: string[]): Promise<void>;
   deleteOverview(id: OverviewId): Promise<void>;
 
   listClaims(): Promise<ClaimSummary[]>;

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
+import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
 import { KEY_POINT_MAX_WORDS, KEY_POINT_TARGET_WORDS } from "./sections/coreSection.js";
 import { HOW_TO_APPLY_MAX_WORDS, HOW_TO_APPLY_TARGET_WORDS } from "./sections/howToApplySection.js";
 import type { GenerationInput } from "./GenerationInput.js";
@@ -28,6 +29,8 @@ const baseInput: GenerationInput = {
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
   pastClaims: [],
+  existingTags: [],
+  tagAliases: {},
 };
 
 test("structural fields are always in the schema, regardless of toggles", () => {
@@ -259,4 +262,20 @@ test("refuses a key point or an action over its hard word ceiling, so the retry 
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS + 1))), false);
   assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS)] }), true);
   assert.equal(accepts("howToApply", { items: [words(HOW_TO_APPLY_MAX_WORDS + 1)] }), false);
+});
+
+test("the reader's most used tags are offered for reuse, up to the cap and no further", () => {
+  const existingTags = Array.from({ length: TAG_VOCABULARY_CAP + 1 }, (_, index) => ({
+    tag: `tag-${index}`,
+    count: TAG_VOCABULARY_CAP + 1 - index,
+  }));
+  const { systemPrompt } = composePrompt({ ...baseInput, existingTags });
+  assert.ok(systemPrompt.includes(`tag-0, tag-1`));
+  assert.ok(systemPrompt.includes(`tag-${TAG_VOCABULARY_CAP - 1}`));
+  assert.ok(!systemPrompt.includes(`tag-${TAG_VOCABULARY_CAP}`));
+});
+
+test("a reader with no tags yet is told so rather than offered an empty list", () => {
+  const { systemPrompt } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("The reader has no tags yet."));
 });

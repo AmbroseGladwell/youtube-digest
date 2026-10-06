@@ -3,6 +3,7 @@ import { AnthropicModel, DEFAULT_ANTHROPIC_MODEL } from "./AnthropicModel.js";
 import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
+import { TagAliases } from "./TagAliases.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -38,6 +39,9 @@ export const Settings = z.object({
   // and the server drops their events (docs/features/analytics-consent.md).
   analyticsOptOut: z.boolean().catch(false),
   analyticsOptOutChangedAt: z.iso.datetime().nullable().catch(null),
+  // Replaced whole rather than merged one level, so that an undo can take an alias away
+  // (docs/features/tag-reuse.md).
+  tagAliases: TagAliases.catch({}),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -52,4 +56,5 @@ export const DEFAULT_SETTINGS: Settings = {
   showMilestoneCards: true,
   analyticsOptOut: false,
   analyticsOptOutChangedAt: null,
+  tagAliases: {},
 };

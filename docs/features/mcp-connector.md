@@ -196,13 +196,14 @@ again rather than seeing a protocol fault.
 
 ## The tools
 
-All five read, and are marked `readOnlyHint`. Each reads the account's live records
+All six read, and are marked `readOnlyHint`. Each reads the account's live records
 afresh, so what an assistant sees is what has reached the server through sync.
 
 | Tool | Returns |
 |---|---|
 | `search_overviews` | a light listing, newest saved first: title, channel, verdict, topics, saved date, id, and the one-line premise to choose by. 50 a page |
 | `list_topics` | every topic with how many overviews it holds, its id and description, and how many overviews are not filed |
+| `list_tags` | every tag, the video's own and the reader's, with how many overviews carry it, most used first (OV-84) |
 | `get_overview` | one note in full |
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
 | `get_transcript` | one video's transcript, by its overview's id |

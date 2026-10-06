@@ -57,12 +57,14 @@ test("each field write goes to its own route with the date of the local write", 
 
   await pushPendingWrite(api, entry({ change: { op: "topics", topicIds: ["t"] } }), null, storage);
   await pushPendingWrite(api, entry({ change: { op: "captureReason", captureReason: "why" } }), null, storage);
+  await pushPendingWrite(api, entry({ change: { op: "tags", tags: ["saas"] } }), null, storage);
   await pushPendingWrite(api, entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }), null, storage);
   await pushPendingWrite(api, entry({ kind: "settings", id: "settings", change: { op: "settings", patch: { readerContext: "me" } } }), null, storage);
 
   assert.deepEqual(api.calls, [
     { method: "setOverviewTopics", args: ["a", ["t"], AT] },
     { method: "setOverviewCaptureReason", args: ["a", "why", AT] },
+    { method: "setOverviewTags", args: ["a", ["saas"], AT] },
     { method: "setOverviewState", args: ["a", { read: true }, AT] },
     { method: "updateSettings", args: [{ readerContext: "me" }, AT] },
   ]);

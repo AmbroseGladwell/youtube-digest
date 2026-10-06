@@ -42,6 +42,8 @@ const overview = await generateOverview(
     sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
     existingTopics: [],
     pastClaims: [],
+    existingTags: [],
+    tagAliases: {},
   },
   { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOString() },
 );

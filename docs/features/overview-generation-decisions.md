@@ -333,6 +333,10 @@ spelled out verbatim in its How-to-apply section ("Year 4 Multiplication Tables
 Check... MTC age"). Tags add no search recall the rest of the overview doesn't already
 provide.
 
+**Superseded by OV-84 (`tag-reuse.md`):** tags are now kept consistent across a library and
+link overviews that share a subject, so the paragraph below, and its conclusion that tags need
+no consistency or dedup, no longer holds. It is kept as the reasoning of the time.
+
 **Decision: keep Tags as-is, as a scanning aid, not a search mechanism.** The visible,
 non-interactive badges are genuinely useful for quick recognition on their own
 merits — that doesn't need "for search" to be true to justify keeping them. Nothing
