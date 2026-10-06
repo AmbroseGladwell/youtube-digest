@@ -6,6 +6,24 @@ import { QueuedCaptureProblem } from "./QueuedCapture.js";
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
 const TranscriptRung = z.enum(["shared-cache", "extension", "service"]);
+// TranscriptFetchFailure's names, so a rung's failure can be read without the transcripts
+// package (docs/features/transcript-retrieval.md).
+const TranscriptRungFailure = z.enum([
+  "no-captions",
+  "video-unavailable",
+  "access-restricted",
+  "source-blocked",
+  "rate-limited",
+  "source-unavailable",
+  "malformed-response",
+  "source-unsupported",
+  "budget-exhausted",
+  "daily-cap",
+]);
+// The queue stopped on its own and waited: at our server's daily cap, for the moment it asked
+// us to slow down, and at an overview limit once OV-104 counts them
+// (docs/features/capture-queue.md, "Waiting at a limit").
+const QueueHoldReason = z.enum(["serverCap", "serverBusy"]);
 
 // What the app did when something it depends on let it down and it carried on anyway: a
 // line in the server's logs at warn, never an error-tracking issue and never an event
@@ -15,9 +33,18 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("transcriptFellThrough"),
-      // The rungs asked before one answered, or every rung when none did.
+      // The rungs asked before one answered, or every rung when none did, each with why it
+      // failed when it named a reason.
       passed: z
-        .array(z.object({ rung: TranscriptRung, outcome: z.enum(["unavailable", "no-answer", "failed"]) }).strict())
+        .array(
+          z
+            .object({
+              rung: TranscriptRung,
+              outcome: z.enum(["unavailable", "no-answer", "failed"]),
+              failure: TranscriptRungFailure.optional(),
+            })
+            .strict(),
+        )
         .min(1)
         .max(4),
       answeredBy: TranscriptRung.nullable(),
@@ -61,6 +88,28 @@ export const ClientWarning = z.discriminatedUnion("name", [
       // A video the queue took from a followed playlist could not be made, and why, as the
       // reader is told (docs/features/capture-queue.md, "Needs attention").
       problem: QueuedCaptureProblem,
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("captureQueueHeld"),
+      // The queue stopped asking and waited, with this many videos, until the limit resets
+      // (docs/features/capture-queue.md, "Waiting at a limit").
+      reason: QueueHoldReason,
+      waiting: z.number().int().nonnegative(),
+      resumesInSeconds: z.number().int().nonnegative(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("captureQueueResumed"),
+      // The queue carried on after waiting at a limit: the limit reset, or the extension
+      // connected and could fetch instead.
+      reason: QueueHoldReason,
+      waiting: z.number().int().nonnegative(),
+      via: z.enum(["reset", "extension"]),
       at: z.iso.datetime(),
     })
     .strict(),

@@ -69,7 +69,8 @@ Deciding whether to try the next rung used to mean asking whether an error was a
 |---|---|
 | `no-captions` | try the next rung — another source may have a track this one cannot see |
 | `access-restricted` | try the next rung |
-| `source-blocked`, `source-unavailable`, `rate-limited`, `malformed-response` | try the next rung |
+| `source-blocked`, `source-unavailable`, `rate-limited`, `malformed-response` | try the next rung. From our own server, `rate-limited` is its per-minute request limit and carries `retryAfterSeconds`; the capture queue waits it out (`capture-queue.md`, "Waiting at a limit") |
+| `budget-exhausted`, `daily-cap` | try the next rung; our own server has spent its proxy budget, or this caller's daily safety cap, and the extension can still fetch. Neither is retryable until the day turns. `daily-cap` carries `retryAfterSeconds`, which is how the capture queue knows when to carry on (`capture-queue.md`, "Waiting at a limit") |
 | `source-unsupported` | skip the rung entirely; it was never able to answer |
 | `video-unavailable` | **stop.** No rung will do better on a video that does not exist |
 
@@ -333,5 +334,14 @@ and the extension's host permission for `api.supadata.ai`.
 
 What that gave up is deliberate. Supadata's `mode=generate` transcribed videos with no
 caption track at all; those now fail with `no-captions`, and no rung can fetch them. And a
-key holder used to fetch without limit, where every reader without the extension now
-counts against `serviceTranscriptQuotas`.
+key holder used to fetch without limit, where a reader without the extension now fetches
+through our server as part of an overview, behind the daily safety cap in
+`serviceTranscriptQuotas` (`docs/architecture/server-side-transcripts.md`, "Limits").
+
+## When the ladder fails, the client says how
+
+`resolveVideo` reports `transcriptFellThrough` whenever a rung failed on the way to an
+answer, or no rung answered: each rung tried, its outcome, and its `TranscriptFetchFailure`
+when it named one (`docs/architecture/errors-and-logs.md`, "Client warnings"). Kinds and
+counts only, never a video id or a provider's message, so a queue failure can be traced
+without the server's logs.

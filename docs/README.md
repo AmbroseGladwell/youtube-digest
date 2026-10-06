@@ -35,9 +35,10 @@ Five folders, five different questions.
   issues, what a log line may carry, and how to find a failure's server lines by request id.
 - `server-side-transcripts.md` — the ladder's last rung, our own server fetching captions:
   the YouTube-ToS position, why there is a residential proxy and which one (Decodo, behind
-  one URL), direct first and the proxy only on a bot check, per-caller and global daily
-  limits kept in Postgres, a server fetch going into the shared cache confirmed, the
-  client rung and readiness, logs and spend, and turning it on.
+  one URL), direct first and the proxy only on a bot check, transcripts as part of an
+  overview behind a per-caller daily safety cap that counts only what was stored, the global
+  proxy budget, both kept in Postgres, a server fetch going into the shared cache confirmed,
+  the client rung and readiness, logs and spend, and turning it on.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, the TTS
   pool deployed from CI only when it changed, and how the extension gets its id, its server
@@ -95,7 +96,8 @@ Five folders, five different questions.
   Settings › YouTube playlists, unfollowing, and the From line an overview keeps.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
-  the strip's six states; what needs attention and why; and waiting without a key.
+  the strip's seven states; what needs attention and why; waiting without a key; and
+  waiting at a limit, with the reason and resume time and no dead Try again.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.

@@ -11,6 +11,8 @@ const LOGGED_DETAILS = new Set([
   "schemaVersion",
   "minSupportedClientVersion",
   "limit",
+  "daily",
+  "retryAfterSeconds",
 ]);
 
 export function logRefused(

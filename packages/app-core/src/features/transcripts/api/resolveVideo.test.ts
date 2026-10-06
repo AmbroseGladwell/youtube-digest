@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { VideoId, type ClientWarningReport, type TranscriptStore, type VideoSource } from "@overview/domain";
+import { TranscriptFetchError } from "@overview/transcripts";
 import type { TranscriptSource, TranscriptTier } from "../types/TranscriptSource.js";
 import { resolveVideo } from "./resolveVideo.js";
 
@@ -22,12 +23,13 @@ const emptyStore: TranscriptStore = {
   deleteTranscript: async () => undefined,
 };
 
-const rung = (tier: TranscriptTier, answer: "answers" | "no-answer" | "throws"): TranscriptSource => ({
+const rung = (tier: TranscriptTier, answer: "answers" | "no-answer" | "throws" | "daily-cap"): TranscriptSource => ({
   tier,
   cost: "free",
   isReady: async () => true,
   resolve: async () => {
     if (answer === "throws") throw new Error("Simulated: the rung failed");
+    if (answer === "daily-cap") throw new TranscriptFetchError("Simulated: the cap", { failure: "daily-cap", sourceId: tier });
     return answer === "no-answer" ? null : { video, transcript: segments, generated: false };
   },
 });
@@ -73,5 +75,21 @@ describe("resolveVideo's warnings", () => {
 
     expect(outcome).toBe("failed");
     expect(warnings).toEqual([expect.objectContaining({ name: "transcriptFellThrough", answeredBy: null })]);
+  });
+
+  it("says why each rung failed when it named a reason, so a queue failure can be traced without the server's logs", async () => {
+    const { outcome, warnings } = await resolvingWith([rung("shared-cache", "no-answer"), rung("service", "daily-cap")]);
+
+    expect(outcome).toBe("failed");
+    expect(warnings).toEqual([
+      {
+        name: "transcriptFellThrough",
+        passed: [
+          { rung: "shared-cache", outcome: "no-answer" },
+          { rung: "service", outcome: "failed", failure: "daily-cap" },
+        ],
+        answeredBy: null,
+      },
+    ]);
   });
 });

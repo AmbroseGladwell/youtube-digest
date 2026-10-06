@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { FIXTURE_VIDEO_ID } from "@overview/transcripts/testing";
+import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
@@ -10,10 +11,13 @@ import { ServiceUsageRepository, usageDay } from "../transcripts/ServiceUsageRep
 
 const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
 const videoIdNumbered = (n: number) => `vid${String(n).padStart(8, "0")}`;
+const PLAYLIST_OF_NINETEEN = 19;
 
-async function serviceApp(youTube: FakeYouTube, proxyDailyFetches = 1000): Promise<TestApp> {
-  return createTestApp({}, { transcriptService: { fetches: youTube.fetches, proxyDailyFetches } });
+async function serviceApp(youTube: FakeYouTube, proxyDailyFetches = 1000, logger?: ReturnType<typeof recordingLogger>["logger"]): Promise<TestApp> {
+  return createTestApp({}, { transcriptService: { fetches: youTube.fetches, proxyDailyFetches }, ...(logger === undefined ? {} : { logger }) });
 }
+
+const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
 const askAnonymously = (testApp: TestApp, videoId: string, remoteAddress = "203.0.113.7") =>
   testApp.app.inject({ method: "POST", url: `/api/service-transcripts/${videoId}`, headers: HEADERS, remoteAddress });
@@ -133,7 +137,7 @@ test("a video with no captions is never tried through the proxy, and is not aske
   await testApp.close();
 });
 
-test("a signed-out address has a small daily quota, and is told when it can ask again", async () => {
+test("a signed-out address has a small daily safety cap, and is told when it can ask again", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
   for (let n = 1; n <= serviceTranscriptQuotas.address; n += 1) {
@@ -142,13 +146,15 @@ test("a signed-out address has a small daily quota, and is told when it can ask 
 
   const refused = await askAnonymously(testApp, videoIdNumbered(99));
 
+  assert.equal(serviceTranscriptQuotas.address, 5);
   assert.equal(refused.statusCode, 429);
   assert.equal(refused.json().error.details.daily, true);
+  assert.equal(refused.json().error.details.retryAfterSeconds, 15 * 60 * 60);
   assert.equal(refused.headers["retry-after"], String(15 * 60 * 60));
   await testApp.close();
 });
 
-test("a signed-in reader is counted by account at its plan's quota, not by address", async () => {
+test("a signed-in reader is counted by account at its plan's cap, not by address", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
   const account = await makeAccount(testApp);
@@ -161,8 +167,108 @@ test("a signed-in reader is counted by account at its plan's quota, not by addre
     answers.push((await account.inject({ method: "POST", url: `/api/service-transcripts/${videoIdNumbered(100 + n)}` })).statusCode);
   }
 
+  assert.deepEqual(serviceTranscriptQuotas, { address: 5, free: 50, plus: 100 });
   assert.deepEqual(answers.slice(0, serviceTranscriptQuotas.free), Array(serviceTranscriptQuotas.free).fill(200));
   assert.equal(answers.at(-1), 429);
+  await testApp.close();
+});
+
+test("a free account's 19-video playlist is fetched in full on one day", async () => {
+  const testApp = await serviceApp(makeFakeYouTube());
+  const account = await makeAccount(testApp);
+
+  const answers = [];
+  for (let n = 1; n <= PLAYLIST_OF_NINETEEN; n += 1) {
+    answers.push((await account.inject({ method: "POST", url: `/api/service-transcripts/${videoIdNumbered(200 + n)}` })).statusCode);
+  }
+
+  assert.deepEqual(answers, Array(PLAYLIST_OF_NINETEEN).fill(200));
+  await testApp.close();
+});
+
+test("a video with no captions gives its slot back, so it never spends the day's cap", async () => {
+  const youTube = makeFakeYouTube({ direct: "no-captions", proxy: "no-captions" });
+  const testApp = await serviceApp(youTube);
+
+  const answers = [];
+  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
+    answers.push((await askAnonymously(testApp, videoIdNumbered(n))).json().error.details.failure);
+  }
+  youTube.answers.direct = "captions";
+  const fetched = await askAnonymously(testApp, videoIdNumbered(99));
+
+  assert.deepEqual(new Set(answers), new Set(["no-captions"]));
+  assert.equal(fetched.statusCode, 200);
+  await testApp.close();
+});
+
+test("captions our server refused as unfit give the slot back", async () => {
+  const youTube = makeFakeYouTube({ direct: "another-video", proxy: "another-video" });
+  const testApp = await serviceApp(youTube);
+
+  const statuses = [];
+  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
+    statuses.push((await askAnonymously(testApp, videoIdNumbered(n))).statusCode);
+  }
+  youTube.answers.direct = "captions";
+  const fetched = await askAnonymously(testApp, videoIdNumbered(99));
+
+  assert.deepEqual(new Set(statuses), new Set([422]));
+  assert.equal(fetched.statusCode, 200);
+  await testApp.close();
+});
+
+test("readers who share one in-flight fetch spend one slot between them", async () => {
+  const youTube = makeFakeYouTube();
+  const testApp = await serviceApp(youTube);
+
+  const shared = await Promise.all(
+    Array.from({ length: serviceTranscriptQuotas.address }, () => askAnonymously(testApp, FIXTURE_VIDEO_ID)),
+  );
+  const answers = [];
+  for (let n = 2; n <= serviceTranscriptQuotas.address; n += 1) {
+    answers.push((await askAnonymously(testApp, videoIdNumbered(n))).statusCode);
+  }
+
+  assert.deepEqual(new Set(shared.map((answer) => answer.statusCode)), new Set([200]));
+  assert.deepEqual(answers, Array(serviceTranscriptQuotas.address - 1).fill(200));
+  assert.equal((await askAnonymously(testApp, videoIdNumbered(99))).statusCode, 429);
+  await testApp.close();
+});
+
+test("reaching the cap is one warn line saying who, which plan, the limit, today's count and when it resets", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await serviceApp(makeFakeYouTube(), 1000, logger);
+  const account = await makeAccount(testApp);
+  for (let n = 1; n <= serviceTranscriptQuotas.free + 1; n += 1) {
+    await account.inject({ method: "POST", url: `/api/service-transcripts/${videoIdNumbered(300 + n)}` });
+  }
+
+  const [spent] = saying(lines, "service transcript quota spent");
+  const refused = saying(lines, "request refused").filter((line) => line.code === "too_many_requests");
+  const [fetched] = saying(lines, "service transcript fetched");
+
+  assert.deepEqual(
+    { level: spent!.level, caller: spent!.caller, plan: spent!.plan, accountId: spent!.accountId, limit: spent!.limit, used: spent!.used, retryAfterSeconds: spent!.retryAfterSeconds },
+    { level: LOG_LEVELS.warn, caller: "account", plan: "free", accountId: account.accountId, limit: 50, used: 50, retryAfterSeconds: 15 * 60 * 60 },
+  );
+  assert.equal(refused.length, 1);
+  assert.deepEqual({ daily: refused[0]!.daily, retryAfterSeconds: refused[0]!.retryAfterSeconds }, { daily: true, retryAfterSeconds: 15 * 60 * 60 });
+  assert.deepEqual({ used: fetched!.used, limit: fetched!.limit }, { used: 1, limit: 50 });
+  await testApp.close();
+});
+
+test("a signed-out caller's cap line names the address counter, never the address", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await serviceApp(makeFakeYouTube(), 1000, logger);
+  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
+    await askAnonymously(testApp, videoIdNumbered(n), "203.0.113.77");
+  }
+
+  const [spent] = saying(lines, "service transcript quota spent");
+
+  assert.deepEqual({ caller: spent!.caller, plan: spent!.plan, limit: spent!.limit, used: spent!.used }, { caller: "address", plan: null, limit: 5, used: 5 });
+  assert.doesNotMatch(JSON.stringify(spent), /203\.0\.113\.77/);
   await testApp.close();
 });
 

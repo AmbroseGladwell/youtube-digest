@@ -71,7 +71,7 @@ describe("serviceTranscriptSource", () => {
     expect((error as TranscriptFetchError).message).toBe("Our server has fetched all it can today.");
   });
 
-  it("tells a reader who has spent their day's fetches what else can still fetch it", async () => {
+  it("names our server's daily cap as its own failure, carrying when it resets and what else can fetch", async () => {
     const error = await rejectionOf(
       serviceTranscriptSource(
         api({
@@ -81,8 +81,29 @@ describe("serviceTranscriptSource", () => {
       ).resolve(URL, context),
     );
 
+    expect((error as TranscriptFetchError).failure).toBe("daily-cap");
+    expect((error as TranscriptFetchError).retryAfterSeconds).toBe(60);
+    expect((error as TranscriptFetchError).message).toMatch(/after \d\d:\d\d, or the extension can fetch this one now/);
+  });
+
+  it("an ordinary per-minute refusal is a rate limit with its wait, not the daily cap", async () => {
+    const error = await rejectionOf(
+      serviceTranscriptSource(
+        api({ fetch: () => Promise.reject(new SyncRequestError("too_many_requests", 429, "slow down", { retryAfterSeconds: 10 })) }),
+      ).resolve(URL, context),
+    );
+
     expect((error as TranscriptFetchError).failure).toBe("rate-limited");
-    expect((error as TranscriptFetchError).message).toMatch(/extension/);
+    expect((error as TranscriptFetchError).retryAfterSeconds).toBe(10);
+    expect((error as TranscriptFetchError).message).toMatch(/^Our server asked us to wait a moment\. It can again after \d\d:\d\d/);
+  });
+
+  it("a refusal that gave no wait is tried again after a minute", async () => {
+    const error = await rejectionOf(
+      serviceTranscriptSource(api({ fetch: () => Promise.reject(new SyncRequestError("too_many_requests", 429, "slow down")) })).resolve(URL, context),
+    );
+
+    expect((error as TranscriptFetchError).retryAfterSeconds).toBe(60);
   });
 
   it("falls through without a word when the server has the service off", async () => {

@@ -71,8 +71,8 @@ export function LibraryQueueGroup() {
               dense={phone}
             />
           )}
-          {rows.map(({ capture, state }) => (
-            <QueueRow key={capture.videoId} capture={capture} state={state} position={null} dense={phone} />
+          {rows.map(({ capture, state, resumeTime }) => (
+            <QueueRow key={capture.videoId} capture={capture} state={state} position={null} resumeTime={resumeTime} dense={phone} />
           ))}
         </ul>
       )}

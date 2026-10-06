@@ -9,6 +9,7 @@ import { useCaptureQueueController } from "../CaptureQueueContext.js";
 import { AttentionRow } from "../components/AttentionRow/AttentionRow.js";
 import { QueueRow } from "../components/QueueRow/QueueRow.js";
 import { makingStep } from "../util/makingStep.js";
+import { queueHoldNote } from "../util/queueHoldCopy.js";
 import { waitingRows } from "../util/queueRows.js";
 import styles from "./QueuePage.module.scss";
 import { queuePageTestIds } from "./QueuePageTestIds.js";
@@ -160,6 +161,15 @@ export function QueuePage() {
         </div>
       )}
 
+      {queue.hold !== null && waitingCount > 0 && (
+        <div className={styles.held} data-testid={queuePageTestIds.heldNote}>
+          <span className={styles.heldIcon} aria-hidden="true">
+            <StrokeIcon name="clock" size={18} />
+          </span>
+          <p className={styles.heldText}>{queueHoldNote(queue.hold, waitingCount, queue.viaExtension)}</p>
+        </div>
+      )}
+
       {queue.making !== null && (
         <div className={styles.group}>
           <p className={styles.label}>Making now</p>
@@ -175,12 +185,13 @@ export function QueuePage() {
             Waiting · {rows.length.toLocaleString("en-GB")}
           </p>
           <ol className={styles.list} data-testid={queuePageTestIds.waiting}>
-            {rows.map(({ capture, state }, index) => (
+            {rows.map(({ capture, state, resumeTime }, index) => (
               <QueueRow
                 key={capture.videoId}
                 capture={capture}
                 state={state}
                 position={index + 1}
+                resumeTime={resumeTime}
                 dense
                 onRemove={() => {
                   analytics.queue.item.removed();

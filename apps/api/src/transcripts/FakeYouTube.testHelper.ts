@@ -2,7 +2,7 @@ import type { PlayerResponse, YouTubeFetch, YouTubeFetchRequest, YouTubeFetchRes
 import { JSON3_WRITTEN, makeMetadataResponse, makePlayerResponse } from "@overview/transcripts/testing";
 import type { ServiceFetches } from "./fetchThroughService.js";
 
-export type YouTubeAnswer = "captions" | "bot-check" | "no-captions" | "removed";
+export type YouTubeAnswer = "captions" | "bot-check" | "no-captions" | "removed" | "another-video";
 
 export interface FakeYouTubeRequest {
   route: "direct" | "proxy";
@@ -32,6 +32,7 @@ const playerFor = (videoId: string, answer: YouTubeAnswer): PlayerResponse => {
   }
   if (answer === "removed") return { playabilityStatus: { status: "ERROR", reason: "This video has been removed" } };
   if (answer === "no-captions") return { ...base, videoDetails, captions: { playerCaptionsTracklistRenderer: { captionTracks: [] } } };
+  if (answer === "another-video") return { ...base, videoDetails: { ...videoDetails, videoId: "notTheOne1" } };
   return { ...base, videoDetails };
 };
 
