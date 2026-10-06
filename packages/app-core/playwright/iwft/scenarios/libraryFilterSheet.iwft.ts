@@ -34,7 +34,7 @@ test("the open sheet holds the keyboard, and gives it back to the button that op
   await library.verifyFocusIsOnTheFilterButton();
 });
 
-test("the button beside the search says how many filters are set, and the sheet's foot shows what they leave", async ({
+test("the button beside the search marks filters changed from the default, and the sheet's foot shows what they leave", async ({
   launcher,
   backendSimulator,
   page,
@@ -43,12 +43,12 @@ test("the button beside the search says how many filters are set, and the sheet'
   backendSimulator.overviews.seed(makeOverview({ tags: ["energy"] }));
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();
-  await library.verifyFilterButtonSays("Filters, 1 set");
+  await library.verifyFilterButtonSays("Filters");
 
   await library.openFilters();
   await library.filterPanel.clickTagChip("saas");
   await library.showResults("Show 1 overview");
 
-  await library.verifyFilterButtonSays("Filters, 2 set");
+  await library.verifyFilterButtonSays("Filters, 1 changed");
   await library.expectCardCountToBe(1);
 });

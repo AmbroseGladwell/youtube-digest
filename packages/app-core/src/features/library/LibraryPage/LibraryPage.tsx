@@ -34,6 +34,7 @@ import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import { libraryViewState } from "../util/libraryViewState.js";
 import { libraryViewSummary } from "../util/libraryViewSummary.js";
+import { filtersChangedFromDefault } from "../util/filtersChangedFromDefault.js";
 import { useLibraryView } from "./useLibraryView.js";
 import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
 import { useFocusTrap } from "../../../util/useFocusTrap.js";
@@ -153,8 +154,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(searchParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
-  // The search says itself, so it is not one of the filters the button counts (84i).
-  const setFilters = applied.filter((filter) => filter.key !== "query").length;
+  // The dot marks a view the reader changed, not the default's own Unread; the search says
+  // itself, so it is not counted (84i, docs/features/tag-reuse.md).
+  const changedFilters = filtersChangedFromDefault(filters);
 
   // A row changed from the list stays where it is until the view changes, rather than
   // vanishing from under the pointer (docs/features/library-view.md).
@@ -314,12 +316,12 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 analytics.library.filterSheet.opened();
                 setFiltersOpen(true);
               }}
-              aria-label={setFilters === 0 ? "Filters" : `Filters, ${setFilters} set`}
+              aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
               aria-expanded={filtersOpen}
               data-testid={libraryPageTestIds.filterButton}
             >
               <StrokeIcon name="filter" size={17} />
-              {setFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+              {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
             </button>
           </div>
 
