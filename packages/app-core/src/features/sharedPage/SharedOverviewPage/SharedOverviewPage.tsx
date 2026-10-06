@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { NOVELTY_LABEL, overviewNoteLines, formatClock, type SharePayload } from "@overview/domain";
+import { NOVELTY_LABEL, overviewNoteCaptions, overviewNoteLines, formatClock, type SharePayload } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
@@ -61,6 +61,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
 
   const lines = useMemo(() => overviewNoteLines(note), [note]);
+  const captions = useMemo(() => overviewNoteCaptions(note), [note]);
   const track = useMemo(() => playerTrackFor(note, lines), [note, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
@@ -168,6 +169,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               <div className={styles.note} data-testid={sharedOverviewPageTestIds.overviewPanel}>
                 <ReadAlongNote
                   lines={lines}
+                  captions={captions}
                   activeIndex={notePlayer.activeIndex}
                     onSelectLine={notePlayer.selectLine}
                   renderRange={(line, range, active) => (
