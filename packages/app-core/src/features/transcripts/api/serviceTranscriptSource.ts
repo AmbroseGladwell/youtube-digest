@@ -3,13 +3,26 @@ import { isSyncRequestError, type ServiceTranscriptApi } from "@overview/sync";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { TranscriptSource } from "../types/TranscriptSource.js";
+import { resumesAtFrom, serverBusyResumeSentence, serverCapResumeSentence } from "../util/resumeTime.js";
+
+const BUSY_RETRY_SECONDS = 60;
+
+const retryAfterOf = (details: Record<string, unknown> | undefined): number | null => {
+  const said = details?.retryAfterSeconds;
+  return typeof said === "number" && said > 0 ? Math.ceil(said) : null;
+};
 
 const SOURCE_ID = "service";
 const STATUS_TIMEOUT_MS = 3000;
 const FAILURES = new Set<string>(Object.values(TranscriptFetchFailure));
 
-const serviceError = (message: string, failure: TranscriptFetchFailure, cause?: unknown) =>
-  new TranscriptFetchError(message, { failure, sourceId: SOURCE_ID, ...(cause === undefined ? {} : { cause }) });
+const serviceError = (message: string, failure: TranscriptFetchFailure, cause?: unknown, retryAfterSeconds?: number) =>
+  new TranscriptFetchError(message, {
+    failure,
+    sourceId: SOURCE_ID,
+    ...(cause === undefined ? {} : { cause }),
+    ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+  });
 
 function asServiceError(error: unknown): TranscriptFetchError | null {
   if (!isSyncRequestError(error)) {
@@ -26,11 +39,22 @@ function asServiceError(error: unknown): TranscriptFetchError | null {
       error,
     );
   }
-  if (error.code === "too_many_requests" && error.details?.daily === true) {
+  if (error.code === "too_many_requests") {
+    const retryAfterSeconds = retryAfterOf(error.details);
+    if (error.details?.daily === true) {
+      return serviceError(
+        serverCapResumeSentence(resumesAtFrom(retryAfterSeconds, new Date())),
+        TranscriptFetchFailure.DAILY_CAP,
+        error,
+        retryAfterSeconds ?? undefined,
+      );
+    }
+    const waitSeconds = retryAfterSeconds ?? BUSY_RETRY_SECONDS;
     return serviceError(
-      "You've used today's transcripts from our server. The extension can still fetch this one, or try again tomorrow.",
+      serverBusyResumeSentence(resumesAtFrom(waitSeconds, new Date())),
       TranscriptFetchFailure.RATE_LIMITED,
       error,
+      waitSeconds,
     );
   }
   return serviceError("Our server could not fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);

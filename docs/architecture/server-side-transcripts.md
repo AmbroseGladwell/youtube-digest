@@ -99,29 +99,42 @@ Two kinds, and both live in Postgres (`service_transcript_usage`), not in the pr
 memory like the request limits in `api.md`. A deploy resetting a request window only
 forgives a caller, but a reset budget would spend real money twice.
 
-**Per caller, every cold fetch.** A shared-cache hit is free and never counted. A fetch
-that reaches YouTube is counted whether it went direct or through the proxy, because a
-direct fetch spends our address's reputation, and that is what the proxy exists to
-protect.
+**Transcripts from our server are part of an overview, not a quota of their own** (decided
+6 Oct 2026, OV-107). A fetch is allowed while the reader has an overview left: on either key
+this month for an account (`tiers.md`), or in the trial when signed out. Readers only ever
+see the overview count. That check lands with OV-102 (accounts) and OV-103 (the trial);
+until then the safety cap below is the only gate.
 
-| Caller | Fetches a UTC day |
+**A daily safety cap per caller.** It protects our address's standing with YouTube, not our
+money, and sits well above normal use. Only a cold fetch that stored a transcript counts: a
+slot is reserved before the fetch and given back when the fetch fails or `transcriptFault`
+refuses what came back, so a video with no captions costs nothing (`ServiceUsageRepository`,
+`reserveFetch` and `releaseFetch`, the same pattern as the proxy budget). A shared-cache hit
+is free, and so is joining a fetch another reader started a moment ago: only the reader who
+started it holds a slot.
+
+| Caller | Cold fetches a UTC day |
 |---|---|
-| Signed out, per address | 3 |
-| A free account | 10 |
-| A Plus account | 50 |
+| Signed out, per address | 5 |
+| A free account | 50 |
+| A Plus account | 100 |
 
-Signed-out readers can use the rung (decided 5 Oct 2026), because a web reader with no
-account is exactly who has no other rung. Their address is stored only as a truncated
-SHA-256, and per-caller rows are deleted after seven days. Past the quota, the answer is
-`429 too_many_requests` with `details.daily: true` and a `Retry-After` at UTC midnight. The
-reader is told their other options.
+`byo-plus: 100` joins when OV-102 adds the plan. Signed-out readers can use the rung
+(decided 5 Oct 2026), because a web reader with no account is exactly who has no other
+rung; signed out, our server fetches only for the trial's overviews. Their address is stored
+only as a truncated SHA-256, and per-caller rows are deleted after seven days. Past the cap,
+the answer is `429 too_many_requests` with `details.daily: true`, `details.retryAfterSeconds`
+and a `Retry-After` at UTC midnight, and the server logs `service transcript quota spent` at
+warn (below). The client turns it into the `daily-cap` failure: the reader is told when it
+resets, in their own clock, and that the extension can fetch now; the capture queue waits at
+it rather than failing (`docs/features/capture-queue.md`, "Waiting at a limit").
 
 **Global, proxied fetches only.** One proxied fetch is reserved before the proxy is
 touched and released if no request went through it. When none is left, the failure is
 `budget-exhausted`, a `TranscriptFetchFailure` of its own: the reader is told our server
 has fetched what it can today, and that the extension can still fetch it. It is not retryable.
 
-The quotas are constants in `serviceTranscriptQuotas`. The global cap is
+The caps are constants in `serviceTranscriptQuotas`. The global cap is
 `TRANSCRIPT_PROXY_DAILY_FETCHES`, default 1,000 (about 100 MB, or $0.40 a day).
 
 ## What happens on a request
@@ -132,11 +145,12 @@ The quotas are constants in `serviceTranscriptQuotas`. The global cap is
 1. **The shared cache first.** A confirmed copy is returned straight away. The client
    asked it a moment ago, but two readers can race, and this costs one row read.
 2. **A recent no.** A video that had no captions, or doesn't exist, is answered from
-   memory for six hours rather than asked again.
-3. **The caller's quota** is taken.
-4. **One fetch per video.** Readers asking at the same moment share one in-flight fetch.
-   That map is in memory, which is exact on one machine (`deploy.md`). With two machines,
-   a second fetch is possible and harmless: both copies hash the same.
+   memory for six hours rather than asked again, before any cap is touched.
+3. **One fetch per video.** Readers asking at the same moment share one in-flight fetch,
+   and only the one who started it is counted. That map is in memory, which is exact on one
+   machine (`deploy.md`). With two machines, a second fetch is possible and harmless: both
+   copies hash the same.
+4. **The caller's slot** is reserved, and given back at step 5 or 6 if nothing is stored.
 5. **Direct, then the proxy**, with a 10-second timeout per request.
 6. **Into the shared cache, confirmed.** The usual rule is that two accounts have to
    agree before a copy is served (`shared-transcript-cache.md`), because the server can't
@@ -172,12 +186,19 @@ other.
 
 | Line | Level | Carries |
 |---|---|---|
-| `service transcript fetched` | info | `via`, `proxySessions`, `proxyBytes`, `generated`, `segments`, `ms` |
+| `service transcript fetched` | info | `via`, `proxySessions`, `proxyBytes`, `generated`, `segments`, `ms`, and today's `used` beside the caller's `limit` |
 | `service transcript answered from the shared cache` | info | |
 | `service transcript failed` | warn | `failure`, `proxyBytes`, `ms` |
 | `service transcript refused` | warn | `fault`, `via` |
+| `service transcript quota spent` | warn | `caller` (`account` or `address`), `plan` (`null` for an address), `accountId` for an account and never the address, `limit`, `used`, `retryAfterSeconds` |
+| `request refused` | warn | `code: too_many_requests` with `daily: true` and `retryAfterSeconds`, which is what tells the cap apart from a per-minute refusal |
 | `transcript proxy spend` | info | `proxyBytes`, `proxiedToday`, `proxyBytesToday` |
-| `throttled` | warn | `limit: serviceTranscriptAddress`, the per-address request limit of 60 an hour |
+| `throttled` | warn | `limit: serviceTranscriptAddress`, the per-address request limit of 60 an hour. The client reads it as `rate-limited` with the `Retry-After`, and the capture queue waits it out rather than failing the video (`docs/features/capture-queue.md`, "Waiting at a limit") |
+
+A reached cap is identifiable from the one `service transcript quota spent` line: who, which
+plan, the limit and when it resets. On the client, a queue failure is traced without these
+logs through the `transcriptFellThrough` warning, which names each rung tried and its
+failure (`errors-and-logs.md`, "Client warnings").
 
 Daily spend is the global row, `select day, proxied, proxy_bytes from
 service_transcript_usage where caller = 'global'`, and the last `transcript proxy spend`
@@ -222,5 +243,7 @@ Each run carried about 563 KB of bodies.
   costs at most the cap.
 - **XML captions** (`srv1`), which the research measured at about half the size of json3
   on long videos. The parser is json3-only. Worth doing if spend ever matters.
-- **Counting only accounts of some age** toward the quota, if magic-link accounts are
+- **Counting only accounts of some age** toward the cap, if magic-link accounts are
   ever made in bulk to farm it.
+- **The "an overview left" check** in front of the safety cap: OV-102 for accounts, OV-103
+  for the signed-out trial.

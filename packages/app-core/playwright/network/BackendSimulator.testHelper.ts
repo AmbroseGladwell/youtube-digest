@@ -125,6 +125,9 @@ export class BackendSimulator {
   #sharedTranscripts = new Map<string, StoredTranscript>();
   // On, as it is in production, answering for the fixture video; null is the service off.
   #serviceTranscripts: Map<string, StoredTranscript> | null = new Map([[IWFT_VIDEO_ID, makeServiceTranscriptFixture()]]);
+  // Our server turning this caller away for now: at the daily safety cap, or asked to slow
+  // down for a moment; null when it answers.
+  #serviceRefusal: { daily: boolean; retryAfterSeconds: number } | null = null;
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
   #signInAttempts: string[] = [];
@@ -493,6 +496,19 @@ export class BackendSimulator {
         onDefault: () => {
           if (this.#serviceTranscripts === null) {
             return { status: 503, body: { error: { code: "unavailable", message: "Simulated: the service is off" } } };
+          }
+          if (this.#serviceRefusal !== null) {
+            const { daily, retryAfterSeconds } = this.#serviceRefusal;
+            return {
+              status: 429,
+              body: {
+                error: {
+                  code: "too_many_requests",
+                  message: daily ? "Simulated: as many transcripts as our server fetches for you in a day" : "Simulated: too many requests",
+                  details: { ...(daily ? { daily: true } : {}), retryAfterSeconds },
+                },
+              },
+            };
           }
           const videoId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
           const fetched = this.#serviceTranscripts.get(videoId);
@@ -996,6 +1012,18 @@ export class BackendSimulator {
     // A server with its fetching switched off, which says so before anything is asked.
     serviceIsOff: (): void => {
       this.#serviceTranscripts = null;
+    },
+    // This caller has reached our server's daily safety cap, which resets in this many
+    // seconds (docs/architecture/server-side-transcripts.md, "Limits").
+    serviceCapReached: (resetsInSeconds: number): void => {
+      this.#serviceRefusal = { daily: true, retryAfterSeconds: resetsInSeconds };
+    },
+    // The ordinary per-address request limit: asked to slow down for this many seconds.
+    serviceBusy: (retryAfterSeconds: number): void => {
+      this.#serviceRefusal = { daily: false, retryAfterSeconds };
+    },
+    serviceAnswersAgain: (): void => {
+      this.#serviceRefusal = null;
     },
     isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
   };

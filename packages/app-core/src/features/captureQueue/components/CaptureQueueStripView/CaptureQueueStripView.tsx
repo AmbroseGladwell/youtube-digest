@@ -22,6 +22,7 @@ export interface CaptureQueueStripViewProps {
 const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
   making: null,
   paused: "pause",
+  held: "clock",
   checked: "refresh",
   noKey: "key",
   attention: "alert",
@@ -142,6 +143,7 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
             {unfold ?? queueLink(compact ? null : "Queue")}
           </>
         );
+      case "held":
       case "checked":
         return unfold ?? queueLink(compact ? null : "Queue");
       case "noKey":

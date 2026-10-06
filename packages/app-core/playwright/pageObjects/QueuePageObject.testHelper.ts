@@ -56,6 +56,16 @@ export class QueuePageObject extends PageObject {
 
   verifyNoKeyNote = () => this.step("verifyNoKeyNote", () => this.expectToBeVisible(queuePageTestIds.noKeyNote));
 
+  verifyHeldNoteReads = (text: string | RegExp) =>
+    this.step("verifyHeldNoteReads", () => expect(this.get(queuePageTestIds.heldNote)).toHaveText(text));
+
+  verifyHeldNoteIsAbsent = () => this.step("verifyHeldNoteIsAbsent", () => this.expectToHaveCount(queuePageTestIds.heldNote, 0));
+
+  verifyTryAgainIsOffered = (offered: boolean) =>
+    this.step(`verifyTryAgainIsOffered ${offered}`, () =>
+      offered ? this.expectToBeVisible(attentionRowTestIds.retryButton) : this.expectToHaveCount(attentionRowTestIds.retryButton, 0),
+    );
+
   verifyPauseIsOffered = (offered: boolean) =>
     this.step(`verifyPauseIsOffered ${offered}`, () =>
       offered ? this.expectToBeVisible(queuePageTestIds.pauseButton) : this.expectToHaveCount(queuePageTestIds.pauseButton, 0),

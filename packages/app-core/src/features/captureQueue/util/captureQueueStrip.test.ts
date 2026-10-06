@@ -8,6 +8,8 @@ const idle: CaptureQueueStripInput = {
   skipped: 0,
   paused: false,
   needsKey: false,
+  hold: null,
+  viaExtension: true,
   batch: null,
   notice: null,
   attentionDismissed: false,
@@ -41,6 +43,13 @@ describe("captureQueueStrip", () => {
 
   it("paused, says how many wait", () => {
     expect(captureQueueStrip({ ...idle, waiting: 10, paused: true })).toEqual({ kind: "paused", waiting: 10 });
+  });
+
+  it("waiting at our server's cap, says so with when it resumes, and the reader's pause still wins", () => {
+    const hold = { reason: "serverCap" as const, resumesAt: Date.parse("2026-10-07T00:00:00.000Z") };
+    expect(captureQueueStrip({ ...idle, waiting: 9, hold })).toEqual({ kind: "held", hold, waiting: 9, viaExtension: true });
+    expect(captureQueueStrip({ ...idle, waiting: 9, hold, paused: true })).toEqual({ kind: "paused", waiting: 9 });
+    expect(captureQueueStrip({ ...idle, waiting: 0, hold })).toBeNull();
   });
 
   it("once the queue empties with problems, says how many need attention until dismissed", () => {

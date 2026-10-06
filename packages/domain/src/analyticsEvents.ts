@@ -83,6 +83,7 @@ export const CaptureFailure = z.enum([
   "malformed-response",
   "source-unsupported",
   "budget-exhausted",
+  "daily-cap",
   "noTranscriptSource",
   "generation",
   "unknown",

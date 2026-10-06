@@ -8,6 +8,10 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 
 const API_KEYS = { anthropicApiKey: "sk-ant-test" };
 const ORIGIN = { id: PlaylistId.parse(PSYCHOLOGY_ID), title: "Psychology" };
+const EVENING = new Date("2026-10-06T21:30:00.000Z");
+const CAP_RESETS_IN_SECONDS = 2.5 * 60 * 60;
+// Written in the runner's own clock, as the app writes it for the reader.
+const RESUME_TIME = new Date(EVENING.getTime() + CAP_RESETS_IN_SECONDS * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 const followed = (overrides: Partial<FollowedPlaylist> = {}): FollowedPlaylist => ({
   id: PlaylistId.parse(PSYCHOLOGY_ID),
@@ -97,6 +101,112 @@ test("a video with no captions fails, says why, and can be tried again or dismis
 
   await queue.verifyNothingWaiting();
   expect(await backendSimulator.playlists.listQueue()).toEqual([]);
+});
+
+test("a video tried again keeps its place and runs before what was already waiting", async ({ launcher, backendSimulator }) => {
+  backendSimulator.transcripts.seedService(makeServiceTranscriptFixture("secondVideo1", "How Your Brain Fills In the Gaps"));
+  backendSimulator.playlists.seedQueued(
+    queued("noCaptions1", "Live Q&A: Ask Me Anything", { queuedAt: "2026-10-05T09:00:00.000Z", status: "failed", problem: "noCaptions" }),
+  );
+  backendSimulator.playlists.seedQueued(queued("secondVideo1", "How Your Brain Fills In the Gaps", { queuedAt: "2026-10-05T09:00:00.001Z" }));
+  await launcher.launch({});
+  await launcher.appShell.queueStrip.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.verifyWaiting(["How Your Brain Fills In the Gaps"]);
+
+  await queue.retry("Live Q&A: Ask Me Anything");
+
+  await queue.verifyWaiting(["Live Q&A: Ask Me Anything", "How Your Brain Fills In the Gaps"]);
+  await queue.verifyWaitingStatuses(["Waiting for an API key", "Waiting for an API key"]);
+});
+
+// The definition of done for OV-107: past our server's daily cap the queue waits visibly, with
+// the reason and the resume time, offers no dead Try again, and carries on by itself after
+// the reset (docs/features/capture-queue.md, "Waiting at a limit").
+test("past our server's daily cap, the queue waits with the reason and resume time, and resumes by itself after the reset", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: EVENING });
+  backendSimulator.transcripts.seedService(makeServiceTranscriptFixture("secondVideo1", "How Your Brain Fills In the Gaps"));
+  backendSimulator.transcripts.serviceCapReached(CAP_RESETS_IN_SECONDS);
+  backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
+  backendSimulator.playlists.seedQueued(queued("secondVideo1", "How Your Brain Fills In the Gaps", { queuedAt: "2026-10-05T09:00:00.001Z" }));
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  const strip = launcher.appShell.queueStrip;
+  await strip.verifyReads("Waiting for our server", `2 waiting · these continue after ${RESUME_TIME}, or now with the extension`);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+  await strip.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.verifyHeldNoteReads(
+    `Our server has fetched as many transcripts for you as it can today. These continue after ${RESUME_TIME}, or now with the extension. Nothing has failed.`,
+  );
+  await queue.verifyWaiting(["The Simulated Video", "How Your Brain Fills In the Gaps"]);
+  await queue.verifyWaitingStatuses([`Continues after ${RESUME_TIME}`, `Continues after ${RESUME_TIME}`]);
+  await queue.verifyTryAgainIsOffered(false);
+  await expect.poll(() =>
+    backendSimulator.errors.batches().flatMap(({ warnings }) => warnings ?? []).filter(({ name }) => name === "captureQueueHeld"),
+  ).toEqual([expect.objectContaining({ name: "captureQueueHeld", reason: "serverCap", waiting: 2, resumesInSeconds: CAP_RESETS_IN_SECONDS })]);
+
+  backendSimulator.transcripts.serviceAnswersAgain();
+  // The laptop lid closed for the evening and opened after the reset, rather than every
+  // timer in between firing.
+  await page.clock.fastForward(CAP_RESETS_IN_SECONDS * 1000);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);
+  await queue.verifyHeldNoteIsAbsent();
+  await expect.poll(() =>
+    backendSimulator.errors.batches().flatMap(({ warnings }) => warnings ?? []).filter(({ name }) => name === "captureQueueResumed"),
+  ).toEqual([expect.objectContaining({ name: "captureQueueResumed", reason: "serverCap", via: "reset" })]);
+});
+
+test("a hold outlives reopening: the queue waits without asking our server again until the time has passed", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: EVENING });
+  const hold = { reason: "serverCap", resumesAt: EVENING.getTime() + CAP_RESETS_IN_SECONDS * 1000 };
+  await page.evaluate((stored) => localStorage.setItem("overview.captureQueue.noAccount", stored), JSON.stringify({ paused: false, folded: false, hold }));
+  backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  await launcher.appShell.queueStrip.verifyReads("Waiting for our server", `1 waiting · it continues after ${RESUME_TIME}, or now with the extension`);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
+
+  await page.clock.fastForward(CAP_RESETS_IN_SECONDS * 1000);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(1);
+});
+
+test("asked to slow down, the queue waits a moment and carries on, rather than failing the video", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: EVENING });
+  backendSimulator.transcripts.serviceBusy(45);
+  backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  const resumeTime = new Date(EVENING.getTime() + 45_000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const strip = launcher.appShell.queueStrip;
+  await strip.verifyReads("Waiting for our server", `1 waiting · it asked us to slow down · it continues after ${resumeTime}`);
+  await strip.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.verifyHeldNoteReads(`Our server asked us to slow down for a moment. The waiting video continues after ${resumeTime}. Nothing has failed.`);
+  await queue.verifyTryAgainIsOffered(false);
+
+  backendSimulator.transcripts.serviceAnswersAgain();
+  await page.clock.runFor(45_000);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(1);
+  await expect.poll(() =>
+    backendSimulator.errors.batches().flatMap(({ warnings }) => warnings ?? []).filter(({ name }) => name === "captureQueueHeld"),
+  ).toEqual([expect.objectContaining({ name: "captureQueueHeld", reason: "serverBusy", waiting: 1, resumesInSeconds: 45 })]);
 });
 
 test("a backfill queues private and deleted videos as skipped, saying so", async ({ launcher, backendSimulator }) => {

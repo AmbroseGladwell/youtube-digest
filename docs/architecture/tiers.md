@@ -29,9 +29,10 @@ rather than replacing it.
 
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
-| Overviews on our key | 3, in total | 10 a month | 10 a month | About $2.50 of cost a month (OV-92 sets the number) |
+| Overviews on our key | 5, in total | 10 a month | 10 a month | About $2.50 of cost a month (OV-92 sets the number) |
 | Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
-| Server transcript fetches (unchanged) | 3 a day per address | 10 a day | 50 a day | 50 a day |
+| Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
+| Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
 | Library | This device only | Synced to every device | Synced | Synced |
 | Narration, every voice | — (needs an account) | Yes | Yes | Yes |
 | Sharing an overview | — (needs an account) | Yes | Yes | Yes |
@@ -65,7 +66,7 @@ That is about half a cent an overview at worst, so 200 a month costs us at most 
 **Narration for an own-key overview renders only when it is first played,** never in
 advance, so the cost follows what readers listen to rather than what they make. A cap on
 narration renders per account per day stops one account rendering a whole library in every
-voice. The transcript proxy's caps and OV-95's playlist caps stay as they are.
+voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
 **Plus's allowance on our key is set from what an overview costs.** It isn't fixed first and
 then priced. OV-92 measures an overview on the model we choose, and Plus gets as many as
@@ -101,9 +102,10 @@ copy was wrong (`plusFeatures.ts`). The MCP connection is gated on Plus today
 (`mcp-connector.md`). That gate goes.
 
 **Signed out, your own key is unlimited,** as it is today: generation runs on the device,
-the library stays on the device, and none of our running costs apply. The transcript
-rung has its own quota. Signing up does put a monthly count on own-key use, in exchange for
-sync, narration and the MCP connection, which are what the count pays for.
+the library stays on the device, and none of our running costs apply. Our server fetches
+transcripts only for the trial's overviews, so an own-key overview signed out needs the
+extension or the shared cache. Signing up does put a monthly count on own-key use, in
+exchange for sync, narration and the MCP connection, which are what the count pays for.
 
 **Chapters, the transcript tab and personalisation are parts of an overview,** not
 features beside it. They come with every overview at every tier. Gating them would mean
@@ -144,13 +146,21 @@ an uncounted own key, OV-95's caps apply.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
   key says so plainly and points to adding a key. It doesn't fail with a generic error.
+- **Transcripts from our server are part of an overview, not a quota of their own**
+  (decided 6 Oct 2026, OV-107). A fetch is allowed while the reader has an overview left: on
+  either key this month for an account, or in the trial when signed out. Readers only ever
+  see the overview count. Behind that sits a daily safety cap per caller, 5 per signed-out
+  address, 50 per free account, 100 per Plus or BYO Plus account, which protects our
+  address's standing with YouTube rather than our money and logs a warning when reached.
+  Until OV-102 and OV-103 count overviews, the safety cap is the only gate
+  (`server-side-transcripts.md`, "Limits").
 
 ## At the limit
 
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 3 on our key:** *Sign up to keep going: a free account makes 10 a
+- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 10 a
   month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
   on-device library stays readable, and moves into the account on sign-in (OV-47).
 - **Free, after 10 on our key this month:** *You've made this month's 10. More on
@@ -164,6 +174,8 @@ ways around it. Nothing they already have stops working.
 - Reading, listening, sync, sharing and the MCP connection keep working at every limit.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
+  The same waiting state, with a different reason and resume time, is what the queue shows
+  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
 
 ## Not decided here
 

@@ -9,6 +9,7 @@ export const queuePageTestIds = {
   confirmClearButton: "QueuePage.confirmClearButton",
   keepButton: "QueuePage.keepButton",
   noKeyNote: "QueuePage.noKeyNote",
+  heldNote: "QueuePage.heldNote",
   addKeyLink: "QueuePage.addKeyLink",
   making: "QueuePage.making",
   waiting: "QueuePage.waiting",

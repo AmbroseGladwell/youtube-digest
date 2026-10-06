@@ -4,16 +4,17 @@ import { StoredTranscript, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountId } from "../auth/AccountId.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
-import type { ServiceUsageRepository } from "./ServiceUsageRepository.js";
+import type { FetchReservation, ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
 import type { TranscriptsRepository } from "./TranscriptsRepository.js";
 
 const MISSING_TTL_MS = 6 * 60 * 60 * 1000;
 
-// Cold fetches a caller may ask our server for in a UTC day; a shared-cache hit costs
-// nothing and is never counted (docs/architecture/server-side-transcripts.md, "Limits").
-export const serviceTranscriptQuotas = { address: 3, free: 10, plus: 50 } as const satisfies Record<
+// A daily safety cap per caller on cold fetches, well above normal use: it protects our
+// address's standing with YouTube, not our money. A shared-cache hit costs nothing and is
+// never counted (docs/architecture/server-side-transcripts.md, "Limits").
+export const serviceTranscriptQuotas = { address: 5, free: 50, plus: 100 } as const satisfies Record<
   "address" | Plan,
   number
 >;
@@ -47,6 +48,11 @@ const callerKey = (caller: ServiceCaller): string =>
 const quotaOf = (caller: ServiceCaller): number =>
   "accountId" in caller ? serviceTranscriptQuotas[caller.plan] : serviceTranscriptQuotas.address;
 
+const callerLogged = (caller: ServiceCaller) =>
+  "accountId" in caller
+    ? { caller: "account" as const, plan: caller.plan, accountId: caller.accountId }
+    : { caller: "address" as const, plan: null };
+
 const secondsToNextDay = (now: Date): number => {
   const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
   return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
@@ -74,18 +80,42 @@ export class ServiceTranscripts {
     const missing = this.#missing.get(videoId);
     if (missing !== undefined && missing.until > now.getTime()) throw missing.error;
 
-    if (!(await usage.takeFetch(now, callerKey(caller), quotaOf(caller)))) {
-      throw new QuotaSpentError(secondsToNextDay(now));
+    // A fetch already under way for this video is the cache a moment early: joined for free,
+    // and only the caller who started it holds a slot. Its cap is its own, so a joiner it
+    // refused asks again for itself.
+    const running = this.#inFlight.get(videoId);
+    if (running !== undefined) {
+      try {
+        return await running;
+      } catch (error) {
+        if (error instanceof QuotaSpentError) return this.resolve(videoId, caller, log);
+        throw error;
+      }
     }
 
-    const running = this.#inFlight.get(videoId);
-    if (running !== undefined) return running;
-    const fetching = this.#fetch(videoId, log).finally(() => this.#inFlight.delete(videoId));
+    const key = callerKey(caller);
+    const fetching = (async (): Promise<ServiceAnswer> => {
+      const reservation = await usage.reserveFetch(now, key, quotaOf(caller));
+      if (!reservation.reserved) {
+        const retryAfterSeconds = secondsToNextDay(now);
+        log.warn(
+          { ...callerLogged(caller), limit: reservation.limit, used: reservation.used, retryAfterSeconds },
+          "service transcript quota spent",
+        );
+        throw new QuotaSpentError(retryAfterSeconds);
+      }
+      try {
+        return await this.#fetch(videoId, log, reservation);
+      } catch (error) {
+        await usage.releaseFetch(clock(), key);
+        throw error;
+      }
+    })().finally(() => this.#inFlight.delete(videoId));
     this.#inFlight.set(videoId, fetching);
     return fetching;
   }
 
-  async #fetch(videoId: VideoId, log: FastifyBaseLogger): Promise<ServiceAnswer> {
+  async #fetch(videoId: VideoId, log: FastifyBaseLogger, reservation: FetchReservation): Promise<ServiceAnswer> {
     const { fetches, usage, transcripts, proxyDailyFetches, clock } = this.#options;
     const startedAt = clock().getTime();
     let proxyBytes = 0;
@@ -140,6 +170,8 @@ export class ServiceTranscripts {
         generated: transcript.generated,
         segments: transcript.segments.length,
         ms: clock().getTime() - startedAt,
+        used: reservation.used,
+        limit: reservation.limit,
       },
       "service transcript fetched",
     );

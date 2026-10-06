@@ -200,3 +200,19 @@ test("once our server's budget for the day is spent, the reader is told what els
 
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
+
+test("past our server's daily cap, a reader making one by hand is told when it resets and that the extension can fetch it now", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedService(serviceTranscript());
+  backendSimulator.transcripts.serviceCapReached(60 * 60);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
+
+  await form.submitUrl(VIDEO_URL);
+  await form.verifyGenerationError(
+    /^Our server has fetched as many transcripts for you as it can today\. It can again after \d\d:\d\d, or the extension can fetch this one now\.$/,
+  );
+
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+});

@@ -60,8 +60,8 @@ export class GenerateOverviewFormPageObject extends PageObject {
       expect(this.get(generateOverviewFormTestIds.validationError)).toHaveText(message),
     );
 
-  verifyGenerationError = (message: string) =>
-    this.step(`verifyGenerationError ${message}`, () =>
+  verifyGenerationError = (message: string | RegExp) =>
+    this.step(`verifyGenerationError ${String(message)}`, () =>
       expect(this.get(generateOverviewFormTestIds.generationError)).toHaveText(message),
     );
 

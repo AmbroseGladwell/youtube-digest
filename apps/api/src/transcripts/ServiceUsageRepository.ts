@@ -9,6 +9,8 @@ export interface ProxySpend {
   proxyBytes: number;
 }
 
+export type FetchReservation = { reserved: boolean; used: number; limit: number };
+
 export const usageDay = (now: Date): string => now.toISOString().slice(0, 10);
 
 // One row per UTC day and caller for what our own service fetched, and one global row per
@@ -22,20 +24,40 @@ export class ServiceUsageRepository {
     this.#sql = sql;
   }
 
-  async takeFetch(now: Date, caller: string, limit: number): Promise<boolean> {
-    if (limit < 1) return false;
+  // A slot is held for the fetch and given back unless a transcript was stored, so a video
+  // with no captions, or a fetch that failed, costs the caller nothing
+  // (docs/architecture/server-side-transcripts.md, "Limits").
+  async reserveFetch(now: Date, caller: string, limit: number): Promise<FetchReservation> {
+    if (limit < 1) return { reserved: false, used: 0, limit };
     await this.#sql.query("delete from service_transcript_usage where caller <> $1 and day < $2::date", [
       GLOBAL_CALLER,
       usageDay(new Date(now.getTime() - CALLER_RETENTION_DAYS * DAY_MS)),
     ]);
-    const rows = await this.#sql.query(
+    const rows = await this.#sql.query<{ fetches: number }>(
       `insert into service_transcript_usage (day, caller, fetches) values ($1::date, $2, 1)
        on conflict (day, caller) do update set fetches = service_transcript_usage.fetches + 1
        where service_transcript_usage.fetches < $3
        returning fetches`,
       [usageDay(now), caller, limit],
     );
-    return rows.length > 0;
+    const [row] = rows;
+    if (row !== undefined) return { reserved: true, used: row.fetches, limit };
+    return { reserved: false, used: await this.fetchesOn(usageDay(now), caller), limit };
+  }
+
+  async releaseFetch(now: Date, caller: string): Promise<void> {
+    await this.#sql.query(
+      "update service_transcript_usage set fetches = greatest(fetches - 1, 0) where day = $1::date and caller = $2",
+      [usageDay(now), caller],
+    );
+  }
+
+  async fetchesOn(day: string, caller: string): Promise<number> {
+    const [row] = await this.#sql.query<{ fetches: number }>(
+      "select fetches from service_transcript_usage where day = $1::date and caller = $2",
+      [day, caller],
+    );
+    return row?.fetches ?? 0;
   }
 
   async reserveProxy(now: Date, limit: number): Promise<boolean> {

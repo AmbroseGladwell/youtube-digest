@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { QueuedCapture, VideoId } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
+import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -23,9 +24,10 @@ import { captureQueueKeys } from "./captureQueueKeys.js";
 import { readCaptureQueuePreferences, writeCaptureQueuePreferences } from "./captureQueuePreferencesStorage.js";
 import { useCaptureQueueQuery } from "./queries/captureQueueQuery.js";
 import type { CaptureQueueStrip } from "./types/CaptureQueueStrip.js";
+import type { QueueHold } from "./types/QueueHold.js";
 import { captureQueueStrip, type QueueNotice } from "./util/captureQueueStrip.js";
 import { makingStep } from "./util/makingStep.js";
-import { queueProblemOf } from "./util/queueProblemOf.js";
+import { isQueueHoldReason, queueHoldOf, queueProblemOf } from "./util/queueProblemOf.js";
 
 const CHECKED_NOTICE_MS = 8_000;
 const DONE_NOTICE_MS = 10_000;
@@ -45,6 +47,11 @@ export interface CaptureQueueController {
   paused: boolean;
   folded: boolean;
   needsKey: boolean;
+  // Waiting at a limit, until it resets or the extension connects; nothing is asked meanwhile
+  // (docs/features/capture-queue.md, "Waiting at a limit").
+  hold: QueueHold | null;
+  // Whether the extension would be a way around a hold here: a shell with no free rung.
+  viaExtension: boolean;
   setPaused: (paused: boolean) => void;
   setFolded: (folded: boolean) => void;
   remove: (videoId: VideoId) => void;
@@ -67,6 +74,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const { apiKeys } = useApiKeys();
   const generate = useRunOverviewGeneration(apiKeys);
   const needsKey = useGenerationReadiness() !== "ready";
+  const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
 
@@ -75,7 +83,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const [batch, setBatch] = useState<{ done: number } | null>(null);
   const [notice, setNotice] = useState<QueueNotice | null>(null);
   const [attentionDismissed, setAttentionDismissed] = useState(false);
+  const holding = useRef<QueueHold | null>(null);
   const cancelled = useRef<VideoId | null>(null);
+  const waitingCount = useRef(0);
   const checked = useRef<{ library: string; playlists: Set<string> }>({ library: "", playlists: new Set() });
 
   useEffect(() => setPreferences(readCaptureQueuePreferences(accountId)), [accountId]);
@@ -83,6 +93,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const items = queue.data ?? [];
   const waiting = items.filter((capture) => capture.status === "waiting");
   const attention = items.filter((capture) => capture.status !== "waiting");
+  waitingCount.current = waiting.length;
+  const hold = preferences.hold;
+  holding.current = hold;
 
   const refresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
@@ -200,8 +213,19 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
         void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
       } catch (error) {
-        if (!(error instanceof GenerationCancelledError)) {
-          const problem = queueProblemOf(error);
+        if (error instanceof GenerationCancelledError) return;
+        const problem = queueProblemOf(error);
+        if (isQueueHoldReason(problem)) {
+          const held = queueHoldOf(error, problem, new Date());
+          holding.current = held;
+          savePreferences({ hold: held });
+          reporter.warn({
+            name: "captureQueueHeld",
+            reason: held.reason,
+            waiting: waitingCount.current,
+            resumesInSeconds: Math.max(0, Math.ceil((held.resumesAt - Date.now()) / 1000)),
+          });
+        } else {
           await captureQueueStore.saveQueued({ ...capture, status: "failed", problem });
           reporter.warn({ name: "queuedCaptureFailed", problem });
         }
@@ -210,11 +234,36 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         setMaking(null);
       }
     },
-    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter],
+    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences],
   );
 
+  const resume = useCallback(
+    (via: "reset" | "extension") => {
+      const current = holding.current;
+      if (current === null) return;
+      holding.current = null;
+      savePreferences({ hold: null });
+      reporter.warn({ name: "captureQueueResumed", reason: current.reason, waiting: waitingCount.current, via });
+    },
+    [savePreferences, reporter],
+  );
+
+  // The hold ends by itself when the limit resets, or at once when an extension connects and
+  // can fetch instead; a shell that always had one is not a connection.
+  useEffect(() => {
+    if (hold === null) return;
+    const timer = setTimeout(() => resume("reset"), Math.max(0, hold.resumesAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [hold, resume]);
+  const hadYouTubeFetch = useRef(youTubeFetch !== null);
+  useEffect(() => {
+    const has = youTubeFetch !== null;
+    if (has && !hadYouTubeFetch.current) resume("extension");
+    hadYouTubeFetch.current = has;
+  }, [youTubeFetch, resume]);
+
   const next = waiting[0] ?? null;
-  const canMake = !preferences.paused && !needsKey && !readerRunActive && making === null && queue.isSuccess;
+  const canMake = !preferences.paused && !needsKey && !readerRunActive && making === null && hold === null && queue.isSuccess;
   useEffect(() => {
     if (canMake && next !== null) void make(next);
   }, [canMake, next, make]);
@@ -244,13 +293,13 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     [making, captureQueueStore, refresh],
   );
 
+  // Its place in the oldest-first order is kept, so a video the reader tries again runs next
+  // rather than after everything already waiting (docs/features/capture-queue.md).
   const retry = useCallback(
     (videoId: VideoId) => {
       const capture = items.find((each) => each.videoId === videoId);
       if (capture === undefined) return;
-      void captureQueueStore
-        .saveQueued({ ...capture, status: "waiting", problem: null, queuedAt: new Date().toISOString() })
-        .then(refresh);
+      void captureQueueStore.saveQueued({ ...capture, status: "waiting", problem: null }).then(refresh);
     },
     [items, captureQueueStore, refresh],
   );
@@ -278,6 +327,8 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     skipped: attention.length - failed,
     paused: preferences.paused,
     needsKey,
+    hold,
+    viaExtension: youTubeFetch === null,
     batch,
     notice,
     attentionDismissed,
@@ -293,6 +344,8 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       paused: preferences.paused,
       folded: preferences.folded,
       needsKey,
+      hold,
+      viaExtension: youTubeFetch === null,
       setPaused,
       setFolded: (folded: boolean) => savePreferences({ folded }),
       remove,
@@ -305,6 +358,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         if (waiting.length === 0) setBatch(null);
       },
     }),
-    [playlistApi, waiting, attention, making, strip, preferences, needsKey, setPaused, savePreferences, remove, retry, captureQueueStore, refresh, clear],
+    [playlistApi, waiting, attention, making, strip, preferences, needsKey, hold, youTubeFetch, setPaused, savePreferences, remove, retry, captureQueueStore, refresh, clear],
   );
 }

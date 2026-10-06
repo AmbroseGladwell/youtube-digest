@@ -8,7 +8,11 @@ Following one turns that habit into overviews. A reader pastes a playlist link; 
 shows what is in it and what making it would cost, then follows it, with or without the
 videos already there. Videos added to it later are queued each time the app opens.
 
-It is for everyone, signed in or not, Free or Plus, and it has no limits yet (OV-95).
+It is for everyone, signed in or not, Free or Plus, and it has no limits of its own yet
+(OV-95). What does limit it is what limits any overview: the reader's allowance, and behind
+it our server's daily safety cap on transcript fetches, at which the queue waits visibly and
+carries on by itself (`capture-queue.md`, "Waiting at a limit"). A 19-video playlist on a
+free account with no extension is made in full.
 
 ## Public and unlisted only
 

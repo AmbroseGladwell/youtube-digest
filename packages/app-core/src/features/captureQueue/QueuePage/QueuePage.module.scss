@@ -147,7 +147,8 @@
   gap: 0.375rem;
 }
 
-.noKey {
+.noKey,
+.held {
   display: flex;
   align-items: center;
   gap: 0.75rem;

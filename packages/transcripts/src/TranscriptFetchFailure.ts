@@ -13,6 +13,9 @@ export const TranscriptFetchFailure = {
   // Our own service has spent today's proxy budget: nothing about the video, and not worth
   // retrying until tomorrow (docs/architecture/server-side-transcripts.md).
   BUDGET_EXHAUSTED: "budget-exhausted",
+  // Our own service has reached this caller's daily safety cap: nothing about the video, and
+  // the extension can still fetch it (docs/architecture/server-side-transcripts.md).
+  DAILY_CAP: "daily-cap",
 } as const;
 
 export type TranscriptFetchFailure =
@@ -37,6 +40,7 @@ const WORTH_ANOTHER_SOURCE: ReadonlySet<TranscriptFetchFailure> = new Set([
   TranscriptFetchFailure.SOURCE_UNSUPPORTED,
   TranscriptFetchFailure.RATE_LIMITED,
   TranscriptFetchFailure.BUDGET_EXHAUSTED,
+  TranscriptFetchFailure.DAILY_CAP,
 ]);
 
 export const isWorthAnotherSource = (failure: TranscriptFetchFailure): boolean =>

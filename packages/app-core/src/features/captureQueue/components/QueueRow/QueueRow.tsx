@@ -3,7 +3,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./QueueRow.module.scss";
 import { queueRowTestIds } from "./QueueRowTestIds.js";
 
-export type QueueRowState = "making" | "next" | "waiting" | "noKey";
+export type QueueRowState = "making" | "next" | "waiting" | "noKey" | "held";
 
 export interface QueueRowProps {
   capture: QueuedCapture;
@@ -11,20 +11,25 @@ export interface QueueRowProps {
   position: number | null;
   step?: string;
   progress?: number;
+  // When a held video continues, written out (docs/features/capture-queue.md, "Waiting at a limit").
+  resumeTime?: string | undefined;
   dense?: boolean;
   onRemove?: () => void;
 }
 
-const STATUS: Record<Exclude<QueueRowState, "making">, string> = {
+const STATUS: Record<Exclude<QueueRowState, "making" | "held">, string> = {
   next: "Next",
   waiting: "Waiting",
   noKey: "Waiting for an API key",
 };
 
+const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string | undefined) =>
+  state === "held" ? `Continues after ${resumeTime ?? "the limit resets"}` : STATUS[state];
+
 // Design 27i–27j: a video that isn't an overview yet doesn't pretend to be one. No raised
 // tile but the one being made, a faded thumbnail, no verdict or topic, and its status in
 // words, so the difference never rests on colour.
-export function QueueRow({ capture, state, position, step, progress = 0, dense = false, onRemove }: QueueRowProps) {
+export function QueueRow({ capture, state, position, step, progress = 0, resumeTime, dense = false, onRemove }: QueueRowProps) {
   const making = state === "making";
   return (
     <li
@@ -51,7 +56,7 @@ export function QueueRow({ capture, state, position, step, progress = 0, dense =
               Making now{step === undefined ? "" : ` · ${step}`}
             </span>
           ) : (
-            <span data-testid={queueRowTestIds.status}>{STATUS[state]}</span>
+            <span data-testid={queueRowTestIds.status}>{statusText(state, resumeTime)}</span>
           )}
           <span aria-hidden="true">·</span>
           <span>From {capture.fromPlaylist.title}</span>

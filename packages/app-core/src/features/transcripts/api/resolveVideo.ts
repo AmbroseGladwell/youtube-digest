@@ -29,7 +29,11 @@ const warnIfDegraded = (
   if (failures.length === 0) return;
   deps.warn?.({
     name: "transcriptFellThrough",
-    passed: failures.map(({ tier, outcome }) => ({ rung: tier, outcome })),
+    passed: failures.map(({ tier, outcome, error }) => ({
+      rung: tier,
+      outcome,
+      ...(error instanceof TranscriptFetchError ? { failure: error.failure } : {}),
+    })),
     answeredBy,
   });
 };

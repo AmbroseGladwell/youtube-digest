@@ -25,6 +25,18 @@ describe("captureQueueStripCopy", () => {
     expect(captureQueueStripCopy({ kind: "done", made: 12 }, false)).toEqual({ title: "Queue done · 12 made", meta: null });
   });
 
+  it("waiting at a limit, writes the resume time out, wide and compact", () => {
+    const hold = { reason: "serverCap" as const, resumesAt: new Date(2026, 9, 7, 1, 0).getTime() };
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true }, false)).toEqual({
+      title: "Waiting for our server",
+      meta: "9 waiting · these continue after 01:00, or now with the extension",
+    });
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true }, true)).toEqual({
+      title: "Waiting · 9 continue after 01:00",
+      meta: null,
+    });
+  });
+
   it("compact, folds the detail into the title where the design does", () => {
     expect(captureQueueStripCopy({ kind: "paused", waiting: 10 }, true)).toEqual({ title: "Queue paused · 10 waiting", meta: null });
     expect(captureQueueStripCopy({ kind: "noKey", waiting: 1 }, true)).toEqual({ title: "1 waiting for an API key", meta: null });
