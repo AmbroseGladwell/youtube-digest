@@ -24,7 +24,7 @@ test("a screen that throws while it renders is reported, with what the reader di
   const overview = makeOverview();
   const broken = makeOverview({
     video: { ...overview.video, title: "My notes on the divorce" },
-    tags: "not a list" as unknown as Overview["tags"],
+    tags: [{}] as unknown as Overview["tags"],
   });
   backendSimulator.overviews.seed(broken);
   backendSimulator.connections.seedRequest(request);
@@ -41,7 +41,7 @@ test("a screen that throws while it renders is reported, with what the reader di
     .toEqual([
       expect.objectContaining({
         source: "routeBoundary",
-        type: "TypeError",
+        type: "Error",
         handled: false,
         trail: [{ name: "mcp.consentScreen.shown", at: expect.any(String) }],
       }),

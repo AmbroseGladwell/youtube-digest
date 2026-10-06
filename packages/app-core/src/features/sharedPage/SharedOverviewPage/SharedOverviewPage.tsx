@@ -10,6 +10,7 @@ import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderP
 import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { LineRangeTag } from "../../reader/components/LineRangeTag/LineRangeTag.js";
+import { RelatedByTag } from "../../reader/components/RelatedByTag/RelatedByTag.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import type { ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
@@ -184,13 +185,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     />
                   )}
                 />
-                <div className={styles.tagRow}>
-                  {note.tags.map((tag) => (
-                    <span key={tag} className={styles.tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
               </div>
             )}
             {tab === "Transcript" && (

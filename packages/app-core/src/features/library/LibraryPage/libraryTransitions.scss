@@ -1,0 +1,29 @@
+// "OV-84 4 Chip Motion" 84s, timed for useLibraryGlide. The pane is not captured during this
+// transition (AppShell.module.scss), so only the rows and the chip row are; everything else
+// stays live. Leaves are quicker than arrivals, as frontend-architecture-guide.md 2.4 asks.
+@keyframes libraryGlideLeave {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes libraryGlideEnter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:active-view-transition-type(library-glide)::view-transition-group(*) {
+    animation-duration: 280ms;
+    animation-timing-function: var(--motion-ease);
+  }
+
+  :root:active-view-transition-type(library-glide)::view-transition-old(*):only-child {
+    animation: libraryGlideLeave 120ms var(--motion-ease) both;
+  }
+
+  :root:active-view-transition-type(library-glide)::view-transition-new(*):only-child {
+    animation: libraryGlideEnter 240ms var(--motion-ease) 120ms both;
+  }
+}

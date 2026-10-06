@@ -117,6 +117,12 @@
   view-transition-name: pane;
 }
 
+// While the library glides a filter change, its rows are captured one by one rather than
+// inside the pane (features/library/LibraryPage/useLibraryGlide.ts).
+:global(:root[data-library-glide]) .pane {
+  view-transition-name: none;
+}
+
 @media (max-width: 61.9375rem) {
   .bar {
     gap: 1rem;

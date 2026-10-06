@@ -17,6 +17,44 @@
   background: var(--stone-tint);
 }
 
+// 84v/84w: a 44px circle on the default sort, a tinted pill with a short name on any other.
+// The width moves first and the name fades in after it, so the name never shows squeezed;
+// going back, the name goes first.
+.iconTrigger {
+  @include controls.surface-pill;
+
+  justify-content: flex-start;
+  gap: 0.375rem;
+  height: 2.75rem;
+  max-width: 2.75rem;
+  padding: 0 0 0 0.8125rem;
+  overflow: hidden;
+  font-size: 0.84375rem;
+
+  transition: max-width 200ms var(--motion-ease) 80ms, padding 200ms var(--motion-ease) 80ms, background var(--motion-ink) var(--motion-ease);
+}
+
+.iconTriggerWide {
+  max-width: 7rem;
+  padding-right: 0.875rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+
+  transition: max-width 200ms var(--motion-ease), padding 200ms var(--motion-ease), background var(--motion-ink) var(--motion-ease);
+}
+
+.shortLabel {
+  opacity: 0;
+
+  transition: opacity 80ms var(--motion-ease);
+}
+
+.iconTriggerWide .shortLabel {
+  opacity: 1;
+
+  transition: opacity 120ms var(--motion-ease) 80ms;
+}
+
 // The ⋯ menu's surface (OverviewActionsMenu), hung from the pill's right edge because the
 // pill sits at the right of the list head.
 .menu {
