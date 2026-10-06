@@ -584,6 +584,24 @@ export const analyticsEvents = {
     caughtUp: {
       allShown: event("The reader with nothing unread asks to see every overview"),
     },
+    // Counts only: never a tag's name (docs/architecture/analytics.md).
+    manageTags: {
+      opened: event("The reader opens Manage tags from the rail"),
+      closed: event("The reader closes Manage tags"),
+      merged: event("The reader merges tags into one, with how many tags and how many overviews it changed", {
+        tags: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      renamed: event("The reader renames a tag, onto a tag that exists or not, and how many overviews it changed", {
+        intoExisting: z.boolean(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      deleted: event("The reader deletes tags, with how many tags and how many overviews it changed", {
+        tags: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+      }),
+      undone: event("The reader undoes the last change in Manage tags"),
+    },
     filterSheet: {
       opened: event("The reader opens the filter sheet on a narrow screen"),
       closed: event("The reader closes the filter sheet on a narrow screen"),

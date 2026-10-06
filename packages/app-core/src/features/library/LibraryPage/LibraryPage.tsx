@@ -16,6 +16,7 @@ import {
 import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
+import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
 import { SortPill } from "../components/SortPill/SortPill.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
@@ -92,6 +93,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const rail = useRef<HTMLElement | null>(null);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
+  const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
   const searchSettled = useRef(() => {});
@@ -224,6 +226,11 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 analytics.library.newTopicDialog.opened();
                 setFiltersOpen(false);
                 setNewTopicOpen(true);
+              }}
+              onManageTags={() => {
+                analytics.library.manageTags.opened();
+                setFiltersOpen(false);
+                setManageTagsOpen(true);
               }}
             />
             {!railIsSheet && <div className={styles.milestones}>{milestoneStack}</div>}
@@ -439,6 +446,12 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           analytics.timeSaved.library.breakdownClosed();
           setTimeSavedOpen(false);
         }}
+      />
+
+      <ManageTagsDialog
+        open={manageTagsOpen}
+        entries={readableEntries(entries)}
+        onClose={() => setManageTagsOpen(false)}
       />
 
       <NewTopicDialog

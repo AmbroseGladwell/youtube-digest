@@ -53,7 +53,8 @@ export type StrokeIconName =
   | "pause"
   | "trash"
   | "ban"
-  | "video";
+  | "video"
+  | "pencil";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -363,6 +364,12 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <rect x="2" y="4" width="20" height="16" rx="4" />
       <path d="m10 9 5 3-5 3z" />
+    </>
+  ),
+  pencil: (
+    <>
+      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+      <path d="m15 5 4 4" />
     </>
   ),
 };

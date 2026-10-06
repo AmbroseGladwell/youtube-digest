@@ -131,9 +131,41 @@ the search field with a dot; the app keeps its existing filter bar above the lis
 button already fills while anything is set and whose applied chips include the tag. The
 running time-saved figure stays beside the count, which 84g leaves out.
 
+## Manage tags: merge, rename, delete (design 84j–84n)
+
+`Manage tags` sits at the foot of the rail's Tags group, and hides with it when there are no
+tags. It opens one dialog, a sheet on a phone: every tag with how many overviews use it, most
+used first or A–Z, a `Find a tag` field, and a checkbox per row. The action bar says what to do
+until something is selected, then offers `Rename` for one tag or `Merge…` for several, with
+`Delete` and `Clear`.
+
+- **Merge…** asks which name to keep, most used first and already chosen, or a new one, and
+  says how many overviews will carry the kept name.
+- **Rename** turns the row into a field that normalises as you type ("Saves as
+  #micro-saas-tools"), refuses a name with no letters or numbers, and says so when the name is
+  taken, where saving becomes a merge.
+- **Delete** takes the tag off every overview and blocks it, as a merge alias to nothing, so a
+  later overview cannot bring the word back. That was the design's open question; blocking is
+  its own proposal, and Undo is the way back.
+
+**No confirm step.** Every change lands at once (`planTagEdit`, then `useEditTagsMutation`,
+painted optimistically) and a notice at the top offers Undo until the dialog closes. Undo writes
+back exactly what each overview and the aliases held before, rather than running an inverse
+edit, so it is right even when a merge folded two tags on one overview into one. It undoes the
+last change; an earlier one is undone the way it was made.
+
+Escape steps back out of a rename or the merge step before it closes the dialog.
+
+**Where the build departs from the design.** The notice says where the tag now is ("Merged 3
+tags into #saas, now on 18 overviews") rather than "18 overviews updated", because only the
+overviews that carried a merged-away name were rewritten and the two numbers differ. The bar's
+one-tag state, with `Rename` in place of `Merge…`, is not drawn and follows 84l's text. The
+merge step names how many other names become aliases in figures.
+
 ## Counting
 
-`reader.relatedByTag.tagFollowed`, `overviewOpened` (with how many tags the two share) and
+`library.manageTags` counts opening and closing, merges, renames, deletes and undo, by how
+many tags and overviews, never which. `reader.relatedByTag.tagFollowed`, `overviewOpened` (with how many tags the two share) and
 `moreShown`, and `library.filters.tagChosen` and `tagCleared` count the filter by where it was set from, never
 which tag: a tag is the reader's own word, and an event may not carry one
 (`docs/architecture/analytics.md`). `capture.newOverview.finished` carries `tagsReused` and `tagsAdded`: how many of the new note's

@@ -22,7 +22,14 @@ export interface RelatedByTagProps {
 
 // The note's last section: its tags as the heading row, each opening the library filtered to
 // it, and under them the overviews sharing most of them ("OV-84 1 On the Note" 84a–84e).
-export function RelatedByTag({ tags, related, tagsLink, onTagFollowed, onOverviewOpened, onMoreShown }: RelatedByTagProps) {
+export function RelatedByTag({
+  tags,
+  related,
+  tagsLink,
+  onTagFollowed,
+  onOverviewOpened,
+  onMoreShown,
+}: RelatedByTagProps) {
   const [allShown, setAllShown] = useState(false);
   const headingId = useId();
   const animateNavigation = useShouldAnimateNavigation();

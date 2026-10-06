@@ -15,6 +15,7 @@ export interface FilterPanelProps {
   counts: LibraryFilterCounts;
   onChange: (patch: Partial<LibraryFilters>) => void;
   onNewTopic: () => void;
+  onManageTags: () => void;
 }
 
 const MORE_PANEL_ID = "FilterPanel-more";
@@ -31,7 +32,7 @@ const moreSummary = (filters: LibraryFilters): string => {
   );
 };
 
-export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: FilterPanelProps) {
+export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags }: FilterPanelProps) {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   // A tag arriving from a note opens the group the tag is in (84g).
   const [moreShown, setMoreShown] = useState(filters.tag !== null);
@@ -204,6 +205,15 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic }: F
                     {allTagsShown ? "Show fewer" : `Show all ${counts.byTag.length}`}
                   </button>
                 )}
+                <button
+                  type="button"
+                  className={styles.manageTags}
+                  onClick={onManageTags}
+                  data-testid={filterPanelTestIds.manageTagsButton}
+                >
+                  <StrokeIcon name="pencil" />
+                  Manage tags
+                </button>
               </>
             )}
           </div>
