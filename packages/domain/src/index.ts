@@ -46,6 +46,7 @@ export * from "./sellingLabel.js";
 export * from "./watchAnywayLabel.js";
 export * from "./wordCount.js";
 export * from "./NoteLine.js";
+export * from "./overviewNoteCaptions.js";
 export * from "./overviewNoteLines.js";
 export * from "./noteTiming.js";
 export * from "./readerMetaParts.js";

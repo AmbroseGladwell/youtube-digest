@@ -120,8 +120,9 @@ export class ReaderPageObject extends PageObject {
           return { top: box.y, bottom: box.y + box.height };
         };
         const chip = await rowOf(this.get(readerMastheadTestIds.channel));
-        const novelty = await rowOf(this.page.getByText("Original", { exact: true }));
-        const dubious = await rowOf(this.page.getByText(/Dubious claim/));
+        const masthead = this.get(readerMastheadTestIds.root);
+        const novelty = await rowOf(masthead.getByText("Original", { exact: true }));
+        const dubious = await rowOf(masthead.getByText(/Dubious claim/));
 
         for (const beside of [novelty, dubious]) {
           expect(beside.top).toBeLessThan(chip.bottom);
@@ -287,6 +288,17 @@ export class ReaderPageObject extends PageObject {
         .filter({ hasText: text });
       return shown ? expect(line).toBeVisible() : expect(line).toHaveCount(0);
     });
+
+  verifyNoteLabelsRead = (labels: string[]) =>
+    this.step(`verifyNoteLabelsRead ${labels.join(", ")}`, () =>
+      expect(this.get(readAlongNoteTestIds.lineLabel)).toHaveText(labels),
+    );
+
+  verifyVerdictChipReads = (text: string) =>
+    this.step(`verifyVerdictChipReads ${text}`, () => expect(this.get(readAlongNoteTestIds.chip)).toHaveText(text));
+
+  verifyNoteCaptionReads = (text: string) =>
+    this.step(`verifyNoteCaptionReads ${text}`, () => expect(this.get(readAlongNoteTestIds.caption)).toHaveText(text));
 
   clickLineWithText = (text: string) =>
     this.step(`clickLineWithText ${text}`, () =>

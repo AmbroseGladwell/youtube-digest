@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
@@ -97,6 +98,7 @@ function FirstRunHero() {
   const surface = useSurface();
   const { readiness, ready, url, setUrl, validationError, generate } = useStartFromLink();
   const analytics = useAnalytics();
+  const urlFieldId = useId();
 
   return (
     <div className={styles.hero} data-testid={homePageTestIds.hero}>
@@ -116,7 +118,14 @@ function FirstRunHero() {
             <StrokeIcon name="link" size={18} />
           </span>
           <input
+            id={urlFieldId}
+            name="video-url"
             type="url"
+            autoComplete="off"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={styles.heroInput}
             placeholder="Paste a YouTube link"
             value={url}

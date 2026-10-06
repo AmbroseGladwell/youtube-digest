@@ -101,6 +101,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
           </label>
           <input
             id="new-topic-name"
+            name="topic-name"
             type="text"
             className={styles.nameInput}
             value={name}
