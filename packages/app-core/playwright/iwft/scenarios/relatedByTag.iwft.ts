@@ -82,8 +82,8 @@ test("a tag opens the library filtered to it, and a related overview opens in th
   await reader.verifyTitle("Related 0");
 
   const library = await reader.relatedByTag.followTag("saas");
-  await library.verifySearchTagReads("#saas");
-  await library.verifyCountReads("2 tagged #saas");
+  await library.verifyChipsRead(["#saas", "Read and unread"]);
+  await library.verifyCountReads("2 overviews tagged #saas · 2 unread");
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("reader.relatedByTag.")))
     .toEqual([
@@ -101,7 +101,7 @@ test("with nothing related the tags stay, still linking, under a Tags label", as
   await related.verifyHeadingReads("Tags");
   await related.verifyNoRelated();
   const library = await related.followTag("pricing");
-  await library.verifyCountReads("1 tagged #pricing");
+  await library.verifyCountReads("1 overview tagged #pricing · 1 unread");
 });
 
 test("a note with no tags has no section at all", async ({ launcher, backendSimulator }) => {

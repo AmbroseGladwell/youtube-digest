@@ -1,6 +1,4 @@
 export const libraryPageTestIds = {
-  searchTagChip: "LibraryPage.searchTagChip",
-  removeSearchTagButton: "LibraryPage.removeSearchTagButton",
   root: "LibraryPage.root",
   list: "LibraryPage.list",
   listCount: "LibraryPage.listCount",

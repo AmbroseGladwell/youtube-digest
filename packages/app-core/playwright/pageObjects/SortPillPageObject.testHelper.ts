@@ -17,6 +17,14 @@ export class SortPillPageObject extends PageObject {
       await expect(this.get(sortPillTestIds.trigger)).toHaveAccessibleName(`Sort: ${label}`);
     });
 
+  // The narrow layout's icon: no words on the default order, a short name otherwise, and the
+  // whole order as its name either way.
+  verifyCompactReads = (shortLabel: string, label: string) =>
+    this.step(`verifyCompactReads ${shortLabel}`, async () => {
+      await expect(this.get(sortPillTestIds.trigger)).toHaveText(shortLabel);
+      await expect(this.get(sortPillTestIds.trigger)).toHaveAccessibleName(`Sort: ${label}`);
+    });
+
   verifyIsOpen = (open: boolean) =>
     this.step(`verifyIsOpen ${open}`, async () => {
       await expect(this.get(sortPillTestIds.trigger)).toHaveAttribute("aria-expanded", String(open));

@@ -1,7 +1,7 @@
 import type { Analytics } from "../../analytics/createAnalytics.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 
-export type FilterControl = "panel" | "searchChip" | "clearAll" | "reset" | "caughtUp";
+export type FilterControl = "panel" | "filterChip" | "clearAll" | "reset" | "caughtUp";
 
 // One event per filter the patch actually changes, named for the filter and carrying the
 // value it changed to: a topic by its id, a novelty or status by its own enum, never a label

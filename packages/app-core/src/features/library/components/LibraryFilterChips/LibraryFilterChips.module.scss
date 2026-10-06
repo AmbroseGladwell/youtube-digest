@@ -1,0 +1,52 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-height: 2.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 2.5rem;
+  padding-left: 0.875rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.remove {
+  @include controls.ghost-pill;
+  @include controls.circle(2.5rem);
+
+  color: inherit;
+}
+
+.more {
+  @include controls.surface-pill;
+
+  flex: none;
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  font-size: 0.84375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 0.5rem;
+  visibility: hidden;
+  pointer-events: none;
+}

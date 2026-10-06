@@ -107,35 +107,71 @@ and never a related list: it is someone else's view of one overview.
 A note's tags, here and when matching, are its own and the reader's `userTags` together
 (`overviewTags`).
 
-## Filtering the library by tag (design 84g–84i)
+## Filtering the library by tag (design 84g–84i, 84o–84v)
 
 Tags join Verdict under **More filters** in the rail, as rows like the topic rows, `#saas`
 and its count, most used first and capped at six behind `Show all N`, with the active tag
 always listed (`cappedTags`, as `cappedTopics`). A library with no tags has no Tags group at
-all. Closed, the row's summary names the tag beside the verdict ("Any verdict · #saas").
+all. Closed, the row's summary names the tag beside the verdict ("Any verdict · #saas"), and
+wraps rather than being cut off.
 
 **One tag at a time.** Picking another swaps it, and picking the active one clears it. The
 filter is the URL's `tag` param, so a note's tag links to `Routes.taggedLibrary(tag)`, and
-arriving that way opens More filters, so the tag is never set out of sight.
-
-**The tag sits in the search field** as a removable chip (`Remove tag filter saas`), and the
-placeholder becomes "Search within": a search typed beside it narrows the tagged list. The
-count under the heading reads "14 tagged #saas", counting what is shown.
+arriving that way opens More filters, so the tag is never set out of sight. A link names a
+whole view, so it also shows read overviews, and that shows as its own chip.
 
 A tag matches the note's own tags or the reader's `userTags`. An unreadable record never
 matches one, as it never matches a topic. The tag is not part of the saved view
 (`library-view.md`).
 
-**Under 992px the filters are a bottom sheet** (84i), opened from a button beside the search
-field that carries a dot only while the filters differ from the view the library opens on, so
-the default Unread alone shows none, and names how many ("Filters, 2 changed"); the search
-does not count, since the field shows it. The row of applied-filter chips that used to
-sit above the list is gone: the dot, the "Showing:" line and the tag's chip in the search say
-what is set. The sheet keeps every group, Verdict and Tags still behind More filters, and its
-foot is "Clear all" and "Show N overviews", which closes it. Filters apply as they are tapped.
+## The library's head and its chips (option C, 84o, 84r, 84v)
 
-**Where the build departs from the design.** The running time-saved figure stays beside the
-count, which 84g leaves out.
+The first cut put the tag in the search field and the count line read "14 tagged
+#founder-interview · 0m saved" beside the sort pill, which broke into three ragged lines on a
+phone. Option C reorganised the head at every width:
+
+- **Chips under the search** (`libraryFilterChips`, `LibraryFilterChips`), one for each
+  filter changed from the view the library opens on, in the order tag, topic, verdict, show:
+  `#founder-interview`, `Business`, `Fresh angle`, `Dubious only`, `Favourites`, and `Read and
+  unread` or `Read` once Unread only is off. The default view has none, and the search is not
+  one, because its own field shows it. Each × puts its own filter back to the default. The row
+  never wraps: whole chips while they fit and a `+N` for the rest (`fittingChipCount`, measured
+  from a hidden copy of the row), which opens the sheet on a narrow screen and moves focus to
+  the rail on a wide one. With chips set the field's placeholder is "Search within these".
+- **The count only counts.** With a tag set it reads "14 overviews · 14 unread", with "tagged
+  #founder-interview" there for a screen reader alone, since the chip names it.
+- **Below 992px** time saved sits on the title's baseline at the right, in a box as wide as its
+  widest figure so the rolling digits move nothing, and the count has the line under it to
+  itself. Sort is a 44px icon between the search and Filters; on any order but the newest it
+  widens into a tinted pill with a short name ("Oldest", "A–Z"), the field's placeholder
+  shortening to "Search overviews", and its name is always the whole order. There is no
+  "Showing:" line and no Reset: the chips' × and the sheet's Clear all do that job. The filters
+  are a bottom sheet (84i) from the button beside the search, which carries a dot only while the
+  filters differ from the default and names how many ("Filters, 2 changed"); its foot is "Clear
+  all" and "Show N overviews", and Verdict and Tags stay behind More filters in it.
+- **On a wide screen** the sort pill stays by the title and the "Showing:" line and Reset stay;
+  the chips sit under the search there too.
+
+## The glide (84s, "OV-84 4 Chip Motion")
+
+A filter or sort change is one movement (`useLibraryGlide`, `libraryTransitions.scss`): rows
+that stay glide to their new places over 280ms, rows that go fade where they were in 120ms,
+new ones fade in over 240ms after them, and the chip row opens or closes with them. Typing in
+the search is not glided, and narrows the list in place.
+
+It is a view transition, as `frontend-architecture-guide.md` 2.5 asks for a reorder, with two
+wrinkles. Each row and the chip row get a view-transition name only for the length of the
+transition, so a route transition still sees one pane; and the pane itself is not captured
+while the library glides (`AppShell.module.scss`), so the rows are captured one by one and the
+rest of the page stays live. Scrolled down into the list, the change lands at once and the page
+goes back to the top, rather than animating rows nobody can see. A change made mid-glide skips
+the first one to its end and glides from there.
+
+**Where the build departs from the motion file.** New rows fade in together rather than 40ms
+apart, which a view transition cannot stagger without a name per position. Under reduced motion
+the change is instant, with no crossfade. The sort menu closes at once rather than fading out
+first, and the field's placeholder swaps rather than crossfading. The time-saved figure stays
+beside the count on a wide screen, which 84g leaves out.
 
 ## Manage tags: merge, rename, delete (design 84j–84n)
 
@@ -172,7 +208,7 @@ merge step names how many other names become aliases in figures.
 
 `library.manageTags` counts opening and closing, merges, renames, deletes and undo, by how
 many tags and overviews, never which. `reader.relatedByTag.tagFollowed`, `overviewOpened` (with how many tags the two share) and
-`moreShown`, and `library.filters.tagChosen` and `tagCleared` count the filter by where it was set from, never
+`moreShown`, and `library.filters.tagChosen` and `tagCleared` (with a chip's × as `filterChip`) count the filter by where it was set from, never
 which tag: a tag is the reader's own word, and an event may not carry one
 (`docs/architecture/analytics.md`). `capture.newOverview.finished` carries `tagsReused` and `tagsAdded`: how many of the new note's
 tags were already in the library when the run read it. The MCP connector gains `list_tags`

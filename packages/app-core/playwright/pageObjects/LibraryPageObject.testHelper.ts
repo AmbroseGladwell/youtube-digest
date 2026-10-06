@@ -4,6 +4,7 @@ import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
@@ -214,14 +215,27 @@ export class LibraryPageObject extends PageObject {
   expectCardCountToBe = (count: number) =>
     this.step(`expectCardCountToBe ${count}`, () => this.expectToHaveCount(libraryOverviewCardTestIds.root, count));
 
-  verifySearchTagReads = (tag: string) =>
-    this.step(`verifySearchTagReads ${tag}`, () => expect(this.get(libraryPageTestIds.searchTagChip)).toHaveText(tag));
+  verifyChipsRead = (chips: string[]) =>
+    this.step(`verifyChipsRead ${chips.join(", ")}`, () =>
+      expect(this.page.getByRole("group", { name: "Filters set" }).locator(":scope > span, :scope > button")).toHaveText(
+        chips,
+      ),
+    );
 
-  verifyNoSearchTag = () =>
-    this.step("verifyNoSearchTag", () => this.expectNotToBeVisible(libraryPageTestIds.searchTagChip));
+  verifyNoChips = () => this.step("verifyNoChips", () => this.expectToHaveCount(libraryFilterChipsTestIds.root, 0));
 
-  removeSearchTag = () =>
-    this.step("removeSearchTag", () => this.click(libraryPageTestIds.removeSearchTagButton));
+  removeChip = (key: string) => this.step(`removeChip ${key}`, () => this.click(libraryFilterChipsTestIds.removeButton(key)));
+
+  openMoreChips = () =>
+    this.step("openMoreChips", async () => {
+      await this.click(libraryFilterChipsTestIds.moreButton);
+      await this.verifyFiltersAreOpen(true);
+    });
+
+  verifySearchPlaceholderReads = (placeholder: string) =>
+    this.step(`verifySearchPlaceholderReads ${placeholder}`, () =>
+      expect(this.get(libraryPageTestIds.searchInput)).toHaveAttribute("placeholder", placeholder),
+    );
 
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () =>

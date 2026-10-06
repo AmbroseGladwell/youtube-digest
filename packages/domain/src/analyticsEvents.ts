@@ -64,7 +64,7 @@ const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "re
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
-const FilterControl = z.enum(["panel", "appliedChip", "searchChip", "clearAll", "reset", "caughtUp"]);
+const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);

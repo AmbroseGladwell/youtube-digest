@@ -35,6 +35,10 @@ import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import { libraryViewState } from "../util/libraryViewState.js";
 import { libraryViewSummary } from "../util/libraryViewSummary.js";
 import { filtersChangedFromDefault } from "../util/filtersChangedFromDefault.js";
+import { libraryFilterChips } from "../util/libraryFilterChips.js";
+import { LibraryFilterChips } from "../components/LibraryFilterChips/LibraryFilterChips.js";
+import { libraryRowGlideName, useLibraryGlide } from "./useLibraryGlide.js";
+import "./libraryTransitions.scss";
 import { useLibraryView } from "./useLibraryView.js";
 import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
 import { useFocusTrap } from "../../../util/useFocusTrap.js";
@@ -68,9 +72,17 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data);
   const [keptIds, setKeptIds] = useState<ReadonlySet<string>>(new Set());
-  const changeView = (next: URLSearchParams) => {
-    setKeptIds(new Set());
-    change(next);
+  const main = useRef<HTMLElement | null>(null);
+  const glide = useLibraryGlide(main, searchParams.toString());
+  // Typing in the search narrows the list in place; every other change to the view glides
+  // (useLibraryGlide).
+  const changeView = (next: URLSearchParams, { animate = true }: { animate?: boolean } = {}) => {
+    const apply = () => {
+      setKeptIds(new Set());
+      change(next);
+    };
+    if (animate) glide(apply);
+    else apply();
   };
   const setOverviewState = useSetOverviewStateMutation();
   const player = usePlayer();
@@ -143,7 +155,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
     if (from !== null) recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
-    changeView(applyLibraryFilterPatch(searchParams, patch));
+    const typing = Object.keys(patch).length === 1 && "query" in patch;
+    changeView(applyLibraryFilterPatch(searchParams, patch), { animate: !typing });
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
   const resetView = () => {
@@ -157,6 +170,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   // The dot marks a view the reader changed, not the default's own Unread; the search says
   // itself, so it is not counted (84i, docs/features/tag-reuse.md).
   const changedFilters = filtersChangedFromDefault(filters);
+  const chips = libraryFilterChips(filters, topics);
 
   // A row changed from the list stays where it is until the view changes, rather than
   // vanishing from under the pointer (docs/features/library-view.md).
@@ -165,6 +179,51 @@ export function LibraryPage({ entries }: LibraryPageProps) {
     sort,
   );
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
+  const unreadShown = visible.filter((entry) => !entry.state.read).length;
+  // Only counts: with a tag set the chip under the search names it, so the line says it to a
+  // screen reader alone ("OV-84 2 Library Filter" 84o).
+  const countLine =
+    filters.tag === null ? (
+      libraryCountLine(counts, { savedHere: signedOutHere ? savedHere(surface) : null, phone })
+    ) : (
+      <>
+        {visible.length} {visible.length === 1 ? "overview" : "overviews"}
+        <span className={styles.visuallyHidden}> tagged #{filters.tag}</span> · {unreadShown} unread
+      </>
+    );
+  const timeSavedButton = (
+    <button
+      type="button"
+      className={styles.timeSaved}
+      onClick={() => {
+        setTimeSavedOpen(true);
+        analytics.timeSaved.library.breakdownOpened();
+      }}
+      aria-haspopup="dialog"
+      aria-expanded={timeSavedOpen}
+      aria-label={`Time saved: ${spokenTimeSaved(timeSaved.minutes)}`}
+      data-testid={libraryPageTestIds.timeSavedButton}
+    >
+      <TimeSavedFigure minutes={timeSaved.minutes} />
+      <span>saved</span>
+    </button>
+  );
+  const sortControl = (
+    <SortPill
+      sort={sort}
+      compact={railIsSheet}
+      onChange={(next) => {
+        analytics.library.sortPill.orderChosen({ sort: next });
+        changeView(applyLibrarySort(searchParams, next));
+      }}
+    />
+  );
+  const searchPlaceholder =
+    chips.length > 0
+      ? "Search within these"
+      : railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort
+        ? "Search overviews"
+        : "Search claims, channels, tags";
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
@@ -233,41 +292,25 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           )}
         </aside>
 
-        <main className={styles.main}>
+        <main className={styles.main} ref={main}>
           <div className={styles.listHead}>
-            <div>
-              <h1 className={styles.title}>Overviews</h1>
-              <p className={styles.listCount}>
-                <span data-testid={libraryPageTestIds.listCount}>
-                  {filters.tag === null
-                    ? libraryCountLine(counts, { savedHere: signedOutHere ? savedHere(surface) : null, phone })
-                    : `${visible.length} tagged #${filters.tag}`}
-                </span>
-                <span aria-hidden="true">·</span>
-                <button
-                  type="button"
-                  className={styles.timeSaved}
-                  onClick={() => {
-                    setTimeSavedOpen(true);
-                    analytics.timeSaved.library.breakdownOpened();
-                  }}
-                  aria-haspopup="dialog"
-                  aria-expanded={timeSavedOpen}
-                  aria-label={`Time saved: ${spokenTimeSaved(timeSaved.minutes)}`}
-                  data-testid={libraryPageTestIds.timeSavedButton}
-                >
-                  <TimeSavedFigure minutes={timeSaved.minutes} />
-                  <span>saved</span>
-                </button>
+            <div className={styles.titleBlock}>
+              {/* Narrow, time saved sits beside the title and the count has its line to itself (84o). */}
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>Overviews</h1>
+                {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
+              </div>
+              <p className={styles.listCount} aria-live="polite">
+                <span data-testid={libraryPageTestIds.listCount}>{countLine}</span>
+                {!railIsSheet && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    {timeSavedButton}
+                  </>
+                )}
               </p>
             </div>
-            <SortPill
-              sort={sort}
-              onChange={(next) => {
-                analytics.library.sortPill.orderChosen({ sort: next });
-                changeView(applyLibrarySort(searchParams, next));
-              }}
-            />
+            {!railIsSheet && sortControl}
           </div>
 
           <div className={styles.searchRow}>
@@ -275,24 +318,10 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               <span className={styles.searchIcon} aria-hidden="true">
                 <StrokeIcon name="search" size={16} />
               </span>
-              {filters.tag !== null && (
-                <span className={styles.searchTag} data-testid={libraryPageTestIds.searchTagChip}>
-                  #{filters.tag}
-                  <button
-                    type="button"
-                    className={styles.searchTagRemove}
-                    onClick={() => changeFilters({ tag: null }, "searchChip")}
-                    aria-label={`Remove tag filter ${filters.tag}`}
-                    data-testid={libraryPageTestIds.removeSearchTagButton}
-                  >
-                    <StrokeIcon name="close" size={12} />
-                  </button>
-                </span>
-              )}
               <input
                 type="search"
                 className={styles.searchInput}
-                placeholder={filters.tag === null ? "Search claims, channels, tags" : "Search within"}
+                placeholder={searchPlaceholder}
                 value={filters.query}
                 onChange={(event) => changeFilters({ query: event.target.value })}
                 aria-label="Search overviews"
@@ -309,6 +338,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 />
               )}
             </div>
+            {railIsSheet && sortControl}
             <button
               type="button"
               className={styles.filterButton}
@@ -324,6 +354,19 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
             </button>
           </div>
+
+          <LibraryFilterChips
+            chips={chips}
+            onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
+            onMore={() => {
+              if (railIsSheet) {
+                analytics.library.filterSheet.opened();
+                setFiltersOpen(true);
+              } else {
+                rail.current?.querySelector<HTMLButtonElement>("[aria-controls]")?.focus();
+              }
+            }}
+          />
 
           <div className={styles.viewLine}>
             <p className={styles.viewSummary} aria-live="polite" data-testid={libraryPageTestIds.viewSummary}>
@@ -380,49 +423,49 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             </p>
           ) : (
             <div className={styles.list} data-testid={libraryPageTestIds.list}>
-              {visible.map((entry) =>
-                entry.kind === "unreadable" ? (
-                  <LibraryUnreadableCard
-                    key={entry.record.id}
-                    onOpen={() => analytics.library.unreadableCard.opened()}
-                    readerState={readerState}
-                    record={entry.record}
-                    entering={entering.has(entry.record.id)}
-                  />
-                ) : (
-                  <LibraryOverviewCard
-                    key={entry.overview.id}
-                    overviewWithState={entry}
-                    entering={entering.has(entry.overview.id)}
-                    topicNames={entry.overview.topicIds
-                      .map((topicId) => topicNameById.get(topicId))
-                      .filter((name): name is string => name !== undefined)}
-                    onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
-                    readerState={readerState}
-                    onToggleFavourite={() => {
-                      analytics.library.overviewCard.favouriteSwitched({
-                        overviewId: entry.overview.id,
-                        favourite: !entry.state.favourite,
-                      });
-                      keepInPlace(entry.overview.id);
-                      setOverviewState.mutate({
-                        overviewId: entry.overview.id,
-                        patch: { favourite: !entry.state.favourite },
-                      });
-                    }}
-                    onToggleRead={() => {
-                      analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
-                      keepInPlace(entry.overview.id);
-                      setOverviewState.mutate({
-                        overviewId: entry.overview.id,
-                        patch: { read: !entry.state.read },
-                      });
-                    }}
-                    playing={isPlaying(entry.overview.id)}
-                    onListen={() => listen(entry.overview)}
-                  />
-                ),
-              )}
+              {visible.map((entry) => (
+                <div key={libraryEntryId(entry)} data-glide-name={libraryRowGlideName(libraryEntryId(entry))}>
+                  {entry.kind === "unreadable" ? (
+                    <LibraryUnreadableCard
+                      onOpen={() => analytics.library.unreadableCard.opened()}
+                      readerState={readerState}
+                      record={entry.record}
+                      entering={entering.has(entry.record.id)}
+                    />
+                  ) : (
+                    <LibraryOverviewCard
+                      overviewWithState={entry}
+                      entering={entering.has(entry.overview.id)}
+                      topicNames={entry.overview.topicIds
+                        .map((topicId) => topicNameById.get(topicId))
+                        .filter((name): name is string => name !== undefined)}
+                      onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
+                      readerState={readerState}
+                      onToggleFavourite={() => {
+                        analytics.library.overviewCard.favouriteSwitched({
+                          overviewId: entry.overview.id,
+                          favourite: !entry.state.favourite,
+                        });
+                        keepInPlace(entry.overview.id);
+                        setOverviewState.mutate({
+                          overviewId: entry.overview.id,
+                          patch: { favourite: !entry.state.favourite },
+                        });
+                      }}
+                      onToggleRead={() => {
+                        analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
+                        keepInPlace(entry.overview.id);
+                        setOverviewState.mutate({
+                          overviewId: entry.overview.id,
+                          patch: { read: !entry.state.read },
+                        });
+                      }}
+                      playing={isPlaying(entry.overview.id)}
+                      onListen={() => listen(entry.overview)}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </main>
