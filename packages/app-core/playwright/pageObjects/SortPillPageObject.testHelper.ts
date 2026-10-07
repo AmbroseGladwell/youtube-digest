@@ -25,6 +25,19 @@ export class SortPillPageObject extends PageObject {
       await expect(this.get(sortPillTestIds.trigger)).toHaveAccessibleName(`Sort: ${label}`);
     });
 
+  // The default order's icon is a circle with the glyph in its middle (84v). With no name the
+  // button once shrank to its content and sat as an oval, the icon nearer its right edge.
+  verifyCompactIsACircleAroundTheIcon = () =>
+    this.step("verifyCompactIsACircleAroundTheIcon", async () => {
+      const trigger = this.get(sortPillTestIds.trigger);
+      const button = (await trigger.boundingBox())!;
+      const icon = (await trigger.locator("svg").boundingBox())!;
+      expect(Math.round(button.width)).toBe(Math.round(button.height));
+      const left = icon.x - button.x;
+      const right = button.x + button.width - (icon.x + icon.width);
+      expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+    });
+
   verifyIsOpen = (open: boolean) =>
     this.step(`verifyIsOpen ${open}`, async () => {
       await expect(this.get(sortPillTestIds.trigger)).toHaveAttribute("aria-expanded", String(open));
