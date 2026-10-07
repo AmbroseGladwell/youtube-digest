@@ -3,15 +3,9 @@ import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { makeConnectingAssistant, putOnPlan } from "./ConnectingAssistant.testHelper.js";
+import { makeConnectingAssistant } from "./ConnectingAssistant.testHelper.js";
 import { AUTHORIZATION_TTL_MS, REFRESH_TOKEN_TTL_MS } from "./connectionTimings.js";
 import { resolveAccessToken } from "./resolveAccessToken.js";
-
-const plusAccount = async (testApp: TestApp): Promise<TestAccount> => {
-  const account = await makeAccount(testApp);
-  await putOnPlan(testApp, account, "plus");
-  return account;
-};
 
 const reads = (testApp: TestApp, accessToken: string) => resolveAccessToken(testApp.sql, accessToken, testApp.clock.now);
 
@@ -61,27 +55,7 @@ test("a signed-out reader cannot answer a request", async () => {
   await testApp.close();
 });
 
-test("a free reader cannot approve a connection, and the request stays open for after they upgrade", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
-  const testApp = await createTestApp();
-  const assistant = await makeConnectingAssistant(testApp);
-  const reader = await makeAccount(testApp);
-  const authorization = await assistant.startAuthorization();
-
-  const refused = await reader.inject({
-    method: "POST",
-    url: `/api/oauth/requests/${authorization.consentId}/decision`,
-    body: { approve: true },
-  });
-
-  assert.equal(refused.statusCode, 403);
-  assert.equal(refused.json().error.code, "plan_required");
-  await putOnPlan(testApp, reader, "plus");
-  const back = await assistant.approveAs(reader, authorization);
-  assert.ok(back.searchParams.get("code"));
-  await testApp.close();
-});
-
-test("a free reader can approve a connection while every account can connect", async () => {
+test("any signed-in reader can approve a connection, whatever their plan", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
@@ -115,7 +89,7 @@ test("declining sends the assistant back with access_denied and no code", async 
 test("a request can be answered once", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const authorization = await assistant.startAuthorization();
   await assistant.approveAs(reader, authorization);
 
@@ -133,7 +107,7 @@ test("a request can be answered once", async () => {
 test("a request left unanswered for half an hour lapses", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const { consentId } = await assistant.startAuthorization();
 
   testApp.clock.advance(AUTHORIZATION_TTL_MS);
@@ -156,7 +130,7 @@ test("a request id that is not one is simply not found", async () => {
 test("Settings lists the reader's connections by the app's name", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   await assistant.connect(reader);
 
   const response = await reader.inject({ method: "GET", url: "/api/connections" });
@@ -172,7 +146,7 @@ test("Settings lists the reader's connections by the app's name", async () => {
 test("a connection whose tokens have all lapsed is not listed", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   await assistant.connect(reader);
 
   testApp.clock.advance(REFRESH_TOKEN_TTL_MS / 2);
@@ -187,7 +161,7 @@ test("a connection whose tokens have all lapsed is not listed", async () => {
 test("revoking a connection in Settings cuts its access off straight away", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const tokens = await assistant.connect(reader);
   const [connection] = (await reader.inject({ method: "GET", url: "/api/connections" })).json().connections;
 
@@ -203,8 +177,8 @@ test("revoking a connection in Settings cuts its access off straight away", asyn
 test("one reader can neither see nor revoke another's connections", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const owner = await plusAccount(testApp);
-  const stranger = await plusAccount(testApp);
+  const owner = await makeAccount(testApp);
+  const stranger = await makeAccount(testApp);
   const tokens = await assistant.connect(owner);
   const [connection] = (await owner.inject({ method: "GET", url: "/api/connections" })).json().connections;
 
@@ -220,8 +194,8 @@ test("one reader can neither see nor revoke another's connections", async () => 
 test("each reader's access token reads as that reader alone", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const first = await plusAccount(testApp);
-  const second = await plusAccount(testApp);
+  const first = await makeAccount(testApp);
+  const second = await makeAccount(testApp);
 
   const firstTokens = await assistant.connect(first);
   const secondTokens = await assistant.connect(second);

@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
   apiLogLines,
-  canConnectAssistant,
   ConnectionDecision,
   type ConnectionDecided,
   type ConnectionRequest,
@@ -10,7 +9,6 @@ import {
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
-import { accountPlan } from "../auth/accountPlan.js";
 import { connectionWrites } from "./connectionScope.js";
 import { decideAuthorization } from "./decideAuthorization.js";
 import { findPendingAuthorization } from "./findPendingAuthorization.js";
@@ -52,9 +50,6 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
     const now = clock();
     if ((await findPendingAuthorization(sql, request.params.id, now)) === null) {
       throw notPending();
-    }
-    if (approve && !canConnectAssistant(await accountPlan(sql, accountId))) {
-      throw new ApiError("plan_required", "Connecting an assistant needs Plus");
     }
     const redirectTo = await decideAuthorization(sql, { id: request.params.id, accountId, approve, urls, now });
     if (redirectTo === null) {

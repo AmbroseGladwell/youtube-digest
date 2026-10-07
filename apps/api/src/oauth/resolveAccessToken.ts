@@ -1,4 +1,3 @@
-import { canConnectAssistant, type Plan } from "@overview/domain";
 import { AccountId } from "../auth/AccountId.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -13,8 +12,8 @@ export interface ConnectionAccess {
   clientName: string | null;
 }
 
-// The plan is checked on every request rather than when the token was issued, so a reader
-// whose plan stops allowing it loses the connection on its next call (docs/features/mcp-connector.md).
+// Any signed-in account can connect an assistant, so a live token is the whole check
+// (docs/architecture/tiers.md; docs/features/mcp-connector.md).
 export async function resolveAccessToken(sql: SqlClient, token: string, now: Date): Promise<ConnectionAccess | null> {
   const [row] = await sql.query<{
     id: string;
@@ -22,17 +21,15 @@ export async function resolveAccessToken(sql: SqlClient, token: string, now: Dat
     scope: string;
     last_used_at: string | Date;
     client_name: string | null;
-    plan: Plan;
   }>(
-    `select c.id, c.account_id, c.scope, c.last_used_at, cl.client_name, a.plan
+    `select c.id, c.account_id, c.scope, c.last_used_at, cl.client_name
        from connection_tokens t
        join connections c on c.id = t.connection_id
        join oauth_clients cl on cl.id = c.client_id
-       join accounts a on a.id = c.account_id
       where t.token_hash = $1 and t.kind = 'access' and t.expires_at > $2::timestamptz`,
     [hashToken(token), now.toISOString()],
   );
-  if (row === undefined || !canConnectAssistant(row.plan)) {
+  if (row === undefined) {
     return null;
   }
   if (now.getTime() - new Date(row.last_used_at).getTime() > CONNECTION_TOUCH_INTERVAL_MS) {

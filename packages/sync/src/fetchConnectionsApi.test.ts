@@ -56,10 +56,10 @@ test("a decision is a write that carries the client version, which is what stops
 });
 
 test("a refused approval says why", async () => {
-  const { fetch } = answering(403, { error: { code: "plan_required", message: "Plus" } });
+  const { fetch } = answering(404, { error: { code: "not_found", message: "This request has expired" } });
   const api = createFetchConnectionsApi({ baseUrl: "https://overview.example", fetch });
 
-  await assert.rejects(api.decide(REQUEST_ID, true), (error) => isSyncRequestError(error) && error.code === "plan_required");
+  await assert.rejects(api.decide(REQUEST_ID, true), (error) => isSyncRequestError(error) && error.code === "not_found");
 });
 
 test("connections are listed and revoked", async () => {

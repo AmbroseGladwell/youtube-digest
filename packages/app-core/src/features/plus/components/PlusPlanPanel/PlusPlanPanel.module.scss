@@ -1,44 +1,28 @@
 @use "../../../../theme/controls.scss" as controls;
+@use "../../../connections/consent" as consent;
 
-// Design 16c: the permanent home, above the keys. It states the plan first and makes the
-// case second, which is the order that lets someone already on Plus read it as a
-// statement rather than a pitch.
+// Design 16c, redrawn by 95d–95h: the plan first, then what every account includes, then
+// every plan as a card. The reader's own card is ringed so it reads before the copy does.
 .root {
   @include controls.tile;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
   padding: 1.25rem 1.375rem;
   max-width: 35rem;
 }
 
 .eyebrow {
   @include controls.section-label;
-  margin: 0 0 0.25rem;
+  margin: 0;
 }
 
 .planName {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.25rem;
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 1.125rem;
   line-height: 1.12;
-}
-
-.offer {
-  background: var(--stone-tint);
-  color: var(--on-stone-tint);
-  border-radius: var(--radius-panel);
-  padding: 1rem 1.125rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.offerName {
-  margin: 0;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 1rem;
 }
 
 .features {
@@ -52,8 +36,87 @@
   color: var(--muted);
 }
 
-.offer .features {
-  color: inherit;
+.plans {
+  margin: 0.125rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.plan {
+  @include consent.card;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem 1rem;
+  border-radius: 18px;
+}
+
+.yours {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.planHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+}
+
+.planCardName {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.yoursPill {
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--label);
+  color: var(--ground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.allowances {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  dt {
+    font-size: 0.78125rem;
+    color: var(--muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .yours & dt,
+  .yours & dd {
+    color: inherit;
+  }
+}
+
+.planNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+
+  .yours & {
+    color: inherit;
+  }
 }
 
 .note {
@@ -62,21 +125,6 @@
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--muted);
-}
-
-.offer .note {
-  color: inherit;
-  opacity: 0.8;
-}
-
-.featureLink {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-
-  &:hover {
-    color: var(--accent);
-  }
 }
 
 .recheck {

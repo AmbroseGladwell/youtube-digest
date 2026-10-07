@@ -1,4 +1,4 @@
-import { canConnectAssistant, DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
@@ -74,50 +74,6 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
-    ...(narrationApi !== null
-      ? [
-          {
-            id: "voice" as const,
-            title: "Narration voice",
-            value: voiceRowValue(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
-          },
-        ]
-      : []),
-    { id: "keys", title: "API keys", value: keysRowValue(apiKeys, settings?.model ?? DEFAULT_ANTHROPIC_MODEL) },
-    ...(sync.available
-      ? [
-          {
-            id: "connections" as const,
-            title: "Connections",
-            value: connectionsRowValue({
-              signedIn: sync.connected && !sessionEnded,
-              planStatus,
-              canConnect: canConnectAssistant(plan),
-              count: connections.data?.length,
-              countFailed: connections.isError,
-            }),
-          },
-        ]
-      : []),
-    ...(knownApiUrl !== null
-      ? [
-          {
-            id: "playlists" as const,
-            title: "YouTube playlists",
-            value: followed.isSuccess ? followingRowValue(followed.data.length) : CHECKING_ROW_VALUE,
-          },
-        ]
-      : []),
-    {
-      id: "milestones",
-      title: "Milestones",
-      value: overviews.isSuccess
-        ? milestonesRowValue(timeSavedSummary(readableEntries(overviews.data)).minutes)
-        : CHECKING_ROW_VALUE,
-    },
-    ...(shareApi !== null
-      ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }]
-      : []),
     {
       id: "plan",
       title: "Plan",
@@ -128,6 +84,49 @@ export function useSettingsSections(): SettingsSectionSummary[] {
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,
     },
+    { id: "keys", title: "API keys", value: keysRowValue(apiKeys, settings?.model ?? DEFAULT_ANTHROPIC_MODEL) },
+    ...(sync.available
+      ? [
+          {
+            id: "connections" as const,
+            title: "Connections",
+            value: connectionsRowValue({
+              signedIn: sync.connected && !sessionEnded,
+              accountUnreachable: session.isError && !sessionEnded,
+              count: connections.data?.length,
+              countFailed: connections.isError,
+            }),
+          },
+        ]
+      : []),
+    ...(narrationApi !== null
+      ? [
+          {
+            id: "voice" as const,
+            title: "Narration voice",
+            value: voiceRowValue(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
+          },
+        ]
+      : []),
+    {
+      id: "milestones",
+      title: "Milestones",
+      value: overviews.isSuccess
+        ? milestonesRowValue(timeSavedSummary(readableEntries(overviews.data)).minutes)
+        : CHECKING_ROW_VALUE,
+    },
+    ...(knownApiUrl !== null
+      ? [
+          {
+            id: "playlists" as const,
+            title: "YouTube playlists",
+            value: followed.isSuccess ? followingRowValue(followed.data.length) : CHECKING_ROW_VALUE,
+          },
+        ]
+      : []),
+    ...(shareApi !== null
+      ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }]
+      : []),
     ...(knownApiUrl !== null ? [{ id: "privacy" as const, title: "Privacy", value: shareUsageRowValue(shareUsage) }] : []),
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
-import { canConnectAssistant, consentPath, MAGIC_LINK_TTL_MINUTES } from "@overview/domain";
+import { consentPath, MAGIC_LINK_TTL_MINUTES } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { RouteParams } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -19,7 +19,6 @@ import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { ConsentAddressCard } from "../components/ConsentAddressCard/ConsentAddressCard.js";
 import { ConsentAnswer, type ConsentDecision } from "../components/ConsentAnswer/ConsentAnswer.js";
 import { ConsentNote } from "../components/ConsentNote/ConsentNote.js";
-import { ConsentPlusCard } from "../components/ConsentPlusCard/ConsentPlusCard.js";
 import { ConsentSignInCard } from "../components/ConsentSignInCard/ConsentSignInCard.js";
 import { rememberConsentLinkAsked, wasConsentLinkAskedHere } from "../consentLinksAskedStorage.js";
 import { useDecideConnectionMutation } from "../mutations/useDecideConnectionMutation.js";
@@ -83,7 +82,6 @@ export function ConsentPage() {
     if (loaded) heading.current?.focus();
   }, [loaded, sent]);
   useOnce(loaded, analytics.mcp.consentScreen.shown);
-  useOnce(loaded && plan !== undefined && !canConnectAssistant(plan), analytics.mcp.consentScreen.plusRequired);
 
   if (!sync.available) {
     return <ErrorState screen="accountsUnavailable" title="Accounts need the web app or the extension" back />;
@@ -118,7 +116,7 @@ export function ConsentPage() {
       {
         onError: (error) => {
           setDeciding(null);
-          if (isCode(error, "plan_required") || isCode(error, "unauthenticated")) void session.refetch();
+          if (isCode(error, "unauthenticated")) void session.refetch();
         },
       },
     );
@@ -292,12 +290,10 @@ export function ConsentPage() {
           </p>
         ) : plan === undefined ? (
           <div className={styles.planPending} aria-busy="true" />
-        ) : canConnectAssistant(plan) ? (
-          <ConsentAnswer host={host} writes={writes} deciding={deciding} onDecide={answer} />
         ) : (
-          <ConsentPlusCard minutesLeft={left} declining={deciding === "decline"} onDecline={() => answer("decline")} />
+          <ConsentAnswer host={host} writes={writes} deciding={deciding} onDecide={answer} />
         )}
-        {decide.isError && !isCode(decide.error, "plan_required") && !isCode(decide.error, "unauthenticated") && (
+        {decide.isError && !isCode(decide.error, "unauthenticated") && (
           <p className={styles.error} role="alert" data-testid={consentPageTestIds.decisionError}>
             <StrokeIcon name="alertCircle" size={14} />
             That answer didn't reach the server. Try again.

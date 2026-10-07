@@ -6,17 +6,8 @@
   @include consent.card;
 }
 
-.offer {
-  @include consent.tint-card;
-  box-shadow: inset 0 0 0 1.5px var(--label);
-}
-
 .label {
   @include consent.label;
-
-  .offer & {
-    color: inherit;
-  }
 
   &:focus {
     outline: none;
@@ -25,10 +16,6 @@
 
 .body {
   @include consent.note;
-
-  .offer & {
-    color: inherit;
-  }
 }
 
 .intro {
@@ -53,10 +40,6 @@
 .secondary {
   @include controls.surface-pill;
   @include controls.pill-md;
-}
-
-.onFree {
-  font-size: 0.8125rem;
 }
 
 .list {

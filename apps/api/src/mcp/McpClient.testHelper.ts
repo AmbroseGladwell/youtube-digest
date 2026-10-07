@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { LightMyRequestResponse } from "fastify";
-import { makeConnectingAssistant, putOnPlan, type TokenSet } from "../oauth/ConnectingAssistant.testHelper.js";
+import { makeConnectingAssistant, type TokenSet } from "../oauth/ConnectingAssistant.testHelper.js";
 import type { TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import type { SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
@@ -16,12 +16,6 @@ export interface McpClient {
   request(method: string, params?: Record<string, unknown>): Promise<Record<string, unknown>>;
   callTool(name: string, args?: Record<string, unknown>): Promise<ToolResult>;
 }
-
-export const plusAccount = async (testApp: TestApp): Promise<TestAccount> => {
-  const account = await makeAccount(testApp);
-  await putOnPlan(testApp, account, "plus");
-  return account;
-};
 
 export async function seedLibrary(account: TestAccount, library: SampleLibrary): Promise<void> {
   for (const topic of library.topics) {

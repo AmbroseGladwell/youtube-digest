@@ -1,7 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import { PLUS_FEATURES } from "../../../src/features/plus/plusFeatures.js";
+import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS, UNSET_ALLOWANCE } from "../../../src/features/plus/planCards.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
@@ -19,7 +19,9 @@ const seedHeldOverview = (backendSimulator: BackendSimulator) => {
   });
 };
 
-test("Settings names the plan, lists what Plus adds, and admits there is nothing to buy yet", async ({
+// The paid plans sell volume, never features, and no plan ever says "unlimited"
+// (docs/architecture/tiers.md).
+test("Settings names the plan, gives every account the features, and sells both paid plans on volume", async ({
   launcher,
 }) => {
   await launcher.launchPanel(panel);
@@ -28,12 +30,15 @@ test("Settings names the plan, lists what Plus adds, and admits there is nothing
   await settings.openSection("plan");
 
   await settings.verifyPlanReads("Free");
-  await settings.verifyOffersPlus(true);
-  await settings.verifyPlusFeaturesRead(PLUS_FEATURES);
-  await settings.verifySaysPlusIsNotOnSale();
+  await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
+  await settings.verifyPlanCardsRead(
+    PLAN_CARDS.map((card) => [card.name, card.ourKey ?? UNSET_ALLOWANCE, card.ownKey, card.note]),
+  );
+  await settings.verifyPlanMarkedAsYours("Free");
+  await settings.verifyPlansAreNotOnSale("isn't built yet");
 });
 
-test("on Plus, Settings states the plan rather than pitching it", async ({ launcher }) => {
+test("on Plus, Settings rings the reader's own plan among the three", async ({ launcher }) => {
   await launcher.launchPanel({
     ...panel,
     sync: true,
@@ -43,8 +48,9 @@ test("on Plus, Settings states the plan rather than pitching it", async ({ launc
   const settings = await (await launcher.appShell.openSettings()).openSection("plan");
 
   await settings.verifyPlanReads("Plus");
-  await settings.verifyOffersPlus(false);
-  await settings.verifyPlusFeaturesRead(PLUS_FEATURES);
+  await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
+  await settings.verifyPlanMarkedAsYours("Plus");
+  await settings.verifyPlansAreNotOnSale("set by hand");
 });
 
 // Design 2d: the Plus prompt on Listen is retired, since audio is open to every account
@@ -146,7 +152,6 @@ test("a plan the server couldn't be asked for is said as unknown, not as Free, a
   await settings.verifyRowReads("connections", "Couldn't check");
   await settings.openSection("plan");
   await settings.verifyPlanReads("Couldn't check your plan");
-  await settings.verifyOffersPlus(false);
 
   backendSimulator.simulateEndpointDefault(EndpointKey.SESSION_READ);
   await settings.recheckPlan();

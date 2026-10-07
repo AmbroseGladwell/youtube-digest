@@ -104,18 +104,7 @@ test.describe("Settings › Connections", () => {
     test.expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${SERVER}/mcp`);
   });
 
-  test("on Free, it says what a connection does and offers Plus, with no address or steps", async ({ launcher }) => {
-    test.skip(true, "every account can connect an assistant until billing exists (OV-18)");
-    await launcher.launch(SIGNED_IN);
-    const settings = await launcher.appShell.openSettings();
-    await settings.verifyRowReads("connections", "Needs Plus");
-
-    await settings.openSection("connections");
-
-    await settings.connections.verifyOffersPlus();
-  });
-
-  test("on Free, it lists connections and shows the address while every account can connect", async ({ launcher }) => {
+  test("on Free, it lists connections and shows the address, like any other account", async ({ launcher }) => {
     await launcher.launch(SIGNED_IN);
     const settings = await launcher.appShell.openSettings();
     await settings.verifyRowReads("connections", "None");
@@ -163,16 +152,7 @@ test.describe("Settings › Connections", () => {
     await launcher.launch({ sync: false });
     const settings = await launcher.appShell.openSettings();
 
-    await settings.verifyRowsAre(["keys", "playlists", "milestones", "plan", "privacy"]);
-  });
-
-  test("the Plus panel's connection line opens the section", async ({ launcher }) => {
-    await launcher.launch(PLUS);
-    const settings = await (await launcher.appShell.openSettings()).openSection("plan");
-
-    await settings.connections.openFromPlusPanel();
-
-    await settings.verifySectionIsShown("connections");
+    await settings.verifyRowsAre(["plan", "keys", "milestones", "playlists", "privacy"]);
   });
 
   test("on a phone, the section is a page of its own", async ({ launcher, backendSimulator, page }) => {

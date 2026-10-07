@@ -1,12 +1,12 @@
 export const SETTINGS_SECTION_IDS = [
   "account",
-  "voice",
+  "plan",
   "keys",
   "connections",
-  "playlists",
+  "voice",
   "milestones",
+  "playlists",
   "shared",
-  "plan",
   "privacy",
   "about",
 ] as const;

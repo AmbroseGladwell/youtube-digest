@@ -244,7 +244,6 @@ sends:
 | `invalid_request` | 400 | body, header or query fails validation; malformed JSON; a body written at a version other than the client's own |
 | `unauthenticated` | 401 | no, unknown or expired bearer |
 | `client_unsupported` | 403 | a write from below `minSupportedClientVersion`; `details` carry both numbers |
-| `plan_required` | 403 | the account is not on the plan the action needs: approving an assistant's connection needs Plus |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
 | `video_already_held` | 409 | a second overview of a video the account holds; `details.overviewId` names the first (`docs/features/one-overview-per-video.md`) |

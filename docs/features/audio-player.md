@@ -188,7 +188,9 @@ than a plan, so two pieces of copy that sold it as Plus were corrected:
 - `PLUS_FEATURES` no longer lists "Audio playback of any overview".
 - The saved-locally note (16b) no longer says Plus "unlocks audio overviews".
 
-Settings still sells Plus on sync and MCP.
+OV-104 finished the same correction: sync and the MCP connection turned out to belong to
+the account too, so Settings now sells the paid plans on how many overviews a month they
+make (`docs/architecture/tiers.md`, `plus-upsell.md`), and `PLUS_FEATURES` is gone.
 
 ## Accessibility
 

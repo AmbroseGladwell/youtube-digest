@@ -3,7 +3,6 @@ import { emailLinkFormTestIds } from "../../src/features/auth/components/EmailLi
 import { consentAddressCardTestIds } from "../../src/features/connections/components/ConsentAddressCard/ConsentAddressCardTestIds.js";
 import { consentAnswerTestIds } from "../../src/features/connections/components/ConsentAnswer/ConsentAnswerTestIds.js";
 import { consentNoteTestIds } from "../../src/features/connections/components/ConsentNote/ConsentNoteTestIds.js";
-import { consentPlusCardTestIds } from "../../src/features/connections/components/ConsentPlusCard/ConsentPlusCardTestIds.js";
 import { consentSignInCardTestIds } from "../../src/features/connections/components/ConsentSignInCard/ConsentSignInCardTestIds.js";
 import { consentPageTestIds } from "../../src/features/connections/ConsentPage/ConsentPageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -67,16 +66,6 @@ export class ConsentPageObject extends PageObject {
 
   retrySession = () =>
     this.step("retrySession", () => this.get(consentPageTestIds.sessionError).getByRole("button").click());
-
-  verifyOffersPlus = (openFor: string) =>
-    this.step(`verifyOffersPlus ${openFor}`, async () => {
-      await this.expectToBeVisible(consentPlusCardTestIds.root);
-      await expect(this.get(consentPlusCardTestIds.openFor)).toHaveText(openFor);
-    });
-
-  seePlus = () => this.step("seePlus", () => this.click(consentPlusCardTestIds.seePlusLink));
-
-  declineOnFree = () => this.step("declineOnFree", () => this.click(consentPlusCardTestIds.declineButton));
 
   notYou = () => this.step("notYou", () => this.click(consentPageTestIds.notYouButton));
 

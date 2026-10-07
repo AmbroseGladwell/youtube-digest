@@ -14,8 +14,8 @@ import { useIsPhone } from "../../../util/useIsPhone.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { wasJustGenerated } from "../../newOverview/justGenerated.js";
-import { PlusSavedLocallyNote } from "../../plus/components/PlusSavedLocallyNote/PlusSavedLocallyNote.js";
-import { usePlusSavedLocallyNote } from "../../plus/usePlusSavedLocallyNote.js";
+import { SavedLocallyNote } from "../../plus/components/SavedLocallyNote/SavedLocallyNote.js";
+import { useSavedLocallyNote } from "../../plus/useSavedLocallyNote.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
@@ -104,7 +104,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   );
   const [playerDocked, setPlayerDocked] = useState(false);
   const location = useLocation();
-  const savedLocallyNote = usePlusSavedLocallyNote(wasJustGenerated(location.state));
+  const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
 
   // A chapter opens the transcript at its start; choosing the tab yourself opens it at
@@ -299,7 +299,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           onDelete={() => setConfirmingDelete(true)}
         />
 
-        {savedLocallyNote.shown && <PlusSavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
+        {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
 
         <ReaderTabs
           active={tab}

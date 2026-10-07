@@ -82,10 +82,10 @@ test("signed out, there is no narration to choose a voice for, so there is no vo
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyRowsAre(["keys", "playlists", "milestones", "plan", "privacy"]);
+  await settings.verifyRowsAre(["plan", "keys", "milestones", "playlists", "privacy"]);
   await settings.voicePicker.verifyIsAbsent();
   await launcher.openPage(Routes.settingsSection("voice"));
-  await settings.verifySectionIsShown("keys");
+  await settings.verifySectionIsShown("plan");
 });
 
 test("a note narrated before the reader chose another voice plays as it was, and re-records in the new one", async ({

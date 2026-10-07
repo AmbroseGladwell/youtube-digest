@@ -14,7 +14,7 @@ import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
 import { TRANSCRIPT_REST_GAP } from "../../src/features/reader/components/TranscriptPanel/transcriptRestingLine.js";
 import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRangeTag/LineRangeTagTestIds.js";
-import { plusSavedLocallyNoteTestIds } from "../../src/features/plus/components/PlusSavedLocallyNote/PlusSavedLocallyNoteTestIds.js";
+import { savedLocallyNoteTestIds } from "../../src/features/plus/components/SavedLocallyNote/SavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -866,13 +866,13 @@ export class ReaderPageObject extends PageObject {
   verifySavedLocallyNoteIsShown = (shown: boolean) =>
     this.step(`verifySavedLocallyNoteIsShown ${shown}`, () =>
       shown
-        ? this.expectToBeVisible(plusSavedLocallyNoteTestIds.root)
-        : this.expectNotToBeVisible(plusSavedLocallyNoteTestIds.root),
+        ? this.expectToBeVisible(savedLocallyNoteTestIds.root)
+        : this.expectNotToBeVisible(savedLocallyNoteTestIds.root),
     );
 
   dismissSavedLocallyNote = () =>
     this.step("dismissSavedLocallyNote", () =>
-      this.click(plusSavedLocallyNoteTestIds.dismissButton),
+      this.click(savedLocallyNoteTestIds.dismissButton),
     );
 
   verifyMastheadIsPanelSized = () =>

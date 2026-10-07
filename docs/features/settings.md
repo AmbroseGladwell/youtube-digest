@@ -14,13 +14,13 @@ In order, each with the value its row shows:
 | Section | Route | Row value | Shown when |
 |---|---|---|---|
 | Account & sync | `/settings/account` | first name (or email) · the sync status line; signed out, "Not signed in · this library stays here" | the shell can sync |
-| Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
-| API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
-| Connections | `/settings/connections` | "N connected" or "None" on Plus, "Needs Plus", or "Sign in first" | the shell can sync |
-| YouTube playlists | `/settings/playlists` | "Following 3" or "None" | there is a server to read playlists through (`playlists.md`) |
-| Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
-| Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
 | Plan | `/settings/plan` | Free or Plus | always |
+| API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
+| Connections | `/settings/connections` | "N connected" or "None", or "Sign in first" | the shell can sync |
+| Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
+| Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
+| YouTube playlists | `/settings/playlists` | "Following 3" or "None" | there is a server to read playlists through (`playlists.md`) |
+| Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
 | Privacy | `/settings/privacy` | "Not chosen", "Sharing usage" or "Not sharing usage" | there is a server to send to (`analytics-consent.md`) |
 | About | `/settings/about` | the version | the shell knows its build |
 
@@ -30,13 +30,17 @@ address then opens Settings as `/settings` would (`CLAUDE.md`, "degrade visibly"
 each panel already reads.
 
 Plan is its own section rather than part of Account, so a Free reader with no account still
-finds it. It comes after Connections: below the things people change, above About.
+finds it. **Design 95d moved it second, under Account & sync** (OV-104). OV-51 had put it
+near the bottom, "below the things people change, above About", and that reasoning stopped
+holding when the row began carrying usage: how many overviews are left this month is
+something a reader checks, not something they set, so it belongs with the other facts about
+their account rather than beside the version number. The same turn moved Narration voice
+below Connections and Milestones above YouTube playlists.
 
-New sections go here: Personalisation (OV-46) after Narration voice. YouTube playlists sits
-after Connections. Privacy sits between Plan and About (`analytics-consent.md`). About
-stays last, with the privacy policy and terms linked under the version. Connections is described in
-`mcp-connector.md`, YouTube playlists in `playlists.md`, Milestones in `time-saved.md`, Shared links
-in `sharing.md`.
+New sections go here: Personalisation (OV-46) after Narration voice. Privacy sits between
+Shared links and About (`analytics-consent.md`). About stays last, with the privacy policy
+and terms linked under the version. Connections is described in `mcp-connector.md`, YouTube
+playlists in `playlists.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.
 
 ## Two panes, or a list then a page
 
@@ -58,7 +62,6 @@ to that heading. The list is a `nav` named "Settings sections".
   voice into view, as it did before (43i).
 - Every "set up your keys" link goes to `/settings/keys`: the home page, the new-overview
   form, the panel's capture screen, and the injected button when keys are missing.
-- The panel's "See Plus" note goes to `/settings/plan`.
 - The account menu's Settings item goes to `/settings`.
 
 ## Account & sync

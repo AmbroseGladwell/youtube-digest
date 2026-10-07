@@ -22,7 +22,6 @@ import {
   type Connection,
   type ConnectionRequest,
   type Plan,
-  canConnectAssistant,
   type MagicLinkRequest,
   type OutboxEntry,
   type Overview,
@@ -702,9 +701,6 @@ export class BackendSimulator {
             return { status: 401, body: { error: { code: "unauthenticated", message: "Simulated: no such session" } } };
           }
           if (pending(requestId) === null) return notFound();
-          if (approve && !canConnectAssistant(this.#accountPlan)) {
-            return { status: 403, body: { error: { code: "plan_required", message: "Simulated: needs Plus" } } };
-          }
           this.#decisions.push({ requestId, approve });
           this.#connectionRequest = null;
           const answer = approve ? "code=simulated-code" : "error=access_denied";

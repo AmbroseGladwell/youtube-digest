@@ -37,7 +37,7 @@ test.describe("signed out", () => {
     await launcher.launch({ ...NEVER_ASKED, build: BUILD });
     const settings = await launcher.appShell.openSettings();
 
-    await settings.verifyRowsAre(["keys", "playlists", "milestones", "plan", "privacy", "about"]);
+    await settings.verifyRowsAre(["plan", "keys", "milestones", "playlists", "privacy", "about"]);
     await settings.verifyRowReads("privacy", "Not chosen");
     await settings.openSection("privacy");
 

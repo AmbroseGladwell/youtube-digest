@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { Link } from "react-router";
-import { canConnectAssistant } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -19,8 +18,9 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 export const CONNECTIONS_INTRO =
   "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, and mark them read or favourite for you.";
 
-// Design 58i–58r. A connection belongs to an account on Plus, so signed out and Free each
-// say what it would take rather than showing controls that cannot work.
+// Design 58i–58r. A connection belongs to an account rather than to a plan
+// (docs/architecture/tiers.md), so signed out is the only state that says what it would take
+// rather than showing controls that cannot work.
 export function ConnectionsSection() {
   const analytics = useAnalytics();
   const sync = useSync();
@@ -81,30 +81,6 @@ export function ConnectionsSection() {
 
   if (session.data === undefined) {
     return <div className={styles.pending} aria-busy="true" data-testid={connectionsSectionTestIds.pending} />;
-  }
-
-  if (!canConnectAssistant(session.data.plan)) {
-    return (
-      <div className={styles.offer} data-testid={connectionsSectionTestIds.plusOffer}>
-        <p className={styles.label}>Comes with Plus</p>
-        <p className={styles.body}>
-          Connect Claude or another assistant and it can read every overview and transcript you’ve saved, answer
-          across them, and mark them read or favourite for you.
-        </p>
-        <ExampleQuestions onTint />
-        <div className={styles.actions}>
-          <Link
-            to={Routes.settingsSection("plan")}
-            className={styles.primary}
-            onClick={() => analytics.mcp.settingsConnections.seePlusChosen()}
-            data-testid={connectionsSectionTestIds.seePlusLink}
-          >
-            See Plus
-          </Link>
-          <span className={styles.onFree}>You’re on Free.</span>
-        </div>
-      </div>
-    );
   }
 
   const address = `${(connection.apiUrl ?? "").replace(/\/+$/, "")}/mcp`;

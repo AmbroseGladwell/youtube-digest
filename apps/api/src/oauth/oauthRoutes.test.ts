@@ -3,15 +3,9 @@ import assert from "node:assert/strict";
 import { hashToken } from "../auth/hashToken.js";
 import { createTestApp, TEST_APP_URL, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { ASSISTANT_REDIRECT_URI, makeConnectingAssistant, postForm, putOnPlan } from "./ConnectingAssistant.testHelper.js";
+import { ASSISTANT_REDIRECT_URI, makeConnectingAssistant, postForm } from "./ConnectingAssistant.testHelper.js";
 import { AUTHORIZATION_CODE_TTL_MS, REFRESH_TOKEN_TTL_MS } from "./connectionTimings.js";
 import { resolveAccessToken } from "./resolveAccessToken.js";
-
-const plusAccount = async (testApp: TestApp): Promise<TestAccount> => {
-  const account = await makeAccount(testApp);
-  await putOnPlan(testApp, account, "plus");
-  return account;
-};
 
 const reads = (testApp: TestApp, accessToken: string) => resolveAccessToken(testApp.sql, accessToken, testApp.clock.now);
 
@@ -147,7 +141,7 @@ test("asking for another resource or another scope is refused back to the client
 test("a Plus reader who approves sends the assistant back with a code, its state and the issuer", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const authorization = await assistant.startAuthorization();
 
   const back = await assistant.approveAs(reader, authorization);
@@ -162,7 +156,7 @@ test("a Plus reader who approves sends the assistant back with a code, its state
 test("the code trades for an access token that reads and marks as the approving account, when no scope was named", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
 
   const tokens = await assistant.connect(reader);
 
@@ -177,7 +171,7 @@ test("the code trades for an access token that reads and marks as the approving 
 test("an assistant that asks for the read scope alone is granted that alone, and one that asks only to write still reads", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
 
   const reading = await assistant.connect(reader, { scope: "overviews:read" });
   const writing = await assistant.connect(reader, { scope: "overviews:write" });
@@ -190,7 +184,7 @@ test("an assistant that asks for the read scope alone is granted that alone, and
 test("the token endpoint's answers are never cached", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const authorization = await assistant.startAuthorization();
   const back = await assistant.approveAs(reader, authorization);
 
@@ -204,7 +198,7 @@ test("a connection's tokens are kept only as hashes", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
 
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   const hashes = (await testApp.sql.query<{ token_hash: string }>("select token_hash from connection_tokens")).map((row) => row.token_hash);
   assert.deepEqual(hashes.sort(), [hashToken(tokens.access_token), hashToken(tokens.refresh_token)].sort());
@@ -215,7 +209,7 @@ test("a code presented with the wrong verifier is refused", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
 
   const response = await assistant.exchange(back.searchParams.get("code")!, "x".repeat(43));
 
@@ -228,7 +222,7 @@ test("a code presented with a different redirect than it was issued for is refus
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
 
   const response = await assistant.exchange(back.searchParams.get("code")!, authorization.verifier, {
     redirect_uri: "https://assistant.test/other",
@@ -242,7 +236,7 @@ test("a code is good for a minute", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
 
   testApp.clock.advance(AUTHORIZATION_CODE_TTL_MS);
   const response = await assistant.exchange(back.searchParams.get("code")!, authorization.verifier);
@@ -255,7 +249,7 @@ test("a code exchanged a second time is refused and revokes the connection the f
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
   const code = back.searchParams.get("code")!;
   const first = (await assistant.exchange(code, authorization.verifier)).json();
 
@@ -271,7 +265,7 @@ test("a code issued to one client cannot be spent by another", async () => {
   const assistant = await makeConnectingAssistant(testApp);
   const thief = await makeConnectingAssistant(testApp);
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
 
   const response = await thief.exchange(back.searchParams.get("code")!, authorization.verifier);
 
@@ -298,7 +292,7 @@ test("a confidential client may present its secret by HTTP Basic instead", async
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp, { token_endpoint_auth_method: "client_secret_basic" });
   const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(await plusAccount(testApp), authorization);
+  const back = await assistant.approveAs(await makeAccount(testApp), authorization);
   const basic = Buffer.from(`${assistant.clientId}:${assistant.clientSecret}`).toString("base64");
 
   const response = await postForm(
@@ -325,7 +319,7 @@ test("a grant type this server does not offer is refused as unsupported", async 
 test("refreshing hands out a new pair, and the old refresh token is spent", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   const refreshed = await assistant.refresh(tokens.refresh_token);
 
@@ -340,7 +334,7 @@ test("refreshing hands out a new pair, and the old refresh token is spent", asyn
 test("a spent refresh token presented again revokes the whole connection", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
   const next = (await assistant.refresh(tokens.refresh_token)).json();
 
   const replay = await assistant.refresh(tokens.refresh_token);
@@ -354,7 +348,7 @@ test("a spent refresh token presented again revokes the whole connection", async
 test("a refresh token lapses after thirty days unused", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   testApp.clock.advance(REFRESH_TOKEN_TTL_MS);
 
@@ -365,38 +359,11 @@ test("a refresh token lapses after thirty days unused", async () => {
 test("an access token stops reading after its hour", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   testApp.clock.advance(tokens.expires_in * 1000);
 
   assert.equal(await reads(testApp, tokens.access_token), null);
-  await testApp.close();
-});
-
-test("a reader who leaves Plus loses the connection on its next request and cannot refresh it", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
-  const testApp = await createTestApp();
-  const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
-  const tokens = await assistant.connect(reader);
-
-  await putOnPlan(testApp, reader, "free");
-
-  assert.equal(await reads(testApp, tokens.access_token), null);
-  assert.equal((await assistant.refresh(tokens.refresh_token)).json().error, "invalid_grant");
-  await testApp.close();
-});
-
-test("a reader who leaves Plus between approving and the exchange gets no tokens", { skip: "every account can connect an assistant until billing exists (OV-18)" }, async () => {
-  const testApp = await createTestApp();
-  const assistant = await makeConnectingAssistant(testApp);
-  const reader = await plusAccount(testApp);
-  const authorization = await assistant.startAuthorization();
-  const back = await assistant.approveAs(reader, authorization);
-
-  await putOnPlan(testApp, reader, "free");
-  const response = await assistant.exchange(back.searchParams.get("code")!, authorization.verifier);
-
-  assert.equal(response.json().error, "invalid_grant");
   await testApp.close();
 });
 
@@ -405,7 +372,7 @@ test("the assistant revoking either token ends the connection", async () => {
 
   for (const which of ["access_token", "refresh_token"] as const) {
     const assistant = await makeConnectingAssistant(testApp);
-    const tokens = await assistant.connect(await plusAccount(testApp));
+    const tokens = await assistant.connect(await makeAccount(testApp));
 
     const response = await assistant.revoke(tokens[which]);
 
@@ -419,7 +386,7 @@ test("a client cannot revoke another client's connection, and is answered the sa
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const other = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   const response = await other.revoke(tokens.refresh_token);
 
@@ -430,7 +397,7 @@ test("a client cannot revoke another client's connection, and is answered the sa
 
 test("a session token is not an access token", async () => {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
 
   const sessionToken = reader.headers.authorization!.replace(/^Bearer /, "");
 
@@ -441,7 +408,7 @@ test("a session token is not an access token", async () => {
 test("an access token is not a session: the sync API refuses it", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const tokens = await assistant.connect(await plusAccount(testApp));
+  const tokens = await assistant.connect(await makeAccount(testApp));
 
   const response = await testApp.app.inject({
     method: "GET",
