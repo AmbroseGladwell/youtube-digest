@@ -96,6 +96,7 @@ test("on a phone sort is an icon beside the search, which shows a short name for
   const library = await launcher.launchExpectingLibrary();
 
   await library.sortPill.verifyCompactReads("", "Newest saved first");
+  await library.sortPill.verifyCompactIsACircleAroundTheIcon();
   await library.sortPill.sortBy("oldest");
 
   await library.sortPill.verifyCompactReads("Oldest", "Oldest saved first");
