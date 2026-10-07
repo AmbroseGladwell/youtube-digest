@@ -6,8 +6,8 @@ import { makeStoredTranscript } from "@overview/store-conformance";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { sampleLibrary, type SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
 import { storedOverview, storedTopic } from "../testing/storedRecords.testHelper.js";
-import type { TestAccount } from "../testing/TestAccount.testHelper.js";
-import { connectMcpClient, plusAccount, seedLibrary, type McpClient } from "./McpClient.testHelper.js";
+import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { connectMcpClient, seedLibrary, type McpClient } from "./McpClient.testHelper.js";
 import { LISTING_PAGE_SIZE, OVERVIEWS_PER_CALL } from "./mcpTools.js";
 
 interface Connected {
@@ -19,7 +19,7 @@ interface Connected {
 
 async function connectedToSamples(): Promise<Connected> {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const library = sampleLibrary();
   await seedLibrary(reader, library);
   return { testApp, reader, library, client: await connectMcpClient(testApp, reader) };
@@ -148,7 +148,7 @@ test("get_overview returns every real note as Markdown, whichever way its action
 
 test("get_overview links each chapter to its moment in the video", async () => {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const overview = storedOverview({
     chapters: [{ title: "The hinge", summary: "Why the swing starts at the hips.", startMs: 95_000, endMs: 180_000 }],
   });
@@ -192,7 +192,7 @@ test("get_overviews reads by ids, and by search", async () => {
 
 test("get_overviews stops at its cap and hands back a cursor that reads the rest", async () => {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const topic = storedTopic({ name: "strength" });
   await reader.inject({ method: "POST", url: "/api/topics", body: topic });
   const ids = await seedMany(reader, OVERVIEWS_PER_CALL + 3, topic.id);
@@ -211,7 +211,7 @@ test("get_overviews stops at its cap and hands back a cursor that reads the rest
 
 test("search_overviews pages its listing past its own, larger page size", async () => {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const topic = storedTopic({ name: "strength" });
   await reader.inject({ method: "POST", url: "/api/topics", body: topic });
   await seedMany(reader, LISTING_PAGE_SIZE + 1, topic.id);
@@ -278,7 +278,7 @@ test("get_transcript is a failed call when no transcript is kept for the video",
 test("get_transcript never serves another reader's copy of the same video's transcript", async () => {
   const { testApp, library, client } = await connectedToSamples();
   const fitness = note(library, "fitness").overview;
-  const other = await plusAccount(testApp);
+  const other = await makeAccount(testApp);
   await other.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: fitness.video }) });
   await other.inject({
     method: "PUT",
@@ -368,7 +368,7 @@ test("mark_overviews is a failed call without read or favourite to set, and with
 
 test("mark_overviews never marks another reader's overview: alone it is a failed call, beside the reader's own it is a note", async () => {
   const { testApp, reader, library, client } = await connectedToSamples();
-  const other = await plusAccount(testApp);
+  const other = await makeAccount(testApp);
   const theirs = storedOverview();
   await other.inject({ method: "POST", url: "/api/overviews", body: theirs });
   const mine = note(library, "interesting").overview;
@@ -388,7 +388,7 @@ test("mark_overviews never marks another reader's overview: alone it is a failed
 
 test("a connection approved to read only is not offered mark_overviews, and is told how to be reconnected if it calls it anyway", async () => {
   const testApp = await createTestApp();
-  const reader = await plusAccount(testApp);
+  const reader = await makeAccount(testApp);
   const library = sampleLibrary();
   await seedLibrary(reader, library);
   const client = await connectMcpClient(testApp, reader, "overviews:read");

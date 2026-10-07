@@ -1,4 +1,3 @@
-import { canConnectAssistant, type Plan } from "@overview/domain";
 import { AccountId } from "../auth/AccountId.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -20,7 +19,6 @@ interface CodeRow {
   code_expires_at: string | Date;
   code_consumed_at: string | Date | null;
   connection_id: string | null;
-  plan: Plan;
 }
 
 export interface CodeExchange {
@@ -38,11 +36,11 @@ export async function exchangeCode(
 ): Promise<TokenGrant> {
   return sql.transaction(async (tx) => {
     const [row] = await tx.query<CodeRow>(
-      `select o.id, o.client_id, o.redirect_uri, o.code_challenge, o.scope, o.resource, o.account_id,
-              o.code_expires_at, o.code_consumed_at, o.connection_id, a.plan
-         from oauth_authorizations o join accounts a on a.id = o.account_id
-        where o.code_hash = $1
-        for update of o`,
+      `select id, client_id, redirect_uri, code_challenge, scope, resource, account_id,
+              code_expires_at, code_consumed_at, connection_id
+         from oauth_authorizations
+        where code_hash = $1
+        for update`,
       [hashToken(exchange.code)],
     );
     if (row === undefined || row.client_id !== client.id) {
@@ -65,9 +63,6 @@ export async function exchangeCode(
     }
     if (exchange.resource !== undefined && exchange.resource.replace(/\/+$/, "") !== urls.resource) {
       return { kind: "refused", description: `The only resource is ${urls.resource}` };
-    }
-    if (!canConnectAssistant(row.plan)) {
-      return { kind: "refused", description: "Connecting an assistant needs Plus" };
     }
 
     const [connection] = await tx.query<{ id: string }>(

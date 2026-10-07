@@ -121,21 +121,31 @@ export class SettingsPageObject extends PageObject {
       expect(this.get(plusPlanPanelTestIds.planName)).toHaveText(plan),
     );
 
-  verifyPlusFeaturesRead = (features: string[]) =>
-    this.step(`verifyPlusFeaturesRead ${features.join(", ")}`, () =>
+  verifyEveryAccountIncludes = (features: string[]) =>
+    this.step(`verifyEveryAccountIncludes ${features.join(", ")}`, () =>
       expect(this.get(plusPlanPanelTestIds.feature)).toHaveText(features),
     );
 
-  verifyOffersPlus = (offers: boolean) =>
-    this.step(`verifyOffersPlus ${offers}`, () =>
-      offers
-        ? this.expectToBeVisible(plusPlanPanelTestIds.offer)
-        : this.expectNotToBeVisible(plusPlanPanelTestIds.offer),
-    );
+  verifyPlanCardsRead = (cards: string[][]) =>
+    this.step(`verifyPlanCardsRead ${cards.map((lines) => lines[0]).join(", ")}`, async () => {
+      await this.expectToHaveCount(plusPlanPanelTestIds.planCard, cards.length);
+      for (const [index, lines] of cards.entries()) {
+        for (const line of lines) {
+          await expect(this.get(plusPlanPanelTestIds.planCard).nth(index)).toContainText(line);
+        }
+      }
+    });
 
-  verifySaysPlusIsNotOnSale = () =>
-    this.step("verifySaysPlusIsNotOnSale", () =>
-      this.expectToBeVisible(plusPlanPanelTestIds.notOnSaleNote),
+  verifyPlanMarkedAsYours = (name: string) =>
+    this.step(`verifyPlanMarkedAsYours ${name}`, async () => {
+      const yours = this.get(plusPlanPanelTestIds.planCard).filter({ hasText: "Your plan" });
+      await expect(yours).toHaveCount(1);
+      await expect(yours).toContainText(name);
+    });
+
+  verifyPlansAreNotOnSale = (text: string) =>
+    this.step(`verifyPlansAreNotOnSale ${text}`, () =>
+      expect(this.get(plusPlanPanelTestIds.notOnSaleNote)).toContainText(text),
     );
 
   verifyBuildLineReads = (text: string) =>

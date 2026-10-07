@@ -336,11 +336,10 @@ export const analyticsEvents = {
   },
   plus: {
     savedLocallyNote: {
-      seePlusChosen: event("The reader follows See Plus from the note that a new overview is saved only on this browser"),
+      createAccountChosen: event("The reader follows Create account from the note that a new overview is saved only on this browser"),
       dismissed: event("The reader dismisses the note that a new overview is saved only on this browser"),
     },
     planPanel: {
-      connectionsChosen: event("The reader follows the assistant feature from the plan panel to Connections"),
       recheckChosen: event("The reader asks to check their plan again after it couldn't be checked"),
     },
   },
@@ -685,10 +684,8 @@ export const analyticsEvents = {
   mcp: {
     consentScreen: {
       shown: event("An assistant's request to connect over MCP is shown on the consent screen"),
-      plusRequired: event("A reader on Free is told on the consent screen that connecting an assistant needs Plus"),
       approved: event("The reader approves an assistant's request to connect"),
       declined: event("The reader declines an assistant's request to connect", { plan: Plan }),
-      seePlusChosen: event("A reader on Free follows See Plus from the consent screen"),
       sessionRetried: event("The reader tries checking their account again on the consent screen"),
     },
     settingsConnections: {
@@ -696,7 +693,6 @@ export const analyticsEvents = {
       revokeAsked: event("The reader asks to revoke an assistant's access, before confirming"),
       revokeKept: event("The reader keeps an assistant's access after asking to revoke it"),
       addressCopied: event("The reader copies the connector address to give their assistant"),
-      seePlusChosen: event("The reader on Free follows See Plus from Settings › Connections"),
       signInChosen: event("The reader follows Sign in from Settings › Connections"),
       createAccountChosen: event("The reader follows Create account from Settings › Connections"),
       retried: event("The reader tries loading their connections again"),

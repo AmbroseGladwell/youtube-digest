@@ -1,5 +1,4 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { canConnectAssistant } from "@overview/domain";
 import type { ConnectionsApi } from "@overview/sync";
 import { useSessionQuery } from "../../auth/queries/sessionQuery.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
@@ -13,10 +12,10 @@ export const connectionsQueryOptions = (account: string | null, api: Connections
     enabled: enabled && api !== null,
   });
 
-// Only an account whose plan allows connecting has connections to list (docs/features/mcp-connector.md, "Plus").
+// A connection belongs to an account, so there is nothing to list until the session is known.
 export function useConnectionsQuery() {
   const { connection } = useSyncConnection();
   const session = useSessionQuery();
   const api = useConnectionsApi();
-  return useQuery(connectionsQueryOptions(connection.email, api, session.data !== undefined && canConnectAssistant(session.data.plan)));
+  return useQuery(connectionsQueryOptions(connection.email, api, session.data !== undefined));
 }

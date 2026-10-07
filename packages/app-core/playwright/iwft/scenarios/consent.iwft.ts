@@ -135,34 +135,7 @@ test.describe("answering an assistant's request", () => {
     await consent.verifyOffersApprove(true);
   });
 
-  test("a free reader is shown what Plus would do, with no Approve, and can still decline", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
-    test.skip(true, "every account can connect an assistant until billing exists (OV-18)");
-    backendSimulator.connections.seedRequest(request());
-    await launcher.launch(SIGNED_IN);
-    await launcher.openConsent(REQUEST_ID);
-    const consent = await launcher.consentPage.verifyIsShown();
-
-    await consent.verifyOffersPlus(
-      "This request stays open for 26 more minutes. Get Plus and you’ll come back here to approve it.",
-    );
-    await consent.verifyOffersApprove(false);
-
-    await consent.declineOnFree();
-    await expect(page).toHaveURL(`${SIMULATED_ASSISTANT_CALLBACK}?error=access_denied&state=s`);
-    await expect
-      .poll(() => backendSimulator.analytics.events())
-      .toEqual([
-        { name: "mcp.consentScreen.shown", props: {} },
-        { name: "mcp.consentScreen.plusRequired", props: {} },
-        { name: "mcp.consentScreen.declined", props: { plan: "free" } },
-      ]);
-  });
-
-  test("a free reader can approve while every account can connect", async ({ launcher, backendSimulator, page }) => {
+  test("a free account can approve and connect an assistant", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.connections.seedRequest(request());
     await launcher.launch(SIGNED_IN);
     await launcher.openConsent(REQUEST_ID);

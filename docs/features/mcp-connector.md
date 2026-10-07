@@ -1,6 +1,6 @@
 # The MCP connector
 
-OV-26: a Plus reader connects Claude, or any other MCP client, to their account, and
+OV-26: a signed-in reader connects Claude, or any other MCP client, to their account, and
 the assistant reads their overviews and transcripts, and (OV-109) marks them read, unread
 or favourite when the reader asks. The synthesis across many overviews happens in the
 reader's own assistant, on their own plan. This server only serves the sources and keeps
@@ -103,39 +103,31 @@ reader's behalf, exactly as it protects every other write (`sign-in.md`). A requ
 decided once: the update that records the decision only matches an undecided, unexpired
 row.
 
-## Plus
+## The connection belongs to an account, not to a plan
 
-The card gates the connector on Plus. Until OV-18 this used to be impossible, because a
-plan was only a local setting (`plus-upsell.md`) and the server had nothing to check.
-`accounts.plan` now exists, defaults to `free`, and is set by hand:
+OV-26 gated the connector on Plus. **OV-104 took that gate out** (`docs/architecture/tiers.md`):
+the paid plans sell volume, never features, and the MCP connection is one of the three
+things — with sync and narration in every voice — that make signing up worth doing. Any
+signed-in account can connect an assistant, whatever it pays.
+
+So there is no plan check anywhere in the connector. Approving, the code exchange, every
+refresh and every request through `resolveAccessToken` ask only whether there is a live
+session or a live token. `canConnectAssistant` in `@overview/domain` is gone, and so is the
+`plan_required` error code, which nothing could raise any more. **A signed-out device still
+cannot connect**: approving needs a session, which is what Settings › Connections and the
+consent screen say instead.
+
+`accounts.plan` stays, because the quotas OV-102 and OV-103 count against it. It defaults
+to `free` and is still set by hand until OV-18 bills for it:
 
 ```
 task plan -- reader@example.com plus
 ```
 
-**Until OV-18 ships, every account can connect.** Nothing can be bought, so the connector
-could not be tested by anyone not set to Plus by hand. Every check below asks
-`canConnectAssistant(plan)` in `@overview/domain`, which answers yes for any plan for now;
-moving the connector back to Plus is that one function returning `plan === "plus"`, and
-un-skipping the tests that say "until billing exists". A signed-out device still cannot
-connect: approving needs a session.
-
-OV-18's billing will write the same column. It is checked at three points, so that
-leaving Plus cuts access off rather than waiting for a token to lapse:
-
-- **Approving** answers `403 plan_required` to a free reader. The request stays open, so a
-  reader who upgrades can come back and approve it. The consent screen knows the plan
-  up front, from the session, so it can show the free-tier state rather than a button
-  that fails.
-- **The code exchange and every refresh** refuse with `invalid_grant` once the account is
-  not Plus.
-- **Every request** through `resolveAccessToken` joins the account and requires Plus.
-
-`GET /api/session` carries the plan, and the clients read it there through `usePlan()`. A
-device with no session is on Free: Plus belongs to an account. A signed-in device that has
-not heard back, or could not ask, does not know its plan and says so ("Checking…",
-"Couldn't check your plan", with Try again) rather than calling it Free, so an offline
-Plus reader is never pitched Plus.
+`GET /api/session` carries the plan, and the clients read it there through `usePlan()` for
+the Plan section. A device with no session is on Free. A signed-in device that has not heard
+back, or could not ask, does not know its plan and says so ("Checking…", "Couldn't check
+your plan", with Try again) rather than calling it Free.
 
 ## Tokens
 
@@ -213,7 +205,7 @@ zod, already here, writes each tool's JSON Schema.
 In order, a request meets:
 
 1. **The per-address limit**, as on every route.
-2. **The bearer**, through `resolveAccessToken`, which also requires Plus. A missing,
+2. **The bearer**, through `resolveAccessToken`. A missing,
    unknown, expired or lapsed token is `401` with
    `WWW-Authenticate: Bearer resource_metadata="<APP_URL>/.well-known/oauth-protected-resource/mcp", scope="overviews:read overviews:write"`,
    plus `error="invalid_token"` when a token was sent. A reader's session token is not an
@@ -382,26 +374,26 @@ the server.
 
 **Both answers leave.** Approve and Decline each get `{ redirectTo }` and go there by a full
 page load, so there is no result screen: the pressed button says where it is going
-("Sending you back to claude.ai…"), both lock, and a status region reads the same. A free
-reader has no Approve at all, only what Plus would do, how long the request stays open,
-See Plus and Decline. An expired or answered request (`404 not_found`) is the error state
-with no retry, since the only way forward is from the assistant.
+("Sending you back to claude.ai…"), both lock, and a status region reads the same. Every
+signed-in reader gets the same Approve and Decline, whatever they pay (OV-104). An expired
+or answered request (`404 not_found`) is the error state with no retry, since the only way
+forward is from the assistant.
 
 ## Settings › Connections
 
 `/settings/connections` (`ConnectionsSection`, design 58i–58r), after API keys, shown
-wherever the shell can sync. Its row reads "N connected" or "None" on Plus, "Needs Plus" on
-Free, and "Sign in first" signed out, which is its own state rather than the Free one
-because a connection belongs to an account.
+wherever the shell can sync. Its row reads "N connected" or "None" signed in, "Sign in
+first" signed out, and "Couldn't check" when the account could not be read — there is no
+plan state, because a connection belongs to an account rather than to a plan.
 
 The intro says an assistant can read the reader's overviews and transcripts and mark them
-read or favourite; it does not say which a given connection holds. On Plus it lists each
+read or favourite; it does not say which a given connection holds. It lists each
 connection by name ("No name given" when there is none), when it connected and when it
 was last used. `last_used_at` is touched at most once an hour, so the
 line says "Used in the last hour", "Used today" or "Last used 14 September", never minutes.
 Below is the connector address (`<server>/mcp`, with Copy where the clipboard can be
 written), three steps for Claude, and with nothing connected, three questions to try, one
-of them across overviews. The Plus panel's MCP line links here.
+of them across overviews.
 
 **Revoke asks once.** It cannot be undone, so the row turns into a confirmation that says
 so. Revoke access removes the row at once, sends the delete, and moves focus to the
@@ -410,12 +402,12 @@ with focus on its Revoke.
 
 ## Events
 
-The design's five events are in the analytics catalogue under the app's own naming
+The design's events are in the analytics catalogue under the app's own naming
 (`docs/architecture/analytics.md`, "Naming"): `mcp.consentScreen.shown` once a request
-has loaded, `mcp.consentScreen.plusRequired` once a reader on Free is shown the Plus card,
-`mcp.consentScreen.approved`, and `mcp.consentScreen.declined` with the plan the reader was
-on, both sent as the page is left so they outlive it, and `mcp.settingsConnections.revoked`
-once the server has taken the revoke. Only a
+has loaded, `mcp.consentScreen.approved`, and `mcp.consentScreen.declined` with the plan the
+reader was on, both sent as the page is left so they outlive it, and
+`mcp.settingsConnections.revoked` once the server has taken the revoke. The two that counted
+a reader being shown the Plus card went with the gate (OV-104). Only a
 signed-in reader is counted, so a request looked at before signing in is not; the server
 still logs every decision and revoke itself, as above.
 
@@ -427,10 +419,6 @@ still logs every decision and revoke itself, as above.
   added when one is wanted.
 - **A sweep** of unused clients, lapsed authorization requests and expired tokens, which
   waits for the same future job as expired sessions (`api.md`).
-- **Coming back after buying Plus.** The free consent state says, as design 58g does, that
-  getting Plus brings the reader back to approve the request. See Plus opens the Plan
-  section, which has nothing to buy yet; carrying the request through a purchase and back
-  waits for billing (OV-18).
 - **Other writes**: filing under a topic, tags, the capture reason. `mark_overviews` is
   the only tool that writes, and the write scope covers only marks; another kind of write
   would be another tool under the same scope, or a scope of its own if the reader should be

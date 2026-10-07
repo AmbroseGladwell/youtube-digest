@@ -44,8 +44,6 @@ export const postForm = (testApp: TestApp, url: string, fields: Record<string, s
     payload: form(fields),
   });
 
-export const putOnPlan = (testApp: TestApp, account: TestAccount, plan: "free" | "plus") =>
-  testApp.sql.query("update accounts set plan = $2 where id = $1", [account.accountId, plan]);
 
 // An MCP client as Claude would be one: it registers itself, sends the reader to authorize,
 // and trades what comes back for tokens (docs/features/mcp-connector.md).

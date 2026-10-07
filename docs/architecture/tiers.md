@@ -98,8 +98,9 @@ They are what makes signing up worth doing. Their cost to us follows the number 
 overviews, and that number is limited on Free. One voice costs the same to render as
 another, so there is nothing to sell in the voice picker. Plus copy said Plus syncs, while
 the server has given sync to every account since it was built. The code was right and the
-copy was wrong (`plusFeatures.ts`). The MCP connection is gated on Plus today
-(`mcp-connector.md`). That gate goes.
+copy was wrong. The MCP connection was gated on Plus. **OV-104 took that gate out and
+rewrote the copy to sell volume** (`mcp-connector.md`, `plus-upsell.md`); what is still to
+come is showing a reader their own counts, which waits on OV-102 and OV-103.
 
 **Signed out, your own key is unlimited,** as it is today: generation runs on the device,
 the library stays on the device, and none of our running costs apply. Our server fetches

@@ -2,7 +2,6 @@ import { expect } from "@playwright/experimental-ct-react";
 import { connectionRowTestIds } from "../../src/features/connections/components/ConnectionRow/ConnectionRowTestIds.js";
 import { connectionsSectionTestIds } from "../../src/features/connections/components/ConnectionsSection/ConnectionsSectionTestIds.js";
 import { connectorSetupTestIds } from "../../src/features/connections/components/ConnectorSetup/ConnectorSetupTestIds.js";
-import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 // Settings › Connections (docs/features/mcp-connector.md).
@@ -60,12 +59,6 @@ export class ConnectionsSectionPageObject extends PageObject {
 
   verifyCopied = () => this.step("verifyCopied", () => this.expectToBeVisible(connectorSetupTestIds.copied));
 
-  verifyOffersPlus = () =>
-    this.step("verifyOffersPlus", async () => {
-      await this.expectToBeVisible(connectionsSectionTestIds.plusOffer);
-      await this.expectToHaveCount(connectorSetupTestIds.root, 0);
-    });
-
   verifyAsksToSignIn = () =>
     this.step("verifyAsksToSignIn", async () => {
       await this.expectToBeVisible(connectionsSectionTestIds.signInFirst);
@@ -77,5 +70,4 @@ export class ConnectionsSectionPageObject extends PageObject {
   tryAgain = () =>
     this.step("tryAgain", () => this.get(connectionsSectionTestIds.error).getByRole("button", { name: "Try again" }).click());
 
-  openFromPlusPanel = () => this.step("openFromPlusPanel", () => this.click(plusPlanPanelTestIds.connectionsLink));
 }

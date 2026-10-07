@@ -6,13 +6,9 @@ export const EXAMPLE_QUESTIONS = [
   "“Which video explained index funds, and what was its verdict?”",
 ];
 
-export interface ExampleQuestionsProps {
-  onTint?: boolean;
-}
-
-export function ExampleQuestions({ onTint = false }: ExampleQuestionsProps) {
+export function ExampleQuestions() {
   return (
-    <ul className={`${styles.root} ${onTint ? styles.onTint : ""}`} aria-label="Example questions">
+    <ul className={styles.root} aria-label="Example questions">
       {EXAMPLE_QUESTIONS.map((question) => (
         <li key={question} className={styles.question}>
           {question}
