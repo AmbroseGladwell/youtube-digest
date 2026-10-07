@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ClientErrorBatch, readClientError, readClientWarning } from "@overview/domain";
+import { apiLogLines, ClientErrorBatch, readClientError, readClientWarning } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -24,14 +24,13 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
 
       for (const { source, type, message, handled, frames, requestId, apiErrorCode, status, trail } of errors) {
         request.log.warn(
-          {
+          apiLogLines.errors.clientError({
             clientError: { source, type, message, handled, top: frames[0], apiErrorCode, status },
             failedRequestId: requestId,
             trail: trail.map(({ name }) => name),
             signedIn: request.session !== null,
             ...context,
-          },
-          "client error",
+          }),
         );
       }
       // Logged and nothing more: a degraded moment the app carried on through is the
@@ -39,12 +38,16 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
       for (const { at: _at, ...warning } of warnings.map(readClientWarning)) {
         const { requestId, ...logged } = "requestId" in warning ? warning : { ...warning, requestId: undefined };
         request.log.warn(
-          { clientWarning: logged, failedRequestId: requestId, signedIn: request.session !== null, ...context },
-          "client warning",
+          apiLogLines.errors.clientWarning({
+            clientWarning: logged,
+            failedRequestId: requestId,
+            signedIn: request.session !== null,
+            ...context,
+          }),
         );
       }
       if (dropped !== undefined) {
-        request.log.warn({ dropped, surface: context.surface, appVersion: context.appVersion }, "client errors dropped");
+        request.log.warn(apiLogLines.errors.clientErrorsDropped({ dropped, surface: context.surface, appVersion: context.appVersion }));
       }
       if (sink !== null && errors.length > 0) {
         const source = {
@@ -55,7 +58,7 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
         void sink
           .capture(errors, source)
           .catch((error: unknown) =>
-            request.log.warn({ errors: errors.length, error: String(error) }, "client errors not forwarded"),
+            request.log.warn(apiLogLines.errors.clientErrorsNotForwarded({ errors: errors.length, error: String(error) })),
           );
       }
       return reply.status(204).send();

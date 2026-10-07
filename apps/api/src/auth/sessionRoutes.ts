@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { LinkCode, SessionInfo } from "@overview/domain";
+import { apiLogLines, type LinkCode, type SessionInfo } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { deleteSession } from "./deleteSession.js";
 import { issueLinkCode } from "./issueLinkCode.js";
@@ -21,7 +21,7 @@ export function sessionRoutes(app: FastifyInstance, { sql, clock, sessionCookieS
 
   app.post("/session/link-code", async (request) => {
     const issued = await issueLinkCode(sql, request.session!.accountId, clock());
-    request.log.info({ transport: request.session!.transport }, "link code issued");
+    request.log.info(apiLogLines.auth.linkCodeIssued({ transport: request.session!.transport }));
     const linkCode: LinkCode = { linkCode: issued.code, linkCodeExpiresAt: issued.expiresAt };
     return linkCode;
   });
@@ -29,7 +29,7 @@ export function sessionRoutes(app: FastifyInstance, { sql, clock, sessionCookieS
   app.delete("/session", async (request, reply) => {
     const session = request.session!;
     await deleteSession(sql, session.tokenHash);
-    request.log.info({ transport: session.transport }, "signed out");
+    request.log.info(apiLogLines.auth.signedOut({ transport: session.transport }));
     if (session.transport === "cookie") {
       reply.header("set-cookie", clearedSessionCookie({ secure: sessionCookieSecure }));
     }

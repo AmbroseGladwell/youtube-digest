@@ -3,6 +3,7 @@ import sys
 from collections.abc import Mapping
 from urllib.parse import urlparse
 
+from . import log_lines
 from .json_log_formatter import JsonLogFormatter
 from .otlp_log_handler import OtlpLogHandler
 from .otlp_logs_config import otlp_logs_config
@@ -33,5 +34,5 @@ def configure_logging(env: Mapping[str, str]) -> OtlpLogHandler | None:
         logging.getLogger(name).propagate = True
     logging.getLogger("uvicorn.access").disabled = True
     origin = None if config is None else f"{urlparse(config.endpoint).scheme}://{urlparse(config.endpoint).netloc}"
-    logging.getLogger(__name__).info("log shipping", extra={"endpoint": origin})
+    log_lines.SERVICE_LOG_SHIPPING.write(logging.getLogger(__name__), endpoint=origin)
     return shipping

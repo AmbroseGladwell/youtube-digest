@@ -1,3 +1,5 @@
+import { apiLogLines } from "@overview/domain";
+import { SERVICE_NAME } from "./createLogger.js";
 import { otlpLogRecord, otlpValue, type OtlpLogRecord } from "./otlpLogRecord.js";
 
 export interface OtlpLogExporterOptions {
@@ -14,7 +16,7 @@ export interface OtlpLogExporterOptions {
   onFailure?: (message: string) => void;
 }
 
-const SCOPE = { name: "overview-api" };
+const SCOPE = { name: SERVICE_NAME };
 
 // pino's lines, batched and posted as OTLP/HTTP JSON to whatever the OTEL_* variables name.
 // No SDK and no worker thread: a slow or absent destination costs held lines, never a
@@ -93,8 +95,12 @@ export class OtlpLogExporter {
       observedTimeUnixNano: at,
       severityNumber: 13,
       severityText: "WARN",
-      body: { stringValue: "log records dropped" },
-      attributes: [{ key: "dropped", value: otlpValue(dropped) }],
+      body: { stringValue: apiLogLines.logs.recordsDropped.message },
+      attributes: [
+        { key: "logCode", value: otlpValue(apiLogLines.logs.recordsDropped.logCode) },
+        { key: "service", value: otlpValue(SERVICE_NAME) },
+        { key: "dropped", value: otlpValue(dropped) },
+      ],
     };
   }
 

@@ -80,7 +80,11 @@ test("a batch the destination refused is dropped, not retried, and the next batc
 
   assert.deepEqual(failures, ["Error: the log destination answered 503"]);
   assert.deepEqual(posted.map(({ bodies }) => bodies), [["log records dropped", "arrived"]]);
-  assert.deepEqual(posted[0]!.attributes[0], [{ key: "dropped", value: { intValue: "2" } }]);
+  assert.deepEqual(posted[0]!.attributes[0], [
+    { key: "logCode", value: { stringValue: "api.logs.recordsDropped" } },
+    { key: "service", value: { stringValue: "overview-api" } },
+    { key: "dropped", value: { intValue: "2" } },
+  ]);
 });
 
 test("past what it may hold, lines are dropped and counted rather than held without limit", async () => {
@@ -92,7 +96,11 @@ test("past what it may hold, lines are dropped and counted rather than held with
   await exporter.flush();
 
   assert.deepEqual(posted.map(({ bodies }) => bodies), [["log records dropped", "a", "b"]]);
-  assert.deepEqual(posted[0]!.attributes[0], [{ key: "dropped", value: { intValue: "1" } }]);
+  assert.deepEqual(posted[0]!.attributes[0], [
+    { key: "logCode", value: { stringValue: "api.logs.recordsDropped" } },
+    { key: "service", value: { stringValue: "overview-api" } },
+    { key: "dropped", value: { intValue: "1" } },
+  ]);
 });
 
 test("closing ships what is still held", async () => {

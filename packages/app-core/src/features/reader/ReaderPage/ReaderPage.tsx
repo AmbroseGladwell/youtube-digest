@@ -442,6 +442,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         {(!isPanel || playerDocked) && (
           <ReaderPlayerBar
             view={barView}
+            status={notePlayer.snapshot.status}
             time={notePlayer.time}
             lines={lines}
             lineStarts={notePlayer.snapshot.timings.lineStarts}

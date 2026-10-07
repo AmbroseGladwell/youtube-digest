@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import { isApiError } from "../http/ApiError.js";
 import { logRefused } from "../http/logRefused.js";
 import { JSON_RPC_ERRORS, jsonRpcError } from "./handleMcpMessage.js";
@@ -18,7 +19,7 @@ export function registerMcpErrorHandler(app: FastifyInstance, reporting: Request
       logRefused(request, "invalid_request", error.statusCode);
       return reply.status(error.statusCode).send(jsonRpcError(null, code, error.message));
     }
-    request.log.error({ err: error, requestId: request.id }, "unhandled error");
+    request.log.error(apiLogLines.http.unhandledError({ err: error, requestId: request.id }));
     reportRequestError(reporting, request, error);
     return reply.status(500).send(jsonRpcError(null, JSON_RPC_ERRORS.internalError, "Something went wrong"));
   });

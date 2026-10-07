@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { FastifyBaseLogger } from "fastify";
-import { StoredTranscript, type Plan, type VideoId } from "@overview/domain";
+import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountId } from "../auth/AccountId.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
@@ -99,8 +99,12 @@ export class ServiceTranscripts {
       if (!reservation.reserved) {
         const retryAfterSeconds = secondsToNextDay(now);
         log.warn(
-          { ...callerLogged(caller), limit: reservation.limit, used: reservation.used, retryAfterSeconds },
-          "service transcript quota spent",
+          apiLogLines.serviceTranscripts.quotaSpent({
+            ...callerLogged(caller),
+            limit: reservation.limit,
+            used: reservation.used,
+            retryAfterSeconds,
+          }),
         );
         throw new QuotaSpentError(retryAfterSeconds);
       }
@@ -129,7 +133,13 @@ export class ServiceTranscripts {
           spend: async (bytes) => {
             proxyBytes = bytes;
             const today = await usage.addProxyBytes(clock(), bytes);
-            log.info({ proxyBytes: bytes, proxiedToday: today.proxied, proxyBytesToday: today.proxyBytes }, "transcript proxy spend");
+            log.info(
+              apiLogLines.serviceTranscripts.proxySpend({
+                proxyBytes: bytes,
+                proxiedToday: today.proxied,
+                proxyBytesToday: today.proxyBytes,
+              }),
+            );
           },
         },
         videoId,
@@ -142,7 +152,7 @@ export class ServiceTranscripts {
       if (failed.failure === TranscriptFetchFailure.NO_CAPTIONS || failed.failure === TranscriptFetchFailure.VIDEO_UNAVAILABLE) {
         this.#missing.set(videoId, { error: failed, until: clock().getTime() + MISSING_TTL_MS });
       }
-      log.warn({ failure: failed.failure, proxyBytes, ms: clock().getTime() - startedAt }, "service transcript failed");
+      log.warn(apiLogLines.serviceTranscripts.failed({ failure: failed.failure, proxyBytes, ms: clock().getTime() - startedAt }));
       throw failed;
     }
 
@@ -155,7 +165,7 @@ export class ServiceTranscripts {
     });
     const fault = transcriptFault(transcript, videoId);
     if (fault !== null) {
-      log.warn({ fault, via: result.via }, "service transcript refused");
+      log.warn(apiLogLines.serviceTranscripts.refused({ fault, via: result.via }));
       throw new TranscriptFetchError("YouTube answered with captions that could not be read", {
         failure: TranscriptFetchFailure.MALFORMED_RESPONSE,
         sourceId: "service",
@@ -163,7 +173,7 @@ export class ServiceTranscripts {
     }
     await transcripts.putServiceFetched(transcript);
     log.info(
-      {
+      apiLogLines.serviceTranscripts.fetched({
         via: result.via,
         proxySessions: result.proxySessions,
         proxyBytes,
@@ -172,8 +182,7 @@ export class ServiceTranscripts {
         ms: clock().getTime() - startedAt,
         used: reservation.used,
         limit: reservation.limit,
-      },
-      "service transcript fetched",
+      }),
     );
     return { transcript, via: result.via };
   }

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { NarrationVoice, narrationLanguage, redactErrorMessage } from "@overview/domain";
+import { apiLogLines, narrationLanguage, NarrationVoice, redactErrorMessage } from "@overview/domain";
 import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
 import type { Narrator } from "./Narrator.js";
@@ -9,9 +9,9 @@ const RETRY_DELAYS_MS = [30_000, 120_000];
 const STALE_RENDER_MS = 15 * 60 * 1000;
 
 export interface RenderLog {
-  info(entry: object, message: string): void;
-  warn(entry: object, message: string): void;
-  error(entry: object, message: string): void;
+  info(line: object): void;
+  warn(line: object): void;
+  error(line: object): void;
 }
 
 export interface AudioRenderQueueOptions {
@@ -54,7 +54,7 @@ export class AudioRenderQueue {
     try {
       while (await this.#renderNext()) {}
     } catch (error) {
-      this.#options.log.error({ error: redactErrorMessage(String(error)) }, "audio worker stopped");
+      this.#options.log.error(apiLogLines.audio.workerStopped({ error: redactErrorMessage(String(error)) }));
     }
   }
 
@@ -84,14 +84,13 @@ export class AudioRenderQueue {
       const readyAt = clock();
       await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, readyAt);
       log.info(
-        {
+        apiLogLines.audio.rendered({
           ...entry,
           synthesisSeconds: narration.synthesisSeconds,
           audioSeconds: narration.durationSeconds,
           bytes: narration.audio.byteLength,
           requestToReadySeconds: (readyAt.getTime() - job.requestedAt.getTime()) / 1000,
-        },
-        "audio rendered",
+        }),
       );
     } catch (error) {
       const delay = RETRY_DELAYS_MS[Math.min(job.attempts - 1, RETRY_DELAYS_MS.length - 1)]!;
@@ -105,9 +104,9 @@ export class AudioRenderQueue {
       );
       const failed = { ...entry, error: redactErrorMessage(String(error)), status };
       if (status === "failed") {
-        log.error(failed, "audio render gave up");
+        log.error(apiLogLines.audio.renderGaveUp(failed));
       } else {
-        log.warn(failed, "audio render failed");
+        log.warn(apiLogLines.audio.renderFailed(failed));
       }
       if (status === "queued" && this.#options.runWorkers) {
         setTimeout(() => this.kick(), delay).unref();

@@ -31,7 +31,7 @@ def handler_to(destination, **options):
 
 
 def logger_with(handler):
-    logger = logging.getLogger(f"test.otlp.{id(handler)}")
+    logger = logging.getLogger(f"overview_tts.test.otlp.{id(handler)}")
     logger.handlers = [handler]
     logger.propagate = False
     logger.setLevel(logging.INFO)
@@ -76,7 +76,7 @@ def test_a_batch_the_destination_refuses_is_counted_and_said_in_the_next_one_tha
 
     records = destination.records()
     assert records[0]["body"] == {"stringValue": "log records dropped"}
-    assert attributes(records[0]) == {"dropped": "2"}
+    assert attributes(records[0]) == {"logCode": "tts.logs.recordsDropped", "service": "overview-tts", "dropped": "2"}
     assert [record["body"]["stringValue"] for record in records[1:]] == ["idle, stopping"]
 
 

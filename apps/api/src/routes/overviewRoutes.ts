@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { DEFAULT_OVERVIEW_STATE, Filing, OverviewId, OverviewState, TopicId } from "@overview/domain";
+import { apiLogLines, DEFAULT_OVERVIEW_STATE, Filing, OverviewId, OverviewState, TopicId } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
 import { ifMatchOf, sendWritten, UpdatedAt } from "../http/writeHeaders.js";
@@ -131,10 +131,10 @@ export function overviewRoutes(
     // On every delete, the retry of one already done included, so a failure here heals.
     const forgotten = await transcripts.forgetUnnoted(accountId);
     if (forgotten > 0) {
-      request.log.info({ count: forgotten }, "transcripts forgotten");
+      request.log.info(apiLogLines.transcripts.forgotten({ count: forgotten }));
     }
     if (overview === null || overview === undefined) {
-      request.log.info({ kind: "overview", id }, "record already deleted");
+      request.log.info(apiLogLines.sync.recordAlreadyDeleted({ kind: "overview", id }));
       return reply.status(204).send();
     }
     return sendWritten(reply, overview);

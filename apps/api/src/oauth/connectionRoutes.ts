@@ -1,5 +1,12 @@
 import type { FastifyInstance } from "fastify";
-import { ConnectionDecision, type ConnectionDecided, type ConnectionRequest, type Connections } from "@overview/domain";
+import {
+  apiLogLines,
+  canConnectAssistant,
+  ConnectionDecision,
+  type ConnectionDecided,
+  type ConnectionRequest,
+  type Connections,
+} from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -49,7 +56,7 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
     if (redirectTo === null) {
       throw notPending();
     }
-    request.log.info({ approved: approve }, "connection request decided");
+    request.log.info(apiLogLines.mcp.connectionRequestDecided({ approved: approve }));
     const decided: ConnectionDecided = { redirectTo };
     return decided;
   });
@@ -66,7 +73,7 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
     if (!revoked) {
       throw new ApiError("not_found", "No such connection");
     }
-    request.log.info({ connectionId: request.params.id, by: "reader" }, "connection revoked");
+    request.log.info(apiLogLines.mcp.connectionRevoked({ connectionId: request.params.id, by: "reader" }));
     return reply.status(204).send();
   });
 }

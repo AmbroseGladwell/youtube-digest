@@ -214,6 +214,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
 
       <ReaderPlayerBar
         view={barView}
+        status={notePlayer.snapshot.status}
         time={notePlayer.time}
         lines={lines}
         lineStarts={notePlayer.snapshot.timings.lineStarts}

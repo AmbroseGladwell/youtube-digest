@@ -5,6 +5,8 @@ from pathlib import Path
 
 import numpy as np
 
+from . import log_lines
+
 log = logging.getLogger(__name__)
 
 MODEL_FILE = "kokoro-v1.0.onnx"
@@ -43,10 +45,10 @@ class LoadingSynthesiser:
         started = time.perf_counter()
         try:
             self._loaded = load()
-            log.info("model loaded", extra={"loadSeconds": round(time.perf_counter() - started, 2)})
+            log_lines.MODEL_LOADED.write(log, loadSeconds=round(time.perf_counter() - started, 2))
         except BaseException as error:
             self._error = error
-            log.error("model failed to load", exc_info=error)
+            log_lines.MODEL_FAILED_TO_LOAD.write(log, exc_info=error)
         finally:
             self._ready.set()
 

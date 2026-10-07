@@ -323,3 +323,33 @@ test("a narration request that fails leaves the note it was made for saved and r
   await reader.verifyTitle("The Simulated Video");
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
+
+test("a press says which state the player was in, so a listen begun is told from one carried on", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Paused/);
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+
+  await expect
+    .poll(() =>
+      backendSimulator.analytics
+        .events()
+        .filter(({ name }) => name === "reader.playerBar.mainPressed")
+        .map(({ props }) => props),
+    )
+    .toEqual([
+      { button: "play", state: "ready", overviewId: NOTE.id },
+      { button: "pause", state: "playing", overviewId: NOTE.id },
+      { button: "play", state: "paused", overviewId: NOTE.id },
+    ]);
+});

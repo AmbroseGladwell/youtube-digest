@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import { isApiError } from "../http/ApiError.js";
 import { logRefused } from "../http/logRefused.js";
 import { isOAuthError } from "./OAuthError.js";
@@ -25,7 +26,7 @@ export function registerOAuthErrorHandler(app: FastifyInstance, reporting: Reque
       logRefused(request, "invalid_request", 400);
       return reply.status(400).send({ error: "invalid_request", error_description: error.message });
     }
-    request.log.error({ err: error, requestId: request.id }, "unhandled error");
+    request.log.error(apiLogLines.http.unhandledError({ err: error, requestId: request.id }));
     reportRequestError(reporting, request, error);
     return reply.status(500).send({ error: "server_error", error_description: "Something went wrong" });
   });

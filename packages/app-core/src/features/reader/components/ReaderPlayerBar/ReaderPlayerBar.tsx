@@ -5,6 +5,7 @@ import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/Favou
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { PlayerScrubber } from "../../../player/components/PlayerScrubber/PlayerScrubber.js";
+import type { PlayerStatus } from "../../../player/types/PlayerSnapshot.js";
 import { SKIP_SECONDS } from "../../../player/PlayerEngine.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { usePlayer } from "../../../player/PlayerContext.js";
@@ -14,6 +15,8 @@ import { readerPlayerBarTestIds } from "./ReaderPlayerBarTestIds.js";
 
 export interface ReaderPlayerBarProps {
   view: PlayerBarView;
+  // The state the view was built from, which is what the main button's press is counted under.
+  status: PlayerStatus;
   time: number;
   lines: NoteLine[];
   lineStarts: number[];
@@ -61,6 +64,7 @@ function MainIcon({ kind }: { kind: PlayerBarView["main"]["kind"] }) {
 // clock beside it is not announced, or a screen reader would read it four times a second.
 export function ReaderPlayerBar({
   view,
+  status,
   time,
   lines,
   lineStarts,
@@ -102,7 +106,7 @@ export function ReaderPlayerBar({
           type="button"
           className={styles.play}
           onClick={() => {
-            analytics.playerBar.mainPressed({ button: view.main.kind });
+            analytics.playerBar.mainPressed({ button: view.main.kind, state: status });
             onMain();
           }}
           disabled={view.main.disabled}

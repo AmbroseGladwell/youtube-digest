@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { ShareRequest, ShareToken, shareContentHash, shareSnapshot, shareUrl } from "@overview/domain";
+import { apiLogLines, shareContentHash, ShareRequest, shareSnapshot, ShareToken, shareUrl } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { ShareRow, SharesRepository } from "../shares/SharesRepository.js";
@@ -35,7 +35,7 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
       snapshot,
       contentHash: await shareContentHash(snapshot.note),
     });
-    request.log.info({ replacing, hasTranscript: transcript !== null, hasNarration: narration !== null }, "share created");
+    request.log.info(apiLogLines.shares.created({ replacing, hasTranscript: transcript !== null, hasNarration: narration !== null }));
     return reply.status(replacing ? 200 : 201).send(describe(share));
   });
 
@@ -48,7 +48,7 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
     if (!(await shares.revoke(request.session!.accountId, token))) {
       throw new ApiError("not_found", "This account has no live shared link with that token");
     }
-    request.log.info("share revoked");
+    request.log.info(apiLogLines.shares.revoked());
     return reply.status(204).send();
   });
 }
