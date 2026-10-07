@@ -4,6 +4,13 @@ import type { StoredTranscript } from "./StoredTranscript.js";
 
 export type WriteAcknowledgement = { rev: number } | { tombstoned: true } | { sent: true };
 
+// A duplicate made on this device folded into the account's copy of the same video
+// (docs/features/one-overview-per-video.md).
+export interface OverviewFold {
+  from: string;
+  into: string;
+}
+
 // The durable client-side half of sync, which the engine drives and never bypasses: the
 // outbox, the revision known for each record, the feed cursor, and whether this library
 // has been enrolled at all (docs/features/sync-client.md).
@@ -19,6 +26,11 @@ export interface SyncStorage {
   acknowledge(key: number, outcome: WriteAcknowledgement): Promise<void>;
   park(key: number, failure: OutboxFailure): Promise<void>;
   revisionOf(kind: OutboxKind, id: string): Promise<number | null>;
+  // The server holds another overview of the video this one is of. Its filing and state are
+  // folded onto that copy as journaled writes, this copy and its pending writes go, and its
+  // transcript write is re-pointed. Null when the other copy is not readable here yet, so
+  // nothing is touched (docs/features/one-overview-per-video.md).
+  foldOverview(from: string, into: string): Promise<OverviewFold | null>;
   // One page of the feed, applied atomically with the cursor that follows it.
   applyChanges(changes: RecordChange[], next: number): Promise<void>;
   onJournaled(listener: () => void): () => void;

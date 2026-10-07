@@ -85,7 +85,7 @@ an `ApiError`, and they are the whole of the write rules:
 
 | Decision | Used by | Rules |
 |---|---|---|
-| `decideReplace` | `POST /overviews`, `POST /topics` | live record and no `If-Match` → `already_exists`; `If-Match` mismatch → `revision_mismatch`; `If-Match` on an absent record → `not_found`; floor; the body's `schemaVersion` must be the caller's own; validate |
+| `decideReplace` | `POST /overviews`, `POST /topics` | live record and no `If-Match` → `already_exists`; `If-Match` mismatch → `revision_mismatch`; `If-Match` on an absent record → `not_found`; another live overview of the same video → `video_already_held` (`docs/features/one-overview-per-video.md`); floor; the body's `schemaVersion` must be the caller's own; validate |
 | `decideMerge` | the field writes and both upserts | absent and no defaults → `not_found`; `If-Match` mismatch; floor; migrate the stored body to the caller's version; merge; validate |
 | `decideTombstone` | `DELETE /overviews/:id` | absent or already deleted → nothing (204); `If-Match` mismatch; floor |
 
@@ -207,5 +207,6 @@ named here in one way, recorded there: the local stores journal to an outbox and
 `SyncedOverviewStore` wraps them, because the journal entry has to be inside the write's
 own transaction. The local store's `deleteOverview` now takes the state row with it.
 The shared transcript cache has since been built, with its gating settled:
-`docs/features/shared-transcript-cache.md`. Still not built: captures, audio, topic rename and delete, the one-overview-per-video question at
-first sync, and set-valued merging of `userTags` and `topicIds`.
+`docs/features/shared-transcript-cache.md`. One overview per video is settled, on the server
+and at first sync: `docs/features/one-overview-per-video.md`. Still not built: captures,
+audio, topic rename and delete, and set-valued merging of `userTags` and `topicIds`.

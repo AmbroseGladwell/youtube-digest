@@ -1,11 +1,14 @@
 import { useCallback, useRef, useState } from "react";
-import type { CaptureEntry, CaptureTranscriptSource, Overview, OverviewId } from "@overview/domain";
+import { heldOverviewOf, OverviewId, type CaptureEntry, type CaptureTranscriptSource, type Overview } from "@overview/domain";
+import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSetOverviewCaptureReasonMutation } from "../overviews/mutations/useSetOverviewCaptureReasonMutation.js";
 import { captureReasonFromDraft } from "../overviews/util/captureReasonFromDraft.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
+import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
+import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { NewOverviewRun } from "./types/NewOverviewRun.js";
 
 export interface StartOverviewRunOptions {
@@ -15,6 +18,9 @@ export interface StartOverviewRunOptions {
 
 export interface NewOverviewRunController {
   run: NewOverviewRun | null;
+  // Set instead of a run when the library already holds the video asked for: the dialog
+  // offers to open it rather than spending another generation on it.
+  held: AlreadyHeld | null;
   dialogOpen: boolean;
   // A link handed over by another paste field, which the dialog opens on: the home page's
   // field passes a playlist link here rather than starting a run (docs/features/playlists.md).
@@ -33,10 +39,12 @@ export interface NewOverviewRunController {
 // without a second app-wide context (docs/conventions/frontend-architecture-guide.md 4.1).
 export function useNewOverviewRun(): NewOverviewRunController {
   const { apiKeys } = useApiKeys();
+  const { overviewStore } = useStores();
   const { mutate } = useGenerateOverviewMutation(apiKeys);
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
   const analytics = useAnalytics();
   const [run, setRun] = useState<NewOverviewRun | null>(null);
+  const [held, setHeld] = useState<AlreadyHeld | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prefill, setPrefill] = useState<string | null>(null);
   const runIdRef = useRef(0);
@@ -60,11 +68,24 @@ export function useNewOverviewRun(): NewOverviewRunController {
     [mutateCaptureReason],
   );
 
+  // A regeneration names the id it writes under and is the reader's deliberate act; any
+  // other request for a video the library already holds opens what it holds instead
+  // (docs/features/one-overview-per-video.md).
+  const alreadyHeld = useCallback(
+    async (url: string, options: StartOverviewRunOptions): Promise<AlreadyHeld | null> => {
+      if (options.overviewId !== undefined) return null;
+      const videoId = extractYouTubeVideoId(url);
+      if (videoId === null) return null;
+      const found = await heldOverviewOf(overviewStore, videoId).catch(() => null);
+      return found === null ? null : { url, overviewId: OverviewId.parse(found.id), readable: found.readable };
+    },
+    [overviewStore],
+  );
+
   // The callbacks are stable because the status strip's self-dismiss timer depends on
   // them: a fresh identity every render would restart the countdown on every re-render.
-  const start = useCallback(
-    (url: string, options: StartOverviewRunOptions) => {
-      const runId = (runIdRef.current += 1);
+  const generate = useCallback(
+    (url: string, options: StartOverviewRunOptions, runId: number) => {
       const isCurrent = () => runIdRef.current === runId;
       const { from } = options;
       const startedAt = Date.now();
@@ -140,6 +161,24 @@ export function useNewOverviewRun(): NewOverviewRunController {
     [mutate, commitDraftOnto, analytics],
   );
 
+  const start = useCallback(
+    (url: string, options: StartOverviewRunOptions) => {
+      const runId = (runIdRef.current += 1);
+      const isCurrent = () => runIdRef.current === runId;
+      setHeld(null);
+      void alreadyHeld(url, options).then((found) => {
+        if (!isCurrent()) return;
+        if (found !== null) {
+          analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId });
+          setHeld(found);
+          return;
+        }
+        generate(url, options, runId);
+      });
+    },
+    [alreadyHeld, analytics, generate],
+  );
+
   const setCaptureReason = useCallback((captureReason: string) => {
     draftRef.current = captureReason;
     setRun((current) => (current === null ? null : { ...current, captureReason }));
@@ -160,21 +199,25 @@ export function useNewOverviewRun(): NewOverviewRunController {
 
   const open = useCallback(() => {
     setPrefill(null);
+    setHeld(null);
     setDialogOpen(true);
   }, []);
   const openWith = useCallback((url: string) => {
     setPrefill(url);
+    setHeld(null);
     setDialogOpen(true);
   }, []);
   const close = useCallback(() => setDialogOpen(false), []);
   const dismiss = useCallback(() => {
     runIdRef.current += 1;
     setRun(null);
+    setHeld(null);
     setDialogOpen(false);
   }, []);
 
   return {
     run,
+    held,
     dialogOpen,
     prefill,
     open,

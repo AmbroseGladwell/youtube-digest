@@ -5,6 +5,7 @@ import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import type { AlreadyHeld } from "../../types/AlreadyHeld.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { CaptureReasonField } from "../CaptureReasonField/CaptureReasonField.js";
@@ -25,7 +26,10 @@ export interface NewOverviewDialogProps {
   open: boolean;
   prefill: string | null;
   run: NewOverviewRun | null;
+  // The library already holds the video submitted, so nothing was started.
+  held: AlreadyHeld | null;
   onSubmit: (url: string) => void;
+  onOpenHeld: (overviewId: Overview["id"]) => void;
   onClose: () => void;
   onDismiss: () => void;
   onReadOverview: (overview: Overview) => void;
@@ -39,7 +43,9 @@ export function NewOverviewDialog({
   open,
   prefill,
   run,
+  held,
   onSubmit,
+  onOpenHeld,
   onClose,
   onDismiss,
   onReadOverview,
@@ -154,6 +160,45 @@ export function NewOverviewDialog({
                 onDismiss();
               }}
             />
+          </>
+        ) : held !== null && run === null ? (
+          // The library already holds this video: nothing to make, one thing to open
+          // (docs/features/one-overview-per-video.md, "Prevention").
+          <>
+            <div className={styles.head}>
+              <h2 className={styles.heading} id={HEADING_ID}>
+                You already have this
+              </h2>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={closeForm}
+                aria-label="Close"
+                data-testid={newOverviewDialogTestIds.closeButton}
+              >
+                <StrokeIcon name="close" size={16} />
+              </button>
+            </div>
+            <p className={styles.sourceMeta} data-testid={newOverviewDialogTestIds.alreadyHeld}>
+              {held.readable
+                ? "Your library already holds an overview of this video, so nothing new was made."
+                : "Your library already holds an overview of this video that this version of the app can't read yet, so nothing new was made."}
+            </p>
+            <div className={styles.foot}>
+              <span className={styles.footActions}>
+                <button type="button" className={styles.secondaryAction} onClick={closeForm}>
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={() => onOpenHeld(held.overviewId)}
+                  data-testid={newOverviewDialogTestIds.openHeldButton}
+                >
+                  Open your overview
+                </button>
+              </span>
+            </div>
           </>
         ) : run === null || run.error !== null ? (
           <>

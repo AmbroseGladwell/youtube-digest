@@ -1,14 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { CURRENT_SCHEMA_VERSIONS, OVERVIEW_CORPUS, type Overview, type Topic } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, OVERVIEW_CORPUS, VideoId, type Overview, type Topic } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 
 export const UPDATED_AT = "2026-09-26T08:30:00.000Z";
 
+// A video of its own per overview unless the test says otherwise: an account holds one
+// overview per video (docs/features/one-overview-per-video.md).
 export const storedOverview = (overrides: Partial<Overview> = {}) => ({
-  ...makeOverview(overrides),
+  ...makeOverview({ video: distinctVideo(), ...overrides }),
   schemaVersion: CURRENT_SCHEMA_VERSIONS.overview,
   updatedAt: UPDATED_AT,
 });
+
+export function distinctVideo(): Overview["video"] {
+  const id = randomUUID().slice(0, 11);
+  return { ...makeOverview().video, id: VideoId.parse(id), url: `https://www.youtube.com/watch?v=${id}` };
+}
 
 export const storedTopic = (overrides: Partial<Topic> = {}) => ({
   id: randomUUID(),

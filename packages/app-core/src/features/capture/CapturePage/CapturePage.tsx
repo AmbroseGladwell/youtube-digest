@@ -65,6 +65,17 @@ export function CapturePage() {
     void navigate(Routes.overview(finished.id), { replace: true, state: JUST_GENERATED });
   }, [finished, dismiss, navigate]);
 
+  // The panel has no dialog to say "you already have this" in: the overview it holds is
+  // the answer, so it opens (docs/features/one-overview-per-video.md, "Prevention").
+  const held = controller.held;
+  useEffect(() => {
+    if (held === null) {
+      return;
+    }
+    dismiss();
+    void navigate(Routes.overview(held.overviewId), { replace: true });
+  }, [held, dismiss, navigate]);
+
   const analytics = useAnalytics();
   const readOverview = (overview: Overview) => {
     analytics.capture.panel.readChosen({ overviewId: overview.id });

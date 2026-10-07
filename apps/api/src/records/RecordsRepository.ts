@@ -1,5 +1,6 @@
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { allocateSeq } from "./allocateSeq.js";
 import type { RecordKind } from "./RecordKind.js";
 import { storedRecordFromRow, type RecordRow, type StoredRecord } from "./StoredRecord.js";
 import type { WriteDecision } from "./WriteDecision.js";
@@ -17,7 +18,11 @@ export interface WriteOutcome {
 export interface WriteOperation {
   kind: RecordKind;
   id: string;
-  decide: (current: StoredRecord | null) => WriteDecision;
+  // The video an overview being written is of. The decision is handed the live overview
+  // under another id that already holds it, if there is one, so it can refuse a second
+  // (docs/features/one-overview-per-video.md).
+  videoId?: string | null;
+  decide: (current: StoredRecord | null, held: StoredRecord | null) => WriteDecision;
 }
 
 export interface ChangesPage {
@@ -26,7 +31,7 @@ export interface ChangesPage {
   more: boolean;
 }
 
-const RECORD_COLUMNS = "kind, id, schema_version, rev, seq, updated_at, deleted, body";
+export const RECORD_COLUMNS = "kind, id, schema_version, rev, seq, updated_at, deleted, body";
 
 // Every write allocates the account's next seq first, and that update row-locks the
 // account for the rest of the transaction: one account's writes commit in seq order, so a
@@ -44,10 +49,11 @@ export class RecordsRepository {
   async write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
-      for (const { kind, id, decide } of operations) {
-        const seq = await this.#allocateSeq(tx, accountId);
+      for (const { kind, id, videoId, decide } of operations) {
+        const seq = await allocateSeq(tx, accountId);
         const current = await this.#get(tx, accountId, kind, id);
-        const decision = decide(current);
+        const held = videoId == null ? null : await this.#liveOverviewOf(tx, accountId, videoId, id);
+        const decision = decide(current, held);
         if (decision.action === "nothing") {
           outcomes.push(null);
           continue;
@@ -109,12 +115,25 @@ export class RecordsRepository {
     return this.#get(this.#sql, accountId, kind, id);
   }
 
-  async #allocateSeq(tx: SqlClient, accountId: AccountId): Promise<number> {
-    const rows = await tx.query<{ last_seq: number | string | bigint }>(
-      "update accounts set last_seq = last_seq + 1 where id = $1 returning last_seq",
-      [accountId],
+  // Live overviews of one video, other than the one being written.
+  async liveOverviewsOf(accountId: AccountId, videoId: string): Promise<StoredRecord[]> {
+    const rows = await this.#sql.query<RecordRow>(
+      `select ${RECORD_COLUMNS} from records
+       where account_id = $1 and kind = 'overview' and not deleted and video_id = $2
+       order by seq`,
+      [accountId, videoId],
     );
-    return Number(rows[0]!.last_seq);
+    return rows.map(storedRecordFromRow);
+  }
+
+  async #liveOverviewOf(tx: SqlClient, accountId: AccountId, videoId: string, exceptId: string): Promise<StoredRecord | null> {
+    const rows = await tx.query<RecordRow>(
+      `select ${RECORD_COLUMNS} from records
+       where account_id = $1 and kind = 'overview' and not deleted and video_id = $2 and id <> $3
+       order by seq limit 1`,
+      [accountId, videoId, exceptId],
+    );
+    return rows[0] === undefined ? null : storedRecordFromRow(rows[0]);
   }
 
   async #get(tx: SqlClient, accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {

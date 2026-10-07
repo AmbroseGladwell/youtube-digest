@@ -2,6 +2,7 @@ import pg from "pg";
 import { createAudioSetup } from "./audio/createAudioSetup.js";
 import { buildApp } from "./buildApp.js";
 import { createPgSqlClient } from "./db/createPgSqlClient.js";
+import { migrationSteps } from "./db/migrationSteps.js";
 import { runMigrations } from "./db/runMigrations.js";
 import { ConfigError, loadConfig } from "./loadConfig.js";
 import { createPostHogErrorSink } from "./errors/postHogErrorSink.js";
@@ -46,7 +47,11 @@ const pool = new pg.Pool({ connectionString: config.databaseUrl });
 // crash the process. The pool replaces the connection on the next query.
 pool.on("error", (error) => logger.error({ err: error }, "database connection lost"));
 const sql = createPgSqlClient(pool);
-const applied = await runMigrations(sql);
+const applied = await runMigrations(sql, {
+  before: migrationSteps((folds) => {
+    for (const fold of folds) logger.info(fold, "duplicate overviews folded");
+  }),
+});
 const transcriptService =
   config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);
 const app = await buildApp({

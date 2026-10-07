@@ -4,6 +4,9 @@ import {
   OverviewState,
   Settings,
   Topic,
+  changedFields,
+  foldFiling,
+  foldOverviewState,
   type OutboxEntry,
   type OutboxFailure,
   type OutboxKind,
@@ -69,6 +72,27 @@ export class InMemorySyncStorage implements SyncStorage {
 
   async revisionOf(kind: OutboxKind, id: string) {
     return this.revisions.get(`${kind}/${id}`) ?? null;
+  }
+
+  // Through the store's own writes, as the IndexedDB storage does in one transaction.
+  async foldOverview(from: string, into: string) {
+    const winner = await this.overviewStore.getOverview(into as never).catch(() => null);
+    if (winner === null) return null;
+    const loser = await this.overviewStore.getOverview(from as never).catch(() => null);
+    if (loser !== null) {
+      const folded = foldFiling(winner, loser);
+      const changes = changedFields({ topicIds: winner.topicIds, tags: winner.tags, captureReason: winner.captureReason }, folded);
+      if (changes.topicIds) await this.overviewStore.setOverviewTopics(winner.id, changes.topicIds as never);
+      if (changes.tags) await this.overviewStore.setOverviewTags(winner.id, changes.tags);
+      if (changes.captureReason !== undefined) await this.overviewStore.setOverviewCaptureReason(winner.id, changes.captureReason);
+    }
+    const { overviewId: _winnerId, ...winnerState } = await this.overviewStore.getOverviewState(into as never);
+    const { overviewId: _loserId, ...loserState } = await this.overviewStore.getOverviewState(from as never);
+    const patch = changedFields(winnerState, foldOverviewState(winnerState, loserState));
+    if (Object.keys(patch).length > 0) await this.overviewStore.setOverviewState(into as never, patch);
+    await this.overviewStore.deleteOverview(from as never);
+    this.outbox = this.outbox.filter((entry) => !((entry.kind === "overview" || entry.kind === "overviewState") && entry.id === from));
+    return { from, into };
   }
 
   async transcriptToPush(videoId: string) {

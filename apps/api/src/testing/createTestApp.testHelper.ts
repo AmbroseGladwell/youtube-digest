@@ -12,6 +12,7 @@ import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { buildApp, type AppConfig, type TranscriptServiceSetup } from "../buildApp.js";
 import type { PlaylistReader } from "../playlists/PlaylistReader.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
+import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { makeRecordingErrorSink, type RecordingErrorSink } from "../errors/RecordingErrorSink.testHelper.js";
@@ -49,6 +50,9 @@ export interface TestAppOptions {
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
   playlistReader?: PlaylistReader;
+  // The database left at an earlier migration, so a test can seed what a later one cleans up
+  // and then run it with runMigrations.
+  migrationsUpTo?: number;
 }
 
 export const TEST_APP_URL = "https://overview.test";
@@ -57,10 +61,10 @@ export const TEST_APP_URL = "https://overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true, logger, slowQueryMs, transcriptService, playlistReader }: TestAppOptions = {},
+  { narration = true, logger, slowQueryMs, transcriptService, playlistReader, migrationsUpTo }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(new PGlite());
-  await runMigrations(sql);
+  await runMigrations(sql, { before: migrationSteps(), ...(migrationsUpTo === undefined ? {} : { upTo: migrationsUpTo }) });
   const clock: TestClock = {
     now: new Date("2026-09-26T09:00:00.000Z"),
     advance(ms) {

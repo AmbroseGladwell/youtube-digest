@@ -2,6 +2,7 @@ import pg from "pg";
 import { Plan } from "@overview/domain";
 import { setAccountPlan } from "../auth/setAccountPlan.js";
 import { createPgSqlClient } from "../db/createPgSqlClient.js";
+import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 
@@ -21,7 +22,7 @@ try {
 }
 
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
-await runMigrations(sql);
+await runMigrations(sql, { before: migrationSteps() });
 const updated = await setAccountPlan(sql, email, parsedPlan.data);
 await sql.close();
 

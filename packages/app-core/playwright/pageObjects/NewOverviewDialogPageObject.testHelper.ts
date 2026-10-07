@@ -81,4 +81,10 @@ export class NewOverviewDialogPageObject extends PageObject {
 
   clickReadOverview = () =>
     this.step("clickReadOverview", () => this.click(newOverviewDialogTestIds.readOverviewButton));
+
+  verifyAlreadyHeld = () =>
+    this.step("verifyAlreadyHeld", () => this.expectToBeVisible(newOverviewDialogTestIds.alreadyHeld));
+
+  clickOpenHeld = () =>
+    this.step("clickOpenHeld", () => this.click(newOverviewDialogTestIds.openHeldButton));
 }

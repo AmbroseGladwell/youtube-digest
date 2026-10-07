@@ -7,6 +7,9 @@ export type PushOutcome =
   | { result: "written"; rev: number }
   | { result: "gone" }
   | { result: "sent" }
+  // The account already holds an overview of this one's video, under the id named: an
+  // outcome to resolve, not a failure to park (docs/features/one-overview-per-video.md).
+  | { result: "held"; by: string }
   | { result: "stuck"; failure: OutboxFailure }
   | { result: "stopped"; reason: StopReason; detail: string };
 
@@ -55,7 +58,7 @@ async function send(
         case "followedPlaylist":
           return replaceWithRetry((ifMatch) => api.saveFollowedPlaylist(change.record, ifMatch), knownRev);
         default:
-          return replaceWithRetry((ifMatch) => api.createOverview(change.record, ifMatch), knownRev);
+          return createOverview(api, change.record, knownRev);
       }
     case "topics":
       return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt));
@@ -85,8 +88,13 @@ const written = ({ rev }: WrittenRecord): PushOutcome => ({ result: "written", r
 // not a tombstone on its way down.
 const isFieldWrite = ({ change }: OutboxEntry): boolean => change.op !== "replace" && change.op !== "transcript";
 
+// Only a refusal about this record's own revision names one worth retrying with.
 const revisionNamedBy = (error: unknown): number | null =>
-  isSyncRequestError(error) && typeof error.details?.rev === "number" ? error.details.rev : null;
+  isSyncRequestError(error) &&
+  (error.code === "already_exists" || error.code === "revision_mismatch") &&
+  typeof error.details?.rev === "number"
+    ? error.details.rev
+    : null;
 
 async function replaceWithRetry(
   replace: (ifMatch: number | null) => Promise<WrittenRecord>,
@@ -103,6 +111,20 @@ async function replaceWithRetry(
       }
       ifMatch = named;
     }
+  }
+}
+
+// A second overview of a video the account holds is refused naming the first; the caller
+// folds this one into it rather than resending (docs/features/one-overview-per-video.md).
+async function createOverview(api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> {
+  try {
+    return await replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
+  } catch (error) {
+    const by = isSyncRequestError(error) && error.code === "video_already_held" ? error.details?.overviewId : undefined;
+    if (typeof by === "string") {
+      return { result: "held", by };
+    }
+    throw error;
   }
 }
 

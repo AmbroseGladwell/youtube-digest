@@ -469,6 +469,10 @@ export const analyticsEvents = {
         failure: CaptureFailure,
         durationMs: z.number().int().nonnegative(),
       }),
+      alreadyHeld: event("The reader asks for a video the library already holds an overview of, so nothing is made", {
+        from: CaptureEntry,
+        overviewId: OverviewId,
+      }),
     },
     newOverviewDialog: {
       opened: event("The reader opens the new overview dialog", { from: z.enum(["newButton", "statusStrip"]) }),

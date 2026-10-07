@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { copyFile, mkdtemp, readdir, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { createPgliteSqlClient } from "./createPgliteSqlClient.js";
+import { migrationsBefore } from "./migrationsBefore.testHelper.js";
 import { runMigrations } from "./runMigrations.js";
 
 test("applies every migration file in version order and records each one", async () => {
@@ -39,7 +40,7 @@ test("two migrations with one version refuse to run, rather than skipping one", 
   await writeFile(join(dir, "V0001__second.sql"), "create table second_one (id int)");
   const sql = createPgliteSqlClient(new PGlite());
 
-  await assert.rejects(runMigrations(sql, pathToFileURL(`${dir}/`)), /two migrations share version 1/);
+  await assert.rejects(runMigrations(sql, { dir: pathToFileURL(`${dir}/`) }), /two migrations share version 1/);
   await sql.close();
 });
 
@@ -75,18 +76,9 @@ test("the tables the migrations create are there to be used", async () => {
   await sql.close();
 });
 
-const migrationsBefore = async (version: number): Promise<URL> => {
-  const source = fileURLToPath(new URL("../../migrations/", import.meta.url));
-  const dir = await mkdtemp(join(tmpdir(), "migrations-"));
-  for (const file of await readdir(source)) {
-    if (Number(file.slice(1, 5)) < version) await copyFile(join(source, file), join(dir, file));
-  }
-  return pathToFileURL(`${dir}/`);
-};
-
 test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
   const sql = createPgliteSqlClient(new PGlite());
-  await runMigrations(sql, await migrationsBefore(9));
+  await runMigrations(sql, { dir: await migrationsBefore(9) });
   const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
   for (const id of [first, second]) {
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
@@ -120,7 +112,7 @@ test("each account keeps the transcripts it stored before the shared cache, and 
 
 test("a share made before OV-83 reads as common knowledge with untimed key points, and one without a verdict keeps none", async () => {
   const sql = createPgliteSqlClient(new PGlite());
-  await runMigrations(sql, await migrationsBefore(13));
+  await runMigrations(sql, { dir: await migrationsBefore(13) });
   const accountId = "a0000000-0000-4000-8000-000000000001";
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);
   const share = (token: string, verdict: unknown, keyPoints = ["One.", "Two.", "Three."]) =>
@@ -151,7 +143,7 @@ test("a share made before OV-83 reads as common knowledge with untimed key point
 
 test("a share made before dubious claims were saved reads as having none saved, and one without a verdict keeps none", async () => {
   const sql = createPgliteSqlClient(new PGlite());
-  await runMigrations(sql, await migrationsBefore(14));
+  await runMigrations(sql, { dir: await migrationsBefore(14) });
   const accountId = "a0000000-0000-4000-8000-000000000001";
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);
   const share = (token: string, verdict: unknown) =>

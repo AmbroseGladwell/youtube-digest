@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
   OverviewId,
   isUnreadableRecordError,
@@ -215,6 +215,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }
 
   if (!overviewQuery.data || !overview) {
+    // The copy made here was folded into the account's while this page was open
+    // (docs/features/one-overview-per-video.md).
+    const folded = sync.folds.find((fold) => fold.from === overviewId);
+    if (folded !== undefined) {
+      return <Navigate to={Routes.overview(folded.into)} replace />;
+    }
     return <ReaderNotFound />;
   }
 
