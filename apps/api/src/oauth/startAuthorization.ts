@@ -1,6 +1,6 @@
 import type { SqlClient } from "../db/SqlClient.js";
 import { AUTHORIZATION_TTL_MS } from "./connectionTimings.js";
-import { CONNECTION_SCOPE } from "./connectionScope.js";
+import { CONNECTION_SCOPES, grantedScope } from "./connectionScope.js";
 import { findClient } from "./findClient.js";
 import type { OAuthUrls } from "./oauthUrls.js";
 import { S256_CHALLENGE } from "./verifierMatches.js";
@@ -47,9 +47,9 @@ export async function startAuthorization(
   if (query.code_challenge_method !== "S256" || query.code_challenge === undefined || !S256_CHALLENGE.test(query.code_challenge)) {
     return back("invalid_request", "PKCE with S256 is required");
   }
-  const scopes = (query.scope ?? CONNECTION_SCOPE).split(" ").filter((scope) => scope !== "");
-  if (!scopes.every((scope) => scope === CONNECTION_SCOPE)) {
-    return back("invalid_scope", `The only scope is ${CONNECTION_SCOPE}`);
+  const scope = grantedScope(query.scope);
+  if (scope === null) {
+    return back("invalid_scope", `The scopes are ${CONNECTION_SCOPES.join(" and ")}`);
   }
   if (query.resource !== undefined && !sameResource(query.resource, urls.resource)) {
     return back("invalid_target", `The only resource is ${urls.resource}`);
@@ -64,7 +64,7 @@ export async function startAuthorization(
       redirectUri,
       query.state ?? null,
       query.code_challenge,
-      CONNECTION_SCOPE,
+      scope,
       query.resource === undefined ? null : urls.resource,
       now.toISOString(),
       new Date(now.getTime() + AUTHORIZATION_TTL_MS).toISOString(),

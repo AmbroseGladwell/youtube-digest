@@ -106,7 +106,7 @@ export function ConsentPage() {
     return <div className={styles.root} aria-busy="true" data-testid={consentPageTestIds.loading} />;
   }
 
-  const { redirectHost: host, clientName, expiresAt } = request.data;
+  const { redirectHost: host, clientName, expiresAt, writes } = request.data;
   const left = minutesLeft(expiresAt, now);
   const { title, label, sub } = consentHeading(clientName);
 
@@ -293,7 +293,7 @@ export function ConsentPage() {
         ) : plan === undefined ? (
           <div className={styles.planPending} aria-busy="true" />
         ) : canConnectAssistant(plan) ? (
-          <ConsentAnswer host={host} deciding={deciding} onDecide={answer} />
+          <ConsentAnswer host={host} writes={writes} deciding={deciding} onDecide={answer} />
         ) : (
           <ConsentPlusCard minutesLeft={left} declining={deciding === "decline"} onDecline={() => answer("decline")} />
         )}

@@ -302,3 +302,106 @@ test("an overview this server cannot read is left out, and the assistant is told
   assert.match(text, /1 saved overview\(s\) could not be read by this server and are left out\./);
   await testApp.close();
 });
+
+test("mark_overviews marks overviews read, stamped by the server's clock, and the mark reaches the feed every device syncs", async () => {
+  const { testApp, reader, library, client } = await connectedToSamples();
+  const marked = [note(library, "fitness").overview, note(library, "finance").overview];
+
+  const { text, isError } = await client.callTool("mark_overviews", { ids: marked.map((overview) => overview.id), read: true });
+
+  assert.equal(isError, false);
+  assert.match(text, /^Marked 2 overview\(s\) read:/);
+  for (const overview of marked) {
+    assert.ok(text.includes(`- **${overview.video.title}**`), overview.video.title);
+    const change = await reader.change("overviewState", overview.id);
+    assert.deepEqual(change.body, { overviewId: overview.id, read: true, favourite: false, userTags: [] });
+    assert.equal(change.updatedAt, testApp.clock.now.toISOString());
+  }
+  const listed = await client.callTool("search_overviews", { read: true });
+  assert.match(listed.text, /^2 saved overview\(s\) match\./);
+  await testApp.close();
+});
+
+test("mark_overviews marks an overview unread and no longer a favourite, and leaves the reader's own tags alone", async () => {
+  const { testApp, reader, library, client } = await connectedToSamples();
+  const { id } = note(library, "parenting").overview;
+  await reader.inject({
+    method: "PUT",
+    url: `/api/overviews/${id}/state`,
+    body: { read: true, favourite: true, userTags: ["homeschool"], updatedAt: "2026-09-26T08:45:00.000Z" },
+  });
+
+  const { text } = await client.callTool("mark_overviews", { ids: [id], read: false, favourite: false });
+
+  assert.match(text, /^Marked 1 overview\(s\) unread and not a favourite:/);
+  const change = await reader.change("overviewState", id);
+  assert.deepEqual(change.body, { overviewId: id, read: false, favourite: false, userTags: ["homeschool"] });
+  assert.equal(change.rev, 2);
+  await testApp.close();
+});
+
+test("mark_overviews leaves an overview already marked as asked as it is, so the feed carries no empty change", async () => {
+  const { testApp, reader, library, client } = await connectedToSamples();
+  const { id, video } = note(library, "business").overview;
+  await client.callTool("mark_overviews", { ids: [id], favourite: true });
+
+  const again = await client.callTool("mark_overviews", { ids: [id], favourite: true });
+  const unread = await client.callTool("mark_overviews", { ids: [id], read: false });
+
+  assert.equal(again.text, `Already a favourite, left as they were:\n- **${video.title}**`);
+  assert.doesNotMatch(unread.text, /^Marked/);
+  assert.equal((await reader.change("overviewState", id)).rev, 1);
+  await testApp.close();
+});
+
+test("mark_overviews is a failed call without read or favourite to set, and without an id", async () => {
+  const { testApp, library, client } = await connectedToSamples();
+
+  const nothingToSet = await client.callTool("mark_overviews", { ids: [note(library, "fitness").overview.id] });
+  const noIds = await client.callTool("mark_overviews", { ids: [], read: true });
+
+  assert.equal(nothingToSet.isError, true);
+  assert.match(nothingToSet.text, /read, favourite or both/);
+  assert.equal(noIds.isError, true);
+  await testApp.close();
+});
+
+test("mark_overviews never marks another reader's overview: alone it is a failed call, beside the reader's own it is a note", async () => {
+  const { testApp, reader, library, client } = await connectedToSamples();
+  const other = await plusAccount(testApp);
+  const theirs = storedOverview();
+  await other.inject({ method: "POST", url: "/api/overviews", body: theirs });
+  const mine = note(library, "interesting").overview;
+
+  const alone = await client.callTool("mark_overviews", { ids: [theirs.id], read: true });
+  const beside = await client.callTool("mark_overviews", { ids: [mine.id, theirs.id], read: true });
+
+  assert.equal(alone.isError, true);
+  assert.match(alone.text, /Not in this library/);
+  assert.equal(beside.isError, false);
+  assert.match(beside.text, /^Marked 1 overview\(s\) read:/);
+  assert.ok(beside.text.includes(`Not in this library: ${theirs.id}.`));
+  assert.equal((await reader.change("overviewState", mine.id)).body?.read, true);
+  assert.ok(!(await other.changes()).changes.some((change) => change.kind === "overviewState"), "their feed carries no mark");
+  await testApp.close();
+});
+
+test("a connection approved to read only is not offered mark_overviews, and is told how to be reconnected if it calls it anyway", async () => {
+  const testApp = await createTestApp();
+  const reader = await plusAccount(testApp);
+  const library = sampleLibrary();
+  await seedLibrary(reader, library);
+  const client = await connectMcpClient(testApp, reader, "overviews:read");
+  const { id } = note(library, "fitness").overview;
+
+  const { instructions } = (await client.request("initialize", { protocolVersion: "2025-06-18", capabilities: {} })) as { instructions: string };
+  const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string }> };
+  const refused = await client.callTool("mark_overviews", { ids: [id], read: true });
+
+  assert.match(instructions, /approved to read only/);
+  assert.ok(!tools.some((tool) => tool.name === "mark_overviews"));
+  assert.equal(refused.isError, true);
+  assert.match(refused.text, /Settings › Connections/);
+  assert.ok(!(await reader.changes()).changes.some((change) => change.kind === "overviewState"));
+  await testApp.close();
+});

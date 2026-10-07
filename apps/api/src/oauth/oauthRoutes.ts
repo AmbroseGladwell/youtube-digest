@@ -6,7 +6,7 @@ import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { authenticateClient } from "./authenticateClient.js";
 import { ClientRegistration } from "./ClientRegistration.js";
-import { CONNECTION_SCOPE } from "./connectionScope.js";
+import { CONNECTION_SCOPES } from "./connectionScope.js";
 import { exchangeCode } from "./exchangeCode.js";
 import { OAuthError } from "./OAuthError.js";
 import type { OAuthUrls } from "./oauthUrls.js";
@@ -56,7 +56,7 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
     token_endpoint: urls.token,
     registration_endpoint: urls.register,
     revocation_endpoint: urls.revoke,
-    scopes_supported: [CONNECTION_SCOPE],
+    scopes_supported: [...CONNECTION_SCOPES],
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
@@ -68,7 +68,7 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
   const protectedResource = async () => ({
     resource: urls.resource,
     authorization_servers: [urls.issuer],
-    scopes_supported: [CONNECTION_SCOPE],
+    scopes_supported: [...CONNECTION_SCOPES],
     bearer_methods_supported: ["header"],
   });
   app.get("/.well-known/oauth-protected-resource", protectedResource);

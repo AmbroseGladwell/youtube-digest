@@ -14,6 +14,7 @@ const request: ConnectionRequest = {
   id: REQUEST_ID,
   clientName: "Claude",
   redirectHost: "claude.ai",
+  writes: true,
   expiresAt: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
 };
 

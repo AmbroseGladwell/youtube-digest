@@ -137,7 +137,7 @@ test("asking for another resource or another scope is refused back to the client
   const base = { client_id: assistant.clientId, redirect_uri: ASSISTANT_REDIRECT_URI, response_type: "code", code_challenge_method: "S256", code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM" };
 
   const resource = await assistant.authorize({ ...base, resource: "https://elsewhere.test/mcp" });
-  const scope = await assistant.authorize({ ...base, scope: "overviews:write" });
+  const scope = await assistant.authorize({ ...base, scope: "overviews:delete" });
 
   assert.equal(new URL(resource.headers.location as string).searchParams.get("error"), "invalid_target");
   assert.equal(new URL(scope.headers.location as string).searchParams.get("error"), "invalid_scope");
@@ -159,7 +159,7 @@ test("a Plus reader who approves sends the assistant back with a code, its state
   await testApp.close();
 });
 
-test("the code trades for a read-only access token that reads as the approving account", async () => {
+test("the code trades for an access token that reads and marks as the approving account, when no scope was named", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await plusAccount(testApp);
@@ -167,10 +167,23 @@ test("the code trades for a read-only access token that reads as the approving a
   const tokens = await assistant.connect(reader);
 
   assert.equal(tokens.token_type, "Bearer");
-  assert.equal(tokens.scope, "overviews:read");
+  assert.equal(tokens.scope, "overviews:read overviews:write");
   assert.equal(tokens.expires_in, 3600);
   const access = await reads(testApp, tokens.access_token);
   assert.equal(access?.accountId, reader.accountId);
+  await testApp.close();
+});
+
+test("an assistant that asks for the read scope alone is granted that alone, and one that asks only to write still reads", async () => {
+  const testApp = await createTestApp();
+  const assistant = await makeConnectingAssistant(testApp);
+  const reader = await plusAccount(testApp);
+
+  const reading = await assistant.connect(reader, { scope: "overviews:read" });
+  const writing = await assistant.connect(reader, { scope: "overviews:write" });
+
+  assert.equal(reading.scope, "overviews:read");
+  assert.equal(writing.scope, "overviews:read overviews:write");
   await testApp.close();
 });
 

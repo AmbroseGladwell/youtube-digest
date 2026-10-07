@@ -4,6 +4,7 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { accountPlan } from "../auth/accountPlan.js";
+import { connectionWrites } from "./connectionScope.js";
 import { decideAuthorization } from "./decideAuthorization.js";
 import { findPendingAuthorization } from "./findPendingAuthorization.js";
 import { listConnections } from "./listConnections.js";
@@ -32,6 +33,7 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
       id: pending.id,
       clientName: pending.clientName,
       redirectHost: new URL(pending.redirectUri).host,
+      writes: connectionWrites(pending.scope),
       expiresAt: pending.expiresAt,
     };
     return connectionRequest;

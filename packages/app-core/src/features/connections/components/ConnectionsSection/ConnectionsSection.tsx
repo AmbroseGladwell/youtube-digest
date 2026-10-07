@@ -17,7 +17,7 @@ import { connectionsSectionTestIds } from "./ConnectionsSectionTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 export const CONNECTIONS_INTRO =
-  "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved. Read-only.";
+  "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, and mark them read or favourite for you.";
 
 // Design 58i–58r. A connection belongs to an account on Plus, so signed out and Free each
 // say what it would take rather than showing controls that cannot work.
@@ -88,8 +88,8 @@ export function ConnectionsSection() {
       <div className={styles.offer} data-testid={connectionsSectionTestIds.plusOffer}>
         <p className={styles.label}>Comes with Plus</p>
         <p className={styles.body}>
-          Connect Claude or another assistant and it can read every overview and transcript you’ve saved, and answer
-          across them. Read-only.
+          Connect Claude or another assistant and it can read every overview and transcript you’ve saved, answer
+          across them, and mark them read or favourite for you.
         </p>
         <ExampleQuestions onTint />
         <div className={styles.actions}>

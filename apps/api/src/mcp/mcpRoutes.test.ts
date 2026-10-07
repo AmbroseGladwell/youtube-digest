@@ -23,7 +23,7 @@ test("a request with no token is turned away with the metadata a client follows 
   assert.equal(response.statusCode, 401);
   assert.equal(
     response.headers["www-authenticate"],
-    `Bearer resource_metadata="${TEST_APP_URL}/.well-known/oauth-protected-resource/mcp", scope="overviews:read"`,
+    `Bearer resource_metadata="${TEST_APP_URL}/.well-known/oauth-protected-resource/mcp", scope="overviews:read overviews:write"`,
   );
   await testApp.close();
 });
@@ -39,7 +39,7 @@ test("a reader's session token is not a connection's token, and opens nothing he
   await testApp.close();
 });
 
-test("initialize agrees the client's protocol version and offers read-only tools and a prompt", async () => {
+test("initialize agrees the client's protocol version and offers tools and a prompt", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await plusAccount(testApp));
 
@@ -63,19 +63,34 @@ test("initialize answers with its own latest version when it does not know the c
   await testApp.close();
 });
 
-test("tools/list offers the six tools, each marked read-only, with a schema for its arguments", async () => {
+test("tools/list offers the seven tools, all but mark_overviews marked read-only, with a schema for each one's arguments", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await plusAccount(testApp));
 
   const { tools } = (await client.request("tools/list")) as {
-    tools: Array<{ name: string; inputSchema: { type: string }; annotations: { readOnlyHint: boolean } }>;
+    tools: Array<{ name: string; inputSchema: { type: string }; annotations: { readOnlyHint: boolean; destructiveHint: boolean } }>;
   };
 
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript"],
+    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript", "mark_overviews"],
   );
-  assert.ok(tools.every((tool) => tool.annotations.readOnlyHint && tool.inputSchema.type === "object"));
+  assert.deepEqual(
+    tools.filter((tool) => !tool.annotations.readOnlyHint).map((tool) => tool.name),
+    ["mark_overviews"],
+  );
+  assert.ok(tools.every((tool) => !tool.annotations.destructiveHint && tool.inputSchema.type === "object"));
+  await testApp.close();
+});
+
+test("tools/list offers a connection approved to read only the six reading tools", async () => {
+  const testApp = await createTestApp();
+  const client = await connectMcpClient(testApp, await plusAccount(testApp), "overviews:read");
+
+  const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string; annotations: { readOnlyHint: boolean } }> };
+
+  assert.equal(tools.length, 6);
+  assert.ok(tools.every((tool) => tool.annotations.readOnlyHint));
   await testApp.close();
 });
 

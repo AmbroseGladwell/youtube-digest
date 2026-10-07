@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
-import type { RecordKind } from "../records/RecordKind.js";
+import { logRecordWritten } from "../records/logRecordWritten.js";
+import type { WriteOutcome } from "../records/RecordsRepository.js";
 import { ApiError } from "./ApiError.js";
 
 const IF_MATCH = /^"?([1-9]\d*)"?$/;
@@ -19,29 +20,7 @@ export function ifMatchOf(request: FastifyRequest): number | null {
 
 export const UpdatedAt = z.iso.datetime({ offset: true }).transform((value) => new Date(value).toISOString());
 
-export interface WrittenRecord {
-  kind: RecordKind;
-  id: string;
-  rev: number;
-  seq: number;
-  deleted: boolean;
-  schemaVersion: number;
-  previousSchemaVersion: number | null;
-}
-
-export function sendWritten(reply: FastifyReply, written: WrittenRecord, status: 200 | 201 = 200) {
-  const { kind, id, rev, seq, deleted, schemaVersion, previousSchemaVersion } = written;
-  reply.request.log.info(
-    {
-      kind,
-      id,
-      rev,
-      seq,
-      deleted,
-      schemaVersion,
-      ...(previousSchemaVersion !== null && previousSchemaVersion !== schemaVersion ? { migratedFrom: previousSchemaVersion } : {}),
-    },
-    "record written",
-  );
-  return reply.status(status).header("etag", `"${rev}"`).send({ id, rev, seq });
+export function sendWritten(reply: FastifyReply, written: WriteOutcome, status: 200 | 201 = 200) {
+  logRecordWritten(reply.request.log, written);
+  return reply.status(status).header("etag", `"${written.rev}"`).send({ id: written.id, rev: written.rev, seq: written.seq });
 }

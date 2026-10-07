@@ -29,7 +29,7 @@ export interface ConnectingAssistant {
   approveAs(account: TestAccount, authorization: Authorization): Promise<URL>;
   token(form: Record<string, string>): Promise<LightMyRequestResponse>;
   exchange(code: string, verifier: string, extra?: Record<string, string>): Promise<LightMyRequestResponse>;
-  connect(account: TestAccount): Promise<TokenSet>;
+  connect(account: TestAccount, params?: Record<string, string>): Promise<TokenSet>;
   refresh(refreshToken: string): Promise<LightMyRequestResponse>;
   revoke(token: string): Promise<LightMyRequestResponse>;
 }
@@ -76,7 +76,6 @@ export async function makeConnectingAssistant(
       code_challenge: s256Challenge(verifier),
       code_challenge_method: "S256",
       state,
-      scope: "overviews:read",
       ...params,
     });
     assert.equal(response.statusCode, 302, response.body);
@@ -108,8 +107,8 @@ export async function makeConnectingAssistant(
     approveAs,
     token,
     exchange,
-    connect: async (account) => {
-      const authorization = await startAuthorization();
+    connect: async (account, params = {}) => {
+      const authorization = await startAuthorization(params);
       const back = await approveAs(account, authorization);
       const response = await exchange(back.searchParams.get("code")!, authorization.verifier);
       assert.equal(response.statusCode, 200, response.body);

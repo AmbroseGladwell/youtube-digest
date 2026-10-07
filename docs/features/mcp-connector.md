@@ -1,9 +1,10 @@
 # The MCP connector
 
 OV-26: a Plus reader connects Claude, or any other MCP client, to their account, and
-the assistant reads their overviews and transcripts. The synthesis across many overviews
-happens in the reader's own assistant, on their own plan. This server only serves the
-sources.
+the assistant reads their overviews and transcripts, and (OV-109) marks them read, unread
+or favourite when the reader asks. The synthesis across many overviews happens in the
+reader's own assistant, on their own plan. This server only serves the sources and keeps
+the reader's marks.
 
 It is built in three slices, one card and one PR each:
 
@@ -15,7 +16,7 @@ It is built in three slices, one card and one PR each:
 3. **OV-58, the consent screen and the Settings section**, in the web app, once OV-51's
    Settings sections have landed.
 
-This document describes all three as built.
+This document describes all three as built, and the one tool that writes, added in OV-109.
 
 ## Why OAuth, and why its own tokens
 
@@ -29,9 +30,10 @@ they get one if they have none.
 **A connection's tokens are not sessions, and neither can stand in for the other.** They
 live in `connection_tokens`, not `sessions`, and only `resolveAccessToken` reads them. The
 session plugin never looks there, so an assistant's token opens nothing under `/api`, where
-the sync API can write. Tests hold both directions. A connection is read-only because the
-only thing that honours its token will be the MCP endpoint, and every tool there reads.
-That is a stronger guarantee than a scope string that each route has to remember to check.
+the sync API can write. Tests hold both directions. What a connection can do is therefore
+exactly what the tools on `/mcp` do: read, and, under the write scope ("Scopes", below),
+mark an overview read or favourite. There is no route that has to remember to check a scope
+string; one place offers or withholds the one tool that writes.
 
 ## The routes
 
@@ -44,7 +46,7 @@ like any other route, except reading a request, which a signed-out reader needs
 
 | Route | Who calls it | What it does |
 |---|---|---|
-| `GET /.well-known/oauth-authorization-server` | assistant | RFC 8414 metadata: every endpoint, S256 only, the one scope |
+| `GET /.well-known/oauth-authorization-server` | assistant | RFC 8414 metadata: every endpoint, S256 only, the two scopes |
 | `GET /.well-known/oauth-protected-resource[/mcp]` | assistant | RFC 9728: `/mcp` is guarded by this server. Both paths, because clients try both |
 | `POST /oauth/register` | assistant | RFC 7591 dynamic registration, open |
 | `GET /oauth/authorize` | reader's browser | checks the request and sends the reader to `/connect/<id>` |
@@ -88,8 +90,8 @@ on every token and revoke call, and either transport is accepted.
   address the caller named.
 - **Anything else wrong goes back to the client's own redirect as an error**, carrying its
   `state` and the `iss` parameter (RFC 9207). That covers a response type other than
-  `code`, PKCE missing or not S256, a scope other than `overviews:read`, and a `resource`
-  (RFC 8707) other than this server's `/mcp`.
+  `code`, PKCE missing or not S256, a scope outside `overviews:read` and `overviews:write`
+  ("Scopes", below), and a `resource` (RFC 8707) other than this server's `/mcp`.
 
 A good request becomes a row in `oauth_authorizations`, and the reader is sent to
 `/connect/<id>`. The row lasts **thirty minutes**, long enough for a reader who is not
@@ -159,6 +161,39 @@ the very next request. There is no revoked flag for a lookup to forget to check.
 `connections.last_used_at` is touched at most once an hour, as sessions are, so Settings
 can say when a connection was last used.
 
+## Scopes
+
+There are two, and the metadata lists both:
+
+| Scope | Lets the connection | Held by |
+|---|---|---|
+| `overviews:read` | read overviews, topics, tags and transcripts: the six reading tools | every connection |
+| `overviews:write` | mark overviews read, unread or favourite: `mark_overviews` | a connection that asked for it, or named no scope |
+
+**Every connection reads**, since that is what connecting is, so a request for
+`overviews:write` alone is granted both. **A request that names no scope is granted
+both**, which is what a client that follows the metadata does. **A request for
+`overviews:read` alone is honoured as read-only**, and that is what every connection made
+before OV-109 holds, since `overviews:read` was then the only scope. A scope outside the
+two is `invalid_scope`. The granted scope is stored on the authorization and copied to the
+connection, and the token response names it. `grantedScope` and `connectionWrites` in
+`connectionScope.ts` are the whole rule.
+
+**The consent screen says what was asked.** `GET /api/oauth/requests/:id` carries
+`writes`, and the permissions card lists marking as granted, and "Not change, add or
+delete an overview" as withheld, only when it is; a read-only request shows the original
+three lines, with "Change nothing. Access is read-only". The heading still says "wants to
+read your overviews" in both cases, since reading is what every connection does.
+
+**A read-only connection is not offered the write tool.** `tools/list` leaves
+`mark_overviews` out, and `initialize` says in its instructions that the connection was
+approved to read only and that reconnecting it from Settings › Connections lets the
+assistant mark overviews, so the assistant can tell the reader rather than silently lacking
+the tool ("Degrade visibly", `CLAUDE.md`). A call to it anyway is a failed call saying the
+same. Reconnecting means revoking in Settings and connecting again from the assistant,
+which asks the current metadata's scopes; there is no in-place upgrade of a connection's
+scope, which would need a consent screen of its own.
+
 ## The endpoint
 
 `/mcp` speaks MCP's Streamable HTTP transport, **statelessly**: every message is a `POST`,
@@ -180,7 +215,7 @@ In order, a request meets:
 1. **The per-address limit**, as on every route.
 2. **The bearer**, through `resolveAccessToken`, which also requires Plus. A missing,
    unknown, expired or lapsed token is `401` with
-   `WWW-Authenticate: Bearer resource_metadata="<APP_URL>/.well-known/oauth-protected-resource/mcp", scope="overviews:read"`,
+   `WWW-Authenticate: Bearer resource_metadata="<APP_URL>/.well-known/oauth-protected-resource/mcp", scope="overviews:read overviews:write"`,
    plus `error="invalid_token"` when a token was sent. A reader's session token is not an
    access token and gets the same answer.
 3. **`mcpAccount`**, 120 a minute per account, shared by all of a reader's assistants.
@@ -196,8 +231,9 @@ again rather than seeing a protocol fault.
 
 ## The tools
 
-All six read, and are marked `readOnlyHint`. Each reads the account's live records
-afresh, so what an assistant sees is what has reached the server through sync.
+Six read, and are marked `readOnlyHint`; one writes, and is marked as not read-only, not
+destructive and idempotent. Each reads the account's live records afresh, so what an
+assistant sees is what has reached the server through sync.
 
 | Tool | Returns |
 |---|---|
@@ -207,6 +243,7 @@ afresh, so what an assistant sees is what has reached the server through sync.
 | `get_overview` | one note in full |
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
 | `get_transcript` | one video's transcript, by its overview's id |
+| `mark_overviews` | marks up to 50 overviews, by id, read or unread and favourite or not; write scope only (OV-109) |
 
 **The filters** `search_overviews` and `get_overviews` share are `query`, `topic` (a name
 or an id), `tag` (the video's own or the reader's `userTags`), `verdict`, `dubious`,
@@ -232,6 +269,34 @@ unchanged.
 
 **A record this server cannot read**, one written at a newer schema version or one that
 no longer parses, is left out, and the listing and `get_overviews` say how many were.
+
+### Marking overviews
+
+`mark_overviews` takes `ids` (one to 50, as `search_overviews` gives them) and `read`,
+`favourite` or both. It is by id only, never by filter: "mark everything under Finance
+read" is a search and then a mark of what came back, so the assistant and the reader both
+see what is about to change, and a filter that matched the whole library could not mark
+it in one call.
+
+**It writes the reader's own `overviewState` record, through the same `decideMerge` the
+`PUT /api/overviews/:id/state` route uses**, with `DEFAULT_OVERVIEW_STATE` under an absent
+record and the reader's `userTags` left as they were, so the mark reaches every device
+through the changes feed like a mark made in the app. The server writes as itself
+(`serverClientContext`: the current client version and schema versions), since an assistant
+has no version to claim. **`updatedAt` is the server's clock.** The assistant is never
+asked for the time (`CLAUDE.md`, "Never let a model count, measure or time anything").
+
+**An overview already marked as asked is left alone** and reported as such, so the feed
+never carries a change that changes nothing, the rule `sync-api.md` has for the state
+route's empty patch. **An id not in this library**, another reader's included, is checked
+against the account's own overviews before anything is written: alone it is a failed call
+pointing at `search_overviews`, and beside the reader's own it is a note on an otherwise
+successful call, as `get_overviews` reports one. A state record written by a newer app
+than this server knows is the floor (`record_newer_than_client`), answered as a failed call
+that says nothing was changed.
+
+The reply names what was marked, by title, and what already was; it carries no ids
+beyond the missing ones, since the assistant has them.
 
 The **`compare_topic` prompt** asks the assistant to read everything under one topic with
 `get_overviews`, following the cursor, and say where the videos agree, contradict each
@@ -274,8 +339,9 @@ token, code or verifier is ever logged.
 
 Every tool call is logged as `mcp tool called` with the connection's id, the assistant
 (`claude`, `chatgpt` or `other`, from the name it registered with by `mcpAssistant`, never
-the name itself), the tool's name, how many overviews it returned (for the three that
-return overviews), whether it failed, and how long it took. These are logs, not analytics
+the name itself), the tool's name, how many overviews it returned or marked (for the four that
+do), whether it failed, and how long it took. A mark also logs `record written` for each
+state record it changed, as every write under `/api` does. These are logs, not analytics
 events: the reader didn't do anything in the app (`docs/architecture/analytics.md`,
 "Actions, not logs"). A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
 told to try again. A query, a topic, a note's content and a transcript are never logged.
@@ -288,7 +354,8 @@ sends the reader's browser.
 **The name is a claim and the address is the proof.** Registration is open, so a client
 calls itself whatever it likes, and may give no name at all. The heading quotes the name
 beside a line saying it is unchecked, or drops it ("An assistant wants to read your
-overviews"), and never shows a logo or a tick. The redirect host gets its own card above
+overviews"), and never shows a logo or a tick. The permissions card lists what the request
+asked for ("Scopes", above). The redirect host gets its own card above
 the permissions and the buttons, because it is the one thing on the screen the assistant
 cannot make up. A long name is cut at 60 characters on screen and kept whole in the
 heading's accessible name, and it is always a text node, never markup.
@@ -327,8 +394,10 @@ wherever the shell can sync. Its row reads "N connected" or "None" on Plus, "Nee
 Free, and "Sign in first" signed out, which is its own state rather than the Free one
 because a connection belongs to an account.
 
-On Plus it lists each connection by name ("No name given" when there is none), when it
-connected and when it was last used. `last_used_at` is touched at most once an hour, so the
+The intro says an assistant can read the reader's overviews and transcripts and mark them
+read or favourite; it does not say which a given connection holds. On Plus it lists each
+connection by name ("No name given" when there is none), when it connected and when it
+was last used. `last_used_at` is touched at most once an hour, so the
 line says "Used in the last hour", "Used today" or "Last used 14 September", never minutes.
 Below is the connector address (`<server>/mcp`, with Copy where the clipboard can be
 written), three steps for Claude, and with nothing connected, three questions to try, one
@@ -362,6 +431,10 @@ still logs every decision and revoke itself, as above.
   getting Plus brings the reader back to approve the request. See Plus opens the Plan
   section, which has nothing to buy yet; carrying the request through a purchase and back
   waits for billing (OV-18).
-- **Write tools** (mark read, favourite, file under a topic). Every connection is read-only
-  because nothing that honours its token writes, and a write tool would end that.
+- **Other writes**: filing under a topic, tags, the capture reason. `mark_overviews` is
+  the only tool that writes, and the write scope covers only marks; another kind of write
+  would be another tool under the same scope, or a scope of its own if the reader should be
+  able to allow one without the other.
+- **Which scope a connection holds, in Settings.** A connection from before OV-109 is
+  read-only and the row does not say so; the assistant says so when it is asked to mark.
 - **Audio.** Narration is not exposed, and would wait for sync to carry it.
