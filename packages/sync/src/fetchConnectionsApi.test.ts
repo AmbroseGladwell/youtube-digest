@@ -30,7 +30,7 @@ const answering = (status: number, body: unknown) => {
 };
 
 test("a request is read by its id", async () => {
-  const answer = { id: REQUEST_ID, clientName: null, redirectHost: "claude.ai", expiresAt: "2026-09-30T10:00:00.000Z" };
+  const answer = { id: REQUEST_ID, clientName: null, redirectHost: "claude.ai", writes: true, expiresAt: "2026-09-30T10:00:00.000Z" };
   const { sent, fetch } = answering(200, answer);
   const api = createFetchConnectionsApi({ baseUrl: "https://overview.example", fetch });
 

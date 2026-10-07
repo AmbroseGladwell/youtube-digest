@@ -249,6 +249,8 @@ export async function buildApp({
     mcpRoutes(mcp, {
       sql,
       transcripts: new TranscriptsRepository(sql, clock),
+      records: new RecordsRepository(sql, clock),
+      clock,
       appOrigin: new URL(config.appUrl).origin,
     });
   });

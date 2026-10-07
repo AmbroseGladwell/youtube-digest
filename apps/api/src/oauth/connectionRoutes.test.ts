@@ -15,17 +15,21 @@ const plusAccount = async (testApp: TestApp): Promise<TestAccount> => {
 
 const reads = (testApp: TestApp, accessToken: string) => resolveAccessToken(testApp.sql, accessToken, testApp.clock.now);
 
-test("the consent screen is told which app is asking and where it will send the reader", async () => {
+test("the consent screen is told which app is asking, where it will send the reader, and whether it asked to mark overviews", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
   const { consentId } = await assistant.startAuthorization();
+  const readOnly = await assistant.startAuthorization({ scope: "overviews:read" });
 
   const response = await reader.inject({ method: "GET", url: `/api/oauth/requests/${consentId}` });
+  const readOnlyResponse = await reader.inject({ method: "GET", url: `/api/oauth/requests/${readOnly.consentId}` });
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json().clientName, "Claude");
   assert.equal(response.json().redirectHost, "assistant.test");
+  assert.equal(response.json().writes, true);
+  assert.equal(readOnlyResponse.json().writes, false);
   await testApp.close();
 });
 
