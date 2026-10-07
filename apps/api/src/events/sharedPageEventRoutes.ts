@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { SharedPageEventBatch, ShareToken, parseSharedPageEvent, type AnalyticsEvent } from "@overview/domain";
+import { apiLogLines, parseSharedPageEvent, SharedPageEventBatch, ShareToken, type AnalyticsEvent } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -35,13 +35,13 @@ export function sharedPageEventRoutes(
       const signedIn = request.session !== null;
 
       for (const { name, props } of accepted) {
-        request.log.info({ event: name, props, viewId, signedIn, ...context }, "client event");
+        request.log.info(apiLogLines.analytics.clientEvent({ event: name, props, viewId, signedIn, ...context }));
       }
       if (dropped !== undefined) {
-        request.log.warn({ dropped, surface: context.surface, appVersion: context.appVersion }, "client events dropped");
+        request.log.warn(apiLogLines.analytics.clientEventsDropped({ dropped, surface: context.surface, appVersion: context.appVersion }));
       }
       if (refused > 0) {
-        request.log.warn({ refused, surface: context.surface, appVersion: context.appVersion }, "client events refused");
+        request.log.warn(apiLogLines.analytics.clientEventsRefused({ refused, surface: context.surface, appVersion: context.appVersion }));
       }
       if (sink !== null && accepted.length > 0) {
         const source = {
@@ -53,7 +53,7 @@ export function sharedPageEventRoutes(
         void sink
           .capture(accepted, source)
           .catch((error: unknown) =>
-            request.log.warn({ events: accepted.length, error: String(error) }, "client events not forwarded"),
+            request.log.warn(apiLogLines.analytics.clientEventsNotForwarded({ events: accepted.length, error: String(error) })),
           );
       }
       return reply.status(204).send();

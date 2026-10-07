@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { VideoId, type ServiceTranscriptStatus } from "@overview/domain";
+import { apiLogLines, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -38,7 +38,7 @@ export function serviceTranscriptRoutes(
           : { accountId: request.session.accountId, plan: await accountPlan(sql, request.session.accountId) };
       try {
         const answer = await service.resolve(videoId, caller, request.log);
-        if (answer.via === "cache") request.log.info("service transcript answered from the shared cache");
+        if (answer.via === "cache") request.log.info(apiLogLines.serviceTranscripts.answeredFromCache());
         return answer.transcript;
       } catch (error) {
         if (error instanceof QuotaSpentError) {

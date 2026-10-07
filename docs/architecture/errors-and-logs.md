@@ -6,7 +6,7 @@ one carries the account it happened to, the id of the call that failed, and the 
 things the reader did. The server's own logs go to PostHog too, so a client error and the
 server's lines for the same call can be found by one request id. This is OV-61.
 
-It has nine parts:
+It has ten parts:
 
 - the server's half: `POST /api/errors`, its checks, and passing errors on to PostHog
 - source maps, so a minified frame reads as the TypeScript it came from
@@ -17,6 +17,7 @@ It has nine parts:
 - the extension's service worker
 - shipping the server's own logs
 - alerts, so a new or worsening issue reaches someone
+- logging codes, so a line is found by a code rather than by its prose
 
 ## Where errors go
 
@@ -455,6 +456,62 @@ than 90 days of history.
    arrives.
 5. Do the same for the other two triggers. If spiking turns out noisy, disable it alone.
 
+## Logging codes
+
+**Every line carries a `logCode`**, the way every analytics event carries a name. This is
+OV-111. Before it, a line was found only by matching the prose in its message, which any of
+us could reword, and PostHog's log table had no column that told one kind of line from
+another. A code is stable; a message is prose and may be reworded without breaking a filter
+or a saved view.
+
+A code is `service.area.event`, mirroring `feature.screen.action` for events
+(`analytics.md`, "Naming"), so a code says where a line came from without a lookup, and
+`api.audio.*` is one filter for everything narration does:
+
+| Part | Is | Examples |
+|---|---|---|
+| service | which process wrote it | `api`, `tts` |
+| area | the part of that service, as the code is laid out | `audio`, `sync`, `http`, `render` |
+| event | what happened, in the past tense | `rendered`, `changesServed`, `requestRefused` |
+
+**The code is the line's position in the catalogue**, so the two can't drift:
+`apiLogLines.audio.rendered` *is* `api.audio.rendered`.
+
+- **The API's catalogue** is `packages/domain/src/logLines.ts`. Each entry declares its
+  level, its message and a description of what it means. A call site is
+  `request.log.info(apiLogLines.audio.rendered({ key, bytes }))` — the level stays at the
+  call site so `.error(` still greps, and the message and code come from the catalogue.
+- **The TTS service's** is `services/tts/src/overview_tts/log_lines.py`, the same scheme
+  under `tts.*`. A call site is `log_lines.RENDER_FINISHED.write(log, bytes=len(audio))`,
+  and the level comes from the entry because Python's logger takes it as the method.
+
+**The field is `logCode`, not `code`.** A refusal already logs the API error's `code`
+(`invalid_grant`, `client_unsupported`) and an error serialises its own, and a second
+meaning on that name would have overwritten them.
+
+**Fastify writes a dozen lines of its own** — the request pair, a route not found, a stream
+that closed early, a serializer that threw — several of them named by an error's message.
+`CodedLogController` (`logs/CodedLogController.ts`) overrides every one with a line from the
+catalogue, through Fastify 5's `logController` option.
+
+**A line from a library can't declare a code**, so the TTS service's formatter gives it one
+by the library's name: Kokoro's own warnings are `tts.thirdParty.kokoroOnnx` and uvicorn's
+lifecycle lines are `tts.thirdParty.uvicorn`. Nothing reaches PostHog uncoded, and
+`tts.thirdParty.*` is one clause to filter out.
+
+**The service is on every line too**, as `service` (`overview-api` or `overview-tts`). The
+TTS service already put it there; the API only had it as an OTLP resource attribute, which
+PostHog's `service` column doesn't read, so every API row showed blank.
+
+**Adding a line:** add it to the catalogue with its level, message and description, then
+call it. `logCodes.test.ts` fails if a log call writes a message of its own instead, and
+`logLines.test.ts` fails on a duplicate code, a code that doesn't match its position, or a
+description too short to act on. `test_log_lines.py` does the same for the TTS service.
+
+The request pair is about five in six lines by volume, so most queries start by excluding
+`api.http.requestReceived` and `api.http.requestCompleted`. Both are kept: a call that
+started and never finished is only visible as a received line with no completed one.
+
 ## Which level
 
 A log says what the system did. What a reader did is an event (`analytics.md`, "Three
@@ -615,6 +672,12 @@ PostHog's error tracking has an error's `request_id`, the id of the call that fa
 PostHog's Logs, filter on `reqId` equal to that id to see the server's lines for the call.
 Filter on `failedRequestId` to find the server's `client error` line for the report
 itself.
+
+Otherwise, start from the code. `logCode = api.audio.rendered` is every render that
+finished; `logCode` starting `api.audio.` is the whole of narration, request to render to
+delete; `logCode` starting `tts.` is what the Kokoro pool was doing at the time. A narration
+that never arrived is `api.audio.queued` with no `api.audio.rendered` for the same `key`,
+and the TTS service's side of it is joined by `ttsRequestId`.
 
 ## Turning it on
 

@@ -1,10 +1,11 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
+  apiLogLines,
   EmailCodeRequest,
   LinkCodeRequest,
   MagicLinkRequest,
-  SignInRequest,
   signInLink,
+  SignInRequest,
   type LinkedSession,
   type SignedIn,
 } from "@overview/domain";
@@ -74,7 +75,7 @@ export function authRoutes(
       now: clock(),
     });
     if (issued === null) {
-      request.log.warn({ surface, intent, reason: "cooldown" }, "magic link held back");
+      request.log.warn(apiLogLines.auth.magicLinkHeldBack({ surface, intent, reason: "cooldown" }));
     } else {
       const creating = intent === "createAccount" && !(await accountExists(sql, issued.email));
       const purpose = creating ? "createAccount" : "signIn";
@@ -87,7 +88,7 @@ export function authRoutes(
         firstName: creating ? firstName : null,
         expiresAt: issued.expiresAt,
       });
-      request.log.info({ surface, purpose }, "magic link sent");
+      request.log.info(apiLogLines.auth.magicLinkSent({ surface, purpose }));
     }
     return reply.status(202).send({ accepted: true });
   });
@@ -100,13 +101,17 @@ export function authRoutes(
   ): Promise<SignedIn> => {
     const account = await findOrCreateAccount(sql, link.email, link.firstName);
     request.log.info(
-      { accountId: account.id, created: account.created, intent: link.intent, surface: link.surface },
-      account.created ? "account created" : "signed in",
+      (account.created ? apiLogLines.auth.accountCreated : apiLogLines.auth.signedIn)({
+        accountId: account.id,
+        created: account.created,
+        intent: link.intent,
+        surface: link.surface,
+      }),
     );
     if (account.created && link.anonymousId !== null && eventSink !== null) {
       void eventSink.link(account.id, link.anonymousId, now).then(
-        () => request.log.info({ accountId: account.id }, "anonymous id linked"),
-        (error: unknown) => request.log.warn({ accountId: account.id, error: String(error) }, "anonymous id not linked"),
+        () => request.log.info(apiLogLines.auth.anonymousIdLinked({ accountId: account.id })),
+        (error: unknown) => request.log.warn(apiLogLines.auth.anonymousIdNotLinked({ accountId: account.id, error: String(error) })),
       );
     }
     if (link.surface === "extension") {
@@ -121,7 +126,7 @@ export function authRoutes(
       return signedIn;
     }
     const session = await createSessionForAccount(sql, account.id, { now, sessionTtlDays });
-    request.log.info({ accountId: account.id, sessionId: session.id, surface: "web" }, "session created");
+    request.log.info(apiLogLines.auth.sessionCreated({ accountId: account.id, sessionId: session.id, surface: "web" }));
     reply.header(
       "set-cookie",
       sessionCookie(session.token, { expiresAt: session.expiresAt, now, secure: sessionCookieSecure }),
@@ -166,7 +171,7 @@ export function authRoutes(
       throw new ApiError("link_invalid", "That code is wrong, has expired, or was already used");
     }
     const session = await createSessionForAccount(sql, accountId, { now, sessionTtlDays });
-    request.log.info({ accountId, sessionId: session.id, surface: "extension" }, "session created");
+    request.log.info(apiLogLines.auth.sessionCreated({ accountId, sessionId: session.id, surface: "extension" }));
     const [account] = await sql.query<{ email: string; first_name: string | null }>(
       "select email, first_name from accounts where id = $1",
       [accountId],

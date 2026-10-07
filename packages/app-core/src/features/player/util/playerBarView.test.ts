@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { OverviewId, type NoteLine } from "@overview/domain";
-import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
+import { OverviewId, PlayerState, type NoteLine } from "@overview/domain";
+import type { PlayerSnapshot, PlayerStatus } from "../types/PlayerSnapshot.js";
 import { playerBarView, sectionHeadingAt } from "./playerBarView.js";
 
 const line = (section: string, text: string, heading = false): NoteLine => ({ section, heading, bullet: false, text });
@@ -169,5 +169,24 @@ describe("sectionHeadingAt", () => {
   it("is the heading printed over the line, which for the summary is Premise", () => {
     expect(sectionHeadingAt(LINES, 1)).toBe("Premise");
     expect(sectionHeadingAt(LINES, 3)).toBe("Key points");
+  });
+});
+
+// A press says which state it was made in, so the catalogue has to know every one of them:
+// the record fails to compile if a status is added here, and the test if one is added there.
+const EVERY_STATUS: Record<PlayerStatus, true> = {
+  ready: true,
+  preparing: true,
+  playing: true,
+  paused: true,
+  buffering: true,
+  ended: true,
+  failed: true,
+  busy: true,
+};
+
+describe("the states a press can be counted under", () => {
+  it("are every state the player has, so reader.playerBar.mainPressed can always say which", () => {
+    expect([...PlayerState.options].sort()).toEqual(Object.keys(EVERY_STATUS).sort());
   });
 });

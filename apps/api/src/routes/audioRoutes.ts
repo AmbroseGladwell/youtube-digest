@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { DEFAULT_NARRATION_VOICE, NarrationVoice, SpokenScript } from "@overview/domain";
+import { apiLogLines, DEFAULT_NARRATION_VOICE, NarrationVoice, SpokenScript } from "@overview/domain";
 import { AUDIO_KEY_PATTERN, TTS_RENDER_VERSION, audioKey } from "../audio/audioKey.js";
 import type { AudioRender, AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import type { AudioRenderQueue } from "../audio/AudioRenderQueue.js";
@@ -69,10 +69,7 @@ export function audioRoutes(
     const key = audioKey(lines, voice);
 
     const existing = await renders.get(key);
-    request.log.info(
-      { key, priority, found: existing?.status ?? null, foundPriority: existing?.priority ?? null },
-      "audio requested",
-    );
+    request.log.info(apiLogLines.audio.requested({ key, priority, found: existing?.status ?? null, foundPriority: existing?.priority ?? null }));
     if (existing?.status === "ready") {
       return describe(existing);
     }
@@ -91,7 +88,7 @@ export function audioRoutes(
       requestedBy: accountId,
       now: clock(),
     });
-    request.log.info({ key, priority, voice, lines: lines.length, status: render.status }, "audio queued");
+    request.log.info(apiLogLines.audio.queued({ key, priority, voice, lines: lines.length, status: render.status }));
     queue.kick();
     return reply.status(202).send(describe(render));
   });
@@ -123,7 +120,7 @@ export function audioRoutes(
       throw new ApiError("not_found", "No narration this account asked for has this key");
     }
     await store.delete(key);
-    request.log.info({ key }, "audio deleted");
+    request.log.info(apiLogLines.audio.deleted({ key }));
     return reply.status(204).send();
   });
 

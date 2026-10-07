@@ -1,6 +1,7 @@
 import json
 import logging
 
+from .log_lines import OUR_LOGGER_ROOT, third_party_code
 from .redact_error_message import redact_error_message
 from .request_id import current_request_id
 
@@ -30,6 +31,8 @@ class JsonLogFormatter(logging.Formatter):
         for key, value in vars(record).items():
             if key not in _RECORD_OWN_FIELDS and not key.startswith("_"):
                 line[key] = value
+        if "logCode" not in line and not record.name.startswith(OUR_LOGGER_ROOT):
+            line["logCode"] = third_party_code(record.name)
         if record.exc_info is not None and record.exc_info[1] is not None:
             error = record.exc_info[1]
             line["err"] = {"type": type(error).__name__, "message": redact_error_message(str(error))}

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { StoredTranscript, VideoId } from "@overview/domain";
+import { apiLogLines, StoredTranscript, VideoId } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
@@ -19,7 +19,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     if (transcript === null) {
       throw new ApiError("not_found", "No transcript is kept for this video");
     }
-    request.log.info("transcript served");
+    request.log.info(apiLogLines.transcripts.served());
     return transcript;
   });
 
@@ -31,15 +31,15 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     }
     const fault = transcriptFault(transcript, videoId);
     if (fault !== null) {
-      request.log.warn({ fault, segments: transcript.segments.length }, "transcript refused");
+      request.log.warn(apiLogLines.transcripts.refused({ fault, segments: transcript.segments.length }));
       return reply.status(204).send();
     }
     const contribution = await transcripts.putIfNoted(request.session!.accountId, transcript);
     const logged = { contribution, generated: transcript.generated, segments: transcript.segments.length };
     if (contribution === "not-noted") {
-      request.log.warn(logged, "transcript not kept");
+      request.log.warn(apiLogLines.transcripts.notKept(logged));
     } else {
-      request.log.info(logged, "transcript stored");
+      request.log.info(apiLogLines.transcripts.stored(logged));
     }
     return reply.status(204).send();
   });
@@ -53,7 +53,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     async (request) => {
       const { videoId } = parseOrThrow(Params, request.params, "The video id");
       const transcript = await transcripts.getShared(videoId);
-      request.log.info({ hit: transcript !== null }, "shared transcript read");
+      request.log.info(apiLogLines.transcripts.sharedRead({ hit: transcript !== null }));
       if (transcript === null) {
         throw new ApiError("not_found", "No shared transcript is kept for this video");
       }

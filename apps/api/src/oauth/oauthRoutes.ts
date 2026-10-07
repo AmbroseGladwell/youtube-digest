@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
+import { apiLogLines } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import type { RateLimit } from "../rateLimit/RateLimit.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
@@ -77,7 +78,7 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
   app.post("/oauth/register", { preHandler: perAddress(rateLimits.oauthRegisterPerAddress) }, async (request, reply) => {
     const registration = parseOrOAuthError(ClientRegistration, request.body, "invalid_client_metadata");
     const registered = await registerClient(sql, registration, clock());
-    request.log.info({ authMethod: registered.token_endpoint_auth_method }, "oauth client registered");
+    request.log.info(apiLogLines.mcp.oauthClientRegistered({ authMethod: registered.token_endpoint_auth_method }));
     return noStore(reply).status(201).send(registered);
   });
 
@@ -117,14 +118,14 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
         throw new OAuthError("unsupported_grant_type", "Only authorization_code and refresh_token are supported");
     }
     if (grant.kind === "replayed") {
-      request.log.warn({ connectionId: grant.connectionId, reason: "replayed" }, "connection revoked");
+      request.log.warn(apiLogLines.mcp.connectionRevoked({ connectionId: grant.connectionId, reason: "replayed" }));
       throw new OAuthError("invalid_grant", "This grant was already used");
     }
     if (grant.kind === "refused") {
       throw new OAuthError("invalid_grant", grant.description);
     }
     if (grant.created) {
-      request.log.info({ connectionId: grant.connectionId }, "connection made");
+      request.log.info(apiLogLines.mcp.connectionMade({ connectionId: grant.connectionId }));
     }
     return noStore(reply).send(grant.tokens);
   });
@@ -134,7 +135,7 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
     const client = await authenticateClient(sql, request.headers.authorization, body);
     const revoked = await revokeToken(sql, { token: required(body, "token"), clientId: client.id });
     if (revoked !== null) {
-      request.log.info({ connectionId: revoked, by: "client" }, "connection revoked");
+      request.log.info(apiLogLines.mcp.connectionRevoked({ connectionId: revoked, by: "client" }));
     }
     return noStore(reply).status(200).send();
   });

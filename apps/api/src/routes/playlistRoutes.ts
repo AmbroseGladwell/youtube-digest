@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { PlaylistId } from "@overview/domain";
+import { apiLogLines, PlaylistId } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { PlaylistUnavailableError, type PlaylistReader } from "../playlists/PlaylistReader.js";
@@ -30,7 +30,7 @@ export function playlistRoutes(
         return await reader.read(id, request.log);
       } catch (error) {
         if (error instanceof PlaylistUnavailableError) {
-          request.log.info({ reason: error.reason }, "playlist unavailable");
+          request.log.info(apiLogLines.playlists.unavailable({ reason: error.reason }));
           throw new ApiError(error.reason === "private" ? "playlist_private" : "playlist_not_found", error.message);
         }
         throw error;

@@ -1,4 +1,5 @@
 import pg from "pg";
+import { apiLogLines } from "@overview/domain";
 import { createAudioSetup } from "./audio/createAudioSetup.js";
 import { buildApp } from "./buildApp.js";
 import { createPgSqlClient } from "./db/createPgSqlClient.js";
@@ -45,11 +46,11 @@ reportProcessErrors({
 const pool = new pg.Pool({ connectionString: config.databaseUrl });
 // An idle connection the database drops is emitted here, and an unheard "error" would
 // crash the process. The pool replaces the connection on the next query.
-pool.on("error", (error) => logger.error({ err: error }, "database connection lost"));
+pool.on("error", (error) => logger.error(apiLogLines.db.connectionLost({ err: error })));
 const sql = createPgSqlClient(pool);
 const applied = await runMigrations(sql, {
   before: migrationSteps((folds) => {
-    for (const fold of folds) logger.info(fold, "duplicate overviews folded");
+    for (const fold of folds) logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
   }),
 });
 const transcriptService =
@@ -68,42 +69,38 @@ const app = await buildApp({
   errorSink,
   logger,
 });
-app.log.info({ applied }, "migrations applied");
-app.log.info({ transport: config.mail.transport, appUrl: config.appUrl }, "magic links");
-app.log.info(
-  config.audio === null
-    ? "TTS_URL is not set: narration is unavailable"
-    : {
-        tts: config.audio.ttsUrl,
-        store: config.audio.store.kind === "r2" ? `r2:${config.audio.store.bucket}` : config.audio.store.dir,
-      },
-  "narration",
-);
-app.log.info(
-  config.transcriptService === null
-    ? "TRANSCRIPT_SERVICE is off: the server fetches no transcripts itself"
-    : {
-        proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
-        proxyDailyFetches: config.transcriptService.proxyDailyFetches,
-      },
-  "transcript service",
-);
-app.log.info(
-  config.youTubeApiKey === null ? "YOUTUBE_API_KEY is not set: playlists cannot be followed" : { source: "YouTube Data API" },
-  "playlists",
-);
-app.log.info(
-  postHog === null ? "POSTHOG_API_KEY is not set: client events and errors are logged only" : { host: postHog.host, environment },
-  "analytics",
-);
-app.log.info(
-  config.staticRoot === null ? "STATIC_ROOT is not set: serving the API only" : { root: config.staticRoot },
-  "web app",
-);
-app.log.info(
-  config.logs === null ? "no OTLP logs endpoint: logs go to stdout only" : { endpoint: new URL(config.logs.endpoint).origin },
-  "log shipping",
-);
+app.log.info(apiLogLines.startup.migrationsApplied({ applied }));
+app.log.info(apiLogLines.startup.magicLinks({ transport: config.mail.transport, appUrl: config.appUrl }));
+app.log.info(apiLogLines.startup.narration(
+    config.audio === null
+      ? { enabled: false, why: "TTS_URL is not set" }
+      : {
+          enabled: true,
+          tts: config.audio.ttsUrl,
+          store: config.audio.store.kind === "r2" ? `r2:${config.audio.store.bucket}` : config.audio.store.dir,
+        },
+  ));
+app.log.info(apiLogLines.startup.transcriptService(
+    config.transcriptService === null
+      ? { enabled: false, why: "TRANSCRIPT_SERVICE is off" }
+      : {
+          enabled: true,
+          proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
+          proxyDailyFetches: config.transcriptService.proxyDailyFetches,
+        },
+  ));
+app.log.info(apiLogLines.startup.playlists(
+    config.youTubeApiKey === null ? { enabled: false, why: "YOUTUBE_API_KEY is not set" } : { enabled: true, source: "YouTube Data API" },
+  ));
+app.log.info(apiLogLines.startup.analytics(
+    postHog === null ? { enabled: false, why: "POSTHOG_API_KEY is not set" } : { enabled: true, host: postHog.host, environment },
+  ));
+app.log.info(apiLogLines.startup.webApp(
+    config.staticRoot === null ? { enabled: false, why: "STATIC_ROOT is not set" } : { enabled: true, root: config.staticRoot },
+  ));
+app.log.info(apiLogLines.startup.logShipping(
+    config.logs === null ? { enabled: false, why: "no OTLP logs endpoint" } : { enabled: true, endpoint: new URL(config.logs.endpoint).origin },
+  ));
 
 // Fly stops an idle machine with SIGINT; the last lines are shipped before it goes.
 for (const signal of ["SIGINT", "SIGTERM"] as const) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { apiLogLines } from "@overview/domain";
 import type { McpAssistant } from "./mcpAssistant.js";
 import { mcpPrompts } from "./mcpPrompts.js";
 import { toolError, type McpToolContext } from "./McpTool.js";
@@ -94,12 +95,16 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
         ? toolError(`This connection was approved to read only, so ${name} is not available. ${READ_ONLY_INSTRUCTIONS}`)
         : await tool.call(args, context);
     context.log.info(
-      { ...logged, overviews: outcome.overviews ?? null, failed: outcome.isError === true, durationMs: durationMs() },
-      "mcp tool called",
+      apiLogLines.mcp.toolCalled({
+        ...logged,
+        overviews: outcome.overviews ?? null,
+        failed: outcome.isError === true,
+        durationMs: durationMs(),
+      }),
     );
     return { content: [{ type: "text", text: outcome.text }], isError: outcome.isError === true };
   } catch (error) {
-    context.log.error({ ...logged, err: error, durationMs: durationMs() }, "mcp tool failed");
+    context.log.error(apiLogLines.mcp.toolFailed({ ...logged, err: error, durationMs: durationMs() }));
     return { content: [{ type: "text", text: "Something went wrong. Try again shortly." }], isError: true };
   }
 }

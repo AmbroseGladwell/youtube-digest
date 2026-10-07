@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { PlaylistId } from "@overview/domain";
+import { apiLogLines, PlaylistId } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
 import { ifMatchOf, sendWritten } from "../http/writeHeaders.js";
@@ -39,7 +39,7 @@ export function followedPlaylistRoutes(app: FastifyInstance, records: RecordsRep
       },
     ]);
     if (written === null || written === undefined) {
-      request.log.info({ kind: "followedPlaylist", id }, "record already deleted");
+      request.log.info(apiLogLines.sync.recordAlreadyDeleted({ kind: "followedPlaylist", id }));
       return reply.status(204).send();
     }
     return sendWritten(reply, written);
