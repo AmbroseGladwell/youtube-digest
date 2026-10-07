@@ -495,9 +495,19 @@ that closed early, a serializer that threw — several of them named by an error
 catalogue, through Fastify 5's `logController` option.
 
 **A line from a library can't declare a code**, so the TTS service's formatter gives it one
-by the library's name: Kokoro's own warnings are `tts.thirdParty.kokoroOnnx` and uvicorn's
-lifecycle lines are `tts.thirdParty.uvicorn`. Nothing reaches PostHog uncoded, and
-`tts.thirdParty.*` is one clause to filter out.
+by the library's name: Kokoro's own notices are `tts.thirdParty.kokoroOnnx`, the phonemizer
+it calls is `tts.thirdParty.phonemizer`, and uvicorn's lifecycle lines are
+`tts.thirdParty.uvicorn`. Nothing reaches PostHog uncoded, and `tts.thirdParty.*` is one
+clause to filter out.
+
+**Library chatter is demoted to debug, not left at warn.** The phonemizer checks that every
+word came back as phonemes and warns when it didn't — `words count mismatch on 200.0% of the
+lines (2/1)` — several times a render, and the audio is fine. At warn it made "every warning
+from the TTS service" almost entirely that line. `configure_logging.py` demotes anything below
+error from `phonemizer` and `kokoro_onnx`, and uvicorn's info lifecycle lines (`Started server
+process`, `Application startup complete` and the rest), to debug. The service logs at info,
+so they are dropped; a root logger at debug still shows them. An error from either library,
+and a uvicorn warning, keep their level.
 
 **The service is on every line too**, as `service` (`overview-api` or `overview-tts`). The
 TTS service already put it there; the API only had it as an OTLP resource attribute, which

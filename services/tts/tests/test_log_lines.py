@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from fake_synthesiser import FakeSchedule, FakeSynthesiser
 from overview_tts import log_lines
+from overview_tts.configure_logging import DEMOTED_TO_DEBUG_BELOW, configure_logging
 from overview_tts.create_app import create_app
 from overview_tts.idle_exit import IdleExit
 from overview_tts.json_log_formatter import JsonLogFormatter
@@ -81,3 +82,50 @@ def test_every_line_a_render_writes_carries_a_code_from_the_catalogue():
         code = line["logCode"]
         assert code.startswith(f"{log_lines.THIRD_PARTY_PREFIX}.") or code in known, line["msg"]
     assert {line["logCode"] for line in written} >= {"tts.render.requested", "tts.render.finished", "tts.render.refused"}
+
+
+@pytest.fixture
+def configured_root():
+    root = logging.getLogger()
+    saved = (root.handlers, root.level)
+    configure_logging({})
+    reached: list[logging.LogRecord] = []
+
+    class Recording(logging.Handler):
+        def emit(self, record):
+            reached.append(record)
+
+    root.addHandler(Recording())
+    yield reached
+    root.handlers, root.level = saved
+    for name in DEMOTED_TO_DEBUG_BELOW:
+        logging.getLogger(name).filters = []
+    logging.getLogger("uvicorn.access").disabled = False
+
+
+def test_library_chatter_never_reaches_a_handler_at_info(configured_root):
+    logging.getLogger("phonemizer").warning("words count mismatch on 200.0%% of the lines (2/1)")
+    logging.getLogger("kokoro_onnx").warning("rounding speed 1.1 to 1")
+    logging.getLogger("uvicorn.error").info("Application startup complete.")
+
+    assert configured_root == []
+
+
+def test_a_library_error_or_a_uvicorn_warning_keeps_its_level(configured_root):
+    logging.getLogger("phonemizer").error("espeak not installed")
+    logging.getLogger("kokoro_onnx").error("Failed to load espeak shared library")
+    logging.getLogger("uvicorn.error").warning("Invalid HTTP request received.")
+
+    assert [(record.name, record.levelno) for record in configured_root] == [
+        ("phonemizer", logging.ERROR),
+        ("kokoro_onnx", logging.ERROR),
+        ("uvicorn.error", logging.WARNING),
+    ]
+
+
+def test_library_chatter_is_demoted_not_silenced(configured_root):
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger("phonemizer").warning("words count mismatch on 200.0%% of the lines (2/1)")
+
+    [record] = configured_root
+    assert (record.levelno, JsonLogFormatter().line(record)["logCode"]) == (logging.DEBUG, "tts.thirdParty.phonemizer")
