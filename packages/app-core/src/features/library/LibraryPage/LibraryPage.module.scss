@@ -350,6 +350,17 @@
     transform: translateY(0);
   }
 
+  // While the list glides a filter change, its rows are drawn as snapshots in the browser's
+  // top layer, above any z-index the page can give the sheet. The open sheet and its scrim
+  // are captured too, and libraryTransitions.scss stacks them back over the rows.
+  :global(:root[data-library-glide]) .railOpen {
+    view-transition-name: library-filter-sheet;
+  }
+
+  :global(:root[data-library-glide]) .scrimOpen {
+    view-transition-name: library-filter-scrim;
+  }
+
   .railBody {
     flex: 1;
     min-height: 0;

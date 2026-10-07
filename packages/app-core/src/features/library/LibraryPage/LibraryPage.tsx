@@ -480,6 +480,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         className={`${styles.scrim} ${filtersOpen ? styles.scrimOpen : ""}`}
         onClick={closeFilters}
         aria-hidden="true"
+        data-testid={libraryPageTestIds.scrim}
       />
 
       <TimeSavedSheet

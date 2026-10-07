@@ -167,6 +167,12 @@ rest of the page stays live. Scrolled down into the list, the change lands at on
 goes back to the top, rather than animating rows nobody can see. A change made mid-glide skips
 the first one to its end and glides from there.
 
+On a phone the change usually comes from the open sheet, and the snapshots paint in the
+browser's top layer, above any z-index the page gives the sheet: left alone, the rows glide
+over it. So while the glide runs the open sheet and its scrim are captured too
+(`LibraryPage.module.scss`), and `libraryTransitions.scss` stacks their snapshots back above
+the rows, the way `paneTransitions.scss` does for the masthead.
+
 **Where the build departs from the motion file.** New rows fade in together rather than 40ms
 apart, which a view transition cannot stagger without a name per position. Under reduced motion
 the change is instant, with no crossfade. The sort menu closes at once rather than fading out

@@ -7,6 +7,7 @@ export const libraryPageTestIds = {
   clearSearchButton: "LibraryPage.clearSearchButton",
   empty: "LibraryPage.empty",
   rail: "LibraryPage.rail",
+  scrim: "LibraryPage.scrim",
   railBody: "LibraryPage.railBody",
   filterButton: "LibraryPage.filterButton",
   closeFiltersButton: "LibraryPage.closeFiltersButton",

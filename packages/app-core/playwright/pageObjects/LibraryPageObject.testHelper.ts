@@ -165,6 +165,34 @@ export class LibraryPageObject extends PageObject {
       }
     });
 
+  // A filter change glides the rows as snapshots in the browser's top layer, above any
+  // z-index the page can give the sheet. The open sheet and its scrim stay over the rows
+  // only by being captured into that layer themselves, so this watches the glide the change
+  // starts for their snapshots (useLibraryGlide.ts, libraryTransitions.scss).
+  verifyTheGlideCapturesTheFilterSheet = (change: () => Promise<void>) =>
+    this.step("verifyTheGlideCapturesTheFilterSheet", async () => {
+      const wanted = ["::view-transition-group(library-filter-sheet)", "::view-transition-group(library-filter-scrim)"];
+      const captured = this.page.evaluate(
+        (names) =>
+          new Promise<string[]>((resolve) => {
+            const seen = new Set<string>();
+            const start = performance.now();
+            const look = () => {
+              for (const animation of document.getAnimations()) {
+                const pseudo = (animation.effect as KeyframeEffect | null)?.pseudoElement;
+                if (pseudo) seen.add(pseudo);
+              }
+              if (names.every((name) => seen.has(name)) || performance.now() - start > 4_000) resolve([...seen]);
+              else requestAnimationFrame(look);
+            };
+            look();
+          }),
+        wanted,
+      );
+      await change();
+      expect(await captured).toEqual(expect.arrayContaining(wanted));
+    });
+
   closeFiltersWithEscape = () =>
     this.step("closeFiltersWithEscape", async () => {
       await this.page.keyboard.press("Escape");

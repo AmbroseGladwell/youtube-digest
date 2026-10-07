@@ -27,3 +27,14 @@
     animation: libraryGlideEnter 240ms var(--motion-ease) 120ms both;
   }
 }
+
+// 2.4 rule 3, for the phone sheet: paint order puts the rows' snapshots over the open
+// sheet's (LibraryPage.module.scss), so its real order is re-asserted, above the masthead's
+// 2 in paneTransitions.scss.
+::view-transition-group(library-filter-scrim) {
+  z-index: 3;
+}
+
+::view-transition-group(library-filter-sheet) {
+  z-index: 4;
+}
