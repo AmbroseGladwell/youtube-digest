@@ -232,7 +232,7 @@ because it names the caller's address.
 | `render refused` | `warn` | `code` (`unknown_voice`, `render_version_mismatch`, `invalid_request`), `status` |
 | `unhandled error` | `error` | `err`: its type and redacted message. Also reported, as above |
 | `model loaded` / `model failed to load` | `info` / `error` | `loadSeconds` / `err` |
-| `idle, stopping` | `info` | `idleSeconds` |
+| `idle, stopping` | `info` | `idleSeconds`; `servingSeconds`, how long since the model was ready, and `upSeconds`, since boot |
 
 No line carries a word of the script.
 

@@ -15,7 +15,9 @@ from overview_tts.render_script import RENDER_VERSION
 def service():
     schedule = FakeSchedule()
     stops = []
-    app = create_app(FakeSynthesiser(), IdleExit(15, lambda: stops.append(True), schedule))
+    idle_exit = IdleExit(15, lambda: stops.append(True), schedule)
+    idle_exit.start()
+    app = create_app(FakeSynthesiser(), idle_exit)
     return TestClient(app), schedule, stops
 
 
@@ -136,3 +138,37 @@ def test_a_model_that_fails_to_load_fails_the_request_rather_than_hanging_it():
     response = TestClient(app, raise_server_exceptions=False).post("/render", json=render_body())
 
     assert response.status_code == 500
+
+
+def test_a_machine_slower_to_load_than_the_grace_still_serves_the_request_that_woke_it():
+    release = threading.Event()
+    schedule = FakeSchedule()
+    stops = []
+
+    def slow_load():
+        release.wait()
+        return FakeSynthesiser()
+
+    idle_exit = IdleExit(15, lambda: stops.append(True), schedule)
+    app = create_app(LoadingSynthesiser(slow_load, on_ready=idle_exit.start), idle_exit)
+    responses = []
+    request = threading.Thread(target=lambda: responses.append(TestClient(app).post("/render", json=render_body())))
+    request.start()
+    request.join(timeout=0.2)
+
+    assert schedule.armed == []
+    release.set()
+    request.join(timeout=5)
+    assert responses[0].status_code == 200
+    assert [timer.delay for timer in schedule.armed] == [15]
+    assert stops == []
+
+
+def test_a_model_that_fails_to_load_still_lets_the_machine_stop():
+    def broken_load():
+        raise FileNotFoundError("kokoro-v1.0.onnx")
+
+    ready = threading.Event()
+    LoadingSynthesiser(broken_load, on_ready=ready.set)
+
+    assert ready.wait(timeout=5)

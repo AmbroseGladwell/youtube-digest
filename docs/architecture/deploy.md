@@ -292,7 +292,9 @@ the model baked in and hash-checked) and its own Fly app, `the-overview-tts`
   running ones are busy, so the pool's size is the number of renders that can run at once. A
   stopped machine costs only its image storage.
 - **It stops itself.** The process exits `IDLE_EXIT_SECONDS` (15) after its last render, and
-  Fly's default restart policy leaves a clean exit stopped. Health checks do not count as
+  Fly's default restart policy leaves a clean exit stopped. The grace starts once the model
+  has loaded (or failed to), never at boot: a cold load can take most of the 15 seconds, and
+  a clock started at boot stopped machines the moment they became ready. Health checks do not count as
   work, so they never keep a machine up.
 - **Private.** The app gets a Flycast address and no public one; only the API, over Fly's
   private network, can reach it.
