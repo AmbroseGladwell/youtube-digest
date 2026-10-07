@@ -234,3 +234,13 @@ test("unfollowing deletes the followed playlist, not an overview", async () => {
   assert.deepEqual(outcome, { result: "gone" });
   assert.deepEqual(api.calls, [{ method: "deleteFollowedPlaylist", args: ["PLpsychology"] }]);
 });
+
+test("an overview of a video the account already holds is an outcome naming the account's copy, not a parked write", async () => {
+  const api = new ScriptedSyncApi();
+  api.failAlways("createOverview", { code: "video_already_held", details: { overviewId: "theirs", rev: 3 } });
+
+  const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
+
+  assert.deepEqual(outcome, { result: "held", by: "theirs" });
+  assert.equal(api.callsTo("createOverview").length, 1);
+});

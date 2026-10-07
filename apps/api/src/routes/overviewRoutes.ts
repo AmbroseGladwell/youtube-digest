@@ -32,8 +32,9 @@ export function overviewRoutes(
       {
         kind: "overview",
         id,
-        decide: (current) =>
-          decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!),
+        videoId: videoIdOf(body),
+        decide: (current, held) =>
+          decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!, held),
       },
     ]);
     return sendWritten(reply, written!, ifMatch === null ? 201 : 200);
@@ -138,4 +139,11 @@ export function overviewRoutes(
     }
     return sendWritten(reply, overview);
   });
+}
+
+// Read loosely rather than parsed: the body may be at a version this server does not know.
+function videoIdOf(body: Record<string, unknown>): string | null {
+  const video = body.video;
+  const id = typeof video === "object" && video !== null ? (video as Record<string, unknown>).id : null;
+  return typeof id === "string" ? id : null;
 }

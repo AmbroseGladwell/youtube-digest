@@ -1,6 +1,7 @@
 import pg from "pg";
 import { VideoId } from "@overview/domain";
 import { createPgSqlClient } from "../db/createPgSqlClient.js";
+import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
@@ -24,7 +25,7 @@ try {
 }
 
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
-await runMigrations(sql);
+await runMigrations(sql, { before: migrationSteps() });
 const transcripts = new TranscriptsRepository(sql, () => new Date());
 const vouchers = await transcripts.vouchersFor(videoId);
 const forgotten =

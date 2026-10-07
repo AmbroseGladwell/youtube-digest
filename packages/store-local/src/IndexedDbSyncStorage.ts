@@ -10,14 +10,20 @@ import {
   StoredTranscript,
   SYNCED_RECORD_KINDS,
   TOPIC_MIGRATIONS,
+  changedFields,
+  foldFiling,
+  foldOverviewState,
   migrateStoredRecord,
   readStoredRecord,
   rebasePendingChanges,
   stampStoredRecord,
   storedUpdatedAt,
+  type FoldableFiling,
+  type FoldableState,
   type OutboxEntry,
   type OutboxFailure,
   type OutboxKind,
+  type OverviewFold,
   type PendingWrite,
   type RecordChange,
   type RecordMigration,
@@ -43,6 +49,7 @@ import {
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
+import { appendPendingWrite } from "./appendPendingWrite.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
@@ -222,6 +229,72 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const revisions = this.#db.transaction(SYNC_REVISIONS_STORE, "readonly").objectStore(SYNC_REVISIONS_STORE);
     const known = await promisifyRequest<{ rev: number } | undefined>(revisions.get([kind, id]));
     return known?.rev ?? null;
+  }
+
+  // One transaction: the winner is re-filed and journaled field by field, as a reader's
+  // own edits would be; the loser, its state and its pending writes go, and its transcript
+  // write is re-pointed at the winner, which is of the same video. Nothing is touched when
+  // the winner is not here to fold onto, or cannot be read (docs/features/one-overview-per-video.md).
+  async foldOverview(from: string, into: string): Promise<OverviewFold | null> {
+    const transaction = this.#db.transaction([OVERVIEWS_STORE, OVERVIEW_STATES_STORE, OUTBOX_STORE, SYNC_META_STORE], "readwrite");
+    const overviews = transaction.objectStore(OVERVIEWS_STORE);
+    const states = transaction.objectStore(OVERVIEW_STATES_STORE);
+    const outbox = transaction.objectStore(OUTBOX_STORE);
+    const [winnerRaw, loserRaw, winnerStateRaw, loserStateRaw, pending] = await Promise.all([
+      promisifyRequest<unknown>(overviews.get(into)),
+      promisifyRequest<unknown>(overviews.get(from)),
+      promisifyRequest<unknown>(states.get(into)),
+      promisifyRequest<unknown>(states.get(from)),
+      promisifyRequest<OutboxEntry[]>(outbox.getAll()),
+    ]);
+    const winner = winnerRaw === undefined ? null : readable("overview", winnerRaw);
+    const loser = loserRaw === undefined ? null : readable("overview", loserRaw);
+    if (winner === null || (loserRaw !== undefined && loser === null)) {
+      return null;
+    }
+
+    const now = this.#now();
+    const updatedAt = now.toISOString();
+    const filing = filingOf(winner);
+    const folded = loser === null ? filing : foldFiling(filing, filingOf(loser));
+    const filingChanges = changedFields(filing, folded);
+    if (Object.keys(filingChanges).length > 0) {
+      overviews.put(stampStoredRecord({ ...winner, ...folded }, CURRENT_SCHEMA_VERSIONS.overview, now));
+      if (filingChanges.topicIds) {
+        await appendPendingWrite(transaction, { kind: "overview", id: into, updatedAt, change: { op: "topics", topicIds: filingChanges.topicIds } });
+      }
+      if (filingChanges.tags) {
+        await appendPendingWrite(transaction, { kind: "overview", id: into, updatedAt, change: { op: "tags", tags: filingChanges.tags } });
+      }
+      if (filingChanges.captureReason !== undefined) {
+        await appendPendingWrite(transaction, {
+          kind: "overview",
+          id: into,
+          updatedAt,
+          change: { op: "captureReason", captureReason: filingChanges.captureReason },
+        });
+      }
+    }
+
+    const winnerState = stateOf(winnerStateRaw);
+    const foldedState = foldOverviewState(winnerState, stateOf(loserStateRaw));
+    const patch = changedFields(winnerState, foldedState);
+    if (Object.keys(patch).length > 0) {
+      states.put(stampStoredRecord({ ...foldedState, overviewId: into }, CURRENT_SCHEMA_VERSIONS.overviewState, now));
+      await appendPendingWrite(transaction, { kind: "overviewState", id: into, updatedAt, change: { op: "state", patch } });
+    }
+
+    overviews.delete(from);
+    states.delete(from);
+    for (const entry of pending) {
+      if ((entry.kind === "overview" || entry.kind === "overviewState") && entry.id === from) {
+        outbox.delete(entry.key);
+      } else if (entry.change.op === "transcript" && entry.change.overviewId === from) {
+        outbox.put({ ...entry, change: { ...entry.change, overviewId: into } });
+      }
+    }
+    await promisifyTransaction(transaction);
+    return { from, into };
   }
 
   async transcriptToPush(videoId: string): Promise<StoredTranscript | null> {
@@ -405,5 +478,23 @@ function transcriptWrite(transcript: StoredTranscript, overviewId: string): Pend
     id: transcript.videoId,
     updatedAt: transcript.fetchedAt,
     change: { op: "transcript", overviewId },
+  };
+}
+
+const strings = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+const filingOf = (record: Record<string, unknown>): FoldableFiling => ({
+  topicIds: strings(record.topicIds),
+  tags: strings(record.tags),
+  captureReason: typeof record.captureReason === "string" ? record.captureReason : null,
+});
+
+function stateOf(raw: unknown): FoldableState {
+  const migrated = readable("overviewState", { ...DEFAULT_OVERVIEW_STATE, ...(isObject(raw) ? raw : {}) });
+  return {
+    read: migrated?.read === true,
+    favourite: migrated?.favourite === true,
+    userTags: migrated === null ? [] : strings(migrated.userTags),
   };
 }

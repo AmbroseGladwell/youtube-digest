@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CURRENT_SCHEMA_VERSIONS, DEFAULT_OVERVIEW_STATE } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, DEFAULT_OVERVIEW_STATE, VideoId } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { rawOverviewAtVersion2, storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
@@ -352,5 +352,68 @@ test("a body that is not JSON is a 400 invalid_request, not a crash", async () =
 
   assert.equal(response.statusCode, 400);
   assert.equal(response.json().error.code, "invalid_request");
+  await testApp.close();
+});
+
+test("a second overview of a video the account already holds is refused, naming the one it has", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const first = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: first });
+
+  const response = await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: first.video }) });
+
+  assert.equal(response.statusCode, 409);
+  assert.equal(response.json().error.code, "video_already_held");
+  assert.equal(response.json().error.details.overviewId, first.id);
+  assert.equal((await account.changes()).changes.filter((change) => change.kind === "overview").length, 1);
+  await testApp.close();
+});
+
+test("a regeneration keeps its id, so it replaces the overview of the video rather than being a second one", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const overview = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: overview });
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/overviews",
+    body: { ...overview, coreClaim: "Regenerated." },
+    ifMatch: 1,
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal((await account.change("overview", overview.id)).body?.coreClaim, "Regenerated.");
+  await testApp.close();
+});
+
+test("once an overview is deleted, the account can hold a new one of the same video", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const deleted = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: deleted });
+  await account.inject({ method: "DELETE", url: `/api/overviews/${deleted.id}` });
+  const again = storedOverview();
+
+  const response = await account.inject({ method: "POST", url: "/api/overviews", body: again });
+
+  assert.equal(response.statusCode, 201);
+  assert.equal((await account.change("overview", again.id)).deleted, false);
+  await testApp.close();
+});
+
+test("two overviews of different videos sit side by side, and one of a video with no id is never held", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const other = storedOverview({ video: { ...storedOverview().video, id: VideoId.parse("another") } });
+  const unidentified = () => storedOverview({ video: { ...storedOverview().video, id: null } });
+  await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview() });
+
+  const responses = await Promise.all(
+    [other, unidentified(), unidentified()].map((body) => account.inject({ method: "POST", url: "/api/overviews", body })),
+  );
+
+  assert.deepEqual(responses.map((response) => response.statusCode), [201, 201, 201]);
   await testApp.close();
 });

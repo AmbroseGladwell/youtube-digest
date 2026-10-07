@@ -1,3 +1,4 @@
+import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
@@ -162,4 +163,25 @@ test("a failure hands the dialog back to the form with the link still in it, and
   await form.verifyUrlInputHolds(VALID_URL);
 
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
+});
+
+// One overview per video: a video the library already holds opens rather than being made
+// again (docs/features/one-overview-per-video.md, "Prevention").
+test("a video the library already holds offers to open the existing overview, and generates nothing", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const held = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse(IWFT_VIDEO_ID), title: "Already Here" } });
+  backendSimulator.overviews.seed(held);
+  await launcher.launchExpectingLibrary({ apiKeys: API_KEYS });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.submitUrl(VALID_URL);
+
+  await dialog.verifyAlreadyHeld();
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+  await dialog.clickOpenHeld();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle("Already Here");
+  await dialog.verifyIsHidden();
 });

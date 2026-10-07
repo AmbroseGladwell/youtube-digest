@@ -183,21 +183,6 @@ test("deleting the last note on a video forgets the account's transcript of it",
   await testApp.close();
 });
 
-test("deleting one of two notes on a video keeps the transcript the other still uses", async () => {
-  const testApp = await createTestApp();
-  const account = await makeAccount(testApp);
-  const transcript = makeStoredTranscript();
-  const [first, second] = [storedOverview({ video: transcript.video! }), storedOverview({ video: transcript.video! })];
-  await account.inject({ method: "POST", url: "/api/overviews", body: first });
-  await account.inject({ method: "POST", url: "/api/overviews", body: second });
-  await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
-
-  await account.inject({ method: "DELETE", url: `/api/overviews/${first.id}`, ifMatch: 1 });
-
-  assert.equal(await keptTranscriptOf(account, transcript.videoId), 200);
-  await testApp.close();
-});
-
 test("deleting a note on one account leaves another account's transcript of the same video", async () => {
   const testApp = await createTestApp();
   const [deleter, keeper] = [await makeAccount(testApp), await makeAccount(testApp)];

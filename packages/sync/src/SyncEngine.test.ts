@@ -286,3 +286,60 @@ test("a transcript whose note was parked in an earlier cycle still waits behind 
   assert.deepEqual(api.callsTo("saveTranscript"), []);
   assert.equal(storage.outbox.length, 2);
 });
+
+test("an overview the account already holds is folded into the account's copy: pulled first, this copy's state and filing written onto it, this copy gone", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  storage.records.set("overview/mine", { id: "mine", topicIds: ["t2"], tags: ["two", "three"], captureReason: "Why" });
+  storage.records.set("overviewState/mine", { overviewId: "mine", read: true, favourite: false, userTags: ["later"] });
+  storage.journal({ kind: "overview", id: "mine", updatedAt: AT, change: { op: "replace", record: { id: "mine" } } });
+  storage.journal({ kind: "overviewState", id: "mine", updatedAt: AT, change: { op: "state", patch: { read: true } } });
+  storage.journal({ kind: "transcript", id: "video", updatedAt: AT, change: { op: "transcript", overviewId: "mine" } });
+  storage.notedVideoIds.add("video");
+  storage.transcripts.set("video", { videoId: VideoId.parse("video"), segments: [], generated: false, fetchedAt: AT });
+  api.failOnce("createOverview", { code: "video_already_held", details: { overviewId: "theirs", rev: 1 } });
+  api.queuePage([
+    change({ id: "theirs", seq: 1, body: { id: "theirs", topicIds: ["t1"], tags: ["one", "two"], captureReason: null } }),
+    change({ id: "theirs", seq: 2, kind: "overviewState", body: { overviewId: "theirs", read: false, favourite: true, userTags: [] } }),
+  ]);
+  const folds: unknown[] = [];
+
+  const status = await new SyncEngine({ api, storage, now: () => NOW, onFolded: (fold) => folds.push(fold) }).sync();
+
+  assert.deepEqual(folds, [{ from: "mine", into: "theirs" }]);
+  assert.equal(status.phase, "idle");
+  assert.deepEqual(status, { ...status, pending: 0, stuck: 0 });
+  assert.deepEqual(api.calls.map((call) => call.method), [
+    "handshake",
+    "createOverview",
+    "changes",
+    "saveTranscript",
+    "setOverviewTopics",
+    "setOverviewTags",
+    "setOverviewCaptureReason",
+    "setOverviewState",
+    "changes",
+  ]);
+  assert.deepEqual(api.callsTo("setOverviewTopics")[0]!.args.slice(0, 2), ["theirs", ["t1", "t2"]]);
+  assert.deepEqual(api.callsTo("setOverviewTags")[0]!.args.slice(0, 2), ["theirs", ["one", "two", "three"]]);
+  assert.deepEqual(api.callsTo("setOverviewCaptureReason")[0]!.args.slice(0, 2), ["theirs", "Why"]);
+  assert.deepEqual(api.callsTo("setOverviewState")[0]!.args.slice(0, 2), ["theirs", { read: true, userTags: ["later"] }]);
+  assert.equal(storage.records.has("overview/mine"), false);
+  assert.deepEqual(storage.records.get("overviewState/theirs"), { overviewId: "theirs", read: true, favourite: true, userTags: ["later"] });
+});
+
+test("an overview held by a copy this device cannot read yet is parked with the reason rather than dropped", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  storage.journal({ kind: "overview", id: "mine", updatedAt: AT, change: { op: "replace", record: { id: "mine" } } });
+  storage.journal({ kind: "overview", id: "other", updatedAt: AT, change: { op: "replace", record: { id: "other" } } });
+  api.failAlways("createOverview", { code: "video_already_held", details: { overviewId: "unseen", rev: 1 } });
+  api.failOnce("createOverview", { code: "video_already_held", details: { overviewId: "unseen", rev: 1 } });
+
+  const status = await engineOver(api, storage).sync();
+
+  assert.equal(status.stuck, 2);
+  assert.deepEqual(storage.outbox.map((entry) => entry.stuck?.code), ["video_already_held", "video_already_held"]);
+});

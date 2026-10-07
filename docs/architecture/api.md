@@ -38,7 +38,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 
 ```
 apps/api/
-  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql, …, V0015__magic_link_email_codes.sql, V0016__followed_playlist_records.sql
+  migrations/            V0001__accounts_and_sessions.sql, V0002__records.sql, V0003__magic_links_and_link_codes.sql, V0004__transcripts.sql, …, V0006__audio_renders.sql, V0007__voice_samples.sql, V0008__account_plans_and_connections.sql, V0009__shared_transcripts.sql, V0010__shares.sql, V0011__magic_link_anonymous_ids.sql, V0012__service_transcript_usage.sql, …, V0015__magic_link_email_codes.sql, V0016__followed_playlist_records.sql, V0017__overview_video_ids.sql, V0018__one_overview_per_video.sql
   assets/fonts/          the two faces the Open Graph card is drawn in, bundled because the image has none
   src/
     server.ts            env → SqlClient → migrations → mailer → buildApp → listen
@@ -247,6 +247,7 @@ sends:
 | `plan_required` | 403 | the account is not on the plan the action needs: approving an assistant's connection needs Plus |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
+| `video_already_held` | 409 | a second overview of a video the account holds; `details.overviewId` names the first (`docs/features/one-overview-per-video.md`) |
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |
 | `revision_mismatch` | 412 | `If-Match` does not match; `details.rev` is current |

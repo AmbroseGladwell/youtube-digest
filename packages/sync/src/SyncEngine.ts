@@ -1,7 +1,9 @@
 import {
   CLIENT_VERSION,
   type OutboxEntry,
+  type OutboxFailure,
   type OutboxKind,
+  type OverviewFold,
   type RecordChange,
   type StoredTranscript,
   type SyncStorage,
@@ -19,6 +21,9 @@ export interface SyncEngineOptions {
   pageSize?: number | undefined;
   // Called after a page of the feed has landed locally, so a screen can re-read.
   onApplied?: ((changes: RecordChange[]) => void) | undefined;
+  // Called when an overview made on this device was folded into the account's copy of the
+  // same video, so the reader can be told and anything open on it re-pointed.
+  onFolded?: ((fold: OverviewFold) => void) | undefined;
 }
 
 export interface SyncEngineSchedule {
@@ -27,6 +32,11 @@ export interface SyncEngineSchedule {
 }
 
 const pendingKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
+
+const HELD_ELSEWHERE: OutboxFailure = {
+  code: "video_already_held",
+  message: "The account already holds an overview of this video, and this device cannot read it yet",
+};
 
 // One cycle is handshake, enrol if never enrolled, push the outbox in order, then pull
 // the feed to its end. Push goes before pull so that what comes back already carries this
@@ -39,18 +49,20 @@ export class SyncEngine {
   #now: () => Date;
   #pageSize: number;
   #onApplied: ((changes: RecordChange[]) => void) | undefined;
+  #onFolded: ((fold: OverviewFold) => void) | undefined;
   #status: SyncStatus = INITIAL_SYNC_STATUS;
   #listeners = new Set<(status: SyncStatus) => void>();
   #running: Promise<SyncStatus> | null = null;
   #askedAgain = false;
 
-  constructor({ api, storage, clientVersion = CLIENT_VERSION, now = () => new Date(), pageSize = 200, onApplied }: SyncEngineOptions) {
+  constructor({ api, storage, clientVersion = CLIENT_VERSION, now = () => new Date(), pageSize = 200, onApplied, onFolded }: SyncEngineOptions) {
     this.#api = api;
     this.#storage = storage;
     this.#clientVersion = clientVersion;
     this.#now = now;
     this.#pageSize = pageSize;
     this.#onApplied = onApplied;
+    this.#onFolded = onFolded;
   }
 
   get status(): SyncStatus {
@@ -152,7 +164,16 @@ export class SyncEngine {
       : this.#finish();
   }
 
+  // A fold rewrites the outbox, dropping this copy's writes and journaling the winner's,
+  // so the pass starts again from what is pending now.
   async #push(): Promise<{ reason: StopReason; detail: string } | null> {
+    for (;;) {
+      const pass = await this.#pushPass();
+      if (pass !== "folded") return pass;
+    }
+  }
+
+  async #pushPass(): Promise<{ reason: StopReason; detail: string } | "folded" | null> {
     const blocked = new Set<string>();
     for (const entry of await this.#storage.listPending()) {
       const key = pendingKey(entry.kind, entry.id);
@@ -179,6 +200,13 @@ export class SyncEngine {
         case "sent":
           await this.#storage.acknowledge(entry.key, { sent: true });
           break;
+        case "held": {
+          const folded = await this.#fold(entry, outcome.by);
+          if (folded === "folded") return "folded";
+          if (folded !== null) return folded;
+          blocked.add(key);
+          break;
+        }
         case "stuck":
           await this.#storage.park(entry.key, outcome.failure);
           blocked.add(key);
@@ -188,6 +216,22 @@ export class SyncEngine {
       }
     }
     return null;
+  }
+
+  // The account's copy wins. It is pulled first, so the union of the two filings can be
+  // computed here, then this copy's filing and state are folded onto it as journaled
+  // writes and this copy goes. A winner this device cannot read yet leaves the write
+  // parked, counted, with the reason (docs/features/one-overview-per-video.md).
+  async #fold(entry: OutboxEntry, winnerId: string): Promise<{ reason: StopReason; detail: string } | "folded" | null> {
+    const stopped = await this.#pull();
+    if (stopped !== null) return stopped;
+    const fold = await this.#storage.foldOverview(entry.id, winnerId);
+    if (fold === null) {
+      await this.#storage.park(entry.key, HELD_ELSEWHERE);
+      return null;
+    }
+    this.#onFolded?.(fold);
+    return "folded";
   }
 
   // A note's transcript is kept by the server only once the note is there, so it waits

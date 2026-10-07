@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { StoredTranscript, VideoId } from "@overview/domain";
+import type { OverviewFold, StoredTranscript, VideoId } from "@overview/domain";
 import { INITIAL_SYNC_STATUS, type SyncStatus } from "@overview/sync";
 import type { SignOutNotice } from "./types/SignOutNotice.js";
 import type { SignOutOptions } from "./types/SignOutOutcome.js";
@@ -22,6 +22,13 @@ export interface SyncState {
   opening: boolean;
   // Asks the server for a transcript this device does not hold. Null when not signed in.
   fetchTranscript: ((videoId: VideoId) => Promise<StoredTranscript | null>) | null;
+  // Overviews made on this device that were folded into the account's copy of the same
+  // video since this tab opened, latest last, so an open page can follow and the reader
+  // can be told (docs/features/one-overview-per-video.md).
+  folds: OverviewFold[];
+  // The latest fold the reader has not yet been told about.
+  foldNotice: OverviewFold | null;
+  dismissFoldNotice: () => void;
 }
 
 const SyncContext = createContext<SyncState>({
@@ -35,6 +42,9 @@ const SyncContext = createContext<SyncState>({
   dismissSignOutNotice: () => undefined,
   opening: false,
   fetchTranscript: null,
+  folds: [],
+  foldNotice: null,
+  dismissFoldNotice: () => undefined,
 });
 
 export const SyncProvider = SyncContext.Provider;

@@ -126,10 +126,11 @@ a dropped write is the prototype's eleven missing notes at the scale of one edit
 later write to the same record waits behind it, because a filing pushed over a create that
 was refused would be a `404` that looked like a deletion. Other records carry on.
 
-Two refusals are outcomes rather than failures. A field write to a record the server no
+Three refusals are outcomes rather than failures. A field write to a record the server no
 longer has is done with, because the tombstone is on its way down. A topic the server
 already holds under this id is this same topic, pushed once before and not acknowledged in
-time, and counts as created.
+time, and counts as created. An overview of a video the account already holds is folded
+into the account's copy (`docs/features/one-overview-per-video.md`).
 
 ### Whole-record writes and the revision
 
@@ -213,8 +214,8 @@ extension it is `Open extensions`, which the shell provides and app-core cannot.
 ## Not built
 
 `chrome.runtime.onUpdateAvailable`
-feeding the wall's `Update now`; the one-overview-per-video question at first sync;
-set-valued merging of `userTags` and `topicIds`; the shared transcript cache (a reader's own
+feeding the wall's `Update now`; set-valued merging of `userTags` and `topicIds`
+(one overview per video is settled: `docs/features/one-overview-per-video.md`); the shared transcript cache (a reader's own
 transcripts do sync, outside the feed: `docs/features/transcript-storage.md`); captures and
 audio. Retrying a parked write once the app has updated is a one-line change to `#push`
 when the day comes, and is left until it does.

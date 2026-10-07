@@ -7,6 +7,7 @@ import {
   DEFAULT_SETTINGS,
   OVERVIEW_CORPUS,
   OverviewId,
+  TopicId,
   VideoId,
   type RecordChange,
 } from "@overview/domain";
@@ -513,4 +514,82 @@ test("a cursor pulled before this client knew every kind starts again from the b
   assert.equal(await storage.cursor(), 0);
   await storage.applyChanges([], 40);
   assert.equal(await storage.cursor(), 40);
+});
+
+test("folding an overview into the account's copy re-files the copy field by field, journals each, and drops the duplicate and its writes", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const overviews = new IndexedDbOverviewStore(db);
+  const transcripts = new IndexedDbTranscriptStore(db);
+  const video = { ...makeOverview().video, id: VideoId.parse("twice") };
+  const theirs = makeOverview({ video, topicIds: [TopicId.parse(randomUUID())], tags: ["one", "two"], captureReason: null });
+  const mine = makeOverview({ video, topicIds: [TopicId.parse(randomUUID())], tags: ["two", "three"], captureReason: "Why" });
+  await storage.applyChanges(
+    [
+      change({ kind: "overview", id: theirs.id, body: theirs }),
+      change({ kind: "overviewState", id: theirs.id, body: { overviewId: theirs.id, read: false, favourite: true, userTags: [] } }),
+    ],
+    2,
+  );
+  await transcripts.saveTranscript(makeStoredTranscript({ videoId: video.id }));
+  await overviews.saveOverview(mine);
+  await overviews.setOverviewState(mine.id, { read: true, userTags: ["later"] });
+
+  const fold = await storage.foldOverview(mine.id, theirs.id);
+
+  assert.deepEqual(fold, { from: mine.id, into: theirs.id });
+  assert.equal(await overviews.getOverview(mine.id), null);
+  assert.deepEqual(await overviews.getOverview(theirs.id), {
+    ...theirs,
+    topicIds: [...theirs.topicIds, ...mine.topicIds],
+    tags: ["one", "two", "three"],
+    captureReason: "Why",
+  });
+  assert.deepEqual(await overviews.getOverviewState(theirs.id), { overviewId: theirs.id, read: true, favourite: true, userTags: ["later"] });
+  assert.deepEqual(await overviews.getOverviewState(mine.id), { overviewId: mine.id, read: false, favourite: false, userTags: [] });
+  assert.deepEqual(
+    (await readOutbox(db)).map(({ kind, id, change: pending }) => ({ kind, id, op: pending.op, ...(pending.op === "transcript" ? { overviewId: pending.overviewId } : {}) })),
+    [
+      { kind: "transcript", id: "twice", op: "transcript", overviewId: theirs.id },
+      { kind: "overview", id: theirs.id, op: "topics" },
+      { kind: "overview", id: theirs.id, op: "tags" },
+      { kind: "overview", id: theirs.id, op: "captureReason" },
+      { kind: "overviewState", id: theirs.id, op: "state" },
+    ],
+  );
+  const state = (await readOutbox(db)).find((entry) => entry.change.op === "state")!;
+  assert.deepEqual(state.change, { op: "state", patch: { read: true, userTags: ["later"] } });
+  assert.equal(state.updatedAt, NOW.toISOString());
+});
+
+test("a fold onto a copy this device does not hold, or cannot read, touches nothing and says so", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const overviews = new IndexedDbOverviewStore(db);
+  const mine = makeOverview();
+  await overviews.saveOverview(mine);
+  const outboxBefore = await readOutbox(db);
+  const unreadableId = randomUUID();
+  await putRaw(db, OVERVIEWS_STORE, { id: unreadableId, schemaVersion: CURRENT_SCHEMA_VERSIONS.overview + 1 });
+
+  assert.equal(await storage.foldOverview(mine.id, randomUUID()), null);
+  assert.equal(await storage.foldOverview(mine.id, unreadableId), null);
+
+  assert.deepEqual(await overviews.getOverview(mine.id), mine);
+  assert.deepEqual(await readOutbox(db), outboxBefore);
+});
+
+test("a fold whose copy already matches the account's journals nothing but still lets the duplicate go", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const overviews = new IndexedDbOverviewStore(db);
+  const theirs = makeOverview({ tags: ["one"], topicIds: [] });
+  await storage.applyChanges([change({ kind: "overview", id: theirs.id, body: theirs })], 1);
+  const mine = makeOverview({ video: theirs.video, tags: ["one"], topicIds: [] });
+  await overviews.saveOverview(mine);
+
+  await storage.foldOverview(mine.id, theirs.id);
+
+  assert.equal(await overviews.getOverview(mine.id), null);
+  assert.deepEqual((await readOutbox(db)).map((entry) => entry.change.op), ["transcript"]);
 });

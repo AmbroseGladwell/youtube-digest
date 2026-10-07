@@ -11,12 +11,22 @@ export interface AppliedMigration {
   name: string;
 }
 
+// Code run inside a migration's own transaction, before its file, keyed by its version.
+export type MigrationSteps = Partial<Record<number, (tx: SqlClient) => Promise<void>>>;
+
+export interface RunMigrationsOptions {
+  dir?: URL;
+  before?: MigrationSteps;
+  // Stop after this version, for a test that seeds the shape a later migration starts from.
+  upTo?: number;
+}
+
 // Flyway's file naming without Flyway: each file runs once, in version order, in its own
 // transaction, under a lock so two starting servers cannot both apply the same one
 // (docs/architecture/api.md).
 export async function runMigrations(
   sql: SqlClient,
-  dir: URL = MIGRATIONS_DIR,
+  { dir = MIGRATIONS_DIR, before = {}, upTo = Number.POSITIVE_INFINITY }: RunMigrationsOptions = {},
 ): Promise<AppliedMigration[]> {
   await sql.execute(
     "create table if not exists schema_migrations (version integer primary key, name text not null, applied_at timestamptz not null default now())",
@@ -25,6 +35,7 @@ export async function runMigrations(
     .map((file) => ({ file, match: MIGRATION_FILE.exec(file) }))
     .filter((entry): entry is { file: string; match: RegExpExecArray } => entry.match !== null)
     .map(({ file, match }) => ({ file, version: Number(match[1]), name: match[2]! }))
+    .filter(({ version }) => version <= upTo)
     .sort((a, b) => a.version - b.version);
   const clash = files.find((entry, index) => index > 0 && files[index - 1]!.version === entry.version);
   if (clash !== undefined) {
@@ -42,6 +53,7 @@ export async function runMigrations(
       if (existing.length > 0) {
         return false;
       }
+      await before[version]?.(tx);
       await tx.execute(await readFile(new URL(file, dir), "utf8"));
       await tx.query("insert into schema_migrations (version, name) values ($1, $2)", [version, name]);
       return true;

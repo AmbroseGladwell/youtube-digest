@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import type { FastifyInstance } from "fastify";
 import { IDBFactory } from "fake-indexeddb";
-import { CLIENT_VERSION } from "@overview/domain";
+import { CLIENT_VERSION, type OverviewFold } from "@overview/domain";
 import {
   IndexedDbOverviewStore,
   IndexedDbSettingsStore,
@@ -48,6 +48,7 @@ export interface DeviceOptions {
   token?: string;
   clientVersion?: number;
   pageSize?: number;
+  onFolded?: (fold: OverviewFold) => void;
   // A database that already holds records before sync is switched on.
   before?: (stores: Pick<SyncedDevice, "overviews" | "settings" | "transcripts">) => Promise<void>;
 }
@@ -60,6 +61,7 @@ export async function makeDevice(
     token = account.headers.authorization!.replace(/^Bearer /, ""),
     clientVersion = CLIENT_VERSION,
     pageSize,
+    onFolded,
     before,
   }: DeviceOptions = {},
 ): Promise<SyncedDevice> {
@@ -75,6 +77,7 @@ export async function makeDevice(
     clientVersion,
     pageSize,
     now: () => testApp.clock.now,
+    onFolded,
   });
   return { overviews, settings, transcripts, storage, engine, sync: () => engine.sync() };
 }

@@ -73,6 +73,8 @@ export * from "./Settings.js";
 export * from "./settingsMigrations.js";
 export * from "./SettingsStore.js";
 export * from "./OverviewStore.js";
+export * from "./heldOverviewOf.js";
+export * from "./foldOverview.js";
 export * from "./TranscriptStore.js";
 export * from "./clientVersion.js";
 export * from "./SchemaVersions.js";

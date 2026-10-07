@@ -1,4 +1,5 @@
 import type { RunReport } from "@overview/app-core";
+import { heldOverviewOf } from "@overview/domain";
 import { IndexedDbOverviewStore, localDatabaseName, openLocalDatabase } from "@overview/store-local";
 import {
   BridgeMessage,
@@ -65,14 +66,7 @@ async function openCurrentLibrary(): Promise<IDBDatabase> {
 async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
   try {
     const store = new IndexedDbOverviewStore(await openCurrentLibrary());
-    const [overviews, unreadable] = await Promise.all([
-      store.listOverviews(),
-      store.listUnreadable(),
-    ]);
-    return (
-      overviews.some((overview) => overview.video.id === videoId) ||
-      unreadable.some((record) => record.salvaged?.video?.id === videoId)
-    );
+    return (await heldOverviewOf(store, videoId)) !== null;
   } catch (error) {
     void errors.report(error, { handled: true });
     return null;

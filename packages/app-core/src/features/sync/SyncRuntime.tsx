@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { VideoId } from "@overview/domain";
+import type { OverviewFold, VideoId } from "@overview/domain";
 import {
   createFetchAuthApi,
   createFetchSyncApi,
@@ -46,6 +46,8 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const [signOutNotice, setSignOutNotice] = useState<SignOutNotice | null>(null);
   const [opening, setOpening] = useState(false);
+  const [folds, setFolds] = useState<OverviewFold[]>([]);
+  const [foldNotice, setFoldNotice] = useState<OverviewFold | null>(null);
   const wasConnected = useRef(connected);
   const surface = useClientSurface();
 
@@ -74,6 +76,12 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
         void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
       },
+      onFolded: (fold) => {
+        setFolds((current) => [...current, fold]);
+        setFoldNotice(fold);
+        void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
+        void queryClient.invalidateQueries({ queryKey: topicKeys.all });
+      },
     });
     const unsubscribe = started.subscribe(setStatus);
     const stop = started.start();
@@ -100,6 +108,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       signOutNotice,
       dismissSignOutNotice: () => setSignOutNotice(null),
       opening: opening && connected,
+      folds,
+      foldNotice,
+      dismissFoldNotice: () => setFoldNotice(null),
       signOut: async ({ beforeEndingSession }: SignOutOptions = {}) => {
         const running = engine.current;
         setSigningOut(true);
@@ -125,7 +136,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, surface, signingOut, signOutNotice, opening],
+    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, surface, signingOut, signOutNotice, opening, folds, foldNotice],
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;

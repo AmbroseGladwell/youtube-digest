@@ -227,7 +227,12 @@ export function AppShell() {
               open={newOverview.dialogOpen}
               prefill={newOverview.prefill}
               run={newOverview.run}
+              held={newOverview.held}
               onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
+              onOpenHeld={(overviewId) => {
+                newOverview.dismiss();
+                void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
+              }}
               onClose={newOverview.close}
               onDismiss={newOverview.dismiss}
               onReadOverview={readOverview}

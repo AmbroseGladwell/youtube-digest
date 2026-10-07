@@ -98,6 +98,11 @@ Five folders, five different questions.
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and
   waiting at a limit, with the reason and resume time and no dead Try again.
+- `one-overview-per-video.md` — an account holds one overview per video, everywhere: the
+  server refusing a second and naming the first, the generated `video_id` column and its
+  unique index, the one-off fold of duplicates run inside the migration, the merge rules
+  the server and both clients share, the client folding its losing copy after pulling the
+  winner, and the dialog not generating a video the library already holds.
 - `capture-reason.md` — the optional "why you saved it": asked for while the overview is
   being made rather than before, read back as one line above the premise, edited in place
   from the ⋯ menu, and why the prompt never sees it.

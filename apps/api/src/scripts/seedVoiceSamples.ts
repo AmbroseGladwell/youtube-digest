@@ -6,6 +6,7 @@ import { createAudioSetup } from "../audio/createAudioSetup.js";
 import { seedVoiceSamples } from "../audio/seedVoiceSamples.js";
 import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { createPgSqlClient } from "../db/createPgSqlClient.js";
+import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 
@@ -22,7 +23,7 @@ try {
 }
 
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
-const applied = await runMigrations(sql);
+const applied = await runMigrations(sql, { before: migrationSteps() });
 log({ applied }, "migrations applied");
 
 if (config.audio === null) {

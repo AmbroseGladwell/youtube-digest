@@ -1,5 +1,11 @@
 import {
+  DEFAULT_OVERVIEW_STATE,
+  changedFields,
+  foldFiling,
+  foldOverviewState,
   rebasePendingChanges,
+  type FoldableFiling,
+  type FoldableState,
   type OutboxEntry,
   type OutboxFailure,
   type OutboxKind,
@@ -73,6 +79,40 @@ export class InMemorySyncStorage implements SyncStorage {
     return this.revisions.get(recordKey(kind, id)) ?? null;
   }
 
+  // What IndexedDbSyncStorage does over its stores, over the maps here.
+  async foldOverview(from: string, into: string) {
+    const winner = this.records.get(recordKey("overview", into));
+    if (winner === undefined) return null;
+    const loser = this.records.get(recordKey("overview", from)) ?? {};
+    const filing = filingOf(winner);
+    const folded = foldFiling(filing, filingOf(loser));
+    const changes = changedFields(filing, folded);
+    this.records.set(recordKey("overview", into), { ...winner, ...folded });
+    const at = new Date().toISOString();
+    if (changes.topicIds) this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "topics", topicIds: changes.topicIds } });
+    if (changes.tags) this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "tags", tags: changes.tags } });
+    if (changes.captureReason !== undefined) {
+      this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "captureReason", captureReason: changes.captureReason } });
+    }
+    const winnerState = stateOf(this.records.get(recordKey("overviewState", into)));
+    const foldedState = foldOverviewState(winnerState, stateOf(this.records.get(recordKey("overviewState", from))));
+    const patch = changedFields(winnerState, foldedState);
+    if (Object.keys(patch).length > 0) {
+      this.records.set(recordKey("overviewState", into), { ...foldedState, overviewId: into });
+      this.journal({ kind: "overviewState", id: into, updatedAt: at, change: { op: "state", patch } });
+    }
+    this.records.delete(recordKey("overview", from));
+    this.records.delete(recordKey("overviewState", from));
+    this.outbox = this.outbox
+      .filter((entry) => !((entry.kind === "overview" || entry.kind === "overviewState") && entry.id === from))
+      .map((entry) =>
+        entry.change.op === "transcript" && entry.change.overviewId === from
+          ? { ...entry, change: { ...entry.change, overviewId: into } }
+          : entry,
+      );
+    return { from, into };
+  }
+
   async applyChanges(changes: RecordChange[], next: number) {
     for (const change of changes) {
       const key = recordKey(change.kind, change.id);
@@ -112,3 +152,18 @@ export class InMemorySyncStorage implements SyncStorage {
     this.transcripts.set(transcript.videoId, transcript);
   }
 }
+
+const strings = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+const filingOf = (record: Record<string, unknown>): FoldableFiling => ({
+  topicIds: strings(record.topicIds),
+  tags: strings(record.tags),
+  captureReason: typeof record.captureReason === "string" ? record.captureReason : null,
+});
+
+const stateOf = (record: Record<string, unknown> | undefined): FoldableState => ({
+  read: record?.read === true,
+  favourite: record?.favourite === true,
+  userTags: record === undefined ? [...DEFAULT_OVERVIEW_STATE.userTags] : strings(record.userTags),
+});

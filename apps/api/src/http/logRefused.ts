@@ -5,6 +5,7 @@ import type { FastifyRequest } from "fastify";
 const LOGGED_DETAILS = new Set([
   "kind",
   "rev",
+  "overviewId",
   "storedSchemaVersion",
   "clientSchemaVersion",
   "bodySchemaVersion",

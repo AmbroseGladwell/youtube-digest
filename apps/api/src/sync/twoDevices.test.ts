@@ -10,7 +10,10 @@ import {
   VideoId,
 } from "@overview/domain";
 import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
+import { migrationSteps } from "../db/migrationSteps.js";
+import { runMigrations } from "../db/runMigrations.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
+import { distinctVideo, storedOverview } from "../testing/storedRecords.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeDevice } from "./SyncedDevice.testHelper.js";
 
@@ -178,8 +181,8 @@ test("a record from a newer client arrives, is held back and counted, and cannot
 test("a write the server refuses is kept and counted as stuck, and the rest of the library still syncs", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
-  const good = makeOverview();
-  const bad = makeOverview({ keyPoints: [{ text: "only one", range: null }] });
+  const good = makeOverview({ video: distinctVideo() });
+  const bad = makeOverview({ video: distinctVideo(), keyPoints: [{ text: "only one", range: null }] });
   const laptop = await makeDevice(testApp, account, {
     before: async ({ overviews }) => {
       await overviews.saveOverview(bad);
@@ -239,7 +242,7 @@ test("the feed is pulled page by page, and the cursor ends where the feed does",
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const laptop = await makeDevice(testApp, account);
-  for (let i = 0; i < 5; i += 1) await laptop.overviews.saveOverview(makeOverview());
+  for (let i = 0; i < 5; i += 1) await laptop.overviews.saveOverview(makeOverview({ video: distinctVideo() }));
   await laptop.sync();
   const phone = await makeDevice(testApp, account, { pageSize: 2 });
 
@@ -353,5 +356,104 @@ test("deleting a synced note on one device leaves the account no transcript for 
   await laptop.sync();
 
   assert.equal(await phone.engine.fetchTranscript(transcript.videoId), null);
+  await testApp.close();
+});
+
+test("two devices that generate the same video offline end with one overview carrying both devices' read, favourite and topic state", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  await phone.sync();
+  const video = distinctVideo();
+  const onLaptop = makeOverview({ video, tags: ["one", "two"] });
+  const onPhone = makeOverview({ video, tags: ["two", "three"], captureReason: "Because" });
+  const laptopTopic = await laptop.overviews.createTopic({ name: "Finance" });
+  const phoneTopic = await phone.overviews.createTopic({ name: "Cooking" });
+  await laptop.overviews.saveOverview({ ...onLaptop, topicIds: [laptopTopic.id] });
+  await laptop.overviews.setOverviewState(onLaptop.id, { read: true });
+  await phone.overviews.saveOverview({ ...onPhone, topicIds: [phoneTopic.id] });
+  await phone.overviews.setOverviewState(onPhone.id, { favourite: true, userTags: ["later"] });
+
+  const laptopStatus = await laptop.sync();
+  const phoneStatus = await phone.sync();
+  await laptop.sync();
+
+  assert.equal(laptopStatus.phase, "idle");
+  assert.deepEqual({ phase: phoneStatus.phase, pending: phoneStatus.pending, stuck: phoneStatus.stuck }, { phase: "idle", pending: 0, stuck: 0 });
+  for (const device of [laptop, phone]) {
+    const held = await device.overviews.listOverviews();
+    assert.deepEqual(held.map((overview) => overview.id), [onLaptop.id]);
+    assert.deepEqual(held[0]!.topicIds, [laptopTopic.id, phoneTopic.id]);
+    assert.deepEqual(held[0]!.tags, ["one", "two", "three"]);
+    assert.equal(held[0]!.captureReason, "Because");
+    assert.deepEqual(await device.overviews.getOverviewState(onLaptop.id), {
+      overviewId: onLaptop.id,
+      read: true,
+      favourite: true,
+      userTags: ["later"],
+    });
+    assert.equal(await device.overviews.getOverview(onPhone.id), null);
+    assert.deepEqual(await device.storage.listPending(), []);
+  }
+  assert.equal((await account.changes()).changes.filter((change) => change.kind === "overview" && !change.deleted).length, 1);
+  await testApp.close();
+});
+
+test("a device that generates a video the account already holds, before pulling it, folds its copy into the account's and tells the shell", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const video = distinctVideo();
+  const theirs = makeOverview({ video });
+  await laptop.overviews.saveOverview(theirs);
+  await laptop.sync();
+  const mine = makeOverview({ video });
+  const folds: unknown[] = [];
+  const telling = await makeDevice(testApp, account, { onFolded: (fold) => folds.push(fold) });
+  await telling.overviews.saveOverview(mine);
+  await telling.overviews.setOverviewState(mine.id, { read: true });
+
+  await telling.sync();
+  await phone.sync();
+
+  assert.deepEqual(folds, [{ from: mine.id, into: theirs.id }]);
+  assert.deepEqual((await telling.overviews.listOverviews()).map((overview) => overview.id), [theirs.id]);
+  assert.equal((await telling.overviews.getOverviewState(theirs.id)).read, true);
+  assert.equal((await phone.overviews.getOverviewState(theirs.id)).read, true);
+  assert.equal(await phone.overviews.getOverview(mine.id), null);
+  await testApp.close();
+});
+
+test("an account that already held duplicates ends with one overview per video, state merged, and every device drops the others", async () => {
+  const testApp = await createTestApp({}, { migrationsUpTo: 17 });
+  const account = await makeAccount(testApp);
+  const video = distinctVideo();
+  const earlier = makeOverview({ video, savedAt: "2026-09-01T00:00:00.000Z", tags: ["one"] });
+  const later = makeOverview({ video, savedAt: "2026-09-02T00:00:00.000Z", tags: ["two"] });
+  const { schemaVersion: _v, updatedAt: _u, ...stored } = storedOverview();
+  for (const overview of [later, earlier]) {
+    await account.seedRaw("overview", overview.id, CURRENT_SCHEMA_VERSIONS.overview, { ...stored, ...overview });
+  }
+  await account.seedRaw("overviewState", later.id, CURRENT_SCHEMA_VERSIONS.overviewState, { overviewId: later.id, read: true, favourite: false, userTags: [] });
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  await phone.sync();
+  assert.equal((await laptop.overviews.listOverviews()).length, 2);
+
+  await runMigrations(testApp.sql, { before: migrationSteps() });
+  await laptop.sync();
+  await phone.sync();
+
+  for (const device of [laptop, phone]) {
+    const held = await device.overviews.listOverviews();
+    assert.deepEqual(held.map((overview) => overview.id), [earlier.id]);
+    assert.deepEqual(held[0]!.tags, ["one", "two"]);
+    assert.equal((await device.overviews.getOverviewState(earlier.id)).read, true);
+    assert.equal(await device.overviews.getOverview(later.id), null);
+  }
   await testApp.close();
 });
