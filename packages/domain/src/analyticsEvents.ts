@@ -60,6 +60,11 @@ const SkipDirection = z.enum(["back", "forward"]);
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
 const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
+// The player's state when that button was pressed, so a first listen is told from a resume:
+// `play` from `ready` started one, `play` from `paused` carried one on. app-core's
+// PlayerStatus, which playerBarView.test.ts keeps this in step with.
+export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
+export type PlayerState = z.infer<typeof PlayerState>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
@@ -191,9 +196,10 @@ export const overviewPageEvents = {
     retried: event("The reader tries loading a transcript that failed again"),
   },
   playerBar: {
-    mainPressed: event("The reader presses the player's main button, named by what it showed", {
-      button: PlayerMainButton,
-    }),
+    mainPressed: event(
+      "The reader presses the player's main button, named by what it showed and the state the player was in: `play` from `ready` is a listen begun, `play` from `paused` a listen carried on",
+      { button: PlayerMainButton, state: PlayerState },
+    ),
     skipped: event("The reader skips back or forward by the player's step", { direction: SkipDirection }),
     seeked: event("The reader moves the player's position with the scrubber"),
     rateChanged: event("The reader changes the playback speed, to the speed chosen", { rate: z.number().positive() }),

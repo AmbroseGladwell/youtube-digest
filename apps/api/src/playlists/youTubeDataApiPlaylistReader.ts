@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  apiLogLines,
   PlaylistId,
   VideoId,
   type PlaylistEntry,
@@ -96,7 +97,7 @@ export function youTubeDataApiPlaylistReader({
       const playlists = await get("playlists", { part: "snippet,status", id: playlistId }, PlaylistsResponse);
       const playlist = playlists?.items[0];
       if (playlist === undefined) {
-        log.info({ units }, "playlist read");
+        log.info(apiLogLines.playlists.read({ units }));
         throw new PlaylistUnavailableError(await whyUnavailable(youTubeFetch, playlistId));
       }
 
@@ -130,7 +131,7 @@ export function youTubeDataApiPlaylistReader({
         if (pageToken === undefined) break;
       }
 
-      log.info({ units, entries: entries.length }, "playlist read");
+      log.info(apiLogLines.playlists.read({ units, entries: entries.length }));
       const lookup: PlaylistLookup = {
         id: PlaylistId.parse(playlist.id),
         title: playlist.snippet.title,

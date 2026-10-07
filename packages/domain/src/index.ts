@@ -117,6 +117,7 @@ export * from "./overviewMarkdown.js";
 export * from "./analyticsEvents.js";
 export * from "./AnalyticsEventBatch.js";
 export * from "./RequestId.js";
+export * from "./logLines.js";
 export * from "./redactErrorMessage.js";
 export * from "./ClientErrorBatch.js";
 export * from "./ClientWarning.js";

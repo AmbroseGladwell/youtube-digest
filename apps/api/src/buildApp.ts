@@ -20,6 +20,7 @@ import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { requestIdFor } from "./http/requestIdFor.js";
 import { corsPlugin } from "./http/corsPlugin.js";
 import { webAppPlugin } from "./http/webAppPlugin.js";
+import { CodedLogController } from "./logs/CodedLogController.js";
 import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { connectionAccessPlugin } from "./mcp/connectionAccessPlugin.js";
@@ -132,6 +133,7 @@ export async function buildApp({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
     requestIdHeader: false,
     genReqId: requestIdFor,
+    logController: new CodedLogController(),
   });
   trackCurrentRequest(app);
   app.addHook("onRequest", async (request, reply) => {

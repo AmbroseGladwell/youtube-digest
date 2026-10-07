@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { AnalyticsDeclined, AnalyticsEventBatch, parseAnalyticsEvent, type AnalyticsEvent } from "@overview/domain";
+import { AnalyticsDeclined, AnalyticsEventBatch, apiLogLines, parseAnalyticsEvent, type AnalyticsEvent } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -50,20 +50,20 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
         throw new ApiError("unauthenticated", "Sign in, or agree to share usage, to send events");
       }
       if (accountId !== null && (await optedOut(accountId))) {
-        request.log.info({ events: events.length, surface: context.surface }, "client events dropped for opt-out");
+        request.log.info(apiLogLines.analytics.clientEventsDroppedForOptOut({ events: events.length, surface: context.surface }));
         return reply.status(204).send();
       }
       const accepted = events.map(parseAnalyticsEvent).filter((event): event is AnalyticsEvent => event !== null);
       const refused = events.length - accepted.length;
 
       for (const { name, props } of accepted) {
-        request.log.info({ event: name, props, signedIn: accountId !== null, ...context }, "client event");
+        request.log.info(apiLogLines.analytics.clientEvent({ event: name, props, signedIn: accountId !== null, ...context }));
       }
       if (dropped !== undefined) {
-        request.log.warn({ dropped, surface: context.surface, appVersion: context.appVersion }, "client events dropped");
+        request.log.warn(apiLogLines.analytics.clientEventsDropped({ dropped, surface: context.surface, appVersion: context.appVersion }));
       }
       if (refused > 0) {
-        request.log.warn({ refused, surface: context.surface, appVersion: context.appVersion }, "client events refused");
+        request.log.warn(apiLogLines.analytics.clientEventsRefused({ refused, surface: context.surface, appVersion: context.appVersion }));
       }
       if (sink !== null && accepted.length > 0) {
         const source = {
@@ -75,7 +75,7 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
         void sink
           .capture(accepted, source)
           .catch((error: unknown) =>
-            request.log.warn({ events: accepted.length, error: String(error) }, "client events not forwarded"),
+            request.log.warn(apiLogLines.analytics.clientEventsNotForwarded({ events: accepted.length, error: String(error) })),
           );
       }
       return reply.status(204).send();
@@ -91,7 +91,7 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
     },
     async (request, reply) => {
       const { context } = parseOrThrow(AnalyticsDeclined, request.body, "The decline");
-      request.log.info({ ...context }, "analytics declined");
+      request.log.info(apiLogLines.analytics.declined({ ...context }));
       return reply.status(204).send();
     },
   );

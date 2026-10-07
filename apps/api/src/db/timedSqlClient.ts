@@ -1,4 +1,5 @@
 import type { FastifyBaseLogger } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import type { SqlClient } from "./SqlClient.js";
 
 export const SLOW_QUERY_MS = 500;
@@ -30,17 +31,17 @@ export function timedSqlClient(inner: SqlClient, { log, slowMs = SLOW_QUERY_MS, 
     query: (text, params) =>
       timed(
         () => client.query(text, params),
-        (durationMs) => log().warn({ durationMs, statement: statementOf(text) }, "slow query"),
+        (durationMs) => log().warn(apiLogLines.db.slowQuery({ durationMs, statement: statementOf(text) })),
       ),
     execute: (text) =>
       timed(
         () => client.execute(text),
-        (durationMs) => log().warn({ durationMs, statement: statementOf(text) }, "slow query"),
+        (durationMs) => log().warn(apiLogLines.db.slowQuery({ durationMs, statement: statementOf(text) })),
       ),
     transaction: (run) =>
       timed(
         () => client.transaction((tx) => run(wrap(tx))),
-        (durationMs) => log().warn({ durationMs }, "slow transaction"),
+        (durationMs) => log().warn(apiLogLines.db.slowTransaction({ durationMs })),
       ),
     close: () => client.close(),
   });

@@ -7,6 +7,7 @@ import urllib.request
 from collections.abc import Callable
 
 from .json_log_formatter import JsonLogFormatter
+from .log_lines import LOGS_NOT_SHIPPED, LOGS_RECORDS_DROPPED
 from .otlp_logs_config import OtlpLogsConfig
 
 SCOPE = {"name": "overview-tts"}
@@ -73,7 +74,16 @@ class OtlpLogHandler(logging.Handler):
         max_batch_records: int = 500,
         max_held_records: int = 5_000,
         on_failure: Callable[[str], None] = lambda message: sys.stderr.write(
-            json.dumps({"level": 40, "time": int(time.time() * 1000), "msg": "logs not shipped", "error": message}) + "\n"
+            json.dumps(
+                {
+                    "level": 40,
+                    "time": int(time.time() * 1000),
+                    "msg": LOGS_NOT_SHIPPED.message,
+                    "logCode": LOGS_NOT_SHIPPED.log_code,
+                    "error": message,
+                }
+            )
+            + "\n"
         ),
         run_timer: bool = True,
     ):
@@ -138,8 +148,12 @@ class OtlpLogHandler(logging.Handler):
             "observedTimeUnixNano": at,
             "severityNumber": 13,
             "severityText": "WARN",
-            "body": {"stringValue": "log records dropped"},
-            "attributes": [{"key": "dropped", "value": otlp_value(dropped)}],
+            "body": {"stringValue": LOGS_RECORDS_DROPPED.message},
+            "attributes": [
+                {"key": "logCode", "value": otlp_value(LOGS_RECORDS_DROPPED.log_code)},
+                {"key": "service", "value": otlp_value(self._config.resource.get("service.name", "overview-tts"))},
+                {"key": "dropped", "value": otlp_value(dropped)},
+            ],
         }
 
     def _body(self, records: list[dict]) -> bytes:

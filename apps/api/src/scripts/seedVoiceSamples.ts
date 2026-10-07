@@ -1,5 +1,5 @@
 import pg from "pg";
-import { NarrationVoice } from "@overview/domain";
+import { NarrationVoice, apiLogLines } from "@overview/domain";
 import { AudioRenderQueue } from "../audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import { createAudioSetup } from "../audio/createAudioSetup.js";
@@ -12,7 +12,7 @@ import { ConfigError, loadConfig } from "../loadConfig.js";
 
 // Fly's release_command, run before the new machines start: why it migrates, renders in the
 // deploy and never fails it is in docs/features/narration-voice.md, "The samples".
-const log = (entry: object, message: string) => console.log(JSON.stringify({ ...entry, msg: message }));
+const log = (line: object) => console.log(JSON.stringify(line));
 
 let config;
 try {
@@ -24,16 +24,16 @@ try {
 
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
 const applied = await runMigrations(sql, { before: migrationSteps() });
-log({ applied }, "migrations applied");
+log(apiLogLines.startup.migrationsApplied({ applied }));
 
 if (config.audio === null) {
-  log({}, "TTS_URL is not set: no voice samples to seed");
+  log(apiLogLines.seed.narrationUnavailable({ why: "TTS_URL is not set" }));
 } else {
   const setup = createAudioSetup(config.audio, false);
   const renders = new AudioRendersRepository(sql);
   const samples = new VoiceSamplesRepository(sql);
   const seeded = await seedVoiceSamples({ renders, samples, store: setup.store, now: new Date() });
-  log(seeded, "voice samples seeded");
+  log(apiLogLines.seed.voiceSamplesSeeded(seeded));
 
   const queue = new AudioRenderQueue({
     renders,
@@ -45,6 +45,6 @@ if (config.audio === null) {
 
   const ready = (await samples.ready()).map((sample) => sample.voice);
   const missing = NarrationVoice.options.filter((voice) => !ready.includes(voice));
-  log({ ready: ready.length, of: NarrationVoice.options.length, missing }, "voice samples ready");
+  log(apiLogLines.seed.voiceSamplesReady({ ready: ready.length, of: NarrationVoice.options.length, missing }));
 }
 await sql.close();

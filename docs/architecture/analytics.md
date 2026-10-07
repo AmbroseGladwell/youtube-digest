@@ -134,6 +134,14 @@ An event that changes something says what it changed to: `readSwitched({ read: t
 `favouriteSwitched({ favourite: false })`, `rateChanged({ rate: 1.5 })`, and where it was
 done from when there is more than one place (`from: "masthead" | "actionsMenu" | "playerBar"`).
 
+**One control that means different things says which it meant.** The player's main button is
+play, pause, cancel, buffering or replay depending on the state the player is in, so
+`playerBar.mainPressed` carries both the `button` the reader saw and the `state` it was
+pressed in. Without the state, a listen begun (`play` from `ready`) and a listen carried on
+(`play` from `paused`) are the same number, and no funnel can tell how many readers actually
+started listening. `PlayerState` is app-core's `PlayerStatus`, kept in step by
+`playerBarView.test.ts`.
+
 What every event carries without being asked is said once per batch, in `context`: the
 shell (`web` or `extension`), the layout (`full` or `panel`, or `worker` for an error from
 the extension's service worker), the app's version when it is a plain `x.y.z`, and the

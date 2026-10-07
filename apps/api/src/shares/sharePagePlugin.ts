@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { ShareToken } from "@overview/domain";
+import { apiLogLines, ShareToken } from "@overview/domain";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { shareCardPng } from "./shareCard.js";
@@ -40,7 +40,7 @@ export async function sharePagePlugin(app: FastifyInstance, options: SharePagePl
   // A mistyped link and a link that was never issued are the same thing to the person
   // holding it, so both get the page rather than the API's envelope.
   const gone = (reply: FastifyReply, state: Missing) => {
-    reply.request.log.info({ state }, "share page missing");
+    reply.request.log.info(apiLogLines.shares.pageMissing({ state }));
     const { status, title } = GONE[state];
     return reply
       .status(status)
@@ -58,7 +58,7 @@ export async function sharePagePlugin(app: FastifyInstance, options: SharePagePl
     if (found === "revoked") {
       return gone(reply, "revoked");
     }
-    request.log.info("share viewed");
+    request.log.info(apiLogLines.shares.viewed());
     return reply
       .header("content-type", "text/html; charset=utf-8")
       .header("cache-control", "no-store")

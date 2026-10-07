@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from pydantic.alias_generators import to_camel
 
 from .encode_m4a import encode_m4a
+from . import log_lines
 from .idle_exit import IdleExit
 from .posthog_exception_reporter import ExceptionReporter
 from .request_id import REQUEST_ID_HEADER, current_request_id, request_id_for
@@ -86,16 +87,16 @@ def create_app(
         try:
             report_exception(error)
         except Exception as failure:
-            log.warning("error not forwarded", extra={"errorType": type(failure).__name__})
+            log_lines.ERRORS_NOT_FORWARDED.write(log, errorType=type(failure).__name__)
 
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, error: ServiceError) -> JSONResponse:
-        log.warning("render refused", extra={"code": error.code, "status": error.status})
+        log_lines.RENDER_REFUSED.write(log, code=error.code, status=error.status)
         return error_response(error.status, error.code, error.message)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_: Request, error: RequestValidationError) -> JSONResponse:
-        log.warning("render refused", extra={"code": "invalid_request", "status": 422})
+        log_lines.RENDER_REFUSED.write(log, code="invalid_request", status=422)
         return error_response(422, "invalid_request", str(error.errors()[0].get("msg", "Invalid request")))
 
     # A failure nothing planned for: answered in the API's envelope, then reported once the
@@ -104,7 +105,7 @@ def create_app(
     async def unexpected(request: Request, error: Exception) -> JSONResponse:
         # Starlette answers an unexpected error outside the middleware, where the request's id
         # has already been reset, so it is read back from the request itself.
-        log.error("unhandled error", exc_info=error, extra={"reqId": getattr(request.state, "request_id", None)})
+        log_lines.HTTP_UNHANDLED_ERROR.write(log, exc_info=error, reqId=getattr(request.state, "request_id", None))
         return JSONResponse(
             status_code=500,
             content={"error": {"code": "internal_error", "message": "Something went wrong"}},
@@ -124,7 +125,7 @@ def create_app(
             "lines": len(request.lines),
             "characters": sum(len(line) for line in request.lines),
         }
-        log.info("render requested", extra=script)
+        log_lines.RENDER_REQUESTED.write(log, **script)
         with idle_exit.busy():
             if request.render_version != RENDER_VERSION:
                 raise ServiceError(
@@ -139,14 +140,12 @@ def create_app(
                 rendered = render_script(synthesiser, request.lines, request.voice, request.language)
                 synthesis_seconds = time.perf_counter() - started
                 audio = encode_m4a(rendered.samples, rendered.sample_rate)
-            log.info(
-                "render finished",
-                extra={
-                    **script,
-                    "synthesisSeconds": round(synthesis_seconds, 2),
-                    "audioSeconds": round(rendered.duration_seconds, 2),
-                    "bytes": len(audio),
-                },
+            log_lines.RENDER_FINISHED.write(
+                log,
+                **script,
+                synthesisSeconds=round(synthesis_seconds, 2),
+                audioSeconds=round(rendered.duration_seconds, 2),
+                bytes=len(audio),
             )
             return RenderResponse(
                 render_version=RENDER_VERSION,

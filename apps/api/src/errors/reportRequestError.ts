@@ -1,4 +1,5 @@
 import type { FastifyRequest } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import type { ErrorSink } from "./ErrorSink.js";
 import { toServerError } from "./toServerError.js";
 
@@ -29,5 +30,5 @@ export function reportRequestError(
   });
   void errorSink
     .captureServerError(serverError)
-    .catch((failure: unknown) => request.log.warn({ error: String(failure) }, "server error not forwarded"));
+    .catch((failure: unknown) => request.log.warn(apiLogLines.errors.serverErrorNotForwarded({ error: String(failure) })));
 }

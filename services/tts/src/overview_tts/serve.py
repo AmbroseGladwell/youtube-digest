@@ -4,6 +4,7 @@ from pathlib import Path
 
 import uvicorn
 
+from . import log_lines
 from .configure_logging import configure_logging
 from .create_app import create_app
 from .idle_exit import IdleExit
@@ -17,7 +18,7 @@ def main() -> None:
     synthesiser = LoadingSynthesiser(lambda: KokoroSynthesiser(model_dir))
 
     def stop() -> None:
-        logging.getLogger(__name__).info("idle, stopping", extra={"idleSeconds": idle_exit_seconds})
+        log_lines.SERVICE_IDLE_STOPPING.write(logging.getLogger(__name__), idleSeconds=idle_exit_seconds)
         server.should_exit = True
 
     idle_exit_seconds = float(os.environ.get("IDLE_EXIT_SECONDS", "15"))

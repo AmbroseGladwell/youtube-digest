@@ -1,5 +1,6 @@
 import type { EventEmitter } from "node:events";
 import type { FastifyBaseLogger } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import type { ErrorSink, ServerError } from "./ErrorSink.js";
 import { toServerError } from "./toServerError.js";
 
@@ -12,9 +13,9 @@ export interface ProcessErrorReporting {
   process?: Pick<EventEmitter, "on">;
 }
 
-const LOG_MESSAGES = {
-  uncaughtException: "uncaught exception",
-  unhandledRejection: "unhandled rejection",
+const FATAL_LINES = {
+  uncaughtException: apiLogLines.process.uncaughtException,
+  unhandledRejection: apiLogLines.process.unhandledRejection,
 } as const;
 
 // What Node does with an error nothing caught, which is stop, but reported before it does
@@ -22,7 +23,7 @@ const LOG_MESSAGES = {
 export function reportProcessErrors({ errorSink, log, clock, exit, process: emitter = process }: ProcessErrorReporting): void {
   let exiting = false;
   const onFatal = (caughtBy: Exclude<ServerError["caughtBy"], "request">) => (error: unknown) => {
-    log.fatal({ err: error }, LOG_MESSAGES[caughtBy]);
+    log.fatal(FATAL_LINES[caughtBy]({ err: error }));
     if (exiting) return;
     exiting = true;
     const sent =
@@ -30,7 +31,7 @@ export function reportProcessErrors({ errorSink, log, clock, exit, process: emit
         ? Promise.resolve()
         : errorSink
             .captureServerError(toServerError(error, { caughtBy, at: clock() }))
-            .catch((failure: unknown) => log.warn({ error: String(failure) }, "server error not forwarded"));
+            .catch((failure: unknown) => log.warn(apiLogLines.errors.serverErrorNotForwarded({ error: String(failure) })));
     void sent.then(exit);
   };
   emitter.on("uncaughtException", onFatal("uncaughtException"));

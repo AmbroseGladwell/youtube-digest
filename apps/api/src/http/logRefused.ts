@@ -1,4 +1,5 @@
 import type { FastifyRequest } from "fastify";
+import { apiLogLines } from "@overview/domain";
 
 // The details a refusal sends that are ids, numbers and enums, never a validation detail,
 // which can quote what was sent.
@@ -23,5 +24,5 @@ export function logRefused(
   details?: Record<string, unknown>,
 ): void {
   const logged = Object.fromEntries(Object.entries(details ?? {}).filter(([key]) => LOGGED_DETAILS.has(key)));
-  request.log.warn({ code, status, ...logged }, "request refused");
+  request.log.warn(apiLogLines.http.requestRefused({ code, status, ...logged }));
 }

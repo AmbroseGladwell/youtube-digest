@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { apiLogLines } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { FixedWindowLimiter } from "./FixedWindowLimiter.js";
 import type { RateLimit } from "./RateLimit.js";
@@ -20,8 +21,12 @@ export function rateLimitHook(rateLimit: RateLimit, keyOf: RateLimitKey, clock: 
     }
     const { retryAfterSeconds } = verdict;
     request.log.warn(
-      { limit: rateLimit.name, method: request.method, route: request.routeOptions.url ?? null, retryAfterSeconds },
-      "throttled",
+      apiLogLines.http.throttled({
+        limit: rateLimit.name,
+        method: request.method,
+        route: request.routeOptions.url ?? null,
+        retryAfterSeconds,
+      }),
     );
     reply.header("retry-after", String(retryAfterSeconds));
     throw new ApiError("too_many_requests", "Too many requests. Try again shortly", { retryAfterSeconds });
