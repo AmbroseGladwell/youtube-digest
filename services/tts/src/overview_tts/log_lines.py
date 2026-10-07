@@ -39,7 +39,7 @@ SERVICE_LOG_SHIPPING = LogLine(
     "tts.service.logShipping", logging.INFO, "log shipping", "Where these logs are shipped, or that they go to stdout only."
 )
 SERVICE_IDLE_STOPPING = LogLine(
-    "tts.service.idleStopping", logging.INFO, "idle, stopping", "Nothing arrived within the idle grace, so the machine is shutting down."
+    "tts.service.idleStopping", logging.INFO, "idle, stopping", "Nothing arrived within the idle grace after the model was ready, so the machine is shutting down."
 )
 ERRORS_NOT_FORWARDED = LogLine(
     "tts.errors.notForwarded", logging.WARNING, "error not forwarded", "An error could not be passed on to error tracking."

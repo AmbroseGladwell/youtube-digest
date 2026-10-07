@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -35,7 +36,8 @@ class KokoroSynthesiser:
 # held until Kokoro is ready rather than refused while it loads
 # (docs/architecture/deploy.md, "The TTS service").
 class LoadingSynthesiser:
-    def __init__(self, load):
+    def __init__(self, load, on_ready: Callable[[], None] = lambda: None):
+        self._on_ready = on_ready
         self._ready = threading.Event()
         self._loaded = None
         self._error: BaseException | None = None
@@ -51,6 +53,7 @@ class LoadingSynthesiser:
             log_lines.MODEL_FAILED_TO_LOAD.write(log, exc_info=error)
         finally:
             self._ready.set()
+            self._on_ready()
 
     def _synthesiser(self):
         self._ready.wait()

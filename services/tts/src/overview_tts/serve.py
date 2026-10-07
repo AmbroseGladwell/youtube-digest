@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from pathlib import Path
 
 import uvicorn
@@ -13,16 +14,22 @@ from .posthog_exception_reporter import create_posthog_exception_reporter
 
 
 def main() -> None:
+    booted_at = time.monotonic()
     shipping = configure_logging(os.environ)
     model_dir = Path(os.environ.get("MODEL_DIR", "models"))
-    synthesiser = LoadingSynthesiser(lambda: KokoroSynthesiser(model_dir))
 
     def stop() -> None:
-        log_lines.SERVICE_IDLE_STOPPING.write(logging.getLogger(__name__), idleSeconds=idle_exit_seconds)
+        log_lines.SERVICE_IDLE_STOPPING.write(
+            logging.getLogger(__name__),
+            idleSeconds=idle_exit_seconds,
+            servingSeconds=round(idle_exit.serving_seconds(), 2),
+            upSeconds=round(time.monotonic() - booted_at, 2),
+        )
         server.should_exit = True
 
     idle_exit_seconds = float(os.environ.get("IDLE_EXIT_SECONDS", "15"))
     idle_exit = IdleExit(idle_exit_seconds, stop)
+    synthesiser = LoadingSynthesiser(lambda: KokoroSynthesiser(model_dir), on_ready=idle_exit.start)
     api_key = os.environ.get("POSTHOG_API_KEY")
     report_exception = (
         None
