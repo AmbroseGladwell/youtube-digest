@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
   apiLogLines,
-  canConnectAssistant,
   ConnectionDecision,
   type ConnectionDecided,
   type ConnectionRequest,
