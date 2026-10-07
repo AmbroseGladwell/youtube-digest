@@ -63,6 +63,23 @@ test("the button beside the search marks filters changed from the default, and t
   await library.expectCardCountToBe(1);
 });
 
+test("a filter applied from the sheet glides the list beneath the sheet, never over it", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.overviews.seed(makeOverview({ tags: ["saas"] }));
+  backendSimulator.overviews.seed(makeOverview({ tags: ["energy"] }));
+  await page.setViewportSize(PHONE);
+  const library = await launcher.launchExpectingLibrary();
+  await library.openFilters();
+
+  await library.verifyTheGlideCapturesTheFilterSheet(() => library.filterPanel.clickTagChip("saas"));
+
+  await library.verifyFiltersAreOpen(true);
+  await library.showResults("Show 1 overview");
+});
+
 test("on a phone the chips under the search keep to one line, with +N opening the sheet for the rest", async ({
   launcher,
   backendSimulator,
