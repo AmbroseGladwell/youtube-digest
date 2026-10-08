@@ -132,9 +132,67 @@
   color: var(--on-stone-tint);
 }
 
+// The transcript's way back, worded for the voice: the same pill and the same brand dot
+// (docs/features/following-playback.md, "Following, and stopping following"). It comes to
+// rest above the floating player bar, which is the same room a line scrolled to clears
+// below it.
+.followButton {
+  @include controls.pill-shape;
+  @include controls.control-motion;
+
+  position: sticky;
+  bottom: 7rem;
+  z-index: 2;
+  align-self: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  font-size: 0.84375rem;
+  background: var(--ink);
+  color: var(--ground);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    background: var(--label);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.followButtonMark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .followButton {
+    animation: followRise var(--motion-travel) var(--motion-ease) both;
+  }
+}
+
+@keyframes followRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (max-width: 61.9375rem) {
   .line {
     scroll-margin-bottom: 11rem;
+  }
+
+  .followButton {
+    bottom: 11.25rem;
   }
 
   .headingLine {

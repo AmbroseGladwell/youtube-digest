@@ -7,4 +7,5 @@ export const readAlongNoteTestIds = {
   bullet: "ReadAlongNote.bullet",
   activeLine: "ReadAlongNote.activeLine",
   caption: "ReadAlongNote.caption",
+  followButton: "ReadAlongNote.followButton",
 };

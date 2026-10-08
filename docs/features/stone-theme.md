@@ -200,8 +200,10 @@ that **the raised card means the video, and a tint means the voice**.
   wash the old reader used are gone. The tint clones across a wrapped line rather than
   boxing the paragraph. The page scrolls to keep that line in its top third, and leaves a
   line already resting there alone, so a listener sees the tint walk down the page rather
-  than the page jump per sentence. `prefers-reduced-motion` gets the same scroll without
-  the animation.
+  than the page jump per sentence. It does that only while the note is being read aloud,
+  and the scroll is instant rather than eased — both for reasons the page's own way back
+  turns on (`docs/features/audio-player.md`, "The note follows the voice"), which is also
+  why the frame about reduced motion no longer has a scroll animation to drop.
 - **The player bar** (1a/1b). The web's bar is a floating card: transport at the left, the
   section and the clock over a 4px brand track in the middle, the rate pill at the right.
   The panel's is the same parts as grid areas — track, clocks, then rate, transport and

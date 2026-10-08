@@ -1,12 +1,17 @@
-import { Fragment, useEffect, useRef, type ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { NoteLine, TimeRange } from "@overview/domain";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
+import { sectionHeadingAt } from "../../../player/util/playerBarView.js";
+import { useFollowTheVoice } from "./useFollowTheVoice.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
 export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
+  // Whether the note is being read aloud right now. The page follows the voice and
+  // nothing else: a note opened in silence stays where it was opened.
+  speaking: boolean;
   onSelectLine: (index: number) => void;
   captions?: Record<string, string>;
   renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
@@ -29,39 +34,26 @@ const numberListLines = (lines: NoteLine[]): Array<number | null> => {
   });
 };
 
-// Design 1a: the page scrolls to keep the sentence being read in the top third. A line
-// already resting there is left alone, so a listener who has not touched the page sees
-// the tint walk down and the page catch up, never a jump per sentence
-// (docs/features/stone-theme.md, "Highlighting").
-const TOP_THIRD = 1 / 3;
-const LOWEST_RESTING = 0.45;
-
-const keepInTopThird = (line: HTMLElement) => {
-  const rect = line.getBoundingClientRect();
-  const stickyTop = parseFloat(getComputedStyle(line).scrollMarginTop) || 0;
-  const viewport = window.innerHeight;
-  const resting = rect.top >= stickyTop && rect.top <= viewport * LOWEST_RESTING && rect.bottom < viewport - viewport * TOP_THIRD;
-  if (resting) {
-    return;
-  }
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  line.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
-};
-
-export function ReadAlongNote({ lines, activeIndex, onSelectLine, captions = {}, renderRange }: ReadAlongNoteProps) {
-  const activeLine = useRef<HTMLDivElement | null>(null);
+export function ReadAlongNote({
+  lines,
+  activeIndex,
+  speaking,
+  onSelectLine,
+  captions = {},
+  renderRange,
+}: ReadAlongNoteProps) {
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
-
-  useEffect(() => {
-    if (activeLine.current) {
-      keepInTopThird(activeLine.current);
-    }
-  }, [activeIndex]);
+  const follow = useFollowTheVoice(speaking);
 
   const select = (index: number) => {
     analytics.readAlong.lineChosen();
     onSelectLine(index);
+  };
+
+  const followTheVoice = () => {
+    analytics.readAlong.followResumed();
+    follow.follow();
   };
 
   return (
@@ -72,7 +64,7 @@ export function ReadAlongNote({ lines, activeIndex, onSelectLine, captions = {},
         return (
           <Fragment key={`${line.section}-${index}`}>
             <div
-              ref={active ? activeLine : null}
+              ref={active ? follow.spokenLine : undefined}
               className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
                 line.bullet ? styles.bulletLine : ""
               } ${active ? styles.lineActive : ""}`}
@@ -122,6 +114,20 @@ export function ReadAlongNote({ lines, activeIndex, onSelectLine, captions = {},
           </Fragment>
         );
       })}
+
+      {/* The way back to the line being read, the transcript's own way back worded for a
+          voice instead of a clock, sitting above the player bar rather than on it. */}
+      {follow.offered && (
+        <button
+          type="button"
+          className={styles.followButton}
+          onClick={followTheVoice}
+          data-testid={readAlongNoteTestIds.followButton}
+        >
+          <span className={styles.followButtonMark} aria-hidden="true" />
+          Back to {sectionHeadingAt(lines, activeIndex)}
+        </button>
+      )}
     </div>
   );
 }

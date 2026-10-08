@@ -325,9 +325,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 onEditingChange={setEditingReason}
               />
               <ReadAlongNote
+                key={overviewId}
                 lines={lines}
                 captions={captions}
                 activeIndex={notePlayer.activeIndex}
+                speaking={notePlayer.playing}
                 onSelectLine={notePlayer.selectLine}
                 renderRange={(line, range, active) => (
                   <LineRangeTag

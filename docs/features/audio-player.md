@@ -162,6 +162,40 @@ shows: a stone-tint "Read-along · no audio" tag, a stone fill rather than orang
 time written with a ~. It has no thumb or notches, because its times are not somewhere a
 listener can seek to.
 
+## The note follows the voice
+
+The page scrolls itself only while the note is being read aloud, and the three states of
+that are the whole of it.
+
+**Silent.** A note nobody is listening to is left exactly where it was opened. It was not:
+the read-along scrolled the line it had marked into the top third on mount, so every open
+of every note jumped the page down past the masthead to the premise before the reader had
+asked for anything. Tapping a line, scrubbing while paused and stepping with `[` and `]`
+move the reading mark and nothing else.
+
+**Following.** From the first press, and from the first render of a note opened while it
+is already being read — the one time the page is right to move on its own, since the voice
+is somewhere the reader cannot see. The line being spoken is kept in the top third, and a
+line already resting there is left alone (`docs/features/stone-theme.md`, "Highlighting").
+
+**Scrolled away.** Reading ahead, or back, is the reader taking the scroll over: the
+following stands down and a `● Back to Key points` pill rises above the player bar, naming
+the section the voice is in rather than a time, which is what the transcript's way back
+names. Pressing it follows again, and the same press scrolls back.
+
+The detection is the transcript's, and so is the thing that buys it: an
+`IntersectionObserver` on the spoken line, asking only whether it is still on screen,
+which works because the follow scroll is **instant rather than smooth**. The read-along's
+scroll used to be eased, and the ease is what had to go — a smooth scroll is still in
+flight when the observer first reports, and the line it is travelling towards is off
+screen while it travels, which reads as the reader taking over one frame after the voice
+moved (`docs/features/following-playback.md`, "Following, and stopping following"). The
+per-sentence calm the ease was for comes from the resting rule instead, which is what
+keeps most lines from scrolling the page at all.
+
+The follow belongs to the note, not to the reader: stepping to the next overview starts it
+following again, because the component is keyed by the overview it is showing.
+
 ## iOS and the lock screen
 
 - **Starting sound after a wait.** iOS only lets a page start audio inside a tap, and a
@@ -216,6 +250,10 @@ make (`docs/architecture/tiers.md`, `plus-upsell.md`), and `PLUS_FEATURES` is go
   WAV of the render's length, served with byte ranges. Without ranges the element cannot
   seek, which the first run of these scenarios showed. `narration.finishRenders()`,
   `failRenders()` and `accountIsBusy()` move a render between states from the test.
+  `followTheVoice.iwft.ts` holds the three states above: the open that must not scroll,
+  the open while playing that must, and the read ahead that hands the scroll back. The
+  first watches for a scroll rather than taking one reading afterwards, because the scroll
+  it is about happened a frame after the note rendered.
 
 ## Left out, or not yet read
 
