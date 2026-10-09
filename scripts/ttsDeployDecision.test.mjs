@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { deployedCommitsOf, ttsDeployDecision, verifyTtsDeploy } from "./ttsDeployDecision.mjs";
+import { readFileSync } from "node:fs";
+import { deployedCommitsOf, poolSizeOf, ttsDeployDecision, verifyTtsDeploy } from "./ttsDeployDecision.mjs";
 
 const OLD = "a".repeat(40);
 const LIVE = "b".repeat(40);
@@ -49,7 +50,21 @@ test("each machine's live commit is read from the env the last deploy stamped", 
 });
 
 test("a deploy is verified only when every machine reports the new commit", () => {
-  assert.match(verifyTtsDeploy({ deployedCommits: [HEAD, HEAD], head: HEAD }), /all 2 machines/);
-  assert.throws(() => verifyTtsDeploy({ deployedCommits: [HEAD, LIVE], head: HEAD }), /1 of 2 machines/);
-  assert.throws(() => verifyTtsDeploy({ deployedCommits: [], head: HEAD }));
+  assert.match(verifyTtsDeploy({ deployedCommits: [HEAD, HEAD], head: HEAD, poolSize: 2 }), /all 2 machines/);
+  assert.throws(() => verifyTtsDeploy({ deployedCommits: [HEAD, LIVE], head: HEAD, poolSize: 2 }), /1 of 2 machines/);
+  assert.throws(() => verifyTtsDeploy({ deployedCommits: [], head: HEAD, poolSize: 0 }));
+});
+
+test("a deploy that leaves more or fewer machines than the pool's size is not verified", () => {
+  assert.throws(
+    () => verifyTtsDeploy({ deployedCommits: Array(13).fill(HEAD), head: HEAD, poolSize: 5 }),
+    /the pool has 13 machines, not 5: fly scale count 5/,
+  );
+  assert.throws(() => verifyTtsDeploy({ deployedCommits: [HEAD], head: HEAD, poolSize: 5 }), /1 machines, not 5/);
+});
+
+test("the pool is sized by the API's TTS_CONCURRENCY", () => {
+  assert.equal(poolSizeOf('[env]\n  TTS_URL = "http://the-overview-tts.flycast"\n  TTS_CONCURRENCY = "5"\n'), 5);
+  assert.equal(poolSizeOf(readFileSync(new URL("../fly.toml", import.meta.url), "utf8")), 5);
+  assert.throws(() => poolSizeOf("[env]\n"), /sets no TTS_CONCURRENCY/);
 });

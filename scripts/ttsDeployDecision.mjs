@@ -3,6 +3,7 @@ import { appendFileSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const TTS_PATH = "services/tts";
+const API_FLY_TOML = "fly.toml";
 
 function gitSucceeds(args) {
   try {
@@ -43,10 +44,25 @@ export function ttsDeployDecision({ deployedCommits, head, git = gitHistory }) {
     : { deploy: false, reason: `${TTS_PATH} is unchanged since the live ${short(live)}` };
 }
 
-export function verifyTtsDeploy({ deployedCommits, head }) {
+// The pool is as many machines as the API runs renders at once, so the API's own setting is
+// its size (docs/architecture/deploy.md, "The TTS service").
+export function poolSizeOf(apiFlyToml) {
+  const match = apiFlyToml.match(/^\s*TTS_CONCURRENCY\s*=\s*"(\d+)"/m);
+  if (match === null) throw new Error(`${API_FLY_TOML} sets no TTS_CONCURRENCY to size the pool by`);
+  return Number(match[1]);
+}
+
+// A deploy that retries can leave the machines it created on an earlier try behind, so the
+// count is checked as well as the commit (docs/architecture/deploy.md, "The TTS service").
+export function verifyTtsDeploy({ deployedCommits, head, poolSize }) {
   const behind = deployedCommits.filter((commit) => commit !== head).length;
   if (deployedCommits.length === 0 || behind > 0) {
     throw new Error(`${behind} of ${deployedCommits.length} machines don't report ${short(head)} after the deploy`);
+  }
+  if (deployedCommits.length !== poolSize) {
+    throw new Error(
+      `the pool has ${deployedCommits.length} machines, not ${poolSize}: fly scale count ${poolSize} --app the-overview-tts`,
+    );
   }
   return `all ${deployedCommits.length} machines report ${short(head)}`;
 }
@@ -64,7 +80,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const deployedCommits = deployedCommitsOf(JSON.parse(readFileSync(machinesFile, "utf8")));
   try {
     if (mode === "verify") {
-      console.log(`tts deploy: ${verifyTtsDeploy({ deployedCommits, head })}`);
+      const poolSize = poolSizeOf(readFileSync(API_FLY_TOML, "utf8"));
+      console.log(`tts deploy: ${verifyTtsDeploy({ deployedCommits, head, poolSize })}`);
     } else {
       const { deploy, reason } = ttsDeployDecision({ deployedCommits, head });
       console.log(`tts deploy: ${deploy ? "deploying" : "skipping"}, because ${reason}`);

@@ -289,8 +289,9 @@ the model baked in and hash-checked) and its own Fly app, `the-overview-tts`
 
 - **A pool, not a machine.** Every machine is identical and stopped until needed. The proxy
   gives each one request at a time (`hard_limit = 1`) and starts another stopped one when all
-  running ones are busy, so the pool's size is the number of renders that can run at once. A
-  stopped machine costs only its image storage.
+  running ones are busy, so the pool's size is the number of renders that can run at once:
+  the API's `TTS_CONCURRENCY` (5), which is how many it sends at once. A stopped machine costs
+  only its image storage.
 - **It stops itself.** The process exits `IDLE_EXIT_SECONDS` (15) after its last render, and
   Fly's default restart policy leaves a clean exit stopped. The grace starts once the model
   has loaded (or failed to), never at boot: a cold load can take most of the 15 seconds, and
@@ -334,8 +335,15 @@ live:
   carry no commit or different ones (a deploy by hand drops the stamp). **It skips**, and
   says why in the log, when nothing changed, or when the live commit is newer than this one,
   so re-running an old run never rolls the pool back.
-- **It checks** by reading `DEPLOYED_COMMIT` back from every machine, stopped ones included.
-  There's no health check to ask: the service is private and its machines stop themselves.
+- **It checks** by reading `DEPLOYED_COMMIT` back from every machine, stopped ones included,
+  and by counting them against `TTS_CONCURRENCY` in the API's `fly.toml`. There's no health
+  check to ask: the service is private and its machines stop themselves.
+- **Why it counts.** A machine whose host is full can't be updated where it is, so `fly
+  deploy` replaces it with a new one on another host ("Replacing … by new machine"). If
+  waiting on those replacements times out, it retries the whole update, and every retry
+  replaces the originals again while the previous try's replacements stay. On 2026-10-07 one
+  deploy retried twice and took the pool from 5 machines to 13, every one on the new commit.
+  A failed count names the fix: `fly scale count 5 --app the-overview-tts`.
 
 It has its own token, `FLY_TTS_API_TOKEN`, a deploy token scoped to `the-overview-tts`
 alone, so neither deploy job can touch the other app:
@@ -347,6 +355,36 @@ fly tokens create deploy --app the-overview-tts --name github-actions-tts --expi
 Without it, the job skips with a warning rather than failing `main`. Deploying by hand,
 `fly deploy --remote-only --ha=false` from `services/tts`, still works. The app's one secret,
 `POSTHOG_API_KEY`, stays a one-off `task deploy:tts:secrets`, because CI can't read Bitwarden.
+
+### More machines start than renders
+
+One render can start several machines, and only one of them renders. The rest boot, load
+Kokoro, serve nothing and stop on their idle grace. This is Fly's doing, not ours, and it's
+accepted.
+
+- **Why.** The proxy starts one stopped machine per request. When that machine's host has no
+  room for a `performance-4x`, Fly moves it to another host in the region first, which takes
+  about 30 seconds. The proxy doesn't wait: about five seconds later it tries another stopped
+  machine, and so on until one starts where it is. The moves it gave up on still finish, and
+  each of those machines then starts with nothing to serve.
+- **What it looked like.** On 2026-10-07 at 16:11, Fly moved four machines at 4 to 7 second
+  intervals before the proxy started a fifth in place, 21 seconds after the first try. The
+  fifth rendered; the four started between 16:11:57 and 16:12:05 and stopped within 20
+  seconds. At 16:31, one moved machine started 28 seconds after the proxy had already started
+  another, loaded Kokoro in 22 seconds (five is usual), and stopped. The machines' event
+  histories (`fly machines list --app the-overview-tts --json`, each machine's `events`) show
+  it: a `launch` by `flyd` is a move, a `start` by `proxy` is the start the render got.
+- **What it costs.** Each wasted machine runs 20 to 35 seconds, about $0.002 at $132 a month
+  for a running `performance-4x`. The render waits about five seconds more for every full host
+  the proxy tries. A cold start without that is about eight seconds: 1.5 to boot, 2.5 to 3.5
+  until the port answers, about five for Kokoro, against 70 to 125 seconds of synthesis.
+- **How to see how often.** A machine that started and served nothing logs `tts.model.loaded`
+  and then `tts.service.idleStopping` with no `tts.render.requested` between. Counting those
+  over a week sizes the real cost.
+- **Why nothing changes.** Keeping one machine running (`min_machines_running = 1`) costs about
+  $132 a month to save seconds on a render nobody watches happen. Another region might have
+  more room, but one day of evidence doesn't justify moving. Worth revisiting if the count
+  above turns out large.
 
 ### Deploy order
 
