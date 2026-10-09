@@ -275,6 +275,57 @@ export class ReaderPageObject extends PageObject {
   verifyNoLineIsActive = () =>
     this.step("verifyNoLineIsActive", () => this.expectNotToBeVisible(readAlongNoteTestIds.activeLine));
 
+  // Watched rather than sampled: the scroll this is about happened on its own, a frame
+  // after the note rendered, so a single reading taken afterwards would have missed it.
+  verifyTheNoteStaysWhereItWasOpened = () =>
+    this.step("verifyTheNoteStaysWhereItWasOpened", async () => {
+      await expect(this.get(readAlongNoteTestIds.activeLine)).toBeVisible();
+      const furthest = await this.page.evaluate(
+        () =>
+          new Promise<number>((resolve) => {
+            let most = window.scrollY;
+            const onScroll = () => {
+              most = Math.max(most, window.scrollY);
+            };
+            window.addEventListener("scroll", onScroll, { passive: true });
+            setTimeout(() => {
+              window.removeEventListener("scroll", onScroll);
+              resolve(most);
+            }, 500);
+          }),
+      );
+      expect(furthest).toBe(0);
+    });
+
+  verifyTheSpokenLineIsOnScreen = (onScreen: boolean) =>
+    this.step(`verifyTheSpokenLineIsOnScreen ${onScreen}`, () =>
+      expect(async () => {
+        const line = (await this.get(readAlongNoteTestIds.activeLine).boundingBox())!;
+        const viewport = this.page.viewportSize()!;
+        expect(line.y + line.height > 0 && line.y < viewport.height).toBe(onScreen);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyTheNoteHasScrolled = () =>
+    this.step("verifyTheNoteHasScrolled", () =>
+      expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBeGreaterThan(0),
+    );
+
+  verifyOffersTheWayBackToTheVoice = (offered: boolean) =>
+    this.step(`verifyOffersTheWayBackToTheVoice ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(readAlongNoteTestIds.followButton)
+        : this.expectNotToBeVisible(readAlongNoteTestIds.followButton),
+    );
+
+  verifyTheWayBackToTheVoiceReads = (label: string | RegExp) =>
+    this.step(`verifyTheWayBackToTheVoiceReads ${String(label)}`, () =>
+      expect(this.get(readAlongNoteTestIds.followButton)).toHaveText(label),
+    );
+
+  clickBackToTheVoice = () =>
+    this.step("clickBackToTheVoice", () => this.click(readAlongNoteTestIds.followButton));
+
   verifyBulletedLinesRead = (texts: string[]) =>
     this.step(`verifyBulletedLinesRead ${texts.join(", ")}`, () =>
       expect(

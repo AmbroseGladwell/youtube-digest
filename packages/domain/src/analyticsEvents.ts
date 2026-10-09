@@ -168,6 +168,7 @@ export const overviewPageEvents = {
   },
   readAlong: {
     lineChosen: event("The reader picks a line of the note to listen from"),
+    followResumed: event("The reader asks the note to go back to the line being read aloud"),
     rangeFollowed: event("The reader goes to the stretch of the video a key point or what stands out comes from", {
       line: z.enum(["keyPoint", "standsOut"]),
       by: RangeReach,

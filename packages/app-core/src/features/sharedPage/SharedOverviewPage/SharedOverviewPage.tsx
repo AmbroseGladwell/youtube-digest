@@ -172,7 +172,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                   lines={lines}
                   captions={captions}
                   activeIndex={notePlayer.activeIndex}
-                    onSelectLine={notePlayer.selectLine}
+                  speaking={notePlayer.playing}
+                  onSelectLine={notePlayer.selectLine}
                   renderRange={(line, range, active) => (
                     <LineRangeTag
                       line={line}
