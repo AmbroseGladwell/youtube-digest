@@ -20,6 +20,10 @@ import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
 import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
 import { SurfaceProvider, type Surface } from "./SurfaceContext.js";
 import { YouTubeFetchProvider } from "./YouTubeFetchContext.js";
+import {
+  ProviderPermissionProvider,
+  type ProviderPermissions,
+} from "../features/apiKeys/ProviderPermissionContext.js";
 import type { AppRouter } from "./createAppRouter.js";
 import "../theme/global.scss";
 
@@ -33,6 +37,9 @@ export interface AppProps {
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
+  // Null in the web app, which needs no permission to reach a provider. The extension
+  // passes Chrome's, asked for one provider at a time (docs/features/byo-providers.md).
+  providerPermissions?: ProviderPermissions | null;
   appUpdate?: AppUpdate | null;
   defaultApiUrl?: string | null;
   build?: AppBuild | null;
@@ -49,6 +56,7 @@ export function App({
   playback = null,
   runBridge = null,
   youTubeFetch = null,
+  providerPermissions = null,
   appUpdate = null,
   defaultApiUrl = null,
   build = null,
@@ -56,6 +64,7 @@ export function App({
 }: AppProps) {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
+      <ProviderPermissionProvider value={providerPermissions}>
       <ActiveVideoProvider value={activeVideo}>
         <PlaybackProvider value={playback}>
           <RunBridgeProvider value={runBridge}>
@@ -91,6 +100,7 @@ export function App({
           </RunBridgeProvider>
         </PlaybackProvider>
       </ActiveVideoProvider>
+      </ProviderPermissionProvider>
     </YouTubeFetchProvider>
   );
 }

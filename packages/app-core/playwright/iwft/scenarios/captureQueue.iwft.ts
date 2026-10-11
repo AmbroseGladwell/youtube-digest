@@ -5,8 +5,9 @@ import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
 import { PSYCHOLOGY_ID, PSYCHOLOGY_URL, playlistEntry, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 const ORIGIN = { id: PlaylistId.parse(PSYCHOLOGY_ID), title: "Psychology" };
 const EVENING = new Date("2026-10-06T21:30:00.000Z");
 const CAP_RESETS_IN_SECONDS = 2.5 * 60 * 60;

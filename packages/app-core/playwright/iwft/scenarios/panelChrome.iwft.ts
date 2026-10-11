@@ -5,10 +5,11 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("watchedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=watchedVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };
 

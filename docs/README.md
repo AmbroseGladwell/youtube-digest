@@ -66,6 +66,12 @@ Five folders, five different questions.
 
 ## `features/` — feature-specific design, one file per feature
 
+- `byo-providers.md` — generation on a key from any of six providers: what was checked
+  against their live APIs first, one adapter per provider behind one interface, the single
+  JSON Schema five of them take and the words the sixth gets instead, model lists fetched
+  with the reader's own key and the floor under them, a key per device against a choice that
+  syncs and the dead end that creates, what Chrome has to be asked for and when, and the
+  settings migration it needed.
 - `overview-generation-decisions.md` — the overview format's prompt composability, verdict-scale, novelty-retrieval, and topic decisions, with the reasoning.
 - `novelty-scale.md` — the verdict's three novelty levels and the What stands out line:
   judged against the field rather than the reader's library, what the basis sentence

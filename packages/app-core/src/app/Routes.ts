@@ -1,4 +1,4 @@
-import { consentPath, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
+import { consentPath, SIGN_IN_PATH, sharePath, type OverviewId, type Provider, type ShareToken } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
@@ -12,6 +12,10 @@ export const Routes = {
   // The capture queue's own page (docs/features/capture-queue.md).
   queue: () => "/queue",
   settingsSection: (section: SettingsSectionId) => `/settings/${section}`,
+  // The model picker is a page of its own at every width, not a control on the keys page:
+  // it carries a search field and two groups, one of which can run to dozens of rows
+  // (design 110e).
+  settingsModel: (provider: Provider) => `/settings/keys/model/${provider}`,
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,
   createAccount: () => "/create-account",
@@ -24,6 +28,7 @@ export const Routes = {
 };
 
 export const RouteParams = {
+  provider: "provider",
   overviewId: "overviewId",
   requestId: "requestId",
   shareToken: "token",

@@ -1,4 +1,9 @@
+import { expect } from "@playwright/experimental-ct-react";
+import type { Provider } from "@overview/domain";
+import { addProviderKeyRowTestIds } from "../../src/features/settings/components/AddProviderKeyRow/AddProviderKeyRowTestIds.js";
 import { apiKeysPanelTestIds } from "../../src/features/settings/components/ApiKeysPanel/ApiKeysPanelTestIds.js";
+import { generateWithCardTestIds } from "../../src/features/settings/components/GenerateWithCard/GenerateWithCardTestIds.js";
+import { providerKeyRowTestIds } from "../../src/features/settings/components/ProviderKeyRow/ProviderKeyRowTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class ApiKeysPanelPageObject extends PageObject {
@@ -8,17 +13,75 @@ export class ApiKeysPanelPageObject extends PageObject {
       return this;
     });
 
-  fillAnthropicKey = (value: string) =>
-    this.step(`fillAnthropicKey ${value}`, () => this.get(apiKeysPanelTestIds.anthropicInput).fill(value));
+  openAddKey = (provider: Provider) =>
+    this.step(`openAddKey ${provider}`, () => this.click(addProviderKeyRowTestIds.open(provider)));
 
-  selectModel = (modelId: string) =>
-    this.step(`selectModel ${modelId}`, () => this.get(apiKeysPanelTestIds.modelSelect).selectOption(modelId));
+  fillKey = (provider: Provider, value: string) =>
+    this.step(`fillKey ${provider}`, () => this.get(addProviderKeyRowTestIds.input(provider)).fill(value));
 
-  clickSave = () => this.step("clickSave", () => this.click(apiKeysPanelTestIds.saveButton));
+  clickSaveKey = (provider: Provider) =>
+    this.step(`clickSaveKey ${provider}`, () => this.click(addProviderKeyRowTestIds.save(provider)));
 
-  saveKeys = (anthropicApiKey: string) =>
-    this.step("saveKeys", async () => {
-      await this.fillAnthropicKey(anthropicApiKey);
-      await this.clickSave();
+  addKey = (provider: Provider, value: string) =>
+    this.step(`addKey ${provider}`, async () => {
+      await this.openAddKey(provider);
+      await this.fillKey(provider, value);
+      await this.clickSaveKey(provider);
+    });
+
+  verifyKeyHeld = (provider: Provider) =>
+    this.step(`verifyKeyHeld ${provider}`, () => this.expectToBeVisible(providerKeyRowTestIds.root(provider)));
+
+  verifyNoKeyHeld = (provider: Provider) =>
+    this.step(`verifyNoKeyHeld ${provider}`, () =>
+      expect(this.get(providerKeyRowTestIds.root(provider))).toHaveCount(0),
+    );
+
+  verifyInUse = (provider: Provider) =>
+    this.step(`verifyInUse ${provider}`, () => this.expectToBeVisible(providerKeyRowTestIds.inUse(provider)));
+
+  verifyGenerateWithReads = (text: string) =>
+    this.step(`verifyGenerateWithReads ${text}`, () =>
+      expect(this.get(generateWithCardTestIds.choice)).toHaveText(text),
+    );
+
+  chooseProvider = (provider: Provider) =>
+    this.step(`chooseProvider ${provider}`, () =>
+      this.get(generateWithCardTestIds.select).selectOption(provider),
+    );
+
+  verifyRefused = (provider: Provider) =>
+    this.step(`verifyRefused ${provider}`, () => this.expectToBeVisible(addProviderKeyRowTestIds.problem(provider)));
+
+  removeKey = (provider: Provider) =>
+    this.step(`removeKey ${provider}`, async () => {
+      await this.click(providerKeyRowTestIds.remove(provider));
+      await this.click(providerKeyRowTestIds.confirmRemove(provider));
+    });
+
+  openModelPicker = (provider: Provider) =>
+    this.step(`openModelPicker ${provider}`, () => this.click(providerKeyRowTestIds.model(provider)));
+
+  verifyModelReads = (provider: Provider, label: string) =>
+    this.step(`verifyModelReads ${provider} ${label}`, () =>
+      expect(this.get(providerKeyRowTestIds.model(provider))).toContainText(label),
+    );
+
+  // Design 110g: the choice arrived by sync and the key did not, so the card carries both
+  // ways out rather than a control that cannot work.
+  verifyNoKeyHereDeadEnd = () =>
+    this.step("verifyNoKeyHereDeadEnd", async () => {
+      await this.expectToBeVisible(generateWithCardTestIds.missingHeading);
+      await this.expectToBeVisible(generateWithCardTestIds.addKey);
+      await this.expectToBeVisible(generateWithCardTestIds.useFallback);
+    });
+
+  useFallbackKey = () =>
+    this.step("useFallbackKey", () => this.click(generateWithCardTestIds.useFallback));
+
+  removeAllKeys = () =>
+    this.step("removeAllKeys", async () => {
+      await this.click(apiKeysPanelTestIds.removeAll);
+      await this.click(apiKeysPanelTestIds.removeAllYes);
     });
 }

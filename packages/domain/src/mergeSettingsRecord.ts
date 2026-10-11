@@ -4,9 +4,11 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const mergeOneLevel = (key: string, base: Record<string, unknown>, patch: Record<string, unknown>) =>
   isObject(patch[key]) ? { [key]: { ...(isObject(base[key]) ? base[key] : {}), ...patch[key] } } : {};
 
-// sectionsEnabled and milestones merge one level deep rather than being replaced: patching
+// sectionsEnabled, milestones and modelByProvider merge one level deep rather than being replaced: patching
 // one toggle used to take the other three with it, and one device dismissing a milestone
-// would take another's newly crossed one with it. One function, run by the local store,
+// would take another's newly crossed one with it. modelByProvider joins them for the same
+// reason: a device choosing a model for OpenAI must not drop the model another device
+// chose for Gemini (docs/features/byo-providers.md). One function, run by the local store,
 // the server and the rebase, so the three cannot drift (docs/features/record-migrations.md).
 export function mergeSettingsRecord(
   base: Record<string, unknown>,
@@ -17,5 +19,6 @@ export function mergeSettingsRecord(
     ...patch,
     ...mergeOneLevel("sectionsEnabled", base, patch),
     ...mergeOneLevel("milestones", base, patch),
+    ...mergeOneLevel("modelByProvider", base, patch),
   };
 }

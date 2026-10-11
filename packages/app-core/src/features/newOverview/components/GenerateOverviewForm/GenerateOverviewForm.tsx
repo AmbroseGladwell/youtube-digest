@@ -1,11 +1,7 @@
 import { useId, useState, type FormEvent } from "react";
-import { Link } from "react-router";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
-import { Routes } from "../../../../app/Routes.js";
-import {
-  settingsLinkLabel,
-  transcriptSourceNote,
-} from "../../../transcripts/transcriptSourceNote.js";
+import { keyPromptDetail } from "../../../transcripts/transcriptSourceNote.js";
+import { KeyPromptNote } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useGenerationReadiness } from "../../useGenerationReadiness.js";
 import { useWatchedTranscriptQuery } from "../../../transcripts/queries/watchedTranscriptQuery.js";
 import { isYouTubeUrl, youTubeLink } from "../../util/parseYouTubeUrl.js";
@@ -60,7 +56,7 @@ export function GenerateOverviewForm({
   const activeVideoUrl = useActiveVideoUrl();
   const watchedTranscript = useWatchedTranscriptQuery();
   const readiness = useGenerationReadiness();
-  const keysReady = readiness === "ready";
+  const keysReady = readiness.ready;
   const [validationError, setValidationError] = useState<string | null>(null);
   const analytics = useAnalytics();
   const urlFieldId = useId();
@@ -171,19 +167,13 @@ export function GenerateOverviewForm({
           both succeed.
         </p>
       ) : (
-        <p className={styles.note}>
-          {transcriptSourceNote(readiness)}{" "}
-          <Link
-            to={Routes.settingsSection("keys")}
-            onClick={() => {
-              analytics.capture.newOverviewForm.keysLinkFollowed({ from: "dialog" });
-              onCancel();
-            }}
-            data-testid={generateOverviewFormTestIds.settingsLink}
-          >
-            {settingsLinkLabel(readiness)}
-          </Link>
-        </p>
+        <KeyPromptNote
+          testIds={generateOverviewFormTestIds.keyPrompt}
+          readiness={readiness}
+          detail={keyPromptDetail(readiness)}
+          from="dialog"
+          onFollowed={onCancel}
+        />
       )}
 
       {validationError && (

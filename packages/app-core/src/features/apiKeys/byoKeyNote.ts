@@ -3,12 +3,16 @@
 // Settings. Together here rather than apart in four components, so the two can be read
 // against each other and cannot drift into three.
 //
-// Keys never reach our servers; the video being summarised does, once, when the shared
-// transcript cache is asked for it (docs/features/shared-transcript-cache.md).
+// It names no provider now that there are six (design 110a). Keys never reach our servers;
+// the video being summarised does, once, when the shared transcript cache is asked for it
+// (docs/features/shared-transcript-cache.md).
 export const BYO_KEY_NOTE =
-  "Bring-your-own-key. Your Anthropic key stays on this device and goes straight to " +
-  "Anthropic, never through our servers. Transcripts are looked up in our shared cache " +
-  "first, by video, and fetched by our server when nothing else can.";
+  "Bring your own key. Your key stays on this device and goes straight to the provider, " +
+  "never through our servers. Transcripts are looked up in our shared cache first, by " +
+  "video, and fetched by our server when nothing else can.";
 
+// Design 110a and 110m end the section with this rather than opening with it, so the list
+// and the choice land above the fold in the 600-tall panel.
 export const BYO_KEY_NOTE_SHORT =
-  "Generation is bring-your-own-key, and your key stays on this device.";
+  "Bring your own key. Your key stays on this device and goes straight to the provider, " +
+  "never through our servers.";

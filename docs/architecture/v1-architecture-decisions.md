@@ -185,6 +185,10 @@ of any product decision: Manifest V3 blocks the remotely-hosted scripts ad netwo
 require. Web-app-only ads were considered and dropped too, for lack of usage data to
 justify them yet — revisit once the product has real free-tier traffic.
 
+*Superseded on 2026-10-11 by OV-110 (`docs/features/byo-providers.md`): six providers, the
+structured-output fix having been built once as this decision required. The reasoning below
+is what made that order the right one, and is kept rather than rewritten.*
+
 **LLM generation is Claude-only for v1, behind a provider interface.** Multi-provider
 BYO (Idea 1: Claude/ChatGPT/DeepSeek with model selection) is real future work, but
 `docs/prototype/decisions.md` already flags that the prototype's markdown-parsing approach is
@@ -462,7 +466,8 @@ covers the other direction — the open that cannot start — and is likewise un
 
 ## Explicitly out of scope for v1
 
-- Multi-LLM-provider BYO (Idea 1) — Claude-only behind an interface, see above.
+- Multi-LLM-provider BYO (Idea 1) — Claude-only behind an interface, see above. Done in
+  OV-110: `docs/features/byo-providers.md`.
 - MCP server access (Ideas 4, 10) — deferred; its OAuth requirement is noted above so
   auth doesn't need rework when it's built.
 - Per-video-type content templates (Idea 13) and suggested timestamp ranges (Idea 14).

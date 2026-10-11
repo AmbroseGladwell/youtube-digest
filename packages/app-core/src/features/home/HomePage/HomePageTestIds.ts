@@ -1,4 +1,7 @@
+import { keyPromptNoteTestIds } from "../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
+
 export const homePageTestIds = {
+  keyPrompt: keyPromptNoteTestIds("HomePage"),
   root: "HomePage.root",
   skeleton: "HomePage.skeleton",
   hero: "HomePage.hero",

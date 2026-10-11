@@ -6,6 +6,7 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -42,7 +43,7 @@ test("the first-run link field and the new overview dialog name their fields", a
 
 test("the reason asked for during a run names its field", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
-  const form = await launcher.launchExpectingFirstRun({ apiKeys: { anthropicApiKey: "sk-ant-test" } });
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_KEY });
   const dialog = launcher.appShell.newOverviewDialog;
 
   await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
@@ -93,18 +94,23 @@ test("the extension's server address is a link field with no suggestions, beside
   await signIn.verifyFieldAttributes("server-url", LINK_FIELD);
 });
 
-test("the Anthropic key is kept away from password managers", async ({ launcher }) => {
-  await launcher.launch();
-  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+// Every provider's field, not just the one that used to exist: a key is a key whoever
+// issued it, and a password manager offering to save one is the same mistake six times.
+for (const provider of ["anthropic", "openai", "gemini", "deepseek", "xai", "mistral"] as const) {
+  test(`the ${provider} key is kept away from password managers`, async ({ launcher }) => {
+    await launcher.launch();
+    const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+    await settings.apiKeysPanel.openAddKey(provider);
 
-  await settings.verifyFieldsIdentifyThemselves();
-  await settings.verifyFieldAttributes("anthropic-api-key", {
-    autocomplete: "off",
-    "data-1p-ignore": "true",
-    "data-lpignore": "true",
-    "data-bwignore": "true",
+    await settings.verifyFieldsIdentifyThemselves();
+    await settings.verifyFieldAttributes(`${provider}-api-key`, {
+      autocomplete: "off",
+      "data-1p-ignore": "true",
+      "data-lpignore": "true",
+      "data-bwignore": "true",
+    });
   });
-});
+}
 
 test("the playlist link field is a link field", async ({ launcher }) => {
   await launcher.launch();
@@ -179,7 +185,7 @@ test("the signed-out library's link field is a link field", async ({ launcher })
   await launcher.launch({
     sync: true,
     deviceAccountHistory: { signedOutHere: true },
-    apiKeys: { anthropicApiKey: "sk-ant-test" },
+    apiKeys: ANTHROPIC_KEY,
   });
 
   await launcher.signedOutLibrary.verifyIsShown();

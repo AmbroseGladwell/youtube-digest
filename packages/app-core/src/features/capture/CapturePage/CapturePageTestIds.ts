@@ -1,4 +1,7 @@
+import { keyPromptNoteTestIds } from "../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
+
 export const capturePageTestIds = {
+  keyPrompt: keyPromptNoteTestIds("CapturePage"),
   root: "CapturePage.root",
   opening: "CapturePage.opening",
   createButton: "CapturePage.createButton",
@@ -9,7 +12,6 @@ export const capturePageTestIds = {
   noVideoNote: "CapturePage.noVideoNote",
   captionsNote: "CapturePage.captionsNote",
   keysNote: "CapturePage.keysNote",
-  settingsLink: "CapturePage.settingsLink",
   working: "CapturePage.working",
   workingTitle: "CapturePage.workingTitle",
   workingChannel: "CapturePage.workingChannel",

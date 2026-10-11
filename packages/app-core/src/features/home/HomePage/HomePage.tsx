@@ -4,10 +4,8 @@ import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
-import {
-  settingsLinkLabel,
-  transcriptSourceNote,
-} from "../../transcripts/transcriptSourceNote.js";
+import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
+import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
@@ -21,6 +19,7 @@ import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGro
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { PROVIDER_SHORT_LABEL } from "@overview/domain";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
@@ -153,7 +152,7 @@ function FirstRunHero() {
         {ready ? (
           <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
             <StrokeIcon name="check" />
-            Using your saved API keys ·{" "}
+            Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
             <Link
               to={Routes.settingsSection("keys")}
               onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
@@ -168,17 +167,7 @@ function FirstRunHero() {
               <StrokeIcon name="key" size={17} />
             </span>
             <div className={styles.keysText}>
-              <p className={styles.keysTitle}>Your keys</p>
-              <p className={styles.keysBody}>{transcriptSourceNote(readiness)}</p>
-              <Link
-                className={styles.keysLink}
-                to={Routes.settingsSection("keys")}
-                onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
-                data-testid={homePageTestIds.settingsLink}
-              >
-                {settingsLinkLabel(readiness).replace(/\s*→$/, "")}
-                <StrokeIcon name="arrowRight" size={15} />
-              </Link>
+              <KeyPromptNote testIds={homePageTestIds.keyPrompt} readiness={readiness} detail={keyPromptDetail(readiness)} from="home" />
             </div>
           </div>
         )}

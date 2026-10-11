@@ -1,6 +1,12 @@
 export const apiKeysPanelTestIds = {
   root: "ApiKeysPanel.root",
-  anthropicInput: "ApiKeysPanel.anthropicInput",
-  modelSelect: "ApiKeysPanel.modelSelect",
-  saveButton: "ApiKeysPanel.saveButton",
+  standfirst: "ApiKeysPanel.standfirst",
+  chooseLabel: "ApiKeysPanel.chooseLabel",
+  keysHeading: "ApiKeysPanel.keysHeading",
+  othersHeading: "ApiKeysPanel.othersHeading",
+  removeAll: "ApiKeysPanel.removeAll",
+  removeAllConfirm: "ApiKeysPanel.removeAllConfirm",
+  removeAllYes: "ApiKeysPanel.removeAllYes",
+  removeAllCancel: "ApiKeysPanel.removeAllCancel",
+  note: "ApiKeysPanel.note",
 };

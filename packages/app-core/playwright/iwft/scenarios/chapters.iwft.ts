@@ -7,10 +7,11 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("chapteredVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=chapteredVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(["The opening claim,", "made in the first few seconds", "of the video."], {

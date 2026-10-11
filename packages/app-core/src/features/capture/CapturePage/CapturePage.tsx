@@ -1,11 +1,11 @@
 import { formatClock, timeSavedSummary } from "@overview/domain";
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
-import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { Routes } from "../../../app/Routes.js";
-import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
+import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
@@ -43,7 +43,8 @@ export function CapturePage() {
   const controller = useNewOverviewRunController();
   const overviewsQuery = useOverviewsWithStateQuery();
   const watchedTranscript = useWatchedTranscriptQuery();
-  const keysReady = useGenerationReadiness() === "ready";
+  const readiness = useGenerationReadiness();
+  const keysReady = readiness.ready;
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
   const heldHere = overviewsQuery.data?.length ?? null;
@@ -217,16 +218,7 @@ export function CapturePage() {
 
         {!keysReady && (
           <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>
-            <p className={styles.keysLabel}>Your keys</p>
-            <p className={styles.note}>{BYO_KEY_NOTE}</p>
-            <Link
-              className={styles.keysLink}
-              to={Routes.settingsSection("keys")}
-              onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "panel" })}
-              data-testid={capturePageTestIds.settingsLink}
-            >
-              Set up keys in Settings <StrokeIcon name="arrowRight" size={14} />
-            </Link>
+            <KeyPromptNote testIds={capturePageTestIds.keyPrompt} readiness={readiness} detail={BYO_KEY_NOTE} from="panel" />
           </div>
         )}
       </div>

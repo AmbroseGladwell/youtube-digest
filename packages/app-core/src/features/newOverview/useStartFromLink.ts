@@ -39,5 +39,5 @@ export function useStartFromLink() {
     setUrl("");
   };
 
-  return { readiness, ready: readiness === "ready", url, setUrl, validationError, generate };
+  return { readiness, ready: readiness.ready, url, setUrl, validationError, generate };
 }

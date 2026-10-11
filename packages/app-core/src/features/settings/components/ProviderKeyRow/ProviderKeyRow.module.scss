@@ -1,0 +1,99 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  @include controls.tile;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  list-style: none;
+}
+
+// The row in use is drawn like a chosen voice: the stone tint and a ring, so the list
+// still reads on its own with the card above it scrolled away (design 110b).
+.inUseRow {
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chip {
+  @include controls.chip;
+}
+
+.remove {
+  @include controls.quiet-control;
+  margin-left: auto;
+  font-size: 0.8125rem;
+}
+
+.summary,
+.confirmDetail {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  text-decoration: none;
+}
+
+.modelLabel {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.modelValue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.confirmHeading {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmRemove {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.cancel {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+}

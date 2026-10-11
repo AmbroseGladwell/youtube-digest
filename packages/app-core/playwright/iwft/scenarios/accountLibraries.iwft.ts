@@ -8,8 +8,9 @@ import {
   type BackendSimulator,
 } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 const SIGNED_OUT_HERE = { signedOutHere: true };
 
 const signedInAs = (accountId: string) => ({

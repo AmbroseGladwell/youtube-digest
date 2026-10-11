@@ -11,6 +11,9 @@ export enum EndpointKey {
   INNERTUBE_PLAYER = "INNERTUBE_PLAYER",
   YOUTUBE_TIMEDTEXT = "YOUTUBE_TIMEDTEXT",
   ANTHROPIC_MESSAGES = "ANTHROPIC_MESSAGES",
+  // Asked the moment a key is saved: it is both the check that the key works and where the
+  // model picker's list comes from (docs/features/byo-providers.md).
+  PROVIDER_MODELS = "PROVIDER_MODELS",
   SYNC_HANDSHAKE = "SYNC_HANDSHAKE",
   SYNC_CHANGES = "SYNC_CHANGES",
   SYNC_TRANSCRIPT = "SYNC_TRANSCRIPT",

@@ -1,0 +1,16 @@
+export const modelPickerPageTestIds = {
+  root: "ModelPickerPage.root",
+  back: "ModelPickerPage.back",
+  heading: "ModelPickerPage.heading",
+  standfirst: "ModelPickerPage.standfirst",
+  search: "ModelPickerPage.search",
+  searchCount: "ModelPickerPage.searchCount",
+  recommendedLabel: "ModelPickerPage.recommendedLabel",
+  restLabel: "ModelPickerPage.restLabel",
+  showAll: "ModelPickerPage.showAll",
+  costNote: "ModelPickerPage.costNote",
+  staleNote: "ModelPickerPage.staleNote",
+  recheck: "ModelPickerPage.recheck",
+  notListed: "ModelPickerPage.notListed",
+  choice: (id: string) => `ModelPickerPage.choice.${id}`,
+};

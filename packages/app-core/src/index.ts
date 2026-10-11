@@ -16,6 +16,7 @@ export { StartupFailure, type StartupFailureProps } from "./app/StartupFailure.j
 export { reportStartupFailure, type ReportStartupFailureOptions } from "./app/reportStartupFailure.js";
 export { Routes } from "./app/Routes.js";
 export type { Surface } from "./app/SurfaceContext.js";
+export type { ProviderPermissions } from "./features/apiKeys/ProviderPermissionContext.js";
 export type { Stores } from "./stores/StoresContext.js";
 export type { Library, OpenLibrary } from "./stores/Library.js";
 export { readLibraryAccountId } from "./features/sync/syncConnectionStorage.js";

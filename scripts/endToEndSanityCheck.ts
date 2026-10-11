@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import Anthropic from "@anthropic-ai/sdk";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/domain";
 import { fetchInnerTubeTranscript, type YouTubeFetch } from "@overview/transcripts";
-import { generateOverview, createAnthropicGenerationClient } from "@overview/generation";
+import { generateOverview } from "@overview/generation";
+import { generationClientFromEnv } from "./generationClientFromEnv.js";
 
 const url = process.argv[2];
 if (!url) {
@@ -33,7 +33,7 @@ console.error(
 );
 
 const overview = await generateOverview(
-  createAnthropicGenerationClient(new Anthropic()),
+  generationClientFromEnv(),
   {
     video: fetched.video,
     transcript: fetched.transcript,

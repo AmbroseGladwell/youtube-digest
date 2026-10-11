@@ -12,6 +12,8 @@ import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js"
 import { SharedOverviewRoute } from "../features/sharedPage/SharedOverviewRoute.js";
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 import { RouterErrorBoundary } from "./RouterErrorBoundary.js";
+import type { Provider } from "@overview/domain";
+import { ModelPickerPage } from "../features/settings/ModelPickerPage/ModelPickerPage.js";
 import { RouteParams, Routes } from "./Routes.js";
 
 export type RouterFactory = typeof createBrowserRouter;
@@ -42,6 +44,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
           path: Routes.settingsSection(section),
           element: <SettingsPage section={section} />,
         })),
+        { path: Routes.settingsModel(`:${RouteParams.provider}` as Provider), element: <ModelPickerPage /> },
         { path: Routes.signIn(), element: <SignInPage /> },
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },

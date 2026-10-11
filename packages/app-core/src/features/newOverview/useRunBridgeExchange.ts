@@ -59,7 +59,7 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         return;
       }
 
-      if (readiness !== "ready") {
+      if (!readiness.ready) {
         analytics.extension.injectedButton.pressed({ outcome: "keysNeeded" });
         restateCurrentRun();
         void navigate(Routes.settingsSection("keys"));

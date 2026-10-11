@@ -51,6 +51,14 @@ export class HomePageObject extends PageObject {
       await this.expectNotToBeVisible(homePageTestIds.keysNote);
     });
 
+  // The hero carries the same dead end as Settings, so a reader meets it where they tried
+  // to generate (design 110k).
+  verifyKeyPromptDeadEnd = () =>
+    this.step("verifyKeyPromptDeadEnd", async () => {
+      await this.expectToBeVisible(homePageTestIds.keyPrompt.heading);
+      await this.expectToBeVisible(homePageTestIds.keyPrompt.useFallback);
+    });
+
   submitHeroUrl = (url: string) =>
     this.step(`submitHeroUrl ${url}`, async () => {
       await this.get(homePageTestIds.urlInput).fill(url);

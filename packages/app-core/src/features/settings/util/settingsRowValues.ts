@@ -1,17 +1,19 @@
 import {
-  ANTHROPIC_MODEL_OPTIONS,
   MILESTONES,
+  PROVIDER_SHORT_LABEL,
   formatTimeSaved,
+  modelLabel,
   narrationAccent,
   narrationVoiceName,
-  type AnthropicModel,
+  type Provider,
   type NarrationVoice,
 } from "@overview/domain";
+import { modelFor, type ModelByProvider } from "@overview/domain";
 import type { SyncStatus } from "@overview/sync";
 import type { AppBuild } from "../../../app/AppBuildContext.js";
 import type { Surface } from "../../../app/SurfaceContext.js";
 import { savedHere } from "../../accountLibraries/util/libraryPlace.js";
-import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
+import { hasKeyFor, providersWithKeys, type ApiKeys } from "../../apiKeys/ApiKeys.js";
 import type { SyncConnection } from "../../sync/types/SyncConnection.js";
 import { syncStatusLine } from "../../sync/util/syncStatusLine.js";
 import { reachedCount } from "../../timeSaved/util/milestoneTiles.js";
@@ -35,10 +37,21 @@ export function voiceRowValue(voice: NarrationVoice): string {
   return `${narrationVoiceName(voice)} · ${ACCENT_GROUP_LABELS[narrationAccent(voice)]}`;
 }
 
-export function keysRowValue(apiKeys: ApiKeys, model: AnthropicModel): string {
-  const key = apiKeys.anthropicApiKey === null ? "No Anthropic key yet" : "Anthropic key set";
-  const modelLabel = ANTHROPIC_MODEL_OPTIONS.find((option) => option.id === model)?.label;
-  return modelLabel === undefined ? key : `${key} · ${modelLabel}`;
+// Design 110j: the model's name already says who made it, so the row spends its second
+// half on how many keys this device holds rather than repeating the provider. The state
+// where the choice arrived by sync and the key did not is said in words, because a count
+// cannot say it (design 110g).
+export function keysRowValue(apiKeys: ApiKeys, provider: Provider, models: ModelByProvider): string {
+  const held = providersWithKeys(apiKeys);
+  if (held.length === 0) {
+    return "No keys yet";
+  }
+
+  const name = modelLabel(provider, modelFor(models, provider));
+  if (!hasKeyFor(apiKeys, provider)) {
+    return `${name} · no ${PROVIDER_SHORT_LABEL[provider]} key here`;
+  }
+  return held.length === 1 ? `${name} · 1 key` : `${name} · ${held.length} keys`;
 }
 
 // "3 shared" or "None": the row says how many links are live without opening the section

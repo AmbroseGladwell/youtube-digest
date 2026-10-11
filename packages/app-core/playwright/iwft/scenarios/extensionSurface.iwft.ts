@@ -1,9 +1,10 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 test("the extension says its library is its own, where an empty shelf would otherwise be a mystery", async ({
   launcher,

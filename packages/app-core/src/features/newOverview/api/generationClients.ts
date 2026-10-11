@@ -1,6 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { createAnthropicGenerationClient, type GenerationClient } from "@overview/generation";
-import type { AnthropicModel } from "@overview/domain";
+import { createGenerationClient as createProviderClient, type GenerationClient } from "@overview/generation";
+import type { Provider } from "@overview/domain";
 import { createFetchServiceTranscriptApi, createFetchSharedTranscriptApi } from "@overview/sync";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
@@ -8,15 +7,12 @@ import { serviceTranscriptSource } from "../../transcripts/api/serviceTranscript
 import { sharedCacheTranscriptSource } from "../../transcripts/api/sharedCacheTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 
-// BYO-key, called straight from the browser holding the key (docs/architecture/v1-architecture-decisions.md
-// Model D) — dangerouslyAllowBrowser is the SDK's own opt-in for exactly this shape, not
-// a workaround: Anthropic serves this call with the anthropic-dangerous-direct-browser-access
-// header the SDK sets automatically once this flag is on.
-export function createGenerationClient(anthropicApiKey: string, model: AnthropicModel): GenerationClient {
-  return createAnthropicGenerationClient(
-    new Anthropic({ apiKey: anthropicApiKey, dangerouslyAllowBrowser: true }),
-    model,
-  );
+// BYO-key, called straight from the browser holding the key
+// (docs/architecture/v1-architecture-decisions.md Model D). Every one of the six providers
+// answers a cross-origin preflight, so no server of ours is ever in the path; the adapter
+// behind this sends whatever header its provider needs to permit it.
+export function createGenerationClient(provider: Provider, apiKey: string, model: string): GenerationClient {
+  return createProviderClient({ provider, apiKey, model });
 }
 
 export interface TranscriptSourceOptions {
