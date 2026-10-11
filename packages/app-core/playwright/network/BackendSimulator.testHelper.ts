@@ -41,6 +41,7 @@ import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
+  makeModelListResponse,
 } from "./fixtures/anthropicFixtures.js";
 import {
   IWFT_VIDEO_ID,
@@ -228,6 +229,16 @@ export class BackendSimulator {
         onDefault: () => ({ status: 200, body: makeJson3Fixture() }),
         // An empty track is a gated one, not a video without captions.
         onError: () => ({ status: 200, body: { events: [] } }),
+      }),
+    );
+
+    // Every provider's model list, matched by path rather than by host: the six differ in
+    // origin and in nothing else this layer cares about.
+    await this.#page.route(/\/(v1\/)?models(\?|$)/, (route) =>
+      this.#respond(route, EndpointKey.PROVIDER_MODELS, {
+        onDefault: () => ({ status: 200, body: makeModelListResponse() }),
+        // A refused key, which is the one failure with a screen of its own (design 110f).
+        onError: () => ({ status: 401, body: { error: { message: "Simulated: no such key" } } }),
       }),
     );
 

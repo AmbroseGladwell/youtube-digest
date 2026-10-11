@@ -2,7 +2,7 @@ import { z } from "zod";
 import { OverviewId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
-import { AnthropicModel } from "./AnthropicModel.js";
+import { Provider } from "./Provider.js";
 import { AuthIntent } from "./AuthIntent.js";
 import { NarrationVoice } from "./NarrationVoice.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
@@ -425,10 +425,29 @@ export const analyticsEvents = {
       overviewsChosen: event("The reader leaves Settings for their overviews"),
     },
     apiKeys: {
-      saved: event("The reader saves their keys and model; never a key, only whether one is set", {
-        anthropicKey: z.boolean(),
-        model: AnthropicModel,
-        modelChanged: z.boolean(),
+      keySaved: event(
+        "The reader adds a provider's key and it is accepted; never the key itself, only whose it is, how many models came back, and whether this became the provider overviews are generated with",
+        { provider: Provider, modelsListed: z.number().int(), becameChoice: z.boolean() },
+      ),
+      keyRefused: event("A key the reader added was not accepted by its provider", { provider: Provider }),
+      keyRemoved: event("The reader removes one provider's key from this device", {
+        provider: Provider,
+        wasChoice: z.boolean(),
+      }),
+      allKeysRemoved: event("The reader removes every key from this device", { removed: z.number().int() }),
+      providerChosen: event("The reader changes which provider overviews are generated with", {
+        provider: Provider,
+        // A switch made from a dead end rather than from the picker: the choice arrived by
+        // sync and this device had no key for it (design 110g).
+        from: z.enum(["picker", "no-key-here"]),
+      }),
+      modelChosen: event("The reader chooses a model for one provider", {
+        provider: Provider,
+        // Whether it came from the few we describe or the rest the key can reach.
+        known: z.boolean(),
+      }),
+      modelsListFailed: event("A provider would not list its models, so the picker fell back to the ones we know", {
+        provider: Provider,
       }),
     },
     voice: {

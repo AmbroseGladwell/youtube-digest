@@ -5,9 +5,10 @@ import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS, UNSET_ALLOWANCE } from "../../../sr
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 

@@ -1,13 +1,14 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const PHONE = { width: 390, height: 800 };
 const BUILD = { version: "0.14.2", commit: "30bb95a", dirty: false };
 const EVERYTHING = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL, firstName: "Ada" },
-  apiKeys: { anthropicApiKey: "sk-ant-test" },
+  apiKeys: ANTHROPIC_KEY,
   narrationVoice: "bm_george" as const,
   plan: "plus" as const,
   build: BUILD,
@@ -24,7 +25,7 @@ test("on a wide screen, Settings opens beside its first section, and every row c
   await settings.verifySectionIsShown("account");
   await settings.verifyRowReads("account", /^Ada · (Synced|Connected)/);
   await settings.verifyRowReads("voice", "George · British English");
-  await settings.verifyRowReads("keys", /^Anthropic key set · /);
+  await settings.verifyRowReads("keys", /· 1 key$/);
   await settings.verifyRowReads("connections", "None");
   await settings.verifyRowReads("milestones", "0m saved · 0 of 10");
   await settings.verifyRowReads("shared", "None");

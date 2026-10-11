@@ -3,7 +3,6 @@ import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
-import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
 import { PlaylistsSection } from "../../playlists/components/PlaylistsSection/PlaylistsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
@@ -39,7 +38,9 @@ export interface SettingsPageProps {
 const INTROS: Record<SettingsSectionId, string | null> = {
   account: "Who is signed in, and whether this device is in step.",
   voice: NARRATION_VOICE_STANDFIRST,
-  keys: BYO_KEY_NOTE,
+  // Design 110a moves the standing note to the foot of the panel, so the list and the
+  // choice land above the fold in the 400x600 panel.
+  keys: null,
   connections: null,
   playlists: null,
   milestones: MILESTONES_STANDFIRST,

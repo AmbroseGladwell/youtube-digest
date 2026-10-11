@@ -73,7 +73,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const playlistApi = usePlaylistApi();
   const { apiKeys } = useApiKeys();
   const generate = useRunOverviewGeneration(apiKeys);
-  const needsKey = useGenerationReadiness() !== "ready";
+  const needsKey = !useGenerationReadiness().ready;
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();

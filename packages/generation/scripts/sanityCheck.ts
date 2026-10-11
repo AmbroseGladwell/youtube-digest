@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs";
-import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
+import { DEFAULT_MODEL, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
 import {
   generateOverview,
-  createAnthropicGenerationClient,
+  createGenerationClient,
   type GenerationInput,
   type TranscriptSegment,
 } from "@overview/generation";
@@ -40,7 +39,11 @@ const input: GenerationInput = {
   pastClaims: [],
 };
 
-const client = createAnthropicGenerationClient(new Anthropic());
+const client = createGenerationClient({
+    provider: "anthropic",
+    apiKey: process.env.ANTHROPIC_API_KEY ?? "",
+    model: DEFAULT_MODEL.anthropic,
+  });
 
 const overview = await generateOverview(client, input, {
   id: OverviewId.parse(randomUUID()),

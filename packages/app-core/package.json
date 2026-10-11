@@ -1,7 +1,7 @@
 {
   "name": "@overview/app-core",
   "version": "0.0.0",
-  "description": "The shared Vite/React/React-Router app: routes, shell, components, queries, mutations, SCSS. Mounted verbatim by apps/web and (later) apps/extension. @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "description": "The shared Vite/React/React-Router app: routes, shell, components, queries, mutations, SCSS. Mounted verbatim by apps/web and (later) apps/extension. @overview is a placeholder scope \u2014 product naming is parked (docs/architecture/v1-architecture-decisions.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,7 +23,6 @@
     "@overview/transcripts": "*",
     "@overview/generation": "*",
     "@overview/sync": "*",
-    "@anthropic-ai/sdk": "^0.126.0",
     "@tanstack/react-query": "^5.103.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

@@ -1,0 +1,65 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  @include controls.tile;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.125rem 1.25rem;
+}
+
+.label {
+  @include controls.section-label;
+}
+
+.choice {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.select {
+  @include controls.field-solo;
+  background: var(--surface);
+  appearance: auto;
+  font-weight: 600;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.missing {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.addKey {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.useFallback {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.footnote {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted);
+}

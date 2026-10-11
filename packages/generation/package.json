@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@overview/domain": "*",
-    "@anthropic-ai/sdk": "^0.126.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

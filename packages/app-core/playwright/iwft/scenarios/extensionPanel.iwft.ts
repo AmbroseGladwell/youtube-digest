@@ -3,9 +3,10 @@ import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { VideoId } from "@overview/domain";
+import { ANTHROPIC_KEY, NO_KEYS } from "../../support/apiKeysSeed.testHelper.js";
 
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 
@@ -157,7 +158,7 @@ test("the panel creates with the Anthropic key alone, and asks for no transcript
   launcher,
 }) => {
   const capture = await launcher.launchPanel({
-    apiKeys: { anthropicApiKey: "sk-ant-test" },
+    apiKeys: ANTHROPIC_KEY,
     activeVideoUrl: WATCHED_URL,
     youTubeFetch: true,
   });
@@ -168,7 +169,7 @@ test("the panel creates with the Anthropic key alone, and asks for no transcript
 
 test("the panel still asks when it is the Anthropic key that is missing", async ({ launcher }) => {
   const capture = await launcher.launchPanel({
-    apiKeys: { anthropicApiKey: null },
+    apiKeys: NO_KEYS,
     activeVideoUrl: WATCHED_URL,
     youTubeFetch: true,
   });

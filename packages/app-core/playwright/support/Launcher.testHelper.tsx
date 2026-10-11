@@ -39,6 +39,7 @@ import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePag
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutLibraryPageObject } from "../pageObjects/SignedOutLibraryPageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
+import type { ModelByProvider, Provider } from "@overview/domain";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -60,6 +61,10 @@ export interface LaunchOptions {
   // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
+  // Which provider this account generates with. It syncs while the keys do not, so a
+  // scenario can seed the device that holds the wrong one (docs/features/byo-providers.md).
+  provider?: Provider;
+  modelByProvider?: ModelByProvider;
   // The time-saved milestones the account has already crossed or dismissed.
   milestones?: MilestoneMarks;
   showMilestoneCards?: boolean;
@@ -110,6 +115,8 @@ export class Launcher {
         ...this.backendSimulator.buildHooksConfig(),
         seedSettings: {
           ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
+          ...(options.provider === undefined ? {} : { provider: options.provider }),
+          ...(options.modelByProvider === undefined ? {} : { modelByProvider: options.modelByProvider }),
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
           ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
         },

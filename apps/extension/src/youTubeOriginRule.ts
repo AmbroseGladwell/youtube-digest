@@ -16,7 +16,7 @@ export const youTubeOriginRule = (
     ],
   },
   // Scoped twice over: only requests this extension makes, and only to YouTube. It must
-  // not reach the panel's calls to Anthropic, which carry the user's key.
+  // not reach the panel's calls to a provider, which carry the reader's key.
   condition: {
     initiatorDomains: [extensionId],
     requestDomains: ["youtube.com"],

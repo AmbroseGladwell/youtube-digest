@@ -37,6 +37,13 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
   };
 }
 
+// What a provider sends back when asked what the reader's key can reach. Anthropic's
+// shape, which OpenAI, DeepSeek, xAI and Mistral share; Gemini's differs and has its own
+// scenario rather than its own fixture.
+export function makeModelListResponse(ids: string[] = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]) {
+  return { data: ids.map((id) => ({ id, type: "model", display_name: id })) };
+}
+
 export function makeAnthropicMessageResponse(generatedOutput: Record<string, unknown>) {
   return {
     id: "msg_iwft_fixture",

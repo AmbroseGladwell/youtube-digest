@@ -1,4 +1,7 @@
+import { keyPromptNoteTestIds } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
+
 export const generateOverviewFormTestIds = {
+  keyPrompt: keyPromptNoteTestIds("GenerateOverviewForm"),
   root: "GenerateOverviewForm.root",
   urlInput: "GenerateOverviewForm.urlInput",
   pasteButton: "GenerateOverviewForm.pasteButton",
@@ -6,7 +9,6 @@ export const generateOverviewFormTestIds = {
   watchingNote: "GenerateOverviewForm.watchingNote",
   cancelButton: "GenerateOverviewForm.cancelButton",
   generateButton: "GenerateOverviewForm.generateButton",
-  settingsLink: "GenerateOverviewForm.settingsLink",
   validationError: "GenerateOverviewForm.validationError",
   generationError: "GenerateOverviewForm.generationError",
 };

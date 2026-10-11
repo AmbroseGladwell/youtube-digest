@@ -3,6 +3,7 @@ import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
@@ -22,7 +23,7 @@ const SIGNED_IN = {
 };
 
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 test("narration that exists says so before the first press, and plays on its own timings", async ({
   launcher,

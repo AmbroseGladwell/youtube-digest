@@ -25,7 +25,7 @@ test("get() fills in a field the stored settings predate, rather than handing ba
   const store = await storeHoldingSettings({
     sectionsEnabled: DEFAULT_SETTINGS.sectionsEnabled,
     readerContext: "I'm a beginner cook.",
-    model: DEFAULT_SETTINGS.model,
+    provider: DEFAULT_SETTINGS.provider,
   });
 
   const settings = await store.get();
@@ -39,7 +39,7 @@ test("get() keeps what the stored settings do say, it does not reset them to the
   const store = await storeHoldingSettings({
     sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true },
     readerContext: "I'm a beginner cook.",
-    model: DEFAULT_SETTINGS.model,
+    provider: DEFAULT_SETTINGS.provider,
   });
 
   const settings = await store.get();

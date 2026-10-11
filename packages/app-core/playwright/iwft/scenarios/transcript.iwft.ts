@@ -10,10 +10,11 @@ import {
   makeCaptionRun,
   makeTranscriptSegment,
 } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 // Nine captions, in three runs of the length YouTube actually emits — which the reader
 // merges into the three blocks below (docs/features/transcript-storage.md).

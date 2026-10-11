@@ -101,5 +101,5 @@ export class GenerateOverviewFormPageObject extends PageObject {
     });
 
   clickSettingsLink = () =>
-    this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.settingsLink));
+    this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.keyPrompt.settingsLink));
 }

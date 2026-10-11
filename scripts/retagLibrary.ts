@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import {
   OVERVIEW_MIGRATIONS,
   Overview,
@@ -8,8 +7,9 @@ import {
   tagUsage,
   type RecordChange,
 } from "@overview/domain";
-import { createAnthropicGenerationClient, generateTags } from "@overview/generation";
+import { generateTags } from "@overview/generation";
 import { createFetchSyncApi, type SyncApi } from "@overview/sync";
+import { generationClientFromEnv } from "./generationClientFromEnv.js";
 
 // The one-off re-tag of a library made before tags were reused: oldest first, each note
 // offered the tags the ones before it ended up with (docs/features/tag-reuse.md).
@@ -51,7 +51,7 @@ async function pullLibrary(api: SyncApi): Promise<{ overviews: Overview[]; alias
 }
 
 const api = createFetchSyncApi({ baseUrl, token });
-const client = createAnthropicGenerationClient(new Anthropic());
+const client = generationClientFromEnv();
 const { overviews, aliases } = await pullLibrary(api);
 console.error(`${overviews.length} overviews, ${Object.keys(aliases).length} tag aliases`);
 

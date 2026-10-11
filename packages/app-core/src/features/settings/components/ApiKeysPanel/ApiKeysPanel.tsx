@@ -1,105 +1,182 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ANTHROPIC_MODEL_OPTIONS, DEFAULT_ANTHROPIC_MODEL, type AnthropicModel } from "@overview/domain";
-import type { ApiKeys } from "../../../apiKeys/ApiKeys.js";
+import { useState } from "react";
+import { DEFAULT_PROVIDER, PROVIDERS, type Provider } from "@overview/domain";
+import { useSurface } from "../../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../../util/useIsPhone.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { hasKeyFor, providersWithKeys } from "../../../apiKeys/ApiKeys.js";
+import { BYO_KEY_NOTE_SHORT } from "../../../apiKeys/byoKeyNote.js";
+import { deviceWord } from "../../../apiKeys/keyPrompt.js";
+import { forgetAllCatalogues, forgetCatalogue } from "../../../apiKeys/ModelCatalogue.js";
+import { useProviderPermissions } from "../../../apiKeys/ProviderPermissionContext.js";
+import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
+import { AddProviderKeyRow } from "../AddProviderKeyRow/AddProviderKeyRow.js";
+import { GenerateWithCard } from "../GenerateWithCard/GenerateWithCard.js";
+import { ProviderKeyRow } from "../ProviderKeyRow/ProviderKeyRow.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
-import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
-export interface ApiKeysPanelProps {
-  apiKeys: ApiKeys;
-  onSave: (patch: Partial<ApiKeys>) => void;
-}
+export const NO_KEYS_STANDFIRST =
+  "To write overviews you’ll need your own API key from one of these providers.";
 
-const toStoredValue = (raw: string): string | null => (raw.trim() === "" ? null : raw.trim());
-
-export function ApiKeysPanel({ apiKeys, onSave }: ApiKeysPanelProps) {
-  const [anthropicApiKey, setAnthropicApiKey] = useState(apiKeys.anthropicApiKey ?? "");
+// A list, because holding several keys is the point (design 110a, Q1). Keys on this device
+// come first as full rows; providers without one sit below as quiet one-line rows. On a
+// first run there is no list to join yet, so all six are shown the same way and the
+// "Generate with" card is absent — there is nothing to generate with.
+export function ApiKeysPanel() {
+  const { apiKeys, removeKey, removeAllKeys } = useApiKeys();
   const settingsQuery = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
-  const savedModel = settingsQuery.data?.model ?? DEFAULT_ANTHROPIC_MODEL;
-  // Local draft, committed only on submit — same explicit-save pattern as the keys
-  // below. A model choice changes real per-generation cost, so it shouldn't persist
-  // from a bare <select> onChange (form-restoration/autofill can fire one on a
-  // freshly-mounted select with no real user selection behind it).
-  const [modelDraft, setModelDraft] = useState(savedModel);
-  const selectedOption = ANTHROPIC_MODEL_OPTIONS.find((option) => option.id === modelDraft);
-
-  // settingsQuery resolves asynchronously (an IndexedDB read), so the real saved model
-  // may arrive after this component's first render. Sync the draft once, the first time
-  // real data lands — never again after, so it can't clobber an in-progress edit if the
-  // query refetches later.
-  const hasSyncedDraft = useRef(false);
-  useEffect(() => {
-    if (settingsQuery.data && !hasSyncedDraft.current) {
-      hasSyncedDraft.current = true;
-      setModelDraft(settingsQuery.data.model);
-    }
-  }, [settingsQuery.data]);
-
+  const permissions = useProviderPermissions();
   const analytics = useAnalytics();
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    analytics.settings.apiKeys.saved({
-      anthropicKey: toStoredValue(anthropicApiKey) !== null,
-      model: modelDraft,
-      modelChanged: modelDraft !== savedModel,
-    });
-    onSave({
-      anthropicApiKey: toStoredValue(anthropicApiKey),
-    });
-    if (modelDraft !== savedModel) {
-      updateSettings.mutate({ model: modelDraft });
+  const here = deviceWord(useSurface(), useIsPhone());
+
+  const [adding, setAdding] = useState<Provider | null>(null);
+  const [removingAll, setRemovingAll] = useState(false);
+
+  const provider = settingsQuery.data?.provider ?? DEFAULT_PROVIDER;
+  const models = settingsQuery.data?.modelByProvider ?? {};
+  const held = providersWithKeys(apiKeys);
+  const others = PROVIDERS.filter((candidate) => !hasKeyFor(apiKeys, candidate));
+
+  const choose = (next: Provider, from: "picker" | "no-key-here") => {
+    analytics.settings.apiKeys.providerChosen({ provider: next, from });
+    updateSettings.mutate({ provider: next });
+  };
+
+  const remove = (gone: Provider) => {
+    const movesTo = held.find((candidate) => candidate !== gone) ?? null;
+    analytics.settings.apiKeys.keyRemoved({ provider: gone, wasChoice: gone === provider });
+    removeKey(gone);
+    forgetCatalogue(gone);
+    void permissions?.drop(gone);
+    // The choice moves only when this device can honour the move. With no other key here
+    // it is left alone: another device may still hold it (design 110i).
+    if (gone === provider && movesTo !== null) {
+      updateSettings.mutate({ provider: movesTo });
     }
   };
 
-  return (
-    <form className={styles.root} onSubmit={handleSubmit} data-testid={apiKeysPanelTestIds.root}>
-      <p className={styles.heading}>Connect your keys</p>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="anthropic-api-key">
-          Anthropic API key
-        </label>
-        <input
-          id="anthropic-api-key"
-          name="anthropic-api-key"
-          className={styles.input}
-          type="password"
-          autoComplete="off"
-          data-1p-ignore
-          data-lpignore="true"
-          data-bwignore
-          value={anthropicApiKey}
-          onChange={(event) => setAnthropicApiKey(event.target.value)}
-          data-testid={apiKeysPanelTestIds.anthropicInput}
-        />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="generation-model">
-          Model
-        </label>
-        <select
-          id="generation-model"
-          name="generation-model"
-          className={styles.input}
-          autoComplete="off"
-          value={modelDraft}
-          onChange={(event) => setModelDraft(event.target.value as AnthropicModel)}
-          data-testid={apiKeysPanelTestIds.modelSelect}
-        >
-          {ANTHROPIC_MODEL_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {selectedOption && <p className={styles.modelDescription}>{selectedOption.description}</p>}
-      </div>
+  const removeEverything = () => {
+    analytics.settings.apiKeys.allKeysRemoved({ removed: held.length });
+    for (const gone of held) {
+      void permissions?.drop(gone);
+    }
+    removeAllKeys();
+    forgetAllCatalogues();
+    setRemovingAll(false);
+  };
 
-      <button type="submit" className={styles.saveButton} data-testid={apiKeysPanelTestIds.saveButton}>
-        Save keys
-      </button>
-    </form>
+  const addRow = (candidate: Provider) => (
+    <AddProviderKeyRow
+      key={candidate}
+      provider={candidate}
+      open={adding === candidate}
+      onOpen={() => setAdding(candidate)}
+      onClose={() => setAdding(null)}
+      onSaved={() => setAdding(null)}
+      inUseProvider={held.length === 0 ? null : provider}
+    />
+  );
+
+  return (
+    <div className={styles.root} data-testid={apiKeysPanelTestIds.root}>
+      {held.length === 0 ? (
+        <>
+          <p className={styles.standfirst} data-testid={apiKeysPanelTestIds.standfirst}>
+            {NO_KEYS_STANDFIRST}
+          </p>
+          <p className={styles.groupLabel} data-testid={apiKeysPanelTestIds.chooseLabel}>
+            Choose a provider
+          </p>
+          <ul className={styles.list}>{PROVIDERS.map(addRow)}</ul>
+        </>
+      ) : (
+        <>
+          <GenerateWithCard
+            provider={provider}
+            models={models}
+            held={held}
+            onChoose={(next) => choose(next, hasKeyFor(apiKeys, provider) ? "picker" : "no-key-here")}
+            onAddKeyFor={setAdding}
+          />
+
+          <p className={styles.groupLabel} data-testid={apiKeysPanelTestIds.keysHeading}>
+            Keys on {here}
+          </p>
+          <ul className={styles.list}>
+            {held.map((candidate) => {
+              const stored = apiKeys.keys[candidate];
+              return stored === undefined ? null : (
+                <ProviderKeyRow
+                  key={candidate}
+                  provider={candidate}
+                  stored={stored}
+                  inUse={candidate === provider}
+                  models={models}
+                  movesTo={held.find((other) => other !== candidate) ?? null}
+                  onRemove={() => remove(candidate)}
+                />
+              );
+            })}
+          </ul>
+
+          {others.length > 0 && (
+            <>
+              <p className={styles.groupLabel} data-testid={apiKeysPanelTestIds.othersHeading}>
+                Other providers
+              </p>
+              <ul className={styles.list}>{others.map(addRow)}</ul>
+            </>
+          )}
+
+          {removingAll ? (
+            <div className={styles.removeAllConfirm} data-testid={apiKeysPanelTestIds.removeAllConfirm}>
+              <p className={styles.confirmHeading}>
+                Remove {held.length === 1 ? "your key" : `all ${held.length} keys`} from {here}?
+              </p>
+              <p className={styles.confirmDetail}>
+                Overviews they made stay in your library. Nothing can be made here until you add a key again. Your
+                other devices keep their own keys.
+              </p>
+              <div className={styles.confirmActions}>
+                <button
+                  type="button"
+                  className={styles.removeAllYes}
+                  onClick={removeEverything}
+                  data-testid={apiKeysPanelTestIds.removeAllYes}
+                >
+                  {held.length === 1 ? "Remove key" : "Remove all keys"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.cancel}
+                  onClick={() => setRemovingAll(false)}
+                  data-testid={apiKeysPanelTestIds.removeAllCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={styles.removeAll}
+              onClick={() => setRemovingAll(true)}
+              data-testid={apiKeysPanelTestIds.removeAll}
+            >
+              Remove all keys from {here}
+            </button>
+          )}
+        </>
+      )}
+
+      {/* The note ends the section rather than opening it, so the list and the choice land
+          above the fold in the 600-tall panel (design 110a's notes). */}
+      <p className={styles.note} data-testid={apiKeysPanelTestIds.note}>
+        {BYO_KEY_NOTE_SHORT}
+      </p>
+    </div>
   );
 }

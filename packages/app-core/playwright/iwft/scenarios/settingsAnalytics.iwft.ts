@@ -32,18 +32,21 @@ test("opening a section, sampling a voice and choosing one are counted by the se
     ]);
 });
 
-test("saving keys says which are set and the model chosen, and never a key", async ({ launcher, backendSimulator }) => {
+test("adding a key says whose it is and how many models it reached, and never the key", async ({
+  launcher,
+  backendSimulator,
+}) => {
   await launcher.launch(SIGNED_IN);
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
-  await settings.apiKeysPanel.saveKeys("sk-ant-test-typed");
+  await settings.apiKeysPanel.addKey("anthropic", "sk-ant-test-typed");
 
   await expect
-    .poll(() => settingsEvents(backendSimulator).filter(({ name }) => name === "settings.apiKeys.saved"))
+    .poll(() => settingsEvents(backendSimulator).filter(({ name }) => name === "settings.apiKeys.keySaved"))
     .toEqual([
       {
-        name: "settings.apiKeys.saved",
-        props: { anthropicKey: true, model: expect.any(String), modelChanged: false },
+        name: "settings.apiKeys.keySaved",
+        props: { provider: "anthropic", modelsListed: expect.any(Number), becameChoice: true },
       },
     ]);
   expect(JSON.stringify(backendSimulator.analytics.batches())).not.toContain("sk-ant-test-typed");

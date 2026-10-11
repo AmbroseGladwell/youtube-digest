@@ -13,7 +13,6 @@
     "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
-    "https://api.anthropic.com/*",
     "https://www.youtube.com/*",
     "https://m.youtube.com/*"
   ],
@@ -51,5 +50,13 @@
       ],
       "run_at": "document_idle"
     }
+  ],
+  "optional_host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.deepseek.com/*",
+    "https://api.x.ai/*",
+    "https://api.mistral.ai/*"
   ]
 }

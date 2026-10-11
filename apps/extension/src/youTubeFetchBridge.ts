@@ -27,8 +27,9 @@ export const isYouTubeFetchReply = (reply: unknown): reply is YouTubeFetchReply 
   typeof reply === "object" && reply !== null && typeof (reply as { ok?: unknown }).ok === "boolean";
 
 // This handler is reachable by any content script on any page the extension runs in, so
-// without it the extension is an open CORS proxy for everything in host_permissions —
-// api.anthropic.com included. It is a security boundary, not caution.
+// without it the extension is an open CORS proxy for everything the extension has been
+// granted — every provider origin a reader has added a key for included
+// (docs/features/byo-providers.md). It is a security boundary, not caution.
 const ALLOWED_ORIGINS = new Set(["https://www.youtube.com", "https://m.youtube.com"]);
 
 export function isAllowedYouTubeUrl(url: string): boolean {

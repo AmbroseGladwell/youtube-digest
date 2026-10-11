@@ -2,9 +2,10 @@ import { CURRENT_SCHEMA_VERSIONS, VideoId, type Overview } from "@overview/domai
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_URL = "https://www.youtube.com/watch?v=webAppVideo01";
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 const SERVER = "https://sync.test";
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };

@@ -20,6 +20,7 @@ import {
 } from "@overview/app-core";
 import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
+import { chromeProviderPermissions } from "./chromeProviderPermissions.js";
 import { writeErrorDestination } from "./errorDestination.js";
 import { writeLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
@@ -100,6 +101,7 @@ export async function mountApp({
         playback={playback}
         runBridge={runBridge}
         youTubeFetch={youTubeFetch}
+        providerPermissions={chromeProviderPermissions}
         defaultApiUrl={PRODUCTION_API_URL}
         errorDestinationMirror={writeErrorDestination}
         build={appBuild}

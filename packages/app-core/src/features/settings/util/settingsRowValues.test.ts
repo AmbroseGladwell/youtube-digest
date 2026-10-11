@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_SYNC_STATUS } from "@overview/sync";
+import type { Provider } from "@overview/domain";
 import { DEFAULT_API_KEYS } from "../../apiKeys/ApiKeys.js";
 import { DEFAULT_SYNC_CONNECTION } from "../../sync/types/SyncConnection.js";
 import {
@@ -64,14 +65,40 @@ describe("voiceRowValue", () => {
 });
 
 describe("keysRowValue", () => {
-  it("says the Anthropic key is set, and names the model", () => {
-    expect(keysRowValue({ ...DEFAULT_API_KEYS, anthropicApiKey: "sk-ant-test" }, "claude-sonnet-5")).toBe(
-      "Anthropic key set · Claude Sonnet 5",
+  const withKeys = (...providers: Provider[]) => ({
+    keys: Object.fromEntries(providers.map((provider) => [provider, { key: "sk-test", addedAt: null }])),
+  });
+
+  it("says when no key has been saved on this device", () => {
+    expect(keysRowValue(DEFAULT_API_KEYS, "anthropic", {})).toBe("No keys yet");
+  });
+
+  it("names the model and says this device holds one key", () => {
+    expect(keysRowValue(withKeys("anthropic"), "anthropic", { anthropic: "claude-sonnet-5-5" })).toBe(
+      "Claude Sonnet 5.5 · 1 key",
     );
   });
 
-  it("says when there is no Anthropic key yet", () => {
-    expect(keysRowValue(DEFAULT_API_KEYS, "claude-opus-5")).toBe("No Anthropic key yet · Claude Opus 5");
+  it("counts the keys when there are several", () => {
+    expect(
+      keysRowValue(withKeys("anthropic", "openai", "gemini"), "gemini", { gemini: "gemini-3.6" }),
+    ).toBe("Gemini 3.6 · 3 keys");
+  });
+
+  it("says in words when the choice arrived by sync and the key did not, because a count cannot", () => {
+    expect(keysRowValue(withKeys("anthropic"), "gemini", { gemini: "gemini-3.6" })).toBe(
+      "Gemini 3.6 · no Gemini key here",
+    );
+  });
+
+  it("falls back to the model we would have picked when the reader has never chosen one", () => {
+    expect(keysRowValue(withKeys("openai"), "openai", {})).toBe("GPT-6.1 Sol · 1 key");
+  });
+
+  it("shows a model id we have never heard of as the provider lists it", () => {
+    expect(keysRowValue(withKeys("openai"), "openai", { openai: "gpt-9-unreleased" })).toBe(
+      "gpt-9-unreleased · 1 key",
+    );
   });
 });
 

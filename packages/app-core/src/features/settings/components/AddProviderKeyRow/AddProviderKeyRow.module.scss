@@ -1,0 +1,88 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.quiet {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.625rem;
+  background: var(--surface);
+  list-style: none;
+}
+
+.openRow {
+  @include controls.tile;
+  padding: 0.875rem 1rem;
+  list-style: none;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.open {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  margin-left: auto;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.input {
+  @include controls.field-solo;
+  background: var(--surface);
+}
+
+.status,
+.hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.problem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.problemHeading {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.link {
+  color: var(--action);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+.save {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.cancel {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+}

@@ -5,11 +5,12 @@ import type { BackendSimulator } from "../../network/BackendSimulator.testHelper
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("longVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=longVideo1";
 const OTHER_VIDEO_ID = VideoId.parse("longVideo2");
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 
 const longTranscript = (): TranscriptSegment[] =>
   Array.from({ length: 30 }, (_, index) =>

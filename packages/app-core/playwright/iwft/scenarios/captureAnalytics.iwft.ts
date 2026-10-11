@@ -2,11 +2,12 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
-  apiKeys: { anthropicApiKey: "sk-ant-test" },
+  apiKeys: ANTHROPIC_KEY,
 };
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 

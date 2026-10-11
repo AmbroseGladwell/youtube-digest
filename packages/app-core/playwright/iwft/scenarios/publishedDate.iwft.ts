@@ -1,8 +1,9 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-const API_KEYS = { anthropicApiKey: "sk-ant-test" };
+const API_KEYS = ANTHROPIC_KEY;
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const overviewPublished = (publishedAt: string | null) =>

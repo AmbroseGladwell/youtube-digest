@@ -1,4 +1,4 @@
-import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_NARRATION_VOICE, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
@@ -84,7 +84,11 @@ export function useSettingsSections(): SettingsSectionSummary[] {
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,
     },
-    { id: "keys", title: "API keys", value: keysRowValue(apiKeys, settings?.model ?? DEFAULT_ANTHROPIC_MODEL) },
+    {
+      id: "keys",
+      title: "API keys",
+      value: keysRowValue(apiKeys, settings?.provider ?? DEFAULT_PROVIDER, settings?.modelByProvider ?? {}),
+    },
     ...(sync.available
       ? [
           {

@@ -4,9 +4,10 @@ import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
-const ANTHROPIC_ONLY = { anthropicApiKey: "sk-ant-test" };
+const ANTHROPIC_ONLY = ANTHROPIC_KEY;
 
 test("a shell that can reach YouTube writes a note without asking our server", async ({
   launcher,

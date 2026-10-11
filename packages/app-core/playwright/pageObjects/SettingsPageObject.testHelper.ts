@@ -3,12 +3,12 @@ import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
-import { apiKeysSectionTestIds } from "../../src/features/settings/components/ApiKeysSection/ApiKeysSectionTestIds.js";
 import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
 import { settingsSectionTestIds } from "../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
 import { settingsSectionListTestIds } from "../../src/features/settings/components/SettingsSectionList/SettingsSectionListTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ConnectionsSectionPageObject } from "./ConnectionsSectionPageObject.testHelper.js";
+import { ModelPickerPageObject } from "./ModelPickerPageObject.testHelper.js";
 import { PlaylistsSectionPageObject } from "./PlaylistsSectionPageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
@@ -19,6 +19,10 @@ import { MilestonesSectionPageObject } from "./MilestonesSectionPageObject.testH
 export class SettingsPageObject extends PageObject {
   get apiKeysPanel(): ApiKeysPanelPageObject {
     return new ApiKeysPanelPageObject(this.testContext);
+  }
+
+  get modelPicker(): ModelPickerPageObject {
+    return new ModelPickerPageObject(this.testContext);
   }
 
   get playlists(): PlaylistsSectionPageObject {
@@ -110,9 +114,6 @@ export class SettingsPageObject extends PageObject {
 
   clickBackToOverviews = () =>
     this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.overviewsLink));
-
-  verifySavedConfirmation = () =>
-    this.step("verifySavedConfirmation", () => this.expectToBeVisible(apiKeysSectionTestIds.savedConfirmation));
 
   recheckPlan = () => this.step("recheckPlan", () => this.click(plusPlanPanelTestIds.recheckButton));
 

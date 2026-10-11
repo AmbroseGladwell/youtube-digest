@@ -107,7 +107,7 @@ export class CapturePageObject extends PageObject {
 
   openKeysSettings = (): Promise<SettingsPageObject> =>
     this.step("openKeysSettings", async () => {
-      await this.click(capturePageTestIds.settingsLink);
+      await this.click(capturePageTestIds.keyPrompt.settingsLink);
       const settings = await new SettingsPageObject(this.testContext).verifyIsShown();
       await settings.verifySectionIsShown("keys");
       return settings;
