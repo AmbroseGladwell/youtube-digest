@@ -64,8 +64,28 @@ function proseOf(output: GeneratedOutput): string[] {
 const NUMBER = /\d+(?:[.,]\d+)*/g;
 const normalisedNumber = (raw: string): string => raw.replace(/,(?=\d{3}\b)/g, "").replace(/[.,]$/, "");
 
+const NUMBER_WORDS: Record<string, number> = Object.fromEntries(
+  [
+    ..."zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty".split(" ").map((word, value) => [word, value] as const),
+    ..."thirty forty fifty sixty seventy eighty ninety".split(" ").map((word, index) => [word, (index + 3) * 10] as const),
+  ],
+);
+const SCALES: Record<string, number> = { hundred: 100, thousand: 1_000, million: 1_000_000, billion: 1_000_000_000 };
+
+const withoutSeparators = (source: string): string => source.replace(/(\d),(?=\d{3}(?!\d))/g, "$1");
+
+const spokenAsDigits = (source: string): string =>
+  withoutSeparators(source)
+    .replace(/\b([a-z]+)\b/gi, (word) => {
+      const value = NUMBER_WORDS[word.toLowerCase()];
+      return value === undefined ? word : String(value);
+    })
+    .replace(/(\d+(?:\.\d+)?)\s*(hundred|thousand|million|billion)\b/gi, (_, digits: string, scale: string) =>
+      String(Math.round(Number(digits) * SCALES[scale.toLowerCase()]!)),
+    );
+
 export function unsupportedNumbers(prose: readonly string[], sources: readonly string[]): string[] {
-  const haystack = sources.map((source) => source.replace(/(\d),(?=\d{3}\b)/g, "$1")).join("\n");
+  const haystack = sources.flatMap((source) => [withoutSeparators(source), spokenAsDigits(source)]).join("\n");
   const claimed = new Set(prose.flatMap((text) => (text.match(NUMBER) ?? []).map(normalisedNumber)));
   return [...claimed].filter((number) => {
     const escaped = number.replace(/\./g, "\\.");

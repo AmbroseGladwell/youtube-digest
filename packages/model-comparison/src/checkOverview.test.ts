@@ -91,6 +91,12 @@ test("numbers match across thousands separators, and a part of a longer number i
   assert.deepEqual(unsupportedNumbers(["It took 2.5 months."], ["It took 2.5 months."]), []);
 });
 
+test("numbers auto-captions spell out, or give with a scale word, still count as said", () => {
+  assert.deepEqual(unsupportedNumbers(["Five tips, 51,000 pounds, $1.5M."], ["five tips, 51 thousand pounds, 1.5 million"]), []);
+  assert.deepEqual(unsupportedNumbers(["It took 40 days."], ["it took forty days"]), []);
+  assert.deepEqual(unsupportedNumbers(["About 650 men."], ["about 600 men"]), ["650"]);
+});
+
 test("one chapter holding most of a long video fails; a short video may be one chapter", () => {
   const lopsided = makeGeneratedOutput({
     chapters: [

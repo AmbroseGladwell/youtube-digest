@@ -6,8 +6,8 @@ the method, how to run it, and (once the full run has been done) the results and
 recommendation: the best quality, the best value, and the cheapest model that is still
 acceptable.
 
-**Status:** the harness and the automatic checks are built (`packages/model-comparison`).
-The model-as-judge, the blind A/B page, the cost-lever variants and the full run are still
+**Status:** the harness and the automatic checks are built (`packages/model-comparison`),
+and the first full run is recorded under Results. The model-as-judge, the blind A/B page, the cost-lever variants and the full run are still
 to come. Each one adds its section here.
 
 ## What is compared, and how fairly
@@ -141,10 +141,58 @@ The report is two files in the run's folder: `report.md`, with the table per mod
 reliability, latency, cost and check pass rates, and `sideBySide.html`, which shows each
 video's notes and chapters from every model in one row, with any failed checks marked.
 
-## Results
+## Results: first full run, 12 Oct 2026
 
-Not yet run on the full set. A smoke run on 12 Oct 2026, with Haiku 5.5 on the two
-shortest videos, passed the schema first time on both and cost $0.0043 in all. It also wrote
-4,259 output tokens for a 9-minute video, almost three times the 1,500 that
-`OVERVIEW_TOKENS` in `KnownModel.ts` assumes for a 20-minute one. The full run will
-show whether that figure needs revising.
+Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
+OV-118 fix to the OpenAI adapter was applied for this run, since without it Luna could not
+run at all. Quality here means the automatic checks only. The judge and the blind check
+come next, so **this is not yet the recommendation.**
+
+| Model | Valid first time | Retried | Failed | Median latency | Cost per 20 min of video | The app's own estimate | Median output tokens |
+|---|---|---|---|---|---|---|---|
+| Claude Opus 5.5 | 50% | 9 | 1 | 31.2s | $0.130 | $0.050 | 2,077 |
+| Claude Sonnet 5.5 | 35% | 9 | 4 | 20.1s | $0.070 | $0.025 | 1,930 |
+| Gemini 3.1 Pro Preview | 100% | 0 | 0 | 31.5s | $0.062 | (not in the app) | 4,115 |
+| GPT-6.1 Sol | 100% | 0 | 0 | 33.9s | $0.033 | $0.025 | 1,728 |
+| Gemini 3.6 Flash | 100% | 0 | 0 | 16.9s | $0.019 | $0.009 | 3,303 |
+| Gemini 3.8 Flash | 100% | 0 | 0 | 27.5s | $0.018 | (not in the app) | 3,201 |
+| Claude Haiku 5.5 | 85% | 3 | 0 | 13.6s | $0.003 | $0.001 | 2,209 |
+| GPT-6 Luna | 95% | 0 | 1 | 21.8s | $0.002 | $0.001 | 2,356 |
+
+"The app's own estimate" is `estimatedOverviewCents`' figure, from `OVERVIEW_TOKENS`
+(5,000 in, 1,500 out). The full tables, the check pass rates and every note side by side
+are in the run's `report.md` and `sideBySide.html`.
+
+**What the run shows:**
+
+- **The app underestimates an overview's cost by two to three times.** Every model cost
+  more per 20 minutes than `estimatedOverviewCents` says. Output is longer than the
+  1,500 tokens it assumes: Gemini's figures include its thinking, which it bills as output,
+  and even the leanest model, Sol, wrote a median of 1,728 output tokens. Retries add more on top.
+- **Opus and Sonnet pay for the retry about half the time, and almost always for the same
+  rule.** 9 of Opus's 10 retries and 13 of Sonnet's 13 first-attempt violations were the
+  one-line premise going over 25 words. Sonnet's 4 outright failures were that too. A retry
+  is a second full call, so Opus's $0.13 is about $0.08 with no retry.
+  Getting the one-liner right the first time is the largest cost lever this run found,
+  ahead of any change of model.
+- **Gemini and Sol never needed the retry.** Opus, Sonnet and Luna went over the 40-word
+  key-point target in half or more of their notes. Gemini and Sol never did.
+- **Prompt caching earned nothing.** Cached input was 0% on every provider, so no cached
+  discount applied anywhere. Anthropic caches only when asked, and OpenAI's and Gemini's
+  automatic caching did not trigger: the system prompt is short and the transcript, which
+  comes after it, is different every time.
+- **The number check finds real slips once captions are read properly.** It reads numbers
+  spelled out ("forty") and with scale words ("51 thousand"). What it still flags are
+  mostly inferences, such as "$103,000" from "100k plus three", and rounding. One was a
+  small error: on the Dr K clip the captions give testosterone as "about 612 to 690", Opus
+  wrote "about 650" and Haiku wrote "about 600", which is outside the range.
+- **Operational:** the OpenAI account's first tier allows 10,000 tokens a minute, which
+  refused the two longest transcripts outright until funding raised it. Gemini 3.6 Flash
+  answered 503, "high demand", on 18 of its first 20 calls, and passed on a later pass. A
+  server-side queue has to expect both.
+
+**Provisional, until the judge has read the notes:** Gemini 3.8 Flash and GPT-6.1 Sol are
+the strongest value candidates, since both were reliable and passed the format checks at
+$0.02 to $0.03 per 20 minutes. Luna and Haiku cost a tenth of that but miss the format
+targets more often. Whether Opus's notes are worth four to seven times Sol's cost is the
+question the judge and the blind check exist to answer.
