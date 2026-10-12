@@ -1,0 +1,237 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 110e: a 580px dialog on a scrim, and the same contents as a full sheet on a phone
+// or in the panel, where the design draws it as a page. The <dialog> is the positioner and
+// carries no paint, as NewOverviewDialog's does.
+.dialog {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: var(--scrim);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  box-sizing: border-box;
+  width: min(36.25rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+  padding: 1.375rem 1.5rem 1.625rem 1.75rem;
+  border-radius: 1.5rem;
+  background: var(--dialog);
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 50%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.close {
+  @include controls.icon-control;
+  @include controls.circle(2.25rem);
+  flex: none;
+  color: var(--muted);
+}
+
+.standfirst,
+.costNote,
+.notListed,
+.staleNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.costNote,
+.notListed {
+  font-size: 0.78125rem;
+}
+
+// The field is the pill, with the magnifier inside it rather than beside it.
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.875rem;
+  box-sizing: border-box;
+  padding: 0 1.125rem 0 1rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--ink);
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.groupLabel {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// No border and no shadow: the row is told apart from the dialog by sitting a step
+// further back, and the chosen one by the stone tint and its ring.
+.choice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-state) ease-out;
+
+  &:hover {
+    background: var(--surface);
+  }
+}
+
+.chosen {
+  background: var(--stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+  color: var(--on-stone-tint);
+
+  &:hover {
+    background: var(--stone-tint);
+  }
+}
+
+.raw {
+  padding: 0.625rem 0.875rem;
+}
+
+// The indicator the design draws: a ring, with a dot in it once chosen.
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  margin-top: 0.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 2px var(--muted);
+}
+
+.chosen .mark {
+  box-shadow: inset 0 0 0 2px var(--label);
+}
+
+.markDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--label);
+}
+
+.choiceText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.choiceLabel {
+  font-size: 0.90625rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.choiceDescription {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.chosen .choiceDescription,
+.chosen .cost {
+  color: var(--on-stone-tint);
+}
+
+.cost {
+  padding-top: 0.0625rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.showAll,
+.recheck {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  align-self: flex-start;
+}
+
+// Phone and panel: design 110e draws the picker as a page there, so the sheet fills the
+// screen and the close button leads back the way the page's own link would.
+@media (max-width: 47.9375rem) {
+  .panel {
+    width: 100vw;
+    max-height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 1.125rem 1.25rem 2rem;
+  }
+}

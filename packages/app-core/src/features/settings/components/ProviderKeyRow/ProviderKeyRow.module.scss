@@ -52,6 +52,11 @@
 
 .model {
   display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;

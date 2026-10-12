@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import {
   modelFor,
   modelLabel,
@@ -8,7 +7,6 @@ import {
   type ModelByProvider,
   type Provider,
 } from "@overview/domain";
-import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { keyEnding, type StoredKey } from "../../../apiKeys/ApiKeys.js";
@@ -26,6 +24,7 @@ export interface ProviderKeyRowProps {
   // still hold it (design 110i).
   movesTo: Provider | null;
   onRemove: () => void;
+  onChooseModel: () => void;
 }
 
 const addedOn = (stored: StoredKey): string => {
@@ -38,7 +37,7 @@ const addedOn = (stored: StoredKey): string => {
 
 // One provider the reader has a key for: what it is, that it is the one in use, what the
 // key ends in, and the model it remembers (design 110c).
-export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRemove }: ProviderKeyRowProps) {
+export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRemove, onChooseModel }: ProviderKeyRowProps) {
   const [confirming, setConfirming] = useState(false);
   const here = deviceWord(useSurface(), useIsPhone());
 
@@ -97,14 +96,15 @@ export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRem
           <p className={styles.summary} data-testid={providerKeyRowTestIds.summary(provider)}>
             {addedOn(stored)}
           </p>
-          <Link
+          <button
+            type="button"
             className={styles.model}
-            to={Routes.settingsModel(provider)}
+            onClick={onChooseModel}
             data-testid={providerKeyRowTestIds.model(provider)}
           >
             <span className={styles.modelLabel}>Model</span>
             <span className={styles.modelValue}>{modelLabel(provider, modelFor(models, provider))}</span>
-          </Link>
+          </button>
         </>
       )}
     </li>
