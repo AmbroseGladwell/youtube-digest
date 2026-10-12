@@ -1,7 +1,6 @@
 import { parseArgs } from "node:util";
-import { PROVIDERS, type Provider } from "@overview/domain";
 import { parseComparedModel } from "../ComparedModel.js";
-import { comparisonPaths, loadTranscripts } from "../comparisonPaths.js";
+import { comparisonPaths, loadTranscripts, providerKeysFromEnv } from "../comparisonPaths.js";
 import { DEFAULT_COMPARED_MODELS } from "../modelPrices.js";
 import { runComparison } from "../runComparison.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
@@ -31,12 +30,7 @@ if (transcripts.length === 0) {
   process.exit(1);
 }
 
-const keys: Partial<Record<Provider, string>> = Object.fromEntries(
-  PROVIDERS.flatMap((provider) => {
-    const key = process.env[`${provider.toUpperCase()}_API_KEY`];
-    return key ? [[provider, key]] : [];
-  }),
-);
+const keys = providerKeysFromEnv();
 
 const outcome = await runComparison({
   models: (values.models?.split(",") ?? DEFAULT_COMPARED_MODELS).map((name) => parseComparedModel(name.trim())),

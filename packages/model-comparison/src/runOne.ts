@@ -35,14 +35,14 @@ export const comparisonInput = (fetched: FetchedTranscript): GenerationInput => 
   tagAliases: {},
 });
 
-function measuredCost(model: ComparedModel, calls: MeteredCall[]): number | null {
+export function measuredCost(model: ComparedModel, calls: MeteredCall[]): number | null {
   const price = priceOf(model);
   const answered = calls.filter((call) => call.status >= 200 && call.status < 300);
   if (price === undefined || answered.some((call) => call.usage === null)) return null;
   return answered.reduce((total, call) => total + costInDollars(price, call.usage!), 0);
 }
 
-const isTheModelsDoing = (error: unknown): boolean =>
+export const isTheModelsDoing = (error: unknown): boolean =>
   error instanceof SyntaxError ||
   (error instanceof GenerationError &&
     !(error instanceof ProviderRequestError) &&

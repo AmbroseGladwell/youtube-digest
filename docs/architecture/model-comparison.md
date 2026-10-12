@@ -6,9 +6,9 @@ the method, how to run it, and (once the full run has been done) the results and
 recommendation: the best quality, the best value, and the cheapest model that is still
 acceptable.
 
-**Status:** the harness and the automatic checks are built (`packages/model-comparison`),
-and the first full run is recorded under Results. The model-as-judge, the blind A/B page, the cost-lever variants and the full run are still
-to come. Each one adds its section here.
+**Status:** the harness, the automatic checks, the judge and the blind check are built
+(`packages/model-comparison`), and the first full run is recorded under Results. The judge
+has not yet been run on the full set, and the cost-lever variants are still to come.
 
 ## What is compared, and how fairly
 
@@ -93,6 +93,55 @@ Chapter starts landing on real segments, ascending from zero and staying inside 
 transcript are already guaranteed by the schema and by segment indices, so they are not
 checked again.
 
+## Quality: the judge
+
+`judgePair.ts` and `judgeRubric.ts`. The checks above catch rule-breaking. They can't say
+which note is better, so a model compares notes pairwise.
+
+**Against one baseline, pair by pair.** Every candidate's note for a video is compared with
+Opus 5.5's note for the same video, the model the format was built and judged on. A pair is
+judged only when both notes passed, so the 20 videos give up to 20 pairs per candidate.
+Pairwise is used rather than absolute scores, because a model asked "which is better" is
+more consistent than one asked "how good is this out of 10".
+
+**What the judge sees:** the transcript with a timestamp on every segment, and both notes as
+the reader would read them (`overviewMarkdown`, minus the links). It never sees a model
+name. Which note is A is decided by a hash of the video and the candidate, so it is
+effectively random across pairs and stays the same on a rerun.
+
+**What it answers:** for each of faithfulness, verdict, how-to-apply, chapters and reads
+aloud, and then overall, a one-sentence reason followed by A, B or tie. The reason comes
+first so it is written before the call. The rubric's wording follows `summary-prompt.md`'s
+rules: an invented specific is worse than a missing one, a verdict is right to say common
+knowledge, and dubious is only for certainty that hasn't been earned. Length is not
+quality.
+
+**Who judges:** never a model from either note's provider, because a model tends to
+prefer its own family's writing. The baseline is Anthropic's, so GPT-6.1 Sol judges the
+Anthropic and Gemini candidates and Gemini 3.1 Pro judges the OpenAI ones (`JUDGES`, first
+eligible wins). This means two judges with possibly different tastes, so a win rate is
+compared across candidates with the same judge first, and the blind check is what
+calibrates the two against each other.
+
+**Win rate** counts a tie as half a win, so 50% means level with Opus. Judging has its
+own budget, counted the same way as a run's, and errored judgments are retried on the next
+run like errored runs.
+
+## Quality: the blind check
+
+`npm run blind` serves a local page (`cli/blindCheck.ts`, `blindPageHtml.ts`) showing one
+pair at a time, the same pairs the judge sees, as A and B with no model names. The browser
+is sent only an opaque token and the two notes. The server keeps which model is which, and
+picks a fresh random side every time a pair is shown, independently of the judge's order.
+Pairs the judge has already decided are offered first, because a pick is only useful
+for calibration when there is a judgment to compare it with. Each pick is saved as it is
+made, so the page can be closed at any time and picks up where it left off.
+
+The report then shows, per candidate, your win rate for it and how often you agreed with
+the judge on the same pairs. A few dozen picks across candidates is enough to tell whether
+the judge's taste is yours. If it isn't, the judge's numbers should not decide the
+recommendation.
+
 ## The transcript set
 
 Twenty videos from the reader's own library, chosen on 12 Oct 2026 for spread rather than
@@ -126,7 +175,18 @@ task secrets:run -- npm run compare --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 10
 
 npm run report --workspace packages/model-comparison -- --run 2026-10-12
+
+# the judge: a few pairs first, then the rest under the same run name
+task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+  --run 2026-10-12 --budget 1 --limit 4
+task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+  --run 2026-10-12 --budget 6
+
+# the blind check, then open http://127.0.0.1:4792/
+npm run blind --workspace packages/model-comparison -- --run 2026-10-12
 ```
+
+`--candidates provider:model,...` limits judging to some candidates.
 
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
 `task secrets:run` (`docs/conventions/secrets.md`), and listed in `scripts/sanityCheck.env`.
@@ -138,7 +198,8 @@ already started is allowed to finish, so a run can go over by at most one overvi
 model. On this set that is under $1 in the worst case, the 2 hour hearing on Opus.
 
 The report is two files in the run's folder: `report.md`, with the table per model of
-reliability, latency, cost and check pass rates, and `sideBySide.html`, which shows each
+reliability, latency, cost and check pass rates, and, once there are judgments or picks,
+the judge's win rates and the blind check's agreement; and `sideBySide.html`, which shows each
 video's notes and chapters from every model in one row, with any failed checks marked.
 
 ## Results: first full run, 12 Oct 2026
