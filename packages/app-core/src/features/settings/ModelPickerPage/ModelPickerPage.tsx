@@ -142,7 +142,8 @@ function ModelPicker({ provider, apiKey }: { provider: Provider; apiKey: string 
       <ul className={styles.list}>{matchedRecommended.map(row)}</ul>
 
       <p className={styles.costNote} data-testid={modelPickerPageTestIds.costNote}>
-        ≈ is roughly what {name} charges your key for a 20-minute video. Longer videos cost more.
+        ≈ is roughly what {name} charges your key for a 20-minute video, in US dollars, which is what every
+        one of these providers bills in. Longer videos cost more.
       </p>
 
       {/* Dropped rather than shown empty when the catalogue call failed: a group that says

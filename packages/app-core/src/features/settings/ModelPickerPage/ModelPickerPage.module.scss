@@ -9,10 +9,10 @@
 }
 
 .back {
-  @include controls.quiet-control;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
   align-self: flex-start;
-  font-size: 0.8125rem;
-  text-decoration: none;
+  margin-left: -0.875rem;
 }
 
 .heading {
@@ -54,6 +54,10 @@
 
 .choice {
   @include controls.tile;
+  // tile paints a background but leaves the button's own border and ink, and a bare
+  // <button> keeps the UA ones — light in both themes.
+  border: 0;
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   gap: 0.125rem;

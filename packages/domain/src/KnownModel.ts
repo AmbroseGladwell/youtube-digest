@@ -7,8 +7,8 @@ import { PROVIDERS, type Provider } from "./Provider.js";
 // back to when that call fails (design 110h).
 //
 // Ids checked against each provider's own documentation on 11 October 2026. Prices are
-// dollars per million tokens, approximate, and exist only to drive the one rough figure
-// the picker shows — never to bill anyone.
+// approximate, per million tokens, in US dollars — the currency all six price and bill in.
+// They exist only to drive the one rough figure the picker shows, never to bill anyone.
 export interface KnownModel {
   id: string;
   label: string;
