@@ -1,0 +1,33 @@
+{
+  "name": "@overview/model-comparison",
+  "version": "0.0.0",
+  "private": true,
+  "description": "OV-92: runs the same transcripts through several models with production's own prompt, schema and retry, and measures what each costs and gets right. Local only: a run spends real money (docs/architecture/model-comparison.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "fetch-transcripts": "npm run build && node dist/cli/fetchTranscriptSet.js",
+    "compare": "npm run build && node dist/cli/compareModels.js",
+    "report": "npm run build && node dist/cli/reportComparison.js"
+  },
+  "dependencies": {
+    "@overview/domain": "*",
+    "@overview/generation": "*",
+    "@overview/transcripts": "*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  }
+}
