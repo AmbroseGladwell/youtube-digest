@@ -7,8 +7,9 @@ recommendation: the best quality, the best value, and the cheapest model that is
 acceptable.
 
 **Status:** the harness, the automatic checks, the judge and the blind check are built
-(`packages/model-comparison`), and the first full run is recorded under Results. The judge
-has not yet been run on the full set, and the cost-lever variants are still to come.
+(`packages/model-comparison`). The first full run and its judging are recorded under
+Results. Still to come: the blind picks that calibrate the judge, and the cost-lever
+variants.
 
 ## What is compared, and how fairly
 
@@ -252,8 +253,60 @@ are in the run's `report.md` and `sideBySide.html`.
   answered 503, "high demand", on 18 of its first 20 calls, and passed on a later pass. A
   server-side queue has to expect both.
 
-**Provisional, until the judge has read the notes:** Gemini 3.8 Flash and GPT-6.1 Sol are
-the strongest value candidates, since both were reliable and passed the format checks at
-$0.02 to $0.03 per 20 minutes. Luna and Haiku cost a tenth of that but miss the format
-targets more often. Whether Opus's notes are worth four to seven times Sol's cost is the
-question the judge and the blind check exist to answer.
+### Judged against Opus 5.5, 12 Oct 2026
+
+All 128 pairs judged (every pair where both notes passed), for **$4.73**. One judgment
+errored on a network failure and was retried.
+
+| Candidate | Judge | Overall win rate | Record (W–T–L) | Faithfulness | Verdict | How to apply | Chapters | Reads aloud |
+|---|---|---|---|---|---|---|---|---|
+| GPT-6.1 Sol | Gemini 3.1 Pro | **58%** | 11–0–8 | 50% | 55% | 37% | 47% | 63% |
+| Claude Sonnet 5.5 | GPT-6.1 Sol | 40% | 6–0–9 | 50% | 53% | 30% | 30% | 50% |
+| Claude Haiku 5.5 | GPT-6.1 Sol | 16% | 3–0–16 | 29% | 34% | 16% | 13% | 47% |
+| Gemini 3.6 Flash | GPT-6.1 Sol | 11% | 2–0–17 | 18% | 34% | 8% | 0% | 58% |
+| GPT-6 Luna | Gemini 3.1 Pro | 6% | 1–0–17 | 22% | 19% | 17% | 11% | 47% |
+| Gemini 3.1 Pro | GPT-6.1 Sol | 6% | 1–0–18 | 17% | 28% | 14% | 0% | 58% |
+| Gemini 3.8 Flash | GPT-6.1 Sol | 5% | 1–0–18 | 21% | 34% | 13% | 0% | 50% |
+
+50% is level with Opus. The judge never called an overall tie.
+
+**What the judging shows:**
+
+- **Only GPT-6.1 Sol holds its own against Opus.** At 11–8 over 19 videos it is level with
+  Opus rather than proven better, since a split that close is well within chance. It does
+  this at a quarter of the cost ($0.033 against $0.130 per 20 minutes) and was valid first
+  time on every video.
+- **Every Gemini model loses heavily, and the reasons are specific.** Gemini wrote fewer
+  chapters (a median of 5 against Opus's 8) and about half the words in its key points
+  (115 to 138 against 233). The judge's reasons name chapters that merge distinct
+  subjects, and **facts imported from outside the transcript**: a surname the video never
+  says, a "correction" of a politician's remarks, a free tier the video doesn't mention.
+  The format checks passed Gemini everywhere, so this is exactly what they cannot see.
+  Its 100% reliability bought nothing, because the notes were thinner and less faithful.
+- **Reading aloud is the one dimension nobody loses badly** (47% to 63%), so the format's
+  spoken-text rules hold across every model.
+- **The cheap models are not acceptable stand-ins.** Haiku wins 16% and Luna 6%. Luna's
+  notes also write "First," and "Then," into key points, which the narration adds a second
+  time.
+- **The judge has a mild first-position bias.** A candidate shown as A won 25% of its
+  pairs, and as B 14%. The hash put 59 candidates first and 69 second, so the totals are
+  only slightly affected, but a close result like Sol's should not be read finer than this.
+- **Two judges, so one caveat.** Sol's own result comes from Gemini 3.1 Pro, and everyone
+  else's from Sol. Gemini 3.1 Pro is not lenient towards OpenAI in general, since it gave
+  Luna 6%. The blind picks are what settle whether the two judges, and your taste, agree.
+
+### Recommendation, pending the blind picks
+
+| | Model | Why |
+|---|---|---|
+| **Best quality** | Claude Opus 5.5 and GPT-6.1 Sol, level | Sol is level with Opus on the judge, and nothing else comes close |
+| **Best value** | **GPT-6.1 Sol** | Opus's quality at a quarter of the cost, valid first time on every video, and the shortest output |
+| **Cheapest acceptable** | GPT-6.1 Sol | nothing cheaper is acceptable: Sonnet costs twice as much for a 40% win rate, and every cheaper model loses at least four pairs in five |
+
+**For OV-102 and OV-19:** an overview on our key costs about **$0.033 per 20 minutes of
+video** on Sol, measured. The 2 hour 22 minute hearing cost $0.11. Opus, at about $0.13 per 20 minutes,
+falls to about $0.08 if OV-119 removes its retries, which would still leave it at more
+than twice Sol's cost.
+
+This becomes a decision once a few dozen blind picks agree with the judge. If they
+don't, these win rates should not decide it.
