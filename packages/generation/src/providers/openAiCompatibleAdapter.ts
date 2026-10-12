@@ -12,11 +12,13 @@ export interface OpenAiCompatibleOptions {
   // schema at all, so the shape is taught in the prompt and checked on the way back by
   // generateOverview's existing correction pass.
   structure: "schema" | "prose";
+  // OpenAI's newer models refuse max_tokens outright; the others document only max_tokens.
+  tokenLimitField: "max_tokens" | "max_completion_tokens";
 }
 
 const MAX_TOKENS = 16000;
 
-export function openAiCompatibleAdapter({ baseUrl, structure }: OpenAiCompatibleOptions): ProviderAdapter {
+export function openAiCompatibleAdapter({ baseUrl, structure, tokenLimitField }: OpenAiCompatibleOptions): ProviderAdapter {
   return {
     async generate(call: ProviderCall, request: GenerationRequest, http: typeof fetch): Promise<unknown> {
       const schema = providerJsonSchema(request.schema);
@@ -32,7 +34,7 @@ export function openAiCompatibleAdapter({ baseUrl, structure }: OpenAiCompatible
         headers: { "content-type": "application/json", authorization: `Bearer ${call.apiKey}` },
         body: JSON.stringify({
           model: call.model,
-          max_tokens: MAX_TOKENS,
+          [tokenLimitField]: MAX_TOKENS,
           messages: [
             { role: "system", content: system },
             { role: "user", content: request.userMessage },

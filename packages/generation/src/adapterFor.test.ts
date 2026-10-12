@@ -92,6 +92,19 @@ test("the five that take a schema are sent one, and DeepSeek is taught the shape
   }
 });
 
+test("OpenAI is sent max_completion_tokens, which its newer models require, and the rest keep max_tokens", async () => {
+  for (const provider of ["openai", "deepseek", "xai", "mistral"] as const) {
+    const { calls, http } = recorder(() => ({ body: BODIES.chat }));
+
+    await createGenerationClient({ provider, apiKey: "sk", model: "a-model", http })(request);
+    const body = JSON.parse(String(calls[0]?.init.body));
+
+    const [sent, absent] = provider === "openai" ? ["max_completion_tokens", "max_tokens"] : ["max_tokens", "max_completion_tokens"];
+    assert.equal(typeof body[sent], "number", provider);
+    assert.equal(absent in body, false, provider);
+  }
+});
+
 test("a refused key is told apart from every other failure, because a different screen reports it", async () => {
   for (const provider of PROVIDERS) {
     const { http } = recorder(() => ({ status: 401, body: { error: "invalid key" } }));
