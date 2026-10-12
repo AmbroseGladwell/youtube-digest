@@ -140,6 +140,17 @@ granted.
 - **Model names and prices are real, not the design's placeholders**, taken from each
   provider's own documentation on 11 October 2026. They will go stale; the live fetch is
   what keeps the picker current, and `KNOWN_MODELS` is the floor under it.
+- **The model picker's two layouts are one dialog.** Design 110e draws it as a 580px dialog
+  on a scrim at desktop width and as a page with "‹ API keys" on a phone and in the panel.
+  It is a single native `<dialog>` that fills the screen below 768px rather than two
+  components, so there is one place the picker's behaviour lives.
+- **"As listed by OpenAI. We haven't tested these, so they have no description or cost."
+  is not shown.** The design puts it under the second group; it was cut as noise. That the
+  rows there carry no description and no price already says it.
+- **A model row is a `radio`, not a `listbox` `option`.** The design draws the radio
+  indicator and gives the list listbox semantics. A radio is what a one-of-several choice
+  that saves immediately actually is, and a `<button>` answers Enter and Space without a
+  key handler of its own.
 - **No screenshot tests**, as with `settings.md`: this repo still has no screenshot harness.
   The states are covered by `settingsKeys.iwft.ts` and the scenarios that seed keys.
 

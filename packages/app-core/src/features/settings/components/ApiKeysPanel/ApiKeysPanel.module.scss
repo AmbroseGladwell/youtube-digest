@@ -30,6 +30,10 @@
 .removeAll {
   @include controls.quiet-control;
   align-self: flex-start;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--muted);
   font-size: 0.8125rem;
 }
 

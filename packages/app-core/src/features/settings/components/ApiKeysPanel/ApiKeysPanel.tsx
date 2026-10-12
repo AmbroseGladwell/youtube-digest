@@ -13,6 +13,7 @@ import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMuta
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import { AddProviderKeyRow } from "../AddProviderKeyRow/AddProviderKeyRow.js";
 import { GenerateWithCard } from "../GenerateWithCard/GenerateWithCard.js";
+import { ModelPickerDialog } from "../ModelPickerDialog/ModelPickerDialog.js";
 import { ProviderKeyRow } from "../ProviderKeyRow/ProviderKeyRow.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
@@ -34,6 +35,7 @@ export function ApiKeysPanel() {
 
   const [adding, setAdding] = useState<Provider | null>(null);
   const [removingAll, setRemovingAll] = useState(false);
+  const [pickingModelFor, setPickingModelFor] = useState<Provider | null>(null);
 
   const provider = settingsQuery.data?.provider ?? DEFAULT_PROVIDER;
   const models = settingsQuery.data?.modelByProvider ?? {};
@@ -117,6 +119,7 @@ export function ApiKeysPanel() {
                   models={models}
                   movesTo={held.find((other) => other !== candidate) ?? null}
                   onRemove={() => remove(candidate)}
+                  onChooseModel={() => setPickingModelFor(candidate)}
                 />
               );
             })}
@@ -177,6 +180,12 @@ export function ApiKeysPanel() {
       <p className={styles.note} data-testid={apiKeysPanelTestIds.note}>
         {BYO_KEY_NOTE_SHORT}
       </p>
+
+      <ModelPickerDialog
+        provider={pickingModelFor}
+        apiKey={pickingModelFor === null ? null : (apiKeys.keys[pickingModelFor]?.key ?? null)}
+        onClose={() => setPickingModelFor(null)}
+      />
     </div>
   );
 }

@@ -56,6 +56,30 @@ test("the model picker offers the ones we describe by name", async ({ launcher }
   await settings.modelPicker.verifyOffers("claude-sonnet-5-5");
 });
 
+// Design 110e: it is a dialog, not a page — so it closes without leaving Settings, and
+// Escape closes it the way the native element does.
+test("the picker closes from its own close button, leaving the keys section behind it", async ({ launcher }) => {
+  await launcher.launch({ apiKeys: keysFor("anthropic") });
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+  await settings.apiKeysPanel.openModelPicker("anthropic");
+  await settings.modelPicker.verifyIsShown();
+
+  await settings.modelPicker.close();
+
+  await settings.verifySectionIsShown("keys");
+  await settings.apiKeysPanel.verifyKeyHeld("anthropic");
+});
+
+test("choosing a model closes the picker rather than leaving it open behind the choice", async ({ launcher }) => {
+  await launcher.launch({ apiKeys: keysFor("anthropic") });
+  const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+  await settings.apiKeysPanel.openModelPicker("anthropic");
+
+  await settings.modelPicker.chooseModel("claude-haiku-5-5");
+
+  await settings.verifySectionIsShown("keys");
+});
+
 test("choosing a model saves it against that provider and shows on its row", async ({ launcher }) => {
   await launcher.launch({ apiKeys: keysFor("anthropic") });
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");

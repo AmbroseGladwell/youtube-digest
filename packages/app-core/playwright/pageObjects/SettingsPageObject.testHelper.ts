@@ -8,7 +8,7 @@ import { settingsSectionTestIds } from "../../src/features/settings/components/S
 import { settingsSectionListTestIds } from "../../src/features/settings/components/SettingsSectionList/SettingsSectionListTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ConnectionsSectionPageObject } from "./ConnectionsSectionPageObject.testHelper.js";
-import { ModelPickerPageObject } from "./ModelPickerPageObject.testHelper.js";
+import { ModelPickerDialogPageObject } from "./ModelPickerDialogPageObject.testHelper.js";
 import { PlaylistsSectionPageObject } from "./PlaylistsSectionPageObject.testHelper.js";
 import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
@@ -21,8 +21,8 @@ export class SettingsPageObject extends PageObject {
     return new ApiKeysPanelPageObject(this.testContext);
   }
 
-  get modelPicker(): ModelPickerPageObject {
-    return new ModelPickerPageObject(this.testContext);
+  get modelPicker(): ModelPickerDialogPageObject {
+    return new ModelPickerDialogPageObject(this.testContext);
   }
 
   get playlists(): PlaylistsSectionPageObject {
