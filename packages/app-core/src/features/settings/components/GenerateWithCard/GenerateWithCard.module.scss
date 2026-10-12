@@ -1,11 +1,14 @@
 @use "../../../../theme/controls.scss" as controls;
 
+// Design 110b: a box one step off the ground with no shadow — the surface is the
+// structure, which is the stone theme's whole argument.
 .root {
-  @include controls.tile;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.125rem 1.25rem;
+  gap: 0.625rem;
+  padding: 1rem 1.125rem 1.125rem 1.25rem;
+  border-radius: 1.25rem;
+  background: var(--card);
 }
 
 .label {
@@ -19,6 +22,13 @@
   color: var(--ink);
 }
 
+.missing {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
 .select {
   @include controls.field-solo;
   background: var(--surface);
@@ -28,16 +38,9 @@
 
 .note {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.78125rem;
   line-height: 1.55;
   color: var(--muted);
-}
-
-.missing {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--ink);
 }
 
 .ways {

@@ -40,7 +40,7 @@
 
 .heading {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   font-weight: 400;
   font-size: 1.5rem;
   line-height: 1.1;
@@ -50,8 +50,19 @@
 .close {
   @include controls.icon-control;
   @include controls.circle(2.25rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
+  border: 0;
+  border-radius: var(--radius-btn);
+  background: transparent;
   color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ink);
+  }
 }
 
 .standfirst,

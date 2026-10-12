@@ -9,6 +9,7 @@ import {
 } from "@overview/domain";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { keyEnding, type StoredKey } from "../../../apiKeys/ApiKeys.js";
 import { deviceWord } from "../../../apiKeys/keyPrompt.js";
 import styles from "./ProviderKeyRow.module.scss";
@@ -44,12 +45,21 @@ export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRem
   return (
     <li className={`${styles.root} ${inUse ? styles.inUseRow : ""}`} data-testid={providerKeyRowTestIds.root(provider)}>
       <div className={styles.head}>
-        <span className={styles.name}>{PROVIDER_LABEL[provider]}</span>
-        {inUse && (
-          <span className={styles.chip} data-testid={providerKeyRowTestIds.inUse(provider)}>
-            In use
+        <span className={styles.names}>
+          <span className={styles.nameLine}>
+            <span className={styles.name}>{PROVIDER_LABEL[provider]}</span>
+            {inUse && (
+              <span className={styles.chip} data-testid={providerKeyRowTestIds.inUse(provider)}>
+                In use
+              </span>
+            )}
           </span>
-        )}
+          {!confirming && (
+            <span className={styles.summary} data-testid={providerKeyRowTestIds.summary(provider)}>
+              {addedOn(stored)}
+            </span>
+          )}
+        </span>
         {!confirming && (
           <button
             type="button"
@@ -92,20 +102,19 @@ export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRem
           </div>
         </div>
       ) : (
-        <>
-          <p className={styles.summary} data-testid={providerKeyRowTestIds.summary(provider)}>
-            {addedOn(stored)}
-          </p>
+        <div className={styles.modelLine}>
+          <span className={styles.modelLabel}>Model</span>
           <button
             type="button"
             className={styles.model}
+            aria-haspopup="dialog"
             onClick={onChooseModel}
             data-testid={providerKeyRowTestIds.model(provider)}
           >
-            <span className={styles.modelLabel}>Model</span>
-            <span className={styles.modelValue}>{modelLabel(provider, modelFor(models, provider))}</span>
+            {modelLabel(provider, modelFor(models, provider))}
+            <StrokeIcon name="chevronRight" size={14} />
           </button>
-        </>
+        </div>
       )}
     </li>
   );
