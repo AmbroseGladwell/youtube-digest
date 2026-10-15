@@ -1,12 +1,12 @@
 # Tiers: what signed-out, free and paying readers can do
 
-Decided on 6 Oct 2026 (OV-78). Four tiers, arranged to push readers towards paying:
+Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
 tier, and why. The numbers are provisional until OV-19 decides how much of an overview is personal. OV-92
-priced one: about $0.033 per 20 minutes of video on GPT-6.1 Sol, the model it recommends for
-our key (`model-comparison.md`). The shape is not provisional.
+chose the model for our key, GPT-6.1 Sol, and priced an overview on it: about $0.033 per 20
+minutes of video (`model-comparison.md`). The shape is not provisional.
 
 ## The decision underneath: generation goes through our server
 
@@ -30,7 +30,7 @@ rather than replacing it.
 
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
-| Overviews on our key | 5, in total | 10 a month | 10 a month | About $2.50 of cost a month (OV-92 sets the number) |
+| Overviews on our key | 5, in total | 10 a month | 10 a month | About 65 a month: $2.50 of cost on GPT-6.1 Sol (OV-92) |
 | Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
@@ -71,8 +71,9 @@ voice. The transcript proxy's global cap and OV-95's playlist caps stay as they 
 
 **Plus's allowance on our key is set from what an overview costs.** It isn't fixed first and
 then priced. OV-92 measures an overview on the model we choose, and Plus gets as many as
-about $2.50 a month buys. On a cheap model that may be 100. On a frontier model it may be
-50.
+about $2.50 a month buys. OV-92 chose GPT-6.1 Sol, at a mean of $0.038 an overview over
+its 20 real videos (about $0.033 per 20 minutes of video), so about 65 a month
+(`model-comparison.md`).
 
 ## Price guidance
 
@@ -116,6 +117,47 @@ making a worse overview for the same cost.
 **Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
 an uncounted own key, OV-95's caps apply.
+
+## Which key an overview uses
+
+Decided on 15 Oct 2026. A reader with a key of their own has two keys behind each
+overview, and the order is set by what each plan sells:
+
+| | First | Then |
+|---|---|---|
+| Signed out, Free, BYO Plus | the reader's own key | ours |
+| **Plus** | **ours** | the reader's own key |
+| No key of their own | ours | — |
+
+**Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
+ours, and our allowance (10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
+first. **Plus is the other way round** because Plus is what a reader pays for overviews on
+our key. With their own key first, a Plus reader would rarely use what they paid for.
+
+**An overview moves to the next key when the first can't make it:**
+- that key's quota for the month is spent;
+- the provider is down, overloaded or rate-limiting (5xx, 429), or the reader's account
+  is out of credit. Providers report this differently, so the adapters classify it;
+- the model's answer still breaks the schema after its retry. Our key then pays for
+  another model's mistake, but this is rare except for the problem OV-119 is fixing, and a
+  failed overview is worse.
+
+**It never moves on a refused key (401, 403).** The reader sees the key problem (design
+110f) and fixes it. If it fell back quietly, a broken key would go unnoticed and spend our
+10 without the reader knowing why.
+
+**The reader sees which key made it.** An overview made by falling back says so in one
+quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
+goes down where the reader can see it. This follows "degrade visibly".
+
+**Falling back changes where the transcript goes.** A fallback to our key sends the
+transcript and the reader context through our server to OpenAI, whatever provider the
+reader chose. Settings says so beside the key, and a reader can switch the fallback off
+("Only ever use my key"). It is on by default.
+
+**Counting follows the key that made it.** Each attempt reserves a slot on its own
+counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot
+it reserved first is released.
 
 ## Counting
 
@@ -165,14 +207,16 @@ ways around it. Nothing they already have stops working.
 - **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 10 a
   month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
   on-device library stays readable, and moves into the account on sign-in (OV-47).
-- **Free, after 10 on our key this month:** *You've made this month's 10. More on
-  1 November.* Plus makes more, or use your own key.
-- **Free, after 30 on your own key this month:** the same, with BYO Plus's 200 a
-  month as the upgrade.
-- **BYO Plus, after 10 on our key:** the own key carries on, and Plus is the upgrade.
+- **Free with no key, after 10 on our key this month:** *You've made this month's 10. More
+  on 1 November.* Plus makes more, or add your own key.
+- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** our 10
+  carry on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
+  Free, and Plus's allowance on our key from BYO Plus.
+- **Free or BYO Plus, after our 10 have gone on fallbacks:** the own key carries on, with
+  no fallback behind it until the month turns.
 - **Plus, after its allowance on our key:** the own key carries on.
-- **Either paid plan, after 200 on the own key:** *More on 1 November.* There is no
-  upgrade to offer, and the message doesn't pretend there is.
+- **Plus, after both:** *More on 1 November.* There is no upgrade to offer, and the
+  message doesn't pretend there is.
 - Reading, listening, sync, sharing and the MCP connection keep working at every limit.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
@@ -182,8 +226,6 @@ ways around it. Nothing they already have stops working.
 ## Not decided here
 
 - **The prices of Plus and BYO Plus,** and whether either has a trial: OV-18.
-- **Which model generates on our key,** and so what an overview costs us: OV-92. If
-  the cost turns out different, the numbers change. The shape doesn't.
 - **Shared analysis across readers:** OV-19. If one objective analysis per video is cached,
   a popular video gets cheaper. The quotas still count overviews made, not tokens spent,
   because a reader can't see or predict tokens.
