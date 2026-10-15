@@ -7,19 +7,32 @@ import type { BlindChoice } from "../BlindPick.js";
 import { comparisonPaths, loadComparison } from "../comparisonPaths.js";
 import { judgmentStore, pickStore } from "../judgmentStore.js";
 import { BASELINE_MODEL } from "../judgePair.js";
-import { blindPick, nextBlindPair } from "../nextBlindPair.js";
+import { blindPairSet, blindPick, isInSet, nextBlindPair } from "../nextBlindPair.js";
 import { escapeHtml, noteHtml } from "../noteHtml.js";
 import { judgingPairs, type JudgingPair } from "../runJudging.js";
 
-const { values } = parseArgs({ options: { run: { type: "string" }, port: { type: "string", default: "4792" } } });
+const { values } = parseArgs({
+  options: {
+    run: { type: "string" },
+    port: { type: "string", default: "4792" },
+    candidates: { type: "string" },
+    limit: { type: "string" },
+  },
+});
 if (!values.run) {
-  console.error("usage: npm run blind --workspace packages/model-comparison -- --run <name> [--port <port>]");
+  console.error(
+    "usage: npm run blind --workspace packages/model-comparison -- --run <name> " +
+      "[--candidates provider:model,...] [--limit <pairs>] [--port <port>]",
+  );
   process.exit(1);
 }
 const runName = values.run;
 
 const { runs, byVideo } = await loadComparison(runName);
-const pairs = judgingPairs(runs, byVideo, BASELINE_MODEL);
+const pairs = blindPairSet(judgingPairs(runs, byVideo, BASELINE_MODEL), {
+  candidates: values.candidates?.split(",").map((name) => name.trim()),
+  limit: values.limit === undefined ? undefined : Number(values.limit),
+});
 const picks = pickStore(comparisonPaths.picks(runName));
 const judgments = judgmentStore(comparisonPaths.judgments(runName));
 const shown = new Map<string, { pair: JudgingPair; candidateWasA: boolean }>();
@@ -36,7 +49,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && request.url === "/api/next") {
       const picked = await picks.all();
       const pair = nextBlindPair(pairs, picked, await judgments.all());
-      const counts = { picked: picked.length, total: pairs.length };
+      const counts = { picked: picked.filter((pick) => isInSet(pairs, pick)).length, total: pairs.length };
       if (pair === null) return send(response, 200, "application/json", JSON.stringify({ done: true, ...counts }));
 
       const token = randomUUID();

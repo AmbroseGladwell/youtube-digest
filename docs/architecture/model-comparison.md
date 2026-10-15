@@ -138,10 +138,16 @@ Pairs the judge has already decided are offered first, because a pick is only us
 for calibration when there is a judgment to compare it with. Each pick is saved as it is
 made, so the page can be closed at any time and picks up where it left off.
 
+**Pick only what decides something.** `--candidates` and `--limit` narrow the page to a
+fixed set: the same pairs every time it is started with the same flags, chosen by a hash
+rather than a shuffle, with progress counted within the set. The decision rests on Sol
+against Opus, so that is the set worth picking: ten of its nineteen pairs, about fifteen
+minutes. Three Gemini 3.8 Flash pairs are an optional second set, a check on the judge's
+strongest claim, that Gemini imports facts from outside the transcript.
+
 The report then shows, per candidate, your win rate for it and how often you agreed with
-the judge on the same pairs. A few dozen picks across candidates is enough to tell whether
-the judge's taste is yours. If it isn't, the judge's numbers should not decide the
-recommendation.
+the judge on the same pairs. If you mostly agree on Sol's ten, the recommendation stands.
+If you don't, the judge's numbers should not decide it.
 
 ## The transcript set
 
@@ -183,8 +189,9 @@ task secrets:run -- npm run judge --workspace packages/model-comparison -- \
 task secrets:run -- npm run judge --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 6
 
-# the blind check, then open http://127.0.0.1:4792/
-npm run blind --workspace packages/model-comparison -- --run 2026-10-12
+# the blind check: the ten pairs that decide it, then open http://127.0.0.1:4792/
+npm run blind --workspace packages/model-comparison -- --run 2026-10-12 \
+  --candidates openai:gpt-6.1-sol --limit 10
 ```
 
 `--candidates provider:model,...` limits judging to some candidates.
@@ -308,5 +315,5 @@ video** on Sol, measured. The 2 hour 22 minute hearing cost $0.11. Opus, at abou
 falls to about $0.08 if OV-119 removes its retries, which would still leave it at more
 than twice Sol's cost.
 
-This becomes a decision once a few dozen blind picks agree with the judge. If they
+This becomes a decision once your blind picks on ten Sol pairs agree with the judge. If they
 don't, these win rates should not decide it.

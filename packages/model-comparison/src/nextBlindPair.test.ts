@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { VideoId } from "@overview/domain";
-import { blindPick, nextBlindPair } from "./nextBlindPair.js";
+import { blindPairSet, blindPick, isInSet, nextBlindPair } from "./nextBlindPair.js";
 import type { JudgingPair } from "./runJudging.js";
 import type { JudgeRecord } from "./JudgeRecord.js";
 import { makeFetchedTranscript } from "./FetchedTranscriptFactory.testHelper.js";
@@ -36,4 +36,25 @@ test("a choice of A or B becomes the candidate's win or loss by the side it was 
   assert.equal(blindPick(pair, false, "A", "now").result, "loss");
   assert.equal(blindPick(pair, false, "B", "now").result, "win");
   assert.equal(blindPick(pair, true, "tie", "now").result, "tie");
+});
+
+test("a blind set keeps to the named candidates, is capped, and is the same set every time", () => {
+  const many = ["a", "b", "c", "d", "e", "f"].flatMap((video) => [pairOf(video, "openai:gpt-6.1-sol"), pairOf(video, "openai:gpt-6-luna")]);
+
+  const set = blindPairSet(many, { candidates: ["openai:gpt-6.1-sol"], limit: 4 });
+
+  assert.equal(set.length, 4);
+  assert.ok(set.every((pair) => pair.candidate.name === "openai:gpt-6.1-sol"));
+  assert.deepEqual(
+    blindPairSet([...many].reverse(), { candidates: ["openai:gpt-6.1-sol"], limit: 4 }).map((pair) => pair.fetched.video.id),
+    set.map((pair) => pair.fetched.video.id),
+  );
+  assert.equal(blindPairSet(many, {}).length, many.length);
+});
+
+test("only picks within the set count towards its progress", () => {
+  const set = [pairOf("a", "openai:gpt-6.1-sol")];
+
+  assert.equal(isInSet(set, blindPick(set[0]!, true, "A", "now")), true);
+  assert.equal(isInSet(set, blindPick(pairOf("a", "openai:gpt-6-luna"), true, "A", "now")), false);
 });

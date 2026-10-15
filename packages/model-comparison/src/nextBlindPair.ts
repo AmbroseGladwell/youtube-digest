@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { BlindChoice, BlindPick } from "./BlindPick.js";
 import type { JudgeRecord } from "./JudgeRecord.js";
 import { pairKey, type JudgingPair } from "./runJudging.js";
@@ -33,3 +34,22 @@ export function blindPick(pair: JudgingPair, candidateWasA: boolean, choice: Bli
     pickedAt,
   };
 }
+
+export interface BlindSetOptions {
+  candidates?: readonly string[] | undefined;
+  limit?: number | undefined;
+}
+
+// A hash, not a shuffle, so the same flags offer the same pairs every time the page is
+// started, and picks made in one sitting count towards the set in the next.
+export function blindPairSet(pairs: readonly JudgingPair[], { candidates, limit }: BlindSetOptions): JudgingPair[] {
+  const rank = (pair: JudgingPair) =>
+    createHash("sha256").update(pairKey(videoIdOf(pair), pair.candidate.name)).digest("hex");
+  return pairs
+    .filter((pair) => candidates === undefined || candidates.includes(pair.candidate.name))
+    .sort((left, right) => rank(left).localeCompare(rank(right)))
+    .slice(0, limit ?? pairs.length);
+}
+
+export const isInSet = (set: readonly JudgingPair[], pick: BlindPick): boolean =>
+  set.some((pair) => videoIdOf(pair) === pick.videoId && pair.candidate.name === pick.candidate);
