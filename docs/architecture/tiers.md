@@ -4,8 +4,9 @@ Decided on 6 Oct 2026 (OV-78). Four tiers, arranged to push readers towards payi
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
-tier, and why. The numbers are provisional until OV-92 prices an overview and OV-19 decides
-how much of one is personal. The shape is not provisional.
+tier, and why. The numbers are provisional until OV-19 decides how much of an overview is personal. OV-92
+priced one: about $0.033 per 20 minutes of video on GPT-6.1 Sol, the model it recommends for
+our key (`model-comparison.md`). The shape is not provisional.
 
 ## The decision underneath: generation goes through our server
 

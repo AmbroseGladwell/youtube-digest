@@ -6,10 +6,9 @@ the method, how to run it, and (once the full run has been done) the results and
 recommendation: the best quality, the best value, and the cheapest model that is still
 acceptable.
 
-**Status:** the harness, the automatic checks, the judge and the blind check are built
-(`packages/model-comparison`). The first full run and its judging are recorded under
-Results. Still to come: the blind picks that calibrate the judge, and the cost-lever
-variants.
+**Status:** decided 15 Oct 2026. **Generation on our key should use GPT-6.1 Sol** (see
+Recommendation). The harness, checks, judge and blind check (`packages/model-comparison`)
+stay for reruns when models or prices change.
 
 ## What is compared, and how fairly
 
@@ -302,18 +301,51 @@ errored on a network failure and was retried.
   else's from Sol. Gemini 3.1 Pro is not lenient towards OpenAI in general, since it gave
   Luna 6%. The blind picks are what settle whether the two judges, and your taste, agree.
 
-### Recommendation, pending the blind picks
+### Blind picks, 15 Oct 2026
+
+Ten Sol-against-Opus pairs, the fixed set from `--candidates openai:gpt-6.1-sol --limit 10`,
+plus two Gemini pairs picked earlier.
+
+| | Sol's record against Opus (W–T–L) | Sol's win rate |
+|---|---|---|
+| **The reader, blind** | 6–1–3 | **65%** |
+| The judge, on the same ten pairs | 5–0–5 | 50% |
+
+- **The reader prefers Sol more strongly than the judge does.** On Sol's ten pairs, the
+  reader's blind preference for Sol over Opus is clearer than anything the judge showed.
+- **Pair by pair, the reader agreed with the judge on 4 of 10.** On close pairs the
+  judge's taste is not the reader's, so its calls should not be read one pair at a time,
+  nor used to split two models it rates as close.
+- **On big gaps it held:** both Gemini picks agreed with the judge. Its Gemini results,
+  1 win in 19 or worse for every Gemini model, are far outside what a judge that is merely
+  noisy on close pairs would produce.
+
+## Recommendation
+
+Decided 15 Oct 2026, on the run and judging above and the reader's blind picks.
 
 | | Model | Why |
 |---|---|---|
-| **Best quality** | Claude Opus 5.5 and GPT-6.1 Sol, level | Sol is level with Opus on the judge, and nothing else comes close |
-| **Best value** | **GPT-6.1 Sol** | Opus's quality at a quarter of the cost, valid first time on every video, and the shortest output |
-| **Cheapest acceptable** | GPT-6.1 Sol | nothing cheaper is acceptable: Sonnet costs twice as much for a 40% win rate, and every cheaper model loses at least four pairs in five |
+| **Best quality** | **GPT-6.1 Sol** | preferred over Opus blind, 6–1–3, and level with it on the judge. Nothing else came close to Opus on the judge |
+| **Best value** | **GPT-6.1 Sol** | at a quarter of Opus's cost, valid first time on all 20 videos, and the shortest output of any model |
+| **Cheapest acceptable** | **GPT-6.1 Sol** | nothing cheaper is acceptable: Sonnet costs twice as much for a 40% win rate, and every cheaper model loses at least four pairs in five |
 
-**For OV-102 and OV-19:** an overview on our key costs about **$0.033 per 20 minutes of
-video** on Sol, measured. The 2 hour 22 minute hearing cost $0.11. Opus, at about $0.13 per 20 minutes,
-falls to about $0.08 if OV-119 removes its retries, which would still leave it at more
-than twice Sol's cost.
+**Generation on our key should use GPT-6.1 Sol.** On this set it costs about **$0.033 per
+20 minutes of video**, measured, and the 2 hour 22 minute hearing cost $0.11. For
+OV-102's Plus allowance of about $2.50 a month on our key, that is roughly 75
+twenty-minute overviews. Plan for more than one call's cost per overview anyway: GPT-6.1
+Sol never needed the retry here, but rate limits and network failures on a busy queue will
+still mean some repeated calls.
 
-This becomes a decision once your blind picks on ten Sol pairs agree with the judge. If they
-don't, these win rates should not decide it.
+**What this does not decide:**
+
+- **The reader's own key.** A reader who brings an Anthropic key still starts on Opus
+  (`DEFAULT_MODEL`). Opus is only narrowly worse: blind, the reader preferred Sol 6 to 3 with one tie,
+  which is not a large margin over ten videos. Changing what own-key readers start on is a
+  product call, not something this result forces.
+- **Gemini for readers who choose it.** Gemini readers get thinner notes, and facts
+  imported from outside the transcript. That is a prompt problem worth its own card
+  before it is a reason to remove Gemini.
+- **Prices move.** Prices were checked on 12 Oct 2026. Rerun the comparison under a new
+  run name whenever a provider releases a model or reprices one. The harness, the
+  transcripts and the judge are all reusable, and a full run with judging cost $12.64.
