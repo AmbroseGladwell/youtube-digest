@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { VideoId } from "@overview/domain";
-import { runComparison, type RunStore } from "./runComparison.js";
+import { runComparison } from "./runComparison.js";
+import type { RecordStore } from "./jsonRecordStore.js";
 import type { RunOneOptions } from "./runOne.js";
 import type { RunRecord } from "./RunRecord.js";
 import { makeFetchedTranscript } from "./FetchedTranscriptFactory.testHelper.js";
@@ -11,7 +12,7 @@ const opus = { provider: "anthropic" as const, model: "claude-opus-5-5" };
 const luna = { provider: "openai" as const, model: "gpt-6-luna" };
 const videos = ["a", "b", "c"].map((id) => makeFetchedTranscript(10, { id: VideoId.parse(id) }));
 
-function memoryStore(previous: RunRecord[] = []): RunStore & { saved: RunRecord[] } {
+function memoryStore(previous: RunRecord[] = []): RecordStore<RunRecord> & { saved: RunRecord[] } {
   const saved: RunRecord[] = [];
   return { saved, all: async () => previous, save: async (record) => void saved.push(record) };
 }
