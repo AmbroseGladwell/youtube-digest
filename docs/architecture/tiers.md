@@ -1,6 +1,7 @@
 # Tiers: what signed-out, free and paying readers can do
 
-Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026. Four tiers, arranged to push readers towards paying:
+Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
+allowances on our key and the launch prices on 18 Oct 2026. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
@@ -30,7 +31,8 @@ rather than replacing it.
 
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
-| Overviews on our key | 5, in total | 10 a month | 10 a month | About 65 a month: $2.50 of cost on GPT-6.1 Sol (OV-92) |
+| Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
+| Overviews on our key | 5, in total | 5 a month | 10 a month | 50 a month |
 | Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
@@ -69,15 +71,47 @@ advance, so the cost follows what readers listen to rather than what they make. 
 narration renders per account per day stops one account rendering a whole library in every
 voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
-**Plus's allowance on our key is set from what an overview costs.** It isn't fixed first and
-then priced. OV-92 measures an overview on the model we choose, and Plus gets as many as
-about $2.50 a month buys. OV-92 chose GPT-6.1 Sol, at a mean of $0.038 an overview over
-its 20 real videos (about $0.033 per 20 minutes of video), so about 65 a month
-(`model-comparison.md`).
+**The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
+chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
+per 20 minutes of video, `model-comparison.md`). At that price:
+
+| | On our key | Generation if every one is used |
+|---|---|---|
+| Free | 5 a month, down from 10 | $0.19 |
+| BYO Plus | 10 a month | $0.38 |
+| Plus | 50 a month | $1.90 |
+
+**Free went from 10 to 5** because the allowance barely changes what a typical free reader
+costs, about 4 overviews a month, but it halves what the heaviest free readers can cost. In
+the tier economics model, at 1,000 accounts with 5% on Plus, that cut the worst case by
+about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
 
 ## Price guidance
 
-The prices are OV-18's to set. This is the reasoning OV-78 hands it.
+**Launch prices, set 18 Oct 2026, and expected to change: BYO Plus at £4.99 a month and
+Plus at £7.99.** OV-18 builds the billing. The reasoning OV-78 handed it is below, and the
+prices land above it: the margin it called thin is not thin at these prices.
+
+**What they take home, per subscriber a month,** after Stripe's UK fees (1.5% + 20p, and
+0.7% for Billing):
+
+| | Price | Take-home | With 20% VAT inside the price | Cost if every allowance is used |
+|---|---|---|---|---|
+| BYO Plus | £4.99 | £4.68 | £3.85 | about £0.70 |
+| Plus | £7.99 | £7.61 | £6.28 | about £1.95 |
+
+Costs are billed in dollars and converted at $1.33 to the pound (September 2026).
+**VAT applies once registered,** which is required above £90,000 of turnover a year. Until
+then the whole price, less fees, is take-home.
+
+**Where it breaks even.** In the tier economics model, at 1,000 accounts with 2% on BYO
+Plus and typical use, the tiers break even at about 1.2% of accounts on Plus, or 1.8% once
+VAT applies. With 5% on Plus they make about £260 a month (£176 with VAT). Even if every
+account used every overview it is allowed, 5% on Plus still covers the costs. These figures
+rest on assumed usage and estimated server costs, so they get rechecked once PostHog shows
+real use.
+
+The guidance OV-78 gave, which the launch prices were set against:
 
 - **The going rate is about $10 a month.** Recall Plus is $10, NoteGPT Pro $9 to $9.99, and
   Eightify $9.99 or $59.99 a year (searched 6 Oct 2026). Each covers more than YouTube, or
@@ -130,7 +164,7 @@ overview, and the order is set by what each plan sells:
 | No key of their own | ours | — |
 
 **Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
-ours, and our allowance (10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
+ours, and our allowance (5 or 10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
 first. **Plus is the other way round** because Plus is what a reader pays for overviews on
 our key. With their own key first, a Plus reader would rarely use what they paid for.
 
@@ -204,15 +238,15 @@ it reserved first is released.
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 10 a
+- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 5 a
   month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
   on-device library stays readable, and moves into the account on sign-in (OV-47).
-- **Free with no key, after 10 on our key this month:** *You've made this month's 10. More
+- **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
-- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** our 10
-  carry on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
+- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** the
+  allowance on our key (5 or 10) carries on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
   Free, and Plus's allowance on our key from BYO Plus.
-- **Free or BYO Plus, after our 10 have gone on fallbacks:** the own key carries on, with
+- **Free or BYO Plus, after the allowance on our key has gone on fallbacks:** the own key carries on, with
   no fallback behind it until the month turns.
 - **Plus, after its allowance on our key:** the own key carries on.
 - **Plus, after both:** *More on 1 November.* There is no upgrade to offer, and the
