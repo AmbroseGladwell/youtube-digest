@@ -92,24 +92,35 @@ about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
 Plus at £7.99.** OV-18 builds the billing. The reasoning OV-78 handed it is below, and the
 prices land above it: the margin it called thin is not thin at these prices.
 
-**What they take home, per subscriber a month,** after Stripe's UK fees (1.5% + 20p, and
-0.7% for Billing):
+**Payments go through Paddle** (decided 18 Oct 2026), to keep tax hands-off. Paddle is the
+seller of record: it charges the right VAT or sales tax in every country, files every
+return, and takes 5% + 50¢ a transaction. The cost of that is that VAT comes out of **every**
+sale, UK ones included, even below the £90,000 a year at which we would otherwise have to
+register. The price the reader sees is the final price, tax included, and it doesn't change
+if we cross that threshold.
 
-| | Price | Take-home | With 20% VAT inside the price | Cost if every allowance is used |
+**What a subscriber brings in a month,** against what they cost if every allowance is used:
+
+| | Price | Through Paddle | Stripe, not registered | Cost at the cap |
 |---|---|---|---|---|
-| BYO Plus | £4.99 | £4.68 | £3.85 | about £0.70 |
-| Plus | £7.99 | £7.61 | £6.28 | about £1.95 |
+| BYO Plus | £4.99 | **£3.53** | £4.68 | about £0.70 |
+| Plus | £7.99 | **£5.88** | £7.61 | about £1.95 |
 
-Costs are billed in dollars and converted at $1.33 to the pound (September 2026).
-**VAT applies once registered,** which is required above £90,000 of turnover a year. Until
-then the whole price, less fees, is take-home.
+Costs are billed in dollars and converted at $1.33 to the pound (September 2026). **Paddle
+asks for bespoke pricing on orders under $10,** and BYO Plus at £4.99 is about $6.60, so its
+fee needs confirming with Paddle before launch, or an annual plan avoids the question.
 
-**Where it breaks even.** In the tier economics model, at 1,000 accounts with 2% on BYO
-Plus and typical use, the tiers break even at about 1.2% of accounts on Plus, or 1.8% once
-VAT applies. With 5% on Plus they make about £260 a month (£176 with VAT). Even if every
-account used every overview it is allowed, 5% on Plus still covers the costs. These figures
-rest on assumed usage and estimated server costs, so they get rechecked once PostHog shows
-real use.
+**Where it breaks even, through Paddle.** In the tier economics model, at 1,000 accounts with
+typical use:
+- With 5% on Plus and 2% on BYO Plus, the tiers make about £150 a month. Each Plus
+  subscriber covers about 28 free accounts and each BYO Plus about 19, and a free account
+  costs about £0.17 a month, its share of the servers included.
+- They break even at about **2% on Plus** with 2% on BYO Plus, or 2.8% with 1% on BYO Plus.
+- If every account used every overview it is allowed, break-even rises to about 5 to 6% on
+  Plus.
+
+These figures rest on assumed usage and estimated server costs, so they get rechecked once
+PostHog shows real use.
 
 The guidance OV-78 gave, which the launch prices were set against:
 
