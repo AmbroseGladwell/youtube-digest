@@ -92,32 +92,42 @@ about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
 Plus at £7.99.** OV-18 builds the billing. The reasoning OV-78 handed it is below, and the
 prices land above it: the margin it called thin is not thin at these prices.
 
-**Payments go through Paddle** (decided 18 Oct 2026), to keep tax hands-off. Paddle is the
-seller of record: it charges the right VAT or sales tax in every country, files every
-return, and takes 5% + 50¢ a transaction. The cost of that is that VAT comes out of **every**
-sale, UK ones included, even below the £90,000 a year at which we would otherwise have to
-register. The price the reader sees is the final price, tax included, and it doesn't change
-if we cross that threshold.
+**Payments go through Stripe Managed Payments, with Paddle as the fallback** (decided
+19 Oct 2026), to keep tax hands-off. Either one is the seller of record: it charges the right
+VAT or sales tax in every country and files every return. Stripe Managed Payments takes 3.5%
+a transaction on top of Stripe's usual 1.5% + 20p and 0.7% for Billing; Paddle takes 5% + 50¢.
+The cost of either is that VAT comes out of **every** sale, UK ones included, even below the
+£90,000 a year at which we would otherwise have to register. The price the reader sees is the
+final price, tax included, and it doesn't change if we cross that threshold.
+
+Stripe Managed Payments wins on three counts. It keeps a little more of each sale. It has no
+minimum order, where Paddle asks for bespoke pricing on orders under $10, and BYO Plus at
+£4.99 is about $6.60. And the subscriptions already live in Stripe if we ever register for
+VAT ourselves and drop the seller of record, so nothing has to migrate. Its catch is that
+Stripe reviews the business before approving it, so OV-18 applies early and falls back to
+Paddle if refused. Lemon Squeezy was ruled out because Stripe bought it and is moving its
+customers onto Stripe Managed Payments; Creem and Dodo are smaller and save pennies at most.
 
 **What a subscriber brings in a month,** against what they cost if every allowance is used:
 
-| | Price | Through Paddle | Stripe, not registered | Cost at the cap |
-|---|---|---|---|---|
-| BYO Plus | £4.99 | **£3.53** | £4.68 | about £0.70 |
-| Plus | £7.99 | **£5.88** | £7.61 | about £1.95 |
+| | Price | Stripe Managed Payments | Paddle | Stripe, not registered | Cost at the cap |
+|---|---|---|---|---|---|
+| BYO Plus | £4.99 | **£3.67** | £3.53 | £4.68 | about £0.70 |
+| Plus | £7.99 | **£6.00** | £5.88 | £7.61 | about £1.95 |
 
-Costs are billed in dollars and converted at $1.33 to the pound (September 2026). **Paddle
-asks for bespoke pricing on orders under $10,** and BYO Plus at £4.99 is about $6.60, so its
-fee needs confirming with Paddle before launch, or an annual plan avoids the question.
+Costs are billed in dollars and converted at $1.33 to the pound (September 2026). These fees
+come from the providers' published rates, and get confirmed on their own pricing pages when
+OV-18 signs up.
 
-**Where it breaks even, through Paddle.** In the tier economics model, at 1,000 accounts with
-typical use:
-- With 5% on Plus and 2% on BYO Plus, the tiers make about £150 a month. Each Plus
-  subscriber covers about 28 free accounts and each BYO Plus about 19, and a free account
+**Where it breaks even, through Stripe Managed Payments.** In the tier economics model, at
+1,000 accounts with typical use:
+- With 5% on Plus and 2% on BYO Plus, the tiers make about £160 a month. Each Plus
+  subscriber covers nearly 30 free accounts and each BYO Plus about 20, and a free account
   costs about £0.17 a month, its share of the servers included.
-- They break even at about **2% on Plus** with 2% on BYO Plus, or 2.8% with 1% on BYO Plus.
+- They break even at about **2% on Plus** with 2% on BYO Plus, or 2.7% with 1% on BYO Plus.
 - If every account used every overview it is allowed, break-even rises to about 5 to 6% on
   Plus.
+- Through Paddle, every one of these moves by less than a tenth of a percentage point.
 
 These figures rest on assumed usage and estimated server costs, so they get rechecked once
 PostHog shows real use.
