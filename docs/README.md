@@ -17,6 +17,11 @@ Five folders, five different questions.
   every feature free and volume paid for, the table of limits, what an own-key overview
   costs us, price guidance, how the trial is counted, and
   what the reader sees at the limit.
+- `model-comparison.md` — OV-92's experiment on which model writes the best overview for
+  the least: production's own prompt, schema and retry run on twenty of the reader's videos
+  per model, with tokens, latency and cost measured from the providers' own usage reports,
+  the four run outcomes, the automatic checks and what each catches, the transcript set,
+  the budget, how to run it, and the results.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told
