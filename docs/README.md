@@ -23,6 +23,11 @@ Five folders, five different questions.
   the four run outcomes, the automatic checks and what each catches, the pairwise judge
   that never reads its own provider's notes, the blind A/B check that calibrates it, the transcript set,
   the budget, how to run it, and the results.
+- `cost-model.md` — OV-19's decision on what personalisation costs: one shared note per
+  video seeded by its first reader, then a personal pass per reader written from that note
+  without the transcript. It covers the measured cost per reader, how the personal pass
+  judged against today's single pass, what that didn't show, the rules a build has to keep,
+  and how to run it again.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told

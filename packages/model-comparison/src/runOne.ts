@@ -13,12 +13,14 @@ import type { FetchedTranscript } from "@overview/transcripts";
 import type { ComparedModel } from "./ComparedModel.js";
 import { meteredFetch, type MeteredCall } from "./meteredFetch.js";
 import { costInDollars, priceOf } from "./modelPrices.js";
+import type { ReaderProfile } from "./ReaderProfile.js";
 import type { RunOutcome, RunRecord } from "./RunRecord.js";
 
 export interface RunOneOptions {
   model: ComparedModel;
   apiKey: string;
   fetched: FetchedTranscript;
+  profile?: ReaderProfile;
   http?: typeof fetch;
   now?: () => number;
 }
@@ -52,6 +54,7 @@ export async function runOne({
   model,
   apiKey,
   fetched,
+  profile,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
 }: RunOneOptions): Promise<RunRecord> {
@@ -70,7 +73,7 @@ export async function runOne({
   let error: string | null = null;
   let overview: RunRecord["overview"] = null;
   try {
-    overview = await generateOverview(client, comparisonInput(fetched), {
+    overview = await generateOverview(client, { ...comparisonInput(fetched), ...profile }, {
       id: OverviewId.parse(randomUUID()),
       savedAt: startedAt,
     });

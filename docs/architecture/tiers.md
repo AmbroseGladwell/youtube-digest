@@ -5,7 +5,8 @@ allowances on our key and the launch prices on 18 Oct 2026. Four tiers, arranged
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
-tier, and why. The numbers are provisional until OV-19 decides how much of an overview is personal. OV-92
+tier, and why. OV-19 decided how much of an overview is personal (`cost-model.md`), which
+lowers what a shared video costs but not the allowances. OV-92
 chose the model for our key, GPT-6.1 Sol, and priced an overview on it: about $0.033 per 20
 minutes of video (`model-comparison.md`). The shape is not provisional.
 
@@ -302,9 +303,10 @@ outgrows what subscribers bring in.
 ## Not decided here
 
 - **The prices of Plus and BYO Plus,** and whether either has a trial: OV-18.
-- **Shared analysis across readers:** OV-19. If one objective analysis per video is cached,
-  a popular video gets cheaper. The quotas still count overviews made, not tokens spent,
-  because a reader can't see or predict tokens.
+- **Shared analysis across readers:** decided by OV-19 (`cost-model.md`), not built. A
+  video's first reader pays today's $0.038 on Sol, and each later reader about $0.005. The
+  quotas still count overviews made, not tokens spent, because a reader can't see or
+  predict tokens.
 - **The numbers against real use.** Before billing ships, check overviews per reader per
   week in PostHog (`analytics.md`). The prototype's one heavy reader made about 30 in a
   week, about 120 a month: more than either Free quota and inside 200 on the reader's own key.

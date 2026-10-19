@@ -26,6 +26,8 @@ Generating a personalised note costs roughly 30,000 tokens per video. Because no
 
 Dropping personalisation would allow a shared cached summary per video and change the economics entirely, at the cost of the thing that makes "Try this" worth reading. This is the central product tension and it is unresolved.
 
+**Decided on 19 Oct 2026 (OV-19): the hybrid, measured, in `docs/architecture/cost-model.md`.** A personal note cost about 8,400 prompt tokens on GPT-6.1 Sol, not 30,000, and a personal pass from a shared note cost an eighth of a single pass. What follows is the question as it was first put.
+
 Worth noting: a hybrid is possible and untested. The expensive part is understanding the video, which is not personal. The personal part is only the actions and the topic assignment. A cached objective analysis plus a cheap per-user personalisation pass might get most of the value at a fraction of the cost.
 
 ## 3. Video runtime
