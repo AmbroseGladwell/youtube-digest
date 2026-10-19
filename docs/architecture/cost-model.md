@@ -73,12 +73,18 @@ the personal parts differ. Wins are the personal pass's:
 
 - **From the note, it comes out level overall.** Filing is a little better, and how to apply a
   little worse.
-- **Its typical slip in how to apply is an invented protocol.** For the arms video it suggested
-  "a 6-week trial" and measuring the arms before and after. The video teaches a weekly split and
-  nothing like that. The single pass, writing while it reads the transcript, stayed with what the
-  video teaches. The build should tighten the how-to-apply instruction for the personal pass
-  ("only what the note says the video teaches"), and measure again.
-- **Giving it the transcript doesn't help.** It costs four times as much, and it does no better.
+- **Most of its how-to-apply losses are steps the video doesn't give.** The judge marked down
+  4 of the 20 from the note and 2 of the 20 with the transcript for that: a schedule, a
+  duration or a trial length fitted to the reader. For the arms video it suggested "a 6-week
+  trial" and measuring the arms before and after, where the video teaches a weekly split.
+- **That is allowed (decided 19 Oct 2026).** How to apply is the reader's way of acting on
+  what the video teaches, so a step the video doesn't spell out is fine as long as it
+  sensibly applies what the video teaches. The judge's rubric was stricter than the product,
+  so on the product's own standard the personal pass does better than 6 wins, 6 ties and
+  8 losses. Facts are different: a name, number or claim stated *about the video* still has to
+  come from the video (OV-120).
+- **Giving it the transcript doesn't help.** It costs four times as much, does no better, and
+  still adds steps the video doesn't give.
 
 ### What this doesn't show
 

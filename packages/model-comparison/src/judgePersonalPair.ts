@@ -50,10 +50,10 @@ and two sets of personal parts, A and B. Which came first means nothing.
 
 Judge each dimension on its own, then overall:
 
-- howToApply: one to three things this reader could actually do, specific and concrete, faithful
-  to what the note says the video teaches, and fitted to this reader where the video allows. An
-  empty list is right when nothing in the video is actionable. Invented specifics are worse
-  than generic advice.
+- howToApply: one to three things this reader could actually do, specific and concrete, and
+  fitted to this reader. A step, schedule or number the video doesn't give is fine when it
+  sensibly applies what the video teaches. A step that misrepresents or contradicts what the
+  video teaches is not. An empty list is right when nothing in the video is actionable.
 - filing: the matched topics are the reader's topics this video belongs under, and no others.
   A suggested new topic appears only when no existing one fits. Tags name what the video is about
   and reuse the reader's existing tags wherever one fits.
