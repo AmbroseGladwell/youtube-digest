@@ -20,7 +20,8 @@
     "compare": "npm run build && node dist/cli/compareModels.js",
     "report": "npm run build && node dist/cli/reportComparison.js",
     "judge": "npm run build && node dist/cli/judgeComparison.js",
-    "blind": "npm run build && node dist/cli/blindCheck.js"
+    "blind": "npm run build && node dist/cli/blindCheck.js",
+    "cost-model": "npm run build && node dist/cli/compareCostModel.js"
   },
   "dependencies": {
     "@overview/domain": "*",

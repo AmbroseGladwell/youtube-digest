@@ -12,6 +12,7 @@ export * from "./createGenerationClient.js";
 export * from "./listProviderModels.js";
 export * from "./GenerationError.js";
 export * from "./sections/filingSection.js";
+export * from "./sections/howToApplySection.js";
 export * from "./sections/watchAnywaySection.js";
 export * from "./sections/chaptersSection.js";
 export * from "./generateTags.js";

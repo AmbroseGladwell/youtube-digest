@@ -12,7 +12,7 @@ export type GenerationClient = (request: {
   schema: z.ZodObject<z.ZodRawShape>;
 }) => Promise<unknown>;
 
-function correctionRequest(previous: unknown, error: z.ZodError): string {
+export function correctionRequest(previous: unknown, error: z.ZodError): string {
   const violations = error.issues
     .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
     .join("; ");

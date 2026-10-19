@@ -5,7 +5,9 @@ are the same for every reader, so once two accounts have each fetched the same w
 nobody needs to fetch them again. A hit costs one row read, and nobody contacts YouTube. So a video's third reader onward benefits, and its first two never do.
 
 Only transcripts are shared. An overview is personal to the reader it was written for
-(`docs/architecture/architecture-options.md`), and nothing about one goes near this.
+(`docs/architecture/architecture-options.md`), and nothing about one goes near this. OV-19
+decided to share the non-personal part of an overview too (`docs/architecture/cost-model.md`),
+built only from transcripts this cache would accept. That isn't built.
 
 ## Who reads it, and who adds to it
 
