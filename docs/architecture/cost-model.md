@@ -96,7 +96,8 @@ the personal parts differ. Wins are the personal pass's:
   OV-92 had.
 - **A made-up reader.** The reader context is a one-line stand-in (`SAMPLE_READER_CONTEXT`),
   and the topics, tags and past claims come from the five notes in `samples/`. A real library
-  sends more past claims and tags, which both passes pay for.
+  sends more past claims and tags, which both passes pay for. No real reader sends a context
+  yet: nothing in the apps writes `readerContext`, and the pipeline passes `null` (OV-125).
 - **The saving depends on overlap,** meaning how often two readers save the same video, and
   nothing measures that yet. Count it before building (OV-124).
 
