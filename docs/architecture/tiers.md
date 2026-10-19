@@ -278,6 +278,27 @@ ways around it. Nothing they already have stops working.
   The same waiting state, with a different reason and resume time, is what the queue shows
   at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
 
+## Options for saving cost, not built
+
+Noted on 19 Oct 2026 and deliberately left out of the build. Revisit them if free use
+outgrows what subscribers bring in.
+
+- **A free-tier cap sized from income.** At the start of each month, set aside a share of
+  last month's subscription income after fees and VAT, say 30%, for free readers on our key.
+  Divide it by what one free overview costs us, about £0.03 (Sol plus narration and the
+  transcript fetch), and spread the result over the month as a daily cap for Free only.
+  - With 50 on Plus and 20 on BYO Plus, income is about £373 a month. 30% of that buys about
+    3,650 free overviews a month, or 120 a day. That's about what 1,000 accounts make with
+    typical use, so the cap would only bite in a spike of free sign-ups.
+  - Once it's spent, free overviews on our key wait until the next day and the app says so.
+    Own-key overviews and subscribers are unaffected.
+  - It needs a starting budget before there is any income, for example £20 a month.
+  - A BYO Plus reader's fallback to our key would not count against it.
+  - It turns "paid plans cover free ones" into a limit the server enforces, which the fixed
+    global daily cap in OV-102 does not.
+- **The generation cost levers:** batch APIs, caching, chapters in their own cheaper call,
+  and trimming long transcripts. OV-121 measures them.
+
 ## Not decided here
 
 - **The prices of Plus and BYO Plus,** and whether either has a trial: OV-18.
