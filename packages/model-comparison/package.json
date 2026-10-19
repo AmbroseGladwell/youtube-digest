@@ -18,7 +18,9 @@
     "test": "npm run build && node --test \"dist/**/*.test.js\"",
     "fetch-transcripts": "npm run build && node dist/cli/fetchTranscriptSet.js",
     "compare": "npm run build && node dist/cli/compareModels.js",
-    "report": "npm run build && node dist/cli/reportComparison.js"
+    "report": "npm run build && node dist/cli/reportComparison.js",
+    "judge": "npm run build && node dist/cli/judgeComparison.js",
+    "blind": "npm run build && node dist/cli/blindCheck.js"
   },
   "dependencies": {
     "@overview/domain": "*",

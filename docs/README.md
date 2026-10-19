@@ -20,7 +20,8 @@ Five folders, five different questions.
 - `model-comparison.md` — OV-92's experiment on which model writes the best overview for
   the least: production's own prompt, schema and retry run on twenty of the reader's videos
   per model, with tokens, latency and cost measured from the providers' own usage reports,
-  the four run outcomes, the automatic checks and what each catches, the transcript set,
+  the four run outcomes, the automatic checks and what each catches, the pairwise judge
+  that never reads its own provider's notes, the blind A/B check that calibrates it, the transcript set,
   the budget, how to run it, and the results.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
