@@ -1,11 +1,13 @@
 # Tiers: what signed-out, free and paying readers can do
 
-Decided on 6 Oct 2026 (OV-78). Four tiers, arranged to push readers towards paying:
+Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
+allowances on our key and the launch prices on 18 Oct 2026. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
-tier, and why. The numbers are provisional until OV-92 prices an overview and OV-19 decides
-how much of one is personal. The shape is not provisional.
+tier, and why. The numbers are provisional until OV-19 decides how much of an overview is personal. OV-92
+chose the model for our key, GPT-6.1 Sol, and priced an overview on it: about $0.033 per 20
+minutes of video (`model-comparison.md`). The shape is not provisional.
 
 ## The decision underneath: generation goes through our server
 
@@ -29,7 +31,8 @@ rather than replacing it.
 
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
-| Overviews on our key | 5, in total | 10 a month | 10 a month | About $2.50 of cost a month (OV-92 sets the number) |
+| Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
+| Overviews on our key | 5, in total | 5 a month | 10 a month | 50 a month |
 | Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
@@ -68,14 +71,68 @@ advance, so the cost follows what readers listen to rather than what they make. 
 narration renders per account per day stops one account rendering a whole library in every
 voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
-**Plus's allowance on our key is set from what an overview costs.** It isn't fixed first and
-then priced. OV-92 measures an overview on the model we choose, and Plus gets as many as
-about $2.50 a month buys. On a cheap model that may be 100. On a frontier model it may be
-50.
+**The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
+chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
+per 20 minutes of video, `model-comparison.md`). At that price:
+
+| | On our key | Generation if every one is used |
+|---|---|---|
+| Free | 5 a month, down from 10 | $0.19 |
+| BYO Plus | 10 a month | $0.38 |
+| Plus | 50 a month | $1.90 |
+
+**Free went from 10 to 5** because the allowance barely changes what a typical free reader
+costs, about 4 overviews a month, but it halves what the heaviest free readers can cost. In
+the tier economics model, at 1,000 accounts with 5% on Plus, that cut the worst case by
+about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
 
 ## Price guidance
 
-The prices are OV-18's to set. This is the reasoning OV-78 hands it.
+**Launch prices, set 18 Oct 2026, and expected to change: BYO Plus at £4.99 a month and
+Plus at £7.99.** OV-18 builds the billing. The reasoning OV-78 handed it is below, and the
+prices land above it: the margin it called thin is not thin at these prices.
+
+**Payments go through Stripe Managed Payments, with Paddle as the fallback** (decided
+19 Oct 2026), to keep tax hands-off. Either one is the seller of record: it charges the right
+VAT or sales tax in every country and files every return. Stripe Managed Payments takes 3.5%
+a transaction on top of Stripe's usual 1.5% + 20p and 0.7% for Billing; Paddle takes 5% + 50¢.
+The cost of either is that VAT comes out of **every** sale, UK ones included, even below the
+£90,000 a year at which we would otherwise have to register. The price the reader sees is the
+final price, tax included, and it doesn't change if we cross that threshold.
+
+Stripe Managed Payments wins on three counts. It keeps a little more of each sale. It has no
+minimum order, where Paddle asks for bespoke pricing on orders under $10, and BYO Plus at
+£4.99 is about $6.60. And the subscriptions already live in Stripe if we ever register for
+VAT ourselves and drop the seller of record, so nothing has to migrate. Its catch is that
+Stripe reviews the business before approving it, so OV-18 applies early and falls back to
+Paddle if refused. Lemon Squeezy was ruled out because Stripe bought it and is moving its
+customers onto Stripe Managed Payments; Creem and Dodo are smaller and save pennies at most.
+
+**What a subscriber brings in a month,** against what they cost if every allowance is used:
+
+| | Price | Stripe Managed Payments | Paddle | Stripe, not registered | Cost at the cap |
+|---|---|---|---|---|---|
+| BYO Plus | £4.99 | **£3.67** | £3.53 | £4.68 | about £0.70 |
+| Plus | £7.99 | **£6.00** | £5.88 | £7.61 | about £1.95 |
+
+Costs are billed in dollars and converted at $1.33 to the pound (September 2026). These fees
+come from the providers' published rates, and get confirmed on their own pricing pages when
+OV-18 signs up.
+
+**Where it breaks even, through Stripe Managed Payments.** In the tier economics model, at
+1,000 accounts with typical use:
+- With 5% on Plus and 2% on BYO Plus, the tiers make about £160 a month. Each Plus
+  subscriber covers nearly 30 free accounts and each BYO Plus about 20, and a free account
+  costs about £0.17 a month, its share of the servers included.
+- They break even at about **2% on Plus** with 2% on BYO Plus, or 2.7% with 1% on BYO Plus.
+- If every account used every overview it is allowed, break-even rises to about 5 to 6% on
+  Plus.
+- Through Paddle, every one of these moves by less than a tenth of a percentage point.
+
+These figures rest on assumed usage and estimated server costs, so they get rechecked once
+PostHog shows real use.
+
+The guidance OV-78 gave, which the launch prices were set against:
 
 - **The going rate is about $10 a month.** Recall Plus is $10, NoteGPT Pro $9 to $9.99, and
   Eightify $9.99 or $59.99 a year (searched 6 Oct 2026). Each covers more than YouTube, or
@@ -115,6 +172,47 @@ making a worse overview for the same cost.
 **Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
 an uncounted own key, OV-95's caps apply.
+
+## Which key an overview uses
+
+Decided on 15 Oct 2026. A reader with a key of their own has two keys behind each
+overview, and the order is set by what each plan sells:
+
+| | First | Then |
+|---|---|---|
+| Signed out, Free, BYO Plus | the reader's own key | ours |
+| **Plus** | **ours** | the reader's own key |
+| No key of their own | ours | — |
+
+**Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
+ours, and our allowance (5 or 10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
+first. **Plus is the other way round** because Plus is what a reader pays for overviews on
+our key. With their own key first, a Plus reader would rarely use what they paid for.
+
+**An overview moves to the next key when the first can't make it:**
+- that key's quota for the month is spent;
+- the provider is down, overloaded or rate-limiting (5xx, 429), or the reader's account
+  is out of credit. Providers report this differently, so the adapters classify it;
+- the model's answer still breaks the schema after its retry. Our key then pays for
+  another model's mistake, but this is rare except for the problem OV-119 is fixing, and a
+  failed overview is worse.
+
+**It never moves on a refused key (401, 403).** The reader sees the key problem (design
+110f) and fixes it. If it fell back quietly, a broken key would go unnoticed and spend our
+10 without the reader knowing why.
+
+**The reader sees which key made it.** An overview made by falling back says so in one
+quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
+goes down where the reader can see it. This follows "degrade visibly".
+
+**Falling back changes where the transcript goes.** A fallback to our key sends the
+transcript and the reader context through our server to OpenAI, whatever provider the
+reader chose. Settings says so beside the key, and a reader can switch the fallback off
+("Only ever use my key"). It is on by default.
+
+**Counting follows the key that made it.** Each attempt reserves a slot on its own
+counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot
+it reserved first is released.
 
 ## Counting
 
@@ -161,28 +259,49 @@ an uncounted own key, OV-95's caps apply.
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 10 a
+- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 5 a
   month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
   on-device library stays readable, and moves into the account on sign-in (OV-47).
-- **Free, after 10 on our key this month:** *You've made this month's 10. More on
-  1 November.* Plus makes more, or use your own key.
-- **Free, after 30 on your own key this month:** the same, with BYO Plus's 200 a
-  month as the upgrade.
-- **BYO Plus, after 10 on our key:** the own key carries on, and Plus is the upgrade.
+- **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
+  on 1 November.* Plus makes more, or add your own key.
+- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** the
+  allowance on our key (5 or 10) carries on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
+  Free, and Plus's allowance on our key from BYO Plus.
+- **Free or BYO Plus, after the allowance on our key has gone on fallbacks:** the own key carries on, with
+  no fallback behind it until the month turns.
 - **Plus, after its allowance on our key:** the own key carries on.
-- **Either paid plan, after 200 on the own key:** *More on 1 November.* There is no
-  upgrade to offer, and the message doesn't pretend there is.
+- **Plus, after both:** *More on 1 November.* There is no upgrade to offer, and the
+  message doesn't pretend there is.
 - Reading, listening, sync, sharing and the MCP connection keep working at every limit.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
   The same waiting state, with a different reason and resume time, is what the queue shows
   at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
 
+## Options for saving cost, not built
+
+Noted on 19 Oct 2026 and deliberately left out of the build. Revisit them if free use
+outgrows what subscribers bring in.
+
+- **A free-tier cap sized from income.** At the start of each month, set aside a share of
+  last month's subscription income after fees and VAT, say 30%, for free readers on our key.
+  Divide it by what one free overview costs us, about £0.03 (Sol plus narration and the
+  transcript fetch), and spread the result over the month as a daily cap for Free only.
+  - With 50 on Plus and 20 on BYO Plus, income is about £373 a month. 30% of that buys about
+    3,650 free overviews a month, or 120 a day. That's about what 1,000 accounts make with
+    typical use, so the cap would only bite in a spike of free sign-ups.
+  - Once it's spent, free overviews on our key wait until the next day and the app says so.
+    Own-key overviews and subscribers are unaffected.
+  - It needs a starting budget before there is any income, for example £20 a month.
+  - A BYO Plus reader's fallback to our key would not count against it.
+  - It turns "paid plans cover free ones" into a limit the server enforces, which the fixed
+    global daily cap in OV-102 does not.
+- **The generation cost levers:** batch APIs, caching, chapters in their own cheaper call,
+  and trimming long transcripts. OV-121 measures them.
+
 ## Not decided here
 
 - **The prices of Plus and BYO Plus,** and whether either has a trial: OV-18.
-- **Which model generates on our key,** and so what an overview costs us: OV-92. If
-  the cost turns out different, the numbers change. The shape doesn't.
 - **Shared analysis across readers:** OV-19. If one objective analysis per video is cached,
   a popular video gets cheaper. The quotas still count overviews made, not tokens spent,
   because a reader can't see or predict tokens.
