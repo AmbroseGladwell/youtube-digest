@@ -61,7 +61,7 @@
 
 .head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   min-width: 0;
 }
@@ -86,13 +86,17 @@
 }
 
 .title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .titleGone {
