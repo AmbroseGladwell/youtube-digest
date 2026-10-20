@@ -1,5 +1,5 @@
 import type { Overview, Provider } from "@overview/domain";
-import type { MeteredCall } from "./meteredFetch.js";
+import type { MeteredCall } from "@overview/generation";
 
 // "failed" is the model's doing and is part of the result; "errored" is the provider or
 // the network, and a later run tries it again.

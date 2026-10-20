@@ -17,7 +17,8 @@ and schema and the same single corrective retry, and through the same provider a
 the app uses (`packages/generation/src/providers`). The harness changes nothing in them.
 It wraps two things from outside:
 
-- **the `fetch` the adapter is given** (`meteredFetch.ts`), which times each call to the
+- **the `fetch` the adapter is given** (`meteredFetch.ts`, in `packages/generation` since
+  the server meters generation on our key the same way), which times each call to the
   end of its body and reads the token usage the provider itself reports;
 - **the client `generateOverview` calls** (`runOne.ts`), which keeps every raw attempt.
   One attempt means it was valid the first time, two mean the retry was needed. The last
@@ -29,7 +30,7 @@ reader. Leaving it out keeps the comparison about the model.
 
 ### Models
 
-The default set (`modelPrices.ts`) is eight models from the three providers whose keys
+The default set (every model priced in `modelPrices.ts`) is eight models from the three providers whose keys
 the experiment has: Anthropic's Opus, Sonnet and Haiku 5.5; OpenAI's GPT-6.1 Sol and
 GPT-6 Luna; and Google's Gemini 3.1 Pro Preview, 3.8 Flash and 3.6 Flash. `--models`
 takes any `provider:model` the app has an adapter for. A model without a price in the table
@@ -41,7 +42,8 @@ is the one compared.
 
 ### Prices
 
-`modelPrices.ts`, per million tokens, checked on 12 Oct 2026 against each provider's
+`packages/generation/src/modelPrices.ts`, shared with the server's cost log for our key,
+per million tokens, checked on 12 Oct 2026 against each provider's
 pricing page, which is named beside each entry. Cached input, cache writes and long-prompt
 tiers are priced separately: Haiku 5.5 costs more above 100,000 prompt tokens, and Gemini
 3.1 Pro above 200,000. **Gemini's Flash prices double on 1 Jan 2027.** The table holds the

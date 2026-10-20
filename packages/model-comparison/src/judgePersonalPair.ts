@@ -1,11 +1,10 @@
 import { z } from "zod";
 import type { Overview, Provider } from "@overview/domain";
-import { createGenerationClient } from "@overview/generation";
+import { createGenerationClient, meteredFetch, type MeteredCall } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { comparedModelName, parseComparedModel } from "./ComparedModel.js";
 import { candidateGoesFirst } from "./judgePair.js";
 import { noteForJudging } from "./judgeRubric.js";
-import { meteredFetch, type MeteredCall } from "./meteredFetch.js";
 import { sharedPartOf } from "./personalisePrompt.js";
 import type { ReaderProfile } from "./ReaderProfile.js";
 import { isTheModelsDoing, measuredCost } from "./runOne.js";

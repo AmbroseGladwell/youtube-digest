@@ -1,5 +1,4 @@
-import type { ComparedModel } from "./ComparedModel.js";
-import { comparedModelName } from "./ComparedModel.js";
+import type { Provider } from "@overview/domain";
 import { promptTokensOf, type TokenUsage } from "./TokenUsage.js";
 
 export interface TokenPrices {
@@ -66,9 +65,8 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
   },
 };
 
-export const DEFAULT_COMPARED_MODELS: readonly string[] = Object.keys(MODEL_PRICES);
-
-export const priceOf = (model: ComparedModel): ModelPrice | undefined => MODEL_PRICES[comparedModelName(model)];
+export const priceOf = ({ provider, model }: { provider: Provider; model: string }): ModelPrice | undefined =>
+  MODEL_PRICES[`${provider}:${model}`];
 
 export function costInDollars(price: ModelPrice, usage: TokenUsage): number {
   const { perMillion } =

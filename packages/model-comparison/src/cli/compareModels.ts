@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { parseComparedModel } from "../ComparedModel.js";
 import { comparisonPaths, loadTranscripts, providerKeysFromEnv } from "../comparisonPaths.js";
-import { DEFAULT_COMPARED_MODELS } from "../modelPrices.js";
+import { DEFAULT_COMPARED_MODELS } from "../defaultComparedModels.js";
 import { runComparison } from "../runComparison.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";

@@ -2,7 +2,7 @@ import type { Provider } from "@overview/domain";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { comparedModelName, type ComparedModel } from "./ComparedModel.js";
 import type { RecordStore } from "./jsonRecordStore.js";
-import { priceOf } from "./modelPrices.js";
+import { priceOf } from "@overview/generation";
 import type { RunOneOptions } from "./runOne.js";
 import type { RunRecord } from "./RunRecord.js";
 import { spendWithinBudget, totalSpent } from "./spendWithinBudget.js";
