@@ -2,18 +2,27 @@ import { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import { enabledSections } from "./sectionRegistry.js";
 
+const VIDEO_TAG = /<(\/?)(video|title|channel|description|transcript)\b/gi;
+
+function asVideoContent(text: string): string {
+  return text.replace(VIDEO_TAG, "‹$1$2");
+}
+
 function contextBlock(input: GenerationInput): string {
   const transcript = input.transcript
-    .map((segment, i) => `[${i}] ${segment.text}`)
+    .map((segment, i) => `[${i}] ${asVideoContent(segment.text)}`)
     .join("\n");
   return `
-Title: ${input.video.title}
-Channel: ${input.video.channel}
-Description: ${input.video.description ?? "unavailable"}
-Why they saved it: ${input.captureReason ?? "not said"}
+<video>
+<title>${asVideoContent(input.video.title)}</title>
+<channel>${asVideoContent(input.video.channel)}</channel>
+<description>${input.video.description === null ? "unavailable" : asVideoContent(input.video.description)}</description>
+<transcript>
+${transcript}
+</transcript>
+</video>
 
-Transcript, as numbered segments:
-${transcript}`;
+Why they saved it: ${input.captureReason ?? "not said"}`;
 }
 
 export interface ComposedPrompt {
