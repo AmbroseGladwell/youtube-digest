@@ -1,6 +1,14 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, DEFAULT_OVERVIEW_STATE, Filing, OverviewId, OverviewState, TopicId } from "@overview/domain";
+import {
+  apiLogLines,
+  DEFAULT_OVERVIEW_STATE,
+  Filing,
+  FIRST_RESERVING_CLIENT_VERSION,
+  OverviewId,
+  OverviewState,
+  TopicId,
+} from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
 import { ifMatchOf, sendWritten, UpdatedAt } from "../http/writeHeaders.js";
@@ -9,6 +17,7 @@ import { decideReplace } from "../records/decideReplace.js";
 import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
+import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
@@ -23,12 +32,26 @@ export function overviewRoutes(
   app: FastifyInstance,
   records: RecordsRepository,
   transcripts: TranscriptsRepository,
+  reservations: OverviewReservationsRepository,
 ): void {
+  // A new overview is let in only with a reservation, a generation on our key, or a saved
+  // share behind it, so a skipped reservation buys an overview that never leaves the device.
+  // A replace is a regeneration, counted when it was reserved, and takes its slot here too
+  // so it can't be given back afterwards (docs/architecture/tiers.md, "Counting").
   app.post("/overviews", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The overview");
     const id = parseOrThrow(OverviewId, body.id, "The overview's id");
     const ifMatch = ifMatchOf(request);
-    const [written] = await records.write(request.session!.accountId, [
+    const accountId = request.session!.accountId;
+    const claimed = await reservations.claim(accountId, id);
+    if (!claimed && ifMatch === null && request.client!.version >= FIRST_RESERVING_CLIENT_VERSION) {
+      const current = await records.read(accountId, "overview", id);
+      if (current === null || current.deleted) {
+        request.log.warn(apiLogLines.reservations.pushRefused());
+        throw new ApiError("not_reserved", "A new overview needs a reservation before it is pushed");
+      }
+    }
+    const [written] = await records.write(accountId, [
       {
         kind: "overview",
         id,

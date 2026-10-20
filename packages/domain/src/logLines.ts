@@ -137,6 +137,13 @@ export const apiLogLines = coded("api", {
     dailyCapSpent: line("warn", "our key daily cap spent", "The global daily cap on our key refused a generation for every plan."),
     keyRefused: line("error", "our key refused", "The provider refused our own key. Every generation on our key fails until it is fixed."),
   },
+  reservations: {
+    reserved: line("info", "own-key overview reserved", "A device reserved a slot on the reader's own key before generating: plan, the month's count and limit."),
+    released: line("info", "own-key reservation released", "A generation on the reader's own key failed, and its slot was given back."),
+    quotaSpent: line("info", "own key quota spent", "An account asked to reserve an overview on its own key with none left this month."),
+    shareSaved: line("info", "shared overview saved", "A reader saved a shared overview into their library. It is not counted."),
+    pushRefused: line("warn", "new overview pushed without a reservation", "A reserving client pushed a new overview the server has no reservation or our-key generation for."),
+  },
   shares: {
     created: line("info", "share created", "A reader made a share link. Never the token or anything from the note."),
     revoked: line("info", "share revoked", "A reader withdrew a share link."),

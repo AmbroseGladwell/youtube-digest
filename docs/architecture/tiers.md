@@ -238,7 +238,8 @@ it reserved first is released.
 - **An own-key overview on an account reserves its slot from the server too,** before the
   device generates. The device can skip asking. A sync push of a new overview with no
   reservation is refused, so a skipped reservation buys an overview that never leaves the
-  device. That is the signed-out experience, which is free anyway.
+  device. That is the signed-out experience, which is free anyway. See "Reserving on the
+  reader's own key" below.
 - **Months are UTC calendar months.** The reset date shown to the reader is the first of
   the next month.
 - **Accounts count against the account,** read beside `accounts.plan` the way the MCP
@@ -255,8 +256,14 @@ it reserved first is released.
   day (stored as a truncated hash, like the transcript quota) stops one machine minting
   tokens without limit.
 - **Signing in doesn't carry a trial's count over.** The free account starts its own
-  month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. A no-account library moved in on sign-in
-  (OV-47) is not counted against the month: those overviews already exist.
+  month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. **A no-account library moved in on sign-in
+  (OV-47) counts against the month,** on the key that made each overview (decided 20 Oct
+  2026, reversing the first rule that moved overviews were free). Otherwise a reader at
+  their cap could sign out, make the trial's 3, sign back in and repeat, clearing site data
+  to reset the device's count each time. A signed-out library now holds at most 3, so a new
+  reader is never short. A reader already at the cap keeps the moved overviews on the device,
+  readable, and they sync when the month resets. The server can't tell a moved overview from
+  a new one, so there is no "this was moved" for a modified client to claim.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
   key says so plainly and points to adding a key. It doesn't fail with a generic error.
@@ -289,6 +296,35 @@ on any failure. The device saves the overview it is handed, as it does one made 
   It is ours to fix, so the reader never sees it as their key problem.
 - **Measured, not estimated:** each overview logs the tokens OpenAI reported and their cost
   from `modelPrices.ts`, the same table and metering (`meteredFetch`) the model comparison used.
+
+## Reserving on the reader's own key
+
+`POST /api/overview-reservations` with `{ overviewId }` (OV-102) takes a slot on the
+account's own-key month before the device generates, and answers with the month's counts
+(`OverviewReservationsRepository`, `overview_reservations`). Asking again for an overview
+whose slot is still held is the same reservation, so a retry never counts twice; asking once
+it has been pushed is a regeneration, and counts again. `DELETE
+/api/overview-reservations/<overviewId>` gives the slot back when the generation fails.
+
+- **Past the month's quota:** `429 too_many_requests` with `details.quota: "own"`,
+  `details.resetsOn` and a `Retry-After` at the month's turn.
+- **A new overview is let in by one of three things:** an own-key reservation, a generation
+  on our key under its id (`POST /api/generations` records it), or a saved share. Anything
+  else pushed as new is `428 not_reserved`, logged as `new overview pushed without a
+  reservation`. A replace (a regeneration) isn't refused, since its slot was reserved when it
+  was made.
+- **A slot is spent once its overview is pushed,** new or replaced, and can't be given back
+  after that, so reserving, pushing and releasing buys nothing.
+- **A fallback counts once, on ours.** An overview made on our key gives back an own-key slot
+  still held for the same id.
+- **Saving a shared overview isn't counted.** The device sends the share's token with the
+  overview's id. The server lets it in only while the link is live and the share is of that
+  overview, which a saved copy is: it keeps the shared overview's id. Each share is let in
+  once per account.
+- **The gate holds from client version 7** (`FIRST_RESERVING_CLIENT_VERSION`). An older
+  client's new overview is let in unreserved, so shipping this doesn't strand anyone's
+  writes. Raising `MIN_SUPPORTED_CLIENT_VERSION` to 7 once reserving clients are out closes
+  it for everyone, because the write floor then refuses the older ones.
 
 ## At the limit
 

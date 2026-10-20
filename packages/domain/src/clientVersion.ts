@@ -3,6 +3,11 @@
 // not on every release (docs/architecture/api.md).
 export const CLIENT_VERSION = 6;
 
+// The first client that reserves an overview before pushing it as new. The server refuses an
+// unreserved new overview only from clients at or past it, so the gate holds for everyone
+// once the write floor reaches it (docs/architecture/tiers.md, "Counting").
+export const FIRST_RESERVING_CLIENT_VERSION = 7;
+
 export const CLIENT_VERSION_HEADER = "x-client-version";
 
 // Which shell sent a request, an AuthSurface, so the server's logs can tell the web app's

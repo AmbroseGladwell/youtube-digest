@@ -13,6 +13,7 @@ import {
 import type { AccountId } from "../auth/AccountId.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
+import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js";
 import { ourKeyModel } from "./ourKeyModel.js";
@@ -21,6 +22,7 @@ export interface OurKeyGeneratorOptions {
   apiKey: string;
   dailyGenerations: number;
   usage: OverviewUsageRepository;
+  reservations: OverviewReservationsRepository;
   http: typeof fetch;
   clock: () => Date;
 }
@@ -75,7 +77,7 @@ export class OurKeyGenerator {
     { overviewId, input }: OurKeyGenerationRequest,
     log: FastifyBaseLogger,
   ): Promise<Overview> {
-    const { apiKey, dailyGenerations, usage, http, clock } = this.#options;
+    const { apiKey, dailyGenerations, usage, reservations, http, clock } = this.#options;
     const now = clock();
     const day = usageDay(now);
     if (!(await usage.reserveOurKeyDay(now, dailyGenerations))) {
@@ -104,6 +106,7 @@ export class OurKeyGenerator {
         }),
         { input: 0, output: 0 },
       );
+      await reservations.madeOnOurKey(now, accountId, overviewId);
       const price = priceOf(ourKeyModel);
       const costDollars =
         price === undefined

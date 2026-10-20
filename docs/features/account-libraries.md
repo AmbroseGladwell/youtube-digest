@@ -154,6 +154,11 @@ no-account library holding something. So an overview that arrived before an inte
 counts as the account's, and only leaves here; none is ever in neither library, and none is
 pushed twice.
 
+**A moved overview counts against the account's month,** on the key that made it, and
+reserves its slot like a new one before it is pushed (OV-102, `tiers.md`, "Counting"). With
+the month spent it stays in the account's library on this device, readable, and syncs once
+the month resets.
+
 **State is copied only where it differs from the default.** The server refuses a patch that
 changes nothing (`sync-api.md`), and a refused write would sit parked forever.
 
