@@ -11,6 +11,7 @@ export * from "./adapterFor.js";
 export * from "./createGenerationClient.js";
 export * from "./listProviderModels.js";
 export * from "./GenerationError.js";
+export * from "./fallbackReasonOf.js";
 export * from "./TokenUsage.js";
 export * from "./meteredFetch.js";
 export * from "./modelPrices.js";
