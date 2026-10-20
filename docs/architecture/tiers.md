@@ -270,6 +270,26 @@ it reserved first is released.
   counts the trial, the safety cap is the only gate signed out
   (`server-side-transcripts.md`, "Limits").
 
+## Generating on our key
+
+`POST /api/generations` (OV-102) takes the input a device would give its own model, with the
+transcript it already resolved, and makes the overview through production's own
+`generateOverview` on GPT-6.1 Sol (`OurKeyGenerator`). It reserves the day's slot under
+`OUR_KEY_DAILY_GENERATIONS`, then the account's month's slot on our key, and gives both back
+on any failure. The device saves the overview it is handed, as it does one made on its own key.
+
+- **Past the month's quota:** `429 too_many_requests` with `details.quota: "ours"`,
+  `details.resetsOn` and a `Retry-After` at the month's turn.
+- **Past the global daily cap:** `429` with `details.quota: "our-key-daily"` and a `Retry-After`
+  at UTC midnight. A fallback has nowhere to go and says so.
+- **A failed generation:** `502 generation_failed` with `details.fallback`, from
+  `fallbackReasonOf`: `out-of-credit`, `provider-down` or `schema-failure` may move to the
+  reader's own key, and null may not.
+- **Our own key refused by OpenAI:** `503 unavailable`, logged at error as `our key refused`.
+  It is ours to fix, so the reader never sees it as their key problem.
+- **Measured, not estimated:** each overview logs the tokens OpenAI reported and their cost
+  from `modelPrices.ts`, the same table and metering (`meteredFetch`) the model comparison used.
+
 ## At the limit
 
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the

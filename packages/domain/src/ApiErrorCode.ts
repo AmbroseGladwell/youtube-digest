@@ -13,6 +13,7 @@ export const API_ERROR_CODES = {
   playlist_not_found: 404,
   too_many_requests: 429,
   internal_error: 500,
+  generation_failed: 502,
   unavailable: 503,
 } as const;
 

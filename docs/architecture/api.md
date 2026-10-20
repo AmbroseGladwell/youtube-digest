@@ -253,9 +253,10 @@ sends:
 | `playlist_private` | 422 | the playlist asked for is private on YouTube, so it can't be read (`docs/features/playlists.md`) |
 | `playlist_not_found` | 404 | there is no playlist with that id, or it was deleted |
 | `transcript_unavailable` | 422 | our own server could not fetch a video's transcript; `details.failure` names the `TranscriptFetchFailure`, `budget-exhausted` included (`docs/architecture/server-side-transcripts.md`) |
-| `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many |
+| `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many; or a monthly overview quota or our key's global daily cap is spent, and `details.quota` says which (`tiers.md`) |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
-| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off; a playlist asked of a server with no YouTube key |
+| `generation_failed` | 502 | an overview on our key couldn't be made; `details.fallback` says whether it may move to the reader's own key (`tiers.md`, "Generating on our key") |
+| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off; a playlist asked of a server with no YouTube key; an overview on our key asked of a server with no key, or whose key OpenAI refused |
 
 **426 was considered for the floor and rejected.** RFC 9110 reserves it for a protocol
 upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated,
@@ -401,6 +402,8 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
 | `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
+| `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev`; not yet in `overview-prod` |
+| `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |

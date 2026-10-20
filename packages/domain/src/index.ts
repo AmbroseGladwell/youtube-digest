@@ -4,6 +4,7 @@ export * from "./ModelByProvider.js";
 export * from "./Plan.js";
 export * from "./KeySource.js";
 export * from "./OverviewUsage.js";
+export * from "./OurKeyGenerationRequest.js";
 export * from "./Brands.js";
 export * from "./RecordMigration.js";
 export * from "./RecordMigrationError.js";

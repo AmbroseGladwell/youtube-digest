@@ -13,6 +13,7 @@ import { createLogger } from "./logs/createLogger.js";
 import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
 import { createTranscriptServiceSetup } from "./transcripts/createTranscriptServiceSetup.js";
+import { ourKeyModel } from "./generation/ourKeyModel.js";
 import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
 import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylistReader.js";
 
@@ -61,6 +62,7 @@ const app = await buildApp({
   mailer: createMailer(config.mail),
   audio,
   transcriptService,
+  ourKey: config.ourKey === null ? null : { ...config.ourKey, http: globalThis.fetch.bind(globalThis) },
   playlistReader:
     config.youTubeApiKey === null
       ? null
@@ -88,6 +90,11 @@ app.log.info(apiLogLines.startup.transcriptService(
           proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
           proxyDailyFetches: config.transcriptService.proxyDailyFetches,
         },
+  ));
+app.log.info(apiLogLines.startup.ourKey(
+    config.ourKey === null
+      ? { enabled: false, why: "OPENAI_API_KEY is not set" }
+      : { enabled: true, model: ourKeyModel.model, dailyGenerations: config.ourKey.dailyGenerations },
   ));
 app.log.info(apiLogLines.startup.playlists(
     config.youTubeApiKey === null ? { enabled: false, why: "YOUTUBE_API_KEY is not set" } : { enabled: true, source: "YouTube Data API" },

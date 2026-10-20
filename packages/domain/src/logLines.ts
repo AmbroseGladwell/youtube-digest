@@ -65,6 +65,7 @@ export const apiLogLines = coded("api", {
     magicLinks: line("info", "magic links", "The mail transport sign-in links go through, and the app URL they open."),
     narration: line("info", "narration", "The TTS service and audio store in use, or why narration is unavailable."),
     transcriptService: line("info", "transcript service", "Whether the server fetches transcripts itself, and through which proxy."),
+    ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
     analytics: line("info", "analytics", "Where events and errors are passed on to, or that they are only logged."),
     webApp: line("info", "web app", "Whether this process serves the web app as well as the API."),
@@ -128,6 +129,13 @@ export const apiLogLines = coded("api", {
     overviewsSpent: line("warn", "service transcript refused for spent overviews", "An account asked with no overview left this month on either key."),
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
     answeredFromCache: line("info", "service transcript answered from the shared cache", "No fetch was needed; the cache already had it."),
+  },
+  ourKey: {
+    generated: line("info", "overview made on our key", "An overview made on our key: plan, model, tokens, cost in dollars, the month's count and how long it took."),
+    failed: line("warn", "overview on our key failed", "A generation on our key failed and its slots were given back; `reason` says why, `fallback` whether it may move to the next key."),
+    quotaSpent: line("info", "our key quota spent", "An account asked for an overview on our key with none left this month."),
+    dailyCapSpent: line("warn", "our key daily cap spent", "The global daily cap on our key refused a generation for every plan."),
+    keyRefused: line("error", "our key refused", "The provider refused our own key. Every generation on our key fails until it is fixed."),
   },
   shares: {
     created: line("info", "share created", "A reader made a share link. Never the token or anything from the note."),

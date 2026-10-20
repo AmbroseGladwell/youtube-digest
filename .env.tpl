@@ -27,3 +27,8 @@ R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
 # The YouTube Data API key followed playlists are read with; without it playlists cannot be followed
 # (docs/features/playlists.md, "Looking a playlist up").
 YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+
+# Overviews made on our key, through our server, with GPT-6.1 Sol; unset, the server makes none
+# (docs/architecture/tiers.md). OUR_KEY_DAILY_GENERATIONS is the global daily cap behind every plan.
+OPENAI_API_KEY=${OPENAI_API_KEY}
+OUR_KEY_DAILY_GENERATIONS=300

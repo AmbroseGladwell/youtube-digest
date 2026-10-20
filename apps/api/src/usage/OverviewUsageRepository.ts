@@ -2,6 +2,7 @@ import type { KeySource, OverviewUsage, Plan } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { overviewQuotas } from "./overviewQuotas.js";
+import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { nextUsageMonth, usageMonth } from "./usageMonth.js";
 
 // The month is the one the slot was taken in, so a generation that started before midnight
@@ -56,6 +57,29 @@ export class OverviewUsageRepository {
       ours: { used: used("ours"), limit: overviewQuotas[plan].ours },
       own: { used: used("own"), limit: overviewQuotas[plan].own },
     };
+  }
+
+  // The global cap behind every plan, counted per UTC day: one slot per generation on our
+  // key, given back when it fails, like the proxy's budget.
+  async reserveOurKeyDay(now: Date, limit: number): Promise<boolean> {
+    if (limit < 1) return false;
+    const rows = await this.#sql.query(
+      `insert into our_key_usage (day, generations) values ($1::date, 1)
+       on conflict (day) do update set generations = our_key_usage.generations + 1
+       where our_key_usage.generations < $2
+       returning generations`,
+      [usageDay(now), limit],
+    );
+    return rows.length > 0;
+  }
+
+  async releaseOurKeyDay(day: string): Promise<void> {
+    await this.#sql.query("update our_key_usage set generations = greatest(generations - 1, 0) where day = $1::date", [day]);
+  }
+
+  async ourKeyGenerationsOn(day: string): Promise<number> {
+    const [row] = await this.#sql.query<{ generations: number }>("select generations from our_key_usage where day = $1::date", [day]);
+    return row?.generations ?? 0;
   }
 
   async #usedIn(month: string, accountId: AccountId, keySource: KeySource): Promise<number> {
