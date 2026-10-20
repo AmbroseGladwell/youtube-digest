@@ -125,6 +125,7 @@ export const apiLogLines = coded("api", {
     failed: line("warn", "service transcript failed", "That fetch failed; `failure` names the kind."),
     refused: line("warn", "service transcript refused", "YouTube answered with captions that could not be read."),
     quotaSpent: line("warn", "service transcript quota spent", "A caller hit the daily safety cap on server-side fetches."),
+    overviewsSpent: line("warn", "service transcript refused for spent overviews", "An account asked with no overview left this month on either key."),
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
     answeredFromCache: line("info", "service transcript answered from the shared cache", "No fetch was needed; the cache already had it."),
   },

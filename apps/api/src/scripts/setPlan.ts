@@ -9,7 +9,7 @@ import { ConfigError, loadConfig } from "../loadConfig.js";
 const [email, plan] = process.argv.slice(2);
 const parsedPlan = Plan.safeParse(plan);
 if (!email || !parsedPlan.success) {
-  console.error("usage: npm run set-plan -- <email> <free|plus>");
+  console.error("usage: npm run set-plan -- <email> <free|byo-plus|plus>");
   process.exit(1);
 }
 

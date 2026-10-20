@@ -1,7 +1,8 @@
 # Tiers: what signed-out, free and paying readers can do
 
 Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
-allowances on our key and the launch prices on 18 Oct 2026. Four tiers, arranged to push readers towards paying:
+allowances on our key and the launch prices on 18 Oct 2026. Free's own-key quota went from 30 to
+10 a month on 20 Oct 2026. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
@@ -34,7 +35,7 @@ rather than replacing it.
 |---|---|---|---|---|
 | Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
 | Overviews on our key | 5, in total | 5 a month | 10 a month | 50 a month |
-| Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
+| Overviews on your own key | Unlimited, on this device | 10 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
 | Library | This device only | Synced to every device | Synced | Synced |
@@ -86,6 +87,12 @@ per 20 minutes of video, `model-comparison.md`). At that price:
 costs, about 4 overviews a month, but it halves what the heaviest free readers can cost. In
 the tier economics model, at 1,000 accounts with 5% on Plus, that cut the worst case by
 about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
+
+**Free's own-key quota went from 30 to 10 a month on 20 Oct 2026,** so a free account makes
+15 a month in all rather than 35. The reason is the upgrade, not the cost: an own-key
+overview costs us half a cent at worst, but 35 a month covered a regular reader with room
+to spare, and nothing pushed them towards a paid plan. At 15, a reader who uses it every few
+days meets the limit, and BYO Plus's 200 is the obvious next step.
 
 ## Price guidance
 
@@ -252,7 +259,8 @@ it reserved first is released.
   see the overview count. Behind that sits a daily safety cap per caller, 5 per signed-out
   address, 50 per free account, 100 per Plus or BYO Plus account, which protects our
   address's standing with YouTube rather than our money and logs a warning when reached.
-  Until OV-102 and OV-103 count overviews, the safety cap is the only gate
+  OV-102 checks it for accounts (`OverviewUsageRepository`, `overview_usage`); until OV-103
+  counts the trial, the safety cap is the only gate signed out
   (`server-side-transcripts.md`, "Limits").
 
 ## At the limit
@@ -265,7 +273,7 @@ ways around it. Nothing they already have stops working.
   on-device library stays readable, and moves into the account on sign-in (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
-- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** the
+- **Free or BYO Plus with a key, after the month's own-key quota (10 or 200):** the
   allowance on our key (5 or 10) carries on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
   Free, and Plus's allowance on our key from BYO Plus.
 - **Free or BYO Plus, after the allowance on our key has gone on fallbacks:** the own key carries on, with
@@ -309,10 +317,10 @@ outgrows what subscribers bring in.
   predict tokens.
 - **The numbers against real use.** Before billing ships, check overviews per reader per
   week in PostHog (`analytics.md`). The prototype's one heavy reader made about 30 in a
-  week, about 120 a month: more than either Free quota and inside 200 on the reader's own key.
+  week, about 120 a month: well past Free's 15 in all, and inside 200 on the reader's own key.
 
 ## Grandfathering
 
 There is nothing to grandfather yet, because nobody pays. Accounts that exist today have
-uncounted own-key use, and it becomes counted at 30 a month on Free when the counting ships.
+uncounted own-key use, and it becomes counted at 10 a month on Free when the counting ships.
 Whether they get notice first is decided then.

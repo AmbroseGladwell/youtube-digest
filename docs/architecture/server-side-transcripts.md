@@ -102,8 +102,11 @@ forgives a caller, but a reset budget would spend real money twice.
 **Transcripts from our server are part of an overview, not a quota of their own** (decided
 6 Oct 2026, OV-107). A fetch is allowed while the reader has an overview left: on either key
 this month for an account (`tiers.md`), or in the trial when signed out. Readers only ever
-see the overview count. That check lands with OV-102 (accounts) and OV-103 (the trial);
-until then the safety cap below is the only gate.
+see the overview count. For an account the check is made before anything else: with no
+overview left on either key this month the answer is `429 too_many_requests` with
+`details.quota: "overviews"`, `details.resetsOn` and a `Retry-After` at the month's turn, and
+the server logs `service transcript refused for spent overviews` (OV-102). The trial's check
+lands with OV-103; until then the safety cap below is the only gate for a signed-out reader.
 
 **A daily safety cap per caller.** It protects our address's standing with YouTube, not our
 money, and sits well above normal use. Only a cold fetch that stored a transcript counts: a
@@ -117,9 +120,9 @@ started it holds a slot.
 |---|---|
 | Signed out, per address | 5 |
 | A free account | 50 |
-| A Plus account | 100 |
+| A BYO Plus or Plus account | 100 |
 
-`byo-plus: 100` joins when OV-102 adds the plan. Signed-out readers can use the rung
+Signed-out readers can use the rung
 (decided 5 Oct 2026), because a web reader with no account is exactly who has no other
 rung; signed out, our server fetches only for the trial's overviews. Their address is stored
 only as a truncated SHA-256, and per-caller rows are deleted after seven days. Past the cap,

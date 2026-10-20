@@ -11,17 +11,17 @@ So there are two paid plans, and both are a number of overviews a month:
 
 | | Overviews on our key | Overviews on your own key |
 |---|---|---|
-| Free account | 10 a month | 30 a month |
+| Free account | 5 a month | 10 a month |
 | BYO Plus | 10 a month | 200 a month |
-| Plus | as many as about $2.50 of cost buys (OV-92 sets it) | 200 a month |
+| Plus | 50 a month | 200 a month |
 
-**No plan ever says "unlimited"**, and every number is shown with its reset date. Plus's
-own-key number is the one figure the app cannot print yet, because OV-92 has not measured
-what an overview costs; the panel says "more a month on our key" until it has.
+**No plan ever says "unlimited"**, and every number is shown with its reset date. The
+figures were set on 18 Oct 2026 from what OV-92 measured an overview to cost, and Free's own-key
+quota was cut from 30 to 10 on 20 Oct 2026 to make the upgrade worth having (`tiers.md`).
 
 `PLAN_CARDS` and `EVERY_ACCOUNT_INCLUDES` in `planCards.ts` are that table, written once,
-and the panel and the IWFT scenarios both read them. Plus's figure on our key is `null`
-there rather than a guess, and renders as "More a month" until OV-92 fills it in.
+and the panel and the IWFT scenarios both read them. The server counts against its own copy,
+`overviewQuotas` in the API (OV-102), so a change to one is a change to both.
 
 Design turn 16 asked where a free user should be told any of this. It offers three places
 and says they are not exclusive — 16c should exist regardless, and one of 16a/16b is the
@@ -29,7 +29,7 @@ active prompt. The panel is small enough that they never appear at once.
 
 ## The plan is the account's, and nothing is gated on it
 
-`Settings` grew `plan: "free" | "plus"` long before accounts existed, and `Settings.plan` is
+`Settings` grew a `plan` long before accounts existed, and `Settings.plan` is
 no longer read: a plan is a fact about an account, and a locally-writable one would be a lie
 whichever way it was written.
 

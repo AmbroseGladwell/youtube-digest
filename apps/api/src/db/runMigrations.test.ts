@@ -63,6 +63,7 @@ test("the tables the migrations create are there to be used", async () => {
       "magic_links",
       "oauth_authorizations",
       "oauth_clients",
+      "overview_usage",
       "records",
       "schema_migrations",
       "service_transcript_usage",

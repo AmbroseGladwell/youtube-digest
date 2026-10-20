@@ -39,6 +39,7 @@ import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { followedPlaylistRoutes } from "./routes/followedPlaylistRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
+import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
@@ -51,6 +52,7 @@ import { SharesRepository } from "./shares/SharesRepository.js";
 import type { ServiceFetches } from "./transcripts/fetchThroughService.js";
 import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
 import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
+import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
@@ -203,7 +205,10 @@ export async function buildApp({
       playlistRoutes(api, { reader: playlistReader, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
+      const overviewUsage = new OverviewUsageRepository(sql);
+      overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
       serviceTranscriptRoutes(api, {
+        usage: overviewUsage,
         service:
           transcriptService === null
             ? null
