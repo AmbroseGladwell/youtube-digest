@@ -402,7 +402,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
 | `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
-| `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev`; not yet in `overview-prod` |
+| `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`; the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
