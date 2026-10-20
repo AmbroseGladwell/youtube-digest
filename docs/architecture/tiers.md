@@ -2,7 +2,8 @@
 
 Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
 allowances on our key and the launch prices on 18 Oct 2026. Free's own-key quota went from 30 to
-10 a month on 20 Oct 2026. Four tiers, arranged to push readers towards paying:
+10 a month on 20 Oct 2026, and signed out became 3 overviews in total, on any key, the same
+day. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
@@ -34,8 +35,8 @@ rather than replacing it.
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
 | Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
-| Overviews on our key | 5, in total | 5 a month | 10 a month | 50 a month |
-| Overviews on your own key | Unlimited, on this device | 10 a month | 200 a month | 200 a month |
+| Overviews on our key | 3 in total, on either key | 5 a month | 10 a month | 50 a month |
+| Overviews on your own key | (within the 3) | 10 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
 | Library | This device only | Synced to every device | Synced | Synced |
@@ -52,8 +53,8 @@ costs less than Plus** because we don't pay for its generation. Prices are OV-18
 guidance below.
 
 **No account says "unlimited".** Every overview on an account costs us something, so every
-plan has a number, and the app shows it with its reset date. Only signed out, where nothing
-reaches our server, is the own key uncounted.
+plan has a number, and the app shows it with its reset date. Signed out has a number too,
+the trial's 3.
 
 ## What an own-key overview costs us
 
@@ -167,11 +168,13 @@ copy was wrong. The MCP connection was gated on Plus. **OV-104 took that gate ou
 rewrote the copy to sell volume** (`mcp-connector.md`, `plus-upsell.md`); what is still to
 come is showing a reader their own counts, which waits on OV-102 and OV-103.
 
-**Signed out, your own key is unlimited,** as it is today: generation runs on the device,
-the library stays on the device, and none of our running costs apply. Our server fetches
-transcripts only for the trial's overviews, so an own-key overview signed out needs the
-extension or the shared cache. Signing up does put a monthly count on own-key use, in
-exchange for sync, narration and the MCP connection, which are what the count pays for.
+**Signed out is 3 overviews in total, on either key, then a prompt to create an account**
+(decided 20 Oct 2026). Until then an own key was unlimited signed out, which meant a reader
+with a key gave up volume by signing up: 30, then 10, a month on Free against no limit at
+all. Signed out is now a taste of the product, and the account is where it continues. An
+own-key overview signed out still costs us nothing, so the 3 is about the prompt, not the
+money. Our server fetches transcripts only while the trial has an overview left, so an
+own-key overview signed out may still need the extension or the shared cache.
 
 **Chapters, the transcript tab and personalisation are parts of an overview,** not
 features beside it. They come with every overview at every tier. Gating them would mean
@@ -179,7 +182,7 @@ making a worse overview for the same cost.
 
 **Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
-an uncounted own key, OV-95's caps apply.
+the reader's own key, OV-95's caps apply as well.
 
 ## Which key an overview uses
 
@@ -193,7 +196,7 @@ overview, and the order is set by what each plan sells:
 | No key of their own | ours | — |
 
 **Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
-ours, and our allowance (5 or 10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
+ours, and our allowance (5 or 10 a month, or what is left of the trial's 3) becomes the reader's safety net rather than a quota they spend
 first. **Plus is the other way round** because Plus is what a reader pays for overviews on
 our key. With their own key first, a Plus reader would rarely use what they paid for.
 
@@ -240,15 +243,19 @@ it reserved first is released.
   the next month.
 - **Accounts count against the account,** read beside `accounts.plan` the way the MCP
   connection and the transcript quota already do. `Plan` gains `byo-plus`.
-- **The signed-out trial counts against a token the server issues** to the device on its
-  first generation on our key. It has its own counter. It is never the no-account library's
+- **The signed-out trial is 3 overviews on either key, counted twice.** The device counts
+  every overview it makes signed out, on both keys, and offers the account at 3. Clearing
+  site data resets that count, which is accepted: an own-key overview costs us nothing. The
+  ones on our key are also counted by the server, against a token it issues to the device
+  on its first generation on our key, so the device can never be talked into more than 3 on
+  ours. The token has its own counter. It is never the no-account library's
   contents, because OV-47 empties that library into the account on sign-in, which would
   reset the trial every time. A private window mints a new token, so the trial can be
   reset. It is small enough that this is acceptable. A cap on new tokens per address per
   day (stored as a truncated hash, like the transcript quota) stops one machine minting
   tokens without limit.
 - **Signing in doesn't carry a trial's count over.** The free account starts its own
-  month. Its first 10 are the reason to sign up. A no-account library moved in on sign-in
+  month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. A no-account library moved in on sign-in
   (OV-47) is not counted against the month: those overviews already exist.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
@@ -268,9 +275,10 @@ it reserved first is released.
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 5 a
-  month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
-  on-device library stays readable, and moves into the account on sign-in (OV-47).
+- **Signed out, after 3 on either key:** *Sign up to keep going: a free account makes 15 a
+  month, syncs them to your other devices, and reads them aloud.* Adding a key doesn't get
+  round it. The on-device library stays readable, and moves into the account on sign-in
+  (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
 - **Free or BYO Plus with a key, after the month's own-key quota (10 or 200):** the
