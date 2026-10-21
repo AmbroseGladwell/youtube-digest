@@ -214,12 +214,19 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 
 **The reader sees which key made it.** An overview made by falling back says so in one
 quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
-goes down where the reader can see it. This follows "degrade visibly".
+goes down where the reader can see it. This follows "degrade visibly". The record carries it as
+`madeOn` (overview schema 9, client version 7): which key made it and, for a fallback, the
+key passed over, the reader's provider when it was theirs, and the cause (`quota-spent`,
+`out-of-credit`, `provider-down`, `schema-failure`, or `busy` for our key's daily cap). It
+is null for an overview made before, and for one saved from a share, and it is never in a
+shared copy.
 
 **Falling back changes where the transcript goes.** A fallback to our key sends the
 transcript and the reader context through our server to OpenAI, whatever provider the
 reader chose. Settings says so beside the key, and a reader can switch the fallback off
-("Only ever use my key"). It is on by default.
+("Only ever use my key", the synced setting `onlyMyKey`). The fallback is on by default,
+so the switch starts off (confirmed 21 Oct 2026): a key that runs dry keeps making
+overviews, labelled, and a reader who minds where their transcripts go turns it on.
 
 **Counting follows the key that made it.** Each attempt reserves a slot on its own
 counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot

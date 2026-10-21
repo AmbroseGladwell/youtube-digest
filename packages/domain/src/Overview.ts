@@ -8,6 +8,7 @@ import { Selling } from "./Selling.js";
 import { HowToApply } from "./HowToApply.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 import { Chapters } from "./Chapter.js";
+import { MadeOn } from "./MadeOn.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
 
 // Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
@@ -25,6 +26,9 @@ export const Overview = z
     captureReason: z.string().nullable(),
     // Null for an overview the reader asked for one video at a time (docs/features/playlists.md).
     fromPlaylist: PlaylistOrigin.nullable(),
+    // Null for an overview made before keys were recorded, and for one saved from a share
+    // (docs/architecture/tiers.md, "Which key an overview uses").
+    madeOn: MadeOn.nullable(),
   })
   .extend(CoreFields.shape)
   .extend(Filing.shape)
