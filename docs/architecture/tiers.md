@@ -232,6 +232,20 @@ overviews, labelled, and a reader who minds where their transcripts go turns it 
 counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot
 it reserved first is released.
 
+**On the device** (OV-102). `keyOrderFor` sets the order from the plan the server reports
+(`GET /api/overview-usage`), whether the reader holds a key, and `onlyMyKey`;
+`makeOverviewOnKeys` walks it. An own-key attempt reserves its slot first and releases it
+if the key fails. Only a spent quota stops it there: offline or with the server down, the
+overview is made anyway and its push reserves when it goes. `fallbackCauseOf` decides
+whether a failure moves on, and the last key's own failure is what the reader sees when none
+is left. Our key needs an account, so signed out the reader's own key is the only one
+until OV-103's trial. A signed-in reader with no key of their own is ready to generate
+whenever the server makes overviews on ours (`useGenerationReadiness`, `ourKeyUsable`).
+The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLine` words it),
+and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
+a fallback to switch off. Saving a shared overview sends the share's token before the copy
+is saved, so its push is let in uncounted.
+
 ## Counting
 
 - **The server counts, never a model** (`docs/prototype/constraints.md`), in Postgres. The
