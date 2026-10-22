@@ -88,6 +88,7 @@ export const apiLogLines = coded("api", {
   audio: {
     requested: line("info", "audio requested", "A reader asked for narration, and what was already stored for that key."),
     queued: line("info", "audio queued", "Nothing was stored, so a render went on the queue."),
+    dailyCapSpent: line("warn", "audio daily cap spent", "An account asked for a new render past its daily cap; nothing was queued."),
     rendered: line("info", "audio rendered", "A render came back from the TTS service and was stored."),
     renderFailed: line("warn", "audio render failed", "A render failed with attempts left; it will be tried again."),
     renderGaveUp: line("error", "audio render gave up", "A render failed past MAX_RENDER_ATTEMPTS and will not be retried."),

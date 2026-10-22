@@ -156,6 +156,7 @@ export class BackendSimulator {
   #revoked: string[] = [];
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
+  #narrationDailyCapSpent = false;
   #narrationPriorities: string[] = [];
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
@@ -586,6 +587,18 @@ export class BackendSimulator {
           const key = keyFor(lines, voice);
           const held = this.#renders.get(key);
           if (held?.render.status === "ready") return { status: 200, body: held.render };
+          if (this.#narrationDailyCapSpent) {
+            return {
+              status: 429,
+              body: {
+                error: {
+                  code: "too_many_requests",
+                  message: "Simulated: today's new narration is spent",
+                  details: { quota: "narration-daily", limit: 30, retryAfterSeconds: 3600 },
+                },
+              },
+            };
+          }
           if (this.#narrationBusy) {
             return { status: 429, body: { error: { code: "too_many_requests", message: "Simulated: three waiting" } } };
           }
@@ -1074,6 +1087,9 @@ export class BackendSimulator {
     },
     accountIsBusy: (): void => {
       this.#narrationBusy = true;
+    },
+    dailyCapIsSpent: (): void => {
+      this.#narrationDailyCapSpent = true;
     },
     requestCount: (): number => this.#narrationPriorities.length,
     requestedPriorities: (): string[] => [...this.#narrationPriorities],
