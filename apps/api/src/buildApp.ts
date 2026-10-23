@@ -15,7 +15,6 @@ import { sharedPageEventRoutes } from "./events/sharedPageEventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
 import { errorRoutes } from "./errors/errorRoutes.js";
 import type { ErrorSink } from "./errors/ErrorSink.js";
-import { ApiError } from "./http/ApiError.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { requestIdFor } from "./http/requestIdFor.js";
 import { corsPlugin } from "./http/corsPlugin.js";
@@ -41,6 +40,7 @@ import { followedPlaylistRoutes } from "./routes/followedPlaylistRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
 import { generationRoutes } from "./routes/generationRoutes.js";
+import { healthRoutes } from "./routes/healthRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
@@ -189,14 +189,7 @@ export async function buildApp({
         rateLimitHook(rateLimits.perAccount, (request) => request.session?.accountId ?? null, clock),
       );
 
-      api.get("/health", { config: { public: true } }, async () => {
-        try {
-          await sql.query("select 1");
-        } catch {
-          throw new ApiError("unavailable", "The database is not reachable");
-        }
-        return { ok: true };
-      });
+      healthRoutes(api, sql);
       handshakeRoutes(api, config.minSupportedClientVersion);
       sessionRoutes(api, { sql, clock, sessionCookieSecure });
       authRoutes(api, {

@@ -76,7 +76,7 @@ event sink that record, and `server.ts` is the only place the environment is rea
 
 **Auth exists to gate writes to shared infrastructure**, which is the reasoning
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
-a session unless it says otherwise; eight do: `GET /api/health`, `GET /api/handshake`, the
+a session unless it says otherwise; nine do: `GET /api/live` and `GET /api/health`, `GET /api/handshake`, the
 four `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
 which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
 `GET /api/playlists/:id`, which reads a public or unlisted playlist for anyone following
@@ -259,7 +259,7 @@ sends:
 | `too_many_requests` | 429 | a rate limit is spent, with `Retry-After` and `details.retryAfterSeconds` saying when to try again; or an account already has its limit of narration waiting to be rendered, and `details.limit` says how many; or it has started its day's new narration, `details.quota: "narration-daily"`; or a monthly overview quota or our key's global daily cap is spent, and `details.quota` says which (`tiers.md`) |
 | `internal_error` | 500 | anything unexpected; logged with the request id, nothing about the cause sent |
 | `generation_failed` | 502 | an overview on our key couldn't be made; `details.fallback` says whether it may move to the reader's own key (`tiers.md`, "Generating on our key") |
-| `unavailable` | 503 | the health check cannot reach the database; narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off; a playlist asked of a server with no YouTube key; an overview on our key asked of a server with no key, or whose key OpenAI refused |
+| `unavailable` | 503 | `/api/health` cannot reach the database (`/api/live` never asks it, so Fly's 30-second check lets Neon suspend); narration asked of a server with no TTS service; a transcript asked of a server with server-side retrieval off; a playlist asked of a server with no YouTube key; an overview on our key asked of a server with no key, or whose key OpenAI refused |
 
 **426 was considered for the floor and rejected.** RFC 9110 reserves it for a protocol
 upgrade and requires an `Upgrade` header naming one. 403 is exact: authenticated,

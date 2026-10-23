@@ -60,6 +60,8 @@ export const apiLogLines = coded("api", {
     serverClosing: line("info", "request aborted", "A call arrived while the server was closing and was refused with a 503."),
   },
   startup: {
+    databaseReachable: line("info", "database reachable", "The first query at startup answered, before migrations and before the port opens."),
+    databaseUnreachable: line("fatal", "database unreachable", "The first query at startup failed; the process exits and the machine never reports live."),
     migrationsApplied: line("info", "migrations applied", "Which migrations ran as the server came up."),
     duplicateOverviewsFolded: line("info", "duplicate overviews folded", "A migration folded two overviews of one video together."),
     magicLinks: line("info", "magic links", "The mail transport sign-in links go through, and the app URL they open."),

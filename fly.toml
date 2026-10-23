@@ -48,9 +48,11 @@ primary_region = "lhr"
   auto_start_machines = true
   min_machines_running = 0
 
+  # /api/live answers from the process alone, so this check never wakes Neon; the database is
+  # checked once at startup and by the deploy job (docs/architecture/deploy.md, "The machine").
   [[http_service.checks]]
     method = "GET"
-    path = "/api/health"
+    path = "/api/live"
     interval = "30s"
     timeout = "5s"
     grace_period = "15s"

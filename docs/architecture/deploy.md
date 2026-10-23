@@ -10,7 +10,7 @@ why; this is how they fit together and what a deploy actually does.
 |---|---|
 | The API serves the built web app outside `/api` | `apps/api/src/http/webAppPlugin.ts`, `STATIC_ROOT` in `loadConfig.ts` |
 | One image: build everything, then run only the API and its runtime dependencies | `Dockerfile`, `.dockerignore` |
-| One machine in London that stops when idle, checked on `/api/health` | `fly.toml` |
+| One machine in London that stops when idle, checked on `/api/live` | `fly.toml` |
 | Secrets from the `overview-prod` Bitwarden project straight into Fly, touching no file | `.env.prod.tpl`, `scripts/secrets.sh fly-import`, `task deploy:secrets` |
 | The menu | `Taskfiles/Taskfile-deploy.yml` |
 | CI proves the image builds on every push | the `image` job in `.github/workflows/ci.yml` |
@@ -64,8 +64,18 @@ and `auto_start_machines` so idle time costs nothing, `min_machines_running = 0`
 no volume, since Postgres is on Neon and the API keeps nothing on disk. `force_https`
 means `APP_URL` is https, which `loadConfig` insists on whenever real mail is sent.
 
-The health check is `GET /api/health`, which runs `select 1` against the database, so a
-machine that starts but cannot reach Neon is unhealthy rather than up.
+Fly's health check is `GET /api/live`, every 30 seconds, and it answers from the process
+alone. It used to be `GET /api/health`, which runs `select 1`, and that kept Neon awake for
+every minute the machine was: Neon suspends after 5 minutes without a query and bills the
+hours it is awake, so the bill tracked machine uptime rather than use, and in October 2026
+it spent the Free plan's quota and took production down (OV-128).
+
+The database is still checked, at the two moments it matters. `server.ts` runs `select 1`
+before migrations and before it opens the port, logs `api.startup.databaseReachable` or
+`api.startup.databaseUnreachable`, and exits on the second, so a machine that starts but
+cannot reach Neon never answers `/api/live` and is unhealthy rather than up. And the deploy
+job asks `/api/health`, which still queries, so a new version that cannot reach the
+database fails the deploy.
 
 `APP_URL` is the domain below, and the app name is the one line to edit if the Fly app is
 called something else. Everything that is not a secret lives in `[env]` here, in the
