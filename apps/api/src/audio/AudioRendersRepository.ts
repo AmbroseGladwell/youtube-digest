@@ -1,5 +1,6 @@
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
 export type AudioPriority = "interactive" | "background";
 export type AudioRenderStatus = "queued" | "rendering" | "ready" | "failed";
@@ -101,6 +102,20 @@ export class AudioRendersRepository {
       [accountId, exceptKey],
     );
     return Number(rows[0]?.count ?? 0);
+  }
+
+  // One of the account's new renders for the UTC day, refused at the cap. Only a render
+  // that has to be made counts: narration already made or already queued is free
+  // (docs/architecture/tiers.md, "What an own-key overview costs us").
+  async takeDailyRender(now: Date, accountId: AccountId, limit: number): Promise<boolean> {
+    const rows = await this.#sql.query(
+      `insert into narration_render_usage (day, account_id, renders) values ($1::date, $2, 1)
+       on conflict (day, account_id) do update set renders = narration_render_usage.renders + 1
+       where narration_render_usage.renders < $3
+       returning renders`,
+      [usageDay(now), accountId, limit],
+    );
+    return rows.length > 0;
   }
 
   // A request for audio already queued only ever makes it more urgent, and a request for

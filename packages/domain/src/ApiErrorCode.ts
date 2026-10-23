@@ -11,6 +11,7 @@ export const API_ERROR_CODES = {
   transcript_unavailable: 422,
   playlist_private: 422,
   playlist_not_found: 404,
+  not_reserved: 428,
   too_many_requests: 429,
   internal_error: 500,
   generation_failed: 502,

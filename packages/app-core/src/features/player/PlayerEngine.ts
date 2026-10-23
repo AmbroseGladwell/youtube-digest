@@ -392,6 +392,12 @@ export class PlayerEngine {
         if (generation !== this.#generation) return;
         this.#replacing = null;
         this.#clearPreparing();
+        // The day's new narration is spent: reading along still works, so the reader gets
+        // that rather than a dead button (docs/architecture/tiers.md).
+        if (isSyncRequestError(error) && error.code === "too_many_requests" && error.details?.quota === "narration-daily") {
+          this.#fallBackToPacer("dailyCap", true);
+          return;
+        }
         if (isSyncRequestError(error) && error.code === "too_many_requests") {
           this.#set({ status: "busy", preparing: null });
           return;

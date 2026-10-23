@@ -208,6 +208,12 @@ test("below the write floor the device pulls but pushes nothing, and says it is 
   const other = makeOverview();
   await account.inject({
     method: "POST",
+    url: "/api/overview-reservations",
+    body: { overviewId: other.id },
+    clientVersion: CLIENT_VERSION + 1,
+  });
+  await account.inject({
+    method: "POST",
     url: "/api/overviews",
     body: { ...other, schemaVersion: CURRENT_SCHEMA_VERSIONS.overview, updatedAt: "2026-09-26T08:30:00.000Z" },
     clientVersion: CLIENT_VERSION + 1,

@@ -88,6 +88,7 @@ export const apiLogLines = coded("api", {
   audio: {
     requested: line("info", "audio requested", "A reader asked for narration, and what was already stored for that key."),
     queued: line("info", "audio queued", "Nothing was stored, so a render went on the queue."),
+    dailyCapSpent: line("warn", "audio daily cap spent", "An account asked for a new render past its daily cap; nothing was queued."),
     rendered: line("info", "audio rendered", "A render came back from the TTS service and was stored."),
     renderFailed: line("warn", "audio render failed", "A render failed with attempts left; it will be tried again."),
     renderGaveUp: line("error", "audio render gave up", "A render failed past MAX_RENDER_ATTEMPTS and will not be retried."),
@@ -136,6 +137,13 @@ export const apiLogLines = coded("api", {
     quotaSpent: line("info", "our key quota spent", "An account asked for an overview on our key with none left this month."),
     dailyCapSpent: line("warn", "our key daily cap spent", "The global daily cap on our key refused a generation for every plan."),
     keyRefused: line("error", "our key refused", "The provider refused our own key. Every generation on our key fails until it is fixed."),
+  },
+  reservations: {
+    reserved: line("info", "own-key overview reserved", "A device reserved a slot on the reader's own key before generating: plan, the month's count and limit."),
+    released: line("info", "own-key reservation released", "A generation on the reader's own key failed, and its slot was given back."),
+    quotaSpent: line("info", "own key quota spent", "An account asked to reserve an overview on its own key with none left this month."),
+    shareSaved: line("info", "shared overview saved", "A reader saved a shared overview into their library. It is not counted."),
+    pushRefused: line("warn", "new overview pushed without a reservation", "A reserving client pushed a new overview the server has no reservation or our-key generation for."),
   },
   shares: {
     created: line("info", "share created", "A reader made a share link. Never the token or anything from the note."),

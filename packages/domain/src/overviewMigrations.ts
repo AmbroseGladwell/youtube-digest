@@ -107,6 +107,18 @@ const fillFromPlaylistAddedAfterTheFirstNotes: RecordMigration = {
 // them. Moving the number keeps an older client from quarantining one (docs/features/tag-reuse.md).
 const allowFewerThanThreeTags: RecordMigration = { newSchemaVersion: 8 };
 
+// Derivable as unknown: nothing recorded which key made an overview before our key existed,
+// and only a fallback is ever shown (docs/architecture/tiers.md).
+const fillMadeOnAddedWithOurKey: RecordMigration = {
+  newSchemaVersion: 9,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "madeOn" in record ? record : { ...record, madeOn: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -115,6 +127,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillDubiousClaimsAddedAfterTheFirstNotes,
   fillFromPlaylistAddedAfterTheFirstNotes,
   allowFewerThanThreeTags,
+  fillMadeOnAddedWithOurKey,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

@@ -15,6 +15,9 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
     changes: (since, limit = 200) =>
       answered(request("GET", `/changes?since=${since}&limit=${limit}`, RecordChangesPage)),
     createOverview: (record, ifMatch) => written(request("POST", "/overviews", WrittenRecord, { body: record, ifMatch })),
+    reserveOverview: async (overviewId) => {
+      await request("POST", "/overview-reservations", z.unknown(), { body: { overviewId } });
+    },
     setOverviewTopics: (id, topicIds, updatedAt) =>
       written(request("PUT", `/overviews/${id}/topics`, WrittenRecord, { body: { topicIds, updatedAt } })),
     setOverviewCaptureReason: (id, captureReason, updatedAt) =>

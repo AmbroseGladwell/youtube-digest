@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { REQUEST_ID_HEADER } from "@overview/domain";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
+import { letInOverview } from "../testing/TestAccount.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { recordingLogger, type LogLine } from "./recordingLogger.testHelper.js";
@@ -14,12 +15,14 @@ test("every line of a signed-in request carries its account, its session and the
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
   const session = await makeSession(testApp.sql, { now: testApp.clock.now });
+  const overview = storedOverview();
+  await letInOverview(testApp, session.accountId, overview);
 
   await testApp.app.inject({
     method: "POST",
     url: "/api/overviews",
     headers: { ...session.headers, [REQUEST_ID_HEADER]: "request-0001" },
-    payload: storedOverview(),
+    payload: overview,
   });
 
   const forRequest = linesFor(lines, "request-0001");

@@ -244,3 +244,38 @@ test("an overview of a video the account already holds is an outcome naming the 
   assert.deepEqual(outcome, { result: "held", by: "theirs" });
   assert.equal(api.callsTo("createOverview").length, 1);
 });
+
+test("a new overview the server holds no reservation for reserves a slot and goes again", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("createOverview", { code: "not_reserved" });
+
+  const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
+
+  assert.deepEqual(outcome, { result: "written", rev: 1 });
+  assert.deepEqual(api.calls.map((call) => [call.method, call.args[0]]), [
+    ["createOverview", { id: "a" }],
+    ["reserveOverview", "a"],
+    ["createOverview", { id: "a" }],
+  ]);
+});
+
+test("past the own-key quota a new overview waits for the month to turn, neither parked nor sent", async () => {
+  const api = new ScriptedSyncApi();
+  api.failAlways("createOverview", { code: "not_reserved" });
+  api.failAlways("reserveOverview", { code: "too_many_requests", details: { quota: "own", resetsOn: "2026-11-01" } });
+
+  const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
+
+  assert.deepEqual(outcome, { result: "waiting", until: "2026-11-01" });
+  assert.equal(api.callsTo("createOverview").length, 1);
+});
+
+test("a throttled reservation stops the push like any throttle, rather than waiting a month", async () => {
+  const api = new ScriptedSyncApi();
+  api.failAlways("createOverview", { code: "not_reserved" });
+  api.failAlways("reserveOverview", { code: "too_many_requests", details: { retryAfterSeconds: 30 } });
+
+  const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
+
+  assert.equal(outcome.result, "stopped");
+});
