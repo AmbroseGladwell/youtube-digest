@@ -100,6 +100,15 @@ export class Launcher {
       return new HomePageObject(this.testContext).verifyIsShown();
     });
 
+  // A launch below the server's write floor: the wall takes the place of the page once the
+  // first sync cycle has answered, which can be before home has ever been seen, so home is
+  // not waited for (docs/features/record-migrations.md, "Below the write floor is a wall").
+  launchExpectingWriteFloorWall = (options: LaunchOptions = {}): Promise<ErrorStatePageObject> =>
+    test.step("Launcher.launchExpectingWriteFloorWall", async () => {
+      await this.mountApp(options);
+      return this.appShell.writeFloorWall.verifyIsShown();
+    });
+
   // A launch that lands on the dead-end screen rather than a page, because the read the
   // landing page depends on was told to fail (frontend-testing-guide.md 5.2).
   launchExpectingDeadEnd = (options: LaunchOptions = {}): Promise<ErrorStatePageObject> =>

@@ -75,9 +75,8 @@ test("signing out tells the server and asks to sign in again", async ({ launcher
 // (docs/features/record-migrations.md, "Below the write floor is a wall").
 test("below the server's write floor the web app is walled off with a reload", async ({ launcher, backendSimulator }) => {
   backendSimulator.sync.setMinSupportedClientVersion(CLIENT_VERSION + 1);
-  await launcher.launch({ sync: true, syncConnection: CONNECTED });
 
-  const wall = await launcher.appShell.writeFloorWall.verifyIsShown();
+  const wall = await launcher.launchExpectingWriteFloorWall({ sync: true, syncConnection: CONNECTED });
 
   await wall.verifyTitleReads("This version of the app can no longer sync");
   await wall.verifyOffersAction("Reload");
@@ -88,9 +87,8 @@ test("the extension's wall points at where Chrome updates it, since it cannot re
   backendSimulator,
 }) => {
   backendSimulator.sync.setMinSupportedClientVersion(CLIENT_VERSION + 1);
-  await launcher.launch({ sync: true, syncConnection: CONNECTED, surface: "extension" });
 
-  const wall = await launcher.appShell.writeFloorWall.verifyIsShown();
+  const wall = await launcher.launchExpectingWriteFloorWall({ sync: true, syncConnection: CONNECTED, surface: "extension" });
 
   await wall.verifyOffersNoAction();
 });
