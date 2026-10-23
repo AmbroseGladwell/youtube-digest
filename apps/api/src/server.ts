@@ -49,6 +49,17 @@ const pool = new pg.Pool({ connectionString: config.databaseUrl });
 // crash the process. The pool replaces the connection on the next query.
 pool.on("error", (error) => logger.error(apiLogLines.db.connectionLost({ err: error })));
 const sql = createPgSqlClient(pool);
+// Fly's periodic check is /api/live, which never touches the database so Neon can suspend
+// while the machine idles; this is the one database check a machine passes before it opens
+// its port (docs/architecture/deploy.md, "The machine").
+try {
+  await sql.query("select 1");
+  logger.info(apiLogLines.startup.databaseReachable());
+} catch (error) {
+  logger.fatal(apiLogLines.startup.databaseUnreachable({ err: error }));
+  await logExporter?.close();
+  process.exit(1);
+}
 const applied = await runMigrations(sql, {
   before: migrationSteps((folds) => {
     for (const fold of folds) logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
