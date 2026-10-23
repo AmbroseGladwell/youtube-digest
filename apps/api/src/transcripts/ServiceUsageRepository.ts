@@ -13,6 +13,11 @@ export type FetchReservation = { reserved: boolean; used: number; limit: number 
 
 export const usageDay = (now: Date): string => now.toISOString().slice(0, 10);
 
+export const secondsToNextUsageDay = (now: Date): number => {
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
+};
+
 // One row per UTC day and caller for what our own service fetched, and one global row per
 // day for what went through the proxy and how many bytes it carried. Kept in Postgres
 // rather than memory because a restart must not hand out a second day's budget

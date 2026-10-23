@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, FIRST_RESERVING_CLIENT_VERSION, type Share } from "@overview/domain";
+import { FIRST_RESERVING_CLIENT_VERSION, schemaVersionsForClient, type Share } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { generationRequest, makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
@@ -11,6 +11,9 @@ import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 
 const RESERVING = FIRST_RESERVING_CLIENT_VERSION;
+const BEFORE_RESERVING = FIRST_RESERVING_CLIENT_VERSION - 1;
+
+const fromBeforeReserving = () => ({ ...storedOverview(), schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview });
 
 const reserve = (account: TestAccount, overviewId: string, shareToken?: string) =>
   account.inject({
@@ -24,7 +27,7 @@ const release = (account: TestAccount, overviewId: string) =>
   account.inject({ method: "DELETE", url: `/api/overview-reservations/${overviewId}`, clientVersion: RESERVING });
 
 const push = (account: TestAccount, overview: ReturnType<typeof storedOverview>, { ifMatch, clientVersion = RESERVING }: { ifMatch?: number; clientVersion?: number } = {}) =>
-  account.inject({ method: "POST", url: "/api/overviews", body: overview, clientVersion, ...(ifMatch === undefined ? {} : { ifMatch }) });
+  account.inject({ method: "POST", url: "/api/overviews", body: overview, clientVersion, reserved: false, ...(ifMatch === undefined ? {} : { ifMatch }) });
 
 const ownUsed = async (account: TestAccount): Promise<number> =>
   (await account.inject({ method: "GET", url: "/api/overview-usage" })).json().own.used;
@@ -112,9 +115,8 @@ test("a client from before reservations still pushes new overviews, until the wr
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
 
-  const response = await push(account, storedOverview(), { clientVersion: CLIENT_VERSION });
+  const response = await push(account, fromBeforeReserving(), { clientVersion: BEFORE_RESERVING });
 
-  assert.ok(CLIENT_VERSION < RESERVING);
   assert.equal(response.statusCode, 201);
   await testApp.close();
 });
@@ -123,7 +125,7 @@ test("an overview the account already holds answers as it always did, reserved o
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const overview = storedOverview();
-  await push(account, overview, { clientVersion: CLIENT_VERSION });
+  await push(account, { ...overview, schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview }, { clientVersion: BEFORE_RESERVING });
 
   const again = await push(account, overview);
   const regenerated = await push(account, { ...overview, coreClaim: "A different claim." }, { ifMatch: 1 });

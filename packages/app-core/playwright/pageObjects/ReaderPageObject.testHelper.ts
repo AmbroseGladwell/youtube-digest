@@ -25,6 +25,7 @@ import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.t
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { playlistFromLineTestIds } from "../../src/features/playlists/components/PlaylistFromLine/PlaylistFromLineTestIds.js";
+import { madeOnLineTestIds } from "../../src/features/reader/components/MadeOnLine/MadeOnLineTestIds.js";
 
 export class ReaderPageObject extends PageObject {
   get relatedByTag(): RelatedByTagPageObject {
@@ -46,6 +47,12 @@ export class ReaderPageObject extends PageObject {
       await expect(this.get(playlistFromLineTestIds.root)).toContainText(text);
       if (manage) await this.expectToBeVisible(playlistFromLineTestIds.manageLink);
       else await this.expectToHaveCount(playlistFromLineTestIds.manageLink, 0);
+    });
+
+  verifyMadeOnLine = (text: string | null) =>
+    this.step(`verifyMadeOnLine ${text}`, async () => {
+      if (text === null) await this.expectToHaveCount(madeOnLineTestIds.root, 0);
+      else await expect(this.get(madeOnLineTestIds.root)).toHaveText(text);
     });
 
   openManagePlaylists = () => this.step("openManagePlaylists", () => this.click(playlistFromLineTestIds.manageLink));

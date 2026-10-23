@@ -211,6 +211,9 @@ export class SyncEngine {
           await this.#storage.park(entry.key, outcome.failure);
           blocked.add(key);
           break;
+        case "waiting":
+          blocked.add(key);
+          break;
         case "stopped":
           return { reason: outcome.reason, detail: outcome.detail };
       }

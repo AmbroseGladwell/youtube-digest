@@ -63,6 +63,10 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("createOverview", [record, ifMatch], () => this.#written(String(record.id)));
   }
 
+  async reserveOverview(overviewId: string) {
+    return this.#answer("reserveOverview", [overviewId], () => undefined);
+  }
+
   async setOverviewTopics(id: string, topicIds: string[], updatedAt: string) {
     return this.#answer("setOverviewTopics", [id, topicIds, updatedAt], () => this.#written(id));
   }

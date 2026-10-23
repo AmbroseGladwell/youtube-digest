@@ -72,7 +72,9 @@ That is about half a cent an overview at worst, so 200 a month costs us at most 
 **Narration for an own-key overview renders only when it is first played,** never in
 advance, so the cost follows what readers listen to rather than what they make. A cap on
 narration renders per account per day stops one account rendering a whole library in every
-voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
+voice: 30 new renders a UTC day, counted in `narration_render_usage`, with narration already
+made free to play again (`audio-player.md`, "The day's new narration"). Our key's overviews
+are still narrated ahead, as soon as they are made. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
 **The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
 chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
@@ -214,16 +216,37 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 
 **The reader sees which key made it.** An overview made by falling back says so in one
 quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
-goes down where the reader can see it. This follows "degrade visibly".
+goes down where the reader can see it. This follows "degrade visibly". The record carries it as
+`madeOn` (overview schema 9, client version 7): which key made it and, for a fallback, the
+key passed over, the reader's provider when it was theirs, and the cause (`quota-spent`,
+`out-of-credit`, `provider-down`, `schema-failure`, or `busy` for our key's daily cap). It
+is null for an overview made before, and for one saved from a share, and it is never in a
+shared copy.
 
 **Falling back changes where the transcript goes.** A fallback to our key sends the
 transcript and the reader context through our server to OpenAI, whatever provider the
 reader chose. Settings says so beside the key, and a reader can switch the fallback off
-("Only ever use my key"). It is on by default.
+("Only ever use my key", the synced setting `onlyMyKey`). The fallback is on by default,
+so the switch starts off (confirmed 21 Oct 2026): a key that runs dry keeps making
+overviews, labelled, and a reader who minds where their transcripts go turns it on.
 
 **Counting follows the key that made it.** Each attempt reserves a slot on its own
 counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot
 it reserved first is released.
+
+**On the device** (OV-102). `keyOrderFor` sets the order from the plan the server reports
+(`GET /api/overview-usage`), whether the reader holds a key, and `onlyMyKey`;
+`makeOverviewOnKeys` walks it. An own-key attempt reserves its slot first and releases it
+if the key fails. Only a spent quota stops it there: offline or with the server down, the
+overview is made anyway and its push reserves when it goes. `fallbackCauseOf` decides
+whether a failure moves on, and the last key's own failure is what the reader sees when none
+is left. Our key needs an account, so signed out the reader's own key is the only one
+until OV-103's trial. A signed-in reader with no key of their own is ready to generate
+whenever the server makes overviews on ours (`useGenerationReadiness`, `ourKeyUsable`).
+The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLine` words it),
+and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
+a fallback to switch off. Saving a shared overview sends the share's token before the copy
+is saved, so its push is let in uncounted.
 
 ## Counting
 

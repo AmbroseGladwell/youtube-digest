@@ -78,7 +78,9 @@ export function playerBarView(
     const rest =
       pacerReason === "unavailable"
         ? "narration is unavailable right now"
-        : status === "ended"
+        : pacerReason === "dailyCap"
+          ? "you’ve started today’s new narration, more tomorrow"
+          : status === "ended"
           ? "finished"
           : section;
     return {

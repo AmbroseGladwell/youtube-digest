@@ -129,6 +129,9 @@ describe("playerBarView", () => {
     const unavailable = view({ source: "pacer", pacerReason: "unavailable", status: "playing", timings: pacerTimings }, 40);
     expect(unavailable.label.rest).toBe("narration is unavailable right now");
     expect(unavailable.actions).toEqual([]);
+
+    const dailyCap = view({ source: "pacer", pacerReason: "dailyCap", status: "playing", timings: pacerTimings }, 40);
+    expect(dailyCap.label.rest).toBe("you’ve started today’s new narration, more tomorrow");
   });
 
   it("the rate is written as the design writes it", () => {

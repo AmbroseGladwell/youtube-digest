@@ -46,6 +46,10 @@ export const Settings = z.object({
   // Replaced whole rather than merged one level, so that an undo can take an alias away
   // (docs/features/tag-reuse.md).
   tagAliases: TagAliases.catch({}),
+  // "Only ever use my key": on, an overview the reader's own key can't make fails rather
+  // than moving to ours, which would send the transcript and reader context to OpenAI
+  // through our server. Off by default (docs/architecture/tiers.md).
+  onlyMyKey: z.boolean().catch(false),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -62,4 +66,5 @@ export const DEFAULT_SETTINGS: Settings = {
   analyticsOptOut: false,
   analyticsOptOutChangedAt: null,
   tagAliases: {},
+  onlyMyKey: false,
 };

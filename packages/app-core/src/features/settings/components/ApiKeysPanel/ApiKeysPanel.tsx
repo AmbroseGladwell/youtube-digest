@@ -9,11 +9,13 @@ import { deviceWord } from "../../../apiKeys/keyPrompt.js";
 import { forgetAllCatalogues, forgetCatalogue } from "../../../apiKeys/ModelCatalogue.js";
 import { useProviderPermissions } from "../../../apiKeys/ProviderPermissionContext.js";
 import { useApiKeys } from "../../../apiKeys/useApiKeys.js";
+import { useGenerationReadiness } from "../../../newOverview/useGenerationReadiness.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import { AddProviderKeyRow } from "../AddProviderKeyRow/AddProviderKeyRow.js";
 import { GenerateWithCard } from "../GenerateWithCard/GenerateWithCard.js";
 import { ModelPickerDialog } from "../ModelPickerDialog/ModelPickerDialog.js";
+import { OnlyMyKeySwitch } from "../OnlyMyKeySwitch/OnlyMyKeySwitch.js";
 import { ProviderKeyRow } from "../ProviderKeyRow/ProviderKeyRow.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
@@ -32,6 +34,7 @@ export function ApiKeysPanel() {
   const permissions = useProviderPermissions();
   const analytics = useAnalytics();
   const here = deviceWord(useSurface(), useIsPhone());
+  const { ourKeyUsable } = useGenerationReadiness();
 
   const [adding, setAdding] = useState<Provider | null>(null);
   const [removingAll, setRemovingAll] = useState(false);
@@ -124,6 +127,8 @@ export function ApiKeysPanel() {
               );
             })}
           </ul>
+
+          {ourKeyUsable && <OnlyMyKeySwitch />}
 
           {others.length > 0 && (
             <>
