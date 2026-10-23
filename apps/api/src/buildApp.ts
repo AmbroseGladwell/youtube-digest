@@ -39,6 +39,9 @@ import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
 import { followedPlaylistRoutes } from "./routes/followedPlaylistRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
+import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
+import { generationRoutes } from "./routes/generationRoutes.js";
+import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
@@ -51,6 +54,9 @@ import { SharesRepository } from "./shares/SharesRepository.js";
 import type { ServiceFetches } from "./transcripts/fetchThroughService.js";
 import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
 import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
+import { OverviewReservationsRepository } from "./usage/OverviewReservationsRepository.js";
+import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
+import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
@@ -83,12 +89,21 @@ export interface TranscriptServiceSetup {
   proxyDailyFetches: number;
 }
 
+// Overviews made on our key; absent, /api/generations says it is unavailable
+// (docs/architecture/tiers.md).
+export interface OurKeySetup {
+  apiKey: string;
+  dailyGenerations: number;
+  http: typeof fetch;
+}
+
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
   mailer: Mailer;
   audio?: AudioSetup | null;
   transcriptService?: TranscriptServiceSetup | null;
+  ourKey?: OurKeySetup | null;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -122,6 +137,7 @@ export async function buildApp({
   mailer,
   audio = null,
   transcriptService = null,
+  ourKey = null,
   playlistReader = null,
   eventSink = null,
   errorSink = null,
@@ -197,13 +213,23 @@ export async function buildApp({
       const records = new RecordsRepository(sql, clock);
       changesRoutes(api, records);
       const transcripts = new TranscriptsRepository(sql, clock);
-      overviewRoutes(api, records, transcripts);
+      const overviewUsage = new OverviewUsageRepository(sql);
+      const reservations = new OverviewReservationsRepository(sql, overviewUsage);
+      overviewRoutes(api, records, transcripts, reservations);
       topicRoutes(api, records);
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
+      overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
+      overviewReservationRoutes(api, { reservations, usage: overviewUsage, shares, sql, clock });
+      generationRoutes(api, {
+        generator:
+          ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, clock }),
+        sql,
+      });
       serviceTranscriptRoutes(api, {
+        usage: overviewUsage,
         service:
           transcriptService === null
             ? null

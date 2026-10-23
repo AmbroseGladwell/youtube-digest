@@ -1,5 +1,5 @@
 import { PLAN_LABEL } from "../../planLabel.js";
-import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS, UNSET_ALLOWANCE } from "../../planCards.js";
+import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../planCards.js";
 import { usePlan } from "../../usePlan.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
@@ -76,7 +76,7 @@ export function PlusPlanPanel() {
               <dl className={styles.allowances}>
                 <div>
                   <dt>On us</dt>
-                  <dd>{card.ourKey ?? UNSET_ALLOWANCE}</dd>
+                  <dd>{card.ourKey}</dd>
                 </div>
                 <div>
                   <dt>On your own key</dt>

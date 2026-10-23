@@ -59,6 +59,7 @@ export function assembleOverview(
     savedAt: meta.savedAt,
     captureReason: input.captureReason,
     fromPlaylist: null,
+    madeOn: null,
     inOneLine: output.inOneLine,
     coreClaim: output.coreClaim,
     thin: output.thin,

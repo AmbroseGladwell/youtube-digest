@@ -74,11 +74,14 @@ measures one (`docs/prototype/constraints.md`).
 
 ## A note just made
 
-A note generated while signed in asks for its narration as soon as it is saved, so that by
-the time anybody opens it the audio is usually there (1a rather than 1b). Generation runs in
-the browser on the reader's own key, so "proactively" can only mean the client asking.
+A note made on our key asks for its narration as soon as it is saved, so that by the time
+anybody opens it the audio is usually there (1a rather than 1b). A note made on the reader's
+own key asks for nothing until it is first played (OV-102, `tiers.md`, "What an own-key
+overview costs us"): what narration costs then follows what readers listen to, not what they
+make.
 
-- **The player asks, not the pipeline.** `useGenerateOverviewMutation` hands the saved note to
+- **The player asks, not the pipeline.** `useGenerateOverviewMutation` hands a note our key
+  made (`madeOn.key === "ours"`) to
   `PlayerEngine.prepare`, which posts the same script and voice the reader will later play,
   with `background` priority. The engine is the one place that holds the account's narration
   client and the voice, so the key it asks under is the key the reader will peek at.
@@ -89,6 +92,16 @@ the browser on the reader's own key, so "proactively" can only mean the client a
 - **Pressing play overtakes it.** An interactive request for the same key promotes the
   waiting background render rather than queueing a second one
   (`tts-pre-rendered-speech.md`, "The API side").
+
+## The day's new narration
+
+An account may start 30 new renders a UTC day (`MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY`), so no
+account renders a whole library in every voice. Narration already made, or already
+queued, never counts. Past the cap the request is `429` with `details.quota:
+"narration-daily"` and a `Retry-After` at UTC midnight, and nothing is queued. The player
+reads along instead of offering a dead button, saying why: "Read-along · no audio · you’ve
+started today’s new narration, more tomorrow" (pacer reason `dailyCap`). It is told apart
+from the three-waiting refusal by its `quota`.
 
 ## A note opened before its audio lands
 

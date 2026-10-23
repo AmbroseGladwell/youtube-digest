@@ -23,6 +23,8 @@ import {
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
+  type OurKeyGenerationRequest,
+  type OverviewUsage,
   type OutboxEntry,
   type Overview,
   type OverviewId,
@@ -38,6 +40,7 @@ import {
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
+import { makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
@@ -137,6 +140,15 @@ export class BackendSimulator {
   #accountFirstName: string | null = null;
   #sessionHasEnded = false;
   #accountPlan: Plan = "free";
+  // Off unless a test turns it on, so a reader with no key of their own still meets the key
+  // prompt everywhere else (docs/architecture/tiers.md, "Generating on our key").
+  #ourKeyAvailable = false;
+  #ourKeyRefusal: { status: number; code: string; details: Record<string, unknown> } | null = null;
+  #ownMonthSpent = false;
+  #anthropicOutOfCredit = false;
+  #ourKeyRequests: OurKeyGenerationRequest[] = [];
+  #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
+  #releases: string[] = [];
   #sessionLapsed = false;
   #connectionRequest: ConnectionRequest | null = null;
   #decisions: Array<{ requestId: string; approve: boolean }> = [];
@@ -144,6 +156,7 @@ export class BackendSimulator {
   #revoked: string[] = [];
   #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
   #narrationBusy = false;
+  #narrationDailyCapSpent = false;
   #narrationPriorities: string[] = [];
   #narrationVoices: string[] = [];
   #samples: Array<{ voice: string; key: string }> = [];
@@ -244,12 +257,22 @@ export class BackendSimulator {
 
     await this.#page.route("**/api.anthropic.com/v1/messages**", (route) =>
       this.#respond(route, EndpointKey.ANTHROPIC_MESSAGES, {
-        onDefault: () => ({
-          status: 200,
-          body: makeAnthropicMessageResponse(
-            makeGeneratedOutputFixture(this.#generatedOutputOverrides),
-          ),
-        }),
+        onDefault: () =>
+          this.#anthropicOutOfCredit
+            ? {
+                status: 400,
+                body: {
+                  type: "error",
+                  error: {
+                    type: "invalid_request_error",
+                    message: "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+                  },
+                },
+              }
+            : {
+                status: 200,
+                body: makeAnthropicMessageResponse(makeGeneratedOutputFixture(this.#generatedOutputOverrides)),
+              },
         onError: () => ({
           status: 401,
           body: {
@@ -564,6 +587,18 @@ export class BackendSimulator {
           const key = keyFor(lines, voice);
           const held = this.#renders.get(key);
           if (held?.render.status === "ready") return { status: 200, body: held.render };
+          if (this.#narrationDailyCapSpent) {
+            return {
+              status: 429,
+              body: {
+                error: {
+                  code: "too_many_requests",
+                  message: "Simulated: today's new narration is spent",
+                  details: { quota: "narration-daily", limit: 30, retryAfterSeconds: 3600 },
+                },
+              },
+            };
+          }
           if (this.#narrationBusy) {
             return { status: 429, body: { error: { code: "too_many_requests", message: "Simulated: three waiting" } } };
           }
@@ -647,6 +682,75 @@ export class BackendSimulator {
         body: file.subarray(start, end + 1),
       });
     });
+
+    const usage = (): OverviewUsage => ({
+      plan: this.#accountPlan,
+      resetsOn: "2026-11-01",
+      ours: { used: this.#ourKeyRequests.length, limit: 5 },
+      own: { used: this.#reservations.length - this.#releases.length, limit: 10 },
+    });
+
+    await this.#page.route("**/api/generations", (route) =>
+      route.request().method() === "GET"
+        ? this.#respond(route, EndpointKey.OUR_KEY_STATUS, {
+            onDefault: () => ({ status: 200, body: { available: this.#ourKeyAvailable } }),
+            onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: not reachable" } } }),
+          })
+        : this.#respond(route, EndpointKey.OUR_KEY_GENERATE, {
+            onDefault: () => {
+              const request = route.request().postDataJSON() as OurKeyGenerationRequest;
+              if (this.#ourKeyRefusal !== null) {
+                const { status, code, details } = this.#ourKeyRefusal;
+                return { status, body: { error: { code, message: `Simulated: ${code}`, details } } };
+              }
+              this.#ourKeyRequests.push(request);
+              return {
+                status: 200,
+                body: makeOverview({ id: request.overviewId, video: request.input.video, inOneLine: "Made on our key." }),
+              };
+            },
+            onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
+          }),
+    );
+
+    await this.#page.route("**/api/overview-usage", (route) =>
+      this.#respond(route, EndpointKey.OVERVIEW_USAGE, {
+        onDefault: () => ({ status: 200, body: usage() }),
+        onError: unauthenticated,
+      }),
+    );
+
+    await this.#page.route("**/api/overview-reservations", (route) =>
+      this.#respond(route, EndpointKey.OVERVIEW_RESERVE, {
+        onDefault: () => {
+          if (this.#ownMonthSpent) {
+            return {
+              status: 429,
+              body: {
+                error: {
+                  code: "too_many_requests",
+                  message: "Simulated: this month's own-key overviews are made",
+                  details: { quota: "own", resetsOn: "2026-11-01", retryAfterSeconds: 3600 },
+                },
+              },
+            };
+          }
+          this.#reservations.push(route.request().postDataJSON());
+          return { status: 200, body: usage() };
+        },
+        onError: unauthenticated,
+      }),
+    );
+
+    await this.#page.route("**/api/overview-reservations/*", (route) =>
+      this.#respond(route, EndpointKey.OVERVIEW_RELEASE, {
+        onDefault: () => {
+          this.#releases.push(decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? ""));
+          return { status: 204, body: null };
+        },
+        onError: unauthenticated,
+      }),
+    );
 
     await this.#page.route("**/api/changes**", (route) =>
       this.#respond(route, EndpointKey.SYNC_CHANGES, {
@@ -928,6 +1032,26 @@ export class BackendSimulator {
     },
   };
 
+  // Our key as our server offers it, and the reservations the reader's own key takes
+  // (docs/architecture/tiers.md, "Which key an overview uses").
+  ourKey = {
+    isAvailable: (): void => {
+      this.#ourKeyAvailable = true;
+    },
+    refuses: (status: number, code: string, details: Record<string, unknown>): void => {
+      this.#ourKeyRefusal = { status, code, details };
+    },
+    ownMonthIsSpent: (): void => {
+      this.#ownMonthSpent = true;
+    },
+    anthropicIsOutOfCredit: (): void => {
+      this.#anthropicOutOfCredit = true;
+    },
+    generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
+    reservations: (): Array<{ overviewId: string; shareToken?: string }> => [...this.#reservations],
+    releases: (): string[] => [...this.#releases],
+  };
+
   // Narration as the server holds it: rendered already, still being made, given up on,
   // or refused because the account has too much waiting (docs/features/audio-player.md).
   narration = {
@@ -963,6 +1087,9 @@ export class BackendSimulator {
     },
     accountIsBusy: (): void => {
       this.#narrationBusy = true;
+    },
+    dailyCapIsSpent: (): void => {
+      this.#narrationDailyCapSpent = true;
     },
     requestCount: (): number => this.#narrationPriorities.length,
     requestedPriorities: (): string[] => [...this.#narrationPriorities],

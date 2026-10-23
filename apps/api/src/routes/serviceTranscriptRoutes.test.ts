@@ -7,6 +7,9 @@ import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
 import { serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
+import { overviewQuotas } from "../usage/overviewQuotas.js";
+import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
+import type { AccountId } from "../auth/AccountId.js";
 import { ServiceUsageRepository, usageDay } from "../transcripts/ServiceUsageRepository.js";
 
 const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
@@ -167,9 +170,44 @@ test("a signed-in reader is counted by account at its plan's cap, not by address
     answers.push((await account.inject({ method: "POST", url: `/api/service-transcripts/${videoIdNumbered(100 + n)}` })).statusCode);
   }
 
-  assert.deepEqual(serviceTranscriptQuotas, { address: 5, free: 50, plus: 100 });
+  assert.deepEqual(serviceTranscriptQuotas, { address: 5, free: 50, "byo-plus": 100, plus: 100 });
   assert.deepEqual(answers.slice(0, serviceTranscriptQuotas.free), Array(serviceTranscriptQuotas.free).fill(200));
   assert.equal(answers.at(-1), 429);
+  await testApp.close();
+});
+
+async function spend(testApp: TestApp, accountId: AccountId, keySource: "ours" | "own", count: number) {
+  const usage = new OverviewUsageRepository(testApp.sql);
+  for (let made = 0; made < count; made += 1) await usage.reserve(testApp.clock.now, accountId, keySource, count);
+}
+
+test("an account with no overview left this month on either key is refused, with the reset date", async () => {
+  const youTube = makeFakeYouTube();
+  const { lines, logger } = recordingLogger();
+  const testApp = await serviceApp(youTube, 1000, logger);
+  const account = await makeAccount(testApp);
+  await spend(testApp, account.accountId, "ours", overviewQuotas.free.ours);
+  await spend(testApp, account.accountId, "own", overviewQuotas.free.own);
+
+  const response = await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
+
+  assert.equal(response.statusCode, 429);
+  assert.equal(response.json().error.details.quota, "overviews");
+  assert.equal(response.json().error.details.resetsOn, "2026-10-01");
+  assert.ok(Number(response.headers["retry-after"]) > 0);
+  assert.equal(youTube.requests.length, 0);
+  assert.equal(saying(lines, "service transcript refused for spent overviews").length, 1);
+  await testApp.close();
+});
+
+test("an account with overviews left on only one key still gets a transcript", async () => {
+  const testApp = await serviceApp(makeFakeYouTube());
+  const account = await makeAccount(testApp);
+  await spend(testApp, account.accountId, "ours", overviewQuotas.free.ours);
+
+  const response = await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
+
+  assert.equal(response.statusCode, 200);
   await testApp.close();
 });
 

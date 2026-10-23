@@ -10,9 +10,7 @@ export const EVERY_ACCOUNT_INCLUDES = [
 
 export interface PlanCard {
   name: string;
-  // Null where the figure is not ours to state yet: Plus's allowance on our key is set from
-  // what an overview costs, which OV-92 measures.
-  ourKey: string | null;
+  ourKey: string;
   ownKey: string;
   note: string;
 }
@@ -20,8 +18,8 @@ export interface PlanCard {
 export const PLAN_CARDS: PlanCard[] = [
   {
     name: "Free",
-    ourKey: "10 a month",
-    ownKey: "30 a month",
+    ourKey: "5 a month",
+    ownKey: "10 a month",
     note: "Comes with every account.",
   },
   {
@@ -32,10 +30,8 @@ export const PLAN_CARDS: PlanCard[] = [
   },
   {
     name: "Plus",
-    ourKey: null,
+    ourKey: "50 a month",
     ownKey: "200 a month",
     note: "For a reader who would rather not hold a key at all.",
   },
 ];
-
-export const UNSET_ALLOWANCE = "More a month";

@@ -6,7 +6,7 @@ import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
-import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { letInOverview, makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
 const LONG_TRANSCRIPT_SEGMENTS = 20_000;
@@ -21,11 +21,13 @@ test("a transcript one device stores is read back exactly by another device on t
   const laptop = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const phone = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const transcript = makeStoredTranscript();
+  const overview = storedOverview({ video: transcript.video! });
+  await letInOverview(testApp, laptop.accountId, overview);
   await testApp.app.inject({
     method: "POST",
     url: "/api/overviews",
     headers: laptop.headers,
-    payload: storedOverview({ video: transcript.video! }),
+    payload: overview,
   });
 
   const stored = await testApp.app.inject({

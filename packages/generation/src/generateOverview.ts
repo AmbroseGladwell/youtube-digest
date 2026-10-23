@@ -4,7 +4,7 @@ import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
 import { composePrompt } from "./composePrompt.js";
 import { assembleOverview } from "./assembleOverview.js";
-import { GenerationError } from "./GenerationError.js";
+import { SchemaFailureError } from "./GenerationError.js";
 
 export type GenerationClient = (request: {
   systemPrompt: string;
@@ -49,7 +49,7 @@ export async function generateOverview(
   }
 
   if (!parsed.success) {
-    throw new GenerationError(
+    throw new SchemaFailureError(
       `generated output still failed its own schema after a retry: ${parsed.error.message}`,
     );
   }

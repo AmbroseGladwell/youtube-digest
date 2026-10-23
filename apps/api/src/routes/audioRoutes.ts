@@ -9,8 +9,13 @@ import type { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js"
 import { byteRange } from "../audio/byteRange.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
+import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 
 export const MAX_OUTSTANDING_RENDERS_PER_ACCOUNT = 3;
+// New renders an account may start in a UTC day, so no account renders a whole library in
+// every voice. Narration renders when it is first played, so this is about listening
+// (docs/architecture/tiers.md).
+export const MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY = 30;
 export const MAX_KEYS_PER_LOOKUP = 32;
 
 export interface AudioServices {
@@ -77,6 +82,16 @@ export function audioRoutes(
     if (!alreadyWaiting && (await renders.outstandingFor(accountId, key)) >= MAX_OUTSTANDING_RENDERS_PER_ACCOUNT) {
       throw new ApiError("too_many_requests", "Too much narration is already being prepared for this account", {
         limit: MAX_OUTSTANDING_RENDERS_PER_ACCOUNT,
+      });
+    }
+    if (!alreadyWaiting && !(await renders.takeDailyRender(clock(), accountId, MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY))) {
+      const retryAfterSeconds = secondsToNextUsageDay(clock());
+      request.log.warn(apiLogLines.audio.dailyCapSpent({ limit: MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY, retryAfterSeconds }));
+      reply.header("retry-after", String(retryAfterSeconds));
+      throw new ApiError("too_many_requests", "This account has started as much new narration as it can today", {
+        quota: "narration-daily",
+        limit: MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY,
+        retryAfterSeconds,
       });
     }
     const render = await renders.enqueue({

@@ -1,6 +1,6 @@
 import { expect, test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
@@ -20,6 +20,14 @@ const PRODUCTIVITY_LINE = 9;
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
+};
+
+// On Plus our key goes first, so a note made here is one ours made, and is narrated ahead
+// (docs/architecture/tiers.md, "What an own-key overview costs us").
+const ON_OUR_KEY = {
+  sync: true,
+  syncConnection: { ...SIGNED_IN.syncConnection, accountId: SIMULATED_ACCOUNT_ID },
+  plan: "plus" as const,
 };
 
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
@@ -166,6 +174,21 @@ test("an account with renders already waiting is told to wait, and offered the p
   await reader.verifyIsThePacer(true);
 });
 
+test("past the day's new narration the note reads along instead, saying when more comes", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.dailyCapIsSpent();
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+
+  await reader.verifyBarSays("Read-along · no audio · you’ve started today’s new narration, more tomorrow");
+  await reader.verifyIsThePacer(true);
+});
+
 test("a server with no narration is the pacer, marked as such and saying why", async ({
   launcher,
   backendSimulator,
@@ -235,11 +258,12 @@ test("pausing from the mini-player pauses the row too, and × stops and puts it 
   await launcher.miniPlayer.verifyIsShown(false);
 });
 
-test("a note made while signed in asks for its narration in the background, and has it by the time it is opened", async ({
+test("a note made on our key asks for its narration in the background, and has it by the time it is opened", async ({
   launcher,
   backendSimulator,
 }) => {
-  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  backendSimulator.ourKey.isAvailable();
+  const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, apiKeys: API_KEYS });
 
   await form.submitUrl(VIDEO_URL);
   const dialog = launcher.appShell.newOverviewDialog;
@@ -254,11 +278,30 @@ test("a note made while signed in asks for its narration in the background, and 
   expect(backendSimulator.narration.requestCount()).toBe(1);
 });
 
+test("a note made on the reader's own key asks for no narration until it is first played", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, plan: "free", apiKeys: API_KEYS });
+  await form.submitUrl(VIDEO_URL);
+  const dialog = launcher.appShell.newOverviewDialog;
+  await dialog.verifyStepState("02", "done");
+  await dialog.clickReadOverview();
+  const reader = await launcher.readerPage.verifyIsShown();
+  expect(backendSimulator.narration.requestCount()).toBe(0);
+
+  await reader.clickPlayPause();
+
+  await expect.poll(() => backendSimulator.narration.requestedPriorities()).toEqual(["interactive"]);
+});
+
 test("a note opened before its background render lands says it is preparing, and becomes narrated without playing", async ({
   launcher,
   backendSimulator,
 }) => {
-  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  backendSimulator.ourKey.isAvailable();
+  const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, apiKeys: API_KEYS });
   await form.submitUrl(VIDEO_URL);
   const dialog = launcher.appShell.newOverviewDialog;
   await dialog.verifyStepState("02", "done");
@@ -281,7 +324,8 @@ test("pressing play while a background render is under way asks for it at the fr
   launcher,
   backendSimulator,
 }) => {
-  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  backendSimulator.ourKey.isAvailable();
+  const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, apiKeys: API_KEYS });
   await form.submitUrl(VIDEO_URL);
   const dialog = launcher.appShell.newOverviewDialog;
   await dialog.verifyStepState("02", "done");
@@ -312,7 +356,8 @@ test("a narration request that fails leaves the note it was made for saved and r
   backendSimulator,
 }) => {
   backendSimulator.simulateEndpointError(EndpointKey.NARRATION_REQUEST);
-  const form = await launcher.launchExpectingFirstRun({ ...SIGNED_IN, apiKeys: API_KEYS });
+  backendSimulator.ourKey.isAvailable();
+  const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, apiKeys: API_KEYS });
 
   await form.submitUrl(VIDEO_URL);
   const dialog = launcher.appShell.newOverviewDialog;

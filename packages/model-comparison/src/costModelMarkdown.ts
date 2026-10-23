@@ -2,7 +2,7 @@ import type { FetchedTranscript } from "@overview/transcripts";
 import { PERSONAL_DIMENSIONS, type PersonalJudgeRecord } from "./judgePersonalPair.js";
 import type { RunRecord } from "./RunRecord.js";
 import { isPassed, videoLengthMs } from "./summariseRuns.js";
-import { promptTokensOf } from "./TokenUsage.js";
+import { promptTokensOf } from "@overview/generation";
 
 export interface CostModelArms {
   stageOne: readonly RunRecord[];

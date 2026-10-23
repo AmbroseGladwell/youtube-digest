@@ -18,6 +18,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     clientIpHeader: null,
     audio: null,
     transcriptService: null,
+    ourKey: null,
     youTubeApiKey: null,
     analytics: { environment: "development", postHog: null },
     logs: null,
@@ -173,4 +174,10 @@ test("refuses a floor above the server's own client version", () => {
 
 test("a floor that is not a whole number is refused", () => {
   assert.throws(() => loadConfig({ DATABASE_URL, MIN_SUPPORTED_CLIENT_VERSION: "1.5" }), ConfigError);
+});
+
+test("overviews are made on our key only once there is a key, under a global daily cap of 300 unless told otherwise", () => {
+  assert.equal(loadConfig({ DATABASE_URL }).ourKey, null);
+  assert.deepEqual(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test" }).ourKey, { apiKey: "sk-test", dailyGenerations: 300 });
+  assert.equal(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_DAILY_GENERATIONS: "40" }).ourKey?.dailyGenerations, 40);
 });

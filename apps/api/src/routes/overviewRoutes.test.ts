@@ -127,6 +127,7 @@ test("a client newer than the server has its record stored as given and fed back
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const id = randomUUID();
+  await account.inject({ method: "POST", url: "/api/overview-reservations", body: { overviewId: id }, clientVersion: 99 });
 
   const response = await account.inject({
     method: "POST",

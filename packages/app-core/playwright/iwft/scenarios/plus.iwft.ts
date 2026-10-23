@@ -1,7 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS, UNSET_ALLOWANCE } from "../../../src/features/plus/planCards.js";
+import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../../src/features/plus/planCards.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
@@ -33,7 +33,7 @@ test("Settings names the plan, gives every account the features, and sells both 
   await settings.verifyPlanReads("Free");
   await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
   await settings.verifyPlanCardsRead(
-    PLAN_CARDS.map((card) => [card.name, card.ourKey ?? UNSET_ALLOWANCE, card.ownKey, card.note]),
+    PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.note]),
   );
   await settings.verifyPlanMarkedAsYours("Free");
   await settings.verifyPlansAreNotOnSale("isn't built yet");

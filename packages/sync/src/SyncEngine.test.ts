@@ -343,3 +343,21 @@ test("an overview held by a copy this device cannot read yet is parked with the 
   assert.equal(status.stuck, 2);
   assert.deepEqual(storage.outbox.map((entry) => entry.stuck?.code), ["video_already_held", "video_already_held"]);
 });
+
+test("an overview waiting for the month to turn stays pending, its transcript waits behind it, and other records still go", async () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  api.failAlways("createOverview", { code: "not_reserved" });
+  api.failAlways("reserveOverview", { code: "too_many_requests", details: { quota: "own", resetsOn: "2026-10-01" } });
+  storage.journal({ kind: "overview", id: "a", updatedAt: AT, change: { op: "replace", record: { id: "a" } } });
+  storage.journal({ kind: "overview", id: "a", updatedAt: AT, change: { op: "topics", topicIds: ["t"] } });
+  storage.journal({ kind: "overviewState", id: "b", updatedAt: AT, change: { op: "state", patch: { read: true } } });
+
+  const status = await engineOver(api, storage).sync();
+
+  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "createOverview", "reserveOverview", "setOverviewState", "changes"]);
+  assert.deepEqual(storage.outbox.map((entry) => entry.stuck), [null, null]);
+  assert.equal(status.phase, "idle");
+  assert.deepEqual([status.pending, status.stuck], [2, 0]);
+});

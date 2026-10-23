@@ -4,7 +4,7 @@ import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overvie
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountId } from "../auth/AccountId.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
-import type { FetchReservation, ServiceUsageRepository } from "./ServiceUsageRepository.js";
+import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
 import type { TranscriptsRepository } from "./TranscriptsRepository.js";
@@ -14,7 +14,7 @@ const MISSING_TTL_MS = 6 * 60 * 60 * 1000;
 // A daily safety cap per caller on cold fetches, well above normal use: it protects our
 // address's standing with YouTube, not our money. A shared-cache hit costs nothing and is
 // never counted (docs/architecture/server-side-transcripts.md, "Limits").
-export const serviceTranscriptQuotas = { address: 5, free: 50, plus: 100 } as const satisfies Record<
+export const serviceTranscriptQuotas = { address: 5, free: 50, "byo-plus": 100, plus: 100 } as const satisfies Record<
   "address" | Plan,
   number
 >;
@@ -52,11 +52,6 @@ const callerLogged = (caller: ServiceCaller) =>
   "accountId" in caller
     ? { caller: "account" as const, plan: caller.plan, accountId: caller.accountId }
     : { caller: "address" as const, plan: null };
-
-const secondsToNextDay = (now: Date): number => {
-  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
-};
 
 // The last rung: asked only once every rung a client holds has failed, it answers from the
 // shared cache when it can, fetches once per video however many readers ask at the same
@@ -97,7 +92,7 @@ export class ServiceTranscripts {
     const fetching = (async (): Promise<ServiceAnswer> => {
       const reservation = await usage.reserveFetch(now, key, quotaOf(caller));
       if (!reservation.reserved) {
-        const retryAfterSeconds = secondsToNextDay(now);
+        const retryAfterSeconds = secondsToNextUsageDay(now);
         log.warn(
           apiLogLines.serviceTranscripts.quotaSpent({
             ...callerLogged(caller),

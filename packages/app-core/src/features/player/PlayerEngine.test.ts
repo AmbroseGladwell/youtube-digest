@@ -227,6 +227,20 @@ describe("PlayerEngine", () => {
     expect(engine.getSnapshot().status).toBe("preparing");
   });
 
+  it("past the day's new narration it reads along instead, saying why, rather than leaving a dead button", async () => {
+    const request = vi
+      .fn<NarrationApi["request"]>()
+      .mockRejectedValueOnce(
+        new SyncRequestError("too_many_requests", 429, "Spent", { quota: "narration-daily", limit: 30, retryAfterSeconds: 3600 }),
+      );
+    const engine = engineWith(scriptedApi({ request }));
+    engine.load(TRACK);
+    engine.play();
+    await settle();
+
+    expect(engine.getSnapshot()).toMatchObject({ source: "pacer", pacerReason: "dailyCap", status: "playing" });
+  });
+
   it("a render that gave up is failed, and reading along instead is the pacer, chosen", async () => {
     const engine = engineWith(
       scriptedApi({ request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })) }),

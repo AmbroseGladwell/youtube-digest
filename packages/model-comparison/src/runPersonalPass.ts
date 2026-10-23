@@ -1,8 +1,7 @@
 import type { Overview } from "@overview/domain";
-import { correctionRequest, createGenerationClient } from "@overview/generation";
+import { correctionRequest, createGenerationClient, meteredFetch } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 import type { ComparedModel } from "./ComparedModel.js";
-import { meteredFetch } from "./meteredFetch.js";
 import { personalisePrompt, personalisedOverview, type PersonalOutput } from "./personalisePrompt.js";
 import type { ReaderProfile } from "./ReaderProfile.js";
 import { isTheModelsDoing, measuredCost } from "./runOne.js";

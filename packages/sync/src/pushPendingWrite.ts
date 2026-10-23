@@ -10,6 +10,9 @@ export type PushOutcome =
   // The account already holds an overview of this one's video, under the id named: an
   // outcome to resolve, not a failure to park (docs/features/one-overview-per-video.md).
   | { result: "held"; by: string }
+  // A new overview past the account's own-key quota: neither parked nor sent, it waits in
+  // the outbox and goes once the month turns (docs/features/account-libraries.md).
+  | { result: "waiting"; until: string }
   | { result: "stuck"; failure: OutboxFailure }
   | { result: "stopped"; reason: StopReason; detail: string };
 
@@ -116,14 +119,36 @@ async function replaceWithRetry(
 
 // A second overview of a video the account holds is refused naming the first; the caller
 // folds this one into it rather than resending (docs/features/one-overview-per-video.md).
+// One the server holds no reservation for, moved in on sign-in or queued before this
+// client reserved, takes a slot on the own-key month and goes again
+// (docs/architecture/tiers.md, "Reserving on the reader's own key").
 async function createOverview(api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> {
+  const create = () => replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
   try {
-    return await replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
+    try {
+      return await create();
+    } catch (error) {
+      if (!isSyncRequestError(error) || error.code !== "not_reserved") throw error;
+      const waiting = await reserve(api, String(record.id));
+      if (waiting !== null) return waiting;
+      return await create();
+    }
   } catch (error) {
     const by = isSyncRequestError(error) && error.code === "video_already_held" ? error.details?.overviewId : undefined;
     if (typeof by === "string") {
       return { result: "held", by };
     }
+    throw error;
+  }
+}
+
+async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | null> {
+  try {
+    await api.reserveOverview(overviewId);
+    return null;
+  } catch (error) {
+    const until = isSyncRequestError(error) && error.details?.quota === "own" ? error.details.resetsOn : undefined;
+    if (typeof until === "string") return { result: "waiting", until };
     throw error;
   }
 }

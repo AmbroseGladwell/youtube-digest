@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
 import { generateOverview, type GenerationClient } from "./generateOverview.js";
-import { GenerationError } from "./GenerationError.js";
+import { GenerationError, SchemaFailureError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
 const input: GenerationInput = {
@@ -91,14 +91,14 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
   assert.equal(overview.inOneLine, "A short description.");
 });
 
-test("two consecutive schema failures surface as one GenerationError, not an infinite retry", async () => {
+test("two consecutive schema failures surface as one SchemaFailureError, not an infinite retry", async () => {
   let calls = 0;
   const client: GenerationClient = async () => {
     calls++;
     return { nonsense: true };
   };
 
-  await assert.rejects(() => generateOverview(client, input, meta), GenerationError);
+  await assert.rejects(() => generateOverview(client, input, meta), SchemaFailureError);
   assert.equal(calls, 2);
 });
 

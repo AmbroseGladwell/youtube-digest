@@ -1,7 +1,9 @@
 # Tiers: what signed-out, free and paying readers can do
 
 Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
-allowances on our key and the launch prices on 18 Oct 2026. Four tiers, arranged to push readers towards paying:
+allowances on our key and the launch prices on 18 Oct 2026. Free's own-key quota went from 30 to
+10 a month on 20 Oct 2026, and signed out became 3 overviews in total, on any key, the same
+day. Four tiers, arranged to push readers towards paying:
 signed out is a taste, a free account is the whole product in small amounts, and the two
 paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
@@ -33,8 +35,8 @@ rather than replacing it.
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
 | Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
-| Overviews on our key | 5, in total | 5 a month | 10 a month | 50 a month |
-| Overviews on your own key | Unlimited, on this device | 30 a month | 200 a month | 200 a month |
+| Overviews on our key | 3 in total, on either key | 5 a month | 10 a month | 50 a month |
+| Overviews on your own key | (within the 3) | 10 a month | 200 a month | 200 a month |
 | Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
 | Library | This device only | Synced to every device | Synced | Synced |
@@ -51,8 +53,8 @@ costs less than Plus** because we don't pay for its generation. Prices are OV-18
 guidance below.
 
 **No account says "unlimited".** Every overview on an account costs us something, so every
-plan has a number, and the app shows it with its reset date. Only signed out, where nothing
-reaches our server, is the own key uncounted.
+plan has a number, and the app shows it with its reset date. Signed out has a number too,
+the trial's 3.
 
 ## What an own-key overview costs us
 
@@ -70,7 +72,9 @@ That is about half a cent an overview at worst, so 200 a month costs us at most 
 **Narration for an own-key overview renders only when it is first played,** never in
 advance, so the cost follows what readers listen to rather than what they make. A cap on
 narration renders per account per day stops one account rendering a whole library in every
-voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
+voice: 30 new renders a UTC day, counted in `narration_render_usage`, with narration already
+made free to play again (`audio-player.md`, "The day's new narration"). Our key's overviews
+are still narrated ahead, as soon as they are made. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
 **The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
 chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
@@ -86,6 +90,12 @@ per 20 minutes of video, `model-comparison.md`). At that price:
 costs, about 4 overviews a month, but it halves what the heaviest free readers can cost. In
 the tier economics model, at 1,000 accounts with 5% on Plus, that cut the worst case by
 about $190 a month. Plus's 50 sits inside the $2.50 a month it was sized to.
+
+**Free's own-key quota went from 30 to 10 a month on 20 Oct 2026,** so a free account makes
+15 a month in all rather than 35. The reason is the upgrade, not the cost: an own-key
+overview costs us half a cent at worst, but 35 a month covered a regular reader with room
+to spare, and nothing pushed them towards a paid plan. At 15, a reader who uses it every few
+days meets the limit, and BYO Plus's 200 is the obvious next step.
 
 ## Price guidance
 
@@ -160,11 +170,13 @@ copy was wrong. The MCP connection was gated on Plus. **OV-104 took that gate ou
 rewrote the copy to sell volume** (`mcp-connector.md`, `plus-upsell.md`); what is still to
 come is showing a reader their own counts, which waits on OV-102 and OV-103.
 
-**Signed out, your own key is unlimited,** as it is today: generation runs on the device,
-the library stays on the device, and none of our running costs apply. Our server fetches
-transcripts only for the trial's overviews, so an own-key overview signed out needs the
-extension or the shared cache. Signing up does put a monthly count on own-key use, in
-exchange for sync, narration and the MCP connection, which are what the count pays for.
+**Signed out is 3 overviews in total, on either key, then a prompt to create an account**
+(decided 20 Oct 2026). Until then an own key was unlimited signed out, which meant a reader
+with a key gave up volume by signing up: 30, then 10, a month on Free against no limit at
+all. Signed out is now a taste of the product, and the account is where it continues. An
+own-key overview signed out still costs us nothing, so the 3 is about the prompt, not the
+money. Our server fetches transcripts only while the trial has an overview left, so an
+own-key overview signed out may still need the extension or the shared cache.
 
 **Chapters, the transcript tab and personalisation are parts of an overview,** not
 features beside it. They come with every overview at every tier. Gating them would mean
@@ -172,7 +184,7 @@ making a worse overview for the same cost.
 
 **Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
-an uncounted own key, OV-95's caps apply.
+the reader's own key, OV-95's caps apply as well.
 
 ## Which key an overview uses
 
@@ -186,7 +198,7 @@ overview, and the order is set by what each plan sells:
 | No key of their own | ours | — |
 
 **Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
-ours, and our allowance (5 or 10 a month, or the trial's 5) becomes the reader's safety net rather than a quota they spend
+ours, and our allowance (5 or 10 a month, or what is left of the trial's 3) becomes the reader's safety net rather than a quota they spend
 first. **Plus is the other way round** because Plus is what a reader pays for overviews on
 our key. With their own key first, a Plus reader would rarely use what they paid for.
 
@@ -204,16 +216,37 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 
 **The reader sees which key made it.** An overview made by falling back says so in one
 quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
-goes down where the reader can see it. This follows "degrade visibly".
+goes down where the reader can see it. This follows "degrade visibly". The record carries it as
+`madeOn` (overview schema 9, client version 7): which key made it and, for a fallback, the
+key passed over, the reader's provider when it was theirs, and the cause (`quota-spent`,
+`out-of-credit`, `provider-down`, `schema-failure`, or `busy` for our key's daily cap). It
+is null for an overview made before, and for one saved from a share, and it is never in a
+shared copy.
 
 **Falling back changes where the transcript goes.** A fallback to our key sends the
 transcript and the reader context through our server to OpenAI, whatever provider the
 reader chose. Settings says so beside the key, and a reader can switch the fallback off
-("Only ever use my key"). It is on by default.
+("Only ever use my key", the synced setting `onlyMyKey`). The fallback is on by default,
+so the switch starts off (confirmed 21 Oct 2026): a key that runs dry keeps making
+overviews, labelled, and a reader who minds where their transcripts go turns it on.
 
 **Counting follows the key that made it.** Each attempt reserves a slot on its own
 counter and releases it on failure, so a fallback counts once, on ours, and the own-key slot
 it reserved first is released.
+
+**On the device** (OV-102). `keyOrderFor` sets the order from the plan the server reports
+(`GET /api/overview-usage`), whether the reader holds a key, and `onlyMyKey`;
+`makeOverviewOnKeys` walks it. An own-key attempt reserves its slot first and releases it
+if the key fails. Only a spent quota stops it there: offline or with the server down, the
+overview is made anyway and its push reserves when it goes. `fallbackCauseOf` decides
+whether a failure moves on, and the last key's own failure is what the reader sees when none
+is left. Our key needs an account, so signed out the reader's own key is the only one
+until OV-103's trial. A signed-in reader with no key of their own is ready to generate
+whenever the server makes overviews on ours (`useGenerationReadiness`, `ourKeyUsable`).
+The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLine` words it),
+and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
+a fallback to switch off. Saving a shared overview sends the share's token before the copy
+is saved, so its push is let in uncounted.
 
 ## Counting
 
@@ -228,21 +261,32 @@ it reserved first is released.
 - **An own-key overview on an account reserves its slot from the server too,** before the
   device generates. The device can skip asking. A sync push of a new overview with no
   reservation is refused, so a skipped reservation buys an overview that never leaves the
-  device. That is the signed-out experience, which is free anyway.
+  device. That is the signed-out experience, which is free anyway. See "Reserving on the
+  reader's own key" below.
 - **Months are UTC calendar months.** The reset date shown to the reader is the first of
   the next month.
 - **Accounts count against the account,** read beside `accounts.plan` the way the MCP
   connection and the transcript quota already do. `Plan` gains `byo-plus`.
-- **The signed-out trial counts against a token the server issues** to the device on its
-  first generation on our key. It has its own counter. It is never the no-account library's
+- **The signed-out trial is 3 overviews on either key, counted twice.** The device counts
+  every overview it makes signed out, on both keys, and offers the account at 3. Clearing
+  site data resets that count, which is accepted: an own-key overview costs us nothing. The
+  ones on our key are also counted by the server, against a token it issues to the device
+  on its first generation on our key, so the device can never be talked into more than 3 on
+  ours. The token has its own counter. It is never the no-account library's
   contents, because OV-47 empties that library into the account on sign-in, which would
   reset the trial every time. A private window mints a new token, so the trial can be
   reset. It is small enough that this is acceptable. A cap on new tokens per address per
   day (stored as a truncated hash, like the transcript quota) stops one machine minting
   tokens without limit.
 - **Signing in doesn't carry a trial's count over.** The free account starts its own
-  month. Its first 10 are the reason to sign up. A no-account library moved in on sign-in
-  (OV-47) is not counted against the month: those overviews already exist.
+  month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. **A no-account library moved in on sign-in
+  (OV-47) counts against the month,** on the key that made each overview (decided 20 Oct
+  2026, reversing the first rule that moved overviews were free). Otherwise a reader at
+  their cap could sign out, make the trial's 3, sign back in and repeat, clearing site data
+  to reset the device's count each time. A signed-out library now holds at most 3, so a new
+  reader is never short. A reader already at the cap keeps the moved overviews on the device,
+  readable, and they sync when the month resets. The server can't tell a moved overview from
+  a new one, so there is no "this was moved" for a modified client to claim.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
   key says so plainly and points to adding a key. It doesn't fail with a generic error.
@@ -252,20 +296,71 @@ it reserved first is released.
   see the overview count. Behind that sits a daily safety cap per caller, 5 per signed-out
   address, 50 per free account, 100 per Plus or BYO Plus account, which protects our
   address's standing with YouTube rather than our money and logs a warning when reached.
-  Until OV-102 and OV-103 count overviews, the safety cap is the only gate
+  OV-102 checks it for accounts (`OverviewUsageRepository`, `overview_usage`); until OV-103
+  counts the trial, the safety cap is the only gate signed out
   (`server-side-transcripts.md`, "Limits").
+
+## Generating on our key
+
+`POST /api/generations` (OV-102) takes the input a device would give its own model, with the
+transcript it already resolved, and makes the overview through production's own
+`generateOverview` on GPT-6.1 Sol (`OurKeyGenerator`). It reserves the day's slot under
+`OUR_KEY_DAILY_GENERATIONS`, then the account's month's slot on our key, and gives both back
+on any failure. The device saves the overview it is handed, as it does one made on its own key.
+
+- **Past the month's quota:** `429 too_many_requests` with `details.quota: "ours"`,
+  `details.resetsOn` and a `Retry-After` at the month's turn.
+- **Past the global daily cap:** `429` with `details.quota: "our-key-daily"` and a `Retry-After`
+  at UTC midnight. A fallback has nowhere to go and says so.
+- **A failed generation:** `502 generation_failed` with `details.fallback`, from
+  `fallbackReasonOf`: `out-of-credit`, `provider-down` or `schema-failure` may move to the
+  reader's own key, and null may not.
+- **Our own key refused by OpenAI:** `503 unavailable`, logged at error as `our key refused`.
+  It is ours to fix, so the reader never sees it as their key problem.
+- **Measured, not estimated:** each overview logs the tokens OpenAI reported and their cost
+  from `modelPrices.ts`, the same table and metering (`meteredFetch`) the model comparison used.
+
+## Reserving on the reader's own key
+
+`POST /api/overview-reservations` with `{ overviewId }` (OV-102) takes a slot on the
+account's own-key month before the device generates, and answers with the month's counts
+(`OverviewReservationsRepository`, `overview_reservations`). Asking again for an overview
+whose slot is still held is the same reservation, so a retry never counts twice; asking once
+it has been pushed is a regeneration, and counts again. `DELETE
+/api/overview-reservations/<overviewId>` gives the slot back when the generation fails.
+
+- **Past the month's quota:** `429 too_many_requests` with `details.quota: "own"`,
+  `details.resetsOn` and a `Retry-After` at the month's turn.
+- **A new overview is let in by one of three things:** an own-key reservation, a generation
+  on our key under its id (`POST /api/generations` records it), or a saved share. Anything
+  else pushed as new is `428 not_reserved`, logged as `new overview pushed without a
+  reservation`. A replace (a regeneration) isn't refused, since its slot was reserved when it
+  was made.
+- **A slot is spent once its overview is pushed,** new or replaced, and can't be given back
+  after that, so reserving, pushing and releasing buys nothing.
+- **A fallback counts once, on ours.** An overview made on our key gives back an own-key slot
+  still held for the same id.
+- **Saving a shared overview isn't counted.** The device sends the share's token with the
+  overview's id. The server lets it in only while the link is live and the share is of that
+  overview, which a saved copy is: it keeps the shared overview's id. Each share is let in
+  once per account.
+- **The gate holds from client version 7** (`FIRST_RESERVING_CLIENT_VERSION`). An older
+  client's new overview is let in unreserved, so shipping this doesn't strand anyone's
+  writes. Raising `MIN_SUPPORTED_CLIENT_VERSION` to 7 once reserving clients are out closes
+  it for everyone, because the write floor then refuses the older ones.
 
 ## At the limit
 
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 5 on our key:** *Sign up to keep going: a free account makes 5 a
-  month, syncs them to your other devices, and reads them aloud.* Or add your own key. The
-  on-device library stays readable, and moves into the account on sign-in (OV-47).
+- **Signed out, after 3 on either key:** *Sign up to keep going: a free account makes 15 a
+  month, syncs them to your other devices, and reads them aloud.* Adding a key doesn't get
+  round it. The on-device library stays readable, and moves into the account on sign-in
+  (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
-- **Free or BYO Plus with a key, after the month's own-key quota (30 or 200):** the
+- **Free or BYO Plus with a key, after the month's own-key quota (10 or 200):** the
   allowance on our key (5 or 10) carries on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
   Free, and Plus's allowance on our key from BYO Plus.
 - **Free or BYO Plus, after the allowance on our key has gone on fallbacks:** the own key carries on, with
@@ -309,10 +404,10 @@ outgrows what subscribers bring in.
   predict tokens.
 - **The numbers against real use.** Before billing ships, check overviews per reader per
   week in PostHog (`analytics.md`). The prototype's one heavy reader made about 30 in a
-  week, about 120 a month: more than either Free quota and inside 200 on the reader's own key.
+  week, about 120 a month: well past Free's 15 in all, and inside 200 on the reader's own key.
 
 ## Grandfathering
 
 There is nothing to grandfather yet, because nobody pays. Accounts that exist today have
-uncounted own-key use, and it becomes counted at 30 a month on Free when the counting ships.
+uncounted own-key use, and it becomes counted at 10 a month on Free when the counting ships.
 Whether they get notice first is decided then.
