@@ -61,6 +61,7 @@ test("the tables the migrations create are there to be used", async () => {
       "connections",
       "link_codes",
       "magic_links",
+      "narration_render_usage",
       "oauth_authorizations",
       "oauth_clients",
       "our_key_usage",

@@ -11,7 +11,7 @@ import {
   type FallbackReason,
 } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
-import { usageDay } from "../transcripts/ServiceUsageRepository.js";
+import { secondsToNextUsageDay, usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
@@ -59,9 +59,6 @@ export class OurKeyGenerationError extends Error {
   }
 }
 
-const secondsToNextDay = (now: Date): number =>
-  Math.max(1, Math.ceil((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1) - now.getTime()) / 1000));
-
 // Makes an overview on our key through production's own generateOverview. The global day's
 // slot and the account's month's slot are both reserved first and both given back on any
 // failure, so an overview counts once, when it succeeds (docs/architecture/tiers.md).
@@ -82,7 +79,7 @@ export class OurKeyGenerator {
     const day = usageDay(now);
     if (!(await usage.reserveOurKeyDay(now, dailyGenerations))) {
       log.warn(apiLogLines.ourKey.dailyCapSpent({ plan, limit: dailyGenerations }));
-      throw new OurKeyDailyCapSpentError(secondsToNextDay(now));
+      throw new OurKeyDailyCapSpentError(secondsToNextUsageDay(now));
     }
     const reservation = await usage.reserve(now, accountId, "ours", overviewQuotas[plan].ours);
     if (!reservation.reserved) {

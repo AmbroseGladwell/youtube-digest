@@ -72,7 +72,9 @@ That is about half a cent an overview at worst, so 200 a month costs us at most 
 **Narration for an own-key overview renders only when it is first played,** never in
 advance, so the cost follows what readers listen to rather than what they make. A cap on
 narration renders per account per day stops one account rendering a whole library in every
-voice. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
+voice: 30 new renders a UTC day, counted in `narration_render_usage`, with narration already
+made free to play again (`audio-player.md`, "The day's new narration"). Our key's overviews
+are still narrated ahead, as soon as they are made. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
 
 **The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
 chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033

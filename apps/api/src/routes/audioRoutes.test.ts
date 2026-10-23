@@ -1,11 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MAX_SPOKEN_SCRIPT_CHARACTERS, NarrationVoice } from "@overview/domain";
+import {
+  CLIENT_VERSION,
+  CLIENT_VERSION_HEADER,
+  DEFAULT_NARRATION_VOICE,
+  MAX_SPOKEN_SCRIPT_CHARACTERS,
+  NarrationVoice,
+} from "@overview/domain";
+import { audioKey } from "../audio/audioKey.js";
 import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import { MAX_RENDER_ATTEMPTS } from "../audio/AudioRenderQueue.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { MAX_KEYS_PER_LOOKUP, MAX_OUTSTANDING_RENDERS_PER_ACCOUNT } from "./audioRoutes.js";
+import { MAX_KEYS_PER_LOOKUP, MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY, MAX_OUTSTANDING_RENDERS_PER_ACCOUNT } from "./audioRoutes.js";
 
 const LINES = ["Verdict", "Recycled.", "Standard advice."];
 const MINUTE_MS = 60 * 1000;
@@ -202,6 +209,60 @@ test("an account with its limit of narration waiting is refused more, but not wh
   assert.equal(oneMore.statusCode, 429);
   assert.equal(oneMore.json().error.code, "too_many_requests");
   assert.equal(repeated.statusCode, 202);
+  await testApp.close();
+});
+
+const DAY_MS = 24 * 60 * MINUTE_MS;
+
+const renderADaysWorth = async (testApp: TestApp, account: TestAccount) => {
+  for (let note = 0; note < MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY; note += 1) {
+    await ask(account, { lines: [`Note ${note}.`] });
+    await testApp.drainAudio();
+  }
+};
+
+test("past the day's new renders an account is refused with which cap and when it lifts, and nothing is queued", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  await renderADaysWorth(testApp, account);
+
+  const oneMore = await ask(account, { lines: ["One note too many."] });
+
+  assert.equal(oneMore.statusCode, 429);
+  assert.equal(oneMore.json().error.code, "too_many_requests");
+  assert.deepEqual(
+    { quota: oneMore.json().error.details.quota, limit: oneMore.json().error.details.limit },
+    { quota: "narration-daily", limit: MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY },
+  );
+  assert.ok(Number(oneMore.headers["retry-after"]) > 0);
+  assert.equal(await new AudioRendersRepository(testApp.sql).get(audioKey(["One note too many."], DEFAULT_NARRATION_VOICE)), null);
+  await testApp.close();
+});
+
+test("narration already made is still played past the cap, since only a new render costs", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  await renderADaysWorth(testApp, account);
+
+  const again = await ask(account, { lines: ["Note 0."] });
+
+  assert.equal(again.statusCode, 200);
+  assert.equal(again.json().status, "ready");
+  await testApp.close();
+});
+
+test("the cap is one account's and one UTC day's", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const other = await makeAccount(testApp);
+  await renderADaysWorth(testApp, account);
+
+  const otherAccount = await ask(other, { lines: ["Someone else's note."] });
+  testApp.clock.advance(DAY_MS);
+  const tomorrow = await ask(account, { lines: ["Tomorrow's note."] });
+
+  assert.equal(otherAccount.statusCode, 202);
+  assert.equal(tomorrow.statusCode, 202);
   await testApp.close();
 });
 
