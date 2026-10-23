@@ -44,6 +44,8 @@ const ConfigEnv = z
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
     YOUTUBE_API_KEY: z.string().min(1).optional(),
+    OPENAI_API_KEY: z.string().min(1).optional(),
+    OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
@@ -96,6 +98,10 @@ export type AudioStoreConfig = ({ kind: "r2" } & R2Settings) | { kind: "file"; d
 // when one is configured (docs/architecture/server-side-transcripts.md).
 export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetches: number } | null;
 
+// Overviews made on our key, through our server: on only when there is a key to make them
+// with, and never more a UTC day than the global cap (docs/architecture/tiers.md, "Counting").
+export type OurKeyConfig = { apiKey: string; dailyGenerations: number } | null;
+
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
 // Analytics are forwarded only when there is a PostHog project to forward them to;
@@ -118,6 +124,7 @@ export interface Config {
   clientIpHeader: string | null;
   audio: AudioConfig;
   transcriptService: TranscriptServiceConfig;
+  ourKey: OurKeyConfig;
   // The YouTube Data API key playlists are read with, or null to read none
   // (docs/features/playlists.md).
   youTubeApiKey: string | null;
@@ -176,6 +183,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       data.TRANSCRIPT_SERVICE === "off"
         ? null
         : { proxyUrl: data.TRANSCRIPT_PROXY_URL ?? null, proxyDailyFetches: data.TRANSCRIPT_PROXY_DAILY_FETCHES },
+    ourKey:
+      data.OPENAI_API_KEY === undefined
+        ? null
+        : { apiKey: data.OPENAI_API_KEY, dailyGenerations: data.OUR_KEY_DAILY_GENERATIONS },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,

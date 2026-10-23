@@ -12,3 +12,6 @@ POSTHOG_API_KEY=${POSTHOG_API_KEY}
 TRANSCRIPT_PROXY_URL=${TRANSCRIPT_PROXY_URL}
 # The YouTube Data API key followed playlists are read with (docs/features/playlists.md).
 YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+# Our own OpenAI key, restricted to chat completions, that overviews on our key are made with
+# (docs/architecture/tiers.md, "Generating on our key").
+OPENAI_API_KEY=${OPENAI_API_KEY}

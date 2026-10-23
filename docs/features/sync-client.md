@@ -126,11 +126,16 @@ a dropped write is the prototype's eleven missing notes at the scale of one edit
 later write to the same record waits behind it, because a filing pushed over a create that
 was refused would be a `404` that looked like a deletion. Other records carry on.
 
-Three refusals are outcomes rather than failures. A field write to a record the server no
+Four refusals are outcomes rather than failures. A field write to a record the server no
 longer has is done with, because the tombstone is on its way down. A topic the server
 already holds under this id is this same topic, pushed once before and not acknowledged in
 time, and counts as created. An overview of a video the account already holds is folded
-into the account's copy (`docs/features/one-overview-per-video.md`).
+into the account's copy (`docs/features/one-overview-per-video.md`). And a new overview the
+server holds no reservation for, `428 not_reserved`, reserves a slot on the account's
+own-key month and goes again: that is an overview moved in on sign-in, or one queued before
+this client reserved (`docs/architecture/tiers.md`, "Reserving on the reader's own key").
+With the month spent it **waits**: neither parked nor sent, it stays pending, its transcript
+waits behind it, and it goes on the first cycle after the month turns.
 
 ### Whole-record writes and the revision
 

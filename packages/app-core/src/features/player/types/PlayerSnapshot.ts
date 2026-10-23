@@ -9,7 +9,7 @@ export type PlayerStatus = "ready" | "preparing" | "playing" | "paused" | "buffe
 export type PlayerSource = "audio" | "pacer";
 
 // Why the pacer is running rather than audio, which is what its label says (1k, 1l, 1d).
-export type PacerReason = "signedOut" | "unavailable" | "meanwhile" | "chosen";
+export type PacerReason = "signedOut" | "unavailable" | "dailyCap" | "meanwhile" | "chosen";
 
 // Before the first press: whether the audio exists (1a), is made on first play (1b), or is
 // already on its way because something else asked for it (OV-44, 44a).

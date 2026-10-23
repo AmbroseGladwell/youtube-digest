@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import { PROVIDERS } from "@overview/domain";
 import { adapterFor } from "./adapterFor.js";
-import { ProviderKeyRefusedError, ProviderRequestError } from "./GenerationError.js";
+import { ProviderKeyRefusedError, ProviderOutOfCreditError, ProviderRequestError } from "./GenerationError.js";
 import { listProviderModels } from "./listProviderModels.js";
 import { createGenerationClient } from "./createGenerationClient.js";
 
@@ -121,6 +121,55 @@ test("a provider that is simply down is not reported as a bad key", async () => 
   const { http } = recorder(() => ({ status: 503, body: { error: "overloaded" } }));
 
   await assert.rejects(() => listProviderModels("openai", "sk", http), ProviderRequestError);
+});
+
+// Each provider's own error body, in the shape its API documents for an account with no
+// credit left.
+const OUT_OF_CREDIT = {
+  openai: {
+    status: 429,
+    body: {
+      error: {
+        message: "You exceeded your current quota, please check your plan and billing details.",
+        type: "insufficient_quota",
+        param: null,
+        code: "insufficient_quota",
+      },
+    },
+  },
+  anthropic: {
+    status: 400,
+    body: {
+      type: "error",
+      error: {
+        type: "invalid_request_error",
+        message: "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+      },
+    },
+  },
+  deepseek: { status: 402, body: { error: { message: "Insufficient Balance", type: "unknown_error", code: "invalid_request_error" } } },
+} as const;
+
+test("an account out of credit is told apart from a provider that is down, in each provider's own words", async () => {
+  for (const [provider, failure] of Object.entries(OUT_OF_CREDIT)) {
+    const { http } = recorder(() => failure);
+    const client = createGenerationClient({ provider: provider as keyof typeof OUT_OF_CREDIT, apiKey: "sk", model: "m", http });
+
+    await assert.rejects(() => client(request), ProviderOutOfCreditError, provider);
+  }
+});
+
+test("an ordinary rate limit is not mistaken for an account out of credit", async () => {
+  const { http } = recorder(() => ({
+    status: 429,
+    body: { error: { message: "Rate limit reached for requests", type: "requests", code: "rate_limit_exceeded" } },
+  }));
+  const client = createGenerationClient({ provider: "openai", apiKey: "sk", model: "m", http });
+
+  const error = await client(request).catch((caught: unknown) => caught);
+
+  assert.ok(error instanceof ProviderRequestError);
+  assert.ok(!(error instanceof ProviderOutOfCreditError));
 });
 
 test("the models a key can reach are listed, and the ones that cannot write an overview counted", async () => {

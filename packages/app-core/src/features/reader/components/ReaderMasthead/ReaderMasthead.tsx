@@ -10,6 +10,7 @@ import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
+import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
 import styles from "./ReaderMasthead.module.scss";
@@ -249,6 +250,7 @@ export function ReaderMasthead({
         </p>
 
         <PlaylistFromLine overview={overview} />
+        <MadeOnLine overview={overview} />
       </div>
     </header>
   );

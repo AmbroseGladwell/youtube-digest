@@ -145,3 +145,14 @@ test("a record that already names its playlist keeps it", () => {
   const named = { ...(corpusAt(6) as Record<string, unknown>), fromPlaylist };
   assert.deepEqual((applyRecordMigration(named, OVERVIEW_MIGRATIONS[5]!) as { fromPlaylist: unknown }).fromPlaylist, fromPlaylist);
 });
+
+test("a record from before our key reads as made on an unknown key, so no fallback line is shown", () => {
+  const migrated = Overview.parse(migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS));
+  assert.equal(migrated.madeOn, null);
+});
+
+test("a record that already says which key made it keeps it", () => {
+  const madeOn = { key: "ours", fallback: { from: "own", provider: "anthropic", cause: "out-of-credit" } };
+  const named = { ...(corpusAt(8) as Record<string, unknown>), madeOn };
+  assert.deepEqual((applyRecordMigration(named, OVERVIEW_MIGRATIONS[7]!) as { madeOn: unknown }).madeOn, madeOn);
+});

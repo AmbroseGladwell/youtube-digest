@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import type { Provider } from "@overview/domain";
 import { addProviderKeyRowTestIds } from "../../src/features/settings/components/AddProviderKeyRow/AddProviderKeyRowTestIds.js";
 import { apiKeysPanelTestIds } from "../../src/features/settings/components/ApiKeysPanel/ApiKeysPanelTestIds.js";
+import { onlyMyKeySwitchTestIds } from "../../src/features/settings/components/OnlyMyKeySwitch/OnlyMyKeySwitchTestIds.js";
 import { generateWithCardTestIds } from "../../src/features/settings/components/GenerateWithCard/GenerateWithCardTestIds.js";
 import { providerKeyRowTestIds } from "../../src/features/settings/components/ProviderKeyRow/ProviderKeyRowTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -52,6 +53,19 @@ export class ApiKeysPanelPageObject extends PageObject {
 
   verifyRefused = (provider: Provider) =>
     this.step(`verifyRefused ${provider}`, () => this.expectToBeVisible(addProviderKeyRowTestIds.problem(provider)));
+
+  verifyOnlyMyKey = (state: boolean | "absent") =>
+    this.step(`verifyOnlyMyKey ${state}`, async () => {
+      if (state === "absent") await expect(this.get(onlyMyKeySwitchTestIds.root)).toHaveCount(0);
+      else await expect(this.get(onlyMyKeySwitchTestIds.switch)).toHaveAttribute("aria-checked", String(state));
+    });
+
+  verifyOnlyMyKeyExplains = (pattern: RegExp) =>
+    this.step(`verifyOnlyMyKeyExplains ${pattern}`, () =>
+      expect(this.get(onlyMyKeySwitchTestIds.explanation)).toHaveText(pattern),
+    );
+
+  toggleOnlyMyKey = () => this.step("toggleOnlyMyKey", () => this.click(onlyMyKeySwitchTestIds.switch));
 
   removeKey = (provider: Provider) =>
     this.step(`removeKey ${provider}`, async () => {

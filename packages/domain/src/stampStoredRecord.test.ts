@@ -25,6 +25,7 @@ const overview = {
   savedAt: new Date().toISOString(),
   captureReason: null,
   fromPlaylist: null,
+  madeOn: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,

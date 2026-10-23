@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
 import type { Overview, Provider } from "@overview/domain";
-import { createGenerationClient } from "@overview/generation";
+import { createGenerationClient, meteredFetch } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { comparedModelName, parseComparedModel, type ComparedModel } from "./ComparedModel.js";
-import { meteredFetch } from "./meteredFetch.js";
 import { isTheModelsDoing, measuredCost } from "./runOne.js";
 import { JUDGE_DIMENSIONS, JudgeAnswer, judgePrompt } from "./judgeRubric.js";
 import type { CandidateResult, JudgeOutcome, JudgeRecord } from "./JudgeRecord.js";

@@ -68,6 +68,7 @@ export interface LaunchOptions {
   // The time-saved milestones the account has already crossed or dismissed.
   milestones?: MilestoneMarks;
   showMilestoneCards?: boolean;
+  onlyMyKey?: boolean;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -119,6 +120,7 @@ export class Launcher {
           ...(options.modelByProvider === undefined ? {} : { modelByProvider: options.modelByProvider }),
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
           ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
+          ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
         },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,

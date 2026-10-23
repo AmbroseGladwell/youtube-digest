@@ -1,4 +1,4 @@
-import type { MeteredCall } from "./meteredFetch.js";
+import type { MeteredCall } from "@overview/generation";
 import type { JudgeAnswer, JudgeDimension } from "./judgeRubric.js";
 
 export type JudgeOutcome = "judged" | "failed" | "errored";

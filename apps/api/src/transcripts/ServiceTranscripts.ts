@@ -4,7 +4,7 @@ import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overvie
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountId } from "../auth/AccountId.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
-import type { FetchReservation, ServiceUsageRepository } from "./ServiceUsageRepository.js";
+import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
 import type { TranscriptsRepository } from "./TranscriptsRepository.js";
@@ -53,11 +53,6 @@ const callerLogged = (caller: ServiceCaller) =>
     ? { caller: "account" as const, plan: caller.plan, accountId: caller.accountId }
     : { caller: "address" as const, plan: null };
 
-const secondsToNextDay = (now: Date): number => {
-  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
-};
-
 // The last rung: asked only once every rung a client holds has failed, it answers from the
 // shared cache when it can, fetches once per video however many readers ask at the same
 // moment, and adds what it fetched to the cache as confirmed, since nobody but us touched
@@ -97,7 +92,7 @@ export class ServiceTranscripts {
     const fetching = (async (): Promise<ServiceAnswer> => {
       const reservation = await usage.reserveFetch(now, key, quotaOf(caller));
       if (!reservation.reserved) {
-        const retryAfterSeconds = secondsToNextDay(now);
+        const retryAfterSeconds = secondsToNextUsageDay(now);
         log.warn(
           apiLogLines.serviceTranscripts.quotaSpent({
             ...callerLogged(caller),

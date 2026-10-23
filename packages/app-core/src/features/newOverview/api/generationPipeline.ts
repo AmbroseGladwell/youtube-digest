@@ -10,7 +10,7 @@ import {
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
-import { generateOverview, type GenerationClient } from "@overview/generation";
+import type { GenerationInput } from "@overview/generation";
 import { countWords } from "../../../util/countWords.js";
 import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
 import { resolveVideo, type VideoResolutionDeps } from "../../transcripts/api/resolveVideo.js";
@@ -28,7 +28,8 @@ export interface GenerationProgress {
 export interface GenerationPipelineDeps {
   sources: TranscriptSource[];
   warn?: VideoResolutionDeps["warn"];
-  generationClient: GenerationClient;
+  // Makes the overview on whichever key can, and says which (makeOverviewOnKeys).
+  makeOverview: (input: GenerationInput, meta: { id: OverviewId; savedAt: string }) => Promise<Overview>;
   overviewStore: OverviewStore;
   settingsStore: Pick<SettingsStore, "get">;
   transcriptStore: TranscriptStore;
@@ -75,8 +76,7 @@ export async function runOverviewGeneration(
     deps.settingsStore.get(),
   ]);
   const existingTags = tagUsage(library.map((overview) => overview.tags));
-  const overview = await generateOverview(
-    deps.generationClient,
+  const overview = await deps.makeOverview(
     {
       video,
       transcript,

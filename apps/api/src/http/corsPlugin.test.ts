@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount } from "../testing/TestAccount.testHelper.js";
+import { letInOverview, makeAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
 const EXTENSION = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
@@ -42,12 +42,14 @@ test("a preflight from a listed origin is answered without a session, naming wha
 test("a write from a listed origin carries the origin back and exposes its ETag", async () => {
   const testApp = await createTestApp({ allowedOrigins: [EXTENSION] });
   const account = await makeAccount(testApp);
+  const overview = storedOverview();
+  await letInOverview(testApp, account.accountId, overview);
 
   const response = await testApp.app.inject({
     method: "POST",
     url: "/api/overviews",
     headers: { ...account.headers, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), origin: EXTENSION },
-    payload: storedOverview(),
+    payload: overview,
   });
 
   assert.equal(response.statusCode, 201);
