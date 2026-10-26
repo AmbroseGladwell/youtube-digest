@@ -52,7 +52,7 @@ export class OurKeyDailyCapSpentError extends Error {
 
 export class TrialSpentError extends Error {
   constructor() {
-    super("You've made the overviews you can without an account");
+    super("You've made the overviews you can without an account. Sign up to keep going.");
   }
 }
 
@@ -61,7 +61,7 @@ export class TrialAddressSpentError extends Error {
   readonly retryAfterSeconds: number;
 
   constructor(retryAfterSeconds: number) {
-    super("Overviews on our key without an account have run out here today");
+    super("Overviews on our key without an account have run out on this network today. Sign up, or add your own key, to keep going.");
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
