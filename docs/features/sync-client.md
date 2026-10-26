@@ -104,6 +104,13 @@ edit with the server's older copy until the push landed.
 the tab coming back and the network coming back all ask; none of them start a second
 cycle, and the one that runs after sees everything they asked about.
 
+**A hidden tab does not poll.** The interval (a minute) runs only while the tab is visible,
+and showing the tab again syncs at once. A write in a hidden tab still goes out through the
+journal, and the network coming back still asks. Polling from a tab nobody is looking at
+would keep the server's machine running and the database awake for as long as the tab stays
+open (`docs/architecture/deploy.md`). A change made on another device reaches a hidden tab
+when it is next shown. With no `document`, the interval always runs.
+
 Below the write floor the cycle pushes nothing and still pulls: reads are served below
 the floor (`docs/architecture/api.md`) and a walled client's library may as well be
 current.
