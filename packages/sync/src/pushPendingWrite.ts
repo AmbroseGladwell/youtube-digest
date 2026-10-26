@@ -120,7 +120,8 @@ async function replaceWithRetry(
 // A second overview of a video the account holds is refused naming the first; the caller
 // folds this one into it rather than resending (docs/features/one-overview-per-video.md).
 // One the server holds no reservation for, moved in on sign-in or queued before this
-// client reserved, takes a slot on the own-key month and goes again
+// client reserved, takes a slot on the month and goes again: on our key when the server
+// made it in a signed-out trial, on the reader's own otherwise
 // (docs/architecture/tiers.md, "Reserving on the reader's own key").
 async function createOverview(api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> {
   const create = () => replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
@@ -147,7 +148,8 @@ async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | 
     await api.reserveOverview(overviewId);
     return null;
   } catch (error) {
-    const until = isSyncRequestError(error) && error.details?.quota === "own" ? error.details.resetsOn : undefined;
+    const spent = isSyncRequestError(error) && (error.details?.quota === "own" || error.details?.quota === "ours");
+    const until = spent ? error.details?.resetsOn : undefined;
     if (typeof until === "string") return { result: "waiting", until };
     throw error;
   }

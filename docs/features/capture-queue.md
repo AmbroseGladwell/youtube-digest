@@ -58,6 +58,7 @@ The generation strip's slot and shape (3c), one state at a time (`captureQueueSt
 | State | Says | Offers |
 |---|---|---|
 | making | *Making 3 of 12* · the step · the title, with progress | Details, Pause, Queue |
+| signed out past the trial | *Sign up to keep going* · *10 videos wait for an account · a free one makes 15 a month* | Create account, Queue |
 | no key | *10 videos are waiting for an API key* | Add a key, Queue |
 | paused | *Queue paused* · *10 waiting · nothing is made until you resume* | Resume, Queue |
 | held | *Waiting for our server* · *9 waiting · these continue after 01:00, or now with the extension* | Queue |
@@ -153,6 +154,15 @@ now.* (`serviceTranscriptSource`).
 
 Never a spinner: every waiting video says *Waiting for an API key*, and the strip and a
 note on the page point to Settings › API keys. Pause is hidden, because nothing is running.
+
+## Signed out, past the trial
+
+A device that has made the signed-out trial's 3 (`tiers.md`, "Counting") makes nothing
+more, whatever key it holds, so the queue waits for an account the same way it waits for a
+key: every waiting video says *Waiting for an account*, and the strip and a note on the page
+offer Create account (`account.trial.createAccountChosen`, from `queue`). It comes before
+the key state, because a key wouldn't get round it. Pause is hidden. Signing in starts the
+queue again on the account's month.
 
 ## Analytics
 

@@ -59,6 +59,13 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
         return;
       }
 
+      if (readiness.trialSpent) {
+        analytics.extension.injectedButton.pressed({ outcome: "accountNeeded" });
+        restateCurrentRun();
+        void navigate(Routes.createAccount());
+        return;
+      }
+
       if (!readiness.ready) {
         analytics.extension.injectedButton.pressed({ outcome: "keysNeeded" });
         restateCurrentRun();

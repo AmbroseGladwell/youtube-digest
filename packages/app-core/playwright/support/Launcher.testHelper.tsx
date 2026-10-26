@@ -29,6 +29,7 @@ import {
   NO_ACCOUNT_HISTORY,
   type DeviceAccountHistory,
 } from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
+import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
 import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
 import { AnalyticsConsentNoticePageObject } from "../pageObjects/AnalyticsConsentNoticePageObject.testHelper.js";
@@ -49,6 +50,8 @@ export interface LaunchOptions {
   pendingSignIn?: PendingSignIn;
   // Whether this device has signed out of an account before, or turned down the offer of one.
   deviceAccountHistory?: Partial<DeviceAccountHistory>;
+  // How many overviews this device has made signed out, and the trial token it holds.
+  signedOutTrial?: SignedOutTrial;
   // What this device said about sharing usage. Absent is a "no" already given, so a
   // scenario about something else isn't asked; null is a device that has never been asked.
   analyticsConsent?: AnalyticsConsent | null;
@@ -136,6 +139,7 @@ export class Launcher {
         syncConnection: options.syncConnection,
         pendingSignIn: options.pendingSignIn,
         deviceAccountHistory: { ...NO_ACCOUNT_HISTORY, ...options.deviceAccountHistory },
+        signedOutTrial: options.signedOutTrial,
         analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
         surface: options.surface,
         layout: options.layout,

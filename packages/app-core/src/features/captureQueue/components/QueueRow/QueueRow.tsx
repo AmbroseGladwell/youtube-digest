@@ -3,7 +3,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./QueueRow.module.scss";
 import { queueRowTestIds } from "./QueueRowTestIds.js";
 
-export type QueueRowState = "making" | "next" | "waiting" | "noKey" | "held";
+export type QueueRowState = "making" | "next" | "waiting" | "noKey" | "trialSpent" | "held";
 
 export interface QueueRowProps {
   capture: QueuedCapture;
@@ -21,6 +21,7 @@ const STATUS: Record<Exclude<QueueRowState, "making" | "held">, string> = {
   next: "Next",
   waiting: "Waiting",
   noKey: "Waiting for an API key",
+  trialSpent: "Waiting for an account",
 };
 
 const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string | undefined) =>

@@ -46,6 +46,7 @@ const ConfigEnv = z
     YOUTUBE_API_KEY: z.string().min(1).optional(),
     OPENAI_API_KEY: z.string().min(1).optional(),
     OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
+    OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(50),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
@@ -100,7 +101,7 @@ export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetch
 
 // Overviews made on our key, through our server: on only when there is a key to make them
 // with, and never more a UTC day than the global cap (docs/architecture/tiers.md, "Counting").
-export type OurKeyConfig = { apiKey: string; dailyGenerations: number } | null;
+export type OurKeyConfig = { apiKey: string; dailyGenerations: number; signedOutDailyGenerations: number } | null;
 
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
@@ -186,7 +187,11 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     ourKey:
       data.OPENAI_API_KEY === undefined
         ? null
-        : { apiKey: data.OPENAI_API_KEY, dailyGenerations: data.OUR_KEY_DAILY_GENERATIONS },
+        : {
+            apiKey: data.OPENAI_API_KEY,
+            dailyGenerations: data.OUR_KEY_DAILY_GENERATIONS,
+            signedOutDailyGenerations: data.OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS,
+          },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,

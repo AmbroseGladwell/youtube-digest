@@ -18,6 +18,7 @@ import {
   type PlaylistCheck,
   type PlaylistLookup,
   type QueuedCapture,
+  TRIAL_TOKEN_HEADER,
   type AuthSurface,
   type Connection,
   type ConnectionRequest,
@@ -147,6 +148,8 @@ export class BackendSimulator {
   #ownMonthSpent = false;
   #anthropicOutOfCredit = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
+  #trialTokensIssued = 0;
+  #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
   #releases: string[] = [];
   #sessionLapsed = false;
@@ -704,6 +707,7 @@ export class BackendSimulator {
                 return { status, body: { error: { code, message: `Simulated: ${code}`, details } } };
               }
               this.#ourKeyRequests.push(request);
+              this.#trialTokensSent.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
               return {
                 status: 200,
                 body: makeOverview({ id: request.overviewId, video: request.input.video, inOneLine: "Made on our key." }),
@@ -711,6 +715,16 @@ export class BackendSimulator {
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
           }),
+    );
+
+    await this.#page.route("**/api/trials", (route) =>
+      this.#respond(route, EndpointKey.TRIAL_START, {
+        onDefault: () => {
+          this.#trialTokensIssued += 1;
+          return { status: 200, body: { token: `simulated-trial-${this.#trialTokensIssued}` } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no trials" } } }),
+      }),
     );
 
     await this.#page.route("**/api/overview-usage", (route) =>
@@ -1048,6 +1062,9 @@ export class BackendSimulator {
       this.#anthropicOutOfCredit = true;
     },
     generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
+    // The trial token each generation on our key carried, null for one made by an account.
+    trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
+    trialTokensIssued: (): number => this.#trialTokensIssued,
     reservations: (): Array<{ overviewId: string; shareToken?: string }> => [...this.#reservations],
     releases: (): string[] => [...this.#releases],
   };

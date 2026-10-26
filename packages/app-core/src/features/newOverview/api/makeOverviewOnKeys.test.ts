@@ -75,6 +75,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     release: async () => {
       calls.push("release");
     },
+    startTrial: async () => ({ token: "trial-token" }),
   };
   return { api, calls };
 }
@@ -159,5 +160,28 @@ describe("makeOverviewOnKeys", () => {
     const overview = await makeOverviewOnKeys({ order: ["own"], own: { provider: "anthropic", client: ownClient("made") }, api: null }, input, meta);
 
     expect(overview.madeOn).toEqual({ key: "own", fallback: null });
+  });
+
+  it("signed out, our key goes through the device's trial, with nothing reserved", async () => {
+    const { api, calls } = fakeServer();
+
+    const overview = await makeOverviewOnKeys({ order: ["ours"], own: null, api: null, trial: api }, input, meta);
+
+    expect(overview.madeOn).toEqual({ key: "ours", fallback: null });
+    expect(calls).toEqual(["generate"]);
+  });
+
+  it("signed out, a trial spent on our key, or on this address today, moves to the reader's own key", async () => {
+    for (const quota of ["trial", "trial-address"]) {
+      const { api } = fakeServer({ generate: refusal("too_many_requests", { quota }) });
+
+      const overview = await makeOverviewOnKeys(
+        { order: ["ours", "own"], own: { provider: "anthropic", client: ownClient("made") }, api: null, trial: api },
+        input,
+        meta,
+      );
+
+      expect(overview.madeOn?.fallback?.cause).toBe("quota-spent");
+    }
   });
 });

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
+import { apiLogLines, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEADER, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -10,6 +10,7 @@ import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { QuotaSpentError, type ServiceCaller, type ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
+import type { TrialsRepository } from "../usage/TrialsRepository.js";
 import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ videoId: VideoId });
@@ -19,9 +20,16 @@ export function serviceTranscriptRoutes(
   {
     service,
     usage,
+    trials,
     sql,
     clock,
-  }: { service: ServiceTranscripts | null; usage: OverviewUsageRepository; sql: SqlClient; clock: () => Date },
+  }: {
+    service: ServiceTranscripts | null;
+    usage: OverviewUsageRepository;
+    trials: TrialsRepository;
+    sql: SqlClient;
+    clock: () => Date;
+  },
 ): void {
   app.get("/service-transcripts", { config: { public: true } }, async () => {
     const status: ServiceTranscriptStatus = { available: service !== null };
@@ -57,6 +65,16 @@ export function serviceTranscriptRoutes(
             resetsOn: month.resetsOn,
             retryAfterSeconds,
           });
+        }
+      }
+      // Signed out, the same holds for the trial: once its token has made the trial's
+      // overviews on our key, the extension or the shared cache is where a transcript comes from.
+      const trialToken = request.headers[TRIAL_TOKEN_HEADER];
+      if (!("accountId" in caller) && typeof trialToken === "string") {
+        const used = await trials.used(trialToken);
+        if (used !== null && used >= TRIAL_OVERVIEWS) {
+          request.log.warn(apiLogLines.serviceTranscripts.trialSpent({ used, limit: TRIAL_OVERVIEWS }));
+          throw new ApiError("too_many_requests", "You've made the overviews you can without an account", { quota: "trial" });
         }
       }
       try {

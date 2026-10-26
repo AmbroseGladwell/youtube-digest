@@ -1,20 +1,32 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
+import { TRIAL_OVERVIEWS_PER_ADDRESS_DAILY } from "../usage/TrialsRepository.js";
 
 const OUR_KEY = "sk-test-ours";
 
-async function ourKeyApp(openAi: FakeOpenAi, { dailyGenerations = 300, logger }: { dailyGenerations?: number; logger?: ReturnType<typeof recordingLogger>["logger"] } = {}) {
-  return createTestApp({}, { ourKey: { apiKey: OUR_KEY, dailyGenerations, http: openAi.http }, ...(logger === undefined ? {} : { logger }) });
+async function ourKeyApp(
+  openAi: FakeOpenAi,
+  {
+    dailyGenerations = 300,
+    signedOutDailyGenerations = 50,
+    logger,
+  }: { dailyGenerations?: number; signedOutDailyGenerations?: number; logger?: ReturnType<typeof recordingLogger>["logger"] } = {},
+) {
+  return createTestApp(
+    {},
+    { ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, http: openAi.http }, ...(logger === undefined ? {} : { logger }) },
+  );
 }
 
 const generate = (account: TestAccount) =>
@@ -163,7 +175,7 @@ test("a server with no key of its own says so before anyone asks it to generate"
   await testApp.close();
 });
 
-test("making an overview on our key needs an account", async () => {
+test("making an overview on our key needs an account or a trial", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
 
   const response = await testApp.app.inject({
@@ -174,5 +186,130 @@ test("making an overview on our key needs an account", async () => {
   });
 
   assert.equal(response.json().error.code, "unauthenticated");
+  await testApp.close();
+});
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+test("signed out, a device makes the trial's 3 on our key on its token, and the 4th is refused as the trial's", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi());
+  const device = await makeTrialDevice(testApp);
+
+  const made = [];
+  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
+  const fourth = await device.generate();
+
+  assert.deepEqual(made, [200, 200, 200]);
+  assert.equal(fourth.statusCode, 429);
+  assert.equal(fourth.json().error.details.quota, "trial");
+  await testApp.close();
+});
+
+test("a new token from the same address gets no more on our key that day, while another address does", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
+  const first = await makeTrialDevice(testApp);
+  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await first.generate();
+
+  const privateWindow = await makeTrialDevice(testApp);
+  const refused = await privateWindow.generate();
+  const elsewhere = await (await makeTrialDevice(testApp, "198.51.100.4")).generate();
+  testApp.clock.advance(DAY_MS);
+  const tomorrow = await privateWindow.generate();
+
+  assert.equal(refused.statusCode, 429);
+  assert.equal(refused.json().error.details.quota, "trial-address");
+  assert.ok(Number(refused.headers["retry-after"]) > 0);
+  assert.equal(elsewhere.statusCode, 200);
+  assert.equal(tomorrow.statusCode, 200);
+  assert.equal(saying(lines, "trial address cap spent").length, 1);
+  assert.ok(!JSON.stringify(lines).includes("203.0.113.7"));
+  await testApp.close();
+});
+
+test("a refusal from the address doesn't spend the token's own trial", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi());
+  const filler = await makeTrialDevice(testApp);
+  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await filler.generate();
+  const device = await makeTrialDevice(testApp);
+  await device.generate();
+
+  testApp.clock.advance(DAY_MS);
+  const made = [];
+  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
+
+  assert.deepEqual(made, [200, 200, 200]);
+  await testApp.close();
+});
+
+test("once the signed-out share of the day is spent, a trial is refused as busy while an account still makes one", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(), { signedOutDailyGenerations: 1, logger });
+  await (await makeTrialDevice(testApp)).generate();
+
+  const refused = await (await makeTrialDevice(testApp, "198.51.100.4")).generate();
+  const account = await generate(await makeAccount(testApp));
+
+  assert.equal(refused.statusCode, 429);
+  assert.equal(refused.json().error.details.quota, "our-key-daily");
+  assert.equal(account.statusCode, 200);
+  assert.equal(saying(lines, "our key signed-out share spent").length, 1);
+  await testApp.close();
+});
+
+test("a failed trial generation gives back its token's slot, its address's and the signed-out share", async () => {
+  const openAi = makeFakeOpenAi({ status: 503, body: { error: { message: "overloaded" } } });
+  const testApp = await ourKeyApp(openAi, { signedOutDailyGenerations: 1 });
+  const device = await makeTrialDevice(testApp);
+
+  for (let n = 0; n < TRIAL_OVERVIEWS + 1; n += 1) await device.generate();
+  const usage = new OverviewUsageRepository(testApp.sql);
+  const day = usageDay(testApp.clock.now);
+
+  assert.equal((await device.generate()).json().error.code, "generation_failed");
+  assert.deepEqual([await usage.ourKeyGenerationsOn(day), await usage.signedOutGenerationsOn(day)], [0, 0]);
+  await testApp.close();
+});
+
+test("a token this server never issued is told so, so the device can ask for a new one", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi());
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/generations",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), [TRIAL_TOKEN_HEADER]: "never-issued" },
+    payload: generationRequest(randomUUID()),
+  });
+
+  assert.equal(response.statusCode, 401);
+  assert.equal(response.json().error.details.trial, "unknown");
+  assert.equal(await new OverviewUsageRepository(testApp.sql).ourKeyGenerationsOn(usageDay(testApp.clock.now)), 0);
+  await testApp.close();
+});
+
+test("a trial overview logs as the trial's, with the token's count", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
+  const device = await makeTrialDevice(testApp);
+
+  await device.generate();
+  const [made] = saying(lines, "overview made on our key");
+
+  assert.deepEqual([made?.caller, made?.plan, made?.used, made?.limit], ["trial", null, 1, TRIAL_OVERVIEWS]);
+  assert.equal(saying(lines, "trial token issued").length, 1);
+  assert.ok(!JSON.stringify(lines).includes(device.token));
+  await testApp.close();
+});
+
+test("a server with no key of its own issues no trials", async () => {
+  const testApp = await createTestApp();
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/trials",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+  });
+
+  assert.equal(response.json().error.code, "unavailable");
   await testApp.close();
 });

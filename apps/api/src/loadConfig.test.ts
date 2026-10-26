@@ -178,6 +178,14 @@ test("a floor that is not a whole number is refused", () => {
 
 test("overviews are made on our key only once there is a key, under a global daily cap of 300 unless told otherwise", () => {
   assert.equal(loadConfig({ DATABASE_URL }).ourKey, null);
-  assert.deepEqual(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test" }).ourKey, { apiKey: "sk-test", dailyGenerations: 300 });
+  assert.deepEqual(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test" }).ourKey, {
+    apiKey: "sk-test",
+    dailyGenerations: 300,
+    signedOutDailyGenerations: 50,
+  });
   assert.equal(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_DAILY_GENERATIONS: "40" }).ourKey?.dailyGenerations, 40);
+  assert.equal(
+    loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: "5" }).ourKey?.signedOutDailyGenerations,
+    5,
+  );
 });

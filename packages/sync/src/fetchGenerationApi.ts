@@ -1,4 +1,4 @@
-import { OurKeyGenerationStatus, Overview, OverviewUsage } from "@overview/domain";
+import { OurKeyGenerationStatus, Overview, OverviewUsage, TrialToken } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { GenerationApi } from "./GenerationApi.js";
 
@@ -17,5 +17,6 @@ export function createFetchGenerationApi(options: ApiRequesterOptions): Generati
     release: async (overviewId) => {
       await request("DELETE", `/overview-reservations/${encodeURIComponent(overviewId)}`, OverviewUsage);
     },
+    startTrial: () => answered(request("POST", "/trials", TrialToken)),
   };
 }

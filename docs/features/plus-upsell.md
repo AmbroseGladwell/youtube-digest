@@ -40,7 +40,7 @@ rather than guessing Free.
 
 **Nothing is gated on it today.** The MCP connector used to be, and OV-104 took that gate
 out (`mcp-connector.md`). What the plan will gate is how many overviews a month the account
-can make, which OV-102 and OV-103 count.
+can make, which the server counts (`tiers.md`, "Counting").
 
 Two consequences worth being explicit about:
 
@@ -105,7 +105,7 @@ component is `SavedLocallyNote`; the dismissal is still stored as `plusNoticeDis
 a reader who has already put it away does not meet it again.
 
 The note a signed-in reader should get at this moment is their remaining count for the
-month, which waits for OV-102 and OV-103 to count overviews.
+month, which the server now counts; showing it is still to come.
 
 "Just written" is carried as router state on the navigation the capture page makes, not
 as a flag on the run — the run is dismissed by the time the reader is on screen. Opening
@@ -147,8 +147,8 @@ and the Settings list row's "Free · 7 of 10 left". Both are counts, and nothing
 - **Gating sync, narration or the MCP connection.** None of them is Plus's to gate: they
   belong to the free account (`tiers.md`). The server has given sync to every account since
   it was built, and the copy that said otherwise was the thing that was wrong.
-- **Showing what is left this month.** The counts are the server's, and nothing counts
-  overviews yet: OV-102 for an account's two quotas, OV-103 for the signed-out trial. Until
-  they land the panel states each plan's allowance and no reader is told their own usage.
+- **Showing what is left this month.** The counts are the server's: an account's two
+  quotas and the signed-out trial (`tiers.md`, "Counting"). The panel still states each
+  plan's allowance, and no reader is told their own usage yet.
 - **Selling anything on the web app.** The three placements are the panel's, which is
   where the design puts them. The web reader is untouched.

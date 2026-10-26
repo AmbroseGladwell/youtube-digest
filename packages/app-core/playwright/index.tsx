@@ -4,6 +4,8 @@ import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
 import { writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
 import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js";
 import { writeDeviceAccountHistory } from "../src/features/accountLibraries/deviceAccountHistoryStorage.js";
+import { writeSignedOutTrial } from "../src/features/signedOutTrial/signedOutTrialStorage.js";
+import { NO_TRIAL } from "../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { NO_ACCOUNT_HISTORY } from "../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import { writeAnalyticsConsent } from "../src/features/analyticsConsent/analyticsConsentStorage.js";
 import {
@@ -58,6 +60,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   writeSyncConnection(connection);
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
   writeDeviceAccountHistory(hooksConfig?.deviceAccountHistory ?? NO_ACCOUNT_HISTORY);
+  writeSignedOutTrial(hooksConfig?.signedOutTrial ?? NO_TRIAL);
   writeAnalyticsConsent(hooksConfig?.analyticsConsent ?? null);
 
   window.__iwftStores__ = seeded;

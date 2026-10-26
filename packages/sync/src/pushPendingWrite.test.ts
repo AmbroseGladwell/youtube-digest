@@ -259,16 +259,18 @@ test("a new overview the server holds no reservation for reserves a slot and goe
   ]);
 });
 
-test("past the own-key quota a new overview waits for the month to turn, neither parked nor sent", async () => {
-  const api = new ScriptedSyncApi();
-  api.failAlways("createOverview", { code: "not_reserved" });
-  api.failAlways("reserveOverview", { code: "too_many_requests", details: { quota: "own", resetsOn: "2026-11-01" } });
+for (const quota of ["own", "ours"]) {
+  test(`past the ${quota} quota a new overview waits for the month to turn, neither parked nor sent`, async () => {
+    const api = new ScriptedSyncApi();
+    api.failAlways("createOverview", { code: "not_reserved" });
+    api.failAlways("reserveOverview", { code: "too_many_requests", details: { quota, resetsOn: "2026-11-01" } });
 
-  const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
+    const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
 
-  assert.deepEqual(outcome, { result: "waiting", until: "2026-11-01" });
-  assert.equal(api.callsTo("createOverview").length, 1);
-});
+    assert.deepEqual(outcome, { result: "waiting", until: "2026-11-01" });
+    assert.equal(api.callsTo("createOverview").length, 1);
+  });
+}
 
 test("a throttled reservation stops the push like any throttle, rather than waiting a month", async () => {
   const api = new ScriptedSyncApi();

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { letInOverview, makeAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
@@ -22,7 +22,7 @@ test("a preflight from a listed origin is answered without a session, naming wha
     headers: {
       origin: EXTENSION,
       "access-control-request-method": "POST",
-      "access-control-request-headers": "authorization, content-type, if-match, x-client-version",
+      "access-control-request-headers": `authorization, content-type, if-match, x-client-version, ${TRIAL_TOKEN_HEADER}`,
     },
   });
 
@@ -33,7 +33,7 @@ test("a preflight from a listed origin is answered without a session, naming wha
     assert.ok(methods.includes(method), `allows ${method}`);
   }
   const allowed = headerList(response.headers["access-control-allow-headers"]);
-  for (const header of ["authorization", "content-type", "if-match", CLIENT_VERSION_HEADER]) {
+  for (const header of ["authorization", "content-type", "if-match", CLIENT_VERSION_HEADER, TRIAL_TOKEN_HEADER]) {
     assert.ok(allowed.includes(header), `allows ${header}`);
   }
   await close();

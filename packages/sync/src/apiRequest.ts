@@ -7,6 +7,7 @@ import {
   CLIENT_VERSION,
   CLIENT_VERSION_HEADER,
   REQUEST_ID_HEADER,
+  TRIAL_TOKEN_HEADER,
   type ApiErrorCode,
 } from "@overview/domain";
 import { SyncRequestError, SyncTransportError } from "./SyncRequestError.js";
@@ -26,6 +27,9 @@ export interface ApiRequesterOptions {
   // cookie for the API's origin is the session, which is the web app's transport
   // (docs/features/sign-in.md).
   token?: string | null | undefined;
+  // Signed out, the token the server issued for this device's trial, which it counts the
+  // overviews made on our key against (docs/architecture/tiers.md, "Counting").
+  trialToken?: string | null | undefined;
   clientVersion?: number | undefined;
   // Which shell is asking, sent so the server's logs can tell the two apart.
   surface?: AuthSurface | undefined;
@@ -45,6 +49,7 @@ export type ApiRequester = <T>(
 export function createApiRequester({
   baseUrl,
   token = null,
+  trialToken = null,
   clientVersion = CLIENT_VERSION,
   surface,
   fetch: fetchImpl = globalThis.fetch,
@@ -65,6 +70,7 @@ export function createApiRequester({
         method,
         headers: {
           ...(token === null ? {} : { authorization: `Bearer ${token}` }),
+          ...(trialToken === null ? {} : { [TRIAL_TOKEN_HEADER]: trialToken }),
           [CLIENT_VERSION_HEADER]: String(clientVersion),
           ...(surface === undefined ? {} : { [CLIENT_SURFACE_HEADER]: surface }),
           [REQUEST_ID_HEADER]: requestId,

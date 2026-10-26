@@ -11,6 +11,8 @@ export type OverviewReservation =
   | { reserved: true; month: string; used: number; limit: number }
   | { reserved: false; used: number; limit: number };
 
+export type OurKeyDayReservation = "reserved" | "spent" | "signed-out-share-spent";
+
 // One row per UTC month, account and key. A slot is reserved before generation and released
 // when it fails, so an overview counts once, when it succeeds; regenerating reserves again
 // (docs/architecture/tiers.md, "Counting"). Kept in Postgres, since a deploy that reset it
@@ -60,21 +62,38 @@ export class OverviewUsageRepository {
   }
 
   // The global cap behind every plan, counted per UTC day: one slot per generation on our
-  // key, given back when it fails, like the proxy's budget.
-  async reserveOurKeyDay(now: Date, limit: number): Promise<boolean> {
-    if (limit < 1) return false;
+  // key, given back when it fails, like the proxy's budget. Signed out has its own share of
+  // it, so a trial can't spend the day an account was counting on.
+  async reserveOurKeyDay(now: Date, limit: number, signedOutLimit: number | null): Promise<OurKeyDayReservation> {
+    const signedOut = signedOutLimit === null ? 0 : 1;
+    if (limit < 1) return "spent";
+    if (signedOutLimit !== null && signedOutLimit < 1) return "signed-out-share-spent";
     const rows = await this.#sql.query(
-      `insert into our_key_usage (day, generations) values ($1::date, 1)
-       on conflict (day) do update set generations = our_key_usage.generations + 1
-       where our_key_usage.generations < $2
+      `insert into our_key_usage (day, generations, signed_out) values ($1::date, 1, $3)
+       on conflict (day) do update set
+         generations = our_key_usage.generations + 1,
+         signed_out = our_key_usage.signed_out + $3
+       where our_key_usage.generations < $2 and our_key_usage.signed_out + $3 <= $4
        returning generations`,
-      [usageDay(now), limit],
+      [usageDay(now), limit, signedOut, signedOutLimit ?? limit],
     );
-    return rows.length > 0;
+    if (rows.length > 0) return "reserved";
+    return (await this.ourKeyGenerationsOn(usageDay(now))) < limit ? "signed-out-share-spent" : "spent";
   }
 
-  async releaseOurKeyDay(day: string): Promise<void> {
-    await this.#sql.query("update our_key_usage set generations = greatest(generations - 1, 0) where day = $1::date", [day]);
+  async releaseOurKeyDay(day: string, signedOut: boolean): Promise<void> {
+    await this.#sql.query(
+      `update our_key_usage set
+         generations = greatest(generations - 1, 0),
+         signed_out = greatest(signed_out - $2, 0)
+       where day = $1::date`,
+      [day, signedOut ? 1 : 0],
+    );
+  }
+
+  async signedOutGenerationsOn(day: string): Promise<number> {
+    const [row] = await this.#sql.query<{ signed_out: number }>("select signed_out from our_key_usage where day = $1::date", [day]);
+    return row?.signed_out ?? 0;
   }
 
   async ourKeyGenerationsOn(day: string): Promise<number> {

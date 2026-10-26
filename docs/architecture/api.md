@@ -60,10 +60,10 @@ apps/api/
     postHog/             PostHog's one batch call, shared by events and errors
     logs/                pino with a route-only request log, written to stdout and to an OTLP log endpoint
     playlists/           reading a YouTube playlist whole through the Data API, and telling a private one from a missing one
-    usage/               the month's counts per key, our key's daily cap, and the reservations a new overview is let in by
+    usage/               the month's counts per key, our key's daily cap, the signed-out trial's counts, and the reservations a new overview is let in by
     generation/          OurKeyGenerator, the model our key makes overviews with
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
-    routes/              changes, overviews, topics, settings, followed playlists, playlists, transcripts, audio, shares, overview usage, reservations, generations
+    routes/              changes, overviews, topics, settings, followed playlists, playlists, transcripts, audio, shares, overview usage, reservations, generations and trials
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
@@ -302,6 +302,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
+| `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token costs nothing until it makes an overview, which the 3 a day per address in Postgres counts (`tiers.md`, "Counting") |
 | `playlistAddress` | 120 | hour, per address | `GET /api/playlists/:id`: each read spends YouTube Data API quota shared by every reader (`docs/features/playlists.md`) |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
@@ -407,6 +408,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
 | `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`; the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
+| `OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS` | 50 | the share of that day a signed-out trial may spend, so proxies rotating addresses can't turn accounts away: about £2 (`tiers.md`, "Counting") |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |

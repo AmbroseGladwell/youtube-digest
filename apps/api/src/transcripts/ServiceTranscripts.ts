@@ -1,8 +1,8 @@
-import { createHash } from "node:crypto";
 import type { FastifyBaseLogger } from "fastify";
 import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountId } from "../auth/AccountId.js";
+import { hashedAddress } from "../http/hashedAddress.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
 import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
@@ -43,7 +43,7 @@ export type ServiceAnswer = { transcript: StoredTranscript; via: "cache" | Servi
 const callerKey = (caller: ServiceCaller): string =>
   "accountId" in caller
     ? `account:${caller.accountId}`
-    : `address:${createHash("sha256").update(caller.address).digest("hex").slice(0, 32)}`;
+    : `address:${hashedAddress(caller.address)}`;
 
 const quotaOf = (caller: ServiceCaller): number =>
   "accountId" in caller ? serviceTranscriptQuotas[caller.plan] : serviceTranscriptQuotas.address;
