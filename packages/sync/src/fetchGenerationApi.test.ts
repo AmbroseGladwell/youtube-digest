@@ -70,9 +70,10 @@ test("the server says whether it makes overviews on its own key, and the account
 
 test("signed out, a trial is started with no session, and each generation carries its token", async () => {
   const headersSent: Array<Record<string, string>> = [];
-  const fetch = async (_input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+  const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     headersSent.push({ ...(init?.headers as Record<string, string>) });
-    return new Response(JSON.stringify({ token: "trial-token" }), { status: 200 });
+    const body = String(input).endsWith("/trials") ? { token: "trial-token" } : { available: true };
+    return new Response(JSON.stringify(body), { status: 200 });
   };
 
   assert.deepEqual(await createFetchGenerationApi({ baseUrl: API, fetch }).startTrial(), { token: "trial-token" });
