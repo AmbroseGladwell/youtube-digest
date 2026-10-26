@@ -11,6 +11,8 @@ export const queuePageTestIds = {
   noKeyNote: "QueuePage.noKeyNote",
   heldNote: "QueuePage.heldNote",
   addKeyLink: "QueuePage.addKeyLink",
+  trialSpentNote: "QueuePage.trialSpentNote",
+  createAccountLink: "QueuePage.createAccountLink",
   making: "QueuePage.making",
   waiting: "QueuePage.waiting",
   waitingLabel: "QueuePage.waitingLabel",

@@ -44,13 +44,14 @@ export enum EndpointKey {
   SHARED_PAGE_EVENTS = "SHARED_PAGE_EVENTS",
   ERRORS = "ERRORS",
   PLAYLIST_LOOKUP = "PLAYLIST_LOOKUP",
-  // Overviews made on our key, the account's month on each key, and the reservations an
-  // own-key overview takes (docs/architecture/tiers.md).
+  // Overviews made on our key, the account's month on each key, the reservations an
+  // own-key overview takes, and the signed-out trial's token (docs/architecture/tiers.md).
   OUR_KEY_STATUS = "OUR_KEY_STATUS",
   OUR_KEY_GENERATE = "OUR_KEY_GENERATE",
   OVERVIEW_USAGE = "OVERVIEW_USAGE",
   OVERVIEW_RESERVE = "OVERVIEW_RESERVE",
   OVERVIEW_RELEASE = "OVERVIEW_RELEASE",
+  TRIAL_START = "TRIAL_START",
 }
 
 export enum EndpointBehaviour {

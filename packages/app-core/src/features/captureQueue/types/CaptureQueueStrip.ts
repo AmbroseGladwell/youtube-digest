@@ -7,5 +7,6 @@ export type CaptureQueueStrip =
   | { kind: "held"; hold: QueueHold; waiting: number; viaExtension: boolean }
   | { kind: "checked"; playlists: number; queued: number }
   | { kind: "noKey"; waiting: number }
+  | { kind: "trialSpent"; waiting: number }
   | { kind: "attention"; failed: number; skipped: number }
   | { kind: "done"; made: number };

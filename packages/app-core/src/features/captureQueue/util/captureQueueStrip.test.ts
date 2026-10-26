@@ -8,6 +8,7 @@ const idle: CaptureQueueStripInput = {
   skipped: 0,
   paused: false,
   needsKey: false,
+  trialSpent: false,
   hold: null,
   viaExtension: true,
   batch: null,
@@ -72,5 +73,9 @@ describe("captureQueueStrip", () => {
       playlists: 2,
       queued: 3,
     });
+  });
+
+  it("signed out past the trial, waits for an account before it waits for a key", () => {
+    expect(captureQueueStrip({ ...idle, waiting: 4, trialSpent: true, needsKey: true })).toEqual({ kind: "trialSpent", waiting: 4 });
   });
 });

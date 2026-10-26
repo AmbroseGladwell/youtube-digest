@@ -7,14 +7,19 @@ export interface OverviewKeys {
   // The reader's own key, when they have one on this device.
   own: { provider: Provider; client: GenerationClient } | null;
   // Our server, for a signed-in reader: our key, and the reservations an own-key overview
-  // takes on the account's month. Null signed out, where nothing is counted by the server.
+  // takes on the account's month. Null signed out, where the device counts its own trial.
   api: GenerationApi | null;
+  // Signed out, our key through the device's trial, which the server counts only on our key
+  // (docs/architecture/tiers.md, "Counting").
+  trial?: Pick<GenerationApi, "generate"> | null;
 }
 
 export interface OverviewMeta {
   id: OverviewId;
   savedAt: string;
 }
+
+const SPENT_QUOTAS = new Set(["ours", "own", "trial", "trial-address"]);
 
 // Why a key couldn't make the overview, when that is a reason to try the next one. Null is
 // a failure the reader has to see, such as a refused key (design 110f).
@@ -23,7 +28,7 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
     switch (error.code) {
       case "too_many_requests":
         if (error.details?.quota === "our-key-daily") return "busy";
-        return error.details?.quota === "ours" || error.details?.quota === "own" ? "quota-spent" : null;
+        return SPENT_QUOTAS.has(String(error.details?.quota)) ? "quota-spent" : null;
       case "generation_failed":
         return FallbackCause.safeParse(error.details?.fallback).data ?? null;
       case "unavailable":
@@ -40,14 +45,15 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
 // counts on its own key and gives its slot back when it fails, so a fallback counts once,
 // on the key that made it.
 export async function makeOverviewOnKeys(
-  { order, own, api }: OverviewKeys,
+  { order, own, api, trial = null }: OverviewKeys,
   input: GenerationInput,
   meta: OverviewMeta,
 ): Promise<Overview> {
   let passedOver: MadeOn["fallback"] = null;
   for (const [index, key] of order.entries()) {
     try {
-      const overview = key === "own" ? await onOwnKey(own!, api, input, meta) : await api!.generate({ overviewId: meta.id, input });
+      const overview =
+        key === "own" ? await onOwnKey(own!, api, input, meta) : await (api ?? trial)!.generate({ overviewId: meta.id, input });
       return { ...overview, madeOn: { key, fallback: passedOver } };
     } catch (error) {
       const cause = fallbackCauseOf(error);
