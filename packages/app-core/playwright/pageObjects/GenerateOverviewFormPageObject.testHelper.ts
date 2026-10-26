@@ -100,6 +100,18 @@ export class GenerateOverviewFormPageObject extends PageObject {
       await this.expectToHaveCount(generateOverviewFormTestIds.watchingNote, 0);
     });
 
+  // Signed out past the trial's 3, the form offers an account where Generate would be,
+  // whatever keys the device holds (docs/architecture/tiers.md, "At the limit").
+  verifyOffersAccountForTrial = () =>
+    this.step("verifyOffersAccountForTrial", async () => {
+      await expect(this.get(generateOverviewFormTestIds.keyPrompt.heading)).toHaveText("Sign up to keep going.");
+      await this.expectToBeVisible(generateOverviewFormTestIds.keyPrompt.createAccountLink);
+      await expect(this.get(generateOverviewFormTestIds.generateButton)).toBeDisabled();
+    });
+
+  clickCreateAccountForTrial = () =>
+    this.step("clickCreateAccountForTrial", () => this.click(generateOverviewFormTestIds.keyPrompt.createAccountLink));
+
   clickSettingsLink = () =>
     this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.keyPrompt.settingsLink));
 }

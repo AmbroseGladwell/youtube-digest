@@ -3,6 +3,7 @@ import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import type { CaptureQueueStrip } from "../../types/CaptureQueueStrip.js";
+import { TRIAL_SPENT_ACTION } from "../../../signedOutTrial/trialPrompt.js";
 import { captureQueueStripCopy } from "../../util/captureQueueStripCopy.js";
 import styles from "./CaptureQueueStripView.module.scss";
 import { captureQueueStripViewTestIds } from "./CaptureQueueStripViewTestIds.js";
@@ -25,6 +26,7 @@ const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
   held: "clock",
   checked: "refresh",
   noKey: "key",
+  trialSpent: "userPlus",
   attention: "alert",
   done: "check",
 };
@@ -156,6 +158,20 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
               data-testid={captureQueueStripViewTestIds.addKeyLink}
             >
               Add a key
+            </Link>
+            {!compact && queueLink("Queue")}
+          </>
+        );
+      case "trialSpent":
+        return (
+          <>
+            <Link
+              className={styles.primaryAction}
+              to={Routes.createAccount()}
+              onClick={() => analytics.account.trial.createAccountChosen({ from: "queue" })}
+              data-testid={captureQueueStripViewTestIds.createAccountLink}
+            >
+              {TRIAL_SPENT_ACTION}
             </Link>
             {!compact && queueLink("Queue")}
           </>

@@ -47,6 +47,8 @@ export interface CaptureQueueController {
   paused: boolean;
   folded: boolean;
   needsKey: boolean;
+  // Signed out, the device has made the trial's overviews, so what waits waits for an account.
+  trialSpent: boolean;
   // Waiting at a limit, until it resets or the extension connects; nothing is asked meanwhile
   // (docs/features/capture-queue.md, "Waiting at a limit").
   hold: QueueHold | null;
@@ -73,7 +75,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const playlistApi = usePlaylistApi();
   const { apiKeys } = useApiKeys();
   const generate = useRunOverviewGeneration(apiKeys);
-  const needsKey = !useGenerationReadiness().ready;
+  const readiness = useGenerationReadiness();
+  const trialSpent = readiness.trialSpent;
+  const needsKey = !readiness.ready && !trialSpent;
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
@@ -263,7 +267,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   }, [youTubeFetch, resume]);
 
   const next = waiting[0] ?? null;
-  const canMake = !preferences.paused && !needsKey && !readerRunActive && making === null && hold === null && queue.isSuccess;
+  const canMake = !preferences.paused && !needsKey && !trialSpent && !readerRunActive && making === null && hold === null && queue.isSuccess;
   useEffect(() => {
     if (canMake && next !== null) void make(next);
   }, [canMake, next, make]);
@@ -327,6 +331,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     skipped: attention.length - failed,
     paused: preferences.paused,
     needsKey,
+    trialSpent,
     hold,
     viaExtension: youTubeFetch === null,
     batch,
@@ -344,6 +349,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       paused: preferences.paused,
       folded: preferences.folded,
       needsKey,
+      trialSpent,
       hold,
       viaExtension: youTubeFetch === null,
       setPaused,
@@ -358,6 +364,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         if (waiting.length === 0) setBatch(null);
       },
     }),
-    [playlistApi, waiting, attention, making, strip, preferences, needsKey, hold, youTubeFetch, setPaused, savePreferences, remove, retry, captureQueueStore, refresh, clear],
+    [playlistApi, waiting, attention, making, strip, preferences, needsKey, trialSpent, hold, youTubeFetch, setPaused, savePreferences, remove, retry, captureQueueStore, refresh, clear],
   );
 }

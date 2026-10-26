@@ -298,7 +298,7 @@ export const analyticsEvents = {
   extension: {
     injectedButton: {
       pressed: event("The reader presses the button the extension puts on a YouTube video, and what it did", {
-        outcome: z.enum(["openedHeld", "keysNeeded", "started"]),
+        outcome: z.enum(["openedHeld", "keysNeeded", "accountNeeded", "started"]),
       }),
     },
     sidePanel: {
@@ -402,6 +402,12 @@ export const analyticsEvents = {
     accountOffer: {
       createAccountChosen: event("The reader follows Create account from the strip offering an account"),
       dismissed: event("The reader turns down the strip offering an account, which hides it on this device"),
+    },
+    trial: {
+      limitReached: event("A reader without an account makes the trial's last overview on this device, on either key"),
+      createAccountChosen: event("The reader follows Create account from the prompt a spent signed-out trial shows", {
+        from: z.enum(["dialog", "home", "panel", "queue"]),
+      }),
     },
   },
   analyticsConsent: {

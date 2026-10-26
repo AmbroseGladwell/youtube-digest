@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import type { OverviewUsage } from "@overview/domain";
+import { TRIAL_TOKEN_HEADER, type OverviewUsage } from "@overview/domain";
 import { createFetchGenerationApi } from "./fetchGenerationApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
 
@@ -66,4 +66,20 @@ test("the server says whether it makes overviews on its own key, and the account
 
   assert.deepEqual(await api.status(), { available: true });
   assert.equal(sent[0]!.url, `${API}/api/generations`);
+});
+
+test("signed out, a trial is started with no session, and each generation carries its token", async () => {
+  const headersSent: Array<Record<string, string>> = [];
+  const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+    headersSent.push({ ...(init?.headers as Record<string, string>) });
+    const body = String(input).endsWith("/trials") ? { token: "trial-token" } : { available: true };
+    return new Response(JSON.stringify(body), { status: 200 });
+  };
+
+  assert.deepEqual(await createFetchGenerationApi({ baseUrl: API, fetch }).startTrial(), { token: "trial-token" });
+  await createFetchGenerationApi({ baseUrl: API, fetch, trialToken: "trial-token" }).status();
+
+  assert.equal(headersSent[0]![TRIAL_TOKEN_HEADER], undefined);
+  assert.equal(headersSent[0]!.authorization, undefined);
+  assert.equal(headersSent[1]![TRIAL_TOKEN_HEADER], "trial-token");
 });

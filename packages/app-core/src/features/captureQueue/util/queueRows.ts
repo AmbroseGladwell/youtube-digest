@@ -10,16 +10,19 @@ export interface QueueRowModel {
 }
 
 // What waits, after the one being made, each with the words its row shows: the first is
-// Next, the rest Waiting, every one says so when there is no key to make it with, and every
-// one says when it continues while the queue waits at a limit.
-export function waitingRows(queue: Pick<CaptureQueueController, "waiting" | "making" | "needsKey" | "hold">): QueueRowModel[] {
+// Next, the rest Waiting, every one says so when there is no key or, signed out past the
+// trial, no account to make it with, and every one says when it continues while the queue
+// waits at a limit.
+export function waitingRows(
+  queue: Pick<CaptureQueueController, "waiting" | "making" | "needsKey" | "trialSpent" | "hold">,
+): QueueRowModel[] {
   const makingId = queue.making?.capture.videoId ?? null;
   const resumeTime = queue.hold === null ? undefined : resumeTimeText(new Date(queue.hold.resumesAt));
   return queue.waiting
     .filter((capture) => capture.videoId !== makingId)
     .map((capture, index) => ({
       capture,
-      state: queue.needsKey ? "noKey" : resumeTime !== undefined ? "held" : index === 0 ? "next" : "waiting",
+      state: queue.trialSpent ? "trialSpent" : queue.needsKey ? "noKey" : resumeTime !== undefined ? "held" : index === 0 ? "next" : "waiting",
       ...(resumeTime === undefined ? {} : { resumeTime }),
     }));
 }

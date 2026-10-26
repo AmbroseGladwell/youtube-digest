@@ -240,9 +240,18 @@ it reserved first is released.
 if the key fails. Only a spent quota stops it there: offline or with the server down, the
 overview is made anyway and its push reserves when it goes. `fallbackCauseOf` decides
 whether a failure moves on, and the last key's own failure is what the reader sees when none
-is left. Our key needs an account, so signed out the reader's own key is the only one
-until OV-103's trial. A signed-in reader with no key of their own is ready to generate
-whenever the server makes overviews on ours (`useGenerationReadiness`, `ourKeyUsable`).
+is left. A reader with no key of their own is ready to generate whenever the server makes
+overviews on ours (`useGenerationReadiness`, `ourKeyUsable`): on the account's month signed
+in, and signed out on the device's trial, through `createTrialGenerationApi`, which asks for
+the trial token before the first overview on ours, keeps it, and asks again if the server
+no longer knows it. The device's count (`useSignedOutTrial`, kept in local storage beside the
+library, never read from it) goes up for every overview made signed out, on either key. At 3
+`trialSpent` takes the place of Create on every surface with *Sign up to keep going*
+(`keyPrompt`, `trialPrompt`), the capture queue waits for an account, and the extension's
+button opens Create account. Only a shell that can make an account has a trial: elsewhere
+there is nothing to offer. Signing in leaves the count where it is, so signing out again
+doesn't start a new trial. The count reaching 3 is `account.trial.limitReached`, and following
+the prompt `account.trial.createAccountChosen`.
 The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLine` words it),
 and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
 a fallback to switch off. Saving a shared overview sends the share's token before the copy

@@ -5,6 +5,7 @@ import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { TRIAL_SPENT_ACTION, TRIAL_SPENT_DETAIL, TRIAL_SPENT_HEADING } from "../../signedOutTrial/trialPrompt.js";
 import { useCaptureQueueController } from "../CaptureQueueContext.js";
 import { AttentionRow } from "../components/AttentionRow/AttentionRow.js";
 import { QueueRow } from "../components/QueueRow/QueueRow.js";
@@ -40,7 +41,7 @@ export function QueuePage() {
       ? "Made oldest first while The Overview is open on this phone. Continues next time you open it."
       : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. Close it and the queue waits; it continues next time you open The Overview.";
 
-  const pauseControl = queue.needsKey ? null : queue.paused ? (
+  const pauseControl = queue.needsKey || queue.trialSpent ? null : queue.paused ? (
     <button
       type="button"
       className={stacked ? styles.iconPrimary : styles.primary}
@@ -138,6 +139,25 @@ export function QueuePage() {
               Keep
             </button>
           </span>
+        </div>
+      )}
+
+      {queue.trialSpent && waitingCount > 0 && (
+        <div className={styles.noKey} data-testid={queuePageTestIds.trialSpentNote}>
+          <span className={styles.noKeyIcon} aria-hidden="true">
+            <StrokeIcon name="userPlus" size={18} />
+          </span>
+          <p className={styles.noKeyText}>
+            {TRIAL_SPENT_HEADING} {TRIAL_SPENT_DETAIL} The queue starts again once you're signed in.
+          </p>
+          <Link
+            className={styles.primary}
+            to={Routes.createAccount()}
+            onClick={() => analytics.account.trial.createAccountChosen({ from: "queue" })}
+            data-testid={queuePageTestIds.createAccountLink}
+          >
+            {TRIAL_SPENT_ACTION}
+          </Link>
         </div>
       )}
 
