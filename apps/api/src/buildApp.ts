@@ -56,6 +56,7 @@ import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
 import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
 import { OverviewReservationsRepository } from "./usage/OverviewReservationsRepository.js";
 import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
+import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
@@ -94,6 +95,7 @@ export interface TranscriptServiceSetup {
 export interface OurKeySetup {
   apiKey: string;
   dailyGenerations: number;
+  signedOutDailyGenerations: number;
   http: typeof fetch;
 }
 
@@ -208,6 +210,7 @@ export async function buildApp({
       const transcripts = new TranscriptsRepository(sql, clock);
       const overviewUsage = new OverviewUsageRepository(sql);
       const reservations = new OverviewReservationsRepository(sql, overviewUsage);
+      const trials = new TrialsRepository(sql);
       overviewRoutes(api, records, transcripts, reservations);
       topicRoutes(api, records);
       followedPlaylistRoutes(api, records);
@@ -215,14 +218,17 @@ export async function buildApp({
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
-      overviewReservationRoutes(api, { reservations, usage: overviewUsage, shares, sql, clock });
+      overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
       generationRoutes(api, {
         generator:
-          ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, clock }),
+          ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, clock }),
+        trials,
         sql,
+        clock,
       });
       serviceTranscriptRoutes(api, {
         usage: overviewUsage,
+        trials,
         service:
           transcriptService === null
             ? null

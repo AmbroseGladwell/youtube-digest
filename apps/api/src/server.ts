@@ -105,7 +105,12 @@ app.log.info(apiLogLines.startup.transcriptService(
 app.log.info(apiLogLines.startup.ourKey(
     config.ourKey === null
       ? { enabled: false, why: "OPENAI_API_KEY is not set" }
-      : { enabled: true, model: ourKeyModel.model, dailyGenerations: config.ourKey.dailyGenerations },
+      : {
+          enabled: true,
+          model: ourKeyModel.model,
+          dailyGenerations: config.ourKey.dailyGenerations,
+          signedOutDailyGenerations: config.ourKey.signedOutDailyGenerations,
+        },
   ));
 app.log.info(apiLogLines.startup.playlists(
     config.youTubeApiKey === null ? { enabled: false, why: "YOUTUBE_API_KEY is not set" } : { enabled: true, source: "YouTube Data API" },

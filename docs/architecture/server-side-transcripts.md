@@ -105,8 +105,12 @@ this month for an account (`tiers.md`), or in the trial when signed out. Readers
 see the overview count. For an account the check is made before anything else: with no
 overview left on either key this month the answer is `429 too_many_requests` with
 `details.quota: "overviews"`, `details.resetsOn` and a `Retry-After` at the month's turn, and
-the server logs `service transcript refused for spent overviews` (OV-102). The trial's check
-lands with OV-103; until then the safety cap below is the only gate for a signed-out reader.
+the server logs `service transcript refused for spent overviews` (OV-102). Signed out, a
+device sends its trial token (`X-Trial-Token`), and once that token has made the trial's 3 on
+our key the answer is `429` with `details.quota: "trial"`, logged as `service transcript
+refused for a spent trial` (OV-103). An own-key overview signed out then gets its transcript
+from the extension or the shared cache. A device that has never made one on our key has no
+token, and the safety cap below is its gate; the device's own count stops it at 3.
 
 **A daily safety cap per caller.** It protects our address's standing with YouTube, not our
 money, and sits well above normal use. Only a cold fetch that stored a transcript counts: a
@@ -248,5 +252,3 @@ Each run carried about 563 KB of bodies.
   on long videos. The parser is json3-only. Worth doing if spend ever matters.
 - **Counting only accounts of some age** toward the cap, if magic-link accounts are
   ever made in bulk to farm it.
-- **The "an overview left" check** in front of the safety cap: OV-102 for accounts, OV-103
-  for the signed-out trial.

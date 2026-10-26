@@ -6,6 +6,7 @@ export * from "./KeySource.js";
 export * from "./MadeOn.js";
 export * from "./OverviewUsage.js";
 export * from "./OurKeyGenerationRequest.js";
+export * from "./TrialToken.js";
 export * from "./OverviewReservationRequest.js";
 export * from "./Brands.js";
 export * from "./RecordMigration.js";

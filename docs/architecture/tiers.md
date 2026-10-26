@@ -271,13 +271,19 @@ is saved, so its push is let in uncounted.
   every overview it makes signed out, on both keys, and offers the account at 3. Clearing
   site data resets that count, which is accepted: an own-key overview costs us nothing. The
   ones on our key are also counted by the server, against a token it issues to the device
-  on its first generation on our key, so the device can never be talked into more than 3 on
-  ours. The token has its own counter. It is never the no-account library's
+  before its first generation on our key, so the device can never be talked into more than 3
+  on ours. The token has its own counter. It is never the no-account library's
   contents, because OV-47 empties that library into the account on sign-in, which would
   reset the trial every time. A private window mints a new token, so the trial can be
-  reset. It is small enough that this is acceptable. A cap on new tokens per address per
-  day (stored as a truncated hash, like the transcript quota) stops one machine minting
-  tokens without limit.
+  reset, and **the cap that holds is on what costs money: 3 trial overviews on our key a UTC
+  day per address, across every token** (decided 20 Oct 2026, replacing a cap on new tokens
+  per address). The address is stored only as a truncated hash, like the transcript quota,
+  and its rows are deleted after seven days. Readers sharing an address (an office, a
+  university, a mobile network) share the 3, and are pointed to signing up or adding a key.
+- **Signed out has its own share of the global daily cap on our key: 50 of the 300**
+  (`OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS`, decided 20 Oct 2026). Someone rotating addresses
+  through proxies could otherwise spend the whole day's cap and turn away paying Plus readers
+  until midnight. With it, the worst case is about £2 a day, and accounts never feel it.
 - **Signing in doesn't carry a trial's count over.** The free account starts its own
   month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. **A no-account library moved in on sign-in
   (OV-47) counts against the month,** on the key that made each overview (decided 20 Oct
@@ -296,9 +302,8 @@ is saved, so its push is let in uncounted.
   see the overview count. Behind that sits a daily safety cap per caller, 5 per signed-out
   address, 50 per free account, 100 per Plus or BYO Plus account, which protects our
   address's standing with YouTube rather than our money and logs a warning when reached.
-  OV-102 checks it for accounts (`OverviewUsageRepository`, `overview_usage`); until OV-103
-  counts the trial, the safety cap is the only gate signed out
-  (`server-side-transcripts.md`, "Limits").
+  OV-102 checks it for accounts (`OverviewUsageRepository`, `overview_usage`), and OV-103
+  for a trial token that has made its 3 on our key (`server-side-transcripts.md`, "Limits").
 
 ## Generating on our key
 
@@ -320,6 +325,24 @@ on any failure. The device saves the overview it is handed, as it does one made 
 - **Measured, not estimated:** each overview logs the tokens OpenAI reported and their cost
   from `modelPrices.ts`, the same table and metering (`meteredFetch`) the model comparison used.
 
+**Signed out, a trial token stands in for the account** (OV-103). The device asks `POST
+/api/trials` for one before its first overview on our key (public, 10 an hour per address),
+keeps it, and sends it as `X-Trial-Token` on each generation; the server keeps only its hash
+(`TrialsRepository`, `trial_tokens`). A generation then reserves the day's slot and the
+signed-out share of it, the token's slot and the address's slot for the day, and gives them
+all back on any failure. An address refusing gives the token's slot back, so only an
+overview both allow is counted. Each overview made in a trial is remembered by id
+(`trial_overviews`), so moved in on sign-in it counts on our key.
+
+- **Past the trial's 3 on the token:** `429` with `details.quota: "trial"` and no
+  `Retry-After`: it doesn't come back.
+- **Past the address's 3 today:** `429` with `details.quota: "trial-address"` and a
+  `Retry-After` at UTC midnight, logged at warn as `trial address cap spent`, never the address.
+- **Past the signed-out share of the day:** `429` with `details.quota: "our-key-daily"`, as for
+  the global cap, logged at warn as `our key signed-out share spent`. Accounts carry on.
+- **A token this server never issued:** `401 unauthenticated` with `details.trial: "unknown"`,
+  so the device asks for another. Without an account or a token, `401` as before.
+
 ## Reserving on the reader's own key
 
 `POST /api/overview-reservations` with `{ overviewId }` (OV-102) takes a slot on the
@@ -340,6 +363,11 @@ it has been pushed is a regeneration, and counts again. `DELETE
   after that, so reserving, pushing and releasing buys nothing.
 - **A fallback counts once, on ours.** An overview made on our key gives back an own-key slot
   still held for the same id.
+- **An overview made on our key in a signed-out trial counts on our key when it moves in.**
+  Its reservation takes a slot on the account's month on our key rather than the reader's
+  own, and past that month's quota it waits for the turn like an own-key one does
+  (`429` with `details.quota: "ours"`). The server knows it by its id, so there is nothing for
+  a modified client to claim.
 - **Saving a shared overview isn't counted.** The device sends the share's token with the
   overview's id. The server lets it in only while the link is live and the share is of that
   overview, which a saved copy is: it keeps the shared overview's id. Each share is let in

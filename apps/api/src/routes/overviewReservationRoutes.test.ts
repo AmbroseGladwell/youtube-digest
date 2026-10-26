@@ -7,10 +7,12 @@ import { generationRequest, makeFakeOpenAi } from "../generation/FakeOpenAi.test
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 
 const RESERVING = FIRST_RESERVING_CLIENT_VERSION;
+const OUR_KEY = { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http };
 const BEFORE_RESERVING = FIRST_RESERVING_CLIENT_VERSION - 1;
 
 const fromBeforeReserving = () => ({ ...storedOverview(), schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview });
@@ -151,7 +153,7 @@ test("a regeneration's slot is spent once it is pushed, so it can't be given bac
 });
 
 test("an overview made on our key is let in, and an own-key slot still held for it is given back, so a fallback counts once", async () => {
-  const testApp = await createTestApp({}, { ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, http: makeFakeOpenAi().http } });
+  const testApp = await createTestApp({}, { ourKey: OUR_KEY });
   const account = await makeAccount(testApp);
   const overviewId = randomUUID();
   await reserve(account, overviewId);
@@ -163,6 +165,40 @@ test("an overview made on our key is let in, and an own-key slot still held for 
   assert.equal(made.statusCode, 200);
   assert.equal(pushed.statusCode, 201);
   assert.deepEqual([usage.ours.used, usage.own.used], [1, 0]);
+  await testApp.close();
+});
+
+test("an overview made on our key in a signed-out trial and moved in on sign-in counts on the account's month on our key", async () => {
+  const testApp = await createTestApp({}, { ourKey: OUR_KEY });
+  const device = await makeTrialDevice(testApp);
+  const overviewId = randomUUID();
+  const made = await device.generate(overviewId);
+  const account = await makeAccount(testApp);
+
+  const refused = await push(account, { ...storedOverview(), ...made.json() });
+  const reserved = await reserve(account, overviewId);
+  const pushed = await push(account, { ...storedOverview(), ...made.json() });
+
+  assert.equal(refused.json().error.code, "not_reserved");
+  assert.equal(reserved.statusCode, 200);
+  assert.deepEqual([reserved.json().ours.used, reserved.json().own.used], [1, 0]);
+  assert.equal(pushed.statusCode, 201);
+  await testApp.close();
+});
+
+test("a moved trial overview with the month on our key spent waits for the month, as an own-key one does", async () => {
+  const testApp = await createTestApp({}, { ourKey: OUR_KEY });
+  const account = await makeAccount(testApp);
+  for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
+    await account.inject({ method: "POST", url: "/api/generations", body: generationRequest(randomUUID()) });
+  }
+  const overviewId = randomUUID();
+  await (await makeTrialDevice(testApp)).generate(overviewId);
+
+  const waiting = await reserve(account, overviewId);
+
+  assert.equal(waiting.statusCode, 429);
+  assert.deepEqual([waiting.json().error.details.quota, waiting.json().error.details.resetsOn], ["ours", "2026-10-01"]);
   await testApp.close();
 });
 

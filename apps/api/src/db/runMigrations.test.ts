@@ -74,6 +74,9 @@ test("the tables the migrations create are there to be used", async () => {
       "shared_transcripts",
       "shares",
       "transcript_contributions",
+      "trial_address_usage",
+      "trial_overviews",
+      "trial_tokens",
       "voice_samples",
     ],
   );

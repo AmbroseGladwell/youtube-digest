@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS } from "@overview/domain";
 import { FIXTURE_VIDEO_ID } from "@overview/transcripts/testing";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
+import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
+import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
 import { serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
@@ -341,5 +343,26 @@ test("a server with the service on says so", async () => {
   const status = await testApp.app.inject({ method: "GET", url: "/api/service-transcripts" });
 
   assert.deepEqual(status.json(), { available: true });
+  await testApp.close();
+});
+
+test("signed out, our server fetches only while the trial has an overview left on our key", async () => {
+  const youTube = makeFakeYouTube();
+  const testApp = await createTestApp(
+    {},
+    {
+      transcriptService: { fetches: youTube.fetches, proxyDailyFetches: 1000 },
+      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+    },
+  );
+  const device = await makeTrialDevice(testApp);
+  const before = await device.fetchTranscript(videoIdNumbered(1));
+  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) await device.generate();
+
+  const after = await device.fetchTranscript(videoIdNumbered(2));
+
+  assert.equal(before.statusCode, 200);
+  assert.equal(after.statusCode, 429);
+  assert.equal(after.json().error.details.quota, "trial");
   await testApp.close();
 });
