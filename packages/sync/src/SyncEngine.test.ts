@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 import { CLIENT_VERSION, VideoId, type RecordChange, type StoredTranscript } from "@overview/domain";
 import { InMemorySyncStorage } from "./InMemorySyncStorage.testHelper.js";
 import { ScriptedSyncApi } from "./ScriptedSyncApi.testHelper.js";
@@ -192,6 +192,63 @@ test("a journaled write starts a cycle without being asked", async () => {
   await new Promise((resolve) => setTimeout(resolve, 20));
   stop();
 
+  assert.equal(api.callsTo("setOverviewState").length, 1);
+});
+
+const pageShown = (t: TestContext, visibilityState: DocumentVisibilityState) => {
+  const page = Object.assign(new EventTarget(), { visibilityState });
+  Object.assign(globalThis, { document: page });
+  t.after(() => {
+    delete (globalThis as { document?: unknown }).document;
+  });
+  return {
+    show: (state: DocumentVisibilityState) => {
+      page.visibilityState = state;
+      page.dispatchEvent(new Event("visibilitychange"));
+    },
+  };
+};
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+test("a hidden tab does not poll, and syncs at once when it is shown again", async (t) => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  const page = pageShown(t, "hidden");
+  const engine = engineOver(api, storage);
+  t.after(engine.start({ intervalMs: 5, journalDebounceMs: 1 }));
+  await engine.whenIdle();
+
+  await pause(40);
+  assert.equal(api.callsTo("changes").length, 1);
+
+  page.show("visible");
+  await engine.whenIdle();
+  assert.equal(api.callsTo("changes").length, 2);
+
+  await pause(40);
+  assert.ok(api.callsTo("changes").length > 2);
+});
+
+test("a tab that is hidden stops polling, but its writes still go out", async (t) => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  const page = pageShown(t, "visible");
+  const engine = engineOver(api, storage);
+  t.after(engine.start({ intervalMs: 5, journalDebounceMs: 1 }));
+  await engine.whenIdle();
+
+  page.show("hidden");
+  await engine.whenIdle();
+  const pulls = api.callsTo("changes").length;
+  await pause(40);
+  assert.equal(api.callsTo("changes").length, pulls);
+
+  storage.journal({ kind: "overviewState", id: "a", updatedAt: AT, change: { op: "state", patch: { read: true } } });
+  await pause(20);
+  await engine.whenIdle();
   assert.equal(api.callsTo("setOverviewState").length, 1);
 });
 
