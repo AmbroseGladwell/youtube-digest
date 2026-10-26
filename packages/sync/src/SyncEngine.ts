@@ -114,22 +114,38 @@ export class SyncEngine {
       }, journalDebounceMs);
     };
     const onWake = () => void this.sync();
-    const onVisible = () => {
-      if (globalThis.document?.visibilityState === "visible") onWake();
+    // A hidden tab does not poll, so a tab left open lets the server and database sleep.
+    // Its writes still go out through the journal, and it catches up when shown.
+    const hidden = () => globalThis.document?.visibilityState === "hidden";
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const poll = () => {
+      interval ??= setInterval(onWake, intervalMs);
+    };
+    const pause = () => {
+      if (interval !== null) clearInterval(interval);
+      interval = null;
+    };
+    const onVisibility = () => {
+      if (hidden()) {
+        pause();
+      } else {
+        poll();
+        onWake();
+      }
     };
 
     const stopJournal = this.#storage.onJournaled(soon);
-    const interval = setInterval(onWake, intervalMs);
+    if (!hidden()) poll();
     globalThis.addEventListener?.("online", onWake);
-    globalThis.document?.addEventListener("visibilitychange", onVisible);
+    globalThis.document?.addEventListener("visibilitychange", onVisibility);
     void this.sync();
 
     return () => {
       stopJournal();
-      clearInterval(interval);
+      pause();
       if (debounce !== null) clearTimeout(debounce);
       globalThis.removeEventListener?.("online", onWake);
-      globalThis.document?.removeEventListener("visibilitychange", onVisible);
+      globalThis.document?.removeEventListener("visibilitychange", onVisibility);
     };
   }
 
