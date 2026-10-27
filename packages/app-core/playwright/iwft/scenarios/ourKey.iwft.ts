@@ -26,7 +26,7 @@ test("a Free reader whose Anthropic key is out of credit gets the overview on ou
   await dialog.clickReadOverview();
 
   const reader = await launcher.readerPage.verifyIsShown();
-  await reader.verifyMadeOnLine("Made on our key: your Anthropic key was out of credit");
+  await reader.verifyMadeOnLine("On us: your Anthropic key was out of credit");
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);
   expect(backendSimulator.ourKey.reservations()).toHaveLength(1);
   expect(backendSimulator.ourKey.releases()).toHaveLength(1);
@@ -92,7 +92,7 @@ test("past the own-key month a Free reader's overview is made on our key, and sa
   await dialog.clickReadOverview();
 
   const reader = await launcher.readerPage.verifyIsShown();
-  await reader.verifyMadeOnLine("Made on our key: you’d made this month’s overviews on your own key");
+  await reader.verifyMadeOnLine("On us: you’d made this month’s overviews on your own key");
 });
 
 test("a signed-in reader with no key of their own makes overviews on our key", async ({ launcher, backendSimulator }) => {

@@ -58,7 +58,7 @@ export function generationRoutes(
     const body = parseOrThrow(OurKeyGenerationRequest, request.body, "The generation request");
     const trialToken = request.headers[TRIAL_TOKEN_HEADER];
     if (request.session === null && typeof trialToken !== "string") {
-      throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview on our key");
+      throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview on us");
     }
     if (generator === null) {
       throw new ApiError("unavailable", "This server does not make overviews on its own key");
@@ -99,7 +99,7 @@ export function generationRoutes(
         });
       }
       if (error instanceof OurKeyUnavailableError) {
-        throw new ApiError("unavailable", "Overviews on our key aren't available right now");
+        throw new ApiError("unavailable", "Overviews on us aren't available right now");
       }
       if (error instanceof OurKeyGenerationError) {
         throw new ApiError("generation_failed", error.message, { fallback: error.fallback });

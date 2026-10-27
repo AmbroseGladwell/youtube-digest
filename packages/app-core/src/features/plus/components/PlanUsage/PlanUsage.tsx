@@ -21,7 +21,7 @@ interface Cell {
 }
 
 const FREE = PLAN_CARDS[0]!;
-const FREE_ACCOUNT = `A free account makes ${FREE.ourKey} on our key and ${FREE.ownKey} on your own, and keeps them on every device.`;
+const FREE_ACCOUNT = `A free account makes ${FREE.ourKey} on us and ${FREE.ownKey} on your own key, and keeps them on every device.`;
 
 // This month's counts above the plan cards (designs 95d–95h): one cell per quota on an
 // account, and the trial's one count signed out, which covers either key (decided on OV-131).

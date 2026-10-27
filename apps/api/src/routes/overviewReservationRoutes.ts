@@ -52,7 +52,7 @@ export function overviewReservationRoutes(
         const retryAfterSeconds = secondsToNextUsageMonth(now);
         request.log.info(apiLogLines.ourKey.quotaSpent({ plan, used: moved.used, limit: moved.limit }));
         reply.header("retry-after", String(retryAfterSeconds));
-        throw new ApiError("too_many_requests", "You've made this month's overviews on our key", {
+        throw new ApiError("too_many_requests", "You've made this month's overviews on us", {
           quota: "ours",
           resetsOn: nextUsageMonth(now),
           retryAfterSeconds,

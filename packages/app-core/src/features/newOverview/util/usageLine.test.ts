@@ -23,17 +23,17 @@ describe("usageLineOf", () => {
       passedOver: { key: "own", limit: 10 },
     } as const;
     expect(usageLineOf(next, { plan: "free" })).toEqual({
-      parts: ["This month's 10 on your own key are made, so this one uses ours: 4 of 5 left.", "Plus makes more on our key."],
+      parts: ["This month's 10 on your own key are made, so this one is on us: 4 of 5 left.", "Get more overviews with Plus"],
       link: "See plans",
     });
     expect(usageLineOf(next, { narrow: true, plan: "byo-plus" })).toEqual({
-      parts: ["Your key's 10 are made this month. This one uses ours: 4 of 5 left. Plus makes more on ours"],
+      parts: ["Your key's 10 are made this month. This one is on us: 4 of 5 left. Get more overviews with Plus"],
       link: "Plan",
     });
 
     const plus = { ...next, key: "own", left: 163, limit: 200, passedOver: { key: "ours", limit: 50 } } as const;
     expect(usageLineOf(plus, { plan: "plus" })).toEqual({
-      parts: ["This month's 50 on our key are made, so this one uses your own key: 163 of 200 left."],
+      parts: ["This month's 50 on us are made, so this one uses your own key: 163 of 200 left."],
       link: "Plan",
     });
   });
