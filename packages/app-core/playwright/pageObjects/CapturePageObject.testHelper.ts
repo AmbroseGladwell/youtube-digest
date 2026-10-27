@@ -36,6 +36,13 @@ export class CapturePageObject extends PageObject {
       await this.expectToHaveCount(capturePageTestIds.usageLine.planLink, 0);
     });
 
+  verifyLimitMessage = ({ title, actions }: { title: string; actions: string[] }) =>
+    this.step(`verifyLimitMessage ${title}`, async () => {
+      await expect(this.get(capturePageTestIds.limitMessage.title)).toHaveText(title);
+      await expect(this.get(capturePageTestIds.limitMessage.root).getByRole("link")).toHaveText(actions);
+      await this.expectToHaveCount(capturePageTestIds.createButton, 0);
+    });
+
   verifySaysThereIsNoVideo = () =>
     this.step("verifySaysThereIsNoVideo", () =>
       this.expectToBeVisible(capturePageTestIds.noVideoNote),

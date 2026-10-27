@@ -1,9 +1,11 @@
+import { limitMessageNoteTestIds } from "../../newOverview/components/LimitMessageNote/LimitMessageNoteTestIds.js";
 import { usageLineTestIds } from "../../newOverview/components/UsageLine/UsageLineTestIds.js";
 import { keyPromptNoteTestIds } from "../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
 
 export const capturePageTestIds = {
   keyPrompt: keyPromptNoteTestIds("CapturePage"),
   usageLine: usageLineTestIds("CapturePage"),
+  limitMessage: limitMessageNoteTestIds("CapturePage"),
   root: "CapturePage.root",
   opening: "CapturePage.opening",
   createButton: "CapturePage.createButton",

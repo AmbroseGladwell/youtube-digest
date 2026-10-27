@@ -1,4 +1,4 @@
-import { test } from "../../support/fixtures.testHelper.js";
+import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
@@ -122,4 +122,102 @@ test("the panel's capture screen gives the narrow line", async ({ launcher, back
   const capture = await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: VALID_URL, youTubeFetch: true });
 
   await capture.verifyUsageLineReads("7 of 10 left on your own key · Resets 1 Nov");
+});
+
+// At the limit, the message takes Generate's place and offers only routes that exist
+// (designs 95i–95o; docs/architecture/tiers.md, "At the limit").
+test("on Free with no key, our key's 5 spent: the message says when more come, takes focus, and leads to a key", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.verifyLimitMessage({
+    title: "You've made this month's 5. More on 1 November.",
+    body: "Plus makes more each month on our key. Or add your own key: your free account makes 10 a month with it.",
+    actions: ["Add your own key", "See plans"],
+  });
+  await dialog.form.verifyLimitActionIsFocused("addKey");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("capture.limitMessage")))
+    .toContainEqual({ name: "capture.limitMessage.shown", props: { quota: "ours", plan: "free", from: "dialog" } });
+
+  await dialog.form.clickLimitAction("addKey");
+  await launcher.settingsPage.verifySectionIsShown("keys");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.limitMessage.wayChosen"))
+    .toEqual([{ name: "capture.limitMessage.wayChosen", props: { way: "addKey", from: "dialog" } }]);
+});
+
+test("on Free with both quotas spent, the message names both and offers BYO Plus", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ own: 10, ours: 5 });
+  await launcher.launch(SIGNED_IN);
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.verifyLimitMessage({
+    title: "You've made this month's 10 on your own key and 5 on ours. More on 1 November.",
+    body: "BYO Plus makes 200 a month on your own key.",
+    actions: ["See BYO Plus"],
+  });
+});
+
+test("on Plus with both quotas spent, the message says there's no upgrade, on the hero too", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 50, own: 200 });
+  const home = await launcher.launch({ ...SIGNED_IN, plan: "plus" });
+  await home.verifyLimitMessage({
+    title: "You've made this month's 50 on our key and 200 on your own. More on 1 November.",
+    actions: ["See this month's usage"],
+  });
+
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.verifyLimitMessage({
+    title: "You've made this month's 50 on our key and 200 on your own. More on 1 November.",
+    body: "That's the most any plan makes on your own key, so there's no upgrade for this.",
+    actions: ["See this month's usage"],
+  });
+});
+
+test("on Free with Only ever use my key on, the own key's 10 is the limit, and BYO Plus the way round", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ own: 10 });
+  await launcher.launch({ ...SIGNED_IN, onlyMyKey: true });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.verifyLimitMessage({
+    title: "You've made this month's 10 on your own key. More on 1 November.",
+    actions: ["See BYO Plus"],
+  });
+});
+
+test("on the panel, Plus with no key and our key spent is offered a key", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 50 });
+  const capture = await launcher.launchPanel({
+    ...SIGNED_IN_WITHOUT_A_KEY,
+    plan: "plus",
+    activeVideoUrl: VALID_URL,
+    youTubeFetch: true,
+  });
+
+  await capture.verifyLimitMessage({
+    title: "You've made this month's 50 on our key. More on 1 November.",
+    actions: ["Add your own key"],
+  });
+});
+
+test("signed out with the trial spent, the hero offers an account in the same shape", async ({ launcher }) => {
+  const home = await launcher.launch({ sync: true, apiKeys: ANTHROPIC_KEY, signedOutTrial: { made: 3, token: null } });
+
+  await home.verifyLimitMessage({ title: "You've used your 3 trial overviews", actions: ["Create account"] });
 });

@@ -5,6 +5,7 @@ import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
+import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
@@ -96,7 +97,7 @@ function LibraryHome() {
 // (docs/features/stone-theme.md, "First run").
 function FirstRunHero() {
   const surface = useSurface();
-  const { readiness, ready, url, setUrl, validationError, generate } = useStartFromLink();
+  const { readiness, ready, limit, url, setUrl, validationError, generate } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
 
@@ -134,14 +135,16 @@ function FirstRunHero() {
             aria-label="YouTube link"
             data-testid={homePageTestIds.urlInput}
           />
-          <button
-            type="submit"
-            className={styles.heroGenerate}
-            disabled={!ready}
-            data-testid={homePageTestIds.generateButton}
-          >
-            Generate overview
-          </button>
+          {limit === null && (
+            <button
+              type="submit"
+              className={styles.heroGenerate}
+              disabled={!ready}
+              data-testid={homePageTestIds.generateButton}
+            >
+              Generate overview
+            </button>
+          )}
         </form>
 
         {validationError && (
@@ -150,7 +153,9 @@ function FirstRunHero() {
           </p>
         )}
 
-        {ready ? (
+        {limit !== null ? (
+          <LimitMessageNote message={limit} from="home" testIds={homePageTestIds.limitMessage} />
+        ) : ready ? (
           <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
             <StrokeIcon name="check" />
             Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
@@ -173,7 +178,7 @@ function FirstRunHero() {
           </div>
         )}
 
-        {ready && <UsageLine testIds={homePageTestIds.usageLine} />}
+        {ready && limit === null && <UsageLine testIds={homePageTestIds.usageLine} />}
 
         {surface === "extension" ? (
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>

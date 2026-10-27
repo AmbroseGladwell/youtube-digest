@@ -3,6 +3,7 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../analytics/useTypingSettled.js";
 import { useNewOverviewRunController } from "./NewOverviewRunContext.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
+import { useLimitMessage } from "./useLimitMessage.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
 import { usePlaylistApi } from "../playlists/usePlaylistApi.js";
 
@@ -15,6 +16,7 @@ export function useStartFromLink() {
   const [url, setUrl] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const playlistsAvailable = usePlaylistApi() !== null;
+  const limit = useLimitMessage();
   useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "home" }),
   );
@@ -28,6 +30,9 @@ export function useStartFromLink() {
       setUrl("");
       return;
     }
+    if (limit !== null) {
+      return;
+    }
     if (!isYouTubeUrl(url)) {
       analytics.capture.newOverviewForm.linkRefused({ from: "home" });
       setValidationError("That doesn't look like a YouTube URL.");
@@ -39,5 +44,5 @@ export function useStartFromLink() {
     setUrl("");
   };
 
-  return { readiness, ready: readiness.ready, url, setUrl, validationError, generate };
+  return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate };
 }

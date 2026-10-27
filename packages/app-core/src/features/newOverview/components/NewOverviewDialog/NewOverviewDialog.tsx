@@ -223,6 +223,7 @@ export function NewOverviewDialog({
               onCancel={closeForm}
               onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
               generationError={run?.error ?? null}
+              active={open}
             />
           </>
         ) : (

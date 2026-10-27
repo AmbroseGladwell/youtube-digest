@@ -102,6 +102,12 @@ const PlaylistRefusal = z.enum(["private", "gone", "watchLater", "liked", "mix",
 // Where a playlist was pasted: a paste field that also takes videos, or Settings.
 const PlaylistEntryPoint = z.enum(["dialog", "home", "settings"]);
 const QueueControl = z.enum(["strip", "page"]);
+// What ran out where a reader generates, and the ways round it (docs/architecture/tiers.md,
+// "At the limit").
+export const LimitQuota = z.enum(["trial", "ours", "own", "both"]);
+export type LimitQuota = z.infer<typeof LimitQuota>;
+export const LimitWay = z.enum(["addKey", "seePlans", "createAccount"]);
+const GenerateSurface = z.enum(["dialog", "home", "panel"]);
 // Which of the app's dead ends a reader was on, named because its title is copy
 // (docs/features/error-state.md).
 export const ErrorScreen = z.enum([
@@ -527,6 +533,14 @@ export const analyticsEvents = {
       keysLinkFollowed: event("The reader follows the link to set up their keys before making an overview", {
         from: z.enum(["dialog", "home", "panel"]),
       }),
+    },
+    limitMessage: {
+      shown: event("The reader meets a limit where they generate: which quota ran out, on which plan, and where", {
+        quota: LimitQuota,
+        plan: z.enum([...Plan.options, "signedOut"]),
+        from: GenerateSurface,
+      }),
+      wayChosen: event("The reader takes a way round a limit from its message", { way: LimitWay, from: GenerateSurface }),
     },
     captureReason: {
       typed: event("The reader types why they saved an overview while it's made, once they stop; never the reason"),
