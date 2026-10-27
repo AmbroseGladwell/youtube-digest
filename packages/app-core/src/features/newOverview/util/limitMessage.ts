@@ -30,7 +30,7 @@ const OWN_KEY_MONTH: Record<Plan, string> = { free: FREE.ownKey, "byo-plus": BYO
 const PLAN_NAME: Record<Plan, string> = { free: "your free account", "byo-plus": "BYO Plus", plus: "Plus" };
 
 const onKey = (key: KeySource, first: boolean): string =>
-  key === "ours" ? (first ? "on our key" : "on ours") : first ? "on your own key" : "on your own";
+  key === "ours" ? "on us" : first ? "on your own key" : "on your own";
 
 function madeTitle(spent: SpentQuota[], resetsOn: string, plainOurs: boolean): string {
   const [first, second] = spent;
@@ -52,7 +52,7 @@ export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage
     return {
       quota: "trial",
       title: `You've used your ${next.total} trial overviews`,
-      body: `A free account makes ${FREE.ourKey} on our key, syncs them to every device and reads them aloud.`,
+      body: `A free account makes ${FREE.ourKey} on us, syncs them to every device and reads them aloud.`,
       actions: ["createAccount"],
     };
   }
@@ -69,7 +69,7 @@ export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage
       : {
           quota,
           title,
-          body: `Plus makes more each month on our key. Or add your own key: ${PLAN_NAME[plan]} makes ${OWN_KEY_MONTH[plan]} with it.`,
+          body: `Get more overviews with Plus. Or add your own key: ${PLAN_NAME[plan]} makes ${OWN_KEY_MONTH[plan]} with it.`,
           actions: ["addKey", "seePlans"],
         };
   }
@@ -77,7 +77,7 @@ export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage
     return { quota, title, body: `BYO Plus makes ${BYO_PLUS.ownKey} on your own key.`, actions: ["seeByoPlus"] };
   }
   if (plan === "byo-plus" && quota === "both") {
-    return { quota, title, body: `Plus makes ${PLUS.ourKey} on our key.`, actions: ["seePlans"] };
+    return { quota, title, body: `Get more overviews with Plus: it makes ${PLUS.ourKey} on us.`, actions: ["seePlans"] };
   }
   return {
     quota,

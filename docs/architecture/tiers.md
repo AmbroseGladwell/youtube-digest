@@ -429,7 +429,7 @@ Following "degrade visibly", the reader is told what ran out, when it comes back
 ways around it. Nothing they already have stops working.
 
 - **Signed out, after 3 on either key:** *You've used your 3 trial overviews. A free account
-  makes 5 a month on our key, syncs them to every device and reads them aloud.* The capture
+  makes 5 a month on us, syncs them to every device and reads them aloud.* The capture
   queue's strip still says *Sign up to keep going*. Adding a key doesn't get round it. The on-device library stays readable, and moves into the account on sign-in
   (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
@@ -452,7 +452,7 @@ ways around it. Nothing they already have stops working.
 `LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,
 and on the panel's capture screen. The pasted link stays in the field. The title names what
 ran out and when it's back, both quotas in the order they were spent when both are (*You've
-made this month's 10 on your own key and 5 on ours. More on 1 November.*), and every state
+made this month's 10 on your own key and 5 on us. More on 1 November.*), and every state
 ends *Everything you've already made keeps working.* The ways round go only to Settings ›
 API keys, Settings › Plan or Create account: Add your own key where a key would give more,
 See plans or See BYO Plus where a plan would, and See this month's usage where none would.

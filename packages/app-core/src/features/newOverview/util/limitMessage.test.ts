@@ -18,7 +18,7 @@ describe("limitMessageOf", () => {
     expect(limitMessageOf({ kind: "trial", left: 0, total: 3 }, "free")).toEqual({
       quota: "trial",
       title: "You've used your 3 trial overviews",
-      body: "A free account makes 5 a month on our key, syncs them to every device and reads them aloud.",
+      body: "A free account makes 5 a month on us, syncs them to every device and reads them aloud.",
       actions: ["createAccount"],
     });
   });
@@ -27,7 +27,7 @@ describe("limitMessageOf", () => {
     expect(limitMessageOf(spent({ key: "ours", limit: 5 }), "free")).toEqual({
       quota: "ours",
       title: "You've made this month's 5. More on 1 November.",
-      body: "Plus makes more each month on our key. Or add your own key: your free account makes 10 a month with it.",
+      body: "Get more overviews with Plus. Or add your own key: your free account makes 10 a month with it.",
       actions: ["addKey", "seePlans"],
     });
   });
@@ -35,7 +35,7 @@ describe("limitMessageOf", () => {
   it("on Plus with no key, offers only a key once ours is spent", () => {
     expect(limitMessageOf(spent({ key: "ours", limit: 50 }), "plus")).toEqual({
       quota: "ours",
-      title: "You've made this month's 50 on our key. More on 1 November.",
+      title: "You've made this month's 50 on us. More on 1 November.",
       body: "Add your own key and carry on: Plus makes 200 a month with it.",
       actions: ["addKey"],
     });
@@ -44,7 +44,7 @@ describe("limitMessageOf", () => {
   it("on Free with both spent, names both in the order spent and offers BYO Plus", () => {
     expect(limitMessageOf(spent({ key: "own", limit: 10 }, { key: "ours", limit: 5 }), "free")).toEqual({
       quota: "both",
-      title: "You've made this month's 10 on your own key and 5 on ours. More on 1 November.",
+      title: "You've made this month's 10 on your own key and 5 on us. More on 1 November.",
       body: "BYO Plus makes 200 a month on your own key.",
       actions: ["seeByoPlus"],
     });
@@ -53,7 +53,7 @@ describe("limitMessageOf", () => {
   it("on BYO Plus with both spent, offers Plus's allowance on our key", () => {
     expect(limitMessageOf(spent({ key: "own", limit: 200 }, { key: "ours", limit: 10 }), "byo-plus")).toMatchObject({
       quota: "both",
-      body: "Plus makes 50 a month on our key.",
+      body: "Get more overviews with Plus: it makes 50 a month on us.",
       actions: ["seePlans"],
     });
   });
@@ -61,7 +61,7 @@ describe("limitMessageOf", () => {
   it("on Plus with both spent, says plainly there is no upgrade", () => {
     expect(limitMessageOf(spent({ key: "ours", limit: 50 }, { key: "own", limit: 200 }), "plus")).toEqual({
       quota: "both",
-      title: "You've made this month's 50 on our key and 200 on your own. More on 1 November.",
+      title: "You've made this month's 50 on us and 200 on your own. More on 1 November.",
       body: "That's the most any plan makes on your own key, so there's no upgrade for this.",
       actions: ["seeUsage"],
     });
