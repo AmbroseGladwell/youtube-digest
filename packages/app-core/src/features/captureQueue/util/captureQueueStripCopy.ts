@@ -2,6 +2,7 @@ import { resumeTimeText } from "../../transcripts/util/resumeTime.js";
 import type { CaptureQueueStrip } from "../types/CaptureQueueStrip.js";
 import { TRIAL_SPENT_HEADING } from "../../signedOutTrial/trialPrompt.js";
 import { queueHoldStripMeta } from "./queueHoldCopy.js";
+import { monthHoldStripMeta } from "./monthHoldCopy.js";
 
 const plural = (count: number, one: string, many: string) => `${count.toLocaleString("en-GB")} ${count === 1 ? one : many}`;
 
@@ -27,6 +28,12 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
         ? { title: `Queue paused · ${strip.waiting.toLocaleString("en-GB")} waiting`, meta: null }
         : { title: "Queue paused", meta: `${strip.waiting.toLocaleString("en-GB")} waiting · nothing is made until you resume` };
     case "held":
+      if (strip.hold.reason === "monthSpent") {
+        return {
+          title: compact ? `Queue waiting · ${strip.waiting.toLocaleString("en-GB")}` : `Queue waiting · ${plural(strip.waiting, "video", "videos")}`,
+          meta: monthHoldStripMeta(strip.hold, strip.limit, compact),
+        };
+      }
       return compact
         ? { title: `Waiting · ${strip.waiting.toLocaleString("en-GB")} continue after ${resumeTimeText(new Date(strip.hold.resumesAt))}`, meta: null }
         : { title: "Waiting for our server", meta: queueHoldStripMeta(strip.hold, strip.waiting, strip.viaExtension) };

@@ -130,6 +130,14 @@ The one-off grab (take these videos, don't follow) was left out on the design's 
 *Only new ones* and Unfollow already cover it. There is room for a quiet link under the
 actions if readers ask for it.
 
+**The month's allowance** (95s, and 95v with a pace; OV-131): when what's left this month
+on every key the next overviews could use is less than the backfill, a stone-tint line in
+the facts card says what that means before anything runs (`allowanceLine`). At a pace: *Your
+allowance covers 10 more this month. At 5 a day that’s the next 2 days; the other 11 wait
+for 1 November, then carry on at 5 a day.* As they come: *10 of these 19 can be made now:
+you have 10 left this month. The other 9 wait in the queue and carry on by themselves on 1
+November.* *Only when I choose* spends none of it, so says nothing. The actions don't change.
+
 ## Following
 
 A followed playlist is a synced record of its own kind, `followedPlaylist`, so every
@@ -225,9 +233,6 @@ a log line and a client warning rather than an event (`docs/architecture/analyti
 ## Not built
 
 - Following with the reader's Google account, for private playlists and Liked videos (OV-96).
-- The month's allowance in the preview: OV-95's design draws a line when the allowance
-  left is smaller than the backfill (95v), but the client doesn't show readers their usage
-  yet (`plus-upsell.md`, "Not built").
 - Filing a playlist's overviews under a matching topic, and a library filter by playlist.
 - Dropping a queued video that has left its playlist: it stays queued, on the design's
   advice that the reader may have tidied the playlist after saving.

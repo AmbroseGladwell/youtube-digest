@@ -38,3 +38,11 @@ export function nextQuotaOf({ order, trial, usage }: NextQuotaContext): NextQuot
   }
   return { kind: "spent", spent, resetsOn };
 }
+
+// Every overview the order can still make this month, on any key: what a backfill or a
+// choice in the queue can spend before the rest waits for the month. Null while unknown.
+export function leftThisMonthOf({ order, trial, usage }: NextQuotaContext): number | null {
+  if (trial !== null) return Math.max(0, trial.total - trial.made);
+  if (usage.status !== "known") return null;
+  return order.reduce((sum, key) => sum + Math.max(0, usage.data[key].limit - usage.data[key].used), 0);
+}

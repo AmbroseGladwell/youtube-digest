@@ -5,6 +5,8 @@ import type { Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
+import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
+import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
@@ -46,6 +48,7 @@ export function CapturePage() {
   const watchedTranscript = useWatchedTranscriptQuery();
   const readiness = useGenerationReadiness();
   const keysReady = readiness.ready;
+  const limit = useLimitMessage();
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
   const heldHere = overviewsQuery.data?.length ?? null;
@@ -166,13 +169,15 @@ export function CapturePage() {
                 type="button"
                 className={styles.quiet}
                 onClick={() => createOverview(true)}
-                disabled={!keysReady}
+                disabled={!keysReady || limit !== null}
                 data-testid={capturePageTestIds.createAgainButton}
               >
                 Write a new one
               </button>
             </p>
           </>
+        ) : limit !== null ? (
+          <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
         ) : (
           <button
             type="button"
@@ -185,7 +190,7 @@ export function CapturePage() {
           </button>
         )}
 
-        {keysReady && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
+        {keysReady && limit === null && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
 
         {activeVideoUrl === null && (
           <p className={styles.note} data-testid={capturePageTestIds.noVideoNote}>
@@ -199,7 +204,7 @@ export function CapturePage() {
           </p>
         )}
 
-        {activeVideoUrl !== null && alreadyHeld === null && keysReady && (
+        {activeVideoUrl !== null && alreadyHeld === null && keysReady && limit === null && (
           <p className={styles.note} data-testid={capturePageTestIds.captionsNote}>
             {watchedTranscript.isFetching
               ? "Fetching its captions now."
@@ -219,7 +224,7 @@ export function CapturePage() {
           />
         </div>
 
-        {!keysReady && (
+        {!keysReady && limit === null && (
           <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>
             <KeyPromptNote testIds={capturePageTestIds.keyPrompt} readiness={readiness} detail={BYO_KEY_NOTE} from="panel" />
           </div>

@@ -5,6 +5,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import type { CaptureQueueStrip } from "../../types/CaptureQueueStrip.js";
 import { TRIAL_SPENT_ACTION } from "../../../signedOutTrial/trialPrompt.js";
 import { captureQueueStripCopy } from "../../util/captureQueueStripCopy.js";
+import { monthHoldWays } from "../../util/monthHoldCopy.js";
 import styles from "./CaptureQueueStripView.module.scss";
 import { captureQueueStripViewTestIds } from "./CaptureQueueStripViewTestIds.js";
 
@@ -147,7 +148,23 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
             {unfold ?? queueLink(compact ? null : "Queue")}
           </>
         );
-      case "held":
+      case "held": {
+        const way = strip.hold.reason === "monthSpent" ? (monthHoldWays(strip.limit)[0] ?? null) : null;
+        if (way === null) return unfold ?? queueLink(compact ? null : "Queue");
+        return (
+          <>
+            <Link
+              className={styles.primaryAction}
+              to={way === "addKey" ? Routes.settingsSection("keys") : Routes.settingsSection("plan")}
+              onClick={() => analytics.capture.limitMessage.wayChosen({ way, from: "queueStrip" })}
+              data-testid={way === "addKey" ? captureQueueStripViewTestIds.addKeyLink : captureQueueStripViewTestIds.seePlansLink}
+            >
+              {way === "addKey" ? "Add a key" : "See plans"}
+            </Link>
+            {!compact && queueLink("Queue")}
+          </>
+        );
+      }
       case "checked":
       case "doneForToday":
       case "waitingForYou":

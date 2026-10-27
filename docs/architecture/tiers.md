@@ -248,8 +248,9 @@ in, and signed out on the device's trial, through `createTrialGenerationApi`, wh
 the trial token before the first overview on ours, keeps it, and asks again if the server
 no longer knows it. The device's count (`useSignedOutTrial`, kept in local storage beside the
 library, never read from it) goes up for every overview made signed out, on either key. At 3
-`trialSpent` takes the place of Create on every surface with *Sign up to keep going*
-(`keyPrompt`, `trialPrompt`), the capture queue waits for an account, and the extension's
+the limit message takes the place of Create on every surface with *You've used your 3 trial
+overviews* and Create account (`limitMessageOf`, below), the capture queue waits for an
+account, and the extension's
 button opens Create account. Only a shell that can make an account has a trial: elsewhere
 there is nothing to offer. Signing in leaves the count where it is, so signing out again
 doesn't start a new trial. The count reaching 3 is `account.trial.limitReached`, and following
@@ -427,9 +428,9 @@ it has been pushed is a regeneration, and counts again. `DELETE
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 3 on either key:** *Sign up to keep going: a free account makes 15 a
-  month, syncs them to your other devices, and reads them aloud.* Adding a key doesn't get
-  round it. The on-device library stays readable, and moves into the account on sign-in
+- **Signed out, after 3 on either key:** *You've used your 3 trial overviews. A free account
+  makes 5 a month on us, syncs them to every device and reads them aloud.* The capture
+  queue's strip still says *Sign up to keep going*. Adding a key doesn't get round it. The on-device library stays readable, and moves into the account on sign-in
   (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
@@ -445,7 +446,21 @@ ways around it. Nothing they already have stops working.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
   The same waiting state, with a different reason and resume time, is what the queue shows
-  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
+  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit"
+  and "At the month's limit"). The playlist preview and the queue's *Choose* say what the
+  allowance left means before anything runs.
+
+**Built in OV-131.** `limitMessageOf` turns the next quota into the message, and
+`LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,
+and on the panel's capture screen. The pasted link stays in the field. The title names what
+ran out and when it's back, both quotas in the order they were spent when both are (*You've
+made this month's 10 on your own key and 5 on us. More on 1 November.*), and every state
+ends *Everything you've already made keeps working.* The ways round go only to Settings ›
+API keys, Settings › Plan or Create account: Add your own key where a key would give more,
+See plans or See BYO Plus where a plan would, and See this month's usage where none would.
+The title and body are a polite live region, and the dialog moves focus to the first action
+as it opens. Each message shown is `capture.limitMessage.shown` (quota, plan, surface) and
+each way taken `capture.limitMessage.wayChosen`.
 
 ## Options for saving cost, not built
 

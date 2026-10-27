@@ -1,5 +1,6 @@
 import { paceDailyLimit, type PlaylistId, type PlaylistPace, type QueuedCapture } from "@overview/domain";
 import { paceInASentence } from "../../playlists/util/paceCopy.js";
+import { resetDate } from "../../newOverview/util/usageLine.js";
 
 type PaceOf = (playlistId: PlaylistId) => PlaylistPace;
 
@@ -14,8 +15,23 @@ function paceStays(captures: readonly QueuedCapture[], paceOf: PaceOf): string {
     : `${playlist.title} stays at ${paceInASentence(pace)}.`;
 }
 
-export function chosenBarLine(captures: readonly QueuedCapture[], paceOf: PaceOf): string {
-  return `Made next, oldest first. ${paceStays(captures, paceOf)}`;
+export interface MonthAllowance {
+  left: number;
+  resetsOn: string;
+}
+
+// How many of the chosen the month's allowance makes now; the rest wait for the month (95ah).
+export const madeNowOf = (chosen: number, allowance: MonthAllowance | null): number =>
+  allowance === null ? chosen : Math.min(chosen, allowance.left);
+
+export function chosenBarLine(captures: readonly QueuedCapture[], paceOf: PaceOf, allowance: MonthAllowance | null = null): string {
+  const made = madeNowOf(captures.length, allowance);
+  if (allowance === null || made === captures.length) return `Made next, oldest first. ${paceStays(captures, paceOf)}`;
+  const rest = captures.length - made;
+  return (
+    `You have ${made.toLocaleString("en-GB")} left this month, so ${made.toLocaleString("en-GB")} ${made === 1 ? "is" : "are"} made now ` +
+    `and the other ${rest.toLocaleString("en-GB")} ${rest === 1 ? "waits" : "wait"} for ${resetDate(allowance.resetsOn)}. ${paceStays(captures, paceOf)}`
+  );
 }
 
 export function madeNowNotice(captures: readonly QueuedCapture[], paceOf: PaceOf): { lead: string; rest: string } {

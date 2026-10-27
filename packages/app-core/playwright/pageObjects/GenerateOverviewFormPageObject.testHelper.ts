@@ -103,11 +103,14 @@ export class GenerateOverviewFormPageObject extends PageObject {
   // Signed out past the trial's 3, the form offers an account where Generate would be,
   // whatever keys the device holds (docs/architecture/tiers.md, "At the limit").
   verifyOffersAccountForTrial = () =>
-    this.step("verifyOffersAccountForTrial", async () => {
-      await expect(this.get(generateOverviewFormTestIds.keyPrompt.heading)).toHaveText("Sign up to keep going.");
-      await this.expectToBeVisible(generateOverviewFormTestIds.keyPrompt.createAccountLink);
-      await expect(this.get(generateOverviewFormTestIds.generateButton)).toBeDisabled();
-    });
+    this.step("verifyOffersAccountForTrial", () =>
+      this.verifyLimitMessage({
+        title: "You've used your 3 trial overviews",
+        actions: ["Create account"],
+      }),
+    );
+
+  clickCreateAccountForTrial = () => this.clickLimitAction("createAccount");
 
   // What's left of the quota the next overview will use (design 95b).
   verifyUsageLineReads = (text: string) =>
@@ -119,8 +122,25 @@ export class GenerateOverviewFormPageObject extends PageObject {
   clickUsagePlanLink = () =>
     this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
 
-  clickCreateAccountForTrial = () =>
-    this.step("clickCreateAccountForTrial", () => this.click(generateOverviewFormTestIds.keyPrompt.createAccountLink));
+  // What ran out, in Generate's place, with only the ways round it (designs 95i–95o).
+  verifyLimitMessage = ({ title, body, actions }: { title: string; body?: string; actions: string[] }) =>
+    this.step(`verifyLimitMessage ${title}`, async () => {
+      const ids = generateOverviewFormTestIds.limitMessage;
+      await expect(this.get(ids.title)).toHaveText(title);
+      if (body !== undefined) await expect(this.get(ids.body)).toHaveText(body);
+      await expect(this.get(ids.root).getByRole("link")).toHaveText(actions);
+      await expect(this.get(ids.foot)).toHaveText("Everything you've already made keeps working.");
+      await this.expectToHaveCount(generateOverviewFormTestIds.generateButton, 0);
+      await this.expectToHaveCount(generateOverviewFormTestIds.usageLine.root, 0);
+    });
+
+  verifyLimitActionIsFocused = (action: string) =>
+    this.step(`verifyLimitActionIsFocused ${action}`, () =>
+      expect(this.get(generateOverviewFormTestIds.limitMessage.action(action))).toBeFocused(),
+    );
+
+  clickLimitAction = (action: string) =>
+    this.step(`clickLimitAction ${action}`, () => this.click(generateOverviewFormTestIds.limitMessage.action(action)));
 
   clickSettingsLink = () =>
     this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.keyPrompt.settingsLink));

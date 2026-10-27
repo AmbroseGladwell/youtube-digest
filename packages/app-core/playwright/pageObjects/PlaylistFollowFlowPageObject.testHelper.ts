@@ -45,6 +45,14 @@ export class PlaylistFollowFlowPageObject extends PageObject {
       await expect(this.get(playlistPreviewTestIds.paceResult)).toHaveText(result);
     });
 
+  // What the month's allowance means for the backfill, before anything runs (95s, 95v).
+  verifyAllowance = (text: string | null) =>
+    this.step(`verifyAllowance ${text}`, () =>
+      text === null
+        ? this.expectToHaveCount(playlistPreviewTestIds.allowance, 0)
+        : expect(this.get(playlistPreviewTestIds.allowance)).toHaveText(text),
+    );
+
   verifyNoPace = () => this.step("verifyNoPace", () => this.expectToHaveCount(playlistPreviewTestIds.paceLine, 0));
 
   // Change opens the paces in place, each with what it would do; choosing is immediate.

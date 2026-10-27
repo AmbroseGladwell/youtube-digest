@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { PLAYLIST_PACES, type PlaylistLookup, type PlaylistPace } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { PACE_LABEL, paceConsequence } from "../../util/paceCopy.js";
+import { allowanceLine, PACE_LABEL, paceConsequence } from "../../util/paceCopy.js";
+import { useLeftThisMonth } from "../../../newOverview/useNextQuota.js";
 import type { PlaylistPreview as PlaylistPreviewCounts } from "../../util/playlistPreview.js";
 import { formatCount, TOKENS_PER_OVERVIEW, tokensText } from "../../util/tokenEstimate.js";
 import styles from "./PlaylistPreview.module.scss";
@@ -44,6 +45,9 @@ export function PlaylistPreview({
   const chosenOption = useRef<HTMLInputElement>(null);
   const [choosingPace, setChoosingPace] = useState(false);
   const toMake = preview.toMake.length;
+  const month = useLeftThisMonth();
+  const allowance =
+    month === null || month.resetsOn === null ? null : allowanceLine(pace, toMake, month.left, month.resetsOn);
 
   useEffect(() => firstAction.current?.focus(), []);
   useEffect(() => {
@@ -172,6 +176,11 @@ export function PlaylistPreview({
           </div>
         )}
         {paceBlock !== null && <div className={styles.pace}>{paceBlock}</div>}
+        {allowance !== null && (
+          <p className={styles.allowance} data-testid={playlistPreviewTestIds.allowance}>
+            {allowance}
+          </p>
+        )}
       </div>
 
       <p className={styles.foot} data-testid={playlistPreviewTestIds.foot}>
