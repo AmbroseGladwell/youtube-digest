@@ -2,6 +2,7 @@ import { PrivacySectionPageObject } from "./PrivacySectionPageObject.testHelper.
 import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
+import { planUsageTestIds } from "../../src/features/plus/components/PlanUsage/PlanUsageTestIds.js";
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
 import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
 import { settingsSectionTestIds } from "../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
@@ -142,6 +143,22 @@ export class SettingsPageObject extends PageObject {
       const yours = this.get(plusPlanPanelTestIds.planCard).filter({ hasText: "Your plan" });
       await expect(yours).toHaveCount(1);
       await expect(yours).toContainText(name);
+    });
+
+  // This month's counts above the plan cards, one cell per quota (designs 95d–95h).
+  verifyPlanUsagePeriodReads = (text: string) =>
+    this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
+
+  verifyPlanUsageCellReads = (quota: "ours" | "own" | "trial", lines: string[]) =>
+    this.step(`verifyPlanUsageCellReads ${quota} ${lines.join(" ")}`, () =>
+      expect(this.get(planUsageTestIds.cell(quota)).locator("dd")).toHaveText(lines),
+    );
+
+  verifyPlanUsageCellsAre = (quotas: Array<"ours" | "own" | "trial">) =>
+    this.step(`verifyPlanUsageCellsAre ${quotas.join(", ")}`, async () => {
+      for (const quota of ["ours", "own", "trial"] as const) {
+        await this.expectToHaveCount(planUsageTestIds.cell(quota), quotas.includes(quota) ? 1 : 0);
+      }
     });
 
   verifyPlansAreNotOnSale = (text: string) =>

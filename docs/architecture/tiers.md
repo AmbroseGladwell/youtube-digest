@@ -259,6 +259,30 @@ and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only whe
 a fallback to switch off. Saving a shared overview sends the share's token before the copy
 is saved, so its push is let in uncounted.
 
+## What the reader is told is left
+
+Built in OV-131, from designs 95a–95h with the key order flipped for everyone but Plus. Every
+number is the server's (`GET /api/overview-usage`) or the device's trial, worked out in
+code, never by a model.
+
+**Only the quota the next overview will use is shown where the reader generates.**
+`nextQuotaOf` walks the same order `keyOrderFor` gives a run, and picks the first key with
+any left. The line (`UsageLine`, under Generate in the dialog, under the hero, and under
+Create on the panel's capture screen) reads:
+
+| State | Line |
+|---|---|
+| First key in the order | *7 of 10 left on your own key this month · Resets 1 November · Plan* |
+| First key spent, falling back | *This month's 10 on your own key are made, so this one uses ours: 4 of 5 left. · Plan* |
+| Counts not loaded | *Overviews left this month: Checking… · Plan* |
+| Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
+| Signed out | *2 of 3 trial overviews left · On either key · Plan* |
+
+On the panel the line drops "this month" and Plan and shortens the date (*Resets 1 Nov*).
+Settings › Plan counts both quotas (`docs/features/plus-upsell.md`, "16c"). No count ever
+reads 0 before it is known, and none reads "unlimited". The counts are asked for again
+after every run, made or failed, on any surface or the capture queue.
+
 ## Counting
 
 - **The server counts, never a model** (`docs/prototype/constraints.md`), in Postgres. The

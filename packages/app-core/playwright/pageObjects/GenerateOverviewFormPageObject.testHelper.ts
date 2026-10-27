@@ -109,6 +109,16 @@ export class GenerateOverviewFormPageObject extends PageObject {
       await expect(this.get(generateOverviewFormTestIds.generateButton)).toBeDisabled();
     });
 
+  // What's left of the quota the next overview will use (design 95b).
+  verifyUsageLineReads = (text: string) =>
+    this.step(`verifyUsageLineReads ${text}`, () => expect(this.get(generateOverviewFormTestIds.usageLine.root)).toHaveText(text));
+
+  verifyHasNoUsageLine = () =>
+    this.step("verifyHasNoUsageLine", () => this.expectToHaveCount(generateOverviewFormTestIds.usageLine.root, 0));
+
+  clickUsagePlanLink = () =>
+    this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
+
   clickCreateAccountForTrial = () =>
     this.step("clickCreateAccountForTrial", () => this.click(generateOverviewFormTestIds.keyPrompt.createAccountLink));
 

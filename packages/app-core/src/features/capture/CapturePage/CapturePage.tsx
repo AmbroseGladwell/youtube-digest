@@ -5,6 +5,7 @@ import type { Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
+import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
@@ -183,6 +184,8 @@ export function CapturePage() {
             Create overview
           </button>
         )}
+
+        {keysReady && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
 
         {activeVideoUrl === null && (
           <p className={styles.note} data-testid={capturePageTestIds.noVideoNote}>

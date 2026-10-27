@@ -1,7 +1,9 @@
+import { usageLineTestIds } from "../../newOverview/components/UsageLine/UsageLineTestIds.js";
 import { keyPromptNoteTestIds } from "../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
 
 export const homePageTestIds = {
   keyPrompt: keyPromptNoteTestIds("HomePage"),
+  usageLine: usageLineTestIds("HomePage"),
   root: "HomePage.root",
   skeleton: "HomePage.skeleton",
   hero: "HomePage.hero",

@@ -57,6 +57,13 @@ import {
 import type {} from "./iwftWindow.testHelper.js";
 
 // What the simulated server hands a signed-in reader (docs/features/sign-in.md).
+// The server's quotas a month, per plan (apps/api/src/usage/overviewQuotas.ts).
+const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
+  free: { ours: 5, own: 10 },
+  "byo-plus": { ours: 10, own: 200 },
+  plus: { ours: 50, own: 200 },
+};
+
 export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
@@ -146,6 +153,7 @@ export class BackendSimulator {
   #ourKeyAvailable = false;
   #ourKeyRefusal: { status: number; code: string; details: Record<string, unknown> } | null = null;
   #ownMonthSpent = false;
+  #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
   #trialTokensIssued = 0;
@@ -686,12 +694,16 @@ export class BackendSimulator {
       });
     });
 
-    const usage = (): OverviewUsage => ({
-      plan: this.#accountPlan,
-      resetsOn: "2026-11-01",
-      ours: { used: this.#ourKeyRequests.length, limit: 5 },
-      own: { used: this.#reservations.length - this.#releases.length, limit: 10 },
-    });
+    const usage = (): OverviewUsage => {
+      const limits = SIMULATED_QUOTAS[this.#accountPlan];
+      const ownUsed = this.#madeEarlierThisMonth.own + this.#reservations.length - this.#releases.length;
+      return {
+        plan: this.#accountPlan,
+        resetsOn: "2026-11-01",
+        ours: { used: this.#madeEarlierThisMonth.ours + this.#ourKeyRequests.length, limit: limits.ours },
+        own: { used: this.#ownMonthSpent ? limits.own : ownUsed, limit: limits.own },
+      };
+    };
 
     await this.#page.route("**/api/generations", (route) =>
       route.request().method() === "GET"
@@ -1057,6 +1069,10 @@ export class BackendSimulator {
     },
     ownMonthIsSpent: (): void => {
       this.#ownMonthSpent = true;
+    },
+    // Overviews the account made this month before the test began, on each key.
+    monthHasMade: (made: { ours?: number; own?: number }): void => {
+      this.#madeEarlierThisMonth = { ours: made.ours ?? 0, own: made.own ?? 0 };
     },
     anthropicIsOutOfCredit: (): void => {
       this.#anthropicOutOfCredit = true;

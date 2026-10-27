@@ -29,7 +29,7 @@ test("on a wide screen, Settings opens beside its first section, and every row c
   await settings.verifyRowReads("connections", "None");
   await settings.verifyRowReads("milestones", "0m saved · 0 of 10");
   await settings.verifyRowReads("shared", "None");
-  await settings.verifyRowReads("plan", "Plus");
+  await settings.verifyRowReads("plan", "Plus · 200 of 200 left");
   await settings.verifyRowReads("about", "Version 0.14.2");
 });
 

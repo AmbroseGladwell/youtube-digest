@@ -51,6 +51,9 @@ export class HomePageObject extends PageObject {
       await this.expectNotToBeVisible(homePageTestIds.keysNote);
     });
 
+  verifyUsageLineReads = (text: string) =>
+    this.step(`verifyUsageLineReads ${text}`, () => expect(this.get(homePageTestIds.usageLine.root)).toHaveText(text));
+
   // The hero carries the same dead end as Settings, so a reader meets it where they tried
   // to generate (design 110k).
   verifyKeyPromptDeadEnd = () =>

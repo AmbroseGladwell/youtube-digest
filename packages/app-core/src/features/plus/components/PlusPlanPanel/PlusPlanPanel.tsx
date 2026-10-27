@@ -1,15 +1,18 @@
 import { PLAN_LABEL } from "../../planLabel.js";
 import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../planCards.js";
 import { usePlan } from "../../usePlan.js";
+import { usePlanUsage } from "../../usePlanUsage.js";
+import { PlanUsage } from "../PlanUsage/PlanUsage.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
-// Design 16c, redrawn by 95d–95h: the plan's name, what every account includes, then every
-// plan as a card carrying both quotas, with the reader's own ringed and named. The usage
-// those frames put above this waits for the server to count overviews.
+// Design 16c, redrawn by 95d–95h: the plan's name and this month's counts, what every account
+// includes, then every plan as a card carrying both quotas, with the reader's own ringed and
+// named. Signed out, the plan is the trial, and no card is the reader's.
 export function PlusPlanPanel() {
   const { plan, status, recheck } = usePlan();
+  const usage = usePlanUsage();
   const analytics = useAnalytics();
 
   if (status !== "known") {
@@ -39,14 +42,16 @@ export function PlusPlanPanel() {
     );
   }
 
-  const planName = PLAN_LABEL[plan];
+  const onTrial = usage?.signedIn === false;
+  const planName = onTrial ? "Trial" : PLAN_LABEL[plan];
 
   return (
     <section className={styles.root} data-testid={plusPlanPanelTestIds.root}>
-      <p className={styles.eyebrow}>Plan</p>
+      <p className={styles.eyebrow}>{onTrial ? "Signed out" : "Your plan"}</p>
       <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
         {planName}
       </p>
+      {usage !== null && <PlanUsage {...usage} />}
 
       <p className={styles.note} data-testid={plusPlanPanelTestIds.includedNote}>
         Every account gets all of it:
@@ -90,7 +95,7 @@ export function PlusPlanPanel() {
       </ul>
 
       <p className={styles.note} data-testid={plusPlanPanelTestIds.notOnSaleNote}>
-        {planName === "Free"
+        {plan === "free"
           ? "Both paid plans need a way to pay for them, and that isn't built yet. There is nothing to buy here today — everything on this page works without it."
           : "This plan was set by hand: billing isn't built yet."}
       </p>

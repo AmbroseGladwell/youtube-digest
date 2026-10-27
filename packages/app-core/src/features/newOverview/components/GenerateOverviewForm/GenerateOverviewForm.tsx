@@ -13,6 +13,7 @@ import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
+import { UsageLine } from "../UsageLine/UsageLine.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -218,6 +219,8 @@ export function GenerateOverviewForm({
           </button>
         )}
       </div>
+
+      {keysReady && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
+import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
@@ -171,6 +172,8 @@ function FirstRunHero() {
             </div>
           </div>
         )}
+
+        {ready && <UsageLine testIds={homePageTestIds.usageLine} />}
 
         {surface === "extension" ? (
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>

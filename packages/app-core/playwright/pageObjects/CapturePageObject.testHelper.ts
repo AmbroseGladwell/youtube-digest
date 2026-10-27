@@ -29,6 +29,13 @@ export class CapturePageObject extends PageObject {
         : expect(this.get(capturePageTestIds.createButton)).toBeDisabled(),
     );
 
+  // The panel's narrow line: no "this month", no Plan link, and a short date (design 95c).
+  verifyUsageLineReads = (text: string) =>
+    this.step(`verifyUsageLineReads ${text}`, async () => {
+      await expect(this.get(capturePageTestIds.usageLine.root)).toHaveText(text);
+      await this.expectToHaveCount(capturePageTestIds.usageLine.planLink, 0);
+    });
+
   verifySaysThereIsNoVideo = () =>
     this.step("verifySaysThereIsNoVideo", () =>
       this.expectToBeVisible(capturePageTestIds.noVideoNote),

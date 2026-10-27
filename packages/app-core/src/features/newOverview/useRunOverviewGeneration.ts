@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, TRIAL_OVERVIEWS, type Overview } from "@overview/domain";
 import { createFetchGenerationApi } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
@@ -19,6 +20,7 @@ import { TRIAL_SPENT_MESSAGE } from "../signedOutTrial/trialPrompt.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
+import { generationKeys } from "./generationKeys.js";
 
 // Named for the provider the reader chose, not for a provider in particular: on a device
 // that holds no key for it, this is the message behind design 110g's dead end.
@@ -45,6 +47,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const plan = useOverviewUsageQuery().data?.plan ?? null;
   const onlyMyKey = settingsQuery.data?.onlyMyKey ?? false;
   const signedIn = libraryAccountIdOf(connection) !== null;
+  const queryClient = useQueryClient();
 
   return useCallback(
     async (url: string, options: RunOverviewGenerationOptions): Promise<Overview> => {
@@ -79,7 +82,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
           warn: (warning) => reporter.warn(warning),
         },
         options,
-      );
+      ).finally(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }));
       if (!signedIn) {
         countSignedOutOverview();
         if (currentSignedOutTrial().made === TRIAL_OVERVIEWS) analytics.account.trial.limitReached();
@@ -103,6 +106,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
       transcriptStore,
       reporter,
       analytics,
+      queryClient,
     ],
   );
 }
