@@ -11,7 +11,9 @@ export const resetDate = (resetsOn: string, narrow = false): string =>
 
 export const leftOf = (left: number, limit: number): string => `${left} of ${limit} left`;
 
-const ON_KEY: Record<KeySource, string> = { ours: "on our key", own: "on your own key" };
+const ON_KEY: Record<KeySource, string> = { ours: "on us", own: "on your own key" };
+
+const PLUS_UPSELL = "Get more overviews with Plus";
 
 export interface UsageLine {
   parts: string[];
@@ -46,14 +48,14 @@ export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: Us
       const left = leftOf(next.left, next.limit);
       if (next.passedOver !== null) {
         const { key: spentKey, limit: spentLimit } = next.passedOver;
-        const uses = `uses ${next.key === "ours" ? "ours" : "your own key"}: ${left}.`;
+        const uses = `${next.key === "ours" ? "is on us" : "uses your own key"}: ${left}.`;
         const sentence = narrow
-          ? `${spentKey === "ours" ? "Our key's" : "Your key's"} ${spentLimit} are made this month. This one ${uses}`
+          ? `${spentKey === "ours" ? `The ${spentLimit} on us are` : `Your key's ${spentLimit} are`} made this month. This one ${uses}`
           : `This month's ${spentLimit} ${ON_KEY[spentKey]} are made, so this one ${uses}`;
         if (next.key === "ours" && plan !== "plus") {
           return narrow
-            ? { parts: [`${sentence} Plus makes more on ours`], link: "Plan" }
-            : { parts: [sentence, "Plus makes more on our key."], link: "See plans" };
+            ? { parts: [`${sentence} ${PLUS_UPSELL}`], link: "Plan" }
+            : { parts: [sentence, PLUS_UPSELL], link: "See plans" };
         }
         return { parts: [sentence], link: planLink };
       }

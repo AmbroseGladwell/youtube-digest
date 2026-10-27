@@ -9,11 +9,11 @@ const PASSED_OVER_OWN: Record<FallbackCause, (provider: string) => string> = {
 };
 
 const PASSED_OVER_OURS: Record<FallbackCause, string> = {
-  "quota-spent": "you’d made this month’s overviews on our key",
-  busy: "our key had made all it can today",
-  "provider-down": "our key wasn’t answering",
-  "out-of-credit": "our key wasn’t answering",
-  "schema-failure": "our key’s answer came back malformed",
+  "quota-spent": "you’d made this month’s overviews on us",
+  busy: "we’d made all we can today",
+  "provider-down": "we couldn’t make it just then",
+  "out-of-credit": "we couldn’t make it just then",
+  "schema-failure": "our answer came back malformed",
 };
 
 // The one quiet line a fallback earns, and nothing for an overview the first key made
@@ -23,7 +23,7 @@ export function madeOnLine(madeOn: MadeOn | null): string | null {
   if (madeOn === null || fallback === null) return null;
   const provider = fallback.provider === null ? null : PROVIDER_SHORT_LABEL[fallback.provider];
   if (madeOn.key === "ours") {
-    return `Made on our key: ${PASSED_OVER_OWN[fallback.cause](provider ?? "your provider")}`;
+    return `On us: ${PASSED_OVER_OWN[fallback.cause](provider ?? "your provider")}`;
   }
   return `Made on ${provider === null ? "your own key" : `your ${provider} key`}: ${PASSED_OVER_OURS[fallback.cause]}`;
 }

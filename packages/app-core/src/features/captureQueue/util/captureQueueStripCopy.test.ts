@@ -79,10 +79,10 @@ describe("captureQueueStripCopy", () => {
       title: "Queue waiting · 9",
       meta: "Resumes 1 Nov or with a key",
     });
-    const noUpgrade = { ...limit, quota: "both" as const, made: "50 on our key and 200 on your own", actions: ["seeUsage" as const] };
+    const noUpgrade = { ...limit, quota: "both" as const, made: "50 on us and 200 on your own", actions: ["seeUsage" as const] };
     expect(captureQueueStripCopy({ kind: "held", hold, waiting: 1, viaExtension: true, limit: noUpgrade }, false)).toEqual({
       title: "Queue waiting · 1 video",
-      meta: "This month's 50 on our key and 200 on your own are made. Resumes 1 November.",
+      meta: "This month's 50 on us and 200 on your own are made. Resumes 1 November.",
     });
   });
 

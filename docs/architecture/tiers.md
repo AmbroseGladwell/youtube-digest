@@ -217,7 +217,7 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 10 without the reader knowing why.
 
 **The reader sees which key made it.** An overview made by falling back says so in one
-quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
+quiet line ("On us: your Anthropic key was out of credit"), and the count it used
 goes down where the reader can see it. This follows "degrade visibly". The record carries it as
 `madeOn` (overview schema 9, client version 7): which key made it and, for a fallback, the
 key passed over, the reader's provider when it was theirs, and the cause (`quota-spent`,
@@ -262,6 +262,11 @@ is saved, so its push is let in uncounted.
 
 ## What the reader is told is left
 
+**Readers never read "our key"** (decided 27 Oct 2026, OV-131). The overviews we pay for are
+*on us*, as Settings › Plan's "On us" cell already said: *7 of 10 left on us this month*,
+*this one is on us*, *On us: your Anthropic key was out of credit*. "Our key" stays the
+name for it in code, logs and these docs. The reader's own is still *your own key*.
+
 Built in OV-131, from designs 95a–95h with the key order flipped for everyone but Plus. Every
 number is the server's (`GET /api/overview-usage`) or the device's trial, worked out in
 code, never by a model.
@@ -274,7 +279,7 @@ Create on the panel's capture screen) reads:
 | State | Line |
 |---|---|
 | First key in the order | *7 of 10 left on your own key this month · Resets 1 November · Plan* |
-| First key spent, falling back | *This month's 10 on your own key are made, so this one uses ours: 4 of 5 left. · Plus makes more on our key. · See plans* |
+| First key spent, falling back | *This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans* |
 | Counts not loaded | *Overviews left this month: Checking… · Plan* |
 | Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
 | Signed out | *2 of 3 trial overviews left · On either key · Plan* |
@@ -284,7 +289,7 @@ upsell names only a plan that makes more on the key this overview uses (decided 
 Plus for our key. A reader on our key is never offered BYO Plus, and a Plus reader falling
 back to their own key is offered nothing, since no plan makes more. On the panel the line
 drops "this month" and Plan and shortens the date (*Resets 1 Nov*), but keeps Plan when it
-mentions Plus (*… Plus makes more on ours · Plan*).
+mentions Plus (*… Get more overviews with Plus · Plan*).
 Settings › Plan counts both quotas (`docs/features/plus-upsell.md`, "16c"). No count ever
 reads 0 before it is known, and none reads "unlimited". The counts are asked for again
 after every run, made or failed, on any surface or the capture queue.
@@ -424,7 +429,7 @@ Following "degrade visibly", the reader is told what ran out, when it comes back
 ways around it. Nothing they already have stops working.
 
 - **Signed out, after 3 on either key:** *You've used your 3 trial overviews. A free account
-  makes 5 a month on our key, syncs them to every device and reads them aloud.* The capture
+  makes 5 a month on us, syncs them to every device and reads them aloud.* The capture
   queue's strip still says *Sign up to keep going*. Adding a key doesn't get round it. The on-device library stays readable, and moves into the account on sign-in
   (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
@@ -449,7 +454,7 @@ ways around it. Nothing they already have stops working.
 `LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,
 and on the panel's capture screen. The pasted link stays in the field. The title names what
 ran out and when it's back, both quotas in the order they were spent when both are (*You've
-made this month's 10 on your own key and 5 on ours. More on 1 November.*), and every state
+made this month's 10 on your own key and 5 on us. More on 1 November.*), and every state
 ends *Everything you've already made keeps working.* The ways round go only to Settings ›
 API keys, Settings › Plan or Create account: Add your own key where a key would give more,
 See plans or See BYO Plus where a plan would, and See this month's usage where none would.
