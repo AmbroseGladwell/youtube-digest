@@ -1,7 +1,11 @@
+import { limitMessageNoteTestIds } from "../LimitMessageNote/LimitMessageNoteTestIds.js";
+import { usageLineTestIds } from "../UsageLine/UsageLineTestIds.js";
 import { keyPromptNoteTestIds } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNoteTestIds.js";
 
 export const generateOverviewFormTestIds = {
   keyPrompt: keyPromptNoteTestIds("GenerateOverviewForm"),
+  usageLine: usageLineTestIds("GenerateOverviewForm"),
+  limitMessage: limitMessageNoteTestIds("GenerateOverviewForm"),
   root: "GenerateOverviewForm.root",
   urlInput: "GenerateOverviewForm.urlInput",
   pasteButton: "GenerateOverviewForm.pasteButton",

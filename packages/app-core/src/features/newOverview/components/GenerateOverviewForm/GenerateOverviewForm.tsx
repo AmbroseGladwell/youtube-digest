@@ -13,6 +13,9 @@ import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
+import { UsageLine } from "../UsageLine/UsageLine.js";
+import { LimitMessageNote } from "../LimitMessageNote/LimitMessageNote.js";
+import { useLimitMessage } from "../../useLimitMessage.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -23,6 +26,9 @@ export interface GenerateOverviewFormProps {
   // (docs/features/playlists.md, "Pasting a link").
   onPlaylist: (target: PlaylistTarget, pastedUrl: string) => void;
   generationError?: string | null;
+  // Whether the dialog holding the form is open, so a limit message can take focus as it
+  // comes into view.
+  active?: boolean;
 }
 
 // What a link means once it is complete: a playlist to look up, or one to refuse. Null
@@ -43,6 +49,7 @@ export function GenerateOverviewForm({
   onCancel,
   onPlaylist,
   generationError = null,
+  active = false,
 }: GenerateOverviewFormProps) {
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
@@ -57,6 +64,7 @@ export function GenerateOverviewForm({
   const watchedTranscript = useWatchedTranscriptQuery();
   const readiness = useGenerationReadiness();
   const keysReady = readiness.ready;
+  const limit = useLimitMessage();
   const [validationError, setValidationError] = useState<string | null>(null);
   const analytics = useAnalytics();
   const urlFieldId = useId();
@@ -72,7 +80,7 @@ export function GenerateOverviewForm({
       onPlaylist(target, url);
       return;
     }
-    if (choosing !== null) {
+    if (choosing !== null || limit !== null) {
       return;
     }
     if (!isYouTubeUrl(url)) {
@@ -161,7 +169,15 @@ export function GenerateOverviewForm({
         </button>
       )}
 
-      {keysReady ? (
+      {limit !== null ? (
+        <LimitMessageNote
+          message={limit}
+          from="dialog"
+          testIds={generateOverviewFormTestIds.limitMessage}
+          takeFocus={active}
+          onFollowed={onCancel}
+        />
+      ) : keysReady ? (
         <p className={styles.note}>
           Fetches the transcript, then writes the overview. Nothing is saved to your library unless
           both succeed.
@@ -207,7 +223,7 @@ export function GenerateOverviewForm({
         >
           Cancel
         </button>
-        {choosing === null && (
+        {choosing === null && limit === null && (
           <button
             type="submit"
             className={styles.generateButton}
@@ -218,6 +234,10 @@ export function GenerateOverviewForm({
           </button>
         )}
       </div>
+
+      {keysReady && limit === null && (
+        <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />
+      )}
     </form>
   );
 }

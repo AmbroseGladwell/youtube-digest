@@ -1,0 +1,71 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.period {
+  margin: -0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.cells {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem 0.875rem;
+  border-radius: 14px;
+  background: var(--surface);
+
+  dt {
+    font-size: 0.78125rem;
+    color: var(--muted);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.count {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.aside {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.link {
+  font-weight: 600;
+  color: var(--action);
+  text-decoration: none;
+}
+
+.note {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.createAccount {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+  align-self: flex-start;
+  text-decoration: none;
+}

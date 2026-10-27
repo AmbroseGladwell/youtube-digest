@@ -18,6 +18,8 @@ import { readableEntries } from "../overviews/types/LibraryEntry.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
 import { PLAN_LABEL } from "../plus/planLabel.js";
 import { usePlan } from "../plus/usePlan.js";
+import { useNextQuota } from "../newOverview/useNextQuota.js";
+import { planRowCount } from "../newOverview/util/usageLine.js";
 import { useSharesQuery } from "../shares/queries/sharesQuery.js";
 import { useShareApi } from "../shares/ShareApiContext.js";
 import { useSync } from "../sync/SyncContext.js";
@@ -29,6 +31,7 @@ import { followingRowValue } from "../playlists/util/followedPlaylistLines.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
 import {
   aboutRowValue,
+  planRowValue,
   accountRowValue,
   keysRowValue,
   milestonesRowValue,
@@ -51,6 +54,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const settings = useSettingsQuery().data;
   const { apiKeys } = useApiKeys();
   const { plan, status: planStatus } = usePlan();
+  const nextQuota = useNextQuota();
   const connections = useConnectionsQuery();
   const session = useSessionQuery();
   const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
@@ -79,7 +83,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
       title: "Plan",
       value:
         planStatus === "known"
-          ? PLAN_LABEL[plan]
+          ? planRowValue(nextQuota?.kind === "trial" ? "Trial" : PLAN_LABEL[plan], planRowCount(nextQuota))
           : planStatus === "checking"
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,

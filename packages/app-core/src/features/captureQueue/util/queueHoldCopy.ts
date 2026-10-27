@@ -14,6 +14,8 @@ export function queueHoldStripMeta(hold: QueueHold, waiting: number, viaExtensio
       return `${count(waiting)} waiting · ${continues}${viaExtension ? ", or now with the extension" : ""}`;
     case "serverBusy":
       return `${count(waiting)} waiting · it asked us to slow down · ${continues}`;
+    case "monthSpent":
+      return `${count(waiting)} waiting · ${continues}`;
   }
 }
 
@@ -25,5 +27,7 @@ export function queueHoldNote(hold: QueueHold, waiting: number, viaExtension: bo
       return `Our server has fetched as many transcripts for you as it can today. ${subject} after ${time}${viaExtension ? ", or now with the extension" : ""}. Nothing has failed.`;
     case "serverBusy":
       return `Our server asked us to slow down for a moment. ${subject} after ${time}. Nothing has failed.`;
+    case "monthSpent":
+      return `This month's overviews are made. ${subject} after ${time}. Nothing has failed.`;
   }
 }

@@ -134,10 +134,18 @@ the point.
 This is the one the other two point at, which is what lets 16a and 16b stay short: they
 name the thing being sold and hand off, rather than each carrying a full case.
 
-**What 95d–95h draw that is not built:** the usage block above the cards — the plan's name
-beside "This month · resets 1 November", and the two quota cells reading "7 of 10 left" —
-and the Settings list row's "Free · 7 of 10 left". Both are counts, and nothing counts yet
-(see "Not built", below).
+**This month's usage sits between the plan's name and the cards** (OV-131, `PlanUsage`):
+"This month · resets 1 November", then one cell per quota, "On us" and "On your own key",
+each reading "7 of 10 left" from the server's counts (`GET /api/overview-usage`). A spent
+cell adds "None left. More on 1 November." With no key saved, the own-key cell gives the
+plan's figure ("10 a month") and "Once you add a key · Add a key". While the counts load,
+the cells read "Checking…", never 0. The Settings list row carries the count of the quota
+the next overview will use: "Free · 7 of 10 left".
+
+Signed out, the plan is the trial: "Signed out", "Trial", "This device only", and **one**
+cell, "2 of 3 left · On either key. They don't reset.", since the trial counts either key
+(decided on OV-131; 95f drew a second, "Not counted", own-key cell from before that rule).
+Below it, what a free account makes and Create account. No card is ringed as the reader's.
 
 ## Not built
 
@@ -147,8 +155,5 @@ and the Settings list row's "Free · 7 of 10 left". Both are counts, and nothing
 - **Gating sync, narration or the MCP connection.** None of them is Plus's to gate: they
   belong to the free account (`tiers.md`). The server has given sync to every account since
   it was built, and the copy that said otherwise was the thing that was wrong.
-- **Showing what is left this month.** The counts are the server's: an account's two
-  quotas and the signed-out trial (`tiers.md`, "Counting"). The panel still states each
-  plan's allowance, and no reader is told their own usage yet.
 - **Selling anything on the web app.** The three placements are the panel's, which is
   where the design puts them. The web reader is untouched.

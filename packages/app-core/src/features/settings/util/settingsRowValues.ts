@@ -68,3 +68,7 @@ export function milestonesRowValue(minutes: number): string {
 export function aboutRowValue(build: AppBuild): string {
   return `Version ${build.version}`;
 }
+
+// Design 95d: the plan, then what's left of the quota the next overview will use.
+export const planRowValue = (plan: string, count: string | null): string =>
+  count === null ? plan : `${plan} · ${count}`;

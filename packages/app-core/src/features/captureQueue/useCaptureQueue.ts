@@ -5,12 +5,20 @@ import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
+import { providersWithKeys } from "../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import type { NewOverviewRun } from "../newOverview/types/NewOverviewRun.js";
 import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js";
 import { useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { generationKeys } from "../newOverview/generationKeys.js";
+import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
+import { useLimitMessage } from "../newOverview/useLimitMessage.js";
+import { useNextQuota } from "../newOverview/useNextQuota.js";
+import type { LimitMessage } from "../newOverview/util/limitMessage.js";
+import { monthResetOf } from "../newOverview/util/monthReset.js";
+import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 import { generationRunStatus } from "../newOverview/util/generationRunStatus.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
@@ -34,6 +42,8 @@ import { pacedQueue } from "./util/pacedQueue.js";
 import { isQueueHoldReason, queueHoldOf, queueProblemOf } from "./util/queueProblemOf.js";
 
 const CHECKED_NOTICE_MS = 8_000;
+
+type ResumedVia = "reset" | "extension" | "key" | "plan";
 const DONE_NOTICE_MS = 10_000;
 
 export interface QueueMaking {
@@ -62,8 +72,12 @@ export interface CaptureQueueController {
   // Signed out, the device has made the trial's overviews, so what waits waits for an account.
   trialSpent: boolean;
   // Waiting at a limit, until it resets or the extension connects; nothing is asked meanwhile
-  // (docs/features/capture-queue.md, "Waiting at a limit").
+  // (docs/features/capture-queue.md, "Waiting at a limit"). The month's limit wins over the
+  // others, and over every pace.
   hold: QueueHold | null;
+  // What ran out, when the queue waits for the month: the ways round it the strip and the
+  // page offer.
+  limit: LimitMessage | null;
   // Whether the extension would be a way around a hold here: a shell with no free rung.
   viaExtension: boolean;
   setPaused: (paused: boolean) => void;
@@ -93,6 +107,10 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const readiness = useGenerationReadiness();
   const trialSpent = readiness.trialSpent;
   const needsKey = !readiness.ready && !trialSpent;
+  const nextQuota = useNextQuota();
+  const limit = useLimitMessage();
+  const plan = useOverviewUsageQuery().data?.plan ?? null;
+  const onlyMyKey = useSettingsQuery().data?.onlyMyKey ?? false;
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
@@ -115,8 +133,13 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const waiting = items.filter((capture) => capture.status === "waiting");
   const attention = items.filter((capture) => capture.status !== "waiting");
   waitingCount.current = waiting.length;
-  const hold = preferences.hold;
-  holding.current = hold;
+  const counted = nextQuota?.kind === "spent" ? nextQuota.resetsOn : null;
+  const monthHold = useMemo<QueueHold | null>(
+    () => (counted === null ? null : { reason: "monthSpent", resumesAt: monthResetOf(counted, new Date()).getTime() }),
+    [counted],
+  );
+  const hold = monthHold ?? preferences.hold;
+  holding.current = preferences.hold;
 
   // A pace starts again at the reader's midnight, whether or not anything else changes.
   useEffect(() => {
@@ -296,12 +319,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
           const held = queueHoldOf(error, problem, new Date());
           holding.current = held;
           savePreferences({ hold: held });
-          reporter.warn({
-            name: "captureQueueHeld",
-            reason: held.reason,
-            waiting: waitingCount.current,
-            resumesInSeconds: Math.max(0, Math.ceil((held.resumesAt - Date.now()) / 1000)),
-          });
         } else {
           await captureQueueStore.saveQueued({ ...capture, status: "failed", problem });
           reporter.warn({ name: "queuedCaptureFailed", problem });
@@ -314,24 +331,70 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences, accountId],
   );
 
+  const resumedVia = useRef<ResumedVia>("reset");
   const resume = useCallback(
-    (via: "reset" | "extension") => {
-      const current = holding.current;
-      if (current === null) return;
+    (via: ResumedVia) => {
+      if (holding.current === null) return;
       holding.current = null;
+      resumedVia.current = via;
       savePreferences({ hold: null });
-      reporter.warn({ name: "captureQueueResumed", reason: current.reason, waiting: waitingCount.current, via });
     },
-    [savePreferences, reporter],
+    [savePreferences],
   );
+
+  // At the month's limit the queue carries on when a key or a plan gives it room, and asks
+  // for the counts again as the month turns.
+  const keyed = `${providersWithKeys(apiKeys).join(",")}|${onlyMyKey}`;
+  const lastKeyed = useRef(keyed);
+  const lastPlan = useRef(plan);
+  useEffect(() => {
+    const via = keyed !== lastKeyed.current ? "key" : lastPlan.current !== null && plan !== lastPlan.current ? "plan" : null;
+    lastKeyed.current = keyed;
+    lastPlan.current = plan;
+    if (via === null) return;
+    resumedVia.current = via;
+    if (preferences.hold?.reason === "monthSpent") resume(via);
+  }, [keyed, plan]);
+  // Each wait is logged once as it begins and once as it ends, whichever way it was learned:
+  // from a refusal, or from the month's counts (docs/features/capture-queue.md, "Waiting at a
+  // limit").
+  const loggedHold = useRef<QueueHold | null>(null);
+  useEffect(() => {
+    const previous = loggedHold.current;
+    if (previous?.reason === hold?.reason) return;
+    loggedHold.current = hold;
+    if (previous !== null) {
+      reporter.warn({ name: "captureQueueResumed", reason: previous.reason, waiting: waitingCount.current, via: resumedVia.current });
+      resumedVia.current = "reset";
+    }
+    if (hold !== null) {
+      resumedVia.current = "reset";
+      reporter.warn({
+        name: "captureQueueHeld",
+        reason: hold.reason,
+        waiting: waitingCount.current,
+        resumesInSeconds: Math.max(0, Math.ceil((hold.resumesAt - Date.now()) / 1000)),
+      });
+    }
+  }, [hold, reporter]);
+
+  useEffect(() => {
+    if (monthHold === null) return;
+    const timer = setTimeout(
+      () => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }),
+      Math.max(0, monthHold.resumesAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [monthHold, queryClient]);
 
   // The hold ends by itself when the limit resets, or at once when an extension connects and
   // can fetch instead; a shell that always had one is not a connection.
+  const persistedHold = preferences.hold;
   useEffect(() => {
-    if (hold === null) return;
-    const timer = setTimeout(() => resume("reset"), Math.max(0, hold.resumesAt - Date.now()));
+    if (persistedHold === null) return;
+    const timer = setTimeout(() => resume("reset"), Math.max(0, persistedHold.resumesAt - Date.now()));
     return () => clearTimeout(timer);
-  }, [hold, resume]);
+  }, [persistedHold, resume]);
   const hadYouTubeFetch = useRef(youTubeFetch !== null);
   useEffect(() => {
     const has = youTubeFetch !== null;
@@ -340,8 +403,19 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   }, [youTubeFetch, resume]);
 
   const next = paced.ready[0] ?? null;
+  // Nothing is made until the month's counts are known, so a queue opened at the limit never
+  // asks before it knows; a server that can't be asked still enforces the limit itself.
+  const countsKnown = nextQuota?.kind !== "checking";
   const canMake =
-    !preferences.paused && !needsKey && !trialSpent && !readerRunActive && making === null && hold === null && queue.isSuccess && followed.isSuccess;
+    !preferences.paused &&
+    !needsKey &&
+    !trialSpent &&
+    !readerRunActive &&
+    making === null &&
+    hold === null &&
+    countsKnown &&
+    queue.isSuccess &&
+    followed.isSuccess;
   useEffect(() => {
     if (canMake && next !== null) void make(next);
   }, [canMake, next, make]);
@@ -436,6 +510,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     needsKey,
     trialSpent,
     hold,
+    limit,
     viaExtension: youTubeFetch === null,
     batch,
     notice,
@@ -459,6 +534,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       needsKey,
       trialSpent,
       hold,
+      limit,
       viaExtension: youTubeFetch === null,
       setPaused,
       setFolded: (folded: boolean) => savePreferences({ folded }),
@@ -489,6 +565,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       needsKey,
       trialSpent,
       hold,
+      limit,
       youTubeFetch,
       setPaused,
       savePreferences,

@@ -51,6 +51,16 @@ export class HomePageObject extends PageObject {
       await this.expectNotToBeVisible(homePageTestIds.keysNote);
     });
 
+  verifyUsageLineReads = (text: string) =>
+    this.step(`verifyUsageLineReads ${text}`, () => expect(this.get(homePageTestIds.usageLine.root)).toHaveText(text));
+
+  verifyLimitMessage = ({ title, actions }: { title: string; actions: string[] }) =>
+    this.step(`verifyLimitMessage ${title}`, async () => {
+      await expect(this.get(homePageTestIds.limitMessage.title)).toHaveText(title);
+      await expect(this.get(homePageTestIds.limitMessage.root).getByRole("link")).toHaveText(actions);
+      await this.expectToHaveCount(homePageTestIds.generateButton, 0);
+    });
+
   // The hero carries the same dead end as Settings, so a reader meets it where they tried
   // to generate (design 110k).
   verifyKeyPromptDeadEnd = () =>

@@ -63,6 +63,7 @@ The generation strip's slot and shape (3c), one state at a time (`captureQueueSt
 | making | *Making 3 of 12* · the step · the title, with progress | Details, Pause, Queue |
 | signed out past the trial | *Sign up to keep going* · *10 videos wait for an account · a free one makes 15 a month* | Create account, Queue |
 | no key | *10 videos are waiting for an API key* | Add a key, Queue |
+| at the month's limit | *Queue waiting · 9 videos* · *This month's 5 are made. Resumes 1 November, or when you add a key.* | Add a key or See plans where either would help, Queue |
 | paused | *Queue paused* · *10 waiting · nothing is made until you resume* | Resume, Queue |
 | held | *Waiting for our server* · *9 waiting · these continue after 01:00, or now with the extension* | Queue |
 | checked | *Checked 2 playlists* · *3 new videos queued · starting with the oldest*, for 8 seconds | Queue |
@@ -112,12 +113,13 @@ transcript fetches, which the queue could not tell from any other failure.
 Now a refusal at a limit is the queue's to wait at, not the video's problem
 (`queueProblemOf` answers a hold reason, which is never written onto a capture). The queue
 stops asking, keeps every video *waiting*, and holds (`QueueHold`: the reason and the
-moment it resumes, from the server's `Retry-After`). Two reasons so far:
+moment it resumes, from the server's `Retry-After`, or the month's reset). Three reasons:
 
 | Reason | When | Waits |
 |---|---|---|
 | `serverCap` | our server's daily safety cap (`daily-cap`) | until the server's `Retry-After`, or UTC midnight when it didn't say |
 | `serverBusy` | our server's ordinary per-minute request limit (`rate-limited` from the `service` rung) | the `Retry-After`, or a minute when it didn't say |
+| `monthSpent` | every key the next overview could use has made this month's quota | UTC midnight on the server's `resetsOn`, written as the reader's own date |
 
 Another rung's rate limit is still the video's failure: only our own server's refusals say
 anything about the rest of the queue. It shows why and when, written out in the reader's
@@ -144,14 +146,31 @@ without asking the server again, and a hold whose time has passed is not read ba
 
 Each hold is reported as the `captureQueueHeld` client warning (the reason, how many were
 waiting, seconds until it resumes) and each resumption as `captureQueueResumed` (the
-reason, how many were waiting, `reset` or `extension`). They are logs rather than events
+reason, how many were waiting, `reset`, `extension`, `key` or `plan`). They are logs rather than events
 because the queue acted, not the reader (`docs/architecture/analytics.md`).
 
-The same waiting state is meant for OV-104, where queued captures wait at the overview
-limit with their own reason and resume time, and for OV-95's playlist caps: one pattern,
-different reasons. Once transcripts ride on overviews (`docs/architecture/tiers.md`), the
-limit a reader normally meets is OV-104's; this one is the safety cap behind it. A
-heads-up before a big playlist run ("10 of these 19 can be made today") belongs to OV-104.
+### At the month's limit
+
+Built in OV-131 (designs 95p–95r, 95ad). The queue learns of the limit two ways: from the
+month's counts (`GET /api/overview-usage`), when the next quota is spent, and from a
+refusal mid-run (a `too_many_requests` naming `ours` or `own`), which `queueProblemOf`
+answers as `monthSpent` and the queue keeps as a hold. Until the counts have answered the
+queue makes nothing, so a queue opened at the limit never asks first; a server that can't
+be asked still enforces the limit itself. The month wins over the other holds and over every
+pace.
+
+- **The strip:** *Queue waiting · 9 videos* · *This month's 5 are made. Resumes 1 November,
+  or when you add a key.* Compact: *Queue waiting · 9* · *Resumes 1 Nov or with a key*, or
+  *This month's 200 on your own key are made · resumes 1 Nov* where a key wouldn't help. It
+  offers Add a key, or See plans, only where that would give more (`monthHoldCopy`, from the
+  limit message's ways round it).
+- **The queue page:** a note, *This month's 5 are made, so the queue is waiting. It carries
+  on by itself on 1 November, as soon as you add a key or if your plan changes.*, with the
+  same ways round; the list reads *Waiting · 9 · resumes 1 November*, and every row,
+  including what would have waited on a pace, reads *Waiting for 1 November*. Pause, *Make
+  now* and *Choose* are hidden, because nothing would run.
+- **Resuming:** on the 1st (the queue asks for the counts again at the reset), as soon as a
+  key is added or *Only ever use my key* changes, or when the plan changes.
 
 A reader making one by hand past the cap is told the same thing in the run's own error:
 *Our server has fetched as many transcripts for you as it can today. It can again after
@@ -184,7 +203,7 @@ Lecture have reached today’s pace* (and *12 waiting for you · From Saved for 
 ink, linking to the queue page.
 
 When more than one wait applies, the order is: the month, then our server's cap, then the
-pace. The month's wait in the queue (95ad) is not built yet; see "Not built".
+pace ("At the month's limit", above).
 
 ## Making waiting videos now
 
@@ -202,6 +221,11 @@ Remove and *Make 3 now* (`chooseCopy`). It works in the panel too, which holds i
 queue until OV-11. *Make now* and *Make N now* aren't offered without a key, signed out past
 the trial, or while the queue waits at a limit, because they couldn't work; Remove always
 is.
+
+**More chosen than the month has left** (95ah): the bar says *You have 4 left this month,
+so 4 are made now and the other 3 wait for 1 November.*, the button reads *Make 4 now*, and
+the oldest 4 are made; the rest keep waiting. What's left counts every key the next overviews
+could use (`leftThisMonthOf`).
 
 ## No API key
 
@@ -229,9 +253,4 @@ is not an event; the reader's action was following (`playlists.md`, "Analytics")
 
 ## Not built
 
-- **Waiting at the month's limit in the queue** (95ad, and OV-104's 95p–95s): every row
-  *Waiting for 1 November*, no *Make now* or *Choose*. Today a video the month's allowance
-  refuses fails like any other.
-- **Choosing more than the month allows** (95ah): *You have 4 left this month, so 4 are made
-  now and the other 3 wait for 1 November*, with *Make 4 now*. Both need the client to know
-  the reader's usage, which it doesn't show yet (`plus-upsell.md`, "Not built").
+Nothing from the designs this file follows.

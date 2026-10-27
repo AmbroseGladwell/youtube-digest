@@ -1,4 +1,5 @@
 export const playlistPreviewTestIds = {
+  allowance: "PlaylistPreview.allowance",
   root: "PlaylistPreview.root",
   title: "PlaylistPreview.title",
   owner: "PlaylistPreview.owner",

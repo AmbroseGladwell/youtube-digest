@@ -217,7 +217,7 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 10 without the reader knowing why.
 
 **The reader sees which key made it.** An overview made by falling back says so in one
-quiet line ("Made on our key: your Anthropic key was out of credit"), and the count it used
+quiet line ("On us: your Anthropic key was out of credit"), and the count it used
 goes down where the reader can see it. This follows "degrade visibly". The record carries it as
 `madeOn` (overview schema 9, client version 7): which key made it and, for a fallback, the
 key passed over, the reader's provider when it was theirs, and the cause (`quota-spent`,
@@ -248,8 +248,9 @@ in, and signed out on the device's trial, through `createTrialGenerationApi`, wh
 the trial token before the first overview on ours, keeps it, and asks again if the server
 no longer knows it. The device's count (`useSignedOutTrial`, kept in local storage beside the
 library, never read from it) goes up for every overview made signed out, on either key. At 3
-`trialSpent` takes the place of Create on every surface with *Sign up to keep going*
-(`keyPrompt`, `trialPrompt`), the capture queue waits for an account, and the extension's
+the limit message takes the place of Create on every surface with *You've used your 3 trial
+overviews* and Create account (`limitMessageOf`, below), the capture queue waits for an
+account, and the extension's
 button opens Create account. Only a shell that can make an account has a trial: elsewhere
 there is nothing to offer. Signing in leaves the count where it is, so signing out again
 doesn't start a new trial. The count reaching 3 is `account.trial.limitReached`, and following
@@ -258,6 +259,40 @@ The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLin
 and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
 a fallback to switch off. Saving a shared overview sends the share's token before the copy
 is saved, so its push is let in uncounted.
+
+## What the reader is told is left
+
+**Readers never read "our key"** (decided 27 Oct 2026, OV-131). The overviews we pay for are
+*on us*, as Settings › Plan's "On us" cell already said: *7 of 10 left on us this month*,
+*this one is on us*, *On us: your Anthropic key was out of credit*. "Our key" stays the
+name for it in code, logs and these docs. The reader's own is still *your own key*.
+
+Built in OV-131, from designs 95a–95h with the key order flipped for everyone but Plus. Every
+number is the server's (`GET /api/overview-usage`) or the device's trial, worked out in
+code, never by a model.
+
+**Only the quota the next overview will use is shown where the reader generates.**
+`nextQuotaOf` walks the same order `keyOrderFor` gives a run, and picks the first key with
+any left. The line (`UsageLine`, under Generate in the dialog, under the hero, and under
+Create on the panel's capture screen) reads:
+
+| State | Line |
+|---|---|
+| First key in the order | *7 of 10 left on your own key this month · Resets 1 November · Plan* |
+| First key spent, falling back | *This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans* |
+| Counts not loaded | *Overviews left this month: Checking… · Plan* |
+| Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
+| Signed out | *2 of 3 trial overviews left · On either key · Plan* |
+
+Falling back to our key on Free or BYO Plus, the line mentions Plus once (95m), because an
+upsell names only a plan that makes more on the key this overview uses (decided on OV-131):
+Plus for our key. A reader on our key is never offered BYO Plus, and a Plus reader falling
+back to their own key is offered nothing, since no plan makes more. On the panel the line
+drops "this month" and Plan and shortens the date (*Resets 1 Nov*), but keeps Plan when it
+mentions Plus (*… Get more overviews with Plus · Plan*).
+Settings › Plan counts both quotas (`docs/features/plus-upsell.md`, "16c"). No count ever
+reads 0 before it is known, and none reads "unlimited". The counts are asked for again
+after every run, made or failed, on any surface or the capture queue.
 
 ## Counting
 
@@ -393,9 +428,9 @@ it has been pushed is a regeneration, and counts again. `DELETE
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 3 on either key:** *Sign up to keep going: a free account makes 15 a
-  month, syncs them to your other devices, and reads them aloud.* Adding a key doesn't get
-  round it. The on-device library stays readable, and moves into the account on sign-in
+- **Signed out, after 3 on either key:** *You've used your 3 trial overviews. A free account
+  makes 5 a month on us, syncs them to every device and reads them aloud.* The capture
+  queue's strip still says *Sign up to keep going*. Adding a key doesn't get round it. The on-device library stays readable, and moves into the account on sign-in
   (OV-47).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
@@ -411,7 +446,21 @@ ways around it. Nothing they already have stops working.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
   The same waiting state, with a different reason and resume time, is what the queue shows
-  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
+  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit"
+  and "At the month's limit"). The playlist preview and the queue's *Choose* say what the
+  allowance left means before anything runs.
+
+**Built in OV-131.** `limitMessageOf` turns the next quota into the message, and
+`LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,
+and on the panel's capture screen. The pasted link stays in the field. The title names what
+ran out and when it's back, both quotas in the order they were spent when both are (*You've
+made this month's 10 on your own key and 5 on us. More on 1 November.*), and every state
+ends *Everything you've already made keeps working.* The ways round go only to Settings ›
+API keys, Settings › Plan or Create account: Add your own key where a key would give more,
+See plans or See BYO Plus where a plan would, and See this month's usage where none would.
+The title and body are a polite live region, and the dialog moves focus to the first action
+as it opens. Each message shown is `capture.limitMessage.shown` (quota, plan, surface) and
+each way taken `capture.limitMessage.wayChosen`.
 
 ## Options for saving cost, not built
 

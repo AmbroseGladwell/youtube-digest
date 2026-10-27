@@ -60,6 +60,19 @@ export class QueuePageObject extends PageObject {
   verifyHeldNoteReads = (text: string | RegExp) =>
     this.step("verifyHeldNoteReads", () => expect(this.get(queuePageTestIds.heldNote)).toHaveText(text));
 
+  // At the month's limit the note carries the ways round it (design 95q).
+  verifyMonthHeldNote = (text: string, ways: string[]) =>
+    this.step(`verifyMonthHeldNote ${text}`, async () => {
+      await expect(this.get(queuePageTestIds.heldNote)).toContainText(text);
+      await expect(this.get(queuePageTestIds.heldNote).getByRole("link")).toHaveText(ways);
+    });
+
+  verifyWaitingLabel = (text: string) =>
+    this.step(`verifyWaitingLabel ${text}`, () => expect(this.get(queuePageTestIds.waitingLabel)).toHaveText(text));
+
+  verifyChooseIsOffered = (offered: boolean) =>
+    this.step(`verifyChooseIsOffered ${offered}`, () => this.expectToHaveCount(queuePageTestIds.chooseButton, offered ? 1 : 0));
+
   verifyHeldNoteIsAbsent = () => this.step("verifyHeldNoteIsAbsent", () => this.expectToHaveCount(queuePageTestIds.heldNote, 0));
 
   verifyTryAgainIsOffered = (offered: boolean) =>
