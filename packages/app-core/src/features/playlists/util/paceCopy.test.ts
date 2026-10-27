@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { paceChangedLine, paceConsequence, paceFacts, paceSpan, paceWaitEffect } from "./paceCopy.js";
+import { allowanceLine, paceChangedLine, paceConsequence, paceFacts, paceSpan, paceWaitEffect } from "./paceCopy.js";
 
 describe("paceSpan", () => {
   it("reads a backfill's length in days, and in months once it passes 60", () => {
@@ -58,5 +58,33 @@ describe("paceFacts", () => {
   it("reads the pace and what waits on it", () => {
     expect(paceFacts("fiveADay", 7)).toBe("Up to 5 a day · 7 waiting");
     expect(paceFacts("asTheyCome", 0)).toBe("As they come · nothing waiting");
+  });
+});
+
+describe("allowanceLine", () => {
+  it("at a pace, says how long the allowance lasts and when the rest carry on, as 95v does", () => {
+    expect(allowanceLine("fiveADay", 21, 10, "2026-11-01")).toBe(
+      "Your allowance covers 10 more this month. At 5 a day that’s the next 2 days; the other 11 wait for 1 November, then carry on at 5 a day.",
+    );
+    expect(allowanceLine("oneADay", 21, 1, "2026-11-01")).toBe(
+      "Your allowance covers 1 more this month. At 1 a day that’s today; the other 20 wait for 1 November, then carry on at 1 a day.",
+    );
+  });
+
+  it("as they come, says how many are made now and that the rest wait, as 95s does", () => {
+    expect(allowanceLine("asTheyCome", 19, 10, "2026-11-01")).toBe(
+      "10 of these 19 can be made now: you have 10 left this month. The other 9 wait in the queue and carry on by themselves on 1 November.",
+    );
+  });
+
+  it("says nothing when the allowance covers the backfill, or when the playlist waits to be chosen", () => {
+    expect(allowanceLine("fiveADay", 8, 10, "2026-11-01")).toBeNull();
+    expect(allowanceLine("whenChosen", 21, 0, "2026-11-01")).toBeNull();
+  });
+
+  it("with nothing left, says all of it waits for the month", () => {
+    expect(allowanceLine("fiveADay", 21, 0, "2026-11-01")).toBe(
+      "Nothing is left of this month’s allowance, so all 21 wait in the queue and carry on by themselves on 1 November.",
+    );
   });
 });

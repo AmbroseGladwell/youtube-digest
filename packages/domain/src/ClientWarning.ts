@@ -22,9 +22,9 @@ const TranscriptRungFailure = z.enum([
   "daily-cap",
 ]);
 // The queue stopped on its own and waited: at our server's daily cap, for the moment it asked
-// us to slow down, and at an overview limit once OV-104 counts them
-// (docs/features/capture-queue.md, "Waiting at a limit").
-const QueueHoldReason = z.enum(["serverCap", "serverBusy"]);
+// us to slow down, and at the month's overview limit (docs/features/capture-queue.md,
+// "Waiting at a limit").
+const QueueHoldReason = z.enum(["serverCap", "serverBusy", "monthSpent"]);
 
 // What the app did when something it depends on let it down and it carried on anyway: a
 // line in the server's logs at warn, never an error-tracking issue and never an event
@@ -106,11 +106,11 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("captureQueueResumed"),
-      // The queue carried on after waiting at a limit: the limit reset, or the extension
-      // connected and could fetch instead.
+      // The queue carried on after waiting at a limit: the limit reset, the extension
+      // connected and could fetch instead, or a key or plan gave the month more room.
       reason: QueueHoldReason,
       waiting: z.number().int().nonnegative(),
-      via: z.enum(["reset", "extension"]),
+      via: z.enum(["reset", "extension", "key", "plan"]),
       at: z.iso.datetime(),
     })
     .strict(),

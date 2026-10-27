@@ -436,7 +436,9 @@ ways around it. Nothing they already have stops working.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
   The same waiting state, with a different reason and resume time, is what the queue shows
-  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit").
+  at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit"
+  and "At the month's limit"). The playlist preview and the queue's *Choose* say what the
+  allowance left means before anything runs.
 
 **Built in OV-131.** `limitMessageOf` turns the next quota into the message, and
 `LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,

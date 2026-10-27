@@ -1,5 +1,7 @@
 import type { QueuedCaptureProblem } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
+import { isSyncRequestError } from "@overview/sync";
+import { monthResetOf } from "../../newOverview/util/monthReset.js";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
 import { resumesAtFrom } from "../../transcripts/util/resumeTime.js";
 import type { QueueHold, QueueHoldReason } from "../types/QueueHold.js";
@@ -11,7 +13,15 @@ const BUSY_WAIT_SECONDS = 60;
 export type QueueProblem = QueuedCaptureProblem | QueueHoldReason;
 
 export const isQueueHoldReason = (problem: QueueProblem): problem is QueueHoldReason =>
-  problem === "serverCap" || problem === "serverBusy";
+  problem === "serverCap" || problem === "serverBusy" || problem === "monthSpent";
+
+const MONTH_QUOTAS = new Set(["ours", "own"]);
+
+// The server refused every key the overview could use for this month.
+const monthSpentResetOf = (error: unknown): string | null =>
+  isSyncRequestError(error) && error.code === "too_many_requests" && MONTH_QUOTAS.has(String(error.details?.quota))
+    ? String(error.details?.resetsOn ?? "")
+    : null;
 
 function fetchErrorOf(error: unknown): TranscriptFetchError | null {
   if (error instanceof TranscriptFetchError) return error;
@@ -30,6 +40,7 @@ function fetchErrorOf(error: unknown): TranscriptFetchError | null {
 // provider's own words. The ladder's last rung to answer says why
 // (docs/features/capture-queue.md, "Needs attention").
 export function queueProblemOf(error: unknown): QueueProblem {
+  if (monthSpentResetOf(error) !== null) return "monthSpent";
   const fetchError = fetchErrorOf(error);
   if (fetchError?.failure === "daily-cap") return "serverCap";
   if (fetchError?.failure === "rate-limited" && fetchError.sourceId === "service") return "serverBusy";
@@ -38,9 +49,10 @@ export function queueProblemOf(error: unknown): QueueProblem {
   return "failed";
 }
 
-// How long the queue waits: as long as the server said; when it didn't, until UTC midnight at
-// the daily cap, or a minute when asked to slow down.
+// How long the queue waits: until the month resets at its limit; as long as the server said;
+// when it didn't, until UTC midnight at the daily cap, or a minute when asked to slow down.
 export function queueHoldOf(error: unknown, reason: QueueHoldReason, now: Date): QueueHold {
+  if (reason === "monthSpent") return { reason, resumesAt: monthResetOf(monthSpentResetOf(error), now).getTime() };
   const said = fetchErrorOf(error)?.retryAfterSeconds ?? null;
   const seconds = said ?? (reason === "serverBusy" ? BUSY_WAIT_SECONDS : null);
   return { reason, resumesAt: resumesAtFrom(seconds, now).getTime() };

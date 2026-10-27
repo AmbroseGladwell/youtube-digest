@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TranscriptFetchError } from "@overview/transcripts";
+import { SyncRequestError } from "@overview/sync";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
 import { queueHoldOf, queueProblemOf } from "./queueProblemOf.js";
 
@@ -10,6 +11,17 @@ const ladderEnding = (last: TranscriptFetchError) =>
   ]);
 
 describe("queueProblemOf", () => {
+  it("the month's limit is the queue's to wait at until the month resets, not the video's failure", () => {
+    const spent = new SyncRequestError("too_many_requests", 429, "spent", { quota: "ours", resetsOn: "2026-11-01" });
+    expect(queueProblemOf(spent)).toBe("monthSpent");
+    expect(queueHoldOf(spent, "monthSpent", new Date("2026-10-27T09:00:00Z"))).toEqual({
+      reason: "monthSpent",
+      resumesAt: Date.parse("2026-11-01T00:00:00Z"),
+    });
+    const daily = new SyncRequestError("too_many_requests", 429, "busy", { quota: "our-key-daily" });
+    expect(queueProblemOf(daily)).toBe("failed");
+  });
+
   it("names a video with no captions, however the ladder wrapped it", () => {
     const noCaptions = new TranscriptFetchError("this video has no captions", { failure: "no-captions" });
     expect(queueProblemOf(noCaptions)).toBe("noCaptions");

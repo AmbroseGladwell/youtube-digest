@@ -52,13 +52,37 @@ describe("captureQueueStripCopy", () => {
 
   it("waiting at a limit, writes the resume time out, wide and compact", () => {
     const hold = { reason: "serverCap" as const, resumesAt: new Date(2026, 9, 7, 1, 0).getTime() };
-    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true }, false)).toEqual({
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true, limit: null }, false)).toEqual({
       title: "Waiting for our server",
       meta: "9 waiting · these continue after 01:00, or now with the extension",
     });
-    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true }, true)).toEqual({
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true, limit: null }, true)).toEqual({
       title: "Waiting · 9 continue after 01:00",
       meta: null,
+    });
+  });
+
+  it("waiting for the month, says what was made, when it resumes, and whether a key would help", () => {
+    const hold = { reason: "monthSpent" as const, resumesAt: new Date(2026, 10, 1, 12).getTime() };
+    const limit = {
+      quota: "ours" as const,
+      made: "5",
+      title: "",
+      body: "",
+      actions: ["addKey" as const, "seePlans" as const],
+    };
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true, limit }, false)).toEqual({
+      title: "Queue waiting · 9 videos",
+      meta: "This month's 5 are made. Resumes 1 November, or when you add a key.",
+    });
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 9, viaExtension: true, limit }, true)).toEqual({
+      title: "Queue waiting · 9",
+      meta: "Resumes 1 Nov or with a key",
+    });
+    const noUpgrade = { ...limit, quota: "both" as const, made: "50 on our key and 200 on your own", actions: ["seeUsage" as const] };
+    expect(captureQueueStripCopy({ kind: "held", hold, waiting: 1, viaExtension: true, limit: noUpgrade }, false)).toEqual({
+      title: "Queue waiting · 1 video",
+      meta: "This month's 50 on our key and 200 on your own are made. Resumes 1 November.",
     });
   });
 

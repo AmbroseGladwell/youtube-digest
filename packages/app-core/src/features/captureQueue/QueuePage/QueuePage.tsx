@@ -13,7 +13,9 @@ import { PacedQueueGroup } from "../components/PacedQueueGroup/PacedQueueGroup.j
 import { QueueRow } from "../components/QueueRow/QueueRow.js";
 import { makingStep } from "../util/makingStep.js";
 import { queueHoldNote } from "../util/queueHoldCopy.js";
-import { chosenBarLine, madeNowNotice, makeChosenLabel } from "../util/chooseCopy.js";
+import { useLeftThisMonth } from "../../newOverview/useNextQuota.js";
+import { monthHoldNote, monthHoldWays, monthResumeDate } from "../util/monthHoldCopy.js";
+import { chosenBarLine, madeNowNotice, madeNowOf, makeChosenLabel } from "../util/chooseCopy.js";
 import { pacedGroups, waitingRows } from "../util/queueRows.js";
 import styles from "./QueuePage.module.scss";
 import { queuePageTestIds } from "./QueuePageTestIds.js";
@@ -36,10 +38,14 @@ export function QueuePage() {
   const [notice, setNotice] = useState<{ lead: string; rest: string } | null>(null);
   const rows = waitingRows(queue);
   const waitingCount = queue.waiting.length;
-  const tomorrowGroups = pacedGroups(queue.tomorrow, queue);
+  const monthHeld = queue.hold?.reason === "monthSpent" && !queue.needsKey && !queue.trialSpent;
+  const tomorrowGroups = monthHeld ? [] : pacedGroups(queue.tomorrow, queue);
   const forYouGroups = pacedGroups(queue.forYou, queue);
   const canMakeNow = !queue.needsKey && !queue.trialSpent && queue.hold === null;
   const chosenCaptures = chosen === null ? [] : [...queue.tomorrow, ...queue.forYou].filter((capture) => chosen.has(capture.videoId));
+  const leftThisMonth = useLeftThisMonth();
+  const allowance = leftThisMonth?.resetsOn == null ? null : { left: leftThisMonth.left, resetsOn: leftThisMonth.resetsOn };
+  const madeNowCount = madeNowOf(chosenCaptures.length, allowance);
 
   useEffect(() => heading.current?.focus({ preventScroll: true }), []);
   useEffect(() => {
@@ -106,7 +112,7 @@ export function QueuePage() {
                 : "These playlists have reached today’s pace. The rest of the queue keeps going."}
             </span>
           </span>
-          {chooseControl}
+          {!monthHeld && chooseControl}
         </div>
         {groups.map((group) => (
           <PacedQueueGroup
@@ -141,7 +147,7 @@ export function QueuePage() {
       ? "Made oldest first while The Overview is open on this phone. Continues next time you open it."
       : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 
-  const pauseControl = queue.needsKey || queue.trialSpent ? null : queue.paused ? (
+  const pauseControl = queue.needsKey || queue.trialSpent || monthHeld ? null : queue.paused ? (
     <button
       type="button"
       className={stacked ? styles.iconPrimary : styles.primary}
@@ -281,7 +287,27 @@ export function QueuePage() {
         </div>
       )}
 
-      {queue.hold !== null && waitingCount > 0 && (
+      {monthHeld && queue.hold !== null && waitingCount > 0 && (
+        <div className={styles.held} data-testid={queuePageTestIds.heldNote}>
+          <span className={styles.heldIcon} aria-hidden="true">
+            <StrokeIcon name="clock" size={18} />
+          </span>
+          <p className={styles.heldText}>{monthHoldNote(queue.hold, queue.limit)}</p>
+          {monthHoldWays(queue.limit).map((way, index) => (
+            <Link
+              key={way}
+              className={index === 0 ? styles.primary : styles.secondary}
+              to={way === "addKey" ? Routes.settingsSection("keys") : Routes.settingsSection("plan")}
+              onClick={() => analytics.capture.limitMessage.wayChosen({ way, from: "queuePage" })}
+              data-testid={way === "addKey" ? queuePageTestIds.addKeyLink : queuePageTestIds.seePlansLink}
+            >
+              {way === "addKey" ? "Add a key" : "See plans"}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {!monthHeld && queue.hold !== null && waitingCount > 0 && (
         <div className={styles.held} data-testid={queuePageTestIds.heldNote}>
           <span className={styles.heldIcon} aria-hidden="true">
             <StrokeIcon name="clock" size={18} />
@@ -312,6 +338,7 @@ export function QueuePage() {
         <div className={styles.group}>
           <p className={styles.label} data-testid={queuePageTestIds.waitingLabel}>
             Waiting · {rows.length.toLocaleString("en-GB")}
+            {monthHeld && queue.hold !== null && ` · resumes ${monthResumeDate(queue.hold, stacked)}`}
           </p>
           <ol className={styles.list} data-testid={queuePageTestIds.waiting}>
             {rows.map(({ capture, state, resumeTime }, index) => (
@@ -376,7 +403,9 @@ export function QueuePage() {
             <span className={styles.chosenCount} data-testid={queuePageTestIds.chosenCount}>
               {chosenCaptures.length.toLocaleString("en-GB")} chosen
             </span>
-            <span className={styles.chosenLine}>{chosenBarLine(chosenCaptures, queue.paceOf)}</span>
+            <span className={styles.chosenLine} data-testid={queuePageTestIds.chosenLine}>
+              {chosenBarLine(chosenCaptures, queue.paceOf, allowance)}
+            </span>
           </div>
           <span className={styles.chosenActions}>
             <button
@@ -396,13 +425,14 @@ export function QueuePage() {
                 type="button"
                 className={styles.primary}
                 onClick={() => {
-                  analytics.queue.choose.madeNow({ videos: chosenCaptures.length });
-                  makeNow(chosenCaptures);
+                  const madeNow = [...chosenCaptures].sort((a, b) => a.queuedAt.localeCompare(b.queuedAt)).slice(0, madeNowCount);
+                  analytics.queue.choose.madeNow({ videos: madeNow.length });
+                  makeNow(madeNow);
                   setChosen(null);
                 }}
                 data-testid={queuePageTestIds.makeChosenButton}
               >
-                {makeChosenLabel(chosenCaptures.length)}
+                {makeChosenLabel(madeNowCount)}
               </button>
             )}
           </span>
