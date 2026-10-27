@@ -2,6 +2,7 @@ import { z } from "zod";
 import { API_ERROR_CODES } from "./ApiErrorCode.js";
 import { RequestId } from "./RequestId.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
+import { PlaylistPace } from "./PlaylistPace.js";
 
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
@@ -110,6 +111,18 @@ export const ClientWarning = z.discriminatedUnion("name", [
       reason: QueueHoldReason,
       waiting: z.number().int().nonnegative(),
       via: z.enum(["reset", "extension"]),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("captureQueuePaced"),
+      // A followed playlist reached its pace for the day, with what it made today and what
+      // now waits for tomorrow; the rest of the queue carried on
+      // (docs/features/capture-queue.md, "Waiting on a pace").
+      pace: PlaylistPace,
+      madeToday: z.number().int().nonnegative(),
+      waiting: z.number().int().nonnegative(),
       at: z.iso.datetime(),
     })
     .strict(),

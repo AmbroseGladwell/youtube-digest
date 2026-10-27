@@ -1,22 +1,28 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
+import { DEFAULT_PLAYLIST_PACE } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useCaptureQueueController } from "../../../captureQueue/CaptureQueueContext.js";
 import { useCaptureQueueQuery } from "../../../captureQueue/queries/captureQueueQuery.js";
 import { youTubeLink } from "../../../newOverview/util/parseYouTubeUrl.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
+import { useUpdateSettingsMutation } from "../../../settings/mutations/useUpdateSettingsMutation.js";
+import { useSettingsQuery } from "../../../settings/queries/settingsQuery.js";
+import { useSetPlaylistPaceMutation } from "../../mutations/useSetPlaylistPaceMutation.js";
 import { useUnfollowPlaylistMutation } from "../../mutations/useUnfollowPlaylistMutation.js";
 import { useFollowedPlaylistsQuery } from "../../queries/followedPlaylistsQuery.js";
 import { FollowedPlaylistRow } from "../FollowedPlaylistRow/FollowedPlaylistRow.js";
 import { FollowPlaylistDialog } from "../FollowPlaylistDialog/FollowPlaylistDialog.js";
+import { PacePicker } from "../PacePicker/PacePicker.js";
 import { PlaylistFollowFlow, type PlaylistTarget } from "../PlaylistFollowFlow/PlaylistFollowFlow.js";
 import styles from "./PlaylistsSection.module.scss";
 import { playlistsSectionTestIds } from "./PlaylistsSectionTestIds.js";
 
 export const PLAYLISTS_INTRO =
-  "Follow a public or unlisted playlist and its videos become overviews. New ones are queued each time you open The Overview.";
+  "Follow a public or unlisted playlist and its videos become overviews. Each one makes videos at its own pace; videos you make by hand never count toward it.";
 
 const NOT_A_PLAYLIST = "That doesn’t look like a YouTube playlist link.";
 
@@ -28,9 +34,10 @@ function settingsTargetOf(url: string): PlaylistTarget | null {
   return { kind: "playlist", playlistId: link.playlistId };
 }
 
-// Design 27p–27s: the playlists this library follows, each with Unfollow, and a field to
-// follow another. Empty, it teaches the habit the feature is built around
-// (docs/features/playlists.md, "Settings").
+// Design 27p–27s: the playlists this library follows, each with its pace and Unfollow, and a
+// field to follow another. Empty, it teaches the habit the feature is built around. Above
+// the list, the pace a newly followed playlist starts at (95x) (docs/features/playlists.md,
+// "Settings").
 export function PlaylistsSection() {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
@@ -39,7 +46,11 @@ export function PlaylistsSection() {
   const followed = useFollowedPlaylistsQuery();
   const overviews = useOverviewsWithStateQuery();
   const queue = useCaptureQueueQuery();
+  const queueController = useCaptureQueueController();
   const unfollow = useUnfollowPlaylistMutation();
+  const setPace = useSetPlaylistPaceMutation();
+  const updateSettings = useUpdateSettingsMutation();
+  const defaultPace = useSettingsQuery().data?.defaultPlaylistPace ?? DEFAULT_PLAYLIST_PACE;
   const [link, setLink] = useState("");
   const [linkError, setLinkError] = useState<string | null>(null);
   const [pasted, setPasted] = useState<{ target: PlaylistTarget; url: string } | null>(null);
@@ -114,6 +125,25 @@ export function PlaylistsSection() {
           <p className={styles.intro} data-testid={playlistsSectionTestIds.intro}>
             {PLAYLISTS_INTRO}
           </p>
+          <div className={`${styles.card} ${styles.defaultPace} ${stacked ? styles.defaultPaceStacked : ""}`} data-testid={playlistsSectionTestIds.defaultPace}>
+            <span className={styles.defaultPaceText}>
+              <span className={styles.defaultPaceTitle}>Pace for new playlists</span>
+              <span className={styles.defaultPaceHelp}>
+                Already chosen when you follow one. You can change it there, or for each playlist below. Playlists you already
+                follow keep their own.
+              </span>
+            </span>
+            <PacePicker
+              pace={defaultPace}
+              subject="new playlists"
+              asSheet={isPhone && !isPanel}
+              stacked={stacked}
+              onChange={(pace) => {
+                analytics.playlists.settings.defaultPaceChanged({ pace });
+                updateSettings.mutate({ defaultPlaylistPace: pace });
+              }}
+            />
+          </div>
           {unfollow.isError && (
             <p className={styles.error} role="alert" data-testid={playlistsSectionTestIds.unfollowError}>
               That playlist couldn’t be unfollowed. Try again.
@@ -132,8 +162,11 @@ export function PlaylistsSection() {
                     check={check}
                     overviews={overviewCounts.get(playlist.id) ?? 0}
                     waiting={waitingFrom(playlist.id)}
+                    madeToday={queueController.madeToday(playlist.id)}
                     stacked={stacked}
+                    asSheet={isPhone && !isPanel}
                     now={now}
+                    onPaceChange={(pace) => setPace.mutate({ playlist, pace })}
                     onUnfollow={() =>
                       unfollow.mutate(playlist.id, {
                         onSuccess: ({ waitingRemoved }) => {

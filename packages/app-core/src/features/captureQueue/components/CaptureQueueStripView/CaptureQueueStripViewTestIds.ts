@@ -2,6 +2,7 @@ export const captureQueueStripViewTestIds = {
   root: "CaptureQueueStripView.root",
   title: "CaptureQueueStripView.title",
   meta: "CaptureQueueStripView.meta",
+  after: "CaptureQueueStripView.after",
   attention: "CaptureQueueStripView.attention",
   detailsButton: "CaptureQueueStripView.detailsButton",
   pauseButton: "CaptureQueueStripView.pauseButton",

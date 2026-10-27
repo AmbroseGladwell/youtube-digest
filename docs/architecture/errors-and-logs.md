@@ -308,6 +308,7 @@ an id:
 | `queuedCaptureFailed` | a video the queue took from a playlist could not be made (`docs/features/capture-queue.md`, "Needs attention") | `problem` |
 | `captureQueueHeld` | the queue stopped asking and waited at a limit (`docs/features/capture-queue.md`, "Waiting at a limit") | `reason` (`serverCap` or `serverBusy`), `waiting`, `resumesInSeconds` |
 | `captureQueueResumed` | the queue carried on after waiting at a limit | `reason`, `waiting`, `via` (`reset` or `extension`) |
+| `captureQueuePaced` | a followed playlist reached its pace for the day and the rest of the queue carried on; once a day per playlist on each opening (`docs/features/capture-queue.md`, "Waiting on a pace") | `pace`, `madeToday`, `waiting` |
 
 A **parked sync write** needs no warning. The refusal that parks it is already a
 `request refused` line under the device's session.

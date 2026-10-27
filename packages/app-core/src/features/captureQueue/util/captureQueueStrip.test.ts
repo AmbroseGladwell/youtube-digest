@@ -4,6 +4,9 @@ import { captureQueueStrip, type CaptureQueueStripInput } from "./captureQueueSt
 const idle: CaptureQueueStripInput = {
   making: null,
   waiting: 0,
+  ready: 0,
+  tomorrow: 0,
+  forYou: { waiting: 0, playlists: [] },
   failed: 0,
   skipped: 0,
   paused: false,
@@ -26,6 +29,7 @@ describe("captureQueueStrip", () => {
       ...idle,
       making: { title: "The Placebo Paradox", step: "Writing the overview", stepProgress: 0.5 },
       waiting: 9,
+      ready: 9,
       batch: { done: 2 },
     });
     expect(strip).toEqual({
@@ -35,7 +39,29 @@ describe("captureQueueStrip", () => {
       step: "Writing the overview",
       title: "The Placebo Paradox",
       progress: 21,
+      tomorrow: 0,
     });
+  });
+
+  it("counts only what can be made today in the batch, and says what continues tomorrow beside it", () => {
+    const strip = captureQueueStrip({
+      ...idle,
+      making: { title: "The Placebo Paradox", step: "Writing the overview", stepProgress: 0 },
+      waiting: 216,
+      ready: 2,
+      tomorrow: 214,
+    });
+    expect(strip).toMatchObject({ kind: "making", position: 1, total: 3, tomorrow: 214 });
+  });
+
+  it("with only paced videos left, is done for today rather than done", () => {
+    const paced = { ...idle, waiting: 214, tomorrow: 214, batch: { done: 3 }, notice: { kind: "done" as const, made: 3 } };
+    expect(captureQueueStrip(paced)).toEqual({ kind: "doneForToday", tomorrow: 214 });
+  });
+
+  it("with only videos waiting for the reader left, says they wait for them, because nothing starts by itself", () => {
+    const forYou = { waiting: 12, playlists: ["Saved for later"] };
+    expect(captureQueueStrip({ ...idle, waiting: 12, forYou })).toEqual({ kind: "waitingForYou", ...forYou });
   });
 
   it("with no API key, says what is waiting for one rather than seeming to work", () => {
@@ -57,6 +83,12 @@ describe("captureQueueStrip", () => {
     const done = { ...idle, failed: 1, skipped: 1, batch: { done: 10 } };
     expect(captureQueueStrip(done)).toEqual({ kind: "attention", failed: 1, skipped: 1 });
     expect(captureQueueStrip({ ...done, attentionDismissed: true })).toBeNull();
+  });
+
+  it("problems come before what waits for tomorrow, which shows once they are dismissed", () => {
+    const done = { ...idle, failed: 1, skipped: 1, batch: { done: 10 }, waiting: 7, tomorrow: 7 };
+    expect(captureQueueStrip(done)).toEqual({ kind: "attention", failed: 1, skipped: 1 });
+    expect(captureQueueStrip({ ...done, attentionDismissed: true })).toEqual({ kind: "doneForToday", tomorrow: 7 });
   });
 
   it("problems left from before this run don't announce themselves on opening", () => {

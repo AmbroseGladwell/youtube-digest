@@ -21,6 +21,7 @@ const followed = (overrides: Partial<FollowedPlaylist> = {}): FollowedPlaylist =
   privacy: "public",
   followedAt: "2026-09-01T00:00:00.000Z",
   unavailable: null,
+  pace: "asTheyCome",
   ...overrides,
 });
 
@@ -33,6 +34,7 @@ const queued = (videoId: string, title: string, overrides: Partial<QueuedCapture
   queuedAt: "2026-10-05T09:00:00.000Z",
   status: "waiting",
   problem: null,
+  chosenAt: null,
   ...overrides,
 });
 

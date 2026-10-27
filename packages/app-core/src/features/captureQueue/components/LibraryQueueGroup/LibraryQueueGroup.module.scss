@@ -70,7 +70,8 @@
   gap: 2px;
 }
 
-.attention {
+.attention,
+.paced {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -84,6 +85,10 @@
   &:hover {
     background: var(--surface);
   }
+}
+
+.paced {
+  color: var(--ink);
 }
 
 .attentionDetail {

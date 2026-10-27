@@ -223,3 +223,108 @@
   line-height: 1.55;
   color: var(--muted);
 }
+
+.pacedHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pacedHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+}
+
+.pacedSub {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.stacked .pacedHead .secondary,
+.stacked .pacedHead .ghost {
+  min-height: 2.75rem;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 16px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+
+  svg {
+    flex: none;
+    margin-top: 2px;
+  }
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.chosenBar {
+  position: sticky;
+  bottom: 1.5rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  padding: 0.75rem 0.75rem 0.75rem 1.125rem;
+  border-radius: 20px;
+  background: var(--dialog);
+  box-shadow: var(--shadow-dialog);
+}
+
+.chosenBarStacked {
+  bottom: 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
+
+  .primary,
+  .ghost {
+    min-height: 2.75rem;
+  }
+
+  .primary {
+    flex: 1;
+  }
+}
+
+.chosenText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chosenCount {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.chosenLine {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.chosenActions {
+  display: flex;
+  gap: 0.375rem;
+}

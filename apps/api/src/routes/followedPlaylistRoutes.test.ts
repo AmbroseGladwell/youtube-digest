@@ -11,6 +11,7 @@ const followed = (overrides: Record<string, unknown> = {}) => ({
   privacy: "public",
   followedAt: "2026-10-05T09:00:00.000Z",
   unavailable: null,
+  pace: "asTheyCome",
   schemaVersion: CURRENT_SCHEMA_VERSIONS.followedPlaylist,
   updatedAt: "2026-10-05T09:00:00.000Z",
   ...overrides,

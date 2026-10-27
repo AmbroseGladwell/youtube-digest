@@ -55,7 +55,12 @@ test("following with the backfill makes every video oldest first, and each overv
   expect(await backendSimulator.playlists.listFollowed()).toMatchObject([{ id: PSYCHOLOGY_ID, title: "Psychology", unavailable: null }]);
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("playlists.")))
-    .toEqual([{ name: "playlists.preview.followed", props: { from: "dialog", backfill: true, videos: 2, queued: 2 } }]);
+    .toEqual([
+      {
+        name: "playlists.preview.followed",
+        props: { from: "dialog", backfill: true, videos: 2, queued: 2, pace: "fiveADay", paceIsDefault: true },
+      },
+    ]);
 });
 
 test("following only new ones queues nothing, and a video already in the library is counted as skipped", async ({
@@ -174,6 +179,7 @@ test("Settings lists followed playlists, and unfollowing takes their waiting vid
     privacy: "public",
     followedAt: "2026-10-01T09:00:00.000Z",
     unavailable: null,
+    pace: "asTheyCome",
   });
   backendSimulator.playlists.seedCheck({
     playlistId: PlaylistId.parse(PSYCHOLOGY_ID),
@@ -189,6 +195,7 @@ test("Settings lists followed playlists, and unfollowing takes their waiting vid
     queuedAt: "2026-10-05T09:00:00.000Z",
     status: "waiting",
     problem: null,
+    chosenAt: null,
   });
   await launcher.launch({});
   const settings = await launcher.appShell.openSettings();

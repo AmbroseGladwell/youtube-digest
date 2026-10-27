@@ -117,3 +117,151 @@
 .ghost {
   @include playlists.ghost;
 }
+
+.pace {
+  padding-top: 0.75rem;
+  box-shadow: inset 0 1px 0 var(--surface);
+}
+
+.paceLine {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.paceIcon {
+  color: var(--label);
+  padding-top: 2px;
+}
+
+.paceText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paceName {
+  font-size: 0.875rem;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.paceDefault {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.paceResult {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.paceChange {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+}
+
+.paceChangeStacked {
+  min-height: 2.75rem;
+}
+
+.paceChoice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.paceChoiceLabel {
+  @include controls.section-label;
+  margin-bottom: 0.25rem;
+}
+
+.paceOption {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface);
+  }
+
+  &:has(:checked) {
+    background: var(--stone-tint);
+    box-shadow: inset 0 0 0 1.5px var(--label);
+    color: var(--on-stone-tint);
+  }
+
+  &:has(:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.paceOptionStacked {
+  min-height: 2.75rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.paceRadio {
+  flex: none;
+  appearance: none;
+  margin: 1px 0 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-badge);
+  box-shadow: inset 0 0 0 2px var(--muted);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+
+  &:checked {
+    box-shadow: inset 0 0 0 2px var(--label);
+  }
+
+  &:checked::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-badge);
+    background: var(--label);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.paceOptionText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paceOptionName {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.paceOptionResult {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.paceOption:has(:checked) .paceOptionResult,
+.paceOption:has(:checked) .paceDefault {
+  color: var(--on-stone-tint);
+}

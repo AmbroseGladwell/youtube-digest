@@ -4,4 +4,6 @@ export const libraryQueueGroupTestIds = {
   seeQueueLink: "LibraryQueueGroup.seeQueueLink",
   foldButton: "LibraryQueueGroup.foldButton",
   attentionLink: "LibraryQueueGroup.attentionLink",
+  tomorrowLink: "LibraryQueueGroup.tomorrowLink",
+  forYouLink: "LibraryQueueGroup.forYouLink",
 };

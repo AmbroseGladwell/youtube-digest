@@ -4,7 +4,10 @@ import { captureQueueStripCopy } from "./captureQueueStripCopy.js";
 describe("captureQueueStripCopy", () => {
   it("words each state as design 27k does", () => {
     expect(
-      captureQueueStripCopy({ kind: "making", position: 3, total: 12, step: "Writing the overview", title: "The Placebo Paradox", progress: 20 }, false),
+      captureQueueStripCopy(
+        { kind: "making", position: 3, total: 12, step: "Writing the overview", title: "The Placebo Paradox", progress: 20, tomorrow: 0 },
+        false,
+      ),
     ).toEqual({ title: "Making 3 of 12", meta: "Writing the overview · The Placebo Paradox" });
     expect(captureQueueStripCopy({ kind: "paused", waiting: 10 }, false)).toEqual({
       title: "Queue paused",
@@ -23,6 +26,28 @@ describe("captureQueueStripCopy", () => {
       meta: "1 failed, 1 skipped",
     });
     expect(captureQueueStripCopy({ kind: "done", made: 12 }, false)).toEqual({ title: "Queue done · 12 made", meta: null });
+  });
+
+  it("words a queue waiting on its playlists' paces as design 95ac does, wide and compact", () => {
+    const making = { kind: "making" as const, position: 1, total: 3, step: "Writing the overview", title: "How Sleep Cleans the Brain", progress: 54, tomorrow: 214 };
+    expect(captureQueueStripCopy(making, false)).toEqual({
+      title: "Making 1 of 3",
+      meta: "Writing the overview · How Sleep Cleans the Brain",
+      after: "· 214 continue tomorrow",
+    });
+    expect(captureQueueStripCopy(making, true)).toEqual({ title: "Making 1 of 3", meta: "214 continue tomorrow" });
+    expect(captureQueueStripCopy({ kind: "doneForToday", tomorrow: 214 }, false)).toEqual({
+      title: "Done for today",
+      meta: "214 waiting for tomorrow, at each playlist’s pace",
+    });
+    expect(captureQueueStripCopy({ kind: "doneForToday", tomorrow: 214 }, true)).toEqual({ title: "Done for today", meta: "214 waiting for tomorrow" });
+    expect(captureQueueStripCopy({ kind: "waitingForYou", waiting: 12, playlists: ["Saved for later"] }, false)).toEqual({
+      title: "Queue done · 12 waiting for you",
+      meta: "From Saved for later, made when you choose them",
+    });
+    expect(captureQueueStripCopy({ kind: "waitingForYou", waiting: 12, playlists: ["Saved for later", "Talks"] }, false).meta).toBe(
+      "From 2 playlists, made when you choose them",
+    );
   });
 
   it("waiting at a limit, writes the resume time out, wide and compact", () => {

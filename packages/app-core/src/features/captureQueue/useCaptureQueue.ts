@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { QueuedCapture, VideoId } from "@overview/domain";
+import type { PlaylistId, PlaylistPace, QueuedCapture, VideoId } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
@@ -13,6 +13,8 @@ import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js
 import { useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
 import { generationRunStatus } from "../newOverview/util/generationRunStatus.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
+import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
+import { readableEntries } from "../overviews/types/LibraryEntry.js";
 import { transcriptKeys } from "../transcripts/transcriptKeys.js";
 import { playlistKeys } from "../playlists/playlistKeys.js";
 import { useFollowedPlaylistsQuery } from "../playlists/queries/followedPlaylistsQuery.js";
@@ -26,7 +28,9 @@ import { useCaptureQueueQuery } from "./queries/captureQueueQuery.js";
 import type { CaptureQueueStrip } from "./types/CaptureQueueStrip.js";
 import type { QueueHold } from "./types/QueueHold.js";
 import { captureQueueStrip, type QueueNotice } from "./util/captureQueueStrip.js";
+import { localDayKey, madeTodayByPlaylist, nextLocalMidnight } from "./util/madeTodayByPlaylist.js";
 import { makingStep } from "./util/makingStep.js";
+import { pacedQueue } from "./util/pacedQueue.js";
 import { isQueueHoldReason, queueHoldOf, queueProblemOf } from "./util/queueProblemOf.js";
 
 const CHECKED_NOTICE_MS = 8_000;
@@ -40,7 +44,15 @@ export interface QueueMaking {
 export interface CaptureQueueController {
   // Whether this shell can follow playlists at all; without a server nothing is offered.
   available: boolean;
+  // Every video still waiting, and the same videos sorted by their playlists' paces: what
+  // can be made now, what continues tomorrow, and what waits for the reader to choose it
+  // (docs/features/capture-queue.md, "Waiting on a pace").
   waiting: QueuedCapture[];
+  ready: QueuedCapture[];
+  tomorrow: QueuedCapture[];
+  forYou: QueuedCapture[];
+  paceOf: (playlistId: PlaylistId) => PlaylistPace;
+  madeToday: (playlistId: PlaylistId) => number;
   attention: QueuedCapture[];
   making: QueueMaking | null;
   strip: CaptureQueueStrip | null;
@@ -57,6 +69,9 @@ export interface CaptureQueueController {
   setPaused: (paused: boolean) => void;
   setFolded: (folded: boolean) => void;
   remove: (videoId: VideoId) => void;
+  // Made next, past their playlist's pace, which stays as it is.
+  makeNow: (videoIds: readonly VideoId[]) => Promise<void>;
+  removeMany: (videoIds: readonly VideoId[]) => Promise<void>;
   retry: (videoId: VideoId) => void;
   dismiss: (videoId: VideoId) => void;
   clear: () => Promise<number>;
@@ -81,12 +96,14 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
+  const overviews = useOverviewsWithStateQuery();
 
   const [preferences, setPreferences] = useState(() => readCaptureQueuePreferences(accountId));
   const [making, setMaking] = useState<QueueMaking | null>(null);
   const [batch, setBatch] = useState<{ done: number } | null>(null);
   const [notice, setNotice] = useState<QueueNotice | null>(null);
   const [attentionDismissed, setAttentionDismissed] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const holding = useRef<QueueHold | null>(null);
   const cancelled = useRef<VideoId | null>(null);
   const waitingCount = useRef(0);
@@ -100,6 +117,53 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   waitingCount.current = waiting.length;
   const hold = preferences.hold;
   holding.current = hold;
+
+  // A pace starts again at the reader's midnight, whether or not anything else changes.
+  useEffect(() => {
+    const timer = setTimeout(() => setNow(new Date()), nextLocalMidnight(now).getTime() - Date.now());
+    return () => clearTimeout(timer);
+  }, [now]);
+  const today = localDayKey(now);
+  const chosenToday = useMemo(
+    () => new Set(preferences.chosenToday?.day === today ? preferences.chosenToday.videoIds : []),
+    [preferences.chosenToday, today],
+  );
+  const paces = useMemo(
+    () => new Map<string, PlaylistPace>((followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.pace])),
+    [followed.data],
+  );
+  const madeTodayCounts = useMemo(
+    () => madeTodayByPlaylist(readableEntries(overviews.data ?? []).map(({ overview }) => overview), chosenToday, now),
+    [overviews.data, chosenToday, now],
+  );
+  const paceOf = useCallback((playlistId: PlaylistId) => paces.get(playlistId) ?? "asTheyCome", [paces]);
+  const madeToday = useCallback((playlistId: PlaylistId) => madeTodayCounts.get(playlistId) ?? 0, [madeTodayCounts]);
+  const paced = pacedQueue(
+    waiting,
+    (capture) => paceOf(capture.fromPlaylist.id),
+    (capture) => madeToday(capture.fromPlaylist.id),
+  );
+
+  // Said once a day for each playlist that has made all its pace allows, while the rest of
+  // the queue carries on.
+  const reachedPace = useRef(new Set<string>());
+  const stillMaking = new Set(paced.ready.map((capture) => capture.fromPlaylist.id));
+  const pacedPlaylists = [...new Set(paced.tomorrow.map((capture) => capture.fromPlaylist.id))]
+    .filter((playlistId) => !stillMaking.has(playlistId))
+    .join(" ");
+  useEffect(() => {
+    for (const playlistId of pacedPlaylists === "" ? [] : (pacedPlaylists.split(" ") as PlaylistId[])) {
+      const reached = `${today} ${playlistId}`;
+      if (reachedPace.current.has(reached)) continue;
+      reachedPace.current.add(reached);
+      reporter.warn({
+        name: "captureQueuePaced",
+        pace: paceOf(playlistId),
+        madeToday: madeToday(playlistId),
+        waiting: paced.tomorrow.filter((capture) => capture.fromPlaylist.id === playlistId).length,
+      });
+    }
+  }, [pacedPlaylists, today]);
 
   const refresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
@@ -212,9 +276,18 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
               current?.capture.videoId === capture.videoId ? { ...current, run: { ...current.run, ...progress } } : current,
             ),
         });
+        if (capture.chosenAt !== null) {
+          setPreferences((current) => {
+            const day = localDayKey(new Date());
+            const chosen = current.chosenToday?.day === day ? current.chosenToday.videoIds : [];
+            const next = { ...current, chosenToday: { day, videoIds: [...chosen, capture.videoId] } };
+            writeCaptureQueuePreferences(accountId, next);
+            return next;
+          });
+        }
         await captureQueueStore.removeQueued(capture.videoId);
         setBatch((current) => ({ done: (current?.done ?? 0) + 1 }));
-        void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
+        await queryClient.invalidateQueries({ queryKey: overviewKeys.all });
         void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
       } catch (error) {
         if (error instanceof GenerationCancelledError) return;
@@ -238,7 +311,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         setMaking(null);
       }
     },
-    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences],
+    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences, accountId],
   );
 
   const resume = useCallback(
@@ -266,15 +339,16 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     hadYouTubeFetch.current = has;
   }, [youTubeFetch, resume]);
 
-  const next = waiting[0] ?? null;
-  const canMake = !preferences.paused && !needsKey && !trialSpent && !readerRunActive && making === null && hold === null && queue.isSuccess;
+  const next = paced.ready[0] ?? null;
+  const canMake =
+    !preferences.paused && !needsKey && !trialSpent && !readerRunActive && making === null && hold === null && queue.isSuccess && followed.isSuccess;
   useEffect(() => {
     if (canMake && next !== null) void make(next);
   }, [canMake, next, make]);
 
   // A finished batch says so once, then the next one counts from one again. One that left
   // problems keeps saying so until the reader dismisses it.
-  const finished = batch !== null && making === null && waiting.length === 0;
+  const finished = batch !== null && making === null && paced.ready.length === 0;
   useEffect(() => {
     if (!finished || attention.length > 0) return;
     setNotice({ kind: "done", made: batch.done });
@@ -308,6 +382,27 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     [items, captureQueueStore, refresh],
   );
 
+  const makeNow = useCallback(
+    async (videoIds: readonly VideoId[]) => {
+      const chosenAt = new Date().toISOString();
+      const chosen = new Set<string>(videoIds);
+      for (const capture of items) {
+        if (chosen.has(capture.videoId) && capture.status === "waiting") await captureQueueStore.saveQueued({ ...capture, chosenAt });
+      }
+      refresh();
+    },
+    [items, captureQueueStore, refresh],
+  );
+
+  const removeMany = useCallback(
+    async (videoIds: readonly VideoId[]) => {
+      if (making !== null && videoIds.includes(making.capture.videoId)) cancelled.current = making.capture.videoId;
+      for (const videoId of videoIds) await captureQueueStore.removeQueued(videoId);
+      refresh();
+    },
+    [making, captureQueueStore, refresh],
+  );
+
   const clear = useCallback(async () => {
     const removed = waiting.length;
     if (making !== null) cancelled.current = making.capture.videoId;
@@ -317,6 +412,8 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   }, [waiting.length, making, captureQueueStore, refresh]);
 
   const failed = attention.filter((capture) => capture.status === "failed").length;
+  const notMaking = (captures: QueuedCapture[]) =>
+    making === null ? captures : captures.filter((capture) => capture.videoId !== making.capture.videoId);
   const strip = captureQueueStrip({
     making:
       making === null
@@ -326,7 +423,13 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
             step: makingStep(making.run, false).step,
             stepProgress: generationRunStatus(making.run).progressFraction,
           },
-    waiting: making === null ? waiting.length : waiting.filter((capture) => capture.videoId !== making.capture.videoId).length,
+    waiting: notMaking(waiting).length,
+    ready: notMaking(paced.ready).length,
+    tomorrow: paced.tomorrow.length,
+    forYou: {
+      waiting: paced.forYou.length,
+      playlists: [...new Set(paced.forYou.map((capture) => capture.fromPlaylist.title))],
+    },
     failed,
     skipped: attention.length - failed,
     paused: preferences.paused,
@@ -343,6 +446,11 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     () => ({
       available: playlistApi !== null,
       waiting,
+      ready: paced.ready,
+      tomorrow: paced.tomorrow,
+      forYou: paced.forYou,
+      paceOf,
+      madeToday,
       attention,
       making,
       strip,
@@ -355,6 +463,8 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       setPaused,
       setFolded: (folded: boolean) => savePreferences({ folded }),
       remove,
+      makeNow,
+      removeMany,
       retry,
       dismiss: (videoId: VideoId) => void captureQueueStore.removeQueued(videoId).then(refresh),
       clear,
@@ -364,6 +474,31 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         if (waiting.length === 0) setBatch(null);
       },
     }),
-    [playlistApi, waiting, attention, making, strip, preferences, needsKey, trialSpent, hold, youTubeFetch, setPaused, savePreferences, remove, retry, captureQueueStore, refresh, clear],
+    [
+      playlistApi,
+      waiting,
+      paced.ready,
+      paced.tomorrow,
+      paced.forYou,
+      paceOf,
+      madeToday,
+      attention,
+      making,
+      strip,
+      preferences,
+      needsKey,
+      trialSpent,
+      hold,
+      youTubeFetch,
+      setPaused,
+      savePreferences,
+      remove,
+      makeNow,
+      removeMany,
+      retry,
+      captureQueueStore,
+      refresh,
+      clear,
+    ],
   );
 }

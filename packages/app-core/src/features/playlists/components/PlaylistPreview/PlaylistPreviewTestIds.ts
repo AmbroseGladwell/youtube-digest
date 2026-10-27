@@ -9,4 +9,10 @@ export const playlistPreviewTestIds = {
   backfillButton: "PlaylistPreview.backfillButton",
   newOnlyButton: "PlaylistPreview.newOnlyButton",
   cancelButton: "PlaylistPreview.cancelButton",
+  paceLine: "PlaylistPreview.paceLine",
+  paceName: "PlaylistPreview.paceName",
+  paceResult: "PlaylistPreview.paceResult",
+  paceChangeButton: "PlaylistPreview.paceChangeButton",
+  paceChoice: "PlaylistPreview.paceChoice",
+  paceOption: (pace: string) => `PlaylistPreview.paceOption.${pace}`,
 };

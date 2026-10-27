@@ -1,11 +1,12 @@
-import { useEffect, useMemo } from "react";
-import type { PlaylistId } from "@overview/domain";
+import { useEffect, useMemo, useState } from "react";
+import { DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistPace } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useCaptureQueueQuery } from "../../../captureQueue/queries/captureQueueQuery.js";
 import type { UnfollowableList } from "../../../newOverview/util/parseYouTubeUrl.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
+import { useSettingsQuery } from "../../../settings/queries/settingsQuery.js";
 import { useFollowPlaylistMutation } from "../../mutations/useFollowPlaylistMutation.js";
 import { useFollowedPlaylistsQuery } from "../../queries/followedPlaylistsQuery.js";
 import { usePlaylistLookupQuery } from "../../queries/playlistLookupQuery.js";
@@ -50,6 +51,9 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
   const follow = useFollowPlaylistMutation();
+  const defaultPace = useSettingsQuery().data?.defaultPlaylistPace ?? DEFAULT_PLAYLIST_PACE;
+  const [chosenPace, setChosenPace] = useState<PlaylistPace | null>(null);
+  const pace = chosenPace ?? defaultPace;
 
   const held = useMemo(
     () =>
@@ -77,10 +81,10 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
     if (lookup.data === undefined) return;
     const preview = playlistPreview(lookup.data, held);
     follow.mutate(
-      { lookup: lookup.data, backfill },
+      { lookup: lookup.data, backfill, pace },
       {
         onSuccess: ({ queued }) => {
-          analytics.playlists.preview.followed({ from, backfill, videos: preview.total, queued });
+          analytics.playlists.preview.followed({ from, backfill, videos: preview.total, queued, pace, paceIsDefault: pace === defaultPace });
           onDone();
         },
       },
@@ -120,13 +124,17 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
       );
     }
 
+    const alreadyFollowing = (followed.data ?? []).some(({ playlist }) => playlist.id === lookup.data.id);
     return (
       <PlaylistPreview
         lookup={lookup.data}
         preview={playlistPreview(lookup.data, held)}
-        alreadyFollowing={(followed.data ?? []).some(({ playlist }) => playlist.id === lookup.data.id)}
+        alreadyFollowing={alreadyFollowing}
         stacked={stacked}
         busy={follow.isPending}
+        pace={alreadyFollowing || lookup.data.entries.length <= 1 ? null : pace}
+        defaultPace={defaultPace}
+        onPaceChange={setChosenPace}
         onFollow={followLookup}
         onCancel={() => {
           analytics.playlists.preview.cancelled({ from });

@@ -5,6 +5,7 @@ import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
 import { TagAliases } from "./TagAliases.js";
+import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -50,6 +51,9 @@ export const Settings = z.object({
   // than moving to ours, which would send the transcript and reader context to OpenAI
   // through our server. Off by default (docs/architecture/tiers.md).
   onlyMyKey: z.boolean().catch(false),
+  // The pace a newly followed playlist starts at. Playlists already followed keep their own
+  // (docs/features/playlists.md, "A pace for each playlist").
+  defaultPlaylistPace: PlaylistPace.catch(DEFAULT_PLAYLIST_PACE),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -67,4 +71,5 @@ export const DEFAULT_SETTINGS: Settings = {
   analyticsOptOutChangedAt: null,
   tagAliases: {},
   onlyMyKey: false,
+  defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,
 };

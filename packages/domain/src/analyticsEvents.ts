@@ -8,6 +8,7 @@ import { NarrationVoice } from "./NarrationVoice.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
+import { PlaylistPace } from "./PlaylistPace.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
 // that could carry a URL, a video id or a sentence the reader wrote
@@ -548,7 +549,14 @@ export const analyticsEvents = {
     preview: {
       followed: event(
         "The reader follows a playlist from its preview, with or without the videos already in it; the counts are the app's",
-        { from: PlaylistEntryPoint, backfill: z.boolean(), videos: z.number().int().nonnegative(), queued: z.number().int().nonnegative() },
+        {
+          from: PlaylistEntryPoint,
+          backfill: z.boolean(),
+          videos: z.number().int().nonnegative(),
+          queued: z.number().int().nonnegative(),
+          pace: PlaylistPace,
+          paceIsDefault: z.boolean(),
+        },
       ),
       cancelled: event("The reader closes a playlist's preview without following it", { from: PlaylistEntryPoint }),
       refused: event("A pasted playlist could not be followed, and the reader was told why", {
@@ -563,6 +571,11 @@ export const analyticsEvents = {
         waitingRemoved: z.number().int().nonnegative(),
       }),
       unfollowKept: event("The reader keeps following a playlist after asking to unfollow it"),
+      paceChanged: event("The reader changes a followed playlist's pace, and how many of its videos were waiting then", {
+        pace: PlaylistPace,
+        waiting: z.number().int().nonnegative(),
+      }),
+      defaultPaceChanged: event("The reader changes the pace newly followed playlists start at", { pace: PlaylistPace }),
     },
     fromLine: {
       playlistOpened: event("The reader opens, on YouTube, the playlist an overview came from", { overviewId: OverviewId }),
@@ -588,6 +601,17 @@ export const analyticsEvents = {
       removed: event("The reader takes one waiting video out of the queue"),
       retried: event("The reader tries a video that could not be made again", { problem: QueuedCaptureProblem }),
       dismissed: event("The reader dismisses a video that was skipped or could not be made", { problem: QueuedCaptureProblem }),
+      madeNow: event("The reader has one video waiting on its playlist's pace made next", { pace: PlaylistPace }),
+    },
+    choose: {
+      started: event("The reader starts choosing waiting videos to make now or remove"),
+      cancelled: event("The reader stops choosing without doing anything with the videos chosen"),
+      madeNow: event("The reader has the waiting videos they chose made next, and how many", {
+        videos: z.number().int().positive(),
+      }),
+      removed: event("The reader takes the waiting videos they chose out of the queue, and how many", {
+        videos: z.number().int().positive(),
+      }),
     },
   },
   library: {
