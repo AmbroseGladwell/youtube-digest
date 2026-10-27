@@ -42,7 +42,7 @@ test("once the reader's own key is spent, the line says this one uses ours and m
   const dialog = await launcher.appShell.openNewOverview();
 
   await dialog.form.verifyUsageLineReads(
-    "This month's 10 on your own key are made, so this one uses ours: 4 of 5 left. · Plus makes more on our key. · See plans",
+    "This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans",
   );
   await dialog.form.verifyGenerateButtonEnabled();
 });
@@ -53,7 +53,7 @@ test("on Plus the line counts our key first", async ({ launcher, backendSimulato
   await launcher.launch({ ...SIGNED_IN, plan: "plus" });
   const dialog = await launcher.appShell.openNewOverview();
 
-  await dialog.form.verifyUsageLineReads("38 of 50 left on our key this month · Resets 1 November · Plan");
+  await dialog.form.verifyUsageLineReads("38 of 50 left on us this month · Resets 1 November · Plan");
 });
 
 test("while the counts load, the line and Settings read Checking…, never 0", async ({ launcher, backendSimulator }) => {

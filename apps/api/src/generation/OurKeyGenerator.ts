@@ -35,7 +35,7 @@ export class OurKeyQuotaSpentError extends Error {
   readonly retryAfterSeconds: number;
 
   constructor(resetsOn: string, retryAfterSeconds: number) {
-    super("You've made this month's overviews on our key");
+    super("You've made this month's overviews on us");
     this.resetsOn = resetsOn;
     this.retryAfterSeconds = retryAfterSeconds;
   }
@@ -45,7 +45,7 @@ export class OurKeyDailyCapSpentError extends Error {
   readonly retryAfterSeconds: number;
 
   constructor(retryAfterSeconds: number) {
-    super("Our key has made as many overviews as it can today");
+    super("We've made as many overviews on us as we can today");
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
@@ -61,7 +61,7 @@ export class TrialAddressSpentError extends Error {
   readonly retryAfterSeconds: number;
 
   constructor(retryAfterSeconds: number) {
-    super("Overviews on our key without an account have run out on this network today. Sign up, or add your own key, to keep going.");
+    super("Overviews on us without an account have run out on this network today. Sign up, or add your own key, to keep going.");
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
@@ -90,7 +90,7 @@ export class OurKeyGenerationError extends Error {
   readonly fallback: FallbackReason | null;
 
   constructor(fallback: FallbackReason | null, cause: unknown) {
-    super("The overview couldn't be made on our key", { cause });
+    super("The overview couldn't be made on us", { cause });
     this.fallback = fallback;
   }
 }
