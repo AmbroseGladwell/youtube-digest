@@ -33,6 +33,7 @@ export * from "./WatchAnyway.js";
 export * from "./Chapter.js";
 export * from "./PlaylistOrigin.js";
 export * from "./Overview.js";
+export * from "./PlaylistPace.js";
 export * from "./FollowedPlaylist.js";
 export * from "./followedPlaylistMigrations.js";
 export * from "./FollowedPlaylistStore.js";

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { FollowedPlaylist, PlaylistLookup } from "@overview/domain";
+import type { FollowedPlaylist, PlaylistLookup, PlaylistPace } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { captureQueueKeys } from "../../captureQueue/captureQueueKeys.js";
 import { playlistKeys } from "../playlistKeys.js";
@@ -9,6 +9,9 @@ import { knownVideoIds } from "../util/knownVideoIds.js";
 export interface FollowPlaylistVariables {
   lookup: PlaylistLookup;
   backfill: boolean;
+  // The pace a playlist is followed at. One already followed keeps its own; that is
+  // changed in Settings (docs/features/playlists.md, "A pace for each playlist").
+  pace: PlaylistPace;
 }
 
 // Following records the playlist for every device and marks everything in it as seen here,
@@ -20,7 +23,7 @@ export function useFollowPlaylistMutation() {
 
   return useMutation<{ queued: number }, Error, FollowPlaylistVariables>({
     mutationKey: playlistKeys.all,
-    mutationFn: async ({ lookup, backfill }) => {
+    mutationFn: async ({ lookup, backfill, pace }) => {
       const now = new Date();
       const existing = (await followedPlaylistStore.listFollowed()).find((playlist) => playlist.id === lookup.id);
       const followed: FollowedPlaylist = {
@@ -30,6 +33,7 @@ export function useFollowPlaylistMutation() {
         privacy: lookup.privacy,
         followedAt: existing?.followedAt ?? now.toISOString(),
         unavailable: null,
+        pace: existing?.pace ?? pace,
       };
       await followedPlaylistStore.saveFollowed(followed);
       await followedPlaylistStore.saveCheck({
@@ -48,9 +52,11 @@ export function useFollowPlaylistMutation() {
       await captureQueueStore.enqueue(captures);
       return { queued: captures.filter((capture) => capture.status === "waiting").length };
     },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: playlistKeys.followed() });
-      void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
+    // The queue reads the playlist's pace before it sees the videos, so none is made as if it
+    // had no pace.
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: playlistKeys.followed() });
+      await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
     },
   });
 }

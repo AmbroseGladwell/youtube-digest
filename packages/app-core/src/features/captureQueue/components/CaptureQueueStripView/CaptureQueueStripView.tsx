@@ -28,6 +28,8 @@ const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
   noKey: "key",
   trialSpent: "userPlus",
   attention: "alert",
+  doneForToday: "clock",
+  waitingForYou: "check",
   done: "check",
 };
 
@@ -147,6 +149,8 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
         );
       case "held":
       case "checked":
+      case "doneForToday":
+      case "waitingForYou":
         return unfold ?? queueLink(compact ? null : "Queue");
       case "noKey":
         return (
@@ -207,6 +211,11 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
           {copy.meta !== null && (
             <span className={styles.meta} data-testid={captureQueueStripViewTestIds.meta}>
               {copy.meta}
+            </span>
+          )}
+          {copy.after !== undefined && (
+            <span className={styles.after} data-testid={captureQueueStripViewTestIds.after}>
+              {copy.after}
             </span>
           )}
           {folded !== null && folded.attention > 0 && (

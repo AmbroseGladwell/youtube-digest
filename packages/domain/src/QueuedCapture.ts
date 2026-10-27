@@ -21,5 +21,8 @@ export const QueuedCapture = z.object({
   queuedAt: z.iso.datetime(),
   status: QueuedCaptureStatus,
   problem: QueuedCaptureProblem.nullable(),
+  // When the reader chose it to be made next, past its playlist's pace. Null for every video
+  // the queue makes on its own (docs/features/capture-queue.md, "Making waiting videos now").
+  chosenAt: z.iso.datetime().nullable().catch(null),
 });
 export type QueuedCapture = z.infer<typeof QueuedCapture>;

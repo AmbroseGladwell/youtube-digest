@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { queuePageTestIds } from "../../src/features/captureQueue/QueuePage/QueuePageTestIds.js";
 import { attentionRowTestIds } from "../../src/features/captureQueue/components/AttentionRow/AttentionRowTestIds.js";
+import { pacedQueueGroupTestIds } from "../../src/features/captureQueue/components/PacedQueueGroup/PacedQueueGroupTestIds.js";
 import { queueRowTestIds } from "../../src/features/captureQueue/components/QueueRow/QueueRowTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
@@ -70,4 +71,48 @@ export class QueuePageObject extends PageObject {
     this.step(`verifyPauseIsOffered ${offered}`, () =>
       offered ? this.expectToBeVisible(queuePageTestIds.pauseButton) : this.expectToHaveCount(queuePageTestIds.pauseButton, 0),
     );
+
+  verifyContinuesTomorrow = (label: string, titles: string[]) =>
+    this.step(`verifyContinuesTomorrow ${label}`, async () => {
+      await expect(this.get(queuePageTestIds.tomorrowLabel)).toHaveText(label);
+      await expect(this.get(queuePageTestIds.tomorrow).getByTestId(queueRowTestIds.title)).toHaveText(titles);
+      await expect(this.get(queuePageTestIds.tomorrow).getByTestId(queueRowTestIds.status)).toHaveText(titles.map(() => "Continues tomorrow"));
+    });
+
+  verifyNothingContinuesTomorrow = () =>
+    this.step("verifyNothingContinuesTomorrow", () => this.expectToHaveCount(queuePageTestIds.tomorrow, 0));
+
+  verifyWaitingForYou = (label: string, titles: string[]) =>
+    this.step(`verifyWaitingForYou ${label}`, async () => {
+      await expect(this.get(queuePageTestIds.forYouLabel)).toHaveText(label);
+      await expect(this.get(queuePageTestIds.forYou).getByTestId(queueRowTestIds.title)).toHaveText(titles);
+    });
+
+  verifyPacedGroupMeta = (metas: string[]) =>
+    this.step(`verifyPacedGroupMeta ${metas.join(", ")}`, () => expect(this.get(pacedQueueGroupTestIds.meta)).toHaveText(metas));
+
+  makeNow = (title: string) =>
+    this.step(`makeNow ${title}`, () => this.page.getByRole("button", { name: `Make “${title}” now` }).click());
+
+  verifyMadeNowNotice = (text: string) =>
+    this.step(`verifyMadeNowNotice ${text}`, () => expect(this.get(queuePageTestIds.madeNowNotice)).toHaveText(text));
+
+  startChoosing = () => this.step("startChoosing", () => this.get(queuePageTestIds.chooseButton).first().click());
+
+  choose = (title: string) =>
+    this.step(`choose ${title}`, () => this.page.getByRole("checkbox", { name: `Choose “${title}”` }).click());
+
+  verifyChosen = (count: string, line: string) =>
+    this.step(`verifyChosen ${count}`, async () => {
+      await expect(this.get(queuePageTestIds.chosenCount)).toHaveText(count);
+      await expect(this.get(queuePageTestIds.chosenBar)).toContainText(line);
+    });
+
+  makeChosenNow = (label: string) =>
+    this.step(`makeChosenNow ${label}`, async () => {
+      await expect(this.get(queuePageTestIds.makeChosenButton)).toHaveText(label);
+      await this.click(queuePageTestIds.makeChosenButton);
+    });
+
+  removeChosen = () => this.step("removeChosen", () => this.click(queuePageTestIds.removeChosenButton));
 }

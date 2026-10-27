@@ -11,6 +11,7 @@ export const makeQueuedCapture = (overrides: Partial<QueuedCapture> = {}): Queue
     queuedAt: "2026-10-05T09:00:00.000Z",
     status: "waiting",
     problem: null,
+    chosenAt: null,
     ...overrides,
   };
 };

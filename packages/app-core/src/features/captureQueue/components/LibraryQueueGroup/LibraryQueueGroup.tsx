@@ -5,7 +5,7 @@ import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useCaptureQueueController } from "../../CaptureQueueContext.js";
 import { makingStep } from "../../util/makingStep.js";
-import { attentionSummary, waitingRows } from "../../util/queueRows.js";
+import { attentionSummary, pacedSummary, waitingRows } from "../../util/queueRows.js";
 import { QueueRow } from "../QueueRow/QueueRow.js";
 import styles from "./LibraryQueueGroup.module.scss";
 import { libraryQueueGroupTestIds } from "./LibraryQueueGroupTestIds.js";
@@ -21,6 +21,7 @@ export function LibraryQueueGroup() {
   const phone = useIsPhone();
   const rows = waitingRows(queue).slice(0, queue.making === null ? SHOWN_WAITING + 1 : SHOWN_WAITING);
   const waitingCount = queue.waiting.length;
+  const paced = pacedSummary(queue);
 
   // Folded only while the strip is there to unfold it from.
   if ((queue.folded && queue.strip !== null) || (waitingCount === 0 && queue.attention.length === 0)) return null;
@@ -75,6 +76,30 @@ export function LibraryQueueGroup() {
             <QueueRow key={capture.videoId} capture={capture} state={state} position={null} resumeTime={resumeTime} dense={phone} />
           ))}
         </ul>
+      )}
+      {paced.tomorrow !== null && (
+        <Link
+          className={styles.paced}
+          to={Routes.queue()}
+          onClick={() => analytics.queue.controls.opened({ from: "libraryGroup" })}
+          data-testid={libraryQueueGroupTestIds.tomorrowLink}
+        >
+          <StrokeIcon name="clock" size={15} />
+          {queue.tomorrow.length.toLocaleString("en-GB")} continue tomorrow
+          {!phone && <span className={styles.attentionDetail}>· {paced.tomorrow}</span>}
+        </Link>
+      )}
+      {paced.forYou !== null && (
+        <Link
+          className={styles.paced}
+          to={Routes.queue()}
+          onClick={() => analytics.queue.controls.opened({ from: "libraryGroup" })}
+          data-testid={libraryQueueGroupTestIds.forYouLink}
+        >
+          <StrokeIcon name="check" size={15} />
+          {queue.forYou.length.toLocaleString("en-GB")} waiting for you
+          {!phone && <span className={styles.attentionDetail}>· {paced.forYou}</span>}
+        </Link>
       )}
       {queue.attention.length > 0 && (
         <Link

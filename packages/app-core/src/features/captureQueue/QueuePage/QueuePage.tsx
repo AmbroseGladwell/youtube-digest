@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { QueuedCapture, VideoId } from "@overview/domain";
 import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
@@ -8,16 +9,20 @@ import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { TRIAL_SPENT_ACTION, TRIAL_SPENT_DETAIL, TRIAL_SPENT_HEADING } from "../../signedOutTrial/trialPrompt.js";
 import { useCaptureQueueController } from "../CaptureQueueContext.js";
 import { AttentionRow } from "../components/AttentionRow/AttentionRow.js";
+import { PacedQueueGroup } from "../components/PacedQueueGroup/PacedQueueGroup.js";
 import { QueueRow } from "../components/QueueRow/QueueRow.js";
 import { makingStep } from "../util/makingStep.js";
 import { queueHoldNote } from "../util/queueHoldCopy.js";
-import { waitingRows } from "../util/queueRows.js";
+import { chosenBarLine, madeNowNotice, makeChosenLabel } from "../util/chooseCopy.js";
+import { pacedGroups, waitingRows } from "../util/queueRows.js";
 import styles from "./QueuePage.module.scss";
 import { queuePageTestIds } from "./QueuePageTestIds.js";
 
 // Design 27j–27o: what is being made, what waits in order, and what needs the reader, on a
 // page of its own. The queue is this device's until OV-11, so the page says where it runs
-// rather than promising it happens anywhere (docs/features/capture-queue.md).
+// rather than promising it happens anywhere (docs/features/capture-queue.md). Design
+// 95aa–95aj: what waits on a pace, or for the reader, by playlist after it, with Make now on
+// each and Choose for several.
 export function QueuePage() {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();
@@ -27,10 +32,105 @@ export function QueuePage() {
   const heading = useRef<HTMLHeadingElement>(null);
   const confirmTitle = useRef<HTMLParagraphElement>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const [chosen, setChosen] = useState<ReadonlySet<VideoId> | null>(null);
+  const [notice, setNotice] = useState<{ lead: string; rest: string } | null>(null);
   const rows = waitingRows(queue);
   const waitingCount = queue.waiting.length;
+  const tomorrowGroups = pacedGroups(queue.tomorrow, queue);
+  const forYouGroups = pacedGroups(queue.forYou, queue);
+  const canMakeNow = !queue.needsKey && !queue.trialSpent && queue.hold === null;
+  const chosenCaptures = chosen === null ? [] : [...queue.tomorrow, ...queue.forYou].filter((capture) => chosen.has(capture.videoId));
 
   useEffect(() => heading.current?.focus({ preventScroll: true }), []);
+  useEffect(() => {
+    if (chosen === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        analytics.queue.choose.cancelled();
+        setChosen(null);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [chosen, analytics]);
+
+  const toggle = (videoId: VideoId) =>
+    setChosen((current) => {
+      const next = new Set(current ?? []);
+      if (next.has(videoId)) next.delete(videoId);
+      else next.add(videoId);
+      return next;
+    });
+  const chooseAll = (videoIds: VideoId[], choose: boolean) =>
+    setChosen((current) => {
+      const next = new Set(current ?? []);
+      for (const videoId of videoIds) {
+        if (choose) next.add(videoId);
+        else next.delete(videoId);
+      }
+      return next;
+    });
+  const makeNow = (captures: QueuedCapture[]) => {
+    setNotice(madeNowNotice(captures, queue.paceOf));
+    void queue.makeNow(captures.map((capture) => capture.videoId));
+  };
+
+  const chooseControl = (
+    <button
+      type="button"
+      className={chosen === null ? styles.secondary : styles.ghost}
+      aria-pressed={chosen !== null}
+      onClick={() => {
+        if (chosen === null) analytics.queue.choose.started();
+        else analytics.queue.choose.cancelled();
+        setChosen(chosen === null ? new Set() : null);
+      }}
+      data-testid={queuePageTestIds.chooseButton}
+    >
+      {chosen === null ? "Choose" : "Cancel"}
+    </button>
+  );
+
+  const pacedSection = (groups: typeof tomorrowGroups, waitsFor: "tomorrow" | "you") => {
+    const total = groups.reduce((sum, group) => sum + group.captures.length, 0);
+    return (
+      <div className={styles.group} data-testid={waitsFor === "you" ? queuePageTestIds.forYou : queuePageTestIds.tomorrow}>
+        <div className={styles.pacedHead}>
+          <span className={styles.pacedHeadText}>
+            <p className={styles.label} data-testid={waitsFor === "you" ? queuePageTestIds.forYouLabel : queuePageTestIds.tomorrowLabel}>
+              {waitsFor === "you" ? "Waiting for you" : "Continues tomorrow"} · {total.toLocaleString("en-GB")}
+            </p>
+            <span className={styles.pacedSub}>
+              {waitsFor === "you"
+                ? "Made only when you choose them. They use none of your allowance until then."
+                : "These playlists have reached today’s pace. The rest of the queue keeps going."}
+            </span>
+          </span>
+          {chooseControl}
+        </div>
+        {groups.map((group) => (
+          <PacedQueueGroup
+            key={group.playlist.id}
+            group={group}
+            waitsFor={waitsFor}
+            stacked={stacked}
+            canMakeNow={canMakeNow}
+            chosen={chosen}
+            onToggle={toggle}
+            onChooseAll={chooseAll}
+            onMakeNow={(capture) => {
+              analytics.queue.item.madeNow({ pace: group.pace });
+              makeNow([capture]);
+            }}
+            onRemove={(capture) => {
+              analytics.queue.item.removed();
+              queue.remove(capture.videoId);
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
   useEffect(() => {
     if (confirmingClear) confirmTitle.current?.focus();
   }, [confirmingClear]);
@@ -39,7 +139,7 @@ export function QueuePage() {
     ? "Made while this panel or the extension is open. Continues next time."
     : isPhone
       ? "Made oldest first while The Overview is open on this phone. Continues next time you open it."
-      : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. Close it and the queue waits; it continues next time you open The Overview.";
+      : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 
   const pauseControl = queue.needsKey || queue.trialSpent ? null : queue.paused ? (
     <button
@@ -190,6 +290,15 @@ export function QueuePage() {
         </div>
       )}
 
+      {notice !== null && (
+        <div className={styles.notice} role="status" aria-live="polite" data-testid={queuePageTestIds.madeNowNotice}>
+          <StrokeIcon name="check" size={16} />
+          <p className={styles.noticeText}>
+            <strong>{notice.lead}</strong> {notice.rest}
+          </p>
+        </div>
+      )}
+
       {queue.making !== null && (
         <div className={styles.group}>
           <p className={styles.label}>Making now</p>
@@ -223,6 +332,9 @@ export function QueuePage() {
         </div>
       )}
 
+      {tomorrowGroups.length > 0 && pacedSection(tomorrowGroups, "tomorrow")}
+      {forYouGroups.length > 0 && pacedSection(forYouGroups, "you")}
+
       {queue.attention.length > 0 && (
         <div className={styles.group} id="needs-attention">
           <p className={styles.label} data-testid={queuePageTestIds.attentionLabel}>
@@ -255,6 +367,45 @@ export function QueuePage() {
             New videos in the playlists you follow are queued each time you open The Overview.{" "}
             <Link to={Routes.settingsSection("playlists")}>Your playlists</Link>
           </p>
+        </div>
+      )}
+
+      {chosenCaptures.length > 0 && (
+        <div className={`${styles.chosenBar} ${stacked ? styles.chosenBarStacked : ""}`} role="region" aria-label="Chosen videos" data-testid={queuePageTestIds.chosenBar}>
+          <div className={styles.chosenText} role="status" aria-live="polite">
+            <span className={styles.chosenCount} data-testid={queuePageTestIds.chosenCount}>
+              {chosenCaptures.length.toLocaleString("en-GB")} chosen
+            </span>
+            <span className={styles.chosenLine}>{chosenBarLine(chosenCaptures, queue.paceOf)}</span>
+          </div>
+          <span className={styles.chosenActions}>
+            <button
+              type="button"
+              className={styles.ghost}
+              onClick={() => {
+                analytics.queue.choose.removed({ videos: chosenCaptures.length });
+                void queue.removeMany(chosenCaptures.map((capture) => capture.videoId));
+                setChosen(null);
+              }}
+              data-testid={queuePageTestIds.removeChosenButton}
+            >
+              Remove
+            </button>
+            {canMakeNow && (
+              <button
+                type="button"
+                className={styles.primary}
+                onClick={() => {
+                  analytics.queue.choose.madeNow({ videos: chosenCaptures.length });
+                  makeNow(chosenCaptures);
+                  setChosen(null);
+                }}
+                data-testid={queuePageTestIds.makeChosenButton}
+              >
+                {makeChosenLabel(chosenCaptures.length)}
+              </button>
+            )}
+          </span>
         </div>
       )}
     </div>

@@ -55,7 +55,9 @@ export type StrokeIconName =
   | "ban"
   | "video"
   | "pencil"
-  | "sort";
+  | "sort"
+  | "gauge"
+  | "zap";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -380,6 +382,15 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
       <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
       <path d="m15 5 4 4" />
     </>
+  ),
+  gauge: (
+    <>
+      <path d="m12 14 4-4" />
+      <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+    </>
+  ),
+  zap: (
+    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
   ),
 };
 

@@ -3,4 +3,6 @@ export const queueRowTestIds = {
   title: "QueueRow.title",
   status: "QueueRow.status",
   removeButton: "QueueRow.removeButton",
+  makeNowButton: "QueueRow.makeNowButton",
+  checkbox: "QueueRow.checkbox",
 };

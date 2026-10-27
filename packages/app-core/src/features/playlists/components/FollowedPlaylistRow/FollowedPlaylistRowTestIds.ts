@@ -8,4 +8,6 @@ export const followedPlaylistRowTestIds = {
   confirm: "FollowedPlaylistRow.confirm",
   confirmUnfollowButton: "FollowedPlaylistRow.confirmUnfollowButton",
   keepButton: "FollowedPlaylistRow.keepButton",
+  paceFacts: "FollowedPlaylistRow.paceFacts",
+  paceSaid: "FollowedPlaylistRow.paceSaid",
 };

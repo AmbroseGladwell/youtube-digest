@@ -23,6 +23,8 @@
 
 @mixin dialog-panel {
   width: min(33.75rem, calc(100vw - 2.5rem));
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.125rem;

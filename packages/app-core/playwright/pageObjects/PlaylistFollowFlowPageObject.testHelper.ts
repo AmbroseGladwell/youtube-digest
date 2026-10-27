@@ -39,6 +39,23 @@ export class PlaylistFollowFlowPageObject extends PageObject {
 
   verifyNoBackfill = () => this.step("verifyNoBackfill", () => this.expectToHaveCount(playlistPreviewTestIds.backfillButton, 0));
 
+  verifyPace = (name: string, result: string) =>
+    this.step(`verifyPace ${name}`, async () => {
+      await expect(this.get(playlistPreviewTestIds.paceName)).toHaveText(name);
+      await expect(this.get(playlistPreviewTestIds.paceResult)).toHaveText(result);
+    });
+
+  verifyNoPace = () => this.step("verifyNoPace", () => this.expectToHaveCount(playlistPreviewTestIds.paceLine, 0));
+
+  // Change opens the paces in place, each with what it would do; choosing is immediate.
+  changePace = (pace: string, result: string) =>
+    this.step(`changePace ${pace}`, async () => {
+      await this.click(playlistPreviewTestIds.paceChangeButton);
+      const option = this.page.getByRole("radio", { name: new RegExp(`^${pace}`) });
+      await expect(this.page.getByRole("radiogroup", { name: /^Pace for / })).toContainText(result);
+      await option.check();
+    });
+
   followWithBackfill = () => this.step("followWithBackfill", () => this.click(playlistPreviewTestIds.backfillButton));
 
   followNewOnly = () => this.step("followNewOnly", () => this.click(playlistPreviewTestIds.newOnlyButton));

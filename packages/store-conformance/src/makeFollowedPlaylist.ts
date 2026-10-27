@@ -7,5 +7,6 @@ export const makeFollowedPlaylist = (overrides: Partial<FollowedPlaylist> = {}):
   privacy: "public",
   followedAt: "2026-10-05T09:00:00.000Z",
   unavailable: null,
+  pace: "asTheyCome",
   ...overrides,
 });

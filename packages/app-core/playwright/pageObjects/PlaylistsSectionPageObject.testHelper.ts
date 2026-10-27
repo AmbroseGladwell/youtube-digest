@@ -39,4 +39,26 @@ export class PlaylistsSectionPageObject extends PageObject {
       await expect(this.get(followedPlaylistRowTestIds.confirm)).toContainText(confirmText);
       await this.click(followedPlaylistRowTestIds.confirmUnfollowButton);
     });
+
+  verifyPaceFacts = (index: number, facts: string) =>
+    this.step(`verifyPaceFacts ${index} ${facts}`, () =>
+      expect(this.get(followedPlaylistRowTestIds.paceFacts).nth(index)).toHaveText(facts),
+    );
+
+  // Opens the playlist's pace menu, checks what an option says it would do, and chooses it.
+  choosePace = (title: string, pace: string, detail?: string) =>
+    this.step(`choosePace ${title} ${pace}`, async () => {
+      await this.page.getByRole("button", { name: new RegExp(`^Pace for ${title}: `) }).click();
+      const option = this.page.getByRole("menuitemradio", { name: new RegExp(`^${pace}`) });
+      if (detail !== undefined) await expect(option).toContainText(detail);
+      await option.click();
+    });
+
+  verifyPaceSaid = (text: string) =>
+    this.step(`verifyPaceSaid ${text}`, () => expect(this.get(followedPlaylistRowTestIds.paceSaid).filter({ hasText: text })).toHaveCount(1));
+
+  verifyNoPaceFor = (title: string) =>
+    this.step(`verifyNoPaceFor ${title}`, () =>
+      expect(this.page.getByRole("button", { name: new RegExp(`^Pace for ${title}: `) })).toHaveCount(0),
+    );
 }

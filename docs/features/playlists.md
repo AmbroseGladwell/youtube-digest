@@ -1,18 +1,54 @@
 # Following YouTube playlists
 
-Design: "OV-27 1 Paste and Follow", "OV-27 3 Settings and Source" (27a–27h, 27p–27u).
-Card: OV-27. The queue the videos go into is `capture-queue.md`.
+Design: "OV-27 1 Paste and Follow", "OV-27 3 Settings and Source" (27a–27h, 27p–27u);
+"OV-95 1 Choosing a Pace", "OV-95 2 Pace in Settings" (95t–95z). Cards: OV-27, OV-95. The
+queue the videos go into is `capture-queue.md`.
 
 Most people already have a habit for "I want to get to this later": a YouTube playlist.
 Following one turns that habit into overviews. A reader pastes a playlist link; the app
 shows what is in it and what making it would cost, then follows it, with or without the
 videos already there. Videos added to it later are queued each time the app opens.
 
-It is for everyone, signed in or not, Free or Plus, and it has no limits of its own yet
-(OV-95). What does limit it is what limits any overview: the reader's allowance, and behind
-it our server's daily safety cap on transcript fetches, at which the queue waits visibly and
-carries on by itself (`capture-queue.md`, "Waiting at a limit"). A 19-video playlist on a
-free account with no extension is made in full.
+It is for everyone, signed in or not, Free or Plus. Each followed playlist has a pace of
+the reader's choosing, which caps how many of its videos are made in a day ("A pace for
+each playlist", below). Beyond that it is limited by what limits any overview: the
+reader's allowance, and behind it our server's daily safety cap on transcript fetches, at
+which the queue waits visibly and carries on by itself (`capture-queue.md`, "Waiting at a
+limit"). A 19-video playlist on a free account with no extension, followed as they come,
+is made in full.
+
+## A pace for each playlist
+
+Decided 26 Oct 2026 (OV-95). A big backfill shouldn't spend a month's allowance, or a lot
+of the reader's own key, in one go, or flood the library. So each followed playlist has a
+pace (`PlaylistPace`):
+
+| Pace | Made |
+|---|---|
+| *As they come* | everything, oldest first, until the month's allowance runs out |
+| *Up to 5 a day* | the oldest five a day, the rest the next day, and so on |
+| *Up to 1 a day* | one a day |
+| *Only when I choose* | nothing by itself: videos queue and wait for the reader, using none of the allowance until chosen |
+
+**The default is *Up to 5 a day*.** The reader sets their own default in Settings,
+`Settings.defaultPlaylistPace`, which preselects the preview and only affects playlists
+followed afterwards. A pace is never a required choice. There is no weekly or custom pace:
+at 1 a day a 200-video backfill already takes about 7 months, and the preview says so.
+
+**A day is the reader's day**, from local midnight. "Made today" counts the overviews from
+that playlist saved since then, from the library, so every signed-in device counts the
+same (`madeTodayByPlaylist`). A video made by hand has no playlist and never counts. A
+video the reader chose to make now never counts either; which ones were chosen today is
+this device's own (`CaptureQueuePreferences.chosenToday`), so a video chosen on another
+device counts here until that device's day turns. The gap is accepted: the worst it does
+is make one fewer that day.
+
+The pace is on the synced `FollowedPlaylist` record (followed-playlist schema 2,
+`CLIENT_VERSION` 8). Playlists followed before there were paces read as *As they come*,
+which is what they were doing (`followedPlaylistMigrations.ts`).
+
+How the queue waits on a pace, and how the reader makes waiting videos now, is
+`capture-queue.md`, "Waiting on a pace".
 
 ## Public and unlisted only
 
@@ -72,6 +108,15 @@ first. The estimate is *About N tokens on your own API key* with its working ben
 `TOKENS_PER_OVERVIEW` (30,000) times the count, rounded to millions past a million and
 always labelled as an estimate (`docs/prototype/constraints.md`).
 
+Under the estimate, one line holds the pace (95t): *Pace: Up to 5 a day · your default*,
+what it means for this playlist (*21 videos at 5 a day: about 5 days*, rounded up and read
+in months past 60 days, `paceConsequence`), and *Change*. Change opens the paces in place
+as a radio group, *Pace for Psychology*, each with its result written out; choosing is
+immediate and there is no Done (95u). With nothing to backfill, the sentence speaks only of
+new videos. A one-video playlist hides the pace, and so does a playlist already followed,
+whose pace is changed in Settings. The New dialog scrolls when the open choice makes it
+taller than the window.
+
 *Make overviews for all N* (*Make its overview* for one) follows the playlist and queues
 what is there. *Only new ones from now on* follows it and queues nothing. Cancel follows
 nothing. When there is nothing left to make, only *Only new ones* is offered. An empty
@@ -89,11 +134,13 @@ actions if readers ask for it.
 
 A followed playlist is a synced record of its own kind, `followedPlaylist`, so every
 signed-in device follows the same playlists (`FollowedPlaylist`, `sync-api.md`). It holds
-the title, owner and privacy as last read, when it was followed, and `unavailable`
-(`private` or `gone`) once a check finds it can no longer be read.
+the title, owner and privacy as last read, when it was followed, its pace, and
+`unavailable` (`private` or `gone`) once a check finds it can no longer be read.
 
 Following marks every entry in the playlist as seen on this device, and the backfill, when
-asked for, queues what is there (`useFollowPlaylistMutation`).
+asked for, queues what is there (`useFollowPlaylistMutation`). It refreshes the followed
+playlists before the queue, so the queue knows the new playlist's pace before it sees its
+videos; until the followed playlists have loaded at all, the queue makes nothing.
 
 ## New entries
 
@@ -126,10 +173,18 @@ wherever there is a server to read playlists through. Its row reads *Following N
 *None* (`settings.md`).
 
 Each followed playlist shows its title, linked to it on YouTube; its owner, privacy, the
-number of videos this device last saw in it, and how many overviews it has given; and
-when this device last checked it. One that went private or was deleted says so in
-warning ink and words, and can still be unfollowed. *Unfollow* asks once, inline, with
-the numbers.
+number of videos this device last saw in it, and how many overviews it has given; then,
+in ink, its pace and what waits on it (*Up to 5 a day · 7 waiting*) with when this device
+last checked it. One that went private or was deleted says so in warning ink and words,
+has no pace to set, and can still be unfollowed. *Unfollow* asks once, inline, with the
+numbers.
+
+The pace pill beside Unfollow (95x–95y), labelled *Pace for Psychology: Up to 5 a day*,
+opens the paces, each saying what it would do to what waits (*7 waiting at 1 a day: about
+7 days*, `paceWaitEffect`). A change saves straight away and the row says once, politely,
+what it did: *Now up to 1 a day. 6 of the 7 wait for tomorrow.* (`paceChangedLine`). On a
+phone the pill opens a sheet of radios instead (95z). Above the list, *Pace for new
+playlists* is the reader's default, with the same pill.
 
 Empty, the section teaches the habit the feature is built around: an unlisted playlist
 called "Overview", saved to instead of Watch Later.
@@ -161,15 +216,18 @@ Unfollowed, *Manage* goes. Followed and gone from YouTube, the name is plain tex
 
 ## Analytics
 
-`playlists.link.choiceMade`, `playlists.preview.followed` (with the backfill and the
-counts), `.cancelled` and `.refused` (with why), `playlists.settings.*` and
-`playlists.fromLine.*`. The check on opening is the app acting, not the reader, so it is
+`playlists.link.choiceMade`, `playlists.preview.followed` (with the backfill, the counts,
+the pace and whether it was the reader's default), `.cancelled` and `.refused` (with why),
+`playlists.settings.*` (including `paceChanged`, with how many waited, and
+`defaultPaceChanged`) and `playlists.fromLine.*`. The check on opening is the app acting, not the reader, so it is
 a log line and a client warning rather than an event (`docs/architecture/analytics.md`).
 
 ## Not built
 
 - Following with the reader's Google account, for private playlists and Liked videos (OV-96).
-- Limits on how much a playlist can queue (OV-95).
+- The month's allowance in the preview: OV-95's design draws a line when the allowance
+  left is smaller than the backfill (95v), but the client doesn't show readers their usage
+  yet (`plus-upsell.md`, "Not built").
 - Filing a playlist's overviews under a matching topic, and a library filter by playlist.
 - Dropping a queued video that has left its playlist: it stays queued, on the design's
   advice that the reader may have tidied the playlist after saving.

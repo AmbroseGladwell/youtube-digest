@@ -1,6 +1,7 @@
 # The capture queue
 
-Design: "OV-27 2 Queue" (27i–27o). Card: OV-27. What fills it is `playlists.md`.
+Design: "OV-27 2 Queue" (27i–27o); "OV-95 3 Waiting on a Pace", "OV-95 4 Make Now"
+(95aa–95aj). Cards: OV-27, OV-95. What fills it is `playlists.md`.
 
 Generation is the reader's own key, on the reader's own device, so nothing makes an
 overview while the app is closed (`docs/architecture/v1-architecture-decisions.md`,
@@ -14,14 +15,16 @@ Its copy says where it runs: *on this computer*, *on this phone*, *while this pa
 extension is open*. Followed playlists do sync, so another signed-in device checks the
 same playlists and fills its own queue (`playlists.md`, "New entries").
 
-Paused, folded into the strip, and waiting at a limit are this device's too, kept per account
-in `localStorage` (`captureQueuePreferencesStorage`).
+Paused, folded into the strip, waiting at a limit, and which videos the reader chose to make
+today are this device's too, kept per account in `localStorage`
+(`captureQueuePreferencesStorage`).
 
 ## One at a time, oldest first
 
 `useCaptureQueue`, owned by the `AppShell` like the reader's own run, makes the first
-waiting video whenever nothing else is being made, the queue isn't paused, it isn't waiting
-at a limit, and the shell can generate. A run the reader starts goes first; the queue resumes after it. Oldest
+waiting video its playlist's pace allows ("Waiting on a pace", below) whenever nothing else
+is being made, the queue isn't paused, it isn't waiting at a limit, the followed playlists
+have loaded, and the shell can generate. A run the reader starts goes first; the queue resumes after it. Oldest
 first is the order videos were added to their playlist, then the order they were queued
 in (`oldestFirst`, `capturesFor`).
 
@@ -64,7 +67,13 @@ The generation strip's slot and shape (3c), one state at a time (`captureQueueSt
 | held | *Waiting for our server* · *9 waiting · these continue after 01:00, or now with the extension* | Queue |
 | checked | *Checked 2 playlists* · *3 new videos queued · starting with the oldest*, for 8 seconds | Queue |
 | attention | *Queue done · 2 need attention* · *1 failed, 1 skipped*, until dismissed | See queue, × |
+| done for today | *Done for today* · *214 waiting for tomorrow, at each playlist’s pace* | Queue |
+| waiting for you | *Queue done · 12 waiting for you* · *From Saved for later, made when you choose them* | Queue |
 | done | *Queue done · 12 made*, for 10 seconds | × |
+
+While videos are being made and others wait on a pace, *making* says so after its meta,
+muted: *· 214 continue tomorrow* (compact: the meta becomes *214 continue tomorrow*). Its
+*Making 3 of 12* counts only what can be made today.
 
 *Making 3 of 12* counts this sitting's batch: made, this one, and what waits. Progress is
 the batch's, with the current video credited only for steps that have happened. Problems
@@ -150,6 +159,50 @@ A reader making one by hand past the cap is told the same thing in the run's own
 asked us to wait a moment. It can again after 21:31, or the extension can fetch this one
 now.* (`serviceTranscriptSource`).
 
+## Waiting on a pace
+
+Design 95aa–95ae, 95aj. A pace (`playlists.md`, "A pace for each playlist") holds only its
+own playlist's videos: the queue keeps making everything else in its place. So it is a wait
+on each video, not on the queue, and nothing about it is a failure. `pacedQueue` sorts what
+waits, in order, into what can be made now (the reader's chosen videos first, then each
+playlist's oldest up to what its pace has left today), what continues tomorrow, and what
+waits for the reader. A playlist the device doesn't follow, or no longer does, reads as *As
+they come*. At local midnight the counts start again by themselves.
+
+**On the queue page**, after *Waiting* (which is only what can be made now), a *Continues
+tomorrow · N* group says *These playlists have reached today’s pace. The rest of the queue
+keeps going.* and splits by playlist: its name, then *Up to 5 a day · 5 made today · 7
+waiting*. Rows read *Continues tomorrow*, muted, with *Make now* and Remove; never warning
+ink, never *Try again*. A playlist shows four rows, or two for a backfill of more than 20,
+then *N more from Psychology*. *Only when I choose* playlists have their own *Waiting for you
+· N* group, *Made only when you choose them. They use none of your allowance until then.*,
+rows *Waiting for you*. On a phone or in the panel, rows keep one action and Remove moves
+into choosing (95ae).
+
+**In the library**, the group's foot says *214 continue tomorrow · Psychology and Every
+Lecture have reached today’s pace* (and *12 waiting for you · From Saved for later*), in
+ink, linking to the queue page.
+
+When more than one wait applies, the order is: the month, then our server's cap, then the
+pace. The month's wait in the queue (95ad) is not built yet; see "Not built".
+
+## Making waiting videos now
+
+Design 95af–95ai. *Make now* on a row marks the video chosen (`QueuedCapture.chosenAt`) and
+the queue makes it next, ahead of everything waiting, as *Next · you chose it*. A polite
+notice says the pace is unchanged: *Making “How Sleep Cleans the Brain” next. Psychology
+stays at up to 5 a day.* A chosen video never counts toward its playlist's pace for the
+day (decided 26 Oct 2026), so making three now on a 5-a-day playlist still leaves its five.
+It still counts against the month.
+
+*Choose* turns the paced groups into labelled checkboxes (*Choose “…”*), with *Choose all
+N* per playlist; *Cancel* or Escape leaves. A selection bar, a region with a live count,
+says *3 chosen · Made next, oldest first. Psychology stays at up to 5 a day.* and offers
+Remove and *Make 3 now* (`chooseCopy`). It works in the panel too, which holds its own
+queue until OV-11. *Make now* and *Make N now* aren't offered without a key, signed out past
+the trial, or while the queue waits at a limit, because they couldn't work; Remove always
+is.
+
 ## No API key
 
 Never a spinner: every waiting video says *Waiting for an API key*, and the strip and a
@@ -166,6 +219,19 @@ queue again on the account's month.
 
 ## Analytics
 
-`queue.controls.*` and `queue.item.*`: pausing, resuming, opening, folding, clearing,
-removing, retrying and dismissing, each a reader action. What the queue makes on its own
+`queue.controls.*`, `queue.item.*` and `queue.choose.*`: pausing, resuming, opening,
+folding, clearing, removing, retrying, dismissing, making one now (with its playlist's
+pace), and choosing several to make now or remove (with how many), each a reader action.
+The queue reaching a playlist's pace is the app acting on the reader's choice, so it is not
+an event: it is the `captureQueuePaced` client warning, with the pace, what was made today
+and how many wait (`docs/architecture/errors-and-logs.md`, "Client warnings"). What the queue makes on its own
 is not an event; the reader's action was following (`playlists.md`, "Analytics").
+
+## Not built
+
+- **Waiting at the month's limit in the queue** (95ad, and OV-104's 95p–95s): every row
+  *Waiting for 1 November*, no *Make now* or *Choose*. Today a video the month's allowance
+  refuses fails like any other.
+- **Choosing more than the month allows** (95ah): *You have 4 left this month, so 4 are made
+  now and the other 3 wait for 1 November*, with *Make 4 now*. Both need the client to know
+  the reader's usage, which it doesn't show yet (`plus-upsell.md`, "Not built").

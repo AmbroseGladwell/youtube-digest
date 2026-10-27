@@ -15,5 +15,6 @@ export function capturesFor(entries: PlaylistEntry[], fromPlaylist: PlaylistOrig
     queuedAt: new Date(now.getTime() + index).toISOString(),
     status: entry.availability === "available" ? "waiting" : "skipped",
     problem: entry.availability === "available" ? null : entry.availability,
+    chosenAt: null,
   }));
 }

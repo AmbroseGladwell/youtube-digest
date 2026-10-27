@@ -74,7 +74,7 @@ advance, so the cost follows what readers listen to rather than what they make. 
 narration renders per account per day stops one account rendering a whole library in every
 voice: 30 new renders a UTC day, counted in `narration_render_usage`, with narration already
 made free to play again (`audio-player.md`, "The day's new narration"). Our key's overviews
-are still narrated ahead, as soon as they are made. The transcript proxy's global cap and OV-95's playlist caps stay as they are.
+are still narrated ahead, as soon as they are made. The transcript proxy's global cap and each playlist's pace (OV-95) stay as they are.
 
 **The allowances on our key were set on 18 Oct 2026, from what an overview costs.** OV-92
 chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
@@ -184,7 +184,9 @@ making a worse overview for the same cost.
 
 **Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
-the reader's own key, OV-95's caps apply as well.
+either key, the playlist's pace applies as well: up to 5 a day unless the reader chooses
+otherwise (OV-95, `docs/features/playlists.md`, "A pace for each playlist"). A video the
+reader chooses to make now skips the pace but still counts against the month.
 
 ## Which key an overview uses
 

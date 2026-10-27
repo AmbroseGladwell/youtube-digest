@@ -1,0 +1,237 @@
+@use "../../../../theme/controls.scss" as controls;
+
+$sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 1.012 50%, 1);
+
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  @include controls.surface-pill;
+
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.875rem;
+  min-height: 2.125rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.triggerOpen {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.triggerStacked {
+  min-height: 2.75rem;
+}
+
+// The ⋯ menu's surface (OverviewActionsMenu), hung from the pill's right edge because the
+// pill sits at the right of its row.
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 3;
+  width: 18.75rem;
+  max-width: calc(100vw - 2rem);
+  background: var(--dialog);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-menu);
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: paceMenuRise var(--motion-arrive) var(--motion-ease) both;
+}
+
+@keyframes paceMenuRise {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.item {
+  @include controls.ghost-pill;
+
+  width: 100%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.625rem;
+  border-radius: 12px;
+  padding: 0.5625rem 0.75rem;
+  text-align: left;
+  white-space: normal;
+
+  &[aria-checked="true"] {
+    background: var(--surface);
+  }
+}
+
+.check {
+  flex: none;
+  width: 1rem;
+  padding-top: 2px;
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemName {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.itemDetail {
+  font-size: 0.78125rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet {
+  border: 0;
+  padding: 0;
+  margin: auto 0 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.sheet::backdrop {
+  background: var(--scrim);
+}
+
+.sheet[open] {
+  animation: paceSheetTravel 520ms $sheet-spring both;
+}
+
+@keyframes paceSheetTravel {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.sheetPanel {
+  box-sizing: border-box;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--dialog);
+  border-radius: 28px 28px 0 0;
+  box-shadow: var(--shadow-dialog);
+  padding: 0.625rem 1.25rem 1.75rem;
+}
+
+.handle {
+  align-self: center;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+}
+
+.sheetHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.sheetLine,
+.sheetFoot {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.radios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem;
+  border-radius: 16px;
+  background: var(--ground);
+  cursor: pointer;
+
+  &:has(:checked) {
+    background: var(--stone-tint);
+    box-shadow: inset 0 0 0 1.5px var(--label);
+    color: var(--on-stone-tint);
+  }
+
+  &:has(:checked) .itemDetail {
+    color: var(--on-stone-tint);
+  }
+
+  &:has(:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.radio {
+  flex: none;
+  appearance: none;
+  margin: 1px 0 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-badge);
+  box-shadow: inset 0 0 0 2px var(--muted);
+  display: inline-grid;
+  place-content: center;
+
+  &:checked {
+    box-shadow: inset 0 0 0 2px var(--label);
+  }
+
+  &:checked::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-badge);
+    background: var(--label);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.done {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+  width: 100%;
+  min-height: 2.75rem;
+}
