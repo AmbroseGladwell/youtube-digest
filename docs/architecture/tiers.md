@@ -274,12 +274,17 @@ Create on the panel's capture screen) reads:
 | State | Line |
 |---|---|
 | First key in the order | *7 of 10 left on your own key this month · Resets 1 November · Plan* |
-| First key spent, falling back | *This month's 10 on your own key are made, so this one uses ours: 4 of 5 left. · Plan* |
+| First key spent, falling back | *This month's 10 on your own key are made, so this one uses ours: 4 of 5 left. · Plus makes more on our key. · See plans* |
 | Counts not loaded | *Overviews left this month: Checking… · Plan* |
 | Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
 | Signed out | *2 of 3 trial overviews left · On either key · Plan* |
 
-On the panel the line drops "this month" and Plan and shortens the date (*Resets 1 Nov*).
+Falling back to our key on Free or BYO Plus, the line mentions Plus once (95m), because an
+upsell names only a plan that makes more on the key this overview uses (decided on OV-131):
+Plus for our key. A reader on our key is never offered BYO Plus, and a Plus reader falling
+back to their own key is offered nothing, since no plan makes more. On the panel the line
+drops "this month" and Plan and shortens the date (*Resets 1 Nov*), but keeps Plan when it
+mentions Plus (*… Plus makes more on ours · Plan*).
 Settings › Plan counts both quotas (`docs/features/plus-upsell.md`, "16c"). No count ever
 reads 0 before it is known, and none reads "unlimited". The counts are asked for again
 after every run, made or failed, on any surface or the capture queue.
