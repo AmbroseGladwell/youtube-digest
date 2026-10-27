@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_SYNC_STATUS } from "@overview/sync";
-import type { Provider } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, type Provider } from "@overview/domain";
 import { DEFAULT_API_KEYS } from "../../apiKeys/ApiKeys.js";
 import { DEFAULT_SYNC_CONNECTION } from "../../sync/types/SyncConnection.js";
 import {
@@ -9,6 +9,7 @@ import {
   accountRowValue,
   keysRowValue,
   milestonesRowValue,
+  personalisationRowValue,
   voiceRowValue,
 } from "./settingsRowValues.js";
 
@@ -112,5 +113,15 @@ describe("milestonesRowValue", () => {
   it("is the total saved and how many of the ten milestones it reaches", () => {
     expect(milestonesRowValue(9 * 60 + 47)).toBe("9h 47m saved · 3 of 10");
     expect(milestonesRowValue(0)).toBe("0m saved · 0 of 10");
+  });
+});
+
+describe("personalisationRowValue", () => {
+  it("says how many of the four optional sections the next overview will have", () => {
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED)).toBe("Every section");
+    expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false })).toBe("3 of 4 sections");
+    expect(
+      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }),
+    ).toBe("Summary and key points only");
   });
 });

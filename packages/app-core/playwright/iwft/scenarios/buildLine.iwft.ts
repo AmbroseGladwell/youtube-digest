@@ -27,5 +27,5 @@ test("a shell that was told nothing about its build has no About section rather 
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyRowsAre(["plan", "keys", "milestones", "playlists", "privacy"]);
+  await settings.verifyRowsAre(["plan", "keys", "personalisation", "milestones", "playlists", "privacy"]);
 });

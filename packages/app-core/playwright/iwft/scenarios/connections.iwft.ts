@@ -152,7 +152,7 @@ test.describe("Settings › Connections", () => {
     await launcher.launch({ sync: false });
     const settings = await launcher.appShell.openSettings();
 
-    await settings.verifyRowsAre(["plan", "keys", "milestones", "playlists", "privacy"]);
+    await settings.verifyRowsAre(["plan", "keys", "personalisation", "milestones", "playlists", "privacy"]);
   });
 
   test("on a phone, the section is a page of its own", async ({ launcher, backendSimulator, page }) => {

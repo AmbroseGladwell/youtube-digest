@@ -7,6 +7,7 @@ import {
   narrationVoiceName,
   type Provider,
   type NarrationVoice,
+  type SectionsEnabled,
 } from "@overview/domain";
 import { modelFor, type ModelByProvider } from "@overview/domain";
 import type { SyncStatus } from "@overview/sync";
@@ -18,6 +19,7 @@ import type { SyncConnection } from "../../sync/types/SyncConnection.js";
 import { syncStatusLine } from "../../sync/util/syncStatusLine.js";
 import { reachedCount } from "../../timeSaved/util/milestoneTiles.js";
 import { ACCENT_GROUP_LABELS } from "./accentGroupLabels.js";
+import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in · this library stays here";
 
@@ -59,6 +61,13 @@ export function keysRowValue(apiKeys: ApiKeys, provider: Provider, models: Model
 export function sharedLinksRowValue(count: number): string {
   if (count === 0) return "None";
   return count === 1 ? "1 shared" : `${count} shared`;
+}
+
+export function personalisationRowValue(sectionsEnabled: SectionsEnabled): string {
+  const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
+  if (on === OVERVIEW_SECTIONS.length) return "Every section";
+  if (on === 0) return "Summary and key points only";
+  return `${on} of ${OVERVIEW_SECTIONS.length} sections`;
 }
 
 export function milestonesRowValue(minutes: number): string {

@@ -9,6 +9,7 @@ import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistPace } from "./PlaylistPace.js";
+import { SectionsEnabled } from "./Settings.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
 // that could carry a URL, a video id or a sentence the reader wrote
@@ -142,6 +143,7 @@ export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
 export const SettingsSection = z.enum([
   "account",
   "voice",
+  "personalisation",
   "keys",
   "connections",
   "playlists",
@@ -468,6 +470,12 @@ export const analyticsEvents = {
       samplePlayed: event("The reader plays a voice's sample", { voice: NarrationVoice }),
       sampleStopped: event("The reader stops a voice's sample", { voice: NarrationVoice }),
       samplesRetried: event("The reader tries loading the voice samples again"),
+    },
+    personalisation: {
+      sectionSwitched: event("The reader turns one section of their future overviews on or off in Settings › Personalisation", {
+        section: SectionsEnabled.keyof(),
+        on: z.boolean(),
+      }),
     },
     sharedLinks: {
       linkCopied: event("The reader copies a share link from Settings › Shared links", { overviewId: OverviewId }),
