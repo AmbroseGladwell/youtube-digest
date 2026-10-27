@@ -2,6 +2,7 @@ import type { PlaylistOrigin, PlaylistPace, QueuedCapture } from "@overview/doma
 import { resumeTimeText } from "../../transcripts/util/resumeTime.js";
 import type { CaptureQueueController } from "../useCaptureQueue.js";
 import type { QueueRowState } from "../components/QueueRow/QueueRow.js";
+import { monthResumeDate } from "./monthHoldCopy.js";
 
 export interface QueueRowModel {
   capture: QueuedCapture;
@@ -13,11 +14,19 @@ export interface QueueRowModel {
 // the first is Next, the rest Waiting, and a video the reader chose says so. Every one says
 // so when there is no key or, signed out past the trial, no account to make it with, and
 // every one says when it continues while the queue waits at a limit. What waits on a pace is
-// grouped by playlist instead (pacedGroups).
+// grouped by playlist instead (pacedGroups), except at the month's limit, which wins over every
+// pace: then it all waits for the month, in one list (design 95q).
 export function waitingRows(
-  queue: Pick<CaptureQueueController, "ready" | "making" | "needsKey" | "trialSpent" | "hold">,
+  queue: Pick<CaptureQueueController, "ready" | "tomorrow" | "making" | "needsKey" | "trialSpent" | "hold">,
 ): QueueRowModel[] {
   const makingId = queue.making?.capture.videoId ?? null;
+  if (queue.hold?.reason === "monthSpent" && !queue.trialSpent && !queue.needsKey) {
+    const resumeTime = monthResumeDate(queue.hold);
+    return [...queue.ready, ...queue.tomorrow]
+      .filter((capture) => capture.videoId !== makingId)
+      .sort((a, b) => a.queuedAt.localeCompare(b.queuedAt))
+      .map((capture) => ({ capture, state: "monthSpent", resumeTime }));
+  }
   const resumeTime = queue.hold === null ? undefined : resumeTimeText(new Date(queue.hold.resumesAt));
   return queue.ready
     .filter((capture) => capture.videoId !== makingId)

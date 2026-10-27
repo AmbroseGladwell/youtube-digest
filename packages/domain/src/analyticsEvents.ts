@@ -540,7 +540,10 @@ export const analyticsEvents = {
         plan: z.enum([...Plan.options, "signedOut"]),
         from: GenerateSurface,
       }),
-      wayChosen: event("The reader takes a way round a limit from its message", { way: LimitWay, from: GenerateSurface }),
+      wayChosen: event("The reader takes a way round a limit from its message, or from the queue waiting at it", {
+        way: LimitWay,
+        from: z.enum([...GenerateSurface.options, "queueStrip", "queuePage"]),
+      }),
     },
     captureReason: {
       typed: event("The reader types why they saved an overview while it's made, once they stop; never the reason"),

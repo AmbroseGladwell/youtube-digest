@@ -9,12 +9,12 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
-import { nextQuotaOf, type NextQuota } from "./util/nextQuota.js";
+import { leftThisMonthOf, nextQuotaOf, type NextQuota, type NextQuotaContext } from "./util/nextQuota.js";
 
-// The quota the next overview will use, from the server's counts and the same key order a
+// What the month's counts mean for this device: the server's counts and the same key order a
 // run walks. Signed out it is the device's trial, where this shell has one, and nothing is
 // counted where it hasn't.
-export function useNextQuota(): NextQuota | null {
+function useQuotaContext(): NextQuotaContext | null {
   const readiness = useGenerationReadiness();
   const { apiKeys } = useApiKeys();
   const settings = useSettingsQuery().data;
@@ -32,12 +32,26 @@ export function useNextQuota(): NextQuota | null {
   });
 
   if (!signedIn && !accountsAvailable) return null;
-  return nextQuotaOf({
+  return {
     order,
     trial: signedIn ? null : { made: trial.made, total: TRIAL_OVERVIEWS },
     usage:
       usage.data !== undefined
         ? { status: "known", data: usage.data }
         : { status: usage.isError ? "unreachable" : "checking" },
-  });
+  };
+}
+
+// The quota the next overview will use.
+export function useNextQuota(): NextQuota | null {
+  const context = useQuotaContext();
+  return context === null ? null : nextQuotaOf(context);
+}
+
+// What's left this month on every key the next overviews could use, and when more come.
+export function useLeftThisMonth(): { left: number; resetsOn: string | null } | null {
+  const context = useQuotaContext();
+  const left = context === null ? null : leftThisMonthOf(context);
+  if (context === null || left === null) return null;
+  return { left, resetsOn: context.usage.status === "known" ? context.usage.data.resetsOn : null };
 }

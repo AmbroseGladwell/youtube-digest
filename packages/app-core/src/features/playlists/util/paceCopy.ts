@@ -1,5 +1,6 @@
 import { paceDailyLimit, type PlaylistPace } from "@overview/domain";
 import { formatCount } from "./tokenEstimate.js";
+import { resetDate } from "../../newOverview/util/usageLine.js";
 
 export const PACE_LABEL: Record<PlaylistPace, string> = {
   asTheyCome: "As they come",
@@ -71,4 +72,22 @@ export function paceFacts(pace: PlaylistPace, waiting: number): string {
 
 export function paceInASentence(pace: PlaylistPace): string {
   return PACE_IN_A_SENTENCE[pace];
+}
+
+// What the month's allowance means for a backfill it can't cover, before anything runs (95s,
+// and 95v with a pace). Null when it covers the lot, or when nothing here would spend it.
+export function allowanceLine(pace: PlaylistPace | null, toMake: number, left: number, resetsOn: string): string | null {
+  const limit = pace === null ? null : paceDailyLimit(pace);
+  if (limit === 0 || toMake <= left) return null;
+  const rest = formatCount(toMake - left);
+  const date = resetDate(resetsOn);
+  if (left === 0) {
+    return `Nothing is left of this month’s allowance, so all ${formatCount(toMake)} wait in the queue and carry on by themselves on ${date}.`;
+  }
+  if (limit === null) {
+    return `${formatCount(left)} of these ${formatCount(toMake)} can be made now: you have ${formatCount(left)} left this month. The other ${rest} wait in the queue and carry on by themselves on ${date}.`;
+  }
+  const days = Math.ceil(left / limit);
+  const span = days === 1 ? "today" : `the next ${formatCount(days)} days`;
+  return `Your allowance covers ${formatCount(left)} more this month. At ${limit} a day that’s ${span}; the other ${rest} wait for ${date}, then carry on at ${limit} a day.`;
 }
