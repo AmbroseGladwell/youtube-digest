@@ -1,4 +1,4 @@
-import type { KeySource } from "@overview/domain";
+import type { KeySource, Plan } from "@overview/domain";
 import type { NextQuota } from "./nextQuota.js";
 
 const LONG = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
@@ -15,25 +15,33 @@ const ON_KEY: Record<KeySource, string> = { ours: "on our key", own: "on your ow
 
 export interface UsageLine {
   parts: string[];
-  // Whether the line ends with Plan, a link to Settings › Plan. The panel leaves it out.
-  planLink: boolean;
+  // The link to Settings › Plan the line ends with, if any. The panel leaves it out, unless
+  // the line has a plan to mention.
+  link: "Plan" | "See plans" | null;
+}
+
+export interface UsageLineOptions {
+  narrow?: boolean;
+  plan?: Plan | null;
 }
 
 // Design 95b, and 95c where it's narrow, with the key order flipped for everyone but Plus
-// (decided on OV-131): only the quota the next overview will use.
-export function usageLineOf(next: NextQuota, narrow = false): UsageLine {
-  const planLink = !narrow;
+// (decided on OV-131): only the quota the next overview will use. Falling back to our key on
+// Free or BYO Plus, it mentions Plus once (95m): an upsell names only a plan that makes more
+// on the key this overview uses (decided on OV-131).
+export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: UsageLineOptions = {}): UsageLine {
+  const planLink = narrow ? null : "Plan";
   switch (next.kind) {
     case "checking":
-      return { parts: [`${narrow ? "Left" : "Overviews left"} this month: ${CHECKING}`], planLink };
+      return { parts: [`${narrow ? "Left" : "Overviews left"} this month: ${CHECKING}`], link: planLink };
     case "unreachable":
-      return { parts: ["Couldn't check what's left"], planLink };
+      return { parts: ["Couldn't check what's left"], link: planLink };
     case "trial": {
       const left = `${next.left} of ${next.total} trial overviews left`;
-      return { parts: narrow ? [left] : [left, "On either key"], planLink };
+      return { parts: narrow ? [left] : [left, "On either key"], link: planLink };
     }
     case "spent":
-      return { parts: ["None left this month", `More on ${resetDate(next.resetsOn, narrow)}`], planLink };
+      return { parts: ["None left this month", `More on ${resetDate(next.resetsOn, narrow)}`], link: planLink };
     case "quota": {
       const left = leftOf(next.left, next.limit);
       if (next.passedOver !== null) {
@@ -42,11 +50,16 @@ export function usageLineOf(next: NextQuota, narrow = false): UsageLine {
         const sentence = narrow
           ? `${spentKey === "ours" ? "Our key's" : "Your key's"} ${spentLimit} are made this month. This one ${uses}`
           : `This month's ${spentLimit} ${ON_KEY[spentKey]} are made, so this one ${uses}`;
-        return { parts: [sentence], planLink };
+        if (next.key === "ours" && plan !== "plus") {
+          return narrow
+            ? { parts: [`${sentence} Plus makes more on ours`], link: "Plan" }
+            : { parts: [sentence, "Plus makes more on our key."], link: "See plans" };
+        }
+        return { parts: [sentence], link: planLink };
       }
       return narrow
-        ? { parts: [`${left} ${ON_KEY[next.key]}`, `Resets ${resetDate(next.resetsOn, true)}`], planLink }
-        : { parts: [`${left} ${ON_KEY[next.key]} this month`, `Resets ${resetDate(next.resetsOn)}`], planLink };
+        ? { parts: [`${left} ${ON_KEY[next.key]}`, `Resets ${resetDate(next.resetsOn, true)}`], link: planLink }
+        : { parts: [`${left} ${ON_KEY[next.key]} this month`, `Resets ${resetDate(next.resetsOn)}`], link: planLink };
     }
   }
 }
