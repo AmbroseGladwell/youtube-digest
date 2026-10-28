@@ -14,7 +14,7 @@ const signedOutPanel = {
 };
 const { analyticsConsent: _neverAsked, ...signedOutPanelAnswered } = signedOutPanel;
 
-test("a new reader makes their first overview of the video the panel is beside, and lands on it signed in", async ({
+test("a new reader makes their first overview of the video the panel is beside, lands on it signed in, and is offered their AI", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -50,6 +50,9 @@ test("a new reader makes their first overview of the video the panel is beside, 
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
+  await launcher.onboardingNextSteps.verifyOffers(["ai"]);
+  await launcher.onboardingNextSteps.connectYourAi();
+  await launcher.settingsPage.verifySectionIsShown("connections");
   expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("Works in healthcare.");
   expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
 });

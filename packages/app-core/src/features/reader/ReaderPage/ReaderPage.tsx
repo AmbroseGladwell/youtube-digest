@@ -344,7 +344,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   />
                 )}
               />
-              {!isPanel && <OnboardingNextSteps overviewId={overview.id} />}
+              <OnboardingNextSteps overviewId={overview.id} />
               <RelatedByTag
                 tags={overviewTags(overviewQuery.data)}
                 related={relatedByTag(overviewQuery.data, readableEntries(libraryQuery.data ?? []))}

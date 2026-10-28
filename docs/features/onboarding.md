@@ -132,7 +132,8 @@ About you shows five chips of each group with More for the rest (46o).
 
 **The account is made with a code**, as the extension always signs in (`sign-in.md`): the
 link opens in the browser, which shows a code to type into the panel. Then the plan, and the
-overview on the panel's own reader. The next steps aren't offered in the panel.
+overview on the panel's own reader. Its next steps are Ask your AI alone: the panel is the
+extension already, so Save in one click has nothing to offer there.
 
 **Signed out once the device has had an account** (46q), the panel's home offers signing
 back in instead of Start: "Sign in to see your overviews", with Sign in first and Create an
