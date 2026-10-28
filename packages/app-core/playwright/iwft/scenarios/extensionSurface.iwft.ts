@@ -9,13 +9,17 @@ const API_KEYS = ANTHROPIC_KEY;
 test("the extension says its library is its own, where an empty shelf would otherwise be a mystery", async ({
   launcher,
 }) => {
-  const home = await launcher.launch({ surface: "extension", sync: true });
+  const home = await launcher.launch({ surface: "extension" });
   await home.verifyShowsFirstRunHero();
   await home.verifyShowsSeparateLibraryNote();
+});
+
+test("signed out, the extension's Settings says signing in keeps its library in step", async ({ launcher }) => {
+  await launcher.launch({ surface: "extension", sync: true });
 
   const settings = await (await launcher.appShell.openSettings()).openSection("account");
-  await settings.verifyRowReads("account", "Not signed in · this library stays here");
-  await settings.syncPanel.verifyHintReads(/^The extension keeps its own library until you sign in\./);
+  await settings.verifyRowReads("account", "Not signed in");
+  await settings.syncPanel.verifyHintReads(/^Sign in with your email, and the extension keeps your library in step/);
 });
 
 test("the web app, which has no second library to be confused with, says none of it", async ({

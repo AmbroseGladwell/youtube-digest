@@ -13,7 +13,7 @@ In order, each with the value its row shows:
 
 | Section | Route | Row value | Shown when |
 |---|---|---|---|
-| Account & sync | `/settings/account` | first name (or email) · the sync status line; signed out, "Not signed in · this library stays here" | the shell can sync |
+| Account & sync | `/settings/account` | first name (or email) · the sync status line; signed out, "Not signed in" | the shell can sync |
 | Plan | `/settings/plan` | Free or Plus | always |
 | API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
 | Connections | `/settings/connections` | "N connected" or "None", or "Sign in first" | the shell can sync |
@@ -88,10 +88,9 @@ pane, uses neither.
 
 - **"All overviews" stays on the main page.** The design draws no way back to the library,
   but Settings had one before and keeps it.
-- **The extension's separate-library note** is now the Account section's signed-out hint:
-  "The extension keeps its own library until you sign in." When the shell cannot sync, the
-  Account section is hidden and the note goes with it. The extension's home page still says
-  it.
+- **The extension's separate-library note** became the Account section's signed-out hint,
+  and went with OV-46: signed out there is no library to keep. The hint now says signing in
+  keeps the extension's library in step with the web app.
 - **About shows the build line and the privacy policy and terms links.** It is its own
   section so that it has room to grow.
 - **No screenshot tests.** The card asks for screenshots at 1200, 390 and 400×600, but this

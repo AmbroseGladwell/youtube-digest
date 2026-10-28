@@ -9,9 +9,9 @@ import {
 } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
+import { Routes } from "../../../src/app/Routes.js";
 
 const API_KEYS = ANTHROPIC_KEY;
-const SIGNED_OUT_HERE = { signedOutHere: true };
 
 const signedInAs = (accountId: string) => ({
   apiUrl: "https://sync.test",
@@ -69,7 +69,7 @@ test.describe("each account's library", () => {
 
     const menu = await launcher.appShell.accountMenu.open();
     await menu.chooseSignOut();
-    await launcher.signedOutLibrary.verifyIsShown();
+    await launcher.signedOutGate.verifyIsShown();
 
     await launcher.openSignInLink("the-token-from-the-email");
     const signedInAgain = await launcher.homePage.verifyShowsLibrary();
@@ -86,7 +86,7 @@ test.describe("each account's library", () => {
     await library.expectCardCountToBe(1);
     const menu = await launcher.appShell.accountMenu.open();
     await menu.chooseSignOut();
-    await launcher.signedOutLibrary.verifyIsShown();
+    await launcher.signedOutGate.verifyIsShown();
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -97,7 +97,7 @@ test.describe("each account's library", () => {
 
   test("signing in never syncs the library being left", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Made Before Signing In"));
-    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.launch({ sync: true });
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -107,99 +107,62 @@ test.describe("each account's library", () => {
   });
 });
 
-test.describe("signed out after having an account", () => {
-  // Design 47a.
-  test("the library says it is signed out, and that what it holds is in this browser", async ({
+// Signed out where there are accounts, no overview is shown anywhere, and every page that
+// would show one offers an account instead (docs/architecture/tiers.md, "Signed out").
+test.describe("signed out", () => {
+  test("the library shows none of the overviews on this device, only the ways to an account", async ({
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(titled("Made Since Signing Out"));
-    const library = await launcher.launchExpectingLibrary({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
+    backendSimulator.overviews.seed(titled("Made Before This Change"));
+    await launcher.launch({ sync: true, apiKeys: API_KEYS });
 
-    await launcher.accountStrip.verifySaysSignedOut();
-    await library.verifyCountReads("1 overview in this browser · 1 unread");
-    await launcher.appShell.accountMenu.verifyTriggerLabel("Account, signed out");
+    await launcher.signedOutGate.verifyIsShown();
+    await launcher.appShell.verifyNewOverviewButtonIsAbsent();
+    await launcher.signedOutGate.chooseCreateAccount();
+
+    await launcher.signInPage.verifyAsksForEmail("Create your account");
   });
 
-  test("the strip's Sign in goes to signing in", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(titled("Made Since Signing Out"));
-    await launcher.launchExpectingLibrary({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
+  test("an overview's own address shows the ways to an account, not the overview", async ({ launcher, backendSimulator }) => {
+    const overview = titled("Not To Be Read Signed Out");
+    backendSimulator.overviews.seed(overview);
+    await launcher.launch({ sync: true });
 
-    await launcher.accountStrip.chooseAction();
+    await launcher.openPage(Routes.overview(overview.id));
+
+    await launcher.signedOutGate.verifyIsShown();
+    await launcher.readerPage.verifyIsNotShown();
+  });
+
+  test("Sign in goes to signing in", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+
+    await launcher.signedOutGate.chooseSignIn();
 
     await launcher.signInPage.verifyAsksForEmail("Sign in");
   });
 
-  // Design 47b: not a route, the library at / when it is empty.
-  test("an empty library says the account's overviews are safe, and still takes a link", async ({ launcher }) => {
-    await launcher.launch({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE, apiKeys: API_KEYS });
-
-    await launcher.signedOutLibrary.verifyIsShown();
-    await launcher.signedOutLibrary.verifyOffersAVideo(true);
-    await launcher.accountStrip.verifyIsAbsent();
-  });
-
-  test("without keys the empty library offers no link it couldn't use", async ({ launcher }) => {
-    await launcher.launch({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
-
-    await launcher.signedOutLibrary.verifyIsShown();
-    await launcher.signedOutLibrary.verifyOffersAVideo(false);
-  });
-
-  // Design 47g.
-  test("Settings says where the overviews are saved and offers both ways in", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(titled("One"));
-    backendSimulator.overviews.seed(titled("Two"));
-    await launcher.launch({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
+  test("Settings stays open, and says no one is signed in", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
     const settings = await launcher.appShell.openSettings();
 
-    await settings.verifyRowReads("account", "Signed out · saved in this browser");
-    await settings.openSection("account");
-    await settings.syncPanel.verifyHintReads(
-      /^2 Overviews are only saved in this browser\. Sign in or create an account to sync them/,
-    );
+    await settings.verifyRowReads("account", "Not signed in");
   });
 
-  test("the panel carries the strip above its offer", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(titled("Made Since Signing Out"));
-    await launcher.launchPanel({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
+  test("the panel shows only the ways to an account", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(titled("Made Before This Change"));
+    await launcher.launchPanel({ sync: true, apiKeys: API_KEYS });
 
-    await launcher.accountStrip.verifySaysSignedOut();
+    await launcher.signedOutGate.verifyIsShown();
   });
-});
 
-// Design 47c: a reader who never had an account is offered one, and can turn it down.
-test.describe("never signed in", () => {
-  test("the library offers an account, and turning it down keeps it gone", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("a shell that cannot sync has no account to offer, and keeps its library", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Mine"));
-    const library = await launcher.launchExpectingLibrary({ sync: true });
-    await launcher.accountStrip.verifyOffersAnAccount();
-    await library.verifyCountReads("1 overview · 1 unread");
+    const library = await launcher.launchExpectingLibrary();
 
-    await launcher.accountStrip.dismiss();
-
-    await launcher.accountStrip.verifyIsAbsent();
-    test
-      .expect(await page.evaluate(() => localStorage.getItem("overview.deviceAccountHistory.v1")))
-      .toContain('"offerDismissed":true');
-  });
-
-  test("the empty first-run page offers nothing but the link", async ({ launcher }) => {
-    await launcher.launch({ sync: true });
-
-    await launcher.homePage.verifyShowsFirstRunHero();
-    await launcher.accountStrip.verifyIsAbsent();
-  });
-
-  test("a shell that cannot sync offers no account", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(titled("Mine"));
-    await launcher.launchExpectingLibrary();
-
-    await launcher.accountStrip.verifyIsAbsent();
+    await library.expectCardCountToBe(1);
+    await launcher.signedOutGate.verifyIsNotShown();
   });
 });
 
@@ -221,7 +184,7 @@ test.describe("signing out", () => {
 
     await menu.chooseSignOut();
 
-    await launcher.signedOutLibrary.verifyIsShown();
+    await launcher.signedOutGate.verifyIsShown();
     await launcher.signOutNotice.verifyIsAbsent();
     test
       .expect(signOutsCounted(backendSimulator))
@@ -254,7 +217,7 @@ test.describe("signing out", () => {
 // Design 47f: after a sign-in, until the account's first cycle is done.
 test("signing in opens the account's library behind its skeleton", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_CHANGES);
-  await launcher.launch({ sync: true, deviceAccountHistory: SIGNED_OUT_HERE });
+  await launcher.launch({ sync: true });
 
   await launcher.openSignInLink("the-token-from-the-email");
 
@@ -271,7 +234,7 @@ test.describe("the move on sign-in", () => {
     backendSimulator.overviews.seed(ofVideo("only-here"));
     backendSimulator.overviews.seed(ofVideo("in-both"));
     backendSimulator.sync.seedChange(inTheAccount(1, ofVideo("in-both")));
-    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.launch({ sync: true });
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -290,7 +253,7 @@ test.describe("the move on sign-in", () => {
   test("never says added when the account had everything already", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(ofVideo("in-both"));
     backendSimulator.sync.seedChange(inTheAccount(1, ofVideo("in-both")));
-    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.launch({ sync: true });
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -312,7 +275,7 @@ test.describe("the move on sign-in", () => {
   test("waits for the account to be pulled, rather than moving blind", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(ofVideo("only-here"));
     backendSimulator.simulateEndpointError(EndpointKey.SYNC_CHANGES);
-    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.launch({ sync: true });
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -323,7 +286,7 @@ test.describe("the move on sign-in", () => {
 
   test("the notice can be closed, and closing it is counted", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(ofVideo("only-here"));
-    await launcher.launchExpectingLibrary({ sync: true });
+    await launcher.launch({ sync: true });
     await launcher.openSignInLink("the-token-from-the-email");
     await launcher.libraryMoveNotice.verifyReads("1 Overview added to your account.", null);
 

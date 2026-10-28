@@ -327,8 +327,7 @@ stays signed out and why. A spent, expired or unknown link asks for the address 
 the same page. Any other failure is the dead-end screen with Try again.
 
 **Settings, signed out.** The Sync section points at the two pages rather than being a
-second place to ask for a link. Once this device has signed out of an account, it says how
-many overviews are saved only here instead (`docs/features/account-libraries.md`, 47g).
+second place to ask for a link.
 
 **Settings, signed in.** `Signed in as …`, the one status line sync already had,
 `Sync now` and `Sign out`. When the server no longer knows the session the line says

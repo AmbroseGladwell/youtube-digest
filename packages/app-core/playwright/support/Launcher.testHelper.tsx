@@ -25,12 +25,7 @@ import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper
 import { SharedOverviewPageObject } from "../pageObjects/SharedOverviewPageObject.testHelper.js";
 import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js";
 import { Routes } from "../../src/app/Routes.js";
-import {
-  NO_ACCOUNT_HISTORY,
-  type DeviceAccountHistory,
-} from "../../src/features/accountLibraries/types/DeviceAccountHistory.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
-import { AccountStripPageObject } from "../pageObjects/AccountStripPageObject.testHelper.js";
 import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
 import { AnalyticsConsentNoticePageObject } from "../pageObjects/AnalyticsConsentNoticePageObject.testHelper.js";
 import { AnalyticsConsentPromptPageObject } from "../pageObjects/AnalyticsConsentPromptPageObject.testHelper.js";
@@ -38,7 +33,7 @@ import { makeAnalyticsConsent } from "../../src/features/analyticsConsent/types/
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
-import { SignedOutLibraryPageObject } from "../pageObjects/SignedOutLibraryPageObject.testHelper.js";
+import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
 import type { ModelByProvider, Provider } from "@overview/domain";
 
@@ -48,9 +43,7 @@ export interface LaunchOptions {
   sync?: boolean;
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
-  // Whether this device has signed out of an account before, or turned down the offer of one.
-  deviceAccountHistory?: Partial<DeviceAccountHistory>;
-  // How many overviews this device has made signed out, and the trial token it holds.
+  // The trial token this device holds signed out.
   signedOutTrial?: SignedOutTrial;
   // What this device said about sharing usage. Absent is a "no" already given, so a
   // scenario about something else isn't asked; null is a device that has never been asked.
@@ -96,13 +89,25 @@ export class Launcher {
   launchPanel = (options: LaunchOptions = {}): Promise<CapturePageObject> =>
     test.step("Launcher.launchPanel", async () => {
       await this.mountApp({ ...options, layout: "panel", surface: options.surface ?? "extension" });
-      return new CapturePageObject(this.testContext).verifyIsShown();
+      const capture = new CapturePageObject(this.testContext);
+      if (options.sync === true && !options.syncConnection?.apiUrl) {
+        await this.signedOutGate.verifyIsShown();
+        return capture;
+      }
+      return capture.verifyIsShown();
     });
 
   launch = (options: LaunchOptions = {}): Promise<HomePageObject> =>
     test.step("Launcher.launch", async () => {
       await this.mountApp(options);
-      return new HomePageObject(this.testContext).verifyIsShown();
+      const home = new HomePageObject(this.testContext);
+      // Signed out where there are accounts, home is the way to one rather than a library
+      // (docs/architecture/tiers.md, "Signed out").
+      if (options.sync === true && !options.syncConnection?.apiUrl) {
+        await this.signedOutGate.verifyIsShown();
+        return home;
+      }
+      return home.verifyIsShown();
     });
 
   // A launch below the server's write floor: the wall takes the place of the page once the
@@ -142,7 +147,6 @@ export class Launcher {
         syncAvailable: options.sync,
         syncConnection: options.syncConnection,
         pendingSignIn: options.pendingSignIn,
-        deviceAccountHistory: { ...NO_ACCOUNT_HISTORY, ...options.deviceAccountHistory },
         signedOutTrial: options.signedOutTrial,
         analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
         surface: options.surface,
@@ -241,10 +245,6 @@ export class Launcher {
     return new SignInPageObject(this.testContext);
   }
 
-  get accountStrip(): AccountStripPageObject {
-    return new AccountStripPageObject(this.testContext);
-  }
-
   get accountTermsLine(): AccountTermsLinePageObject {
     return new AccountTermsLinePageObject(this.testContext);
   }
@@ -265,8 +265,8 @@ export class Launcher {
     return new SignOutNoticePageObject(this.testContext);
   }
 
-  get signedOutLibrary(): SignedOutLibraryPageObject {
-    return new SignedOutLibraryPageObject(this.testContext);
+  get signedOutGate(): SignedOutGatePageObject {
+    return new SignedOutGatePageObject(this.testContext);
   }
 
   get openingLibrary(): OpeningLibraryPageObject {

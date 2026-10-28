@@ -38,6 +38,8 @@ export class ReaderPageObject extends PageObject {
       return this;
     });
 
+  verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(readerPageTestIds.root));
+
   verifyFromLine = (text: string | null, manage: boolean) =>
     this.step(`verifyFromLine ${text} ${manage}`, async () => {
       if (text === null) {

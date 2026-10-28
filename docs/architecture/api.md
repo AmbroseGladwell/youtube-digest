@@ -302,7 +302,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
-| `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token costs nothing until it makes an overview, which the 3 a day per address in Postgres counts (`tiers.md`, "Counting") |
+| `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token makes one overview, onboarding's, and costs nothing until it does; the 3 a day per address in Postgres counts those (`tiers.md`, "Counting") |
 | `playlistAddress` | 120 | hour, per address | `GET /api/playlists/:id`: each read spends YouTube Data API quota shared by every reader (`docs/features/playlists.md`) |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |

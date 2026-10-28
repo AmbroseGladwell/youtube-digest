@@ -38,10 +38,6 @@ export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: Us
       return { parts: [`${narrow ? "Left" : "Overviews left"} this month: ${CHECKING}`], link: planLink };
     case "unreachable":
       return { parts: ["Couldn't check what's left"], link: planLink };
-    case "trial": {
-      const left = `${next.left} of ${next.total} trial overviews left`;
-      return { parts: narrow ? [left] : [left, "On either key"], link: planLink };
-    }
     case "spent":
       return { parts: ["None left this month", `More on ${resetDate(next.resetsOn, narrow)}`], link: planLink };
     case "quota": {
@@ -74,9 +70,8 @@ export function planRowCount(next: NextQuota | null): string | null {
       return CHECKING;
     case "unreachable":
       return null;
-    case "trial":
     case "quota":
-      return leftOf(next.left, next.kind === "trial" ? next.total : next.limit);
+      return leftOf(next.left, next.limit);
     case "spent":
       return "None left this month";
   }

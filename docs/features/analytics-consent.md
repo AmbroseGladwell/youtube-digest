@@ -93,9 +93,9 @@ signed in, and never anywhere else: not on an overview, Settings, sign-in, the s
 the library at `/`. A shell with no server to send to asks nothing.
 
 **One strip at a time, highest first:** the generation strip; the move notice (47e), which
-is signed in only and so never meets the prompt; the prompt, then its notice; the
-signed-out strip (47a) or the account offer (47c). The prompt outranks 47a and 47c because
-it holds back data until answered. 47c doesn't count as dismissed while it waits.
+is signed in only and so never meets the prompt; the prompt, then its notice. The
+signed-out strip (47a) and the account offer (47c) that sat below it went with OV-46, since
+signed out shows no library. On the panel the prompt sits above the page shown signed out.
 
 **The prompt is a region, not a dialog.** It has no ×: ignoring it collects nothing, and
 "Don't share" is how it goes away. The two answers are the same pill, size and weight, and

@@ -9,19 +9,8 @@ describe("limitMessageOf", () => {
     expect(
       limitMessageOf({ kind: "quota", key: "own", left: 1, limit: 10, resetsOn: "2026-11-01", passedOver: null }, "free"),
     ).toBeNull();
-    expect(limitMessageOf({ kind: "trial", left: 1, total: 3 }, "free")).toBeNull();
     expect(limitMessageOf({ kind: "checking" }, "free")).toBeNull();
     expect(limitMessageOf(null, "free")).toBeNull();
-  });
-
-  it("offers only an account once the trial is spent, since no key gets round it", () => {
-    expect(limitMessageOf({ kind: "trial", left: 0, total: 3 }, "free")).toEqual({
-      quota: "trial",
-      made: "3 trial overviews",
-      title: "You've used your 3 trial overviews",
-      body: "A free account makes 5 a month on us, syncs them to every device and reads them aloud.",
-      actions: ["createAccount"],
-    });
   });
 
   it("on Free with no key, offers a key or Plus once ours is spent", () => {

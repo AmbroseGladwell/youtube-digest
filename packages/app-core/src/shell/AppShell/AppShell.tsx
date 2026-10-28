@@ -7,14 +7,13 @@ import { OverviewMark } from "../../components/shared/OverviewMark/OverviewMark.
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
-import { AccountStrip } from "../../features/accountLibraries/components/AccountStrip/AccountStrip.js";
+import { SignedOutGate } from "../../features/accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { LibraryMoveNotice } from "../../features/accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
 import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
 import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
-import { useAccountStripKind } from "../../features/accountLibraries/useAccountStripKind.js";
+import { useAccountNeeded } from "../../features/accountLibraries/useAccountNeeded.js";
 import { AnalyticsConsentStripSlot } from "../../features/analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
 import { useAnalyticsConsentStrip } from "../../features/analyticsConsent/useAnalyticsConsentStrip.js";
-import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
@@ -52,9 +51,13 @@ export function AppShell() {
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
   const onHome = pathname === Routes.home();
-  const heldHere = useOverviewsWithStateQuery().data?.length ?? null;
-  const accountStrip = useAccountStripKind(onHome && !isPanel ? heldHere : null);
+  // Signed out where there are accounts, every page that would show an overview shows the
+  // way to an account instead (docs/architecture/tiers.md, "Signed out").
+  const accountNeeded = useAccountNeeded();
+  const gated =
+    accountNeeded && (onHome || pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
   const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel);
+  const panelConsentStrip = useAnalyticsConsentStrip(gated && isPanel);
   const libraryMoved = useLibraryMove().move !== null;
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
@@ -145,20 +148,22 @@ export function AppShell() {
                   </nav>
 
                   <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
-                    <button
-                      type="button"
-                      className={styles.newOverviewButton}
-                      onClick={() => {
-                        analytics.capture.newOverviewDialog.opened({ from: "newButton" });
-                        newOverview.open();
-                      }}
-                      aria-haspopup="dialog"
-                      aria-expanded={newOverview.dialogOpen}
-                      data-testid={appShellTestIds.newOverviewButton}
-                    >
-                      <StrokeIcon name="plus" />
-                      New
-                    </button>
+                    {!accountNeeded && (
+                      <button
+                        type="button"
+                        className={styles.newOverviewButton}
+                        onClick={() => {
+                          analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                          newOverview.open();
+                        }}
+                        aria-haspopup="dialog"
+                        aria-expanded={newOverview.dialogOpen}
+                        data-testid={appShellTestIds.newOverviewButton}
+                      >
+                        <StrokeIcon name="plus" />
+                        New
+                      </button>
+                    )}
                     <AccountMenu />
                   </span>
                   {onAuthPage && (
@@ -204,16 +209,23 @@ export function AppShell() {
               !newOverview.run &&
               (libraryMoved ? (
                 <LibraryMoveNotice />
-              ) : consentStrip !== null ? (
-                <AnalyticsConsentStripSlot strip={consentStrip} />
               ) : (
-                accountStrip !== null && <AccountStrip kind={accountStrip} />
+                consentStrip !== null && <AnalyticsConsentStripSlot strip={consentStrip} />
               ))
             )}
           </header>
 
           <div className={styles.pane} data-testid={appShellTestIds.pane}>
-            {belowWriteFloor ? <WriteFloorWall generating={newOverview.run !== null} /> : <Outlet />}
+            {belowWriteFloor ? (
+              <WriteFloorWall generating={newOverview.run !== null} />
+            ) : gated ? (
+              <>
+                {panelConsentStrip !== null && <AnalyticsConsentStripSlot strip={panelConsentStrip} panel />}
+                <SignedOutGate panel={isPanel} />
+              </>
+            ) : (
+              <Outlet />
+            )}
           </div>
 
           <MiniPlayer />
@@ -222,7 +234,7 @@ export function AppShell() {
 
           <ScrollRestoration />
 
-          {!isPanel && (
+          {!isPanel && !accountNeeded && (
             <NewOverviewDialog
               open={newOverview.dialogOpen}
               prefill={newOverview.prefill}

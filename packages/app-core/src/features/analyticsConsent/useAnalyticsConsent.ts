@@ -9,7 +9,7 @@ export interface AnalyticsConsentState {
   justAnswered: ConsentAnswer | null;
 }
 
-// One shared snapshot, as useDeviceAccountHistory keeps: the prompt writes it, and the
+// One shared snapshot, as useSyncConnection keeps: the prompt writes it, and the
 // analytics queue has to see a yes before the event recording it is sent.
 const listeners = new Set<() => void>();
 let snapshot: AnalyticsConsentState | null = null;

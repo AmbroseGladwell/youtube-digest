@@ -101,16 +101,15 @@ forgives a caller, but a reset budget would spend real money twice.
 
 **Transcripts from our server are part of an overview, not a quota of their own** (decided
 6 Oct 2026, OV-107). A fetch is allowed while the reader has an overview left: on either key
-this month for an account (`tiers.md`), or in the trial when signed out. Readers only ever
+this month for an account (`tiers.md`), or for onboarding's overview when signed out. Readers only ever
 see the overview count. For an account the check is made before anything else: with no
 overview left on either key this month the answer is `429 too_many_requests` with
 `details.quota: "overviews"`, `details.resetsOn` and a `Retry-After` at the month's turn, and
 the server logs `service transcript refused for spent overviews` (OV-102). Signed out, a
-device sends its trial token (`X-Trial-Token`), and once that token has made the trial's 3 on
-our key the answer is `429` with `details.quota: "trial"`, logged as `service transcript
-refused for a spent trial` (OV-103). An own-key overview signed out then gets its transcript
-from the extension or the shared cache. A device that has never made one on our key has no
-token, and the safety cap below is its gate; the device's own count stops it at 3.
+device sends its trial token (`X-Trial-Token`), and once that token has made its one overview
+on our key the answer is `429` with `details.quota: "trial"`, logged as `service transcript
+refused for a spent trial` (OV-103). A device that has never made one has no token, and the
+safety cap below is its gate.
 
 **A daily safety cap per caller.** It protects our address's standing with YouTube, not our
 money, and sits well above normal use. Only a cold fetch that stored a transcript counts: a
@@ -128,7 +127,7 @@ started it holds a slot.
 
 Signed-out readers can use the rung
 (decided 5 Oct 2026), because a web reader with no account is exactly who has no other
-rung; signed out, our server fetches only for the trial's overviews. Their address is stored
+rung; signed out, our server fetches only for onboarding's overview. Their address is stored
 only as a truncated SHA-256, and per-caller rows are deleted after seven days. Past the cap,
 the answer is `429 too_many_requests` with `details.daily: true`, `details.retryAfterSeconds`
 and a `Retry-After` at UTC midnight, and the server logs `service transcript quota spent` at
