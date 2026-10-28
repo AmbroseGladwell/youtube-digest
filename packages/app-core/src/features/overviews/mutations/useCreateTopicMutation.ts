@@ -7,6 +7,7 @@ import { filedUnderTopic } from "../util/filedUnderTopic.js";
 
 export interface CreateTopicVariables {
   name: string;
+  description?: string;
   overviews: Overview[];
 }
 
@@ -17,12 +18,12 @@ export function useCreateTopicMutation() {
 
   return useMutation<Topic, Error, CreateTopicVariables>({
     mutationKey: overviewKeys.all,
-    mutationFn: async ({ name, overviews }) => {
+    mutationFn: async ({ name, description, overviews }) => {
       const trimmed = name.trim();
       const topics = await overviewStore.listTopics();
       const topic =
         topics.find((candidate) => sameTopicName(candidate.name, trimmed)) ??
-        (await overviewStore.createTopic({ name: trimmed }));
+        (await overviewStore.createTopic(description === undefined ? { name: trimmed } : { name: trimmed, description }));
 
       for (const overview of overviews) {
         await overviewStore.setOverviewTopics(overview.id, filedUnderTopic(overview, topic.id).topicIds);

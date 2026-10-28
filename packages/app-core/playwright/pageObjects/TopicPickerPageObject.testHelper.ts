@@ -35,6 +35,13 @@ export class TopicPickerPageObject extends PageObject {
   verifyOffersNoCreate = () =>
     this.step("verifyOffersNoCreate", () => this.expectNotToBeVisible(topicPickerTestIds.createOption));
 
+  verifyHint = (name: string, hint: string | null) =>
+    this.step(`verifyHint ${name} ${hint}`, () =>
+      hint === null
+        ? this.expectNotToBeVisible(topicPickerTestIds.optionHint(name))
+        : expect(this.get(topicPickerTestIds.optionHint(name))).toHaveText(hint),
+    );
+
   clickCreate = () => this.step("clickCreate", () => this.click(topicPickerTestIds.createOption));
 
   clickTopic = (name: string) =>

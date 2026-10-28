@@ -5,7 +5,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 
 const ENERGY = makeTopic({ name: "energy" });
-const POLITICS = makeTopic({ name: "politics" });
+const POLITICS = makeTopic({ name: "politics", description: "Government and public life, including economics." });
 const CLEAN_TECH = makeTopic({ name: "clean tech" });
 const NUCLEAR = makeTopic({ name: "nuclear" });
 
@@ -201,4 +201,13 @@ test("on a phone the same control arrives as a sheet, and Done closes it", async
 
   await picker.clickDone();
   await picker.verifyIsNotShown();
+});
+
+// Design 46r: a starter topic's description is a quiet hint; a topic made by hand has none.
+test("a topic with a description shows it as a hint under its name", async ({ launcher, backendSimulator }) => {
+  const { reader } = await openReader(launcher, backendSimulator);
+  const picker = await reader.editTopics();
+
+  await picker.verifyHint("politics", "Government and public life, including economics.");
+  await picker.verifyHint("energy", null);
 });

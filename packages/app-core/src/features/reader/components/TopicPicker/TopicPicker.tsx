@@ -144,15 +144,22 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
             disabled={busy}
             data-testid={topicPickerTestIds.option(topic.name)}
           >
-            <span className={styles.optionName}>
-              {selectedIds.has(topic.id) && (
-                <span className={styles.tick} aria-hidden="true">
-                  <StrokeIcon name="check" size={13} />
+            <span className={styles.optionText}>
+              <span className={styles.optionName}>
+                {selectedIds.has(topic.id) && (
+                  <span className={styles.tick} aria-hidden="true">
+                    <StrokeIcon name="check" size={13} />
+                  </span>
+                )}
+                {before}
+                <strong>{matched}</strong>
+                {after}
+              </span>
+              {topic.description !== null && (
+                <span className={styles.hint} data-testid={topicPickerTestIds.optionHint(topic.name)}>
+                  {topic.description}
                 </span>
               )}
-              {before}
-              <strong>{matched}</strong>
-              {after}
             </span>
             <span className={styles.count} data-testid={topicPickerTestIds.optionCount}>
               {countByTopic[topic.id] ?? 0}

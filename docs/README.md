@@ -156,6 +156,8 @@ Five folders, five different questions.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.
+- `onboarding.md` — OV-46: onboarding inside the first overview, the starter topics and their
+  descriptions, and what each of its stacked PRs settled.
 - `personalisation.md` — what an overview is made for: the reader context and section
   switches sent with every run, why reader context has no field yet, Settings ›
   Personalisation, and why a section switched off is left out of the prompt rather than
