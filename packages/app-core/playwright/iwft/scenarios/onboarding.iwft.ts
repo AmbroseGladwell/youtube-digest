@@ -1,6 +1,7 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { PSYCHOLOGY_URL, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { Routes } from "../../../src/app/Routes.js";
@@ -69,6 +70,10 @@ test("a new reader answers the questions while the overview is made, creates an 
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
+  await launcher.onboardingNextSteps.verifyOffers(["extension", "ai"]);
+  await launcher.onboardingNextSteps.verifyExtensionCantBeAddedYet();
+  await launcher.onboardingNextSteps.dismiss("extension");
+  await launcher.onboardingNextSteps.verifyOffers(["ai"]);
 
   const [made] = backendSimulator.ourKey.generations();
   expect(made?.input.readerContext).toBe("Works in healthcare, learning about cooking.");
@@ -257,4 +262,34 @@ test("going home in the middle carries on at the same screen", async ({ launcher
   await launcher.openPage(Routes.home());
 
   await onboarding.verifyOnScreen("topics");
+});
+
+test("the library marks the first overview with a milestone, which × hides", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview());
+  await launcher.launchExpectingLibrary({
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },
+  });
+
+  await launcher.firstOverviewMilestone.verifyIsShown();
+  await launcher.firstOverviewMilestone.dismiss();
+
+  await launcher.firstOverviewMilestone.verifyIsAbsent();
+  await expect
+    .poll(() => backendSimulator.analytics.eventNames())
+    .toEqual(expect.arrayContaining(["timeSaved.firstOverview.dismissed"]));
+});
+
+test("the next steps show only under the overview onboarding ended on", async ({ launcher, backendSimulator }) => {
+  const overview = makeOverview();
+  backendSimulator.overviews.seed(overview);
+  await launcher.launchExpectingLibrary({
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },
+  });
+
+  await launcher.openPage(Routes.overview(overview.id));
+
+  await launcher.readerPage.verifyIsShown();
+  await launcher.onboardingNextSteps.verifyIsAbsent();
 });

@@ -113,7 +113,11 @@ under them. Continue with Free waits until the move has brought the overview int
 then goes to it. "This overview counts as your first of the month."
 
 **The reveal is the overview's own page.** Onboarding forgets its progress and dismisses the
-move notice as it goes there.
+move notice as it goes there. Under the Verdict of that overview, and no other, the next
+steps (46l): Save in one click with Add to Chrome, which stays disabled until the extension
+is in the Web Store, and Ask your AI with Connect your AI, which opens Settings ›
+Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`).
+The library then shows the first-overview milestone (46m, `time-saved.md`).
 
 ## Into the account
 
@@ -129,12 +133,11 @@ analytics answer carries in as it always has.
 from; the video being the wrong one or another of a playlist's chosen; how many topics were
 picked and typed; how About you was made (a role, how many goals, their own words), never
 what it says; See your overview before the end; the overview failing, and on which screen, and
-being tried again; the way to an account; the plan; and the reveal. The run itself is counted
+being tried again; the way to an account; the plan; the reveal; and a next step followed or
+dismissed. The run itself is counted
 as `capture.newOverview.started` with `from: "onboarding"`.
 
 ## Not built yet
 
-- The reveal's next steps under the Verdict (46l) and the first-overview milestone (46m).
-- About you in Settings › Personalisation (46s).
 - The extension panel's version (46n–46q), which shows the gate until then.
 - "Try a sample", "Vote for what's next", the unsorted reveal prompt.

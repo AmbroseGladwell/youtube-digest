@@ -50,6 +50,8 @@ import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/Milest
 import { TimeSavedFigure } from "../../timeSaved/components/TimeSavedFigure/TimeSavedFigure.js";
 import { TimeSavedSheet } from "../../timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
+import { useFirstOverviewMilestone } from "../../timeSaved/useFirstOverviewMilestone.js";
+import { FirstOverviewMilestone } from "../../timeSaved/components/FirstOverviewMilestone/FirstOverviewMilestone.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { libraryCountLine } from "../util/libraryCountLine.js";
@@ -112,14 +114,18 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
+  const firstOverview = useFirstOverviewMilestone(readableEntries(entries).length);
   const milestoneStack = (
-    <MilestoneStack
-      milestones={milestones.visible}
-      minutes={timeSaved.minutes}
-      onLineChosen={milestones.lineChosen}
-      onDismiss={milestones.dismiss}
-      onUndo={milestones.undo}
-    />
+    <>
+      <MilestoneStack
+        milestones={milestones.visible}
+        minutes={timeSaved.minutes}
+        onLineChosen={milestones.lineChosen}
+        onDismiss={milestones.dismiss}
+        onUndo={milestones.undo}
+      />
+      {firstOverview.shown && <FirstOverviewMilestone onDismiss={firstOverview.dismiss} />}
+    </>
   );
 
   const entering = useEnteringOverviewIds(entries.map(libraryEntryId));

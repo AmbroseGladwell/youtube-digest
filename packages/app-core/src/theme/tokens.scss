@@ -76,6 +76,9 @@
 
   // The ten time-saved milestones ("OV-34 2 Milestones" 34za): a tint for the card, a
   // ring for its pill and a deeper step for the pill's label on the light ground.
+  --milestone-first-tint: #eeebe5;
+  --milestone-first-ring: #3a3835;
+  --milestone-first-ink: #24221f;
   --milestone-30m-tint: #f8f2e6;
   --milestone-30m-ring: #c8902e;
   --milestone-30m-ink: #7e5610;
@@ -141,6 +144,9 @@
   --shadow-dialog: 0 24px 60px rgba(0, 0, 0, 0.6);
   --shadow-menu: 0 12px 32px rgba(0, 0, 0, 0.55);
 
+  --milestone-first-tint: #2c2b29;
+  --milestone-first-ring: #d9d4cb;
+  --milestone-first-ink: #d9d4cb;
   --milestone-30m-tint: #3d362a;
   --milestone-30m-ring: #e0b054;
   --milestone-30m-ink: #e0b054;

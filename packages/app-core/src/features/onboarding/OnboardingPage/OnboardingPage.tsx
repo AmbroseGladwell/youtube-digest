@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ONBOARDING_STEPS,
+  OverviewId,
   sameTopicName,
   STARTER_TOPICS,
   type AuthIntent,
@@ -37,6 +38,7 @@ import { OnboardingTopics } from "../components/OnboardingTopics/OnboardingTopic
 import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
 import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
 import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingProgressStorage.js";
+import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRun } from "../useOnboardingRun.js";
 import styles from "./OnboardingPage.module.scss";
@@ -117,6 +119,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({ way: progress.way ?? "signIn" });
     libraryMove.dismiss();
+    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [] });
     void navigate(Routes.overview(overviewId), { replace: true });
     writeOnboardingProgress(null);
   };

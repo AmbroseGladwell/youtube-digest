@@ -60,11 +60,15 @@ export function sharedLinksRowValue(count: number): string {
   return count === 1 ? "1 shared" : `${count} shared`;
 }
 
-export function personalisationRowValue(sectionsEnabled: SectionsEnabled): string {
+export function personalisationRowValue(sectionsEnabled: SectionsEnabled, readerContext: string | null): string {
   const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
-  if (on === OVERVIEW_SECTIONS.length) return "Every section";
-  if (on === 0) return "Summary and key points only";
-  return `${on} of ${OVERVIEW_SECTIONS.length} sections`;
+  const sections =
+    on === OVERVIEW_SECTIONS.length
+      ? "Every section"
+      : on === 0
+        ? "Summary and key points only"
+        : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
+  return `${readerContext ?? "About you not set"} · ${sections}`;
 }
 
 export function milestonesRowValue(minutes: number): string {

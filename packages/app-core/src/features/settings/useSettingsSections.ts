@@ -116,7 +116,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     {
       id: "personalisation",
       title: "Personalisation",
-      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED),
+      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.readerContext ?? null),
     },
     {
       id: "milestones",

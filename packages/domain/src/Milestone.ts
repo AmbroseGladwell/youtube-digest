@@ -35,6 +35,10 @@ export type MilestoneMark = z.infer<typeof MilestoneMark>;
 export const MilestoneMarks = z.record(z.string(), MilestoneMark);
 export type MilestoneMarks = z.infer<typeof MilestoneMarks>;
 
+// The first-overview milestone (design 46m), kept among the marks under a key of its own: it
+// is counted in overviews rather than minutes, and gives way to the first time milestone.
+export const FIRST_OVERVIEW_MARK = "firstOverview";
+
 // How a reader moved a milestone card to another line, for analytics.
 export const MilestoneLineControl = z.enum(["swipe", "keys", "dot"]);
 export type MilestoneLineControl = z.infer<typeof MilestoneLineControl>;

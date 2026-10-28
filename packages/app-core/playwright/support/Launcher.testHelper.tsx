@@ -35,6 +35,8 @@ import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePag
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
+import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
+import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
 import type { ModelByProvider, Provider } from "@overview/domain";
 
@@ -263,6 +265,14 @@ export class Launcher {
 
   get signOutNotice(): SignOutNoticePageObject {
     return new SignOutNoticePageObject(this.testContext);
+  }
+
+  get onboardingNextSteps(): OnboardingNextStepsPageObject {
+    return new OnboardingNextStepsPageObject(this.testContext);
+  }
+
+  get firstOverviewMilestone(): FirstOverviewMilestonePageObject {
+    return new FirstOverviewMilestonePageObject(this.testContext);
   }
 
   get onboardingPage(): OnboardingPageObject {

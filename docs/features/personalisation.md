@@ -15,13 +15,19 @@ on the reader's key and on us alike (`runOverviewGeneration` reads them from Set
 
 Both are settings, so they sync and follow the reader to every device.
 
-## Reader context has no field yet
+## About you
 
-Nothing in the apps writes `readerContext`, so it is `null` for every reader today and the
-prompt leaves the line out. How to ask for it isn't settled: a free-text "About you" field,
-picking from choices, a few guided questions, or inferring it from the library for readers
-who skip it. That choice is made with onboarding. Wherever it is asked, say that on us it
-goes through our server to OpenAI, as the Only ever use my key switch already does.
+The reader context is asked as **About you**: in onboarding (`onboarding.md`, design 46f),
+and above the section switches in Settings › Personalisation (46s). Both use the same
+chips: one thing the reader does and up to two things to get better at, which build a line
+("Works in healthcare, learning about cooking."), or their own words, at most 140
+characters (`settings/util/aboutYou.ts`). The line is what is saved and sent; the chips are
+not kept. Both places say that on us it goes through our server to OpenAI with each
+overview.
+
+In Settings it reads "Not set, so overviews are written for anyone." or the line, with Set
+up or Edit. Editing opens the chips and the line in place; Done saves, Clear sets it back to
+none.
 
 ## Settings › Personalisation
 
@@ -47,5 +53,6 @@ written.
 
 ## Analytics
 
-`settings.personalisation.sectionSwitched` with the section and whether it is now on. The
-reader context's text is never logged.
+`settings.personalisation.sectionSwitched` with the section and whether it is now on, and
+`settings.personalisation.aboutYouSaved` with whether it is now set. The reader context's
+text is never logged.

@@ -136,6 +136,15 @@ seconds; the current dot stretches into a bar that fills meanwhile. Hovering or 
 card holds the line. A swipe, the arrow keys or a dot moves to another. Part 4 asks for the
 facts to be checked before shipping.
 
+## The first overview
+
+**A milestone before 30 minutes** (OV-46, design 46m): once the library holds an overview,
+the rail on a wide screen and the top of the list on a phone show "First overview · 1 made",
+"Read it and we'll start counting the time you save.", in stone, the one hue the ten time
+milestones don't use. × hides it, recorded among the marks as `firstOverview` so it holds
+on every device; the first time milestone takes its place; and it hides with the rest when
+milestone cards are switched off. Settings › Milestones doesn't list it.
+
 ## Motion
 
 Every animation goes through `theme/global.scss`'s reduced-motion rule, and the two driven
