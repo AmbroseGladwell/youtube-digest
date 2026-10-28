@@ -156,6 +156,10 @@ Five folders, five different questions.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.
+- `personalisation.md` — what an overview is made for: the reader context and section
+  switches sent with every run, why reader context has no field yet, Settings ›
+  Personalisation, and why a section switched off is left out of the prompt rather than
+  hidden.
 - `plus-upsell.md` — the three places Plus is sold, why the plan is a local placeholder,
   and why Settings has no upgrade button.
 - `reading-position.md` — the transcript tab opening where you had got to, per video:

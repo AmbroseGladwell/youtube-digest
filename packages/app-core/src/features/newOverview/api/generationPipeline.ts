@@ -1,5 +1,4 @@
 import {
-  DEFAULT_SECTIONS_ENABLED,
   OverviewId,
   tagUsage,
   type CaptureTranscriptSource,
@@ -81,8 +80,8 @@ export async function runOverviewGeneration(
       video,
       transcript,
       captureReason: null,
-      readerContext: null,
-      sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
+      readerContext: settings.readerContext,
+      sectionsEnabled: settings.sectionsEnabled,
       existingTopics,
       pastClaims,
       existingTags,

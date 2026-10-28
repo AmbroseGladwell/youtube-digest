@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { SHARE_PAYLOAD_ELEMENT_ID, type MilestoneMarks, type NarrationVoice, type Plan } from "@overview/domain";
+import { SHARE_PAYLOAD_ELEMENT_ID, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -72,6 +72,8 @@ export interface LaunchOptions {
   milestones?: MilestoneMarks;
   showMilestoneCards?: boolean;
   onlyMyKey?: boolean;
+  readerContext?: string;
+  sectionsEnabled?: SectionsEnabled;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -133,6 +135,8 @@ export class Launcher {
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
           ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
+          ...(options.readerContext === undefined ? {} : { readerContext: options.readerContext }),
+          ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
         },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,

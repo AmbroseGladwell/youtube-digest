@@ -1,4 +1,4 @@
-import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
@@ -35,6 +35,7 @@ import {
   accountRowValue,
   keysRowValue,
   milestonesRowValue,
+  personalisationRowValue,
   sharedLinksRowValue,
   voiceRowValue,
 } from "./util/settingsRowValues.js";
@@ -116,6 +117,11 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
+    {
+      id: "personalisation",
+      title: "Personalisation",
+      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED),
+    },
     {
       id: "milestones",
       title: "Milestones",
