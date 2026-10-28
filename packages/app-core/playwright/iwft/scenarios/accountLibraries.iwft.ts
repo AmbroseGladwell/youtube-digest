@@ -69,7 +69,7 @@ test.describe("each account's library", () => {
 
     const menu = await launcher.appShell.accountMenu.open();
     await menu.chooseSignOut();
-    await launcher.signedOutGate.verifyIsShown();
+    await launcher.homePage.verifyShowsStart();
 
     await launcher.openSignInLink("the-token-from-the-email");
     const signedInAgain = await launcher.homePage.verifyShowsLibrary();
@@ -86,7 +86,7 @@ test.describe("each account's library", () => {
     await library.expectCardCountToBe(1);
     const menu = await launcher.appShell.accountMenu.open();
     await menu.chooseSignOut();
-    await launcher.signedOutGate.verifyIsShown();
+    await launcher.homePage.verifyShowsStart();
 
     await launcher.openSignInLink("the-token-from-the-email");
 
@@ -110,15 +110,18 @@ test.describe("each account's library", () => {
 // Signed out where there are accounts, no overview is shown anywhere, and every page that
 // would show one offers an account instead (docs/architecture/tiers.md, "Signed out").
 test.describe("signed out", () => {
-  test("the library shows none of the overviews on this device, only the ways to an account", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("home is onboarding's Start, showing none of the overviews on this device", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Made Before This Change"));
-    await launcher.launch({ sync: true, apiKeys: API_KEYS });
+    const home = await launcher.launch({ sync: true, apiKeys: API_KEYS });
 
-    await launcher.signedOutGate.verifyIsShown();
+    await home.verifyShowsStart();
     await launcher.appShell.verifyNewOverviewButtonIsAbsent();
+  });
+
+  test("Create an account goes to creating an account", async ({ launcher }) => {
+    await launcher.launch({ sync: true });
+    await launcher.openPage(Routes.queue());
+
     await launcher.signedOutGate.chooseCreateAccount();
 
     await launcher.signInPage.verifyAsksForEmail("Create your account");
@@ -137,6 +140,7 @@ test.describe("signed out", () => {
 
   test("Sign in goes to signing in", async ({ launcher }) => {
     await launcher.launch({ sync: true });
+    await launcher.openPage(Routes.queue());
 
     await launcher.signedOutGate.chooseSignIn();
 
@@ -184,7 +188,7 @@ test.describe("signing out", () => {
 
     await menu.chooseSignOut();
 
-    await launcher.signedOutGate.verifyIsShown();
+    await launcher.homePage.verifyShowsStart();
     await launcher.signOutNotice.verifyIsAbsent();
     test
       .expect(signOutsCounted(backendSimulator))

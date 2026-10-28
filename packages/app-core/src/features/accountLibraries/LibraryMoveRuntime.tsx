@@ -7,9 +7,11 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { topicKeys } from "../overviews/topicKeys.js";
+import { settingsKeys } from "../settings/settingsKeys.js";
 import { useSync } from "../sync/SyncContext.js";
 import { moveReadingPositions } from "../transcripts/readingPositionStorage.js";
 import { LibraryMoveProvider } from "./LibraryMoveContext.js";
+import { moveAnswersInto } from "./moveAnswersInto.js";
 import { moveFollowingInto } from "./moveFollowingInto.js";
 import { moveLibraryInto } from "./moveLibraryInto.js";
 import { playlistKeys } from "../playlists/playlistKeys.js";
@@ -17,7 +19,7 @@ import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 import type { LibraryMove } from "./types/LibraryMove.js";
 
 // Signed in, once the account's library has pulled, what this device made without an
-// account moves into it, one overview per video. It runs on every start that finds the
+// account moves into it, one overview per video, along with what onboarding asked. It runs on every start that finds the
 // no-account library holding something, which is also how a move that stopped is finished
 // (docs/features/account-libraries.md, "The move on sign-in").
 export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
@@ -38,6 +40,9 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
     void (async () => {
       const left = await openLibrary(null, { shown: false });
       try {
+        await moveAnswersInto(left.stores, stores);
+        void queryClient.invalidateQueries({ queryKey: topicKeys.all });
+        void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
         const result = await moveLibraryInto(left.stores, stores);
         if ((await moveFollowingInto(left.stores, stores)).playlists > 0) {
           void queryClient.invalidateQueries({ queryKey: playlistKeys.all });

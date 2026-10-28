@@ -15,21 +15,11 @@ const storedConsent = (page: import("@playwright/test").Page) =>
 // Design 62: a reader without an account is asked, once, whether to share usage, and
 // nothing is sent for them until they say yes (docs/features/analytics-consent.md).
 test.describe("asking a reader without an account", () => {
-  // Design 62a.
-  test("the library asks, says what is counted, and sends nothing while it waits", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  // Design 46b: signed out on the web, home is onboarding's Start, which asks on its own screen.
+  test("Start asks nothing in the strip, and sends nothing", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, ...NEVER_ASKED });
 
-    await launcher.analyticsConsentPrompt.verifyAsksFirst();
-    await launcher.analyticsConsentPrompt.verifyPrivacyLink(/\/privacy$/, false);
-    await launcher.analyticsConsentPrompt.verifyAnswersLookAlike();
-
-    await launcher.appShell.openSettings();
-    await launcher.appShell.clickBrand();
-
-    await launcher.analyticsConsentPrompt.verifyAsksFirst();
+    await launcher.analyticsConsentPrompt.verifyIsAbsent();
     test.expect(backendSimulator.analytics.batches()).toEqual([]);
   });
 

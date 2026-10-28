@@ -119,8 +119,11 @@ the note.
 
 ## Signed out
 
-Narration needs an account, so without one there is nothing to choose a voice for. The picker
-and its Settings section hide themselves (`CLAUDE.md`, "degrade visibly"). If the samples fail to
+Narration needs an account, so without one there is nothing to narrate. Onboarding asks for
+the voice before the account exists, so its screen hands the picker an API that only plays the
+samples, which the server serves to anyone; the choice is saved and moves into the account on
+sign-up (`docs/features/onboarding.md`). Elsewhere signed out, the picker and its Settings
+section hide themselves (`CLAUDE.md`, "degrade visibly"). If the samples fail to
 load, the play buttons go, the voices stay choosable, and "Try again" asks again (43d).
 
 ## Logging

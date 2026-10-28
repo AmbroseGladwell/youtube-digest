@@ -10,6 +10,7 @@ import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
+import { OnboardingStep } from "./OnboardingStep.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
 // that could carry a URL, a video id or a sentence the reader wrote
@@ -74,7 +75,7 @@ const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
-export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate"]);
+export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
 // Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
 export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service"]);
@@ -408,11 +409,57 @@ export const analyticsEvents = {
       dismissed: event("The reader closes the notice saying which overviews signing in added to the account"),
     },
   },
+  onboarding: {
+    start: {
+      linkSubmitted: event("A reader with no account gives the home page a link to start their first overview", {
+        kind: z.enum(["video", "playlist"]),
+      }),
+      linkRefused: event("A reader with no account gives the home page something that isn't a video or playlist link"),
+    },
+    step: {
+      shown: event("A screen of onboarding is shown", { step: OnboardingStep }),
+      skipped: event("The reader skips a screen of onboarding, which keeps its default", { step: OnboardingStep }),
+      backChosen: event("The reader goes back a screen in onboarding", { step: OnboardingStep }),
+    },
+    video: {
+      differentLinkChosen: event("The reader says the video found isn't the one they meant, and goes back to Start"),
+      differentVideoChosen: event("The reader starts a playlist's first overview from another of its videos"),
+    },
+    topics: {
+      continued: event("The reader leaves the topics screen: how many starter topics they picked and how many they typed", {
+        picked: z.number().int().nonnegative(),
+        typed: z.number().int().nonnegative(),
+      }),
+    },
+    aboutYou: {
+      continued: event("The reader leaves About you; never what it says, only how it was made", {
+        role: z.boolean(),
+        goals: z.number().int().nonnegative(),
+        ownWords: z.boolean(),
+      }),
+    },
+    overview: {
+      seenEarly: event("The reader follows See your overview before the questions are done", { step: OnboardingStep }),
+      failed: event("Onboarding's overview couldn't be made, and the screen the reader was on when it failed", {
+        step: OnboardingStep,
+      }),
+      retried: event("The reader tries onboarding's overview again after it failed"),
+    },
+    account: {
+      chosen: event("The reader picks how to get to the overview: a new account, or one they have", { way: AuthIntent }),
+    },
+    plan: {
+      chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),
+    },
+    finished: {
+      revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had", { way: AuthIntent }),
+    },
+  },
   analyticsConsent: {
     prompt: {
       accepted: event(
-        "A reader with no account agrees to share usage from the library's prompt, the first event they send; whether it was the first ask or an ask after what is counted changed",
-        { asked: z.enum(["first", "again"]) },
+        "A reader with no account agrees to share usage, the first event they send; whether it was the library's first ask, its ask after what is counted changed, or onboarding's screen",
+        { asked: z.enum(["first", "again", "onboarding"]) },
       ),
     },
     settings: {

@@ -106,6 +106,16 @@ policy. In the extension the link opens the web app's `/privacy` in a tab of its
 **After either answer (62c)** a notice says what was chosen and where to change it, and
 goes after ten seconds or with ×. The two answers get the same notice.
 
+## In onboarding
+
+Onboarding asks on its own screen, the second (design 46b), so a reader starting their first
+overview answers before anything is sent. The same two answers and the same record; the
+screen says what is counted, "which features are used, never what you read or watch", and
+links the privacy policy beside it. No Thanks is the skip. What happened since Start is held
+in memory, as above, and sent on Allow, whose `analyticsConsent.prompt.accepted` says
+`asked: "onboarding"`. A device that has answered already passes the screen by. The library's
+strip no longer asks a reader without an account, since signed out the web's home is Start.
+
 ## Settings › Privacy
 
 The seventh row, between Plan and About, shown whenever there is a server to send to. Its

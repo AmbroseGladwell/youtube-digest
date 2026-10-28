@@ -72,6 +72,7 @@ export * from "./overviewCorpus.js";
 export * from "./Topic.js";
 export * from "./topicMigrations.js";
 export * from "./starterTopics.js";
+export * from "./OnboardingStep.js";
 export * from "./OverviewState.js";
 export * from "./overviewStateMigrations.js";
 export * from "./Milestone.js";

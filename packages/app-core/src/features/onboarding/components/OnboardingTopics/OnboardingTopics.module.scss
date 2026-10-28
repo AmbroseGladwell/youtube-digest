@@ -1,0 +1,73 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../onboarding" as onboarding;
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.intro {
+  @include onboarding.intro;
+}
+
+.lead {
+  @include onboarding.lead;
+}
+
+.typed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  @include onboarding.field-label;
+}
+
+.field {
+  @include controls.field-pill;
+  padding: 0.375rem 0.375rem 0.375rem 1rem;
+  min-height: 3rem;
+  box-sizing: border-box;
+}
+
+.input {
+  @include controls.field-input;
+}
+
+.pick {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.chip {
+  @include onboarding.toggle-chip;
+}
+
+.foot {
+  @include onboarding.foot;
+}
+
+.count {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+
+  strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+}
+
+.primary {
+  @include onboarding.primary;
+}

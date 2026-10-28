@@ -1,0 +1,5 @@
+@use "../../onboarding" as onboarding;
+
+.root {
+  @include onboarding.heading;
+}

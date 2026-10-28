@@ -1,0 +1,164 @@
+@use "../../../theme/controls.scss" as controls;
+
+// Phone first (390); from 64rem the flow sits on the left and the overview taking shape on
+// the right (designs 46b–46k, web 1200).
+.root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  flex: none;
+
+  @media (min-width: 64rem) {
+    padding: 1rem 1.75rem;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+}
+
+.layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 64rem) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 30rem;
+    gap: 3.5rem;
+    align-items: start;
+    padding: 0.5rem 2.5rem 2.5rem 4.5rem;
+  }
+}
+
+.main {
+  flex: 1;
+  box-sizing: border-box;
+  padding: 0.375rem 1.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (min-width: 64rem) {
+    max-width: 32.5rem;
+    padding: 0.25rem 0 0;
+    gap: 1.375rem;
+  }
+}
+
+.narrowProgress {
+  @media (min-width: 64rem) {
+    display: none;
+  }
+}
+
+.wide {
+  display: none;
+
+  @media (min-width: 64rem) {
+    display: block;
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.back {
+  @include controls.icon-control;
+  @include controls.circle(2.5rem);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.segments {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+}
+
+.segment,
+.segmentDone {
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+.segmentDone {
+  background: var(--label);
+}
+
+.skip {
+  @include controls.quiet-control;
+  border: 0;
+  background: transparent;
+  padding: 0 0.5rem;
+  min-height: 2.5rem;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.asking {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.backFromAccount {
+  @include controls.quiet-control;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: 2.5rem;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}

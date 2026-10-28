@@ -15,6 +15,8 @@ export const Routes = {
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,
   createAccount: () => "/create-account",
+  // Onboarding's screens after Start, which is the home page's own field (docs/features/onboarding.md).
+  onboarding: () => "/start",
   connectExtension: () => "/connect-extension",
   connect: (requestId: string) => consentPath(requestId),
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,

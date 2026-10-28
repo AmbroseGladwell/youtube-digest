@@ -9,10 +9,13 @@ import {
   type TranscriptStore,
   type VideoId,
 } from "@overview/domain";
+import { DEFAULT_SETTINGS, type Settings } from "@overview/domain";
+import type { AnswerStores } from "./moveAnswersInto.js";
 import type { MovingStores } from "./moveLibraryInto.js";
 
 // The parts of one library the move reads and writes, held in memory.
-export class MovingLibrary implements MovingStores {
+export class MovingLibrary implements MovingStores, AnswerStores {
+  #settings: Settings = DEFAULT_SETTINGS;
   readonly #overviews = new Map<string, Overview>();
   readonly #states = new Map<string, OverviewState>();
   readonly #topics = new Map<string, Topic>();
@@ -27,11 +30,11 @@ export class MovingLibrary implements MovingStores {
     listOverviews: async () => [...this.#overviews.values()],
     listUnreadable: async () => [],
     listTopics: async () => [...this.#topics.values()],
-    createTopic: async ({ name }) => {
+    createTopic: async ({ name, description }) => {
       const topic: Topic = {
         id: TopicId.parse(crypto.randomUUID()),
         name,
-        description: null,
+        description: description ?? null,
         createdAt: new Date().toISOString(),
       };
       this.#topics.set(topic.id, topic);
@@ -49,6 +52,11 @@ export class MovingLibrary implements MovingStores {
       this.#overviews.delete(id);
       this.#states.delete(id);
     },
+  };
+
+  settingsStore: AnswerStores["settingsStore"] = {
+    get: async () => this.#settings,
+    update: async (patch) => (this.#settings = { ...this.#settings, ...patch }),
   };
 
   transcriptStore: TranscriptStore = {

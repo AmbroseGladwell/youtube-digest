@@ -1,5 +1,5 @@
-import { useId } from "react";
-import { Link } from "react-router";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { Link, Navigate, useNavigate } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -20,6 +20,11 @@ import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { PROVIDER_SHORT_LABEL } from "@overview/domain";
+import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
+import { readOnboardingProgress } from "../../onboarding/onboardingProgressStorage.js";
+import { startOnboarding } from "../../onboarding/useOnboardingProgress.js";
+import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
+import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
@@ -28,6 +33,24 @@ export function HomePage() {
 }
 
 function LibraryHome() {
+  const accountNeeded = useAccountNeeded();
+  // Onboarding under way on this device carries on where it was, signed out or just signed
+  // in by its link (docs/features/onboarding.md, "Leaving and coming back").
+  const onboarding = readOnboardingProgress();
+  if (onboarding !== null && (accountNeeded || onboarding.overviewId !== null)) {
+    return <Navigate to={Routes.onboarding()} replace />;
+  }
+  if (accountNeeded) {
+    return (
+      <div className={styles.root} data-testid={homePageTestIds.root}>
+        <StartHero />
+      </div>
+    );
+  }
+  return <SignedInHome />;
+}
+
+function SignedInHome() {
   const overviewsQuery = useOverviewsWithStateQuery();
   const sync = useSync();
 
@@ -85,11 +108,149 @@ function LibraryHome() {
 // progress it makes — so there is one pipeline and one place a run lives
 // (docs/features/stone-theme.md, "First run").
 function FirstRunHero() {
-  const surface = useSurface();
   const { readiness, ready, limit, url, setUrl, validationError, generate } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
 
+  return (
+    <Hero standfirst="Paste a YouTube URL. Get a succinct overview, with the main premise, key points, actionable steps and a verdict on if it's worth your time.">
+      <form className={styles.heroForm} onSubmit={generate}>
+        <span className={styles.heroFormIcon}>
+          <StrokeIcon name="link" size={18} />
+        </span>
+        <input
+          id={urlFieldId}
+          name="video-url"
+          type="url"
+          autoComplete="off"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className={styles.heroInput}
+          placeholder="Paste a YouTube link"
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          disabled={!ready}
+          aria-label="YouTube link"
+          data-testid={homePageTestIds.urlInput}
+        />
+        {limit === null && (
+          <button
+            type="submit"
+            className={styles.heroGenerate}
+            disabled={!ready}
+            data-testid={homePageTestIds.generateButton}
+          >
+            Generate overview
+          </button>
+        )}
+      </form>
+
+      {validationError && (
+        <p className={styles.heroError} data-testid={homePageTestIds.validationError}>
+          {validationError}
+        </p>
+      )}
+
+      {limit !== null ? (
+        <LimitMessageNote message={limit} from="home" testIds={homePageTestIds.limitMessage} />
+      ) : ready ? (
+        <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
+          <StrokeIcon name="check" />
+          Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
+          <Link
+            to={Routes.settingsSection("keys")}
+            onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
+            data-testid={homePageTestIds.settingsLink}
+          >
+            Change keys
+          </Link>
+        </p>
+      ) : (
+        <div className={styles.keysNote} data-testid={homePageTestIds.keysNote}>
+          <span className={styles.keysIcon}>
+            <StrokeIcon name="key" size={17} />
+          </span>
+          <div className={styles.keysText}>
+            <KeyPromptNote testIds={homePageTestIds.keyPrompt} readiness={readiness} detail={keyPromptDetail(readiness)} from="home" />
+          </div>
+        </div>
+      )}
+
+      {ready && limit === null && <UsageLine testIds={homePageTestIds.usageLine} />}
+    </Hero>
+  );
+}
+
+// Design 46a: signed out, the same hero is onboarding's Start. A video or playlist link goes
+// straight on to the questions while its overview is made, and nothing else is offered: no
+// overview is made or seen without an account (docs/features/onboarding.md).
+function StartHero() {
+  const navigate = useNavigate();
+  const analytics = useAnalytics();
+  const urlFieldId = useId();
+  const [url, setUrl] = useState("");
+  const [refused, setRefused] = useState(false);
+  useTypingSettled(url, () =>
+    analytics.capture.newOverviewForm.linkEntered({ recognised: youTubeLink(url) !== null, from: "home" }),
+  );
+
+  const start = (event: FormEvent) => {
+    event.preventDefault();
+    const link = youTubeLink(url);
+    const videoUrl = link === null ? null : link.kind === "playlist" ? null : link.videoUrl;
+    if (link === null || (link.kind !== "playlist" && videoUrl === null)) {
+      analytics.onboarding.start.linkRefused();
+      setRefused(true);
+      return;
+    }
+    analytics.onboarding.start.linkSubmitted({ kind: link.kind === "playlist" ? "playlist" : "video" });
+    startOnboarding(url.trim(), videoUrl);
+    void navigate(Routes.onboarding());
+  };
+
+  return (
+    <Hero standfirst="Paste a YouTube link and we'll make your first overview: the main premise, key points, steps to apply and a verdict on whether it's worth your time, to read or listen to.">
+      <form className={styles.heroForm} onSubmit={start}>
+        <span className={styles.heroFormIcon}>
+          <StrokeIcon name="link" size={18} />
+        </span>
+        <input
+          id={urlFieldId}
+          name="video-url"
+          type="url"
+          autoComplete="off"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className={styles.heroInput}
+          placeholder="Paste a YouTube video or playlist link"
+          value={url}
+          onChange={(event) => {
+            setUrl(event.target.value);
+            setRefused(false);
+          }}
+          aria-label="YouTube link"
+          aria-describedby={refused ? `${urlFieldId}-error` : undefined}
+          data-testid={homePageTestIds.urlInput}
+        />
+        <button type="submit" className={styles.heroGenerate} data-testid={homePageTestIds.generateButton}>
+          Make my overview
+        </button>
+      </form>
+      {refused && (
+        <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
+          We can't make an overview from that link yet. Try a YouTube video or playlist link.
+        </p>
+      )}
+    </Hero>
+  );
+}
+
+function Hero({ standfirst, children }: { standfirst: string; children: ReactNode }) {
+  const surface = useSurface();
   return (
     <div className={styles.hero} data-testid={homePageTestIds.hero}>
       <div className={styles.heroText}>
@@ -98,76 +259,9 @@ function FirstRunHero() {
           <br />
           <span className={styles.nowrap}>with The Overview</span>
         </h2>
-        <p className={styles.heroStandfirst}>
-          Paste a YouTube URL. Get a succinct overview, with the main premise, key points,
-          actionable steps and a verdict on if it's worth your time.
-        </p>
+        <p className={styles.heroStandfirst}>{standfirst}</p>
 
-        <form className={styles.heroForm} onSubmit={generate}>
-          <span className={styles.heroFormIcon}>
-            <StrokeIcon name="link" size={18} />
-          </span>
-          <input
-            id={urlFieldId}
-            name="video-url"
-            type="url"
-            autoComplete="off"
-            inputMode="url"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            className={styles.heroInput}
-            placeholder="Paste a YouTube link"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            disabled={!ready}
-            aria-label="YouTube link"
-            data-testid={homePageTestIds.urlInput}
-          />
-          {limit === null && (
-            <button
-              type="submit"
-              className={styles.heroGenerate}
-              disabled={!ready}
-              data-testid={homePageTestIds.generateButton}
-            >
-              Generate overview
-            </button>
-          )}
-        </form>
-
-        {validationError && (
-          <p className={styles.heroError} data-testid={homePageTestIds.validationError}>
-            {validationError}
-          </p>
-        )}
-
-        {limit !== null ? (
-          <LimitMessageNote message={limit} from="home" testIds={homePageTestIds.limitMessage} />
-        ) : ready ? (
-          <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
-            <StrokeIcon name="check" />
-            Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
-            <Link
-              to={Routes.settingsSection("keys")}
-              onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
-              data-testid={homePageTestIds.settingsLink}
-            >
-              Change keys
-            </Link>
-          </p>
-        ) : (
-          <div className={styles.keysNote} data-testid={homePageTestIds.keysNote}>
-            <span className={styles.keysIcon}>
-              <StrokeIcon name="key" size={17} />
-            </span>
-            <div className={styles.keysText}>
-              <KeyPromptNote testIds={homePageTestIds.keyPrompt} readiness={readiness} detail={keyPromptDetail(readiness)} from="home" />
-            </div>
-          </div>
-        )}
-
-        {ready && limit === null && <UsageLine testIds={homePageTestIds.usageLine} />}
+        {children}
 
         {surface === "extension" ? (
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>

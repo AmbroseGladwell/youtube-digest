@@ -11,6 +11,16 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
+  // Signed out, the hero is onboarding's Start: it makes the first overview, and offers
+  // nothing that needs keys (design 46a).
+  verifyShowsStart = (): Promise<HomePageObject> =>
+    this.step("verifyShowsStart", async () => {
+      await this.expectToBeVisible(homePageTestIds.hero);
+      await expect(this.get(homePageTestIds.generateButton)).toHaveText("Make my overview");
+      await this.expectNotToBeVisible(homePageTestIds.keysNote);
+      return this;
+    });
+
   verifyShowsFirstRunHero = (): Promise<HomePageObject> =>
     this.step("verifyShowsFirstRunHero", async () => {
       await this.expectToBeVisible(homePageTestIds.hero);

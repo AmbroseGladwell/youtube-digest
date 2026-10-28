@@ -195,13 +195,12 @@ volume to compare with Free, and every reader who sees an overview has an accoun
 it against. The shared link page stays public.
 
 **Where there are accounts, every page that would show an overview shows the way to one
-instead:** the library, an overview's own address, the queue, and the side panel's home
-(`SignedOutGate`, in the shell; `useAccountNeeded`). It has Create an account and Sign in,
+instead:** on the web, home is onboarding's Start; an overview's own address, the queue and
+the side panel's home show `SignedOutGate` (in the shell; `useAccountNeeded`). It has Create an account and Sign in,
 counted as `account.signedOutGate.chosen` with the way taken. Settings, signing in and
 creating an account stay open. Nothing is made signed out on either key (`accountNeeded` in
 `useGenerationReadiness`): no Generate, no New, no capture queue, and the injected YouTube
-button opens Create account. Until onboarding is built, the gate is all a reader without an
-account sees.
+button opens Create account. The panel shows the gate until its own onboarding is built.
 
 **A shell with no server has no accounts to offer,** so it has no gate: its library stays on
 the device and it makes overviews on the reader's key, as before.
