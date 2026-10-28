@@ -97,6 +97,12 @@ and every topic-keyed thing on the page reads that id back. It invalidates inste
   dropped: it is five fixed rows, so it is not what makes the rail long, and "⚠ Dubious
   only" is the filter least worth burying.
 
+## Descriptions, as hints
+
+A topic's description shows as a muted line under its name in the picker (46r), and only
+there. Onboarding's starter topics are the only ones that have one (`onboarding.md`); the
+rail's dialog and the picker's own create row make topics without.
+
 ## What this deliberately leaves out
 
 - **The model's suggested topic.** `filingSection` still asks for one and the schema still

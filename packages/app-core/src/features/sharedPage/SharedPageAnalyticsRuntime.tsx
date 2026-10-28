@@ -20,7 +20,7 @@ export function SharedPageAnalyticsRuntime({ token, children }: { token: string;
   const [queue] = useState(() => {
     const api = createFetchSharedPageEventsApi({ baseUrl: globalThis.location.origin, token });
     return new AnalyticsQueue({
-      canSend: () => true,
+      mode: () => "send",
       send: (batch, options) => api.send({ context: latest.current, viewId, ...batch }, options),
     });
   });

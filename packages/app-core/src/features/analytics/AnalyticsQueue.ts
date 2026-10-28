@@ -11,10 +11,14 @@ export interface QueuedBatch {
   dropped?: number;
 }
 
+// "hold" is a reader without an account who hasn't answered yet: their events wait in memory,
+// never on the device, and go out on a yes or are forgotten on a no. "discard" is a reader
+// who may not be counted: events are not held, sent or counted as dropped, since they were
+// never collected.
+export type AnalyticsSendMode = "send" | "hold" | "discard";
+
 export interface AnalyticsQueueOptions {
-  // Whether this reader's usage may be sent at all. When it may not, events are not held,
-  // sent or counted as dropped: they were never collected.
-  canSend: () => boolean;
+  mode: () => AnalyticsSendMode;
   send: (batch: QueuedBatch, options: SendOptions) => Promise<void>;
   now?: () => Date;
   batchWindowMs?: number;
@@ -28,7 +32,7 @@ const HELD_LIMIT = MAX_ANALYTICS_BATCH_EVENTS;
 // nothing is retried, and nothing here can fail or slow what the reader did; what is lost is
 // counted and said with the next batch that gets through (docs/architecture/analytics.md).
 export class AnalyticsQueue {
-  readonly #canSend: () => boolean;
+  readonly #mode: () => AnalyticsSendMode;
   readonly #send: AnalyticsQueueOptions["send"];
   readonly #now: () => Date;
   readonly #batchWindowMs: number;
@@ -39,8 +43,8 @@ export class AnalyticsQueue {
   #inMinute = 0;
   #timer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor({ canSend, send, now = () => new Date(), batchWindowMs = 2_000, maxPerMinute = 60 }: AnalyticsQueueOptions) {
-    this.#canSend = canSend;
+  constructor({ mode, send, now = () => new Date(), batchWindowMs = 2_000, maxPerMinute = 60 }: AnalyticsQueueOptions) {
+    this.#mode = mode;
     this.#send = send;
     this.#now = now;
     this.#batchWindowMs = batchWindowMs;
@@ -48,7 +52,8 @@ export class AnalyticsQueue {
   }
 
   record(name: AnalyticsEventName, props: Record<string, string | number | boolean>): void {
-    if (!this.#canSend()) return;
+    const mode = this.#mode();
+    if (mode === "discard") return;
     const now = this.#now();
     if (now.getTime() - this.#minuteStartedAt >= MINUTE_MS) {
       this.#minuteStartedAt = now.getTime();
@@ -60,7 +65,7 @@ export class AnalyticsQueue {
     }
     this.#inMinute += 1;
     this.#held.push({ name, props, at: now.toISOString() });
-    this.#timer ??= setTimeout(() => void this.flush(), this.#batchWindowMs);
+    if (mode === "send") this.#timer ??= setTimeout(() => void this.flush(), this.#batchWindowMs);
   }
 
   async flush({ keepalive }: SendOptions = { keepalive: false }): Promise<void> {
@@ -69,8 +74,11 @@ export class AnalyticsQueue {
       this.#timer = null;
     }
     if (this.#held.length === 0) return;
-    if (!this.#canSend()) {
+    const mode = this.#mode();
+    if (mode === "hold") return;
+    if (mode === "discard") {
       this.#held = [];
+      this.#dropped = 0;
       return;
     }
     const events = this.#held;

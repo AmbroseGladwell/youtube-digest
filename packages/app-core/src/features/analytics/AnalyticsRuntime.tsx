@@ -13,7 +13,7 @@ import { useSync } from "../sync/SyncContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { AnalyticsProvider } from "./AnalyticsContext.js";
-import { AnalyticsQueue } from "./AnalyticsQueue.js";
+import { AnalyticsQueue, type AnalyticsSendMode } from "./AnalyticsQueue.js";
 import { createAnalytics } from "./createAnalytics.js";
 import { useAnalyticsContext } from "./useAnalyticsContext.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
@@ -26,7 +26,8 @@ interface Sender {
 // Inside the sync runtime: a signed-in reader's usage goes over their own session unless
 // their account turned sharing off, and a reader without an account's only once they have
 // said yes, under the anonymous id that yes made (docs/architecture/analytics.md, "Who is
-// counted").
+// counted"). Until they answer it waits in memory, so onboarding's first screens are counted
+// on a yes (docs/features/analytics-consent.md, "Before an answer").
 export function AnalyticsRuntime({ children }: { children: ReactNode }) {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
@@ -61,8 +62,13 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
       if (latest.current.anonymousApi === null || !consentAllowsSharing(answered) || anonymousId === null) return null;
       return { api: latest.current.anonymousApi, anonymousId };
     };
+    const mode = (): AnalyticsSendMode => {
+      if (sender() !== null) return "send";
+      const unanswered = !latest.current.signedIn && analyticsConsentSnapshot().consent === null;
+      return unanswered && latest.current.anonymousApi !== null ? "hold" : "discard";
+    };
     return new AnalyticsQueue({
-      canSend: () => sender() !== null,
+      mode,
       send: (batch, options) => {
         const { api, anonymousId } = sender()!;
         return api.send(
@@ -89,6 +95,10 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
       globalThis.removeEventListener("pagehide", flushOnLeave);
     };
   }, [queue, errors]);
+
+  useEffect(() => {
+    void queue.flush();
+  }, [queue, connected, consent]);
 
   useEffect(() => () => queue.dispose(), [queue]);
 

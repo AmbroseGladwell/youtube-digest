@@ -101,6 +101,19 @@
   @include controls.chip;
 }
 
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.hint {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .optionName {
   display: inline-flex;
   align-items: center;

@@ -70,8 +70,10 @@ limit, a year's retention) and Better Stack's are compared on OV-60 and OV-61.
 
 Three tiers, from OV-62 (`docs/features/analytics-consent.md`):
 
-1. **A reader without an account who hasn't said yes sends nothing.** The queue doesn't
-   hold, send or count their events, and nothing about analytics is written to the device.
+1. **A reader without an account who hasn't said yes sends nothing.** Before they answer,
+   the queue holds their events in memory and sends them only if the answer is yes; after
+   a no it doesn't hold, send or count them. Nothing about analytics is written to the
+   device either way (`analytics-consent.md`, "Before an answer").
 2. **A reader without an account who said yes** is counted under a random anonymous id,
    kept on the device only after that yes and sent on each batch as `anonymousId`. The
    route takes such a batch without a session, limited per address.
