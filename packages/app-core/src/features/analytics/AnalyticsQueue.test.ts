@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_ANALYTICS_BATCH_EVENTS, type SentAnalyticsEvent } from "@overview/domain";
-import { AnalyticsQueue, type AnalyticsQueueOptions } from "./AnalyticsQueue.js";
+import { AnalyticsQueue, type AnalyticsQueueOptions, type AnalyticsSendMode } from "./AnalyticsQueue.js";
 
 const START = new Date("2026-10-01T09:00:00.000Z");
 
 const makeQueue = (options: Partial<AnalyticsQueueOptions> = {}) => {
   const sent: Array<{ events: SentAnalyticsEvent[]; dropped?: number; keepalive: boolean }> = [];
-  let signedIn = true;
+  let mode: AnalyticsSendMode = "send";
   let failing = false;
   const queue = new AnalyticsQueue({
-    canSend: () => signedIn,
+    mode: () => mode,
     send: async (batch, { keepalive }) => {
       if (failing) throw new Error("Simulated: offline");
       sent.push({ ...batch, keepalive });
@@ -21,7 +21,9 @@ const makeQueue = (options: Partial<AnalyticsQueueOptions> = {}) => {
     queue,
     sent,
     names: () => sent.map(({ events }) => events.map(({ name }) => name)),
-    signOut: () => (signedIn = false),
+    signOut: () => (mode = "discard"),
+    awaitAnswer: () => (mode = "hold"),
+    answer: (yes: boolean) => (mode = yes ? "send" : "discard"),
     fail: (value: boolean) => (failing = value),
   };
 };
@@ -74,6 +76,36 @@ describe("AnalyticsQueue", () => {
     queue.record("mcp.consentScreen.shown", {});
     signOut();
     await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(sent).toEqual([]);
+  });
+
+  it("holds a reader's events until they answer, and sends them all on a yes", async () => {
+    const { queue, sent, names, awaitAnswer, answer } = makeQueue();
+    awaitAnswer();
+
+    queue.record("mcp.consentScreen.shown", {});
+    await vi.advanceTimersByTimeAsync(5_000);
+    await queue.flush({ keepalive: true });
+    expect(sent).toEqual([]);
+
+    answer(true);
+    queue.record("mcp.consentScreen.approved", {});
+    await vi.advanceTimersByTimeAsync(2_000);
+
+    expect(names()).toEqual([["mcp.consentScreen.shown", "mcp.consentScreen.approved"]]);
+    expect(sent[0]!.events[0]!.at).toBe("2026-10-01T09:00:00.000Z");
+  });
+
+  it("forgets what it held for a reader who says no", async () => {
+    const { queue, sent, awaitAnswer, answer } = makeQueue();
+    awaitAnswer();
+
+    queue.record("mcp.consentScreen.shown", {});
+    answer(false);
+    await queue.flush();
+    answer(true);
+    await queue.flush();
 
     expect(sent).toEqual([]);
   });

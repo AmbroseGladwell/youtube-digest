@@ -16,7 +16,7 @@ links to is OV-79.
 | The list of what is counted, and when it asks again | `features/analyticsConsent/analyticsPurposes.ts`, `util/consentAskOf.ts` |
 | Which strip the slot holds | `features/analyticsConsent/useAnalyticsConsentStrip.ts`; `shell/AppShell/AppShell.tsx` and `features/capture/CapturePage/CapturePage.tsx` for the order |
 | The prompt (62a, 62b) and the notice after it (62c) | `features/analyticsConsent/components/` |
-| Sending under the anonymous id, and only after a yes | `features/analytics/AnalyticsRuntime.tsx` |
+| Sending under the anonymous id, and only after a yes; holding events until an answer | `features/analytics/AnalyticsRuntime.tsx`, `AnalyticsQueue.ts` |
 | The batch's `anonymousId`, and `analyticsConsent.prompt.accepted` | `packages/domain/src/AnalyticsEventBatch.ts`, `analyticsEvents.ts` |
 | The route taking an anonymous batch, and its limit per address | `apps/api/src/events/eventRoutes.ts`, `rateLimit/rateLimits.ts` (`anonymousEventsAddress`) |
 | PostHog: the anonymous id as the distinct id, no person made | `apps/api/src/events/postHogEventSink.ts` |
@@ -32,7 +32,8 @@ links to is OV-79.
 
 1. **No account, no yes:** nothing is sent and nothing about analytics is stored. Errors
    are still reported, with no id (`docs/architecture/errors-and-logs.md`). Errors are not
-   part of the choice, so the prompt doesn't mention them.
+   part of the choice, so the prompt doesn't mention them. Before any answer, events wait
+   in memory (below); after a no, they are never collected.
 2. **No account, a yes:** a random id (`crypto.randomUUID()`, never derived from the device)
    is kept beside the answer and sent on every batch as `anonymousId`. The server takes the
    batch without a session.
@@ -54,6 +55,28 @@ under the last one's id, and the answer survives sign-out while the id does not.
 
 A record the app can't read is treated as no answer: the reader is asked again rather than
 counted.
+
+## Before an answer
+
+**A reader who hasn't answered yet has their events held in memory, not thrown away**
+(OV-46, decided 28 Oct 2026). Onboarding asks on its second screen, after the reader has
+pasted a link, and the funnel needs that first screen counted. So `AnalyticsQueue` has
+three modes, which `AnalyticsRuntime` picks on every record and flush:
+
+- **send:** signed in with the account's analytics on, or no account and a yes.
+- **hold:** no account, never answered, and a server to send to. Events stay in the
+  queue's memory, are never written to the device, and aren't sent on a timer or when the
+  page hides. Closing the page loses them.
+- **discard:** anything else, including a no and a yes to an older list of what is counted.
+  Events aren't collected, and whatever was held is forgotten.
+
+The runtime flushes when the answer or the session changes. A yes sends what was held
+first, in order, then `analyticsConsent.prompt.accepted`. A no forgets it. A reader who
+signs in before answering has what was held sent under their account, as tier 3 would
+have counted it.
+
+The cap on what the queue holds is the same one batch it always had, so a reader who never
+answers holds at most one batch of events, in memory, until they leave.
 
 ## Asking again
 

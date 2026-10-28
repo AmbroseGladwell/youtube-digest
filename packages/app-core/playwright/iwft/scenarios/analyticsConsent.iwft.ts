@@ -121,7 +121,7 @@ test.describe("asking a reader without an account", () => {
     await launcher.analyticsConsentPrompt.verifyIsAbsent();
   });
 
-  test("the panel asks above its home, and opens the policy in a tab of its own", async ({
+  test("the panel asks above its home, opens the policy in a tab of its own, and sends what came before the yes with it", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -133,7 +133,19 @@ test.describe("asking a reader without an account", () => {
     await launcher.analyticsConsentPrompt.share();
 
     await launcher.analyticsConsentNotice.verifyReads("Sharing usage.");
-    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(["analyticsConsent.prompt.accepted"]);
+    await test
+      .expect.poll(() => backendSimulator.analytics.eventNames())
+      .toEqual(["extension.sidePanel.opened", "analyticsConsent.prompt.accepted"]);
+  });
+
+  test("a no in the panel forgets what came before it", async ({ launcher, backendSimulator }) => {
+    await launcher.launchPanel({ defaultApiUrl: "https://sync.test", ...NEVER_ASKED });
+
+    await launcher.analyticsConsentPrompt.dontShare();
+
+    await launcher.analyticsConsentNotice.verifyReads("Not sharing usage.");
+    await launcher.analyticsConsentPrompt.verifyIsAbsent();
+    test.expect(backendSimulator.analytics.batches()).toEqual([]);
   });
 
   test("a panel with no server to send to asks nothing", async ({ launcher }) => {
