@@ -8,7 +8,6 @@ import {
   SyncEngine,
   type SyncStatus,
 } from "@overview/sync";
-import { forgetSignedOutHere, rememberSignedOutHere } from "../accountLibraries/useDeviceAccountHistory.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
@@ -55,7 +54,6 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
     const signedIn = connected && !wasConnected.current;
     wasConnected.current = connected;
     if (!signedIn) return;
-    forgetSignedOutHere();
     setSignOutNotice(null);
     setOpening(true);
   }, [connected]);
@@ -127,7 +125,6 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
           }
           const stillThisConnection = readSyncConnection().accountId === connection.accountId;
           if (stillThisConnection) {
-            rememberSignedOutHere();
             setSignOutNotice(signOutNoticeFor(outcome));
             setConnection(DEFAULT_SYNC_CONNECTION);
           }

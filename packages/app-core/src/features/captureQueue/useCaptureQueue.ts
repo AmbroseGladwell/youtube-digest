@@ -69,8 +69,6 @@ export interface CaptureQueueController {
   paused: boolean;
   folded: boolean;
   needsKey: boolean;
-  // Signed out, the device has made the trial's overviews, so what waits waits for an account.
-  trialSpent: boolean;
   // Waiting at a limit, until it resets or the extension connects; nothing is asked meanwhile
   // (docs/features/capture-queue.md, "Waiting at a limit"). The month's limit wins over the
   // others, and over every pace.
@@ -105,8 +103,8 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const { apiKeys } = useApiKeys();
   const generate = useRunOverviewGeneration(apiKeys);
   const readiness = useGenerationReadiness();
-  const trialSpent = readiness.trialSpent;
-  const needsKey = !readiness.ready && !trialSpent;
+  const accountNeeded = readiness.accountNeeded;
+  const needsKey = !readiness.ready && !accountNeeded;
   const nextQuota = useNextQuota();
   const limit = useLimitMessage();
   const plan = useOverviewUsageQuery().data?.plan ?? null;
@@ -409,7 +407,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const canMake =
     !preferences.paused &&
     !needsKey &&
-    !trialSpent &&
+    !accountNeeded &&
     !readerRunActive &&
     making === null &&
     hold === null &&
@@ -488,7 +486,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const failed = attention.filter((capture) => capture.status === "failed").length;
   const notMaking = (captures: QueuedCapture[]) =>
     making === null ? captures : captures.filter((capture) => capture.videoId !== making.capture.videoId);
-  const strip = captureQueueStrip({
+  const strip = accountNeeded ? null : captureQueueStrip({
     making:
       making === null
         ? null
@@ -508,7 +506,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     skipped: attention.length - failed,
     paused: preferences.paused,
     needsKey,
-    trialSpent,
     hold,
     limit,
     viaExtension: youTubeFetch === null,
@@ -532,7 +529,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       paused: preferences.paused,
       folded: preferences.folded,
       needsKey,
-      trialSpent,
       hold,
       limit,
       viaExtension: youTubeFetch === null,
@@ -563,7 +559,6 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       strip,
       preferences,
       needsKey,
-      trialSpent,
       hold,
       limit,
       youTubeFetch,

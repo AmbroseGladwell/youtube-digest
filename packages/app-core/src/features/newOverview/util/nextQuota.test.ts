@@ -22,7 +22,6 @@ const nextFor = (
 ) =>
   nextQuotaOf({
     order: keyOrderFor({ ourKeyUsable: true, plan, hasOwnKey, onlyMyKey }),
-    trial: null,
     usage: { status: "known", data: usageOf(plan, used) },
   });
 
@@ -81,21 +80,11 @@ describe("nextQuotaOf", () => {
 
   it("is checking, never 0, until the server's counts arrive", () => {
     const order = keyOrderFor({ ourKeyUsable: true, plan: null, hasOwnKey: true, onlyMyKey: false });
-    expect(nextQuotaOf({ order, trial: null, usage: { status: "checking" } })).toEqual({ kind: "checking" });
-    expect(nextQuotaOf({ order, trial: null, usage: { status: "unreachable" } })).toEqual({ kind: "unreachable" });
-  });
-
-  it("is the trial signed out, on either key", () => {
-    const trial = { made: 1, total: 3 };
-    expect(nextQuotaOf({ order: ["own"], trial, usage: { status: "checking" } })).toEqual({ kind: "trial", left: 2, total: 3 });
-    expect(nextQuotaOf({ order: [], trial: { made: 4, total: 3 }, usage: { status: "checking" } })).toEqual({
-      kind: "trial",
-      left: 0,
-      total: 3,
-    });
+    expect(nextQuotaOf({ order, usage: { status: "checking" } })).toEqual({ kind: "checking" });
+    expect(nextQuotaOf({ order, usage: { status: "unreachable" } })).toEqual({ kind: "unreachable" });
   });
 
   it("is nothing where no key can make an overview", () => {
-    expect(nextQuotaOf({ order: [], trial: null, usage: { status: "checking" } })).toBeNull();
+    expect(nextQuotaOf({ order: [], usage: { status: "checking" } })).toBeNull();
   });
 });

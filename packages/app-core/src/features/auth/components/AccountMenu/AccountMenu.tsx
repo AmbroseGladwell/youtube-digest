@@ -9,8 +9,6 @@ import { useSync } from "../../../sync/SyncContext.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { syncStatusLine } from "../../../sync/util/syncStatusLine.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
-import { useDeviceAccountHistory } from "../../../accountLibraries/useDeviceAccountHistory.js";
-import { isConnected } from "../../../sync/types/SyncConnection.js";
 import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 import type { AccountMenuItem } from "@overview/domain";
@@ -31,7 +29,6 @@ export function AccountMenu() {
   const signOut = useSignOut();
   const { connection } = useSyncConnection();
   const { pending } = usePendingSignIn();
-  const { signedOutHere } = useDeviceAccountHistory();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -219,7 +216,7 @@ export function AccountMenu() {
             openMenu("last");
           }
         }}
-        aria-label={signedOutHere && sync.available && !isConnected(connection) ? "Account, signed out" : "Account"}
+        aria-label="Account"
         aria-haspopup="menu"
         aria-expanded={open}
         data-testid={accountMenuTestIds.trigger}

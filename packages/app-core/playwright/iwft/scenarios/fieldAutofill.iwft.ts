@@ -181,15 +181,3 @@ test("the shared page's own link field is a link field", async ({ launcher }) =>
   await page.verifyFieldAttributes("video-url", LINK_FIELD);
 });
 
-test("the signed-out library's link field is a link field", async ({ launcher }) => {
-  await launcher.launch({
-    sync: true,
-    deviceAccountHistory: { signedOutHere: true },
-    apiKeys: ANTHROPIC_KEY,
-  });
-
-  await launcher.signedOutLibrary.verifyIsShown();
-
-  await launcher.signedOutLibrary.verifyFieldsIdentifyThemselves();
-  await launcher.signedOutLibrary.verifyFieldAttributes("video-url", LINK_FIELD);
-});

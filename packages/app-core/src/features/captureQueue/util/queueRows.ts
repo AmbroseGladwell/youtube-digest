@@ -12,15 +12,14 @@ export interface QueueRowModel {
 
 // What the queue can make now, after the one being made, each with the words its row shows:
 // the first is Next, the rest Waiting, and a video the reader chose says so. Every one says
-// so when there is no key or, signed out past the trial, no account to make it with, and
-// every one says when it continues while the queue waits at a limit. What waits on a pace is
+// so when there is no key to make it with, and every one says when it continues while the queue waits at a limit. What waits on a pace is
 // grouped by playlist instead (pacedGroups), except at the month's limit, which wins over every
 // pace: then it all waits for the month, in one list (design 95q).
 export function waitingRows(
-  queue: Pick<CaptureQueueController, "ready" | "tomorrow" | "making" | "needsKey" | "trialSpent" | "hold">,
+  queue: Pick<CaptureQueueController, "ready" | "tomorrow" | "making" | "needsKey" | "hold">,
 ): QueueRowModel[] {
   const makingId = queue.making?.capture.videoId ?? null;
-  if (queue.hold?.reason === "monthSpent" && !queue.trialSpent && !queue.needsKey) {
+  if (queue.hold?.reason === "monthSpent" && !queue.needsKey) {
     const resumeTime = monthResumeDate(queue.hold);
     return [...queue.ready, ...queue.tomorrow]
       .filter((capture) => capture.videoId !== makingId)
@@ -32,9 +31,7 @@ export function waitingRows(
     .filter((capture) => capture.videoId !== makingId)
     .map((capture, index) => ({
       capture,
-      state: queue.trialSpent
-        ? "trialSpent"
-        : queue.needsKey
+      state: queue.needsKey
           ? "noKey"
           : resumeTime !== undefined
             ? "held"

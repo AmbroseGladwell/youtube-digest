@@ -1,8 +1,6 @@
 import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
-import { useSurface } from "../../app/SurfaceContext.js";
 import { isSyncRequestError } from "@overview/sync";
-import { useDeviceAccountHistory } from "../accountLibraries/useDeviceAccountHistory.js";
 import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
 import { shareUsageRowValue } from "../analyticsConsent/util/shareUsageStatus.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -63,8 +61,6 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const shares = useSharesQuery().data;
   const build = useAppBuild();
   const overviews = useOverviewsWithStateQuery();
-  const { signedOutHere } = useDeviceAccountHistory();
-  const surface = useSurface();
   const knownApiUrl = useKnownApiUrl();
   const shareUsage = useShareUsageState();
   const followed = useFollowedPlaylistsQuery();
@@ -75,7 +71,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           {
             id: "account" as const,
             title: "Account & sync",
-            value: accountRowValue(sync, connection, new Date(), { signedOutHere, surface }),
+            value: accountRowValue(sync, connection, new Date()),
           },
         ]
       : []),
@@ -84,7 +80,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
       title: "Plan",
       value:
         planStatus === "known"
-          ? planRowValue(nextQuota?.kind === "trial" ? "Trial" : PLAN_LABEL[plan], planRowCount(nextQuota))
+          ? planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota))
           : planStatus === "checking"
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,

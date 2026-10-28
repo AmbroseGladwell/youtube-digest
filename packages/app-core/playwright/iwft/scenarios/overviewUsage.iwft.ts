@@ -102,20 +102,6 @@ test("with no key saved, Settings gives the own-key quota as a number, with a wa
   await settings.verifyPlanUsageCellReads("own", ["200 a month", "Once you add a key · Add a key"]);
 });
 
-test("signed out, the line, the row and the panel count the trial's 3 on either key", async ({ launcher }) => {
-  await launcher.launch({ sync: true, apiKeys: ANTHROPIC_KEY, signedOutTrial: { made: 1, token: null } });
-  const dialog = await launcher.appShell.openNewOverview();
-  await dialog.form.verifyUsageLineReads("2 of 3 trial overviews left · On either key · Plan");
-  await dialog.form.clickCancel();
-
-  const settings = await launcher.appShell.openSettings();
-  await settings.verifyRowReads("plan", "Trial · 2 of 3 left");
-  await settings.openSection("plan");
-  await settings.verifyPlanReads("Trial");
-  await settings.verifyPlanUsageCellsAre(["trial"]);
-  await settings.verifyPlanUsageCellReads("trial", ["2 of 3 left", "On either key. They don't reset."]);
-});
-
 test("the panel's capture screen gives the narrow line", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ own: 3 });
@@ -216,8 +202,3 @@ test("on the panel, Plus with no key and our key spent is offered a key", async 
   });
 });
 
-test("signed out with the trial spent, the hero offers an account in the same shape", async ({ launcher }) => {
-  const home = await launcher.launch({ sync: true, apiKeys: ANTHROPIC_KEY, signedOutTrial: { made: 3, token: null } });
-
-  await home.verifyLimitMessage({ title: "You've used your 3 trial overviews", actions: ["Create account"] });
-});

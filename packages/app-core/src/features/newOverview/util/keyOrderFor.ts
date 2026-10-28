@@ -1,7 +1,7 @@
 import type { KeySource, Plan } from "@overview/domain";
 
 export interface KeyOrderContext {
-  // Our key needs a server that makes overviews on it, and an account or a trial with one left.
+  // Our key needs a server that makes overviews on it.
   ourKeyUsable: boolean;
   plan: Plan | null;
   hasOwnKey: boolean;

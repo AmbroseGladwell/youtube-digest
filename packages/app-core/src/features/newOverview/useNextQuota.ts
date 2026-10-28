@@ -1,9 +1,6 @@
-import { TRIAL_OVERVIEWS } from "@overview/domain";
 import { hasKeyFor } from "../apiKeys/ApiKeys.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
-import { useSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
-import { useSync } from "../sync/SyncContext.js";
 import { isConnected } from "../sync/types/SyncConnection.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
@@ -12,16 +9,13 @@ import { keyOrderFor } from "./util/keyOrderFor.js";
 import { leftThisMonthOf, nextQuotaOf, type NextQuota, type NextQuotaContext } from "./util/nextQuota.js";
 
 // What the month's counts mean for this device: the server's counts and the same key order a
-// run walks. Signed out it is the device's trial, where this shell has one, and nothing is
-// counted where it hasn't.
+// run walks. Only an account is counted: signed out there is nothing to make here.
 function useQuotaContext(): NextQuotaContext | null {
   const readiness = useGenerationReadiness();
   const { apiKeys } = useApiKeys();
   const settings = useSettingsQuery().data;
   const usage = useOverviewUsageQuery();
-  const trial = useSignedOutTrial();
   const { connection } = useSyncConnection();
-  const accountsAvailable = useSync().available;
   const signedIn = isConnected(connection);
 
   const order = keyOrderFor({
@@ -31,10 +25,9 @@ function useQuotaContext(): NextQuotaContext | null {
     onlyMyKey: settings?.onlyMyKey ?? false,
   });
 
-  if (!signedIn && !accountsAvailable) return null;
+  if (!signedIn) return null;
   return {
     order,
-    trial: signedIn ? null : { made: trial.made, total: TRIAL_OVERVIEWS },
     usage:
       usage.data !== undefined
         ? { status: "known", data: usage.data }

@@ -42,10 +42,6 @@ describe("usageLineOf", () => {
     expect(usageLineOf({ kind: "checking" }).parts).toEqual(["Overviews left this month: Checking…"]);
     expect(usageLineOf({ kind: "checking" }, { narrow: true }).parts).toEqual(["Left this month: Checking…"]);
   });
-
-  it("counts the trial on either key", () => {
-    expect(usageLineOf({ kind: "trial", left: 2, total: 3 }).parts).toEqual(["2 of 3 trial overviews left", "On either key"]);
-  });
 });
 
 describe("planRowCount", () => {

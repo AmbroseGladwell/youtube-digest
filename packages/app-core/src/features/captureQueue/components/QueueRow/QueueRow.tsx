@@ -10,7 +10,6 @@ export type QueueRowState =
   | "chosenNext"
   | "chosen"
   | "noKey"
-  | "trialSpent"
   | "held"
   | "monthSpent"
   | "tomorrow"
@@ -40,7 +39,6 @@ const STATUS: Record<Exclude<QueueRowState, "making" | "held" | "monthSpent">, s
   chosenNext: "Next · you chose it",
   chosen: "You chose it",
   noKey: "Waiting for an API key",
-  trialSpent: "Waiting for an account",
   tomorrow: "Continues tomorrow",
   forYou: "Waiting for you",
 };

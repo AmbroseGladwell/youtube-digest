@@ -64,6 +64,21 @@ test("without keys the press goes to Settings rather than starting a run that ca
   expect(await launcher.readRunReports()).toEqual([null, null]);
 });
 
+// Signed out where there are accounts, nothing is made on either key, so the press goes to
+// creating one (docs/architecture/tiers.md, "Signed out").
+test("signed out, the press goes to creating an account, whatever keys the device holds", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launchPanel({ ...panel, sync: true });
+
+  await launcher.pressInjectedButton(WATCHED_URL);
+
+  await launcher.signInPage.verifyAsksForEmail("Create your account");
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+  expect(await launcher.readRunReports()).toEqual([null, null]);
+});
+
 // The button reads "Overview ready" on a video already written up, and pressing it has
 // to open that note. Starting a second run would make the page's own control the one
 // place in the app that pays for the same video twice.

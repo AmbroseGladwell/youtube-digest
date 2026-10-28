@@ -105,9 +105,9 @@ const PlaylistEntryPoint = z.enum(["dialog", "home", "settings"]);
 const QueueControl = z.enum(["strip", "page"]);
 // What ran out where a reader generates, and the ways round it (docs/architecture/tiers.md,
 // "At the limit").
-export const LimitQuota = z.enum(["trial", "ours", "own", "both"]);
+export const LimitQuota = z.enum(["ours", "own", "both"]);
 export type LimitQuota = z.infer<typeof LimitQuota>;
-export const LimitWay = z.enum(["addKey", "seePlans", "createAccount"]);
+export const LimitWay = z.enum(["addKey", "seePlans"]);
 const GenerateSurface = z.enum(["dialog", "home", "panel"]);
 // Which of the app's dead ends a reader was on, named because its title is copy
 // (docs/features/error-state.md).
@@ -399,24 +399,13 @@ export const analyticsEvents = {
         },
       ),
     },
-    signedOutStrip: {
-      signInChosen: event("The reader follows Sign in from the strip a signed-out library carries"),
-    },
-    signedOutLibrary: {
-      signInChosen: event("The reader follows Sign in from the empty library shown after signing out"),
+    signedOutGate: {
+      chosen: event("A reader with no account follows Sign in or Create an account from the page shown in place of overviews", {
+        way: z.enum(["signIn", "createAccount"]),
+      }),
     },
     movedNotice: {
       dismissed: event("The reader closes the notice saying which overviews signing in added to the account"),
-    },
-    accountOffer: {
-      createAccountChosen: event("The reader follows Create account from the strip offering an account"),
-      dismissed: event("The reader turns down the strip offering an account, which hides it on this device"),
-    },
-    trial: {
-      limitReached: event("A reader without an account makes the trial's last overview on this device, on either key"),
-      createAccountChosen: event("The reader follows Create account from the prompt a spent signed-out trial shows", {
-        from: z.enum(["dialog", "home", "panel", "queue"]),
-      }),
     },
   },
   analyticsConsent: {
@@ -545,7 +534,7 @@ export const analyticsEvents = {
     limitMessage: {
       shown: event("The reader meets a limit where they generate: which quota ran out, on which plan, and where", {
         quota: LimitQuota,
-        plan: z.enum([...Plan.options, "signedOut"]),
+        plan: Plan,
         from: GenerateSurface,
       }),
       wayChosen: event("The reader takes a way round a limit from its message, or from the queue waiting at it", {

@@ -19,14 +19,11 @@ import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
-import { AccountStrip } from "../../accountLibraries/components/AccountStrip/AccountStrip.js";
 import { LibraryMoveNotice } from "../../accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
-import { useAccountStripKind } from "../../accountLibraries/useAccountStripKind.js";
 import { AnalyticsConsentStripSlot } from "../../analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
 import { useAnalyticsConsentStrip } from "../../analyticsConsent/useAnalyticsConsentStrip.js";
-import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
@@ -51,10 +48,7 @@ export function CapturePage() {
   const limit = useLimitMessage();
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
-  const heldHere = overviewsQuery.data?.length ?? null;
-  const accountStrip = useAccountStripKind(heldHere);
   const consentStrip = useAnalyticsConsentStrip(true);
-  const signedOutWithNothingHere = useSignedOutHere() && heldHere === 0;
   const sync = useSync();
   const libraryMoved = useLibraryMove().move !== null;
   const captureQueue = useCaptureQueueController();
@@ -120,7 +114,7 @@ export function CapturePage() {
 
   return (
     <div
-      className={`${styles.root} ${accountStrip === null && consentStrip === null && !libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
+      className={`${styles.root} ${consentStrip === null && !libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
       data-testid={capturePageTestIds.root}
     >
       {captureQueue.strip !== null ? (
@@ -137,9 +131,7 @@ export function CapturePage() {
         <LibraryMoveNotice panel />
       ) : consentStrip !== null ? (
         <AnalyticsConsentStripSlot strip={consentStrip} panel />
-      ) : (
-        accountStrip !== null && <AccountStrip kind={accountStrip} panel />
-      )}
+      ) : null}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         <div>
           <h2 className={styles.title}>
@@ -195,12 +187,6 @@ export function CapturePage() {
         {activeVideoUrl === null && (
           <p className={styles.note} data-testid={capturePageTestIds.noVideoNote}>
             Visit a YouTube video to start creating an overview.
-          </p>
-        )}
-
-        {signedOutWithNothingHere && (
-          <p className={styles.note} data-testid={capturePageTestIds.signedOutNote}>
-            You’re signed out. Your Overviews are safe in your account. Sign in to get them back.
           </p>
         )}
 

@@ -142,10 +142,9 @@ plan's figure ("10 a month") and "Once you add a key · Add a key". While the co
 the cells read "Checking…", never 0. The Settings list row carries the count of the quota
 the next overview will use: "Free · 7 of 10 left".
 
-Signed out, the plan is the trial: "Signed out", "Trial", "This device only", and **one**
-cell, "2 of 3 left · On either key. They don't reset.", since the trial counts either key
-(decided on OV-131; 95f drew a second, "Not counted", own-key cell from before that rule).
-Below it, what a free account makes and Create account. No card is ringed as the reader's.
+Signed out there is nothing to count, since overviews need an account (`tiers.md`, "Signed
+out"; the trial's one cell went with OV-46): what a free account makes and Create account.
+No card is ringed as the reader's.
 
 ## Not built
 

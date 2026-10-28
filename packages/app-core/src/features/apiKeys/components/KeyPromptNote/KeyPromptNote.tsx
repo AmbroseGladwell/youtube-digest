@@ -7,7 +7,6 @@ import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import type { GenerationReadiness } from "../../../newOverview/useGenerationReadiness.js";
 import { useUpdateSettingsMutation } from "../../../settings/mutations/useUpdateSettingsMutation.js";
-import { TRIAL_SPENT_ACTION } from "../../../signedOutTrial/trialPrompt.js";
 import { ADD_A_KEY_IN_SETTINGS, addKeyLabel, keyPrompt, useInsteadLabel } from "../../keyPrompt.js";
 import styles from "./KeyPromptNote.module.scss";
 import type { KeyPromptNoteTestIds } from "./KeyPromptNoteTestIds.js";
@@ -52,19 +51,7 @@ export function KeyPromptNote({ readiness, detail, from, testIds, onFollowed }: 
         {prompt.detail}
       </p>
 
-      {prompt.kind === "trial-spent" ? (
-        <Link
-          className={styles.link}
-          to={Routes.createAccount()}
-          onClick={() => {
-            analytics.account.trial.createAccountChosen({ from });
-            onFollowed?.();
-          }}
-          data-testid={testIds.createAccountLink}
-        >
-          {TRIAL_SPENT_ACTION} <StrokeIcon name="arrowRight" size={15} />
-        </Link>
-      ) : prompt.kind === "no-key" ? (
+      {prompt.kind === "no-key" ? (
         <Link
           className={styles.link}
           to={Routes.settingsSection("keys")}

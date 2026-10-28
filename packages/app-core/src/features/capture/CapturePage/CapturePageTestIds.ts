@@ -12,7 +12,6 @@ export const capturePageTestIds = {
   readOverviewButton: "CapturePage.readOverviewButton",
   createAgainButton: "CapturePage.createAgainButton",
   alreadyInLibraryNote: "CapturePage.alreadyInLibraryNote",
-  signedOutNote: "CapturePage.signedOutNote",
   noVideoNote: "CapturePage.noVideoNote",
   captionsNote: "CapturePage.captionsNote",
   keysNote: "CapturePage.keysNote",

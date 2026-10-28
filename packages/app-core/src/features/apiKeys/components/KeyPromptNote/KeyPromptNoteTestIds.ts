@@ -7,7 +7,6 @@ export const keyPromptNoteTestIds = (prefix: string) => ({
   heading: `${prefix}.keyPrompt.heading`,
   detail: `${prefix}.keyPrompt.detail`,
   settingsLink: `${prefix}.keyPrompt.settingsLink`,
-  createAccountLink: `${prefix}.keyPrompt.createAccountLink`,
   addKey: `${prefix}.keyPrompt.addKey`,
   useFallback: `${prefix}.keyPrompt.useFallback`,
   footnote: `${prefix}.keyPrompt.footnote`,

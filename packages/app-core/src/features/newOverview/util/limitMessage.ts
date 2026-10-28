@@ -3,7 +3,7 @@ import { PLAN_CARDS } from "../../plus/planCards.js";
 import type { NextQuota, SpentQuota } from "./nextQuota.js";
 import { resetDate } from "./usageLine.js";
 
-export type LimitAction = "createAccount" | "addKey" | "seePlans" | "seeByoPlus" | "seeUsage";
+export type LimitAction = "addKey" | "seePlans" | "seeByoPlus" | "seeUsage";
 
 export interface LimitMessage {
   quota: LimitQuota;
@@ -17,7 +17,6 @@ export interface LimitMessage {
 export const LIMIT_FOOT = "Everything you've already made keeps working.";
 
 export const LIMIT_ACTION_LABEL: Record<LimitAction, string> = {
-  createAccount: "Create account",
   addKey: "Add your own key",
   seePlans: "See plans",
   seeByoPlus: "See BYO Plus",
@@ -44,16 +43,6 @@ function madePhrase(spent: SpentQuota[], plainOurs: boolean): string {
 // the key order flipped for everyone but Plus, decided on OV-131; docs/architecture/tiers.md,
 // "At the limit"). Null while there is still a quota to use.
 export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage | null {
-  if (next?.kind === "trial") {
-    if (next.left > 0) return null;
-    return {
-      quota: "trial",
-      made: `${next.total} trial overviews`,
-      title: `You've used your ${next.total} trial overviews`,
-      body: `A free account makes ${FREE.ourKey} on us, syncs them to every device and reads them aloud.`,
-      actions: ["createAccount"],
-    };
-  }
   if (next?.kind !== "spent") return null;
 
   const { spent, resetsOn } = next;

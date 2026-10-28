@@ -13,8 +13,6 @@ import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWit
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
-import { SignedOutLibrary } from "../../accountLibraries/components/SignedOutLibrary/SignedOutLibrary.js";
-import { useSignedOutHere } from "../../accountLibraries/useSignedOutHere.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
 import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
@@ -32,7 +30,6 @@ export function HomePage() {
 function LibraryHome() {
   const overviewsQuery = useOverviewsWithStateQuery();
   const sync = useSync();
-  const signedOutHere = useSignedOutHere();
 
   if (sync.opening) {
     return (
@@ -63,14 +60,6 @@ function LibraryHome() {
           body="Something went wrong reading your saved overviews. Nothing has been lost."
           action={{ label: "Try again", onSelect: () => void overviewsQuery.refetch() }}
         />
-      </div>
-    );
-  }
-
-  if (overviewsQuery.data.length === 0 && signedOutHere) {
-    return (
-      <div className={styles.wide} data-testid={homePageTestIds.root}>
-        <SignedOutLibrary />
       </div>
     );
   }

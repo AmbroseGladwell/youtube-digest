@@ -1,6 +1,5 @@
 import { resumeTimeText } from "../../transcripts/util/resumeTime.js";
 import type { CaptureQueueStrip } from "../types/CaptureQueueStrip.js";
-import { TRIAL_SPENT_HEADING } from "../../signedOutTrial/trialPrompt.js";
 import { queueHoldStripMeta } from "./queueHoldCopy.js";
 import { monthHoldStripMeta } from "./monthHoldCopy.js";
 
@@ -48,13 +47,6 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
         : {
             title: `${plural(strip.waiting, "video is", "videos are")} waiting for an API key`,
             meta: "Nothing can be made without one",
-          };
-    case "trialSpent":
-      return compact
-        ? { title: `${strip.waiting.toLocaleString("en-GB")} waiting · sign up to keep going`, meta: null }
-        : {
-            title: TRIAL_SPENT_HEADING,
-            meta: `${plural(strip.waiting, "video waits", "videos wait")} for an account · a free one makes 15 a month`,
           };
     case "attention":
       return {

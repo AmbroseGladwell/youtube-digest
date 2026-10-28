@@ -61,7 +61,6 @@ The generation strip's slot and shape (3c), one state at a time (`captureQueueSt
 | State | Says | Offers |
 |---|---|---|
 | making | *Making 3 of 12* · the step · the title, with progress | Details, Pause, Queue |
-| signed out past the trial | *Sign up to keep going* · *10 videos wait for an account · a free one makes 15 a month* | Create account, Queue |
 | no key | *10 videos are waiting for an API key* | Add a key, Queue |
 | at the month's limit | *Queue waiting · 9 videos* · *This month's 5 are made. Resumes 1 November, or when you add a key.* | Add a key or See plans where either would help, Queue |
 | paused | *Queue paused* · *10 waiting · nothing is made until you resume* | Resume, Queue |
@@ -218,8 +217,8 @@ It still counts against the month.
 N* per playlist; *Cancel* or Escape leaves. A selection bar, a region with a live count,
 says *3 chosen · Made next, oldest first. Psychology stays at up to 5 a day.* and offers
 Remove and *Make 3 now* (`chooseCopy`). It works in the panel too, which holds its own
-queue until OV-11. *Make now* and *Make N now* aren't offered without a key, signed out past
-the trial, or while the queue waits at a limit, because they couldn't work; Remove always
+queue until OV-11. *Make now* and *Make N now* aren't offered without a key, or while the
+queue waits at a limit, because they couldn't work; Remove always
 is.
 
 **More chosen than the month has left** (95ah): the bar says *You have 4 left this month,
@@ -232,14 +231,11 @@ could use (`leftThisMonthOf`).
 Never a spinner: every waiting video says *Waiting for an API key*, and the strip and a
 note on the page point to Settings › API keys. Pause is hidden, because nothing is running.
 
-## Signed out, past the trial
+## Signed out
 
-A device that has made the signed-out trial's 3 (`tiers.md`, "Counting") makes nothing
-more, whatever key it holds, so the queue waits for an account the same way it waits for a
-key: every waiting video says *Waiting for an account*, and the strip and a note on the page
-offer Create account (`account.trial.createAccountChosen`, from `queue`). It comes before
-the key state, because a key wouldn't get round it. Pause is hidden. Signing in starts the
-queue again on the account's month.
+Where there are accounts, signed out makes and shows nothing (`tiers.md`, "Signed out"), so
+the queue makes nothing, the strip says nothing and the queue's page shows the way to an
+account. Signing in starts the queue on the account's month.
 
 ## Analytics
 

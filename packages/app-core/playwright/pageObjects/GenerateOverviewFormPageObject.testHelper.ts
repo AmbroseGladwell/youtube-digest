@@ -100,18 +100,6 @@ export class GenerateOverviewFormPageObject extends PageObject {
       await this.expectToHaveCount(generateOverviewFormTestIds.watchingNote, 0);
     });
 
-  // Signed out past the trial's 3, the form offers an account where Generate would be,
-  // whatever keys the device holds (docs/architecture/tiers.md, "At the limit").
-  verifyOffersAccountForTrial = () =>
-    this.step("verifyOffersAccountForTrial", () =>
-      this.verifyLimitMessage({
-        title: "You've used your 3 trial overviews",
-        actions: ["Create account"],
-      }),
-    );
-
-  clickCreateAccountForTrial = () => this.clickLimitAction("createAccount");
-
   // What's left of the quota the next overview will use (design 95b).
   verifyUsageLineReads = (text: string) =>
     this.step(`verifyUsageLineReads ${text}`, () => expect(this.get(generateOverviewFormTestIds.usageLine.root)).toHaveText(text));

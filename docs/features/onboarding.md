@@ -45,3 +45,17 @@ Descriptions are hidden in onboarding, which shows the names alone, and shown as
 hint under the name in the topic picker (46r), so a reader can see why something landed
 where it did. A topic typed in by the reader, or made in the rail, has none and shows
 none.
+
+## Signed out sees no overviews
+
+Where there are accounts, every page that would show an overview shows `SignedOutGate`
+instead, with Create an account and Sign in, and nothing is made signed out on either key
+(`docs/architecture/tiers.md`, "Signed out"). It replaced OV-103's 3-overview trial, the
+signed-out library and its strips (`account-libraries.md`, "What signed out looks like").
+On the web, onboarding's Start takes its place for a reader who has none.
+
+What stays is what onboarding's overview needs. Its run is made on us through the device's
+trial token, which the server now allows one overview (`TRIAL_OVERVIEWS`), behind the same
+cap per address and signed-out share of the day. It is saved to the no-account library,
+unseen, and the move on sign-in carries it into the account, where it counts as one of the
+plan's overviews on us.

@@ -1,7 +1,6 @@
 import { PROVIDER_LABEL, PROVIDER_SHORT_LABEL, PROVIDERS, type Provider } from "@overview/domain";
 import type { Surface } from "../../app/SurfaceContext.js";
 import type { GenerationReadiness } from "../newOverview/useGenerationReadiness.js";
-import { TRIAL_SPENT_DETAIL, TRIAL_SPENT_HEADING } from "../signedOutTrial/trialPrompt.js";
 
 // What this device is called in a sentence about where a key lives. The distinction is the
 // whole point of the sentence, so it is not softened to "here" (design 110g).
@@ -17,10 +16,8 @@ export const PROVIDER_CHOICE_LINE = `Use one from ${PROVIDERS.map((provider) => 
 
 // The ways a reader can be unable to generate, each with its own words and its own way
 // out. Kept together so the four surfaces that render them cannot drift apart
-// (designs 110k, 110l, 110m). A spent signed-out trial comes first: no key gets round it
-// (docs/architecture/tiers.md, "At the limit").
+// (designs 110k, 110l, 110m).
 export type KeyPrompt =
-  | { kind: "trial-spent"; heading: string; detail: string }
   | { kind: "no-key"; heading: string; detail: string }
   | { kind: "wrong-device"; heading: string; detail: string; provider: Provider; fallback: Provider; footnote: string };
 
@@ -28,9 +25,6 @@ export function keyPrompt(
   readiness: GenerationReadiness,
   { surface, isPhone, detail }: { surface: Surface; isPhone: boolean; detail: string },
 ): KeyPrompt | null {
-  if (readiness.trialSpent) {
-    return { kind: "trial-spent", heading: TRIAL_SPENT_HEADING, detail: TRIAL_SPENT_DETAIL };
-  }
   if (readiness.hasChosenKey) {
     return null;
   }

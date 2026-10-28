@@ -110,7 +110,7 @@ test("a document with no copy in it is a link that goes nowhere, not a broken pa
 test("saving names the overview on the way to an account, and lands on it once confirmed", async ({
   launcher,
 }) => {
-  await launcher.launchExpectingFirstRun({ sync: true, defaultApiUrl: SERVER });
+  await launcher.launch({ sync: true, defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedPayload());
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   const page = await launcher.sharedOverviewPage.verifyIsShown();
@@ -130,7 +130,7 @@ test("saving names the overview on the way to an account, and lands on it once c
 });
 
 test("creating an account any other way promises nothing about a share", async ({ launcher }) => {
-  await launcher.launchExpectingFirstRun({ sync: true, defaultApiUrl: SERVER });
+  await launcher.launch({ sync: true, defaultApiUrl: SERVER });
 
   await launcher.openPage(Routes.createAccount());
 

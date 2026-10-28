@@ -15,8 +15,8 @@ Five folders, five different questions.
 - `tiers.md` — what signed-out, free, BYO Plus and Plus readers can do: generation on our
   key within a quota counted by the server, own-key overviews counted on a free account,
   every feature free and volume paid for, the table of limits, what an own-key overview
-  costs us, price guidance, how the trial is counted, and
-  what the reader sees at the limit.
+  costs us, price guidance, why signed out sees no overviews and how onboarding's one is
+  counted, and what the reader sees at the limit.
 - `model-comparison.md` — OV-92's experiment on which model writes the best overview for
   the least: production's own prompt, schema and retry run on twenty of the reader's videos
   per model, with tokens, latency and cost measured from the providers' own usage reports,

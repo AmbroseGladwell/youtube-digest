@@ -10,7 +10,6 @@ export const captureQueueStripViewTestIds = {
   queueLink: "CaptureQueueStripView.queueLink",
   addKeyLink: "CaptureQueueStripView.addKeyLink",
   seePlansLink: "CaptureQueueStripView.seePlansLink",
-  createAccountLink: "CaptureQueueStripView.createAccountLink",
   showQueueButton: "CaptureQueueStripView.showQueueButton",
   dismissButton: "CaptureQueueStripView.dismissButton",
 };

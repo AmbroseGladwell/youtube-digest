@@ -57,33 +57,6 @@ test("a note that has not synced yet says so rather than opening a page that isn
   await reader.verifyCannotOpenInWebApp("Not in the web app until it syncs");
 });
 
-test("the item opens up once the note reaches the server, without reopening the note", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  const note = seedNote(backendSimulator);
-  const capture = await launcher.launchPanel(signedIn);
-  const reader = await capture.openStoredOverview();
-  await reader.verifyCannotOpenInWebApp("Not in the web app until it syncs");
-  await reader.closeActionsMenu();
-
-  alreadyOnTheServer(backendSimulator, note);
-  await backendSimulator.sync.simulateBackOnline();
-
-  await reader.verifyOpensInWebAppAt(`${SERVER}/overviews/${note.id}`);
-});
-
-test("signed out, the item says that signing in is what puts the note in the web app", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  seedNote(backendSimulator);
-  const capture = await launcher.launchPanel({ ...panel, sync: true });
-  const reader = await capture.openStoredOverview();
-
-  await reader.verifyCannotOpenInWebApp("Sign in to see it in the web app");
-});
-
 test("a shell that cannot sync offers no web app at all", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);

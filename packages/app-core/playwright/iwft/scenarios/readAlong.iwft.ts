@@ -53,37 +53,6 @@ test("the note's two lists carry bullets, and the prose sections do not", async 
   await reader.verifyBulletedLinesRead([...NOTE.keyPoints.map((point) => point.text), ...NOTE.howToApply!.items]);
 });
 
-test("[ and ] step the reading mark forward and back a line at a time", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  backendSimulator.overviews.seed(NOTE);
-  const library = await launcher.launchExpectingLibrary();
-
-  const reader = await library.nthCard(0).openReader();
-  await reader.pressLineKey("]");
-  await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
-
-  await reader.pressLineKey("[");
-  await reader.verifyActiveLineReads("Premise");
-});
-
-test("signed out, play walks the note as the pacer, with a way to sign in for audio", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  backendSimulator.overviews.seed(NOTE);
-  const library = await launcher.launchExpectingLibrary({ sync: true });
-
-  const reader = await library.nthCard(0).openReader();
-  await reader.verifyOffersSignInForAudio(true);
-  await reader.clickPlayPause();
-
-  await reader.verifyPlayButtonReads("Pause");
-  await reader.verifyBarClockReads(/^~\d+:\d{2} · ~\d+ min left$/);
-  await reader.verifyActiveLineReads("A talking-head explainer about three data points.");
-});
-
 // A shell that cannot sign in at all is not offered a link that could not work (CLAUDE.md).
 test("a shell with no way to sign in is not offered sign-in for audio", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);

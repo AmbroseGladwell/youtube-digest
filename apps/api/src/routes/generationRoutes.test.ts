@@ -191,25 +191,24 @@ test("making an overview on our key needs an account or a trial", async () => {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-test("signed out, a device makes the trial's 3 on our key on its token, and the 4th is refused as the trial's", async () => {
+test("signed out, a device makes its one onboarding overview on our key on its token, and the next is refused as the trial's", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
   const device = await makeTrialDevice(testApp);
 
   const made = [];
   for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
-  const fourth = await device.generate();
+  const next = await device.generate();
 
-  assert.deepEqual(made, [200, 200, 200]);
-  assert.equal(fourth.statusCode, 429);
-  assert.equal(fourth.json().error.details.quota, "trial");
+  assert.deepEqual(made, [200]);
+  assert.equal(next.statusCode, 429);
+  assert.equal(next.json().error.details.quota, "trial");
   await testApp.close();
 });
 
 test("a new token from the same address gets no more on our key that day, while another address does", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
-  const first = await makeTrialDevice(testApp);
-  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await first.generate();
+  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await (await makeTrialDevice(testApp)).generate();
 
   const privateWindow = await makeTrialDevice(testApp);
   const refused = await privateWindow.generate();
@@ -229,8 +228,7 @@ test("a new token from the same address gets no more on our key that day, while 
 
 test("a refusal from the address doesn't spend the token's own trial", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
-  const filler = await makeTrialDevice(testApp);
-  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await filler.generate();
+  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await (await makeTrialDevice(testApp)).generate();
   const device = await makeTrialDevice(testApp);
   await device.generate();
 
@@ -238,7 +236,7 @@ test("a refusal from the address doesn't spend the token's own trial", async () 
   const made = [];
   for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
 
-  assert.deepEqual(made, [200, 200, 200]);
+  assert.deepEqual(made, [200]);
   await testApp.close();
 });
 

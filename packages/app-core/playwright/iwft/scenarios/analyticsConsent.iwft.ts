@@ -20,13 +20,11 @@ test.describe("asking a reader without an account", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(makeOverview());
-    await launcher.launchExpectingLibrary({ sync: true, ...NEVER_ASKED });
+    await launcher.launch({ sync: true, ...NEVER_ASKED });
 
     await launcher.analyticsConsentPrompt.verifyAsksFirst();
     await launcher.analyticsConsentPrompt.verifyPrivacyLink(/\/privacy$/, false);
     await launcher.analyticsConsentPrompt.verifyAnswersLookAlike();
-    await launcher.accountStrip.verifyIsAbsent();
 
     await launcher.appShell.openSettings();
     await launcher.appShell.clickBrand();
@@ -100,17 +98,6 @@ test.describe("asking a reader without an account", () => {
 
     await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("analyticsConsent.prompt.accepted");
     test.expect(backendSimulator.analytics.declines()).toEqual([]);
-  });
-
-  test("closing the notice gives the slot back to the account offer", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(makeOverview());
-    await launcher.launchExpectingLibrary({ sync: true, ...NEVER_ASKED });
-    await launcher.analyticsConsentPrompt.dontShare();
-
-    await launcher.analyticsConsentNotice.dismiss();
-
-    await launcher.analyticsConsentNotice.verifyIsAbsent();
-    await launcher.accountStrip.verifyOffersAnAccount();
   });
 
   test("the prompt is on the library only, not on Settings", async ({ launcher }) => {

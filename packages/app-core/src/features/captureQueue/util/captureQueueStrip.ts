@@ -17,8 +17,6 @@ export interface CaptureQueueStripInput {
   skipped: number;
   paused: boolean;
   needsKey: boolean;
-  // Signed out, the device has made the trial's overviews: an account comes before any key.
-  trialSpent: boolean;
   // Waiting at a limit, and whether the extension would be a way around it here.
   hold: QueueHold | null;
   // What ran out, when the hold is the month's.
@@ -32,7 +30,7 @@ export interface CaptureQueueStripInput {
 // Which of the strip's states the queue is in, most pressing first. Null says nothing at
 // all, which is most of the time (docs/features/capture-queue.md, "The strip").
 export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueStrip | null {
-  const { making, waiting, ready, tomorrow, forYou, failed, skipped, paused, needsKey, trialSpent, hold, limit, viaExtension, batch, notice, attentionDismissed } =
+  const { making, waiting, ready, tomorrow, forYou, failed, skipped, paused, needsKey, hold, limit, viaExtension, batch, notice, attentionDismissed } =
     input;
 
   if (making !== null) {
@@ -48,7 +46,6 @@ export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueSt
       tomorrow,
     };
   }
-  if (waiting > 0 && trialSpent) return { kind: "trialSpent", waiting };
   if (waiting > 0 && needsKey) return { kind: "noKey", waiting };
   if (waiting > 0 && hold?.reason === "monthSpent") return { kind: "held", hold, waiting, viaExtension, limit };
   if (waiting > 0 && paused) return { kind: "paused", waiting };

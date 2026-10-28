@@ -67,6 +67,9 @@ export class AppShellPageObject extends PageObject {
       await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(0);
     });
 
+  verifyNewOverviewButtonIsAbsent = () =>
+    this.step("verifyNewOverviewButtonIsAbsent", () => this.expectNotToBeVisible(appShellTestIds.newOverviewButton));
+
   verifyCarriesTheLibraryChrome = () =>
     this.step("verifyCarriesTheLibraryChrome", async () => {
       await this.expectToBeVisible(appShellTestIds.newOverviewButton);

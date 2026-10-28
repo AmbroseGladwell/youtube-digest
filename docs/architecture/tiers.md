@@ -3,9 +3,11 @@
 Decided on 6 Oct 2026 (OV-78). Which key an overview uses was added on 15 Oct 2026, and the
 allowances on our key and the launch prices on 18 Oct 2026. Free's own-key quota went from 30 to
 10 a month on 20 Oct 2026, and signed out became 3 overviews in total, on any key, the same
-day. Four tiers, arranged to push readers towards paying:
-signed out is a taste, a free account is the whole product in small amounts, and the two
-paid plans sell volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
+day. **On 28 Oct 2026 (OV-46) signed out stopped seeing overviews at all:** a reader without an
+account starts their first overview through onboarding and sees it once they have one.
+Four tiers, arranged to push readers towards paying: signed out is the first overview's
+start, a free account is the whole product in small amounts, and the two paid plans sell
+volume. **Plus** sells overviews on our key. **BYO Plus** is cheaper, and
 sells many more overviews on the reader's own key. This file records the shape of each
 tier, and why. OV-19 decided how much of an overview is personal (`cost-model.md`), which
 lowers what a shared video costs but not the allowances. OV-92
@@ -35,16 +37,17 @@ rather than replacing it.
 | | Signed out | Free account | BYO Plus | Plus |
 |---|---|---|---|---|
 | Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
-| Overviews on our key | 3 in total, on either key | 5 a month | 10 a month | 50 a month |
-| Overviews on your own key | (within the 3) | 10 a month | 200 a month | 200 a month |
-| Transcripts from our server | Part of an overview: fetched while an overview is left | Part of an overview | Part of an overview | Part of an overview |
+| Overviews on our key | Onboarding's first, which counts towards the plan picked | 5 a month | 10 a month | 50 a month |
+| Overviews on your own key | — | 10 a month | 200 a month | 200 a month |
+| Seeing an overview | — (needs an account) | Yes | Yes | Yes |
+| Transcripts from our server | Part of the first overview | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
-| Library | This device only | Synced to every device | Synced | Synced |
+| Library | — | Synced to every device | Synced | Synced |
 | Narration, every voice | — (needs an account) | Yes | Yes | Yes |
 | Sharing an overview | — (needs an account) | Yes | Yes | Yes |
 | MCP connection | — (needs an account) | Yes | Yes | Yes |
-| Chapters, transcript tab, personalisation | Yes | Yes | Yes | Yes |
-| Extension, playlists | Yes | Yes | Yes | Yes |
+| Chapters, transcript tab, personalisation | — | Yes | Yes | Yes |
+| Extension, playlists | Only to start onboarding | Yes | Yes | Yes |
 
 **The paid plans sell volume, never features.** A free account has every feature, so a
 free reader sees the whole value of the product, including their library in Claude and
@@ -53,8 +56,7 @@ costs less than Plus** because we don't pay for its generation. Prices are OV-18
 guidance below.
 
 **No account says "unlimited".** Every overview on an account costs us something, so every
-plan has a number, and the app shows it with its reset date. Signed out has a number too,
-the trial's 3.
+plan has a number, and the app shows it with its reset date.
 
 ## What an own-key overview costs us
 
@@ -170,23 +172,43 @@ copy was wrong. The MCP connection was gated on Plus. **OV-104 took that gate ou
 rewrote the copy to sell volume** (`mcp-connector.md`, `plus-upsell.md`); what is still to
 come is showing a reader their own counts, which waits on OV-102 and OV-103.
 
-**Signed out is 3 overviews in total, on either key, then a prompt to create an account**
-(decided 20 Oct 2026). Until then an own key was unlimited signed out, which meant a reader
-with a key gave up volume by signing up: 30, then 10, a month on Free against no limit at
-all. Signed out is now a taste of the product, and the account is where it continues. An
-own-key overview signed out still costs us nothing, so the 3 is about the prompt, not the
-money. Our server fetches transcripts only while the trial has an overview left, so an
-own-key overview signed out may still need the extension or the shared cache.
-
 **Chapters, the transcript tab and personalisation are parts of an overview,** not
 features beside it. They come with every overview at every tier. Gating them would mean
 making a worse overview for the same cost.
 
-**Playlists stay open to everyone (OV-27).** A capture from a followed playlist counts
+**Playlists stay open to every account (OV-27).** A capture from a followed playlist counts
 against the matching quota like any other overview: on our key or on the reader's own. On
 either key, the playlist's pace applies as well: up to 5 a day unless the reader chooses
 otherwise (OV-95, `docs/features/playlists.md`, "A pace for each playlist"). A video the
 reader chooses to make now skips the pace but still counts against the month.
+
+## Signed out
+
+**Signed out sees no overviews** (decided 28 Oct 2026, OV-46, replacing the 3-overview trial
+of 20 Oct). A reader without an account starts their first overview through onboarding
+(`docs/features/onboarding.md`), on us, and sees it once they have created an account or
+signed in. It then counts as one of the plan's overviews on us. Before, signed out made 3
+overviews on either key into a library on the device, then was asked to sign up; an own key
+was briefly unlimited before that, so a reader with a key gave up volume by signing up.
+Making the account the way to see anything removes both problems: there is no signed-out
+volume to compare with Free, and every reader who sees an overview has an account to count
+it against. The shared link page stays public.
+
+**Where there are accounts, every page that would show an overview shows the way to one
+instead:** the library, an overview's own address, the queue, and the side panel's home
+(`SignedOutGate`, in the shell; `useAccountNeeded`). It has Create an account and Sign in,
+counted as `account.signedOutGate.chosen` with the way taken. Settings, signing in and
+creating an account stay open. Nothing is made signed out on either key (`accountNeeded` in
+`useGenerationReadiness`): no Generate, no New, no capture queue, and the injected YouTube
+button opens Create account. Until onboarding is built, the gate is all a reader without an
+account sees.
+
+**A shell with no server has no accounts to offer,** so it has no gate: its library stays on
+the device and it makes overviews on the reader's key, as before.
+
+**The no-account library stays, unseen** (OV-47). It is where onboarding's overview waits
+for the account, and signing in moves it in as it moved a signed-out library before
+(`docs/features/account-libraries.md`). Nothing shows what it holds.
 
 ## Which key an overview uses
 
@@ -195,12 +217,13 @@ overview, and the order is set by what each plan sells:
 
 | | First | Then |
 |---|---|---|
-| Signed out, Free, BYO Plus | the reader's own key | ours |
+| Free, BYO Plus | the reader's own key | ours |
 | **Plus** | **ours** | the reader's own key |
 | No key of their own | ours | — |
+| Signed out (onboarding) | ours | — |
 
 **Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
-ours, and our allowance (5 or 10 a month, or what is left of the trial's 3) becomes the reader's safety net rather than a quota they spend
+ours, and our allowance (5 or 10 a month) becomes the reader's safety net rather than a quota they spend
 first. **Plus is the other way round** because Plus is what a reader pays for overviews on
 our key. With their own key first, a Plus reader would rarely use what they paid for.
 
@@ -243,18 +266,11 @@ if the key fails. Only a spent quota stops it there: offline or with the server 
 overview is made anyway and its push reserves when it goes. `fallbackCauseOf` decides
 whether a failure moves on, and the last key's own failure is what the reader sees when none
 is left. A reader with no key of their own is ready to generate whenever the server makes
-overviews on ours (`useGenerationReadiness`, `ourKeyUsable`): on the account's month signed
-in, and signed out on the device's trial, through `createTrialGenerationApi`, which asks for
-the trial token before the first overview on ours, keeps it, and asks again if the server
-no longer knows it. The device's count (`useSignedOutTrial`, kept in local storage beside the
-library, never read from it) goes up for every overview made signed out, on either key. At 3
-the limit message takes the place of Create on every surface with *You've used your 3 trial
-overviews* and Create account (`limitMessageOf`, below), the capture queue waits for an
-account, and the extension's
-button opens Create account. Only a shell that can make an account has a trial: elsewhere
-there is nothing to offer. Signing in leaves the count where it is, so signing out again
-doesn't start a new trial. The count reaching 3 is `account.trial.limitReached`, and following
-the prompt `account.trial.createAccountChosen`.
+overviews on ours (`useGenerationReadiness`, `ourKeyUsable`), on the account's month. Signed
+out, a run uses our key only, never the reader's, through `createTrialGenerationApi`, which
+asks for the trial token before the overview, keeps it (`useSignedOutTrial`, in local storage
+beside the library, never read from it), and asks again if the server no longer knows it.
+Only onboarding starts such a run.
 The quiet line is `MadeOnLine` under the playlist line in the reader (`madeOnLine` words it),
 and the switch is `OnlyMyKeySwitch`, beside the keys in Settings, shown only where there is
 a fallback to switch off. Saving a shared overview sends the share's token before the copy
@@ -268,8 +284,8 @@ is saved, so its push is let in uncounted.
 name for it in code, logs and these docs. The reader's own is still *your own key*.
 
 Built in OV-131, from designs 95a–95h with the key order flipped for everyone but Plus. Every
-number is the server's (`GET /api/overview-usage`) or the device's trial, worked out in
-code, never by a model.
+number is the server's (`GET /api/overview-usage`), worked out in code, never by a model.
+Signed out there is no line: nothing is made there but onboarding's overview.
 
 **Only the quota the next overview will use is shown where the reader generates.**
 `nextQuotaOf` walks the same order `keyOrderFor` gives a run, and picks the first key with
@@ -282,7 +298,6 @@ Create on the panel's capture screen) reads:
 | First key spent, falling back | *This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans* |
 | Counts not loaded | *Overviews left this month: Checking… · Plan* |
 | Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
-| Signed out | *2 of 3 trial overviews left · On either key · Plan* |
 
 Falling back to our key on Free or BYO Plus, the line mentions Plus once (95m), because an
 upsell names only a plan that makes more on the key this overview uses (decided on OV-131):
@@ -313,43 +328,38 @@ after every run, made or failed, on any surface or the capture queue.
   the next month.
 - **Accounts count against the account,** read beside `accounts.plan` the way the MCP
   connection and the transcript quota already do. `Plan` gains `byo-plus`.
-- **The signed-out trial is 3 overviews on either key, counted twice.** The device counts
-  every overview it makes signed out, on both keys, and offers the account at 3. Clearing
-  site data resets that count, which is accepted: an own-key overview costs us nothing. The
-  ones on our key are also counted by the server, against a token it issues to the device
-  before its first generation on our key, so the device can never be talked into more than 3
-  on ours. The token has its own counter. It is never the no-account library's
-  contents, because OV-47 empties that library into the account on sign-in, which would
-  reset the trial every time. A private window mints a new token, so the trial can be
-  reset, and **the cap that holds is on what costs money: 3 trial overviews on our key a UTC
-  day per address, across every token** (decided 20 Oct 2026, replacing a cap on new tokens
-  per address). The address is stored only as a truncated hash, like the transcript quota,
+- **Signed out, the server counts onboarding's one overview on our key** against a token it
+  issues to the device before generating (`TRIAL_OVERVIEWS`, 1 since 28 Oct 2026; it was 3,
+  on either key, with the device counting too). The token has its own counter. It is never
+  the no-account library's contents, because OV-47 empties that library into the account on
+  sign-in. A private window mints a new token, so the trial can be reset, and **the cap that
+  holds is on what costs money: 3 trial overviews on our key a UTC day per address, across
+  every token** (decided 20 Oct 2026, replacing a cap on new tokens per address). It stays
+  at 3 with one overview a token, so readers sharing an address can each start onboarding. The address is stored only as a truncated hash, like the transcript quota,
   and its rows are deleted after seven days. Readers sharing an address (an office, a
-  university, a mobile network) share the 3, and are pointed to signing up or adding a key.
+  university, a mobile network) share the 3.
 - **Signed out has its own share of the global daily cap on our key: 50 of the 300**
   (`OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS`, decided 20 Oct 2026). Someone rotating addresses
   through proxies could otherwise spend the whole day's cap and turn away paying Plus readers
   until midnight. With it, the worst case is about £2 a day, and accounts never feel it.
-- **Signing in doesn't carry a trial's count over.** The free account starts its own
-  month. Its 15 a month, 5 on our key and 10 on the reader's own, are the reason to sign up. **A no-account library moved in on sign-in
-  (OV-47) counts against the month,** on the key that made each overview (decided 20 Oct
-  2026, reversing the first rule that moved overviews were free). Otherwise a reader at
-  their cap could sign out, make the trial's 3, sign back in and repeat, clearing site data
-  to reset the device's count each time. A signed-out library now holds at most 3, so a new
-  reader is never short. A reader already at the cap keeps the moved overviews on the device,
-  readable, and they sync when the month resets. The server can't tell a moved overview from
-  a new one, so there is no "this was moved" for a modified client to claim.
+- **Onboarding's overview counts towards the plan picked** (decided 28 Oct 2026, reversing
+  "signing in doesn't carry a trial's count over"). It moves in on sign-in with the
+  no-account library (OV-47), and moving in counts it against the month on the key that
+  made it, which is ours (decided 20 Oct 2026, reversing the first rule that moved overviews
+  were free). A reader already at the cap keeps it on the device, and it syncs when the month
+  resets. The server can't tell a moved overview from a new one, so there is no "this was
+  moved" for a modified client to claim.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
   key says so plainly and points to adding a key. It doesn't fail with a generic error.
 - **Transcripts from our server are part of an overview, not a quota of their own**
   (decided 6 Oct 2026, OV-107). A fetch is allowed while the reader has an overview left: on
-  either key this month for an account, or in the trial when signed out. Readers only ever
+  either key this month for an account, or for onboarding's overview when signed out. Readers only ever
   see the overview count. Behind that sits a daily safety cap per caller, 5 per signed-out
   address, 50 per free account, 100 per Plus or BYO Plus account, which protects our
   address's standing with YouTube rather than our money and logs a warning when reached.
   OV-102 checks it for accounts (`OverviewUsageRepository`, `overview_usage`), and OV-103
-  for a trial token that has made its 3 on our key (`server-side-transcripts.md`, "Limits").
+  for a trial token that has made its overview on our key (`server-side-transcripts.md`, "Limits").
 
 ## Generating on our key
 
@@ -380,7 +390,7 @@ all back on any failure. An address refusing gives the token's slot back, so onl
 overview both allow is counted. Each overview made in a trial is remembered by id
 (`trial_overviews`), so moved in on sign-in it counts on our key.
 
-- **Past the trial's 3 on the token:** `429` with `details.quota: "trial"` and no
+- **Past the token's one overview:** `429` with `details.quota: "trial"` and no
   `Retry-After`: it doesn't come back.
 - **Past the address's 3 today:** `429` with `details.quota: "trial-address"` and a
   `Retry-After` at UTC midnight, logged at warn as `trial address cap spent`, never the address.
@@ -428,10 +438,8 @@ it has been pushed is a regeneration, and counts again. `DELETE
 Following "degrade visibly", the reader is told what ran out, when it comes back, and the
 ways around it. Nothing they already have stops working.
 
-- **Signed out, after 3 on either key:** *You've used your 3 trial overviews. A free account
-  makes 5 a month on us, syncs them to every device and reads them aloud.* The capture
-  queue's strip still says *Sign up to keep going*. Adding a key doesn't get round it. The on-device library stays readable, and moves into the account on sign-in
-  (OV-47).
+- **Signed out** there is no limit to meet: nothing is seen or made but onboarding's
+  overview ("Signed out", above).
 - **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
   on 1 November.* Plus makes more, or add your own key.
 - **Free or BYO Plus with a key, after the month's own-key quota (10 or 200):** the

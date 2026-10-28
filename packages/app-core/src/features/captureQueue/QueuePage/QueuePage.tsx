@@ -6,7 +6,6 @@ import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
-import { TRIAL_SPENT_ACTION, TRIAL_SPENT_DETAIL, TRIAL_SPENT_HEADING } from "../../signedOutTrial/trialPrompt.js";
 import { useCaptureQueueController } from "../CaptureQueueContext.js";
 import { AttentionRow } from "../components/AttentionRow/AttentionRow.js";
 import { PacedQueueGroup } from "../components/PacedQueueGroup/PacedQueueGroup.js";
@@ -38,10 +37,10 @@ export function QueuePage() {
   const [notice, setNotice] = useState<{ lead: string; rest: string } | null>(null);
   const rows = waitingRows(queue);
   const waitingCount = queue.waiting.length;
-  const monthHeld = queue.hold?.reason === "monthSpent" && !queue.needsKey && !queue.trialSpent;
+  const monthHeld = queue.hold?.reason === "monthSpent" && !queue.needsKey;
   const tomorrowGroups = monthHeld ? [] : pacedGroups(queue.tomorrow, queue);
   const forYouGroups = pacedGroups(queue.forYou, queue);
-  const canMakeNow = !queue.needsKey && !queue.trialSpent && queue.hold === null;
+  const canMakeNow = !queue.needsKey && queue.hold === null;
   const chosenCaptures = chosen === null ? [] : [...queue.tomorrow, ...queue.forYou].filter((capture) => chosen.has(capture.videoId));
   const leftThisMonth = useLeftThisMonth();
   const allowance = leftThisMonth?.resetsOn == null ? null : { left: leftThisMonth.left, resetsOn: leftThisMonth.resetsOn };
@@ -147,7 +146,7 @@ export function QueuePage() {
       ? "Made oldest first while The Overview is open on this phone. Continues next time you open it."
       : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 
-  const pauseControl = queue.needsKey || queue.trialSpent || monthHeld ? null : queue.paused ? (
+  const pauseControl = queue.needsKey || monthHeld ? null : queue.paused ? (
     <button
       type="button"
       className={stacked ? styles.iconPrimary : styles.primary}
@@ -245,25 +244,6 @@ export function QueuePage() {
               Keep
             </button>
           </span>
-        </div>
-      )}
-
-      {queue.trialSpent && waitingCount > 0 && (
-        <div className={styles.noKey} data-testid={queuePageTestIds.trialSpentNote}>
-          <span className={styles.noKeyIcon} aria-hidden="true">
-            <StrokeIcon name="userPlus" size={18} />
-          </span>
-          <p className={styles.noKeyText}>
-            {TRIAL_SPENT_HEADING} {TRIAL_SPENT_DETAIL} The queue starts again once you're signed in.
-          </p>
-          <Link
-            className={styles.primary}
-            to={Routes.createAccount()}
-            onClick={() => analytics.account.trial.createAccountChosen({ from: "queue" })}
-            data-testid={queuePageTestIds.createAccountLink}
-          >
-            {TRIAL_SPENT_ACTION}
-          </Link>
         </div>
       )}
 

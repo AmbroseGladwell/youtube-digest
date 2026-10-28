@@ -19,14 +19,13 @@ export interface LimitMessageNoteProps {
 }
 
 const ROUTE: Record<LimitAction, () => string> = {
-  createAccount: () => Routes.createAccount(),
   addKey: () => Routes.settingsSection("keys"),
   seePlans: () => Routes.settingsSection("plan"),
   seeByoPlus: () => Routes.settingsSection("plan"),
   seeUsage: () => Routes.settingsSection("plan"),
 };
 
-const WAY = { createAccount: "createAccount", addKey: "addKey", seePlans: "seePlans", seeByoPlus: "seePlans", seeUsage: "seePlans" } as const;
+const WAY = { addKey: "addKey", seePlans: "seePlans", seeByoPlus: "seePlans", seeUsage: "seePlans" } as const;
 
 // What ran out, when it's back and the ways round it, in Generate's place (designs 95i–95o).
 // The link stays in the field, so a reader who adds a key carries on where they were.
@@ -36,7 +35,7 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
   const firstAction = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    analytics.capture.limitMessage.shown({ quota: message.quota, plan: message.quota === "trial" ? "signedOut" : plan, from });
+    analytics.capture.limitMessage.shown({ quota: message.quota, plan, from });
   }, [message.quota]);
 
   useEffect(() => {
@@ -47,7 +46,6 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
 
   const follow = (action: LimitAction) => {
     analytics.capture.limitMessage.wayChosen({ way: WAY[action], from });
-    if (action === "createAccount" && message.quota === "trial") analytics.account.trial.createAccountChosen({ from });
     onFollowed?.();
   };
 

@@ -26,12 +26,10 @@ was decided for both (Trello OV-47, 2026-10-02) and what is built so far.
 | Sign-out syncs first, for ten seconds at most, and clears nothing | `features/sync/SyncRuntime.tsx` |
 | What a sign-out left queued, counted and worded | `features/sync/util/signOutOutcomeOf.ts`, `signOutNoticeFor.ts`, `features/accountLibraries/util/signOutNoticeCopy.ts` |
 | Sign-out counted before the session ends | `features/accountLibraries/useSignOut.ts`, `account.*` in `packages/domain/src/analyticsEvents.ts` |
-| What the device remembers: signed out here, offer turned down | `features/accountLibraries/deviceAccountHistoryStorage.ts`, `useDeviceAccountHistory.ts` |
-| The strips (47a, 47c), the signed-out library (47b), the notice (47d), opening (47f) | `features/accountLibraries/components/` |
-| Which strip shows, and when the device counts as signed out here | `features/accountLibraries/useAccountStripKind.ts`, `useSignedOutHere.ts` |
+| The notice (47d), opening (47f), and the page shown signed out in place of overviews (OV-46) | `features/accountLibraries/components/`, `useAccountNeeded.ts` |
 | An install signed in before this card: its library adopted by its account, once | `packages/store-local/src/adoptLibraryIntoAccount.ts`, `features/accountLibraries/adoptSignedInLibrary.ts`, both shells' start; reading positions in `readingPositionStorage.ts` (`adoptReadingPositions`) |
 | The move on sign-in, one overview per video, and what it tells the reader (47e) | `features/accountLibraries/moveLibraryInto.ts`, `LibraryMoveRuntime.tsx`, `components/LibraryMoveNotice/`, `util/libraryMoveCopy.ts`; reading positions in `readingPositionStorage.ts` (`moveReadingPositions`) |
-| Settings' row and section (47g), the sign-in page's line (47h) | `features/settings/util/settingsRowValues.ts`, `features/sync/components/SyncPanel/`, `features/auth/util/savedOverviewsNote.ts` |
+| The sign-in page's line (47h) | `features/auth/util/savedOverviewsNote.ts` |
 | Reading positions kept per library | `features/transcripts/readingPositionStorage.ts` |
 | The screens, against in-memory libraries per account | `packages/app-core/playwright/iwft/scenarios/accountLibraries.iwft.ts` |
 
@@ -206,36 +204,19 @@ writes and then not been opened until this landed.
 
 ## What signed out looks like
 
-Two flags, kept on the device whoever is signed in (`DeviceAccountHistory`): whether an
-account has ever signed out here, written by sign-out and cleared by sign-in, and whether
-the offer of an account was turned down. A reader who has never had an account is told
-nothing about signing out, ever.
+**Since OV-46 (28 Oct 2026), nothing.** Signed out where there are accounts, no overview is
+seen anywhere: the library, an overview's address, the queue and the side panel's home show
+`SignedOutGate` instead, with Create an account and Sign in (`docs/architecture/tiers.md`,
+"Signed out"). So the no-account library is never shown. It holds onboarding's overview
+until the account exists, and the move on sign-in carries it in.
 
-- **Signed out, holding overviews (47a).** A stone strip in the generation strip's slot,
-  "Signed out. Sign in to sync your Overviews…", with Sign in and no ×: it lasts as long as
-  the state does. The subtitle says "in this browser", and the account button's name says
-  "Account, signed out". In the panel the strip sits above the offer.
-- **Signed out, holding nothing (47b).** Not a route: the library at / when it is empty and
-  the flag is set. It leads with what is safe, shows no address, and takes focus on its
-  heading. Below Sign in, the first-run field, so someone else at a shared device can start;
-  it is shown only when this device can generate, like every control here. The panel says
-  it in one line under its offer.
-- **Never signed in (47c).** Once the library holds an overview, the same slot offers an
-  account, "Sync across devices…", with Create account and ×, which hides it on this device
-  for good. The empty first-run page doesn't carry it: it has one job, taking a link, and a
-  reader with nothing yet has nothing to sync. The same goes for the panel.
-- **Opening (47f).** After a sign-in, until the account's first cycle is done, the library
-  is its own skeleton with "Opening your library…", so an empty library is never taken for
-  the account's. Sign-out needs none: the device's own library opens at once.
-- **Settings (47g).** Signed out here, the account row reads "Signed out · saved in this
-  browser", and the section says how many Overviews are only saved here, with Sign in and
-  Create account. A device that never had an account keeps the old copy.
-- **The sign-in page (47h)** says signing in adds what is here "except any for videos it
-  already has". Creating an account is unchanged: a new account holds nothing to clash with.
-
-The strips show only on the library, where what they describe is in front of the reader,
-and give way to the generation strip while something is being made. The web app says "this
-browser" wherever the extension says "the extension".
+What OV-47 drew for a signed-out library went with it: the strip saying the device was
+signed out (47a), the empty library after signing out (47b), the offer of an account to a
+reader who never had one (47c), the Settings row and section saying how many were saved here
+(47g), the library's count saying where they were kept, the account button's "Account,
+signed out", and the device flags behind them (`DeviceAccountHistory`). The account row
+reads "Not signed in". A shell with no server never showed any of them, and still shows its
+library.
 
 ## Analytics and logging
 
@@ -249,12 +230,9 @@ through it, from the menu, Settings, the consent screen and Connect the extensio
 control was used is already counted (`app.accountMenu.itemChosen`,
 `settings.sync.signOutChosen`).
 
-**What a signed-out library offers is called but not yet sent.**
-`account.signedOutStrip.signInChosen`, `account.signedOutLibrary.signInChosen`,
-`account.accountOffer.createAccountChosen` and `account.accountOffer.dismissed` are made by
-readers without a session, so like `account.signIn.*` they reach only the trail an error
-carries until OV-62 brings consent and an anonymous id. The calls are in place so they
-count the day it lands.
+**The page shown signed out counts the way taken,** `account.signedOutGate.chosen` with
+`signIn` or `createAccount`. It is made without a session, so it is sent only once the reader
+has said yes to analytics (`analytics-consent.md`).
 
 **The server logs each session from start to end.** `session created` when it is made
 and `signed out` when it ends, both under the account's and the session's ids, `signed out`
@@ -278,14 +256,6 @@ Both happen signed in, so both are sent.
 
 - **`SyncState.disconnect` is gone.** It existed so sign-out could forget the bookkeeping,
   which is exactly what sign-out must now not do, and nothing else called it.
-- **The strips show on the library only**, not on every page the slot exists on: the
-  designs draw them on the library, and a strip about the library on a reader's page would
-  be beside the point.
-- **47b's field is shown only when this device can generate.** The design draws it
-  unconditionally; a field that cannot work is hidden, as the hero's keys note explains for
-  the first-run page.
-- **The account button's name is "Account, signed out"** only once this device has signed
-  out of an account, as the designs draw it; otherwise it stays "Account".
 - **The move writes one overview at a time, not in one transaction.** The card asked for a
   single transaction on the account's side. The move goes through the stores' own writes,
   so each is journalled exactly as a reader's would be, and finishing an interrupted move by

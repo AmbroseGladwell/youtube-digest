@@ -21,10 +21,10 @@ describe("signedOutTrialStorage", () => {
     expect(readSignedOutTrial(makeStorage())).toEqual(NO_TRIAL);
   });
 
-  it("round-trips the count and the token", () => {
+  it("round-trips the token", () => {
     const storage = makeStorage();
-    writeSignedOutTrial({ made: 2, token: "trial-token" }, storage);
-    expect(readSignedOutTrial(storage)).toEqual({ made: 2, token: "trial-token" });
+    writeSignedOutTrial({ token: "trial-token" }, storage);
+    expect(readSignedOutTrial(storage)).toEqual({ token: "trial-token" });
   });
 
   it("treats what it cannot read as a fresh trial", () => {
