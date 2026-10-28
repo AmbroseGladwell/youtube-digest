@@ -10,6 +10,7 @@ import { CreateAccountPage } from "../features/auth/CreateAccountPage/CreateAcco
 import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
 import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js";
 import { SharedOverviewRoute } from "../features/sharedPage/SharedOverviewRoute.js";
+import { OnboardingPage } from "../features/onboarding/OnboardingPage/OnboardingPage.js";
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 import { RouterErrorBoundary } from "./RouterErrorBoundary.js";
 import { RouteParams, Routes } from "./Routes.js";
@@ -35,6 +36,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
       errorElement: <RouterErrorBoundary />,
       children: [
         { path: Routes.home(), element: <HomePage /> },
+        { path: Routes.onboarding(), element: <OnboardingPage /> },
         { path: Routes.overview(`:${RouteParams.overviewId}`), element: <ReaderPage /> },
         { path: Routes.queue(), element: <QueuePage /> },
         { path: Routes.settings(), element: <SettingsPage /> },

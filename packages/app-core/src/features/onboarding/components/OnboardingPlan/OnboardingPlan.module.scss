@@ -1,0 +1,129 @@
+@use "../../onboarding" as onboarding;
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.intro {
+  @include onboarding.intro;
+}
+
+.lead {
+  @include onboarding.lead;
+}
+
+.includes {
+  margin: 0;
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @media (min-width: 64rem) {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.card {
+  @include onboarding.card;
+  flex: 1;
+  min-width: 0;
+  border-radius: 1.375rem;
+  padding: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.recommended {
+  border-radius: var(--radius-badge);
+  box-shadow: inset 0 0 0 1px var(--label);
+  padding: 2px 0.5625rem;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--on-stone-tint);
+}
+
+.price {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gives {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+
+  li {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.tick {
+  color: var(--label);
+}
+
+.more {
+  color: var(--muted);
+}
+
+.action {
+  margin-top: auto;
+  padding-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.choose {
+  @include onboarding.secondary;
+}
+
+.under {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.byo,
+.counts,
+.bringingIn {
+  margin: 0;
+  font-size: 0.78125rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.byo {
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ink);
+}

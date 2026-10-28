@@ -34,6 +34,7 @@ import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types
 import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
+import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
 import type { ModelByProvider, Provider } from "@overview/domain";
 
@@ -101,11 +102,10 @@ export class Launcher {
     test.step("Launcher.launch", async () => {
       await this.mountApp(options);
       const home = new HomePageObject(this.testContext);
-      // Signed out where there are accounts, home is the way to one rather than a library
-      // (docs/architecture/tiers.md, "Signed out").
+      // Signed out where there are accounts, home is onboarding's Start rather than a library
+      // (docs/features/onboarding.md).
       if (options.sync === true && !options.syncConnection?.apiUrl) {
-        await this.signedOutGate.verifyIsShown();
-        return home;
+        return (await home.verifyIsShown()).verifyShowsStart();
       }
       return home.verifyIsShown();
     });
@@ -263,6 +263,10 @@ export class Launcher {
 
   get signOutNotice(): SignOutNoticePageObject {
     return new SignOutNoticePageObject(this.testContext);
+  }
+
+  get onboardingPage(): OnboardingPageObject {
+    return new OnboardingPageObject(this.testContext);
   }
 
   get signedOutGate(): SignedOutGatePageObject {

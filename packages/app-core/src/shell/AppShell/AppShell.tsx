@@ -52,11 +52,13 @@ export function AppShell() {
   const belowWriteFloor = sync.status.phase === "unsupported";
   const onHome = pathname === Routes.home();
   // Signed out where there are accounts, every page that would show an overview shows the
-  // way to an account instead (docs/architecture/tiers.md, "Signed out").
+  // way to an account instead; on the web, home is onboarding's Start in its place
+  // (docs/architecture/tiers.md, "Signed out"; docs/features/onboarding.md).
   const accountNeeded = useAccountNeeded();
   const gated =
-    accountNeeded && (onHome || pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
-  const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel);
+    accountNeeded &&
+    ((onHome && isPanel) || pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
+  const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel && !accountNeeded);
   const panelConsentStrip = useAnalyticsConsentStrip(gated && isPanel);
   const libraryMoved = useLibraryMove().move !== null;
 
@@ -104,6 +106,19 @@ export function AppShell() {
     newOverview.dismiss();
     void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
   };
+
+  // Onboarding brings its own head, with nothing to navigate to until there is an account
+  // (docs/features/onboarding.md).
+  if (pathname === Routes.onboarding()) {
+    return (
+      <NewOverviewRunProvider value={newOverview}>
+        <CaptureQueueProvider value={captureQueue}>
+          <Outlet />
+          <ScrollRestoration />
+        </CaptureQueueProvider>
+      </NewOverviewRunProvider>
+    );
+  }
 
   return (
     <NewOverviewRunProvider value={newOverview}>

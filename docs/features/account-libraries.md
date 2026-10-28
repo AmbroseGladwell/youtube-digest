@@ -132,6 +132,12 @@ the one it set out to sign out, so a sign-in finished during its last cycle is n
 
 ## The move on sign-in
 
+**What onboarding asked goes first** (`moveAnswersInto`, OV-46): every topic the no-account
+library holds, with its description, whether or not an overview is sorted under it yet, then
+About you and the voice where the account has none (no About you, the default voice); the
+account's own win. They are cleared here once moved. Topics stay, since there is no deleting
+a topic, and finding one by name again is harmless.
+
 **It waits for the account's first pull.** `LibraryMoveRuntime` runs once the open library
 is the signed-in account's and its sync has completed a cycle (`lastSyncedAt`), so "the
 account already has this video" means what the account holds, not what this device happened
