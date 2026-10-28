@@ -15,8 +15,10 @@ export function sinceDay(iso: string, now: Date): string {
   return `${date.getDate()} ${MONTH.format(date)} ${date.getFullYear()}`;
 }
 
+// A yes to an older list of what is counted sends nothing, so it reads as off, and turning
+// it on says yes to the current list.
 export function shareUsageOn(state: ShareUsageState): boolean {
-  return state.signedIn ? !state.optedOut : state.consent?.answer === "share";
+  return state.signedIn ? !state.optedOut : state.consent?.answer === "share" && !state.outdated;
 }
 
 // Design 62d–62h: the line under "Analytics", which is the switch's description.

@@ -40,6 +40,14 @@ export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Da
   });
 }
 
+// A no from a reader who hadn't said yes is a decline, which the caller tells the server
+// about; a no after a yes is a withdrawal, which isn't (docs/features/analytics-consent.md).
+export function declineAnalyticsConsent(now: Date = new Date()): { declined: boolean } {
+  const saidYesBefore = analyticsConsentSnapshot().consent?.answer === "share";
+  answerAnalyticsConsent("dontShare", now);
+  return { declined: !saidYesBefore };
+}
+
 // The id belongs to whoever uses this device with no account, so a sign-in drops it and the
 // next reader signed out here gets a new one (docs/features/analytics-consent.md).
 export function forgetAnonymousId(): void {

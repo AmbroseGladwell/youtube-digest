@@ -16,8 +16,13 @@ import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js"
 import { useStores } from "../../../stores/StoresContext.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
-import { answerAnalyticsConsent, useAnalyticsConsent } from "../../analyticsConsent/useAnalyticsConsent.js";
+import {
+  answerAnalyticsConsent,
+  declineAnalyticsConsent,
+  useAnalyticsConsent,
+} from "../../analyticsConsent/useAnalyticsConsent.js";
 import { useAnalyticsDecline } from "../../analyticsConsent/useAnalyticsDecline.js";
+import { consentOutdated } from "../../analyticsConsent/util/consentAllowsSharing.js";
 import { RequestLinkFlow } from "../../auth/components/RequestLinkFlow/RequestLinkFlow.js";
 import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -74,6 +79,9 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const accountId = libraryAccountIdOf(connection);
   const signedIn = accountId !== null;
   const { consent } = useAnalyticsConsent();
+  // An answer to an older list of what is counted is put to the reader again, since nothing
+  // else asks (docs/features/analytics-consent.md, "When what is counted changes").
+  const analyticsAnswered = consent !== null && !consentOutdated(consent);
   const declineAnalytics = useAnalyticsDecline();
   const libraryMove = useLibraryMove();
   const { overviewStore } = useStores();
@@ -127,8 +135,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
   };
 
   useEffect(() => {
-    if (step === "analytics" && consent !== null) update({ step: "video" });
-  }, [step, consent, update]);
+    if (step === "analytics" && analyticsAnswered) update({ step: "video" });
+  }, [step, analyticsAnswered, update]);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -214,8 +222,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
               next();
             }}
             onNoThanks={() => {
-              answerAnalyticsConsent("dontShare");
-              declineAnalytics();
+              if (declineAnalyticsConsent().declined) declineAnalytics();
               next();
             }}
           />
@@ -286,7 +293,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const back = () => {
     analytics.onboarding.step.backChosen({ step });
     const before = ONBOARDING_STEPS[indexOf(step) - 1];
-    if (before === undefined || (before === "analytics" && consent !== null)) startAgain();
+    if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
   };
 

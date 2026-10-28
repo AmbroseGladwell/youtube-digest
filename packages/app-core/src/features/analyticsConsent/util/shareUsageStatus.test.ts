@@ -39,9 +39,10 @@ describe("a reader without an account", () => {
     expect(shareUsageRowValue(no)).toBe("Off");
   });
 
-  it("answered an older list: the old answer shows, and the line says nothing new is counted yet", () => {
+  it("said yes to an older list: off, since nothing is sent, and the line says why", () => {
     const old = state({ answer: "share", answeredAt: EARLIER }, true);
-    expect(shareUsageOn(old)).toBe(true);
+    expect(shareUsageOn(old)).toBe(false);
+    expect(shareUsageRowValue(old)).toBe("Off");
     expect(shareUsageStatus(old, NOW)).toBe("Analytics now covers more. Nothing new is counted until you choose.");
   });
 });

@@ -86,11 +86,15 @@ answers holds at most one batch of events, in memory, until they leave.
 
 `ANALYTICS_PURPOSES` lists every change to what is counted. A yes counts only for the list
 it answered (`consentAllowsSharing`), so adding one stops sending for a reader without an
-account until they say yes again. **Nothing asks them again:** the only readers without an
-account are partway through onboarding, and a signed-in reader is never asked. Settings ›
-Privacy carries the change ("Analytics now covers more …", below), and the privacy policy
-says what was added. A device that answered an older list passes onboarding's screen by,
-like any answered device.
+account until they say yes again. There is no strip to ask them, so the answer is put to
+them again in two places (`consentOutdated`):
+
+- **Onboarding** shows its analytics screen to a device whose answer is to an older list,
+  as it does to one that never answered.
+- **Settings › Privacy** shows an older yes as off, since nothing is sent, with "Analytics
+  now covers more …" under it. Turning it on says yes to the current list.
+
+A signed-in reader is never asked. The privacy policy says what was added.
 
 ## Where it's asked
 
@@ -108,7 +112,7 @@ policy. In the extension the link opens the web app's `/privacy` in a tab of its
 
 No thanks is the skip. What happened since Start is held in memory, as above, and sent on
 Allow, whose `analyticsConsent.prompt.accepted` says `asked: "onboarding"`. A device that
-has answered already passes the screen by. Neither answer shows a notice: the next screen
+has answered the current list passes the screen by. Neither answer shows a notice: the next screen
 follows straight on.
 
 ## Settings › Privacy
@@ -121,7 +125,7 @@ everyone; its line under the label is its description and says what it means:
 |---|---|---|
 | No account, never answered | "You haven't chosen yet, so nothing is counted." | — |
 | No account, answered | "Off since 4 October 2026" | "On since 4 October 2026" |
-| No account, answered an older list | the old answer, with "Analytics now covers more. Nothing new is counted until you choose." | |
+| No account, answered an older list | "Analytics now covers more. Nothing new is counted until you choose.", whatever the answer was | — |
 | Signed in | "Off across your devices since 4 October 2026" | "On across your devices", with "since …" once changed |
 
 A date that is today reads "today". The text under the switch says what is counted, and
@@ -172,10 +176,10 @@ nothing records them now. Every event a signed-out reader's app already calls
 (`account.signIn.*`, onboarding's) is sent once they say yes. `analyticsConsent.settings.switched({ on })` is the
 switch in Settings.
 
-**A no is counted with no id.** No thanks in onboarding, from a reader who hadn't answered,
-posts the app's context alone to `POST /api/events/declined`, which logs
-`analytics declined` and keeps nothing else; it is limited per address like anonymous
-events. A no after a yes is a withdrawal, not a decline, and isn't posted. The switch can't
+**A no is counted with no id.** No thanks in onboarding, from a reader who hadn't said yes,
+posts the app's context alone to `POST /api/events/declined`, which logs `analytics
+declined` and keeps nothing else; it is limited per address like anonymous events.
+`declineAnalyticsConsent` says which kind of no it was. A no after a yes is a withdrawal, not a decline, and isn't posted. The switch can't
 decline: from "Not chosen" it can only turn on.
 
 The server logs each event with `signedIn`, and never the anonymous id in the log line.
