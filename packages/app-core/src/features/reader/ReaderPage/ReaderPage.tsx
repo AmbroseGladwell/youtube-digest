@@ -37,6 +37,7 @@ import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableO
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { LineRangeTag } from "../components/LineRangeTag/LineRangeTag.js";
 import { RelatedByTag } from "../components/RelatedByTag/RelatedByTag.js";
+import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextSteps/OnboardingNextSteps.js";
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { overviewTags } from "../../overviews/util/overviewTags.js";
 import { relatedByTag } from "../util/relatedByTag.js";
@@ -343,6 +344,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   />
                 )}
               />
+              {!isPanel && <OnboardingNextSteps overviewId={overview.id} />}
               <RelatedByTag
                 tags={overviewTags(overviewQuery.data)}
                 related={relatedByTag(overviewQuery.data, readableEntries(libraryQuery.data ?? []))}

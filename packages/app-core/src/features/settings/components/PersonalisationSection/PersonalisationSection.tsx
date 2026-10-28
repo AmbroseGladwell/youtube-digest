@@ -4,11 +4,12 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import { OVERVIEW_SECTIONS } from "../../util/overviewSections.js";
+import { AboutYouCard } from "../AboutYouCard/AboutYouCard.js";
 import styles from "./PersonalisationSection.module.scss";
 import { personalisationSectionTestIds } from "./PersonalisationSectionTestIds.js";
 
 export const PERSONALISATION_STANDFIRST =
-  "Which parts your next overviews include. Overviews you already have keep theirs.";
+  "Shapes the overviews made from now on. Ones you already have stay as they are.";
 
 function SectionSwitch({
   section,
@@ -52,7 +53,8 @@ function SectionSwitch({
   );
 }
 
-// docs/features/personalisation.md.
+// About you, then the sections an overview can leave out (design 46s;
+// docs/features/personalisation.md).
 export function PersonalisationSection() {
   const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;
   const updateSettings = useUpdateSettingsMutation();
@@ -65,17 +67,20 @@ export function PersonalisationSection() {
   };
 
   return (
-    <div className={styles.card} data-testid={personalisationSectionTestIds.root}>
-      {OVERVIEW_SECTIONS.map(({ section, label, hint }) => (
-        <SectionSwitch
-          key={section}
-          section={section}
-          label={label}
-          hint={hint}
-          on={sectionsEnabled[section]}
-          onSwitch={() => switchSection(section)}
-        />
-      ))}
+    <div className={styles.root}>
+      <AboutYouCard />
+      <div className={styles.card} data-testid={personalisationSectionTestIds.root}>
+        {OVERVIEW_SECTIONS.map(({ section, label, hint }) => (
+          <SectionSwitch
+            key={section}
+            section={section}
+            label={label}
+            hint={hint}
+            on={sectionsEnabled[section]}
+            onSwitch={() => switchSection(section)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

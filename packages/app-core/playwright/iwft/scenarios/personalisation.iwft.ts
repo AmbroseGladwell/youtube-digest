@@ -35,13 +35,13 @@ test("turning a section off in Settings › Personalisation leaves it out of the
   backendSimulator.ourKey.isAvailable();
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
   const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
-  await settings.verifyRowReads("personalisation", "Every section");
+  await settings.verifyRowReads("personalisation", "About you not set · Every section");
 
   await settings.personalisation.clickSwitch("watchAnyway");
 
   await settings.personalisation.verifySwitchIs("Watch it anyway?", false);
   await settings.personalisation.verifySwitchIs("Verdict", true);
-  await settings.verifyRowReads("personalisation", "3 of 4 sections");
+  await settings.verifyRowReads("personalisation", "About you not set · 3 of 4 sections");
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("settings.personalisation.")))
     .toEqual([{ name: "settings.personalisation.sectionSwitched", props: { section: "watchAnyway", on: false } }]);
@@ -53,4 +53,28 @@ test("turning a section off in Settings › Personalisation leaves it out of the
   await launcher.readerPage.verifyIsShown();
   const [request] = backendSimulator.ourKey.generations();
   expect(request?.input.sectionsEnabled).toEqual({ ...DEFAULT_SECTIONS_ENABLED, watchAnyway: false });
+});
+
+test("About you set in Settings › Personalisation is what the next overview is written for, and can be cleared", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await settings.personalisation.verifyAboutYouReads("Not set, so overviews are written for anyone.");
+
+  await settings.personalisation.setAboutYou({ role: "Teaching", goals: ["Tech"] });
+
+  await settings.personalisation.verifyAboutYouReads("A teacher, learning about tech.");
+  await settings.verifyRowReads("personalisation", "A teacher, learning about tech. · Every section");
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("A teacher, learning about tech.");
+
+  const again = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await again.personalisation.clearAboutYou();
+  await again.personalisation.verifyAboutYouReads("Not set, so overviews are written for anyone.");
 });

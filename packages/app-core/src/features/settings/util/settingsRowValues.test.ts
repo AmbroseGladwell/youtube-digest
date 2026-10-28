@@ -102,10 +102,18 @@ describe("milestonesRowValue", () => {
 
 describe("personalisationRowValue", () => {
   it("says how many of the four optional sections the next overview will have", () => {
-    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED)).toBe("Every section");
-    expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false })).toBe("3 of 4 sections");
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, null)).toBe("About you not set · Every section");
+    expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, null)).toBe(
+      "About you not set · 3 of 4 sections",
+    );
     expect(
-      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }),
-    ).toBe("Summary and key points only");
+      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, null),
+    ).toBe("About you not set · Summary and key points only");
+  });
+
+  it("leads with About you once it is set", () => {
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, "Works in healthcare.")).toBe(
+      "Works in healthcare. · Every section",
+    );
   });
 });

@@ -8,7 +8,7 @@ import {
   toggledGoals,
   type AboutYouGoal,
   type AboutYouRole,
-} from "../../util/aboutYou.js";
+} from "../../../settings/util/aboutYou.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingAboutYou.module.scss";
 import { onboardingAboutYouTestIds } from "./OnboardingAboutYouTestIds.js";

@@ -1,0 +1,73 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../onboarding" as onboarding;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+
+  @media (min-width: 64rem) {
+    flex-direction: row;
+  }
+}
+
+.card {
+  @include onboarding.card;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding: 1rem 2.75rem 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dismiss {
+  @include controls.icon-control;
+  @include controls.circle(2.75rem);
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  @media (min-width: 64rem) {
+    @include controls.circle(2rem);
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}
+
+.icon {
+  display: inline-flex;
+  color: var(--label);
+}
+
+.title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.action {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  text-decoration: none;
+  color: var(--ink);
+
+  @media (min-width: 64rem) {
+    min-height: 0;
+  }
+}

@@ -451,6 +451,10 @@ export const analyticsEvents = {
     plan: {
       chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),
     },
+    nextSteps: {
+      chosen: event("The reader follows a next step under their first overview", { step: z.enum(["extension", "ai"]) }),
+      dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["extension", "ai"]) }),
+    },
     finished: {
       revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had", { way: AuthIntent }),
     },
@@ -508,6 +512,9 @@ export const analyticsEvents = {
       samplesRetried: event("The reader tries loading the voice samples again"),
     },
     personalisation: {
+      aboutYouSaved: event("The reader saves About you in Settings › Personalisation, or clears it; never what it says", {
+        set: z.boolean(),
+      }),
       sectionSwitched: event("The reader turns one section of their future overviews on or off in Settings › Personalisation", {
         section: SectionsEnabled.keyof(),
         on: z.boolean(),
@@ -827,6 +834,9 @@ export const analyticsEvents = {
         milestone: MilestoneId,
         by: MilestoneLineControl,
       }),
+    },
+    firstOverview: {
+      dismissed: event("The reader hides the first-overview milestone until their next milestone"),
     },
     settingsMilestones: {
       opened: event("The reader opens Settings › Milestones"),
