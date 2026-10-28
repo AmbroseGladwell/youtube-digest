@@ -8,7 +8,7 @@ export class AccountTermsLinePageObject extends PageObject {
     this.step("verifyReadsAboveTheButton", async () => {
       const line = this.get(accountTermsLineTestIds.root);
       await expect(line).toHaveText(
-        "By creating an account, you agree to the Terms and Privacy policy, including sharing which features you use. You can turn this off in Settings › Privacy.",
+        "By creating an account, you agree to the Terms and Privacy policy, including analytics on which features you use. You can turn this off in Settings › Privacy.",
       );
       await expect(line.getByRole("checkbox")).toHaveCount(0);
       for (const [testId, page] of [

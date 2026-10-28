@@ -27,8 +27,6 @@ import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js"
 import { Routes } from "../../src/app/Routes.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
-import { AnalyticsConsentNoticePageObject } from "../pageObjects/AnalyticsConsentNoticePageObject.testHelper.js";
-import { AnalyticsConsentPromptPageObject } from "../pageObjects/AnalyticsConsentPromptPageObject.testHelper.js";
 import { makeAnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
@@ -51,7 +49,7 @@ export interface LaunchOptions {
   pendingSignIn?: PendingSignIn;
   // The trial token this device holds signed out.
   signedOutTrial?: SignedOutTrial;
-  // What this device said about sharing usage. Absent is a "no" already given, so a
+  // What this device said about analytics. Absent is a "no" already given, so a
   // scenario about something else isn't asked; null is a device that has never been asked.
   analyticsConsent?: AnalyticsConsent | null;
   accountSeen?: boolean;
@@ -258,14 +256,6 @@ export class Launcher {
 
   get accountTermsLine(): AccountTermsLinePageObject {
     return new AccountTermsLinePageObject(this.testContext);
-  }
-
-  get analyticsConsentPrompt(): AnalyticsConsentPromptPageObject {
-    return new AnalyticsConsentPromptPageObject(this.testContext);
-  }
-
-  get analyticsConsentNotice(): AnalyticsConsentNoticePageObject {
-    return new AnalyticsConsentNoticePageObject(this.testContext);
   }
 
   get libraryMoveNotice(): LibraryMoveNoticePageObject {

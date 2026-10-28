@@ -3,7 +3,7 @@ import { useUpdateSettingsMutation } from "../settings/mutations/useUpdateSettin
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 import { useSync } from "../sync/SyncContext.js";
 import { answerAnalyticsConsent, useAnalyticsConsent } from "./useAnalyticsConsent.js";
-import { consentAskOf } from "./util/consentAskOf.js";
+import { consentOutdated } from "./util/consentAllowsSharing.js";
 import { shareUsageOn, type ShareUsageState } from "./util/shareUsageStatus.js";
 
 export interface ShareUsage {
@@ -11,7 +11,7 @@ export interface ShareUsage {
   switchTo: (on: boolean) => Promise<void>;
 }
 
-// The one switch in Settings › Privacy. Signed out it is the same answer the prompt records;
+// The one switch in Settings › Privacy. Signed out it is the same answer onboarding records;
 // signed in it is the account's opt-out, which syncs and the server enforces. Turning it off
 // sends the switch's own event first, so what was recorded under the yes goes out before the
 // id is deleted (docs/features/analytics-consent.md, "Settings › Privacy").
@@ -25,7 +25,7 @@ export function useShareUsageState(): ShareUsageState {
         optedOut: settings?.analyticsOptOut ?? false,
         changedAt: settings?.analyticsOptOutChangedAt ?? null,
       }
-    : { signedIn: false, consent, outdated: consentAskOf(consent)?.kind === "again" };
+    : { signedIn: false, consent, outdated: consentOutdated(consent) };
 }
 
 export function useShareUsage(): ShareUsage {
@@ -49,7 +49,7 @@ export function useShareUsage(): ShareUsage {
       );
       return;
     }
-    answerAnalyticsConsent(on ? "share" : "dontShare", { notice: false });
+    answerAnalyticsConsent(on ? "share" : "dontShare");
     switchedOn();
   };
 

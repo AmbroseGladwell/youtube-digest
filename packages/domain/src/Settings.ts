@@ -40,7 +40,7 @@ export const Settings = z.object({
   milestones: MilestoneMarks.catch({}),
   // Off hides the milestone cards on every device; Settings › Milestones still lists them.
   showMilestoneCards: z.boolean().catch(true),
-  // A signed-in reader's "no" to sharing usage, on the account so it holds on every device
+  // A signed-in reader's "no" to analytics, on the account so it holds on every device
   // and the server drops their events (docs/features/analytics-consent.md).
   analyticsOptOut: z.boolean().catch(false),
   analyticsOptOutChangedAt: z.iso.datetime().nullable().catch(null),

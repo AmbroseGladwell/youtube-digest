@@ -17,6 +17,7 @@ import { useStores } from "../../../stores/StoresContext.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { answerAnalyticsConsent, useAnalyticsConsent } from "../../analyticsConsent/useAnalyticsConsent.js";
+import { useAnalyticsDecline } from "../../analyticsConsent/useAnalyticsDecline.js";
 import { RequestLinkFlow } from "../../auth/components/RequestLinkFlow/RequestLinkFlow.js";
 import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -73,6 +74,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const accountId = libraryAccountIdOf(connection);
   const signedIn = accountId !== null;
   const { consent } = useAnalyticsConsent();
+  const declineAnalytics = useAnalyticsDecline();
   const libraryMove = useLibraryMove();
   const { overviewStore } = useStores();
   const createTopic = useCreateTopicMutation();
@@ -207,12 +209,13 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingAnalytics
             onAllow={() => {
-              answerAnalyticsConsent("share", { notice: false });
+              answerAnalyticsConsent("share");
               analytics.analyticsConsent.prompt.accepted({ asked: "onboarding" });
               next();
             }}
             onNoThanks={() => {
-              answerAnalyticsConsent("dontShare", { notice: false });
+              answerAnalyticsConsent("dontShare");
+              declineAnalytics();
               next();
             }}
           />

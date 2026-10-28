@@ -5,7 +5,7 @@ import styles from "./AccountTermsLine.module.scss";
 import { accountTermsLineTestIds } from "./AccountTermsLineTestIds.js";
 
 // Design 62j: read before Create account, so creating an account is agreeing to the terms
-// and to sharing which features are used. No checkbox: that sharing rests on legitimate
+// and to analytics on which features are used. No checkbox: analytics rests on legitimate
 // interests, not consent, and Settings › Privacy still turns it off
 // (docs/features/analytics-consent.md, "Creating an account").
 export function AccountTermsLine() {
@@ -24,7 +24,7 @@ export function AccountTermsLine() {
       <a className={styles.link} href={policyPageUrl(apiUrl, "privacy")} {...target} data-testid={accountTermsLineTestIds.privacy}>
         Privacy policy
       </a>
-      , including sharing which features you use. You can turn this off in Settings › Privacy.
+      , including analytics on which features you use. You can turn this off in Settings › Privacy.
     </p>
   );
 }

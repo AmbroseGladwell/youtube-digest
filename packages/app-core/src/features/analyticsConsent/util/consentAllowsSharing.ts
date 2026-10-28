@@ -1,19 +1,13 @@
 import { ANALYTICS_PURPOSES, currentPurposes, type PurposesChange } from "../analyticsPurposes.js";
 import type { AnalyticsConsent } from "../types/AnalyticsConsent.js";
 
-export type ConsentAsk = { kind: "first" } | { kind: "again"; added: string };
-
-// Whether the prompt has a question to put: never answered, or answered to a list of what
-// is counted that has since grown.
-export function consentAskOf(
+// An answer given to a list of what is counted that has since grown. Nothing asks again:
+// the only readers without an account are partway through onboarding, so Settings › Privacy
+// carries the change (docs/features/analytics-consent.md, "When what is counted changes").
+export const consentOutdated = (
   consent: AnalyticsConsent | null,
   purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
-): ConsentAsk | null {
-  if (consent === null) return { kind: "first" };
-  const current = currentPurposes(purposes);
-  if (consent.purposesVersion >= current.version) return null;
-  return { kind: "again", added: current.added ?? "" };
-}
+): boolean => consent !== null && consent.purposesVersion < currentPurposes(purposes).version;
 
 // A yes counts only for the list it answered: until a reader says yes to what was added,
 // nothing is sent for them.

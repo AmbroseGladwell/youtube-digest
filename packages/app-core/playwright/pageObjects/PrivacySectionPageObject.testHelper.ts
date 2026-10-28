@@ -6,7 +6,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 export class PrivacySectionPageObject extends PageObject {
   verifySwitch = (on: boolean, status: string) =>
     this.step(`verifySwitch ${on} ${status}`, async () => {
-      const toggle = this.page.getByRole("switch", { name: "Share usage" });
+      const toggle = this.page.getByRole("switch", { name: "Analytics" });
       await expect(toggle).toHaveAttribute("aria-checked", String(on));
       await expect(toggle).toHaveAccessibleDescription(status);
       await expect(this.get(privacySectionTestIds.status)).toHaveText(status);
@@ -18,7 +18,7 @@ export class PrivacySectionPageObject extends PageObject {
   verifyErrorReportsAreApart = () =>
     this.step("verifyErrorReportsAreApart", async () => {
       await expect(this.get(privacySectionTestIds.errorReports)).toContainText(
-        "Always sent, so we can fix what breaks. They never include what you watch, read or type, and Share usage doesn’t affect them.",
+        "Always sent, so we can fix what breaks. They never include what you watch, read or type, and Analytics doesn’t affect them.",
       );
       await expect(this.get(privacySectionTestIds.errorReports).getByRole("switch")).toHaveCount(0);
     });
@@ -36,6 +36,6 @@ export class PrivacySectionPageObject extends PageObject {
       }
     });
 
-  switchShareUsage = () =>
-    this.step("switchShareUsage", () => this.click(privacySectionTestIds.shareUsageSwitch));
+  switchAnalytics = () =>
+    this.step("switchAnalytics", () => this.click(privacySectionTestIds.shareUsageSwitch));
 }

@@ -5,17 +5,15 @@ import type { AnalyticsConsent, ConsentAnswer } from "./types/AnalyticsConsent.j
 
 export interface AnalyticsConsentState {
   consent: AnalyticsConsent | null;
-  // The answer just given on this page, for design 62c's notice; never stored.
-  justAnswered: ConsentAnswer | null;
 }
 
-// One shared snapshot, as useSyncConnection keeps: the prompt writes it, and the
+// One shared snapshot, as useSyncConnection keeps: an answer writes it, and the
 // analytics queue has to see a yes before the event recording it is sent.
 const listeners = new Set<() => void>();
 let snapshot: AnalyticsConsentState | null = null;
 
 export function analyticsConsentSnapshot(): AnalyticsConsentState {
-  snapshot ??= { consent: readAnalyticsConsent(), justAnswered: null };
+  snapshot ??= { consent: readAnalyticsConsent() };
   return snapshot;
 }
 
@@ -30,12 +28,8 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-// A yes always makes a new id: one that was deleted by a no is never used again. An answer
-// from Settings says nothing in the library's slot, where 62c's notice is for the prompt.
-export function answerAnalyticsConsent(
-  answer: ConsentAnswer,
-  { now = new Date(), notice = true }: { now?: Date; notice?: boolean } = {},
-): void {
+// A yes always makes a new id: one that was deleted by a no is never used again.
+export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Date()): void {
   update({
     consent: {
       answer,
@@ -43,7 +37,6 @@ export function answerAnalyticsConsent(
       purposesVersion: currentPurposes().version,
       anonymousId: answer === "share" ? crypto.randomUUID() : null,
     },
-    justAnswered: notice ? answer : analyticsConsentSnapshot().justAnswered,
   });
 }
 
@@ -59,11 +52,6 @@ export function mintAnonymousId(): void {
   const state = analyticsConsentSnapshot();
   if (state.consent?.answer !== "share" || state.consent.anonymousId !== null) return;
   update({ ...state, consent: { ...state.consent, anonymousId: crypto.randomUUID() } });
-}
-
-export function dismissConsentNotice(): void {
-  const state = analyticsConsentSnapshot();
-  if (state.justAnswered !== null) update({ ...state, justAnswered: null });
 }
 
 export function useAnalyticsConsent(): AnalyticsConsentState {

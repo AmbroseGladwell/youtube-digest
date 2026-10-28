@@ -7,7 +7,7 @@ import {
   mintAnonymousId,
   useAnalyticsConsent,
 } from "../analyticsConsent/useAnalyticsConsent.js";
-import { consentAllowsSharing } from "../analyticsConsent/util/consentAskOf.js";
+import { consentAllowsSharing } from "../analyticsConsent/util/consentAllowsSharing.js";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 import { useSync } from "../sync/SyncContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
