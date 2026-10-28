@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import type { OverviewId } from "@overview/domain";
+import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -9,13 +10,15 @@ import styles from "./OnboardingNextSteps.module.scss";
 import { onboardingNextStepsTestIds } from "./OnboardingNextStepsTestIds.js";
 
 // Design 46l: under the Verdict of onboarding's overview, the extension and the AI connection,
-// each dismissible, and never a modal. Shown only on the overview onboarding ended on.
+// each dismissible, and never a modal. Shown only on the overview onboarding ended on. The panel
+// is the extension already, so there it offers the AI connection alone.
 export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) {
   const analytics = useAnalytics();
+  const isPanel = useIsPanel();
   const [nextSteps, setNextSteps] = useState(readNextSteps);
   if (nextSteps === null || nextSteps.overviewId !== overviewId) return null;
 
-  const shown = (step: NextStep) => !nextSteps.dismissed.includes(step);
+  const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && !(isPanel && step === "extension");
   const dismiss = (step: NextStep) => {
     analytics.onboarding.nextSteps.dismissed({ step });
     const next = { ...nextSteps, dismissed: [...nextSteps.dismissed, step] };

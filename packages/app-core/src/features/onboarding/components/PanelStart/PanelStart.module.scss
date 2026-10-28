@@ -1,0 +1,74 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../onboarding" as onboarding;
+
+.root {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 1.5rem 1.125rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.intro {
+  @include onboarding.intro;
+}
+
+.lead {
+  @include onboarding.lead;
+  font-size: 0.84375rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  @include onboarding.field-label;
+}
+
+.field {
+  @include controls.field-pill;
+  padding: 0.25rem 0.25rem 0.25rem 0.875rem;
+  min-height: 2.625rem;
+  box-sizing: border-box;
+}
+
+.input {
+  @include controls.field-input;
+}
+
+.go {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+}
+
+.refused {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--accent);
+}
+
+.foot {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.primary {
+  @include onboarding.primary;
+  align-self: stretch;
+}
+
+.quiet {
+  @include onboarding.quiet;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}

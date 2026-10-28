@@ -37,6 +37,9 @@ claim even when the same shell happens to supply both.
 
 ## Three screens, and no fourth
 
+Signed in, that is. Signed out, the panel's home is onboarding's Start, or on a device that
+has had an account the way back into it (`onboarding.md`, "In the extension panel").
+
 **Opening (15a).** The masthead is the mark and `Settings` — no `+ New`, no nav. Below
 it, the offer: the headline, the standfirst, and one action. `Create overview` is live
 when there is a video in front of the panel and both keys are set; it is disabled with

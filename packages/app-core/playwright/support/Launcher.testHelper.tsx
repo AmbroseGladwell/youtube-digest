@@ -1,4 +1,4 @@
-import { test, type ComponentFixtures } from "@playwright/experimental-ct-react";
+import { expect, test, type ComponentFixtures } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
@@ -35,6 +35,9 @@ import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePag
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
+import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
+import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
+import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
@@ -51,6 +54,7 @@ export interface LaunchOptions {
   // What this device said about sharing usage. Absent is a "no" already given, so a
   // scenario about something else isn't asked; null is a device that has never been asked.
   analyticsConsent?: AnalyticsConsent | null;
+  accountSeen?: boolean;
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
@@ -93,8 +97,12 @@ export class Launcher {
     test.step("Launcher.launchPanel", async () => {
       await this.mountApp({ ...options, layout: "panel", surface: options.surface ?? "extension" });
       const capture = new CapturePageObject(this.testContext);
+      // Signed out, the panel's home is onboarding's Start, or once the device has had an
+      // account, the way back into it (designs 46n and 46q).
       if (options.sync === true && !options.syncConnection?.apiUrl) {
-        await this.signedOutGate.verifyIsShown();
+        await expect(
+          this.page.getByTestId(panelStartTestIds.root).or(this.page.getByTestId(signedOutGateTestIds.root)),
+        ).toBeVisible();
         return capture;
       }
       return capture.verifyIsShown();
@@ -151,6 +159,7 @@ export class Launcher {
         pendingSignIn: options.pendingSignIn,
         signedOutTrial: options.signedOutTrial,
         analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
+        ...(options.accountSeen === true ? { accountSeen: true } : {}),
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
@@ -273,6 +282,10 @@ export class Launcher {
 
   get firstOverviewMilestone(): FirstOverviewMilestonePageObject {
     return new FirstOverviewMilestonePageObject(this.testContext);
+  }
+
+  get panelStart(): PanelStartPageObject {
+    return new PanelStartPageObject(this.testContext);
   }
 
   get onboardingPage(): OnboardingPageObject {

@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -22,17 +22,19 @@ import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { PROVIDER_SHORT_LABEL } from "@overview/domain";
 import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
 import { readOnboardingProgress } from "../../onboarding/onboardingProgressStorage.js";
-import { startOnboarding } from "../../onboarding/useOnboardingProgress.js";
+import { useStartOnboarding } from "../../onboarding/useStartOnboarding.js";
+import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
+import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
+import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
 import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
+// Signed out where there are accounts, home is onboarding's Start, or in the panel, once this
+// device has had an account, the way back into it (docs/features/onboarding.md).
 export function HomePage() {
-  return useIsPanel() ? <CapturePage /> : <LibraryHome />;
-}
-
-function LibraryHome() {
+  const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
   // Onboarding under way on this device carries on where it was, signed out or just signed
   // in by its link (docs/features/onboarding.md, "Leaving and coming back").
@@ -40,6 +42,14 @@ function LibraryHome() {
   if (onboarding !== null && (accountNeeded || onboarding.overviewId !== null)) {
     return <Navigate to={Routes.onboarding()} replace />;
   }
+  if (isPanel) {
+    if (!accountNeeded) return <CapturePage />;
+    return readAccountSeen() ? <SignedOutGate panel /> : <PanelStart />;
+  }
+  return <LibraryHome accountNeeded={accountNeeded} />;
+}
+
+function LibraryHome({ accountNeeded }: { accountNeeded: boolean }) {
   if (accountNeeded) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
@@ -187,7 +197,7 @@ function FirstRunHero() {
 // straight on to the questions while its overview is made, and nothing else is offered: no
 // overview is made or seen without an account (docs/features/onboarding.md).
 function StartHero() {
-  const navigate = useNavigate();
+  const startOnboarding = useStartOnboarding();
   const analytics = useAnalytics();
   const urlFieldId = useId();
   const [url, setUrl] = useState("");
@@ -198,16 +208,7 @@ function StartHero() {
 
   const start = (event: FormEvent) => {
     event.preventDefault();
-    const link = youTubeLink(url);
-    const videoUrl = link === null ? null : link.kind === "playlist" ? null : link.videoUrl;
-    if (link === null || (link.kind !== "playlist" && videoUrl === null)) {
-      analytics.onboarding.start.linkRefused();
-      setRefused(true);
-      return;
-    }
-    analytics.onboarding.start.linkSubmitted({ kind: link.kind === "playlist" ? "playlist" : "video" });
-    startOnboarding(url.trim(), videoUrl);
-    void navigate(Routes.onboarding());
+    setRefused(!startOnboarding(url));
   };
 
   return (

@@ -52,6 +52,8 @@ export interface IwftHooksConfig {
   // What this device said about sharing usage; null is never asked
   // (docs/features/analytics-consent.md).
   analyticsConsent?: AnalyticsConsent | null;
+  // This device has been signed in to an account before (design 46q).
+  accountSeen?: boolean;
   surface?: Surface;
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.

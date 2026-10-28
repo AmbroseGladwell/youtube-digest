@@ -6,6 +6,7 @@ import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js
 import { writeSignedOutTrial } from "../src/features/signedOutTrial/signedOutTrialStorage.js";
 import { NO_TRIAL } from "../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { writeAnalyticsConsent } from "../src/features/analyticsConsent/analyticsConsentStorage.js";
+import { markAccountSeen } from "../src/features/accountLibraries/accountSeenStorage.js";
 import {
   DEFAULT_SYNC_CONNECTION,
   libraryAccountIdOf,
@@ -59,6 +60,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
   writeSignedOutTrial(hooksConfig?.signedOutTrial ?? NO_TRIAL);
   writeAnalyticsConsent(hooksConfig?.analyticsConsent ?? null);
+  if (hooksConfig?.accountSeen === true) markAccountSeen();
 
   window.__iwftStores__ = seeded;
   window.__iwftLibraries__ = libraries;

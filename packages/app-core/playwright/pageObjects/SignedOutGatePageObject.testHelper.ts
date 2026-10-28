@@ -6,10 +6,15 @@ export class SignedOutGatePageObject extends PageObject {
   verifyIsShown = () =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(signedOutGateTestIds.root);
-      await expect(this.page.getByRole("heading", { name: "Your overviews need an account" })).toBeFocused();
+      await expect(this.get(signedOutGateTestIds.root).getByRole("heading", { level: 1 })).toBeFocused();
     });
 
   verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(signedOutGateTestIds.root));
+
+  verifyTitle = (title: string) =>
+    this.step(`verifyTitle ${title}`, () =>
+      expect(this.get(signedOutGateTestIds.root).getByRole("heading", { level: 1 })).toHaveText(title),
+    );
 
   chooseSignIn = () => this.step("chooseSignIn", () => this.click(signedOutGateTestIds.signIn));
 
