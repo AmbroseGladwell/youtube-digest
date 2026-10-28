@@ -154,11 +154,15 @@ test.describe("signed out", () => {
     await settings.verifyRowReads("account", "Not signed in");
   });
 
-  test("the panel shows only the ways to an account", async ({ launcher, backendSimulator }) => {
+  test("the panel's home is onboarding's Start, showing none of the overviews on this device", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     backendSimulator.overviews.seed(titled("Made Before This Change"));
     await launcher.launchPanel({ sync: true, apiKeys: API_KEYS });
 
-    await launcher.signedOutGate.verifyIsShown();
+    await launcher.panelStart.verifyIsShown();
+    await launcher.signedOutGate.verifyIsNotShown();
   });
 
   test("a shell that cannot sync has no account to offer, and keeps its library", async ({ launcher, backendSimulator }) => {

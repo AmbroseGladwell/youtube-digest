@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import {
   ABOUT_YOU_GOALS,
@@ -12,6 +13,9 @@ import {
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingAboutYou.module.scss";
 import { onboardingAboutYouTestIds } from "./OnboardingAboutYouTestIds.js";
+
+// The panel shows five of each, with More for the rest (design 46o).
+const PANEL_CHIPS = 5;
 
 export interface AboutYouAnswer {
   readerContext: string | null;
@@ -34,6 +38,14 @@ export function OnboardingAboutYou({ readerContext, saving, onContinue }: Onboar
   const [role, setRole] = useState<AboutYouRole | null>(null);
   const [goals, setGoals] = useState<AboutYouGoal[]>([]);
   const [ownWords, setOwnWords] = useState(readerContext ?? "");
+  const isPanel = useIsPanel();
+  const [allShown, setAllShown] = useState(false);
+  const shown = <T,>(list: readonly T[]): readonly T[] => (isPanel && !allShown ? list.slice(0, PANEL_CHIPS) : list);
+  const more = isPanel && !allShown && (
+    <button type="button" className={styles.more} aria-expanded={false} onClick={() => setAllShown(true)}>
+      More
+    </button>
+  );
   const ownWordsField = useRef<HTMLInputElement | null>(null);
   const roleLabel = useId();
   const goalLabel = useId();
@@ -53,7 +65,7 @@ export function OnboardingAboutYou({ readerContext, saving, onContinue }: Onboar
           What you do<span className={styles.note}> · pick one</span>
         </p>
         <div className={styles.chips}>
-          {ABOUT_YOU_ROLES.map(({ label }) => (
+          {shown(ABOUT_YOU_ROLES).map(({ label }) => (
             <button
               key={label}
               type="button"
@@ -66,6 +78,7 @@ export function OnboardingAboutYou({ readerContext, saving, onContinue }: Onboar
               {label}
             </button>
           ))}
+          {more}
         </div>
       </div>
 
@@ -74,7 +87,7 @@ export function OnboardingAboutYou({ readerContext, saving, onContinue }: Onboar
           What you want to get better at<span className={styles.note}> · up to two</span>
         </p>
         <div className={styles.chips}>
-          {ABOUT_YOU_GOALS.map((goal) => (
+          {shown(ABOUT_YOU_GOALS).map((goal) => (
             <button
               key={goal}
               type="button"
@@ -87,6 +100,7 @@ export function OnboardingAboutYou({ readerContext, saving, onContinue }: Onboar
               {goal}
             </button>
           ))}
+          {more}
         </div>
       </div>
 

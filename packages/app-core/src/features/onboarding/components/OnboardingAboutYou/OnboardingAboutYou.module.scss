@@ -125,3 +125,15 @@
 .primary {
   @include onboarding.primary;
 }
+
+.more {
+  border: 0;
+  background: transparent;
+  padding: 0 0.5rem;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}

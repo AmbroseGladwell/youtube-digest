@@ -119,6 +119,26 @@ is in the Web Store, and Ask your AI with Connect your AI, which opens Settings 
 Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`).
 The library then shows the first-overview milestone (46m, `time-saved.md`).
 
+## In the extension panel
+
+The same screens at 400 × 600 (designs 46n–46q), with the narrow layout throughout.
+
+**Start offers the video the panel is beside** (`PanelStart`, 46n): "Make an overview of
+this video", "Make my overview", "Or paste a different link" for a field in place, and
+"Already have an account? Sign in". With no video beside it, Make my overview is disabled
+and the field is the way in. The video itself is first shown on the next screen once it has
+resolved, since the panel knows only its address until then. Headings are set smaller, and
+About you shows five chips of each group with More for the rest (46o).
+
+**The account is made with a code**, as the extension always signs in (`sign-in.md`): the
+link opens in the browser, which shows a code to type into the panel. Then the plan, and the
+overview on the panel's own reader. The next steps aren't offered in the panel.
+
+**Signed out once the device has had an account** (46q), the panel's home offers signing
+back in instead of Start: "Sign in to see your overviews", with Sign in first and Create an
+account under it. A device is marked when it is signed in (`overview.accountSeen.v1`, only
+that it happened). Every other page that would show an overview shows the same.
+
 ## Into the account
 
 Topics, About you, the voice and the overview are written into the no-account library while
@@ -139,5 +159,4 @@ as `capture.newOverview.started` with `from: "onboarding"`.
 
 ## Not built yet
 
-- The extension panel's version (46n–46q), which shows the gate until then.
 - "Try a sample", "Vote for what's next", the unsorted reveal prompt.

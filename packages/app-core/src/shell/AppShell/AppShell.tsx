@@ -12,6 +12,7 @@ import { LibraryMoveNotice } from "../../features/accountLibraries/components/Li
 import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
 import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
 import { useAccountNeeded } from "../../features/accountLibraries/useAccountNeeded.js";
+import { markAccountSeen } from "../../features/accountLibraries/accountSeenStorage.js";
 import { AnalyticsConsentStripSlot } from "../../features/analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
 import { useAnalyticsConsentStrip } from "../../features/analyticsConsent/useAnalyticsConsentStrip.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
@@ -52,12 +53,15 @@ export function AppShell() {
   const belowWriteFloor = sync.status.phase === "unsupported";
   const onHome = pathname === Routes.home();
   // Signed out where there are accounts, every page that would show an overview shows the
-  // way to an account instead; on the web, home is onboarding's Start in its place
-  // (docs/architecture/tiers.md, "Signed out"; docs/features/onboarding.md).
+  // way to an account instead; home is onboarding's Start, or in the panel once this device has
+  // had an account, the way back to it (docs/architecture/tiers.md, "Signed out";
+  // docs/features/onboarding.md).
   const accountNeeded = useAccountNeeded();
-  const gated =
-    accountNeeded &&
-    ((onHome && isPanel) || pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
+  const gated = accountNeeded && (pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
+  const signedIn = sync.connected;
+  useEffect(() => {
+    if (signedIn) markAccountSeen();
+  }, [signedIn]);
   const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel && !accountNeeded);
   const panelConsentStrip = useAnalyticsConsentStrip(gated && isPanel);
   const libraryMoved = useLibraryMove().move !== null;

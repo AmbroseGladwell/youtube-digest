@@ -115,6 +115,16 @@ export class OnboardingPageObject extends PageObject {
 
   pickRole = (label: string) => this.step(`pickRole ${label}`, () => this.click(onboardingAboutYouTestIds.role(label)));
 
+  verifyRoleOffered = (label: string, offered: boolean) =>
+    this.step(`verifyRoleOffered ${label} ${offered}`, () =>
+      offered
+        ? this.expectToBeVisible(onboardingAboutYouTestIds.role(label))
+        : this.expectNotToBeVisible(onboardingAboutYouTestIds.role(label)),
+    );
+
+  showMoreRoles = () =>
+    this.step("showMoreRoles", () => this.get(onboardingAboutYouTestIds.root).getByRole("button", { name: "More" }).first().click());
+
   pickGoal = (label: string) => this.step(`pickGoal ${label}`, () => this.click(onboardingAboutYouTestIds.goal(label)));
 
   typeOwnWords = (text: string) =>
