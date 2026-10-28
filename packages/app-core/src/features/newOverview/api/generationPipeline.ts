@@ -50,6 +50,10 @@ export interface RunOverviewGenerationOptions {
   // How many of the note's tags were already in the library, counted against the library
   // as the run saw it (docs/features/tag-reuse.md).
   onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
+  // Onboarding fetches the transcript at once but writes only once the reader has answered
+  // or skipped About you, so the first overview is made from their answers. Topics and
+  // Settings are read after it settles (docs/features/onboarding.md, "Writing waits").
+  waitToWrite?: (() => Promise<void>) | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -68,6 +72,10 @@ export async function runOverviewGeneration(
 
   stopIfCancelled();
   options.onProgress?.({ video, transcriptWords, transcriptSource });
+  if (options.waitToWrite) {
+    await options.waitToWrite();
+    stopIfCancelled();
+  }
   const [existingTopics, pastClaims, library, settings] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),

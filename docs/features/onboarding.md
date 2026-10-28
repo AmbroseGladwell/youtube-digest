@@ -16,6 +16,16 @@ The analytics question is the second screen, so the first is counted only if the
 waits for the answer instead of discarding. It does, in memory only: `analytics-consent.md`,
 "Before an answer".
 
+## Writing waits for the answers
+
+`runOverviewGeneration` reads topics and Settings once, just before it writes, so anything
+chosen after that would miss the first overview. Onboarding passes `waitToWrite`: the run
+resolves the video and fetches the transcript straight away (so the "Is this the right
+video?" screen has something to show, and a transcript that can't be had fails early), then
+waits on that promise before reading topics and Settings and writing. The flow settles it
+when About you is answered or skipped, or when the reader leaves the questions some other
+way. Other runs pass nothing and write at once, as before.
+
 ## Starter topics
 
 `STARTER_TOPICS` (`packages/domain/src/starterTopics.ts`) is the 27 the topics screen offers,
