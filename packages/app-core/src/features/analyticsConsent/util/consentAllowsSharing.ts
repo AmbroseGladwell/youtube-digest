@@ -1,24 +1,18 @@
 import { ANALYTICS_PURPOSES, currentPurposes, type PurposesChange } from "../analyticsPurposes.js";
 import type { AnalyticsConsent } from "../types/AnalyticsConsent.js";
 
-// A yes counts only for the list it answered: until a reader says yes to what was added,
-// nothing is sent for them.
-export const consentAllowsSharing = (
-  consent: AnalyticsConsent | null,
-  purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
-): boolean => consent?.answer === "share" && consent.purposesVersion >= currentPurposes(purposes).version;
-
-// An answer given to a list of what is counted that has since grown: onboarding asks it
-// again, and Settings › Privacy shows it as off (docs/features/analytics-consent.md, "When
-// what is counted changes").
+// docs/features/analytics-consent.md, "When what is counted changes".
 export const consentOutdated = (
   consent: AnalyticsConsent | null,
   purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
-): boolean => consent !== null && consent.purposesVersion < currentPurposes(purposes).version;
+): boolean => consent?.answer === "share" && consent.purposesVersion < currentPurposes(purposes).version;
 
-// An answer to the current list. Anything else is asked in onboarding, and its events are
-// held until it is answered.
 export const consentAnswered = (
   consent: AnalyticsConsent | null,
   purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
 ): consent is AnalyticsConsent => consent !== null && !consentOutdated(consent, purposes);
+
+export const consentAllowsSharing = (
+  consent: AnalyticsConsent | null,
+  purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
+): boolean => consentAnswered(consent, purposes) && consent.answer === "share";

@@ -22,17 +22,17 @@ describe("consentOutdated", () => {
     expect(consentOutdated(answered("dontShare", 2), GROWN)).toBe(false);
   });
 
-  it("is true once the list has grown, whatever the answer was", () => {
+  it("is true of a yes once the list has grown, while a no to less still stands", () => {
     expect(consentOutdated(answered("share", 1), GROWN)).toBe(true);
-    expect(consentOutdated(answered("dontShare", 1), GROWN)).toBe(true);
+    expect(consentOutdated(answered("dontShare", 1), GROWN)).toBe(false);
   });
 });
 
 describe("consentAnswered", () => {
-  it("is an answer, yes or no, to the current list only", () => {
+  it("is any no, or a yes to the current list", () => {
     expect(consentAnswered(null, GROWN)).toBe(false);
     expect(consentAnswered(answered("share", 1), GROWN)).toBe(false);
-    expect(consentAnswered(answered("dontShare", 1), GROWN)).toBe(false);
+    expect(consentAnswered(answered("dontShare", 1), GROWN)).toBe(true);
     expect(consentAnswered(answered("share", 2), GROWN)).toBe(true);
     expect(consentAnswered(answered("dontShare", 2), GROWN)).toBe(true);
   });

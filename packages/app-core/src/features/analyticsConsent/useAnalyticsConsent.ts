@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { currentPurposes } from "./analyticsPurposes.js";
+import { consentAllowsSharing } from "./util/consentAllowsSharing.js";
 import { readAnalyticsConsent, writeAnalyticsConsent } from "./analyticsConsentStorage.js";
 import type { AnalyticsConsent, ConsentAnswer } from "./types/AnalyticsConsent.js";
 
@@ -40,12 +41,11 @@ export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Da
   });
 }
 
-// A no from a reader who hadn't said yes is a decline, which the caller tells the server
-// about; a no after a yes is a withdrawal, which isn't (docs/features/analytics-consent.md).
+// A no after a live yes is a withdrawal, not a decline (docs/features/analytics-consent.md).
 export function declineAnalyticsConsent(now: Date = new Date()): { declined: boolean } {
-  const saidYesBefore = analyticsConsentSnapshot().consent?.answer === "share";
+  const sharing = consentAllowsSharing(analyticsConsentSnapshot().consent);
   answerAnalyticsConsent("dontShare", now);
-  return { declined: !saidYesBefore };
+  return { declined: !sharing };
 }
 
 // The id belongs to whoever uses this device with no account, so a sign-in drops it and the
@@ -58,8 +58,9 @@ export function forgetAnonymousId(): void {
 
 export function mintAnonymousId(): void {
   const state = analyticsConsentSnapshot();
-  if (state.consent?.answer !== "share" || state.consent.anonymousId !== null) return;
-  update({ ...state, consent: { ...state.consent, anonymousId: crypto.randomUUID() } });
+  const { consent } = state;
+  if (consent === null || !consentAllowsSharing(consent) || consent.anonymousId !== null) return;
+  update({ ...state, consent: { ...consent, anonymousId: crypto.randomUUID() } });
 }
 
 export function useAnalyticsConsent(): AnalyticsConsentState {

@@ -1,6 +1,4 @@
-// Every change to what is counted, oldest first. A yes counts only for the list it answered,
-// so adding one stops sending for readers without an account until they say yes again in
-// Settings › Privacy (docs/features/analytics-consent.md, "When what is counted changes").
+// Every change to what is counted, oldest first (docs/features/analytics-consent.md).
 export interface PurposesChange {
   version: number;
 }

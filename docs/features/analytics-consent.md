@@ -68,11 +68,11 @@ pasted a link, and the funnel needs that first screen counted. So `AnalyticsQueu
 three modes, which `AnalyticsRuntime` picks on every record and flush:
 
 - **send:** signed in with the account's analytics on, or no account and a yes.
-- **hold:** no account, no answer to the current list of what is counted (`consentAnswered`),
-  and a server to send to. Events stay in the
+- **hold:** no account, no answer or a yes to an older list (`consentAnswered`), and a
+  server to send to. Events stay in the
   queue's memory, are never written to the device, and aren't sent on a timer or when the
   page hides. Closing the page loses them.
-- **discard:** anything else, including a no to the current list.
+- **discard:** anything else, including any no.
   Events aren't collected, and whatever was held is forgotten.
 
 The runtime flushes when the answer or the session changes. A yes sends what was held
@@ -85,16 +85,18 @@ answers holds at most one batch of events, in memory, until they leave.
 
 ## When what is counted changes
 
-`ANALYTICS_PURPOSES` lists every change to what is counted. A yes counts only for the list
-it answered (`consentAllowsSharing`), so adding one stops sending for a reader without an
-account until they say yes again. There is no strip to ask them, so the answer is put to
-them again in two places (`consentOutdated`):
+`ANALYTICS_PURPOSES` lists every change to what is counted. **A no stands when the list
+grows:** a no to less is a no to more. **A yes counts only for the list it answered**
+(`consentAllowsSharing`), so adding one stops sending for a reader without an account until
+they say yes again. There is no strip to ask them, so an older yes (`consentOutdated`) is
+treated as no answer (`consentAnswered`):
 
-- **Onboarding** shows its analytics screen to a device whose answer is to an older list,
-  as it does to one that never answered. Until it is answered, events are held, as before
-  an answer, and sent on Allow.
-- **Settings › Privacy** shows an older yes as off, since nothing is sent, with "Analytics
-  now covers more …" under it. Turning it on says yes to the current list.
+- **Onboarding** shows its analytics screen again, as it does to a device that never
+  answered. Events are held meanwhile, as before an answer, and sent on Allow. No thanks
+  there is a decline, not a withdrawal, since nothing was being sent.
+- **Settings › Privacy** shows the switch off, since nothing is sent, with "Analytics now
+  covers more …" under it. Turning it on says yes to the current list.
+- **No anonymous id is made** for it, since nothing could be sent under one.
 
 A signed-in reader is never asked. The privacy policy says what was added.
 
@@ -127,7 +129,7 @@ everyone; its line under the label is its description and says what it means:
 |---|---|---|
 | No account, never answered | "You haven't chosen yet, so nothing is counted." | — |
 | No account, answered | "Off since 4 October 2026" | "On since 4 October 2026" |
-| No account, answered an older list | "Analytics now covers more, so nothing is counted until you turn it on again.", whatever the answer was | — |
+| No account, said yes to an older list | "Analytics now covers more, so nothing is counted until you turn it on again.", whatever the answer was | — |
 | Signed in | "Off across your devices since 4 October 2026" | "On across your devices", with "since …" once changed |
 
 A date that is today reads "today". The text under the switch says what is counted, and
@@ -181,7 +183,7 @@ switch in Settings.
 **A no is counted with no id.** No thanks in onboarding, from a reader who hadn't said yes,
 posts the app's context alone to `POST /api/events/declined`, which logs `analytics
 declined` and keeps nothing else; it is limited per address like anonymous events.
-`useAnalyticsDecline` records the no and posts it only when it is a decline. A no after a yes is a withdrawal, not a decline, and isn't posted. The switch can't
+`useAnalyticsDecline` records the no and posts it only when it is a decline. A no after a yes that was still sending is a withdrawal, not a decline, and isn't posted. The switch can't
 decline: from "Not chosen" it can only turn on.
 
 The server logs each event with `signedIn`, and never the anonymous id in the log line.
