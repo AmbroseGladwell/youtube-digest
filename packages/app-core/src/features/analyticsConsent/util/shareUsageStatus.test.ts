@@ -43,7 +43,7 @@ describe("a reader without an account", () => {
     const old = state({ answer: "share", answeredAt: EARLIER }, true);
     expect(shareUsageOn(old)).toBe(false);
     expect(shareUsageRowValue(old)).toBe("Off");
-    expect(shareUsageStatus(old, NOW)).toBe("Analytics now covers more. Nothing new is counted until you choose.");
+    expect(shareUsageStatus(old, NOW)).toBe("Analytics now covers more, so nothing is counted until you turn it on again.");
   });
 });
 

@@ -27,7 +27,7 @@ export function shareUsageStatus(state: ShareUsageState, now: Date): string {
     const since = state.changedAt === null ? "" : ` since ${sinceDay(state.changedAt, now)}`;
     return state.optedOut ? `Off across your devices${since}` : `On across your devices${since}`;
   }
-  if (state.outdated) return "Analytics now covers more. Nothing new is counted until you choose.";
+  if (state.outdated) return "Analytics now covers more, so nothing is counted until you turn it on again.";
   if (state.consent === null) return "You haven’t chosen yet, so nothing is counted.";
   const since = sinceDay(state.consent.answeredAt, now);
   return state.consent.answer === "share" ? `On since ${since}` : `Off since ${since}`;

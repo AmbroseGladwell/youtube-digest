@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ANALYTICS_PURPOSES, type PurposesChange } from "../analyticsPurposes.js";
 import type { AnalyticsConsent } from "../types/AnalyticsConsent.js";
-import { consentAllowsSharing, consentOutdated } from "./consentAllowsSharing.js";
+import { consentAllowsSharing, consentAnswered, consentOutdated } from "./consentAllowsSharing.js";
 
 const GROWN: PurposesChange[] = [{ version: 1 }, { version: 2 }];
 
@@ -25,6 +25,16 @@ describe("consentOutdated", () => {
   it("is true once the list has grown, whatever the answer was", () => {
     expect(consentOutdated(answered("share", 1), GROWN)).toBe(true);
     expect(consentOutdated(answered("dontShare", 1), GROWN)).toBe(true);
+  });
+});
+
+describe("consentAnswered", () => {
+  it("is an answer, yes or no, to the current list only", () => {
+    expect(consentAnswered(null, GROWN)).toBe(false);
+    expect(consentAnswered(answered("share", 1), GROWN)).toBe(false);
+    expect(consentAnswered(answered("dontShare", 1), GROWN)).toBe(false);
+    expect(consentAnswered(answered("share", 2), GROWN)).toBe(true);
+    expect(consentAnswered(answered("dontShare", 2), GROWN)).toBe(true);
   });
 });
 

@@ -34,7 +34,7 @@ export function useShareUsage(): ShareUsage {
   const analytics = useAnalytics();
 
   const switchTo = async (on: boolean): Promise<void> => {
-    if (on === shareUsageOn(state) && !(state.signedIn === false && state.outdated)) return;
+    if (on === shareUsageOn(state)) return;
     if (!on) {
       analytics.analyticsConsent.settings.switched({ on });
       await analytics.flush();

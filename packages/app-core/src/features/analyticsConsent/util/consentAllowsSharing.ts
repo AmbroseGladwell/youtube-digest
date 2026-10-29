@@ -15,3 +15,10 @@ export const consentOutdated = (
   consent: AnalyticsConsent | null,
   purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
 ): boolean => consent !== null && consent.purposesVersion < currentPurposes(purposes).version;
+
+// An answer to the current list. Anything else is asked in onboarding, and its events are
+// held until it is answered.
+export const consentAnswered = (
+  consent: AnalyticsConsent | null,
+  purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES,
+): consent is AnalyticsConsent => consent !== null && !consentOutdated(consent, purposes);

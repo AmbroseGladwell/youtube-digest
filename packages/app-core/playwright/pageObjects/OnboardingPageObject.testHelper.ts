@@ -72,6 +72,7 @@ export class OnboardingPageObject extends PageObject {
         "We count which features are used, never what you read or watch.",
       );
       await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("href", /\/privacy$/);
+      await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("target", "_blank");
     });
 
   verifyVideoTitle = (title: string) =>
