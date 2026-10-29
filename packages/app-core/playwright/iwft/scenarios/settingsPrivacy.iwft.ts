@@ -22,12 +22,12 @@ const SIGNED_IN = {
 } as const;
 
 const SIGNED_OUT_EXPLANATION =
-  "Shares which features you use, never what you watch, read or type, under a random ID in this browser that’s deleted when you turn this off. If you create an account later, it’s linked to your account.";
+  "Counts which features you use, never what you watch, read or type, under a random ID in this browser that’s deleted when you turn this off. If you create an account later, it’s linked to your account.";
 
 const storedConsent = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
 
-// Designs 62d–62i: one switch for sharing usage, between Plan and About
+// Designs 62d–62i: one switch for analytics, between Plan and About
 // (docs/features/analytics-consent.md, "Settings › Privacy").
 test.describe("signed out", () => {
   // Design 62d.
@@ -41,14 +41,14 @@ test.describe("signed out", () => {
     await settings.verifyRowReads("privacy", "Not chosen");
     await settings.openSection("privacy");
 
-    await settings.privacySection.verifySwitch(false, "You haven’t chosen yet, so nothing is shared.");
+    await settings.privacySection.verifySwitch(false, "You haven’t chosen yet, so nothing is counted.");
     await settings.privacySection.verifyExplains(SIGNED_OUT_EXPLANATION);
     await settings.privacySection.verifyErrorReportsAreApart();
     await settings.privacySection.verifyPolicyLinks(/^https?:\/\/[^/]+/, false);
   });
 
   // Design 62e.
-  test("turning it on is the same yes as the prompt's: a new id, sent under it, and no prompt after", async ({
+  test("turning it on is the same yes as onboarding's: a new id, and sent under it", async ({
     launcher,
     backendSimulator,
     page,
@@ -57,10 +57,10 @@ test.describe("signed out", () => {
     const settings = await launcher.appShell.openSettings();
     await settings.openSection("privacy");
 
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
     await settings.privacySection.verifySwitch(true, "On since today");
-    await settings.verifyRowReads("privacy", "Sharing usage");
+    await settings.verifyRowReads("privacy", "On");
     const consent = await storedConsent(page);
     test.expect(consent).toMatchObject({ answer: "share" });
     await test.expect.poll(() => backendSimulator.analytics.events()).toContainEqual({
@@ -70,10 +70,6 @@ test.describe("signed out", () => {
     test
       .expect(backendSimulator.analytics.batches().every(({ anonymousId }) => anonymousId === consent.anonymousId))
       .toBe(true);
-
-    await launcher.appShell.clickBrand();
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
-    await launcher.analyticsConsentNotice.verifyIsAbsent();
   });
 
   // Design 62f: withdrawing.
@@ -87,7 +83,7 @@ test.describe("signed out", () => {
     await settings.openSection("privacy");
     await settings.privacySection.verifySwitch(true, "On since 28 September 2026");
 
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
     await settings.privacySection.verifySwitch(false, "Off since today");
     test.expect(await storedConsent(page)).toMatchObject({ answer: "dontShare", anonymousId: null });
@@ -108,11 +104,11 @@ test.describe("signed out", () => {
   }) => {
     await launcher.launch(SAID_NO);
     const settings = await launcher.appShell.openSettings();
-    await settings.verifyRowReads("privacy", "Not sharing usage");
+    await settings.verifyRowReads("privacy", "Off");
     await settings.openSection("privacy");
     await settings.privacySection.verifySwitch(false, "Off since 28 September 2026");
 
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
     const { anonymousId } = await storedConsent(page);
     test.expect(anonymousId).not.toBeNull();
@@ -129,16 +125,6 @@ test.describe("signed out", () => {
     await settings.privacySection.verifyExplains(SIGNED_OUT_EXPLANATION.replace("in this browser", "in the extension"));
     await settings.privacySection.verifyPolicyLinks(/^https:\/\/sync\.test/, true);
   });
-
-  test("the notice after answering the prompt leads to this section", async ({ launcher }) => {
-    await launcher.launch(NEVER_ASKED);
-    await launcher.analyticsConsentPrompt.dontShare();
-
-    await launcher.analyticsConsentNotice.openSettings();
-
-    await launcher.settingsPage.verifySectionIsShown("privacy");
-    await launcher.settingsPage.privacySection.verifySwitch(false, "Off since today");
-  });
 });
 
 test.describe("signed in", () => {
@@ -149,14 +135,14 @@ test.describe("signed in", () => {
   }) => {
     await launcher.launch(SIGNED_IN);
     const settings = await launcher.appShell.openSettings();
-    await settings.verifyRowReads("privacy", "Sharing usage");
+    await settings.verifyRowReads("privacy", "On");
     await settings.openSection("privacy");
     await settings.privacySection.verifySwitch(true, "On across your devices");
     await settings.privacySection.verifyExplains(
-      "Shares which features you use, never what you watch, read or type, so we can improve the app.",
+      "Counts which features you use, never what you watch, read or type, so we can improve the app.",
     );
 
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
     await settings.privacySection.verifySwitch(false, "Off across your devices since today");
     await test
@@ -174,9 +160,9 @@ test.describe("signed in", () => {
     await launcher.launch(SIGNED_IN);
     const settings = await launcher.appShell.openSettings();
     await settings.openSection("privacy");
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
-    await settings.privacySection.switchShareUsage();
+    await settings.privacySection.switchAnalytics();
 
     await settings.privacySection.verifySwitch(true, "On across your devices since today");
   });

@@ -7,7 +7,7 @@ import { shareUsageOn, shareUsageStatus } from "../../util/shareUsageStatus.js";
 import styles from "./PrivacySection.module.scss";
 import { privacySectionTestIds } from "./PrivacySectionTestIds.js";
 
-const NEVER = "Shares which features you use, never what you watch, read or type";
+const NEVER = "Counts which features you use, never what you watch, read or type";
 
 // Designs 62d–62h (docs/features/analytics-consent.md, "Settings › Privacy"): one switch,
 // the same for everyone, whose line says what it means. Error reports sit apart with no
@@ -25,7 +25,7 @@ export function PrivacySection() {
         <div className={styles.switchRow}>
           <span className={styles.switchText}>
             <span className={styles.switchLabel} id={labelId}>
-              Share usage
+              Analytics
             </span>
             <span className={styles.status} id={statusId} data-testid={privacySectionTestIds.status}>
               {shareUsageStatus(state, new Date())}
@@ -53,7 +53,7 @@ export function PrivacySection() {
       <div className={styles.card} data-testid={privacySectionTestIds.errorReports}>
         <p className={styles.cardLabel}>Error reports</p>
         <p className={styles.body}>
-          Always sent, so we can fix what breaks. They never include what you watch, read or type, and Share usage
+          Always sent, so we can fix what breaks. They never include what you watch, read or type, and Analytics
           doesn’t affect them.
         </p>
       </div>

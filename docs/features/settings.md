@@ -22,7 +22,7 @@ In order, each with the value its row shows:
 | Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
 | YouTube playlists | `/settings/playlists` | "Following 3" or "None" | there is a server to read playlists through (`playlists.md`) |
 | Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
-| Privacy | `/settings/privacy` | "Not chosen", "Sharing usage" or "Not sharing usage" | there is a server to send to (`analytics-consent.md`) |
+| Privacy | `/settings/privacy` | "Not chosen", "On" or "Off" | there is a server to send to (`analytics-consent.md`) |
 | About | `/settings/about` | the version | the shell knows its build |
 
 A section whose panel would show nothing is left out, both its row and its route. Its

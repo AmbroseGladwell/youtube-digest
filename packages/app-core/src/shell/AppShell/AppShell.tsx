@@ -13,8 +13,6 @@ import { SignOutNotice } from "../../features/accountLibraries/components/SignOu
 import { useLibraryMove } from "../../features/accountLibraries/LibraryMoveContext.js";
 import { useAccountNeeded } from "../../features/accountLibraries/useAccountNeeded.js";
 import { markAccountSeen } from "../../features/accountLibraries/accountSeenStorage.js";
-import { AnalyticsConsentStripSlot } from "../../features/analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
-import { useAnalyticsConsentStrip } from "../../features/analyticsConsent/useAnalyticsConsentStrip.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
@@ -62,8 +60,6 @@ export function AppShell() {
   useEffect(() => {
     if (signedIn) markAccountSeen();
   }, [signedIn]);
-  const consentStrip = useAnalyticsConsentStrip(onHome && !isPanel && !accountNeeded);
-  const panelConsentStrip = useAnalyticsConsentStrip(gated && isPanel);
   const libraryMoved = useLibraryMove().move !== null;
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
@@ -224,13 +220,7 @@ export function AppShell() {
                 onDismiss={captureQueue.dismissStrip}
               />
             ) : (
-              !isPanel &&
-              !newOverview.run &&
-              (libraryMoved ? (
-                <LibraryMoveNotice />
-              ) : (
-                consentStrip !== null && <AnalyticsConsentStripSlot strip={consentStrip} />
-              ))
+              !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />
             )}
           </header>
 
@@ -238,10 +228,7 @@ export function AppShell() {
             {belowWriteFloor ? (
               <WriteFloorWall generating={newOverview.run !== null} />
             ) : gated ? (
-              <>
-                {panelConsentStrip !== null && <AnalyticsConsentStripSlot strip={panelConsentStrip} panel />}
-                <SignedOutGate panel={isPanel} />
-              </>
+              <SignedOutGate panel={isPanel} />
             ) : (
               <Outlet />
             )}

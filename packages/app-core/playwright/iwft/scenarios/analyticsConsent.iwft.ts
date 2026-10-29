@@ -1,6 +1,12 @@
+import type { Page } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
-import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
-import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import type { Launcher } from "../../support/Launcher.testHelper.js";
+import {
+  SIMULATED_ACCOUNT_ID,
+  SIMULATED_EMAIL,
+  type BackendSimulator,
+} from "../../network/BackendSimulator.testHelper.js";
+import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import {
   ANONYMOUS_ID,
   makeAnalyticsConsent,
@@ -8,127 +14,89 @@ import {
 
 const NEVER_ASKED = { analyticsConsent: null } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
-const storedConsent = (page: import("@playwright/test").Page) =>
+const storedConsent = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
 
-// Design 62: a reader without an account is asked, once, whether to share usage, and
-// nothing is sent for them until they say yes (docs/features/analytics-consent.md).
-test.describe("asking a reader without an account", () => {
-  // Design 46b: signed out on the web, home is onboarding's Start, which asks on its own screen.
-  test("Start asks nothing in the strip, and sends nothing", async ({ launcher, backendSimulator }) => {
+const verifyNothingAsks = async (page: Page) => {
+  await test.expect(page.getByText(/improve The Overview\?/)).toHaveCount(0);
+  await test.expect(page.getByRole("button", { name: /^(Allow|No thanks)$/ })).toHaveCount(0);
+};
+
+// OV-101: onboarding's screen (design 46b) is the only place a reader without an account is
+// asked; the library and the panel's home have no strip (docs/features/analytics-consent.md).
+test.describe("nowhere but onboarding asks", () => {
+  test("Start asks nothing until a link is given, and sends nothing", async ({ launcher, backendSimulator, page }) => {
     await launcher.launch({ sync: true, ...NEVER_ASKED });
 
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
+    await verifyNothingAsks(page);
     test.expect(backendSimulator.analytics.batches()).toEqual([]);
   });
 
-  // Design 62c.
-  test("a yes keeps a random id on the device and sends the reader's usage under it", async ({
+  test("the library asks nothing, and sends nothing", async ({ launcher, backendSimulator, page }) => {
+    await launcher.launch(NEVER_ASKED);
+
+    await verifyNothingAsks(page);
+    await launcher.appShell.openSettings();
+    await launcher.appShell.clickBrand();
+    await verifyNothingAsks(page);
+    test.expect(backendSimulator.analytics.batches()).toEqual([]);
+  });
+
+  test("the panel's home asks nothing, and sends nothing", async ({ launcher, backendSimulator, page }) => {
+    await launcher.launchPanel({ defaultApiUrl: "https://sync.test", ...NEVER_ASKED });
+
+    await verifyNothingAsks(page);
+    test.expect(backendSimulator.analytics.batches()).toEqual([]);
+  });
+});
+
+test.describe("answering in onboarding", () => {
+  const startOnboarding = async (launcher: Launcher, backendSimulator: BackendSimulator) => {
+    backendSimulator.ourKey.isAvailable();
+    const home = await launcher.launch({ sync: true, ...NEVER_ASKED });
+    await home.submitHeroUrl(VIDEO_URL);
+    const onboarding = await launcher.onboardingPage.verifyIsShown();
+    await onboarding.verifyOnScreen("analytics");
+    return onboarding;
+  };
+
+  test("Allow keeps a random id on the device and sends the reader's usage under it", async ({
     launcher,
     backendSimulator,
     page,
   }) => {
-    await launcher.launch(NEVER_ASKED);
+    const onboarding = await startOnboarding(launcher, backendSimulator);
 
-    await launcher.analyticsConsentPrompt.share();
+    await onboarding.allowAnalytics();
 
-    await launcher.analyticsConsentNotice.verifyReads("Sharing usage.");
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
+    await onboarding.verifyOnScreen("video");
     const consent = await storedConsent(page);
     test.expect(consent).toMatchObject({ answer: "share", purposesVersion: 1 });
     test.expect(consent.anonymousId).toMatch(UUID);
-
-    await launcher.appShell.openSettings();
-    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("app.accountMenu.itemChosen");
-    test.expect(backendSimulator.analytics.events()[0]).toEqual({
-      name: "analyticsConsent.prompt.accepted",
-      props: { asked: "first" },
-    });
+    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("analyticsConsent.prompt.accepted");
     test
       .expect(backendSimulator.analytics.batches().map(({ anonymousId }) => anonymousId))
       .toEqual(backendSimulator.analytics.batches().map(() => consent.anonymousId));
-  });
-
-  // Design 62c.
-  test("a no is remembered, keeps no id, and sends nothing", async ({ launcher, backendSimulator, page }) => {
-    await launcher.launch(NEVER_ASKED);
-
-    await launcher.analyticsConsentPrompt.dontShare();
-
-    await launcher.analyticsConsentNotice.verifyReads("Not sharing usage.");
-    test.expect(await storedConsent(page)).toMatchObject({ answer: "dontShare", anonymousId: null });
-
-    await launcher.appShell.openSettings();
-    await launcher.appShell.clickBrand();
-
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
-    test.expect(backendSimulator.analytics.batches()).toEqual([]);
-  });
-
-  test("a no is told to the server once, with the app's context and no id", async ({
-    launcher,
-    backendSimulator,
-  }) => {
-    await launcher.launch(NEVER_ASKED);
-
-    await launcher.analyticsConsentPrompt.dontShare();
-
-    await test.expect.poll(() => backendSimulator.analytics.declines()).toEqual([
-      { context: { surface: "web", layout: "full", appVersion: null, platform: test.expect.any(String) } },
-    ]);
-  });
-
-  test("a yes is not a decline", async ({
-    launcher,
-    backendSimulator,
-  }) => {
-    await launcher.launch(NEVER_ASKED);
-    await launcher.analyticsConsentPrompt.share();
-
-    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("analyticsConsent.prompt.accepted");
     test.expect(backendSimulator.analytics.declines()).toEqual([]);
   });
 
-  test("the prompt is on the library only, not on Settings", async ({ launcher }) => {
-    await launcher.launch(NEVER_ASKED);
-
-    await launcher.appShell.openSettings();
-
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
-  });
-
-  test("the panel asks above its home, opens the policy in a tab of its own, and sends what came before the yes with it", async ({
+  test("No thanks is remembered with no id, and told to the server once with the app's context alone", async ({
     launcher,
     backendSimulator,
+    page,
   }) => {
-    await launcher.launchPanel({ defaultApiUrl: "https://sync.test", ...NEVER_ASKED });
+    const onboarding = await startOnboarding(launcher, backendSimulator);
 
-    await launcher.analyticsConsentPrompt.verifyAsksFirst();
-    await launcher.analyticsConsentPrompt.verifyPrivacyLink(/^https:\/\/sync\.test\/privacy$/, true);
+    await onboarding.declineAnalytics();
 
-    await launcher.analyticsConsentPrompt.share();
-
-    await launcher.analyticsConsentNotice.verifyReads("Sharing usage.");
-    await test
-      .expect.poll(() => backendSimulator.analytics.eventNames())
-      .toEqual(["extension.sidePanel.opened", "analyticsConsent.prompt.accepted"]);
-  });
-
-  test("a no in the panel forgets what came before it", async ({ launcher, backendSimulator }) => {
-    await launcher.launchPanel({ defaultApiUrl: "https://sync.test", ...NEVER_ASKED });
-
-    await launcher.analyticsConsentPrompt.dontShare();
-
-    await launcher.analyticsConsentNotice.verifyReads("Not sharing usage.");
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
+    await onboarding.verifyOnScreen("video");
+    test.expect(await storedConsent(page)).toMatchObject({ answer: "dontShare", anonymousId: null });
+    await test.expect.poll(() => backendSimulator.analytics.declines()).toEqual([
+      { context: { surface: "web", layout: "full", appVersion: null, platform: test.expect.any(String) } },
+    ]);
     test.expect(backendSimulator.analytics.batches()).toEqual([]);
-  });
-
-  test("a panel with no server to send to asks nothing", async ({ launcher }) => {
-    await launcher.launchPanel(NEVER_ASKED);
-
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
   });
 });
 
@@ -150,7 +118,7 @@ test.describe("signed in", () => {
       analyticsConsent: makeAnalyticsConsent({ answer: "share", anonymousId: ANONYMOUS_ID }),
     });
 
-    await launcher.analyticsConsentPrompt.verifyIsAbsent();
+    await verifyNothingAsks(page);
     await test.expect.poll(async () => (await storedConsent(page)).anonymousId).toBeNull();
 
     await launcher.appShell.openSettings();

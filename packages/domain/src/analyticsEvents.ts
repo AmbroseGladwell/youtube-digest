@@ -462,13 +462,13 @@ export const analyticsEvents = {
   analyticsConsent: {
     prompt: {
       accepted: event(
-        "A reader with no account agrees to share usage, the first event they send; whether it was the library's first ask, its ask after what is counted changed, or onboarding's screen",
+        "A reader with no account allows analytics, the first event they send; asked on onboarding's screen, or before OV-101 by the library's first ask or its ask after what is counted changed",
         { asked: z.enum(["first", "again", "onboarding"]) },
       ),
     },
     settings: {
       switched: event(
-        "The reader turns Share usage on or off in Settings › Privacy; sent before an off takes effect, so it is the last event under that yes",
+        "The reader turns Analytics on or off in Settings › Privacy; sent before an off takes effect, so it is the last event under that yes",
         { on: z.boolean() },
       ),
     },

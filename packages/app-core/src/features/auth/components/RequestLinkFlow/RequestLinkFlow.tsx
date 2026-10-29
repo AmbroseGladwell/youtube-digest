@@ -25,7 +25,7 @@ import { EmailLinkForm, type EmailLinkFormValues } from "../EmailLinkForm/EmailL
 import { EnterCode } from "../EnterCode/EnterCode.js";
 import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
 import { analyticsConsentSnapshot } from "../../../analyticsConsent/useAnalyticsConsent.js";
-import { consentAllowsSharing } from "../../../analyticsConsent/util/consentAskOf.js";
+import { consentAllowsSharing } from "../../../analyticsConsent/util/consentAllowsSharing.js";
 import { AccountTermsLine } from "../AccountTermsLine/AccountTermsLine.js";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";

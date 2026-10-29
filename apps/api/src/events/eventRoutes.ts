@@ -47,7 +47,7 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
       const { context, events, dropped, anonymousId } = parseOrThrow(AnalyticsEventBatch, request.body, "The events");
       const accountId = request.session?.accountId ?? null;
       if (accountId === null && anonymousId === undefined) {
-        throw new ApiError("unauthenticated", "Sign in, or agree to share usage, to send events");
+        throw new ApiError("unauthenticated", "Sign in, or allow analytics, to send events");
       }
       if (accountId !== null && (await optedOut(accountId))) {
         request.log.info(apiLogLines.analytics.clientEventsDroppedForOptOut({ events: events.length, surface: context.surface }));

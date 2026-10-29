@@ -339,7 +339,7 @@ the way to switch centred under it (62j). The design pins that foot to the botto
 screen; the app keeps it under the fields.
 
 **Creating an account** carries one line above the button saying what it agrees to, and a
-reader who said yes to sharing usage sends their anonymous id with the request
+reader who said yes to analytics sends their anonymous id with the request
 (`docs/features/analytics-consent.md`, "Creating an account").
 
 **Sign-out** runs one last sync cycle, ten seconds at most, tells the server, and then

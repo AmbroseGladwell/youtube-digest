@@ -22,8 +22,6 @@ import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/Milest
 import { LibraryMoveNotice } from "../../accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
-import { AnalyticsConsentStripSlot } from "../../analyticsConsent/components/AnalyticsConsentStripSlot/AnalyticsConsentStripSlot.js";
-import { useAnalyticsConsentStrip } from "../../analyticsConsent/useAnalyticsConsentStrip.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
@@ -48,7 +46,6 @@ export function CapturePage() {
   const limit = useLimitMessage();
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
-  const consentStrip = useAnalyticsConsentStrip(true);
   const sync = useSync();
   const libraryMoved = useLibraryMove().move !== null;
   const captureQueue = useCaptureQueueController();
@@ -114,7 +111,7 @@ export function CapturePage() {
 
   return (
     <div
-      className={`${styles.root} ${consentStrip === null && !libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
+      className={`${styles.root} ${!libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
       data-testid={capturePageTestIds.root}
     >
       {captureQueue.strip !== null ? (
@@ -129,8 +126,6 @@ export function CapturePage() {
         />
       ) : libraryMoved ? (
         <LibraryMoveNotice panel />
-      ) : consentStrip !== null ? (
-        <AnalyticsConsentStripSlot strip={consentStrip} panel />
       ) : null}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         <div>

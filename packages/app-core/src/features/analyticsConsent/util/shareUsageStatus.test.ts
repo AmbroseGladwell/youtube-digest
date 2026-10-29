@@ -18,9 +18,9 @@ describe("a reader without an account", () => {
   const state = (consent: Parameters<typeof makeAnalyticsConsent>[0] | null, outdated = false): ShareUsageState =>
     ({ signedIn: false, consent: consent === null ? null : makeAnalyticsConsent(consent), outdated });
 
-  it("has not chosen: off, and says nothing is shared", () => {
+  it("has not chosen: off, and says nothing is counted", () => {
     expect(shareUsageOn(state(null))).toBe(false);
-    expect(shareUsageStatus(state(null), NOW)).toBe("You haven’t chosen yet, so nothing is shared.");
+    expect(shareUsageStatus(state(null), NOW)).toBe("You haven’t chosen yet, so nothing is counted.");
     expect(shareUsageRowValue(state(null))).toBe("Not chosen");
   });
 
@@ -29,20 +29,21 @@ describe("a reader without an account", () => {
     expect(shareUsageOn(yes)).toBe(true);
     expect(shareUsageStatus(yes, NOW)).toBe("On since 4 October 2026");
     expect(shareUsageStatus(state({ answer: "share", answeredAt: TODAY }), NOW)).toBe("On since today");
-    expect(shareUsageRowValue(yes)).toBe("Sharing usage");
+    expect(shareUsageRowValue(yes)).toBe("On");
   });
 
   it("said no: off, since the day they said it", () => {
     const no = state({ answer: "dontShare", answeredAt: EARLIER });
     expect(shareUsageOn(no)).toBe(false);
     expect(shareUsageStatus(no, NOW)).toBe("Off since 4 October 2026");
-    expect(shareUsageRowValue(no)).toBe("Not sharing usage");
+    expect(shareUsageRowValue(no)).toBe("Off");
   });
 
-  it("answered an older list: the old answer shows, and the line says nothing new is shared yet", () => {
+  it("said yes to an older list: off, since nothing is sent, and the line says why", () => {
     const old = state({ answer: "share", answeredAt: EARLIER }, true);
-    expect(shareUsageOn(old)).toBe(true);
-    expect(shareUsageStatus(old, NOW)).toBe("Share usage now covers more. Nothing new is shared until you choose.");
+    expect(shareUsageOn(old)).toBe(false);
+    expect(shareUsageRowValue(old)).toBe("Off");
+    expect(shareUsageStatus(old, NOW)).toBe("Analytics now covers more, so nothing is counted until you turn it on again.");
   });
 });
 
@@ -51,7 +52,7 @@ describe("a signed-in reader", () => {
     const state: ShareUsageState = { signedIn: true, optedOut: false, changedAt: null };
     expect(shareUsageOn(state)).toBe(true);
     expect(shareUsageStatus(state, NOW)).toBe("On across your devices");
-    expect(shareUsageRowValue(state)).toBe("Sharing usage");
+    expect(shareUsageRowValue(state)).toBe("On");
   });
 
   it("switched off says since when, and switched back on today says so", () => {
@@ -61,6 +62,6 @@ describe("a signed-in reader", () => {
     expect(shareUsageStatus({ signedIn: true, optedOut: false, changedAt: TODAY }, NOW)).toBe(
       "On across your devices since today",
     );
-    expect(shareUsageRowValue({ signedIn: true, optedOut: true, changedAt: EARLIER })).toBe("Not sharing usage");
+    expect(shareUsageRowValue({ signedIn: true, optedOut: true, changedAt: EARLIER })).toBe("Off");
   });
 });

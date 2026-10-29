@@ -17,6 +17,8 @@ import { useStores } from "../../../stores/StoresContext.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { answerAnalyticsConsent, useAnalyticsConsent } from "../../analyticsConsent/useAnalyticsConsent.js";
+import { useAnalyticsDecline } from "../../analyticsConsent/useAnalyticsDecline.js";
+import { consentAnswered } from "../../analyticsConsent/util/consentAllowsSharing.js";
 import { RequestLinkFlow } from "../../auth/components/RequestLinkFlow/RequestLinkFlow.js";
 import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -73,6 +75,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const accountId = libraryAccountIdOf(connection);
   const signedIn = accountId !== null;
   const { consent } = useAnalyticsConsent();
+  const analyticsAnswered = consentAnswered(consent);
+  const declineAnalytics = useAnalyticsDecline();
   const libraryMove = useLibraryMove();
   const { overviewStore } = useStores();
   const createTopic = useCreateTopicMutation();
@@ -125,8 +129,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
   };
 
   useEffect(() => {
-    if (step === "analytics" && consent !== null) update({ step: "video" });
-  }, [step, consent, update]);
+    if (step === "analytics" && analyticsAnswered) update({ step: "video" });
+  }, [step, analyticsAnswered, update]);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -207,12 +211,12 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingAnalytics
             onAllow={() => {
-              answerAnalyticsConsent("share", { notice: false });
+              answerAnalyticsConsent("share");
               analytics.analyticsConsent.prompt.accepted({ asked: "onboarding" });
               next();
             }}
             onNoThanks={() => {
-              answerAnalyticsConsent("dontShare", { notice: false });
+              declineAnalytics();
               next();
             }}
           />
@@ -283,7 +287,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const back = () => {
     analytics.onboarding.step.backChosen({ step });
     const before = ONBOARDING_STEPS[indexOf(step) - 1];
-    if (before === undefined || (before === "analytics" && consent !== null)) startAgain();
+    if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
   };
 

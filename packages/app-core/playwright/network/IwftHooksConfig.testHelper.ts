@@ -49,7 +49,7 @@ export interface IwftHooksConfig {
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
   signedOutTrial?: SignedOutTrial;
-  // What this device said about sharing usage; null is never asked
+  // What this device said about analytics; null is never asked
   // (docs/features/analytics-consent.md).
   analyticsConsent?: AnalyticsConsent | null;
   // This device has been signed in to an account before (design 46q).

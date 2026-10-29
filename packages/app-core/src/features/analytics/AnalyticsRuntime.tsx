@@ -7,7 +7,7 @@ import {
   mintAnonymousId,
   useAnalyticsConsent,
 } from "../analyticsConsent/useAnalyticsConsent.js";
-import { consentAllowsSharing } from "../analyticsConsent/util/consentAskOf.js";
+import { consentAllowsSharing, consentAnswered } from "../analyticsConsent/util/consentAllowsSharing.js";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 import { useSync } from "../sync/SyncContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
@@ -64,7 +64,7 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
     };
     const mode = (): AnalyticsSendMode => {
       if (sender() !== null) return "send";
-      const unanswered = !latest.current.signedIn && analyticsConsentSnapshot().consent === null;
+      const unanswered = !latest.current.signedIn && !consentAnswered(analyticsConsentSnapshot().consent);
       return unanswered && latest.current.anonymousApi !== null ? "hold" : "discard";
     };
     return new AnalyticsQueue({

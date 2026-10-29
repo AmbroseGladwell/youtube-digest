@@ -16,22 +16,22 @@ export function sinceDay(iso: string, now: Date): string {
 }
 
 export function shareUsageOn(state: ShareUsageState): boolean {
-  return state.signedIn ? !state.optedOut : state.consent?.answer === "share";
+  return state.signedIn ? !state.optedOut : state.consent?.answer === "share" && !state.outdated;
 }
 
-// Design 62d–62h: the line under "Share usage", which is the switch's description.
+// Design 62d–62h: the line under "Analytics", which is the switch's description.
 export function shareUsageStatus(state: ShareUsageState, now: Date): string {
   if (state.signedIn) {
     const since = state.changedAt === null ? "" : ` since ${sinceDay(state.changedAt, now)}`;
     return state.optedOut ? `Off across your devices${since}` : `On across your devices${since}`;
   }
-  if (state.outdated) return "Share usage now covers more. Nothing new is shared until you choose.";
-  if (state.consent === null) return "You haven’t chosen yet, so nothing is shared.";
+  if (state.outdated) return "Analytics now covers more, so nothing is counted until you turn it on again.";
+  if (state.consent === null) return "You haven’t chosen yet, so nothing is counted.";
   const since = sinceDay(state.consent.answeredAt, now);
   return state.consent.answer === "share" ? `On since ${since}` : `Off since ${since}`;
 }
 
 export function shareUsageRowValue(state: ShareUsageState): string {
   if (!state.signedIn && state.consent === null) return "Not chosen";
-  return shareUsageOn(state) ? "Sharing usage" : "Not sharing usage";
+  return shareUsageOn(state) ? "On" : "Off";
 }
