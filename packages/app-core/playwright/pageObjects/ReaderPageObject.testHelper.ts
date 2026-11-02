@@ -532,6 +532,38 @@ export class ReaderPageObject extends PageObject {
 
   verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
 
+  verifySavedChipIsCentredBelowNoteEndButtons = () =>
+    this.step("verifySavedChipIsCentredBelowNoteEndButtons", async () => {
+      const chip = this.get(noteEndActionsTestIds.root).getByTestId(savedChipTestIds.root);
+      await expect(chip).toBeVisible();
+      await chip.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+      const chipBox = (await chip.boundingBox())!;
+      const readBox = (await this.get(noteEndActionsTestIds.readButton).boundingBox())!;
+      const favouriteBox = (await this.get(noteEndActionsTestIds.favouriteButton).boundingBox())!;
+      const buttonsCentre = (readBox.x + favouriteBox.x + favouriteBox.width) / 2;
+      expect(Math.abs(chipBox.x + chipBox.width / 2 - buttonsCentre)).toBeLessThan(1);
+      expect(chipBox.y).toBeGreaterThanOrEqual(readBox.y + readBox.height);
+    });
+
+  verifySavedChipIsInHead = () =>
+    this.step("verifySavedChipIsInHead", () =>
+      expect(this.get(readerMastheadTestIds.root).getByTestId(savedChipTestIds.root)).toBeVisible(),
+    );
+
+  noteEndButtonPositions = () =>
+    this.step("noteEndButtonPositions", async () => {
+      const positionOf = (testId: string) =>
+        this.get(testId).evaluate((element) => {
+          const { left, top, width, height } = element.getBoundingClientRect();
+          return { left, top: top + window.scrollY, width, height };
+        });
+      return {
+        read: await positionOf(noteEndActionsTestIds.readButton),
+        favourite: await positionOf(noteEndActionsTestIds.favouriteButton),
+        wholeBlock: await positionOf(noteEndActionsTestIds.root),
+      };
+    });
+
   clickShare = (): Promise<ShareOverviewDialogPageObject> =>
     this.step("clickShare", async () => {
       await this.openActionsMenu();

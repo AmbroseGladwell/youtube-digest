@@ -101,6 +101,12 @@ $out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
+// Held at the final number's width, so counting up doesn't resize a centred chip.
+.count {
+  display: inline-block;
+  text-align: right;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
