@@ -43,6 +43,41 @@ in instead. The sentence is repeated in a hidden polite status line.
 
 Both places say that on us it goes through our server to OpenAI with each overview.
 
+### A profile that learns
+
+After onboarding the profile updates itself, like ChatGPT's memory. Every three overviews
+(`profilePassIsDue`, counted by code against `overviewsAtLastProfilePass`) a small **profile
+pass** reads the sentence, what's held, what was removed and the 12 newest overviews: title,
+Premise, topics and capture reason. Capture reason is fine here because the profile only reaches
+How to apply; `capture-reason.md` keeps it away from the verdict, and this doesn't change that.
+
+The model says what it noticed and which overviews it rests on. **Code does all the counting:**
+it dedupes the overviews, needs at least two behind an item, writes the source line ("From 4
+overviews on app growth", from their commonest topic) and drops anything already held or removed
+whatever the model says. At most two items a pass, sixty characters each.
+
+It runs after an overview lands, on the key that made it, signed in only. On us it is
+`POST /api/generations/profile`: **free, not counted against the plan or the day's overviews,**
+held to 30 a day for an account by its own rate limit. Failing never touches the overview and
+the reader isn't told; the schedule moves on regardless, so a broken key isn't retried on every
+overview.
+
+`Settings.learned` is keyed by item, merged one by one, so two devices adding and removing at once
+both land. A removed item stays in the map with `removedAt` set, which is what keeps it from
+coming back; Clear everything removes them all the same way. The reader context is the sentence,
+then "Also: …" with the newest items for as many as fit under 600 characters.
+
+**Telling the reader.** An item stays unnoticed until shown, so nothing joins the profile unseen.
+The notice is on the library only (141n), so it can't cover a note or the read-along, and it
+waits there if the reader was reading when the pass finished. It stays ten seconds, longer while
+hovered or focused. Undo removes the item and says so for four seconds; See opens Settings. Items
+already in use are used from the next overview.
+
+**Settings › Personalisation** shows What we know about you: the sentence, Learned from your
+overviews with each item's source and Remove, and Keep learning. Off, nothing new is learned and
+what's held stays. Where no key can run the pass (`useCanLearn`), learning isn't offered, though
+items already held stay readable and removable, because they are still sent.
+
 ### The old line
 
 `Settings.readerContext` used to be the line itself. Migration 3 turns it into an entry under

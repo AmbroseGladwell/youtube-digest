@@ -518,6 +518,13 @@ export const analyticsEvents = {
       aboutYouSaved: event("The reader saves About you in Settings › Personalisation, or clears it; never what it says", {
         set: z.boolean(),
       }),
+      learningSwitched: event("The reader turns Keep learning on or off", { on: z.boolean() }),
+      learnedItemRemoved: event("The reader removes a learned item in Settings; never what it says", {}),
+      profilePassRan: event("A profile pass finished; never what it found", { added: z.number().int().nonnegative(), key: z.enum(["own", "ours"]) }),
+      profilePassFailed: event("A profile pass failed; the reader isn't told", { key: z.enum(["own", "ours"]) }),
+      learnedNoticeShown: event("The learned-item notice shows on the library", { items: z.number().int().positive() }),
+      learnedItemUndone: event("The reader undoes a learned item from the notice; never what it says", {}),
+      learnedNoticeSeen: event("The reader follows See from the learned-item notice", {}),
       sectionSwitched: event("The reader turns one section of their future overviews on or off in Settings › Personalisation", {
         section: SectionsEnabled.keyof(),
         on: z.boolean(),

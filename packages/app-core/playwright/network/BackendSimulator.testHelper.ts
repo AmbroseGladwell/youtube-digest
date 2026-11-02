@@ -25,6 +25,8 @@ import {
   type Plan,
   type MagicLinkRequest,
   type OurKeyGenerationRequest,
+  type ProfilePassInput,
+  type ProfilePassItem,
   type OverviewUsage,
   type OutboxEntry,
   type Overview,
@@ -156,6 +158,8 @@ export class BackendSimulator {
   #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
+  #profilePassItems: ProfilePassItem[] = [];
+  #profilePasses: ProfilePassInput[] = [];
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
@@ -729,6 +733,16 @@ export class BackendSimulator {
           }),
     );
 
+    await this.#page.route("**/api/generations/profile", (route) =>
+      this.#respond(route, EndpointKey.PROFILE_PASS, {
+        onDefault: () => {
+          this.#profilePasses.push(route.request().postDataJSON() as ProfilePassInput);
+          return { status: 200, body: { items: this.#profilePassItems } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/trials", (route) =>
       this.#respond(route, EndpointKey.TRIAL_START, {
         onDefault: () => {
@@ -1078,6 +1092,10 @@ export class BackendSimulator {
       this.#anthropicOutOfCredit = true;
     },
     generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
+    profilePassFinds: (items: ProfilePassItem[]): void => {
+      this.#profilePassItems = items;
+    },
+    profilePasses: (): ProfilePassInput[] => [...this.#profilePasses],
     // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,

@@ -113,6 +113,20 @@ describe("personalisationRowValue", () => {
     ).toBe("About you not set · Summary and key points only");
   });
 
+  it("says how many things were learned, or that learning is off, and nothing of it where learning can't run", () => {
+    const aboutYou = { ...EMPTY_ABOUT_YOU, who: ["dad"] };
+
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: true, keepLearning: true, learnedCount: 3 })).toBe(
+      "A dad · 3 learned · Every section",
+    );
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: true, keepLearning: false, learnedCount: 3 })).toBe(
+      "A dad · Learning off",
+    );
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: false, keepLearning: false, learnedCount: 3 })).toBe(
+      "A dad · Every section",
+    );
+  });
+
   it("leads with the first section that's filled, once there is one", () => {
     expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, { ...EMPTY_ABOUT_YOU, who: ["dad", "husband"] })).toBe(
       "A dad and a husband · Every section",

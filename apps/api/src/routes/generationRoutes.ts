@@ -1,5 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import { apiLogLines, OurKeyGenerationRequest, TRIAL_TOKEN_HEADER, TrialToken, type OurKeyGenerationStatus } from "@overview/domain";
+import {
+  apiLogLines,
+  OurKeyGenerationRequest,
+  ProfilePassInput,
+  TRIAL_TOKEN_HEADER,
+  TrialToken,
+  type OurKeyGenerationStatus,
+  type ProfilePassResult,
+} from "@overview/domain";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
@@ -51,6 +59,26 @@ export function generationRoutes(
       const trial: TrialToken = { token: await trials.issue(clock()) };
       request.log.info(apiLogLines.trials.issued());
       return trial;
+    },
+  );
+
+  app.post(
+    "/generations/profile",
+    { preHandler: rateLimitHook(rateLimits.smallPassPerAccount, (request) => request.session?.accountId ?? null, clock) },
+    async (request) => {
+      const input = parseOrThrow(ProfilePassInput, request.body, "The profile pass");
+      if (generator === null) {
+        throw new ApiError("unavailable", "This server does not make overviews on its own key");
+      }
+      try {
+        const result: ProfilePassResult = { items: await generator.profilePass(input, request.log) };
+        return result;
+      } catch (error) {
+        if (error instanceof OurKeyGenerationError) {
+          throw new ApiError("generation_failed", error.message, { fallback: error.fallback });
+        }
+        throw error;
+      }
     },
   );
 

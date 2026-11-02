@@ -17,6 +17,9 @@ import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGener
 import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { runProfilePassIfDue } from "../settings/api/runProfilePassIfDue.js";
+import { settingsKeys } from "../settings/settingsKeys.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
 import { generationKeys } from "./generationKeys.js";
 
@@ -46,6 +49,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const onlyMyKey = settingsQuery.data?.onlyMyKey ?? false;
   const signedIn = libraryAccountIdOf(connection) !== null;
   const queryClient = useQueryClient();
+  const analytics = useAnalytics();
 
   return useCallback(
     async (url: string, options: RunOverviewGenerationOptions): Promise<Overview> => {
@@ -59,7 +63,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         api: signedIn && knownApiUrl !== null ? createFetchGenerationApi({ baseUrl: knownApiUrl, token: connection.token }) : null,
         trial: !signedIn && knownApiUrl !== null ? createTrialGenerationApi({ baseUrl: knownApiUrl }) : null,
       };
-      return runOverviewGeneration(
+      const overview = await runOverviewGeneration(
         url,
         {
           sources: createTranscriptSources({
@@ -78,6 +82,17 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         },
         options,
       ).finally(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }));
+      void runProfilePassIfDue({
+        madeOn: overview.madeOn?.key ?? null,
+        own: keys.own?.client ?? null,
+        api: keys.api,
+        overviewStore,
+        settingsStore,
+        analytics,
+      }).then((ran) => {
+        if (ran) void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+      });
+      return overview;
     },
     [
       apiKey,
@@ -96,6 +111,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
       transcriptStore,
       reporter,
       queryClient,
+      analytics,
     ],
   );
 }

@@ -28,3 +28,10 @@ test("a patch to one milestone leaves the others, so two devices can each record
     milestones: { "30m": { ...crossed, dismissedAt: "2026-10-01T10:00:00.000Z" }, "1h": crossed },
   });
 });
+
+test("one device removing a learned item and another adding one both land", () => {
+  const item = (text: string, removedAt: string | null) => ({ text, source: "x", learnedAt: "t", noticedAt: null, removedAt });
+  const merged = mergeSettingsRecord({ learned: { a: item("a", "gone"), b: item("b", null) } }, { learned: { c: item("c", null) } });
+
+  assert.deepEqual(Object.keys(merged.learned as object), ["a", "b", "c"]);
+});

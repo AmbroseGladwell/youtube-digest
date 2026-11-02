@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
+import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type LearnedItems, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -36,6 +36,7 @@ import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHe
 import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
 import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
+import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.testHelper.js";
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
@@ -74,6 +75,8 @@ export interface LaunchOptions {
   accentMirror?: boolean;
   onlyMyKey?: boolean;
   aboutYou?: AboutYou;
+  learned?: LearnedItems;
+  keepLearning?: boolean;
   sectionsEnabled?: SectionsEnabled;
   runBridge?: boolean;
   youTubeFetch?: boolean;
@@ -154,6 +157,8 @@ export class Launcher {
           ...(options.accentColour === undefined ? {} : { accentColour: options.accentColour }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
           ...(options.aboutYou === undefined ? {} : aboutYouPatch(options.aboutYou)),
+          ...(options.learned === undefined ? {} : { learned: options.learned }),
+          ...(options.keepLearning === undefined ? {} : { keepLearning: options.keepLearning }),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
         },
         apiKeys: options.apiKeys,
@@ -277,6 +282,10 @@ export class Launcher {
 
   get signOutNotice(): SignOutNoticePageObject {
     return new SignOutNoticePageObject(this.testContext);
+  }
+
+  get learnedNotice(): LearnedNoticePageObject {
+    return new LearnedNoticePageObject(this.testContext);
   }
 
   get onboardingNextSteps(): OnboardingNextStepsPageObject {

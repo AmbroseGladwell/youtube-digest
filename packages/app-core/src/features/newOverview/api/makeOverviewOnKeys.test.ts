@@ -59,6 +59,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
   const calls: string[] = [];
   const api: GenerationApi = {
     status: async () => ({ available: true }),
+    profilePass: async () => ({ items: [] }),
     usage: async () => {
       throw new Error("not asked");
     },
