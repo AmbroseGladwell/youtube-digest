@@ -1,3 +1,5 @@
+export * from "./ArticleRead.js";
+export * from "./ExtractedArticle.js";
 export * from "./Provider.js";
 export * from "./KnownModel.js";
 export * from "./ModelByProvider.js";

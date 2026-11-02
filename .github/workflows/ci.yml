@@ -29,6 +29,7 @@ jobs:
       matrix:
         package:
           - domain
+          - articles
           - transcripts
           - generation
           - store-conformance

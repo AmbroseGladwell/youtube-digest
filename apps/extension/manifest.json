@@ -5,6 +5,7 @@
   "description": "Turns the videos you save and never watch into a blunt, structured note you can read in ninety seconds.",
   "minimum_chrome_version": "114",
   "permissions": [
+    "activeTab",
     "sidePanel",
     "tabs",
     "scripting",
@@ -52,6 +53,8 @@
     }
   ],
   "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*",
     "https://api.anthropic.com/*",
     "https://api.openai.com/*",
     "https://generativelanguage.googleapis.com/*",
