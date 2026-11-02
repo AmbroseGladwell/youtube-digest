@@ -1,4 +1,6 @@
 import type {
+  ForAnyoneInput,
+  ForAnyoneResult,
   OurKeyGenerationRequest,
   OurKeyGenerationStatus,
   Overview,
@@ -16,6 +18,7 @@ export interface GenerationApi {
   generate(request: OurKeyGenerationRequest): Promise<Overview>;
   // Never counted against the plan (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput): Promise<ProfilePassResult>;
+  forAnyone(input: ForAnyoneInput): Promise<ForAnyoneResult>;
   // A slot on the own-key month before the device generates, or a saved share let in.
   reserve(overviewId: string, shareToken?: string): Promise<OverviewUsage>;
   release(overviewId: string): Promise<void>;

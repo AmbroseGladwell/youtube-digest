@@ -122,7 +122,8 @@ then goes to it. "This overview counts as your first of the month."
 move notice as it goes there. Under the Verdict of that overview, and no other, the next
 steps (46l): Save in one click with Add to Chrome, which stays disabled until the extension
 is in the Web Store, and Ask your AI with Connect your AI, which opens Settings ›
-Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`).
+Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`). How to apply
+there carries Written for you / For anyone (`personalisation.md`).
 The library then shows the first-overview milestone (46m, `time-saved.md`).
 
 ## In the extension panel

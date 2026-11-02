@@ -58,6 +58,18 @@
   padding-top: 0;
 }
 
+.headingWithSlot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.slotBeside {
+  display: contents;
+}
+
 .bodyLine {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;

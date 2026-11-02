@@ -2,6 +2,7 @@ import type { FastifyBaseLogger } from "fastify";
 import {
   apiLogLines,
   TRIAL_OVERVIEWS,
+  type ForAnyoneInput,
   type Overview,
   type OurKeyGenerationRequest,
   type Plan,
@@ -12,6 +13,7 @@ import {
   costInDollars,
   createGenerationClient,
   fallbackReasonOf,
+  generateForAnyoneSteps,
   generateOverview,
   generateProfileItems,
   meteredFetch,
@@ -199,6 +201,10 @@ export class OurKeyGenerator {
   // (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
     return this.#smallPass("profile", (client) => generateProfileItems(client, input), log);
+  }
+
+  forAnyone(input: ForAnyoneInput, log: FastifyBaseLogger): Promise<string[]> {
+    return this.#smallPass("forAnyone", (client) => generateForAnyoneSteps(client, input), log);
   }
 
   async #smallPass<Result>(pass: "profile" | "forAnyone", run: (client: GenerationClient) => Promise<Result>, log: FastifyBaseLogger): Promise<Result> {

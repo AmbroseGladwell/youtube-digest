@@ -36,6 +36,7 @@ import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHe
 import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
 import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
+import { HowToApplyFlipPageObject } from "../pageObjects/HowToApplyFlipPageObject.testHelper.js";
 import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.testHelper.js";
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
@@ -282,6 +283,10 @@ export class Launcher {
 
   get signOutNotice(): SignOutNoticePageObject {
     return new SignOutNoticePageObject(this.testContext);
+  }
+
+  get howToApplyFlip(): HowToApplyFlipPageObject {
+    return new HowToApplyFlipPageObject(this.testContext);
   }
 
   get learnedNotice(): LearnedNoticePageObject {

@@ -78,6 +78,20 @@ overviews with each item's source and Remove, and Keep learning. Off, nothing ne
 what's held stays. Where no key can run the pass (`useCanLearn`), learning isn't offered, though
 items already held stay readable and removable, because they are still sent.
 
+### Written for you
+
+On the reveal, and no other overview, How to apply carries Written for you / For anyone (141o), so
+the reader sees what their sentence bought on their own video. For anyone is the same section's
+prompt with no reader, written from the finished note with no transcript, once. It runs as the
+reveal opens, on the key that made the overview if that's the reader's own, otherwise through
+`POST /api/generations/how-to-apply`, free and sharing the profile pass's daily limit.
+
+It's kept in the reveal's device-local state (`nextStepsStorage.ts`), so a reload doesn't pay
+twice. While it's written the option spins and can't be chosen. If it fails the control goes, for
+good, and the section reads as it always has. It's hidden too with nothing known about the reader,
+or a note with no How to apply. The narration reads the note as written whichever side shows: For
+anyone stands in for the lines on the page without moving them in the list the voice follows.
+
 ### The old line
 
 `Settings.readerContext` used to be the line itself. Migration 3 turns it into an entry under
