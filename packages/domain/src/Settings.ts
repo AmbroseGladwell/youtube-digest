@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AboutYou, EMPTY_ABOUT_YOU } from "./AboutYou.js";
 import { AccentColour, DEFAULT_ACCENT_COLOUR, DEFAULT_THEME_MODE, ThemeMode } from "./Appearance.js";
 import { ModelByProvider } from "./ModelByProvider.js";
 import { DEFAULT_PROVIDER, Provider } from "./Provider.js";
@@ -25,7 +26,10 @@ export const DEFAULT_SECTIONS_ENABLED: SectionsEnabled = {
 
 export const Settings = z.object({
   sectionsEnabled: SectionsEnabled,
+  // The sentence as it was composed, written beside aboutYou for clients from before it
+  // (docs/features/personalisation.md, "The old line"). Generation reads aboutYou.
   readerContext: z.string().nullable(),
+  aboutYou: AboutYou.catch(EMPTY_ABOUT_YOU),
   // Which provider and model is not a secret (unlike the API keys they are called with),
   // so the choice belongs here rather than in the device-local ApiKeys store — a genuine
   // sync-eligible preference, per docs/architecture/v1-architecture-decisions.md's split.
@@ -64,6 +68,7 @@ export type Settings = z.infer<typeof Settings>;
 export const DEFAULT_SETTINGS: Settings = {
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   readerContext: null,
+  aboutYou: EMPTY_ABOUT_YOU,
   provider: DEFAULT_PROVIDER,
   modelByProvider: {},
   plan: DEFAULT_PLAN,

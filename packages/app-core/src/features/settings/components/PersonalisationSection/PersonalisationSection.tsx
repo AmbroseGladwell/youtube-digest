@@ -4,12 +4,12 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import { OVERVIEW_SECTIONS } from "../../util/overviewSections.js";
-import { AboutYouCard } from "../AboutYouCard/AboutYouCard.js";
+import { WhatWeKnowCard } from "../WhatWeKnowCard/WhatWeKnowCard.js";
 import styles from "./PersonalisationSection.module.scss";
 import { personalisationSectionTestIds } from "./PersonalisationSectionTestIds.js";
 
 export const PERSONALISATION_STANDFIRST =
-  "Shapes the overviews made from now on. Ones you already have stay as they are.";
+  "Turns each overview's How to apply into steps that fit your life. Overviews you already have stay as they are.";
 
 function SectionSwitch({
   section,
@@ -53,7 +53,7 @@ function SectionSwitch({
   );
 }
 
-// About you, then the sections an overview can leave out (design 46s;
+// What we know about you, then the sections an overview can leave out (design 141k;
 // docs/features/personalisation.md).
 export function PersonalisationSection() {
   const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;
@@ -68,8 +68,9 @@ export function PersonalisationSection() {
 
   return (
     <div className={styles.root}>
-      <AboutYouCard />
+      <WhatWeKnowCard />
       <div className={styles.card} data-testid={personalisationSectionTestIds.root}>
+        <span className={styles.cardTitle}>Sections</span>
         {OVERVIEW_SECTIONS.map(({ section, label, hint }) => (
           <SectionSwitch
             key={section}

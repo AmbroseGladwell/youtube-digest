@@ -4,7 +4,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { SHARE_PAYLOAD_ELEMENT_ID, type AccentColour, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
+import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -73,7 +73,7 @@ export interface LaunchOptions {
   accentColour?: AccentColour;
   accentMirror?: boolean;
   onlyMyKey?: boolean;
-  readerContext?: string;
+  aboutYou?: AboutYou;
   sectionsEnabled?: SectionsEnabled;
   runBridge?: boolean;
   youTubeFetch?: boolean;
@@ -153,7 +153,7 @@ export class Launcher {
           ...(options.theme === undefined ? {} : { theme: options.theme }),
           ...(options.accentColour === undefined ? {} : { accentColour: options.accentColour }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
-          ...(options.readerContext === undefined ? {} : { readerContext: options.readerContext }),
+          ...(options.aboutYou === undefined ? {} : aboutYouPatch(options.aboutYou)),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
         },
         apiKeys: options.apiKeys,

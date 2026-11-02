@@ -1,4 +1,5 @@
 import {
+  composeReaderContext,
   OverviewId,
   tagUsage,
   type CaptureTranscriptSource,
@@ -88,7 +89,7 @@ export async function runOverviewGeneration(
       video,
       transcript,
       captureReason: null,
-      readerContext: settings.readerContext,
+      readerContext: composeReaderContext(settings.aboutYou),
       sectionsEnabled: settings.sectionsEnabled,
       existingTopics,
       pastClaims,

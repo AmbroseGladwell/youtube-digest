@@ -40,13 +40,29 @@ test("a new reader answers the questions while the overview is made, creates an 
   await onboarding.verifyOnScreen("library", "A library that sorts itself");
   await onboarding.next();
 
-  await onboarding.verifyOnScreen("aboutYou", "How should we write your overviews?");
+  await onboarding.verifyOnScreen("aboutYou", "About you");
   await onboarding.verifyProgressReads("Writing starts once you've told us about you");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
-  await onboarding.pickRole("Healthcare");
-  await onboarding.pickGoal("Cooking");
-  await onboarding.verifyAboutYouLineReads("Works in healthcare, learning about cooking.");
+  await onboarding.sentence.verifySentenceReads("I'm a few things at once, I spend my time on all sorts, and right now I'm focusing on getting better at something.");
+  await onboarding.sentence.verifySectionName("who", "Who you are: empty. Fill in.");
+  await onboarding.sentence.openSection("who");
+  await onboarding.sentence.verifySheetHasFocus("Who you are");
+  await onboarding.sentence.pick("dad", "husband");
+  await onboarding.sentence.done();
+  await onboarding.sentence.verifySectionHasFocus("who");
+  await onboarding.sentence.verifySectionName("who", "Who you are: a dad and a husband. Edit.");
+  await onboarding.sentence.openSection("focus");
+  await onboarding.sentence.verifyGroups("From Health", "From Food", "Life");
+  await onboarding.sentence.pick("new recipes");
+  await onboarding.sentence.addOwn("Life", "a half marathon");
+  await onboarding.sentence.verifyInSection("new recipes", "a half marathon");
+  await onboarding.sentence.done();
+  await onboarding.sentence.verifySentenceReads("I'm a dad and a husband, I spend my time on all sorts, and right now I'm focusing on new recipes and a half marathon.");
   await onboarding.continueFromAboutYou();
+
+  await onboarding.verifyOnScreen("stepsForYou", "Steps that fit around you");
+  await onboarding.verifySentenceQuoted("I'm a dad and a husband, and right now I'm focusing on new recipes and a half marathon.");
+  await onboarding.nextFromStepsForYou();
 
   await onboarding.verifyOnScreen("voice", "Who should read your overviews?");
   await onboarding.continueFromVoice();
@@ -76,7 +92,7 @@ test("a new reader answers the questions while the overview is made, creates an 
   await launcher.onboardingNextSteps.verifyOffers(["ai"]);
 
   const [made] = backendSimulator.ourKey.generations();
-  expect(made?.input.readerContext).toBe("Works in healthcare, learning about cooking.");
+  expect(made?.input.readerContext).toBe("I'm a dad and a husband, and right now I'm focusing on new recipes and a half marathon.");
   expect(made?.input.existingTopics.map(({ name, description }) => ({ name, description }))).toEqual([
     { name: "chess", description: null },
     { name: "Food", description: "Cooking, recipes and eating well." },
@@ -85,7 +101,7 @@ test("a new reader answers the questions while the overview is made, creates an 
   expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
 });
 
-test("every question can be skipped, and writing starts once About you is skipped, with nothing about the reader", async ({
+test("every question can be skipped, and writing starts once the slide after About you is passed, with nothing about the reader", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -100,6 +116,11 @@ test("every question can be skipped, and writing starts once About you is skippe
   await onboarding.skip();
   await onboarding.skip();
   await onboarding.verifyOnScreen("aboutYou");
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+  await onboarding.skip();
+
+  await onboarding.verifyOnScreen("stepsForYou", "Let's make your overviews personal and actionable");
+  await onboarding.verifyProgressReads("Writing starts once you've told us about you");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
   await onboarding.skip();
 
@@ -119,6 +140,7 @@ test("See your overview leaves the questions for the account as soon as the over
   await home.submitHeroUrl(VIDEO_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
+  await onboarding.skip();
   await onboarding.skip();
   await onboarding.skip();
   await onboarding.skip();
@@ -180,6 +202,7 @@ test("an overview that can't be made says so on the screen the reader is on, and
   await onboarding.skip();
   await onboarding.skip();
   await onboarding.skip();
+  await onboarding.skip();
 
   await onboarding.verifyOnScreen("voice");
   await onboarding.verifySaysItFailed();
@@ -203,6 +226,7 @@ test("a reader with an account signs in from the account screen and lands on the
   await home.submitHeroUrl(VIDEO_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
+  await onboarding.skip();
   await onboarding.skip();
   await onboarding.skip();
   await onboarding.skip();
@@ -292,4 +316,50 @@ test("the next steps show only under the overview onboarding ended on", async ({
 
   await launcher.readerPage.verifyIsShown();
   await launcher.onboardingNextSteps.verifyIsAbsent();
+});
+
+test("the slide after a skipped About you goes back to the sentence, and what's added there reaches the overview", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("stepsForYou");
+
+  await onboarding.personalise();
+
+  await onboarding.verifyOnScreen("aboutYou");
+  await onboarding.sentence.fill("time", "software");
+  await onboarding.continueFromAboutYou();
+  await onboarding.verifyOnScreen("stepsForYou", "Steps that fit around you");
+  await onboarding.nextFromStepsForYou();
+  await onboarding.verifyCanSeeOverview();
+  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("I spend my time on software.");
+});
+
+test("a section stops taking text at its limit and says why, and Escape folds the field back", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+
+  await onboarding.sentence.openSection("focus");
+  await onboarding.sentence.typeOwn("Life", "x".repeat(130));
+
+  await onboarding.sentence.verifyOwnCountReads("120 / 120");
+  await onboarding.sentence.verifyOwnCountReads("That's as long as a section gets");
+  await onboarding.sentence.closeOwnWithEscape();
+  await onboarding.sentence.verifyOwnChipHasFocus("Life");
+  await onboarding.sentence.closeSheetWithEscape();
+  await onboarding.sentence.verifySectionHasFocus("focus");
 });

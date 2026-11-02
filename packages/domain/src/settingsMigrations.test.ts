@@ -71,3 +71,24 @@ test("a model id this client has never heard of is kept, because the reader's ke
 
   assert.equal(read.modelByProvider.openai, "gpt-7-unreleased");
 });
+
+test("an old About you line arrives as an entry the reader can see and edit, and is still written for older clients", () => {
+  const migrated = migrate({ ...settingsBeforeProviders, readerContext: "A nurse learning to cook." }) as Record<string, unknown>;
+
+  assert.deepEqual(migrated.aboutYou, { who: [], time: ["A nurse learning to cook"], focus: [] });
+  assert.equal(migrated.readerContext, "A nurse learning to cook.");
+});
+
+test("no line leaves the sentence empty", () => {
+  const migrated = migrate(settingsBeforeProviders) as Record<string, unknown>;
+
+  assert.deepEqual(migrated.aboutYou, { who: [], time: [], focus: [] });
+});
+
+test("a line written by an older client onto an empty sentence is taken, and a filled sentence is left alone", () => {
+  const fromV2 = (aboutYou: unknown) =>
+    migrateRecord({ ...DEFAULT_SETTINGS, schemaVersion: 2, aboutYou, readerContext: "A teacher." }, SETTINGS_MIGRATIONS) as Record<string, unknown>;
+
+  assert.deepEqual(fromV2({ who: [], time: [], focus: [] }).aboutYou, { who: [], time: ["A teacher"], focus: [] });
+  assert.deepEqual(fromV2({ who: ["dad"], time: [], focus: [] }).aboutYou, { who: ["dad"], time: [], focus: [] });
+});

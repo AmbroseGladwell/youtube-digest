@@ -435,9 +435,10 @@ export const analyticsEvents = {
     },
     aboutYou: {
       continued: event("The reader leaves About you; never what it says, only how it was made", {
-        role: z.boolean(),
-        goals: z.number().int().nonnegative(),
-        ownWords: z.boolean(),
+        who: z.number().int().nonnegative(),
+        time: z.number().int().nonnegative(),
+        focus: z.number().int().nonnegative(),
+        typed: z.number().int().nonnegative(),
       }),
     },
     overview: {

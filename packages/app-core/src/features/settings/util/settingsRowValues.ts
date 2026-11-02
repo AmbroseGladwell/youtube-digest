@@ -1,5 +1,6 @@
 import {
   ACCENT_COLOUR_NAMES,
+  firstAboutYouText,
   MILESTONES,
   PROVIDER_SHORT_LABEL,
   THEME_MODE_NAMES,
@@ -7,6 +8,7 @@ import {
   modelLabel,
   narrationAccent,
   narrationVoiceName,
+  type AboutYou,
   type AccentColour,
   type Provider,
   type NarrationVoice,
@@ -20,6 +22,7 @@ import { hasKeyFor, providersWithKeys, type ApiKeys } from "../../apiKeys/ApiKey
 import type { SyncConnection } from "../../sync/types/SyncConnection.js";
 import { syncStatusLine } from "../../sync/util/syncStatusLine.js";
 import { reachedCount } from "../../timeSaved/util/milestoneTiles.js";
+import { capitalised } from "./aboutYouCopy.js";
 import { ACCENT_GROUP_LABELS } from "./accentGroupLabels.js";
 import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 
@@ -64,7 +67,7 @@ export function sharedLinksRowValue(count: number): string {
   return count === 1 ? "1 shared" : `${count} shared`;
 }
 
-export function personalisationRowValue(sectionsEnabled: SectionsEnabled, readerContext: string | null): string {
+export function personalisationRowValue(sectionsEnabled: SectionsEnabled, aboutYou: AboutYou): string {
   const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
   const sections =
     on === OVERVIEW_SECTIONS.length
@@ -72,7 +75,8 @@ export function personalisationRowValue(sectionsEnabled: SectionsEnabled, reader
       : on === 0
         ? "Summary and key points only"
         : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
-  return `${readerContext ?? "About you not set"} · ${sections}`;
+  const first = firstAboutYouText(aboutYou);
+  return `${first === null ? "About you not set" : capitalised(first)} · ${sections}`;
 }
 
 export function appearanceRowValue(theme: ThemeMode, accentColour: AccentColour): string {

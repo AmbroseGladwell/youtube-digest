@@ -1,4 +1,5 @@
-import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED,
+  EMPTY_ABOUT_YOU, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
@@ -119,7 +120,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     {
       id: "personalisation",
       title: "Personalisation",
-      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.readerContext ?? null),
+      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.aboutYou ?? EMPTY_ABOUT_YOU),
     },
     { id: "appearance", title: "Appearance", value: appearanceRowValue(appearance.theme, appearance.accentColour) },
     {

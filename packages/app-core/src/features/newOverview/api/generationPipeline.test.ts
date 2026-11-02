@@ -6,6 +6,7 @@ import {
   type StoredTranscript,
   type Topic,
   type TranscriptStore,
+  type AboutYou,
 } from "@overview/domain";
 import type { GenerationInput } from "@overview/generation";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
@@ -48,13 +49,13 @@ const makeDeps = () => {
     deps,
     inputs,
     addTopic: (topic: Topic) => topics.push(topic),
-    setReaderContext: (readerContext: string) => (settings = { ...settings, readerContext }),
+    setAboutYou: (aboutYou: AboutYou) => (settings = { ...settings, aboutYou }),
   };
 };
 
 describe("runOverviewGeneration", () => {
   it("waits to write until told, and writes with the topics and reader context chosen meanwhile", async () => {
-    const { deps, inputs, addTopic, setReaderContext } = makeDeps();
+    const { deps, inputs, addTopic, setAboutYou } = makeDeps();
     let startWriting!: () => void;
     const answered = new Promise<void>((resolve) => (startWriting = resolve));
     let fetched = false;
@@ -69,12 +70,12 @@ describe("runOverviewGeneration", () => {
 
     const food = makeTopic({ name: "Food", description: "Cooking, recipes and eating well." });
     addTopic(food);
-    setReaderContext("Works in healthcare, learning about cooking.");
+    setAboutYou({ who: ["nurse"], time: [], focus: ["new recipes"] });
     startWriting();
     await run;
 
     expect(inputs).toHaveLength(1);
     expect(inputs[0]!.existingTopics).toEqual([food]);
-    expect(inputs[0]!.readerContext).toBe("Works in healthcare, learning about cooking.");
+    expect(inputs[0]!.readerContext).toBe("I'm a nurse, and right now I'm focusing on new recipes.");
   });
 });

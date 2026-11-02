@@ -80,6 +80,8 @@ export * from "./Milestone.js";
 export * from "./visibleMilestones.js";
 export * from "./timeSavedSummary.js";
 export * from "./formatTimeSaved.js";
+export * from "./AboutYou.js";
+export * from "./composeReaderContext.js";
 export * from "./Settings.js";
 export * from "./settingsMigrations.js";
 export * from "./SettingsStore.js";
