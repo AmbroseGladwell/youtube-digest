@@ -59,7 +59,7 @@ a:hover {
 }
 
 ::selection {
-  background: rgba(226, 81, 30, 0.28);
+  background: color-mix(in srgb, var(--brand) 28%, transparent);
 }
 
 :focus-visible {
