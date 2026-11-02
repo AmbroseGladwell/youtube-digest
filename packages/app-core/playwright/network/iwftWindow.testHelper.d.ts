@@ -1,3 +1,4 @@
+import type { AccentColour } from "@overview/domain";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { ErrorDestination } from "../../src/app/ErrorDestinationMirrorContext.js";
 import type { AppRouter } from "../../src/app/createAppRouter.js";
@@ -41,5 +42,6 @@ declare global {
     __iwftRunBridge__: IwftRunBridge | null;
     __iwftYouTubeFetch__: YouTubeFetch | null;
     __iwftErrorDestinations__: ErrorDestination[] | null;
+    __iwftAccentMirror__: AccentColour[] | null;
   }
 }

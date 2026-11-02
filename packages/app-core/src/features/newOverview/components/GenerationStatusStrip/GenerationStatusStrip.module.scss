@@ -39,7 +39,7 @@
 }
 
 .markFailed {
-  color: var(--accent);
+  color: var(--alert);
 }
 
 .dot {
@@ -123,7 +123,7 @@
 }
 
 .root[data-state="failed"] .barFill {
-  background: var(--accent);
+  background: var(--alert);
 }
 
 @keyframes pulse {

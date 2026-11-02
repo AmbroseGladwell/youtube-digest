@@ -75,9 +75,26 @@ test("a settings patch that changes nothing, or names a setting that does not ex
   const unknown = await account.inject({
     method: "PUT",
     url: "/api/settings",
-    body: { theme: "dark", updatedAt: UPDATED_AT },
+    body: { fontSize: "large", updatedAt: UPDATED_AT },
   });
   assert.equal(unknown.statusCode, 400);
+  await testApp.close();
+});
+
+test("the chosen theme and accent are kept in the synced settings, so they follow the reader to every device", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: { theme: "dark", accentColour: "teal", updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 200);
+  const synced = (await account.change("settings", "settings")).body;
+  assert.equal(synced?.theme, "dark");
+  assert.equal(synced?.accentColour, "teal");
   await testApp.close();
 });
 

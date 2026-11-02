@@ -70,6 +70,7 @@ export * from "./SpokenScript.js";
 export * from "./speakable.js";
 export * from "./spokenDuration.js";
 export * from "./spokenOpening.js";
+export * from "./Appearance.js";
 export * from "./NarrationVoice.js";
 export * from "./narrationKey.js";
 export * from "./VoiceSample.js";

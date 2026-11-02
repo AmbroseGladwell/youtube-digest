@@ -34,6 +34,11 @@ export function IwftAppRoot() {
           ? null
           : (destination) => window.__iwftErrorDestinations__?.push(destination)
       }
+      accentMirror={
+        window.__iwftAccentMirror__ === null
+          ? null
+          : (accentColour) => window.__iwftAccentMirror__?.push(accentColour)
+      }
     />
   );
 }

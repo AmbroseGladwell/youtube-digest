@@ -20,5 +20,9 @@ The PNGs were stripped of their C2PA metadata on the way in — several kilobyte
 content credentials on a 16 px icon, in a package where every kilobyte ships. The signed
 originals stay in the design project.
 
+`accents/` holds the same 16 and 32 recoloured pixel for pixel, alpha kept, one folder per
+accent, plus `icon.svg` (docs/features/appearance.md, "The logo"). A change to the orange
+sizes means regenerating them.
+
 The web app's favicon set is the same mark from the same pack, under
 `apps/web/public/` (docs/features/stone-theme.md, "The mark").
