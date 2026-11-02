@@ -25,6 +25,7 @@ import { libraryViewFromState } from "../../library/util/libraryViewState.js";
 import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { DeleteOverviewDialog } from "../components/DeleteOverviewDialog/DeleteOverviewDialog.js";
+import { NoteEndActions } from "../components/NoteEndActions/NoteEndActions.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
@@ -235,11 +236,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     openedFromChapter === undefined
       ? null
       : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
-  const toggleFavourite = (from: "masthead" | "playerBar") => {
+  const toggleFavourite = (from: "masthead" | "playerBar" | "noteEnd") => {
     reader.overview.favouriteSwitched({ favourite: !state.favourite, from });
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
   };
-  const toggleRead = (from: "masthead" | "actionsMenu") => {
+  const toggleRead = (from: "masthead" | "actionsMenu" | "noteEnd") => {
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
@@ -343,6 +344,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     onOpenTranscriptAt={openTranscriptAt}
                   />
                 )}
+              />
+              <NoteEndActions
+                read={state.read}
+                favourite={state.favourite}
+                onToggleRead={() => toggleRead("noteEnd")}
+                onToggleFavourite={() => toggleFavourite("noteEnd")}
               />
               <OnboardingNextSteps overviewId={overview.id} />
               <RelatedByTag

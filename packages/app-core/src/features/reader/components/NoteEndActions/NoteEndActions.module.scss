@@ -1,0 +1,46 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.read {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  min-width: 6.5rem;
+  min-height: 2.125rem;
+}
+
+.readActive,
+.readActive:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.favourite {
+  @include controls.surface-pill;
+  @include controls.circle(2.125rem);
+
+  font-size: 0.875rem;
+  color: var(--brand);
+}
+
+.favourite:hover:not(:disabled) {
+  color: var(--brand);
+}
+
+@media (max-width: 61.9375rem) {
+  .read {
+    min-height: 2.625rem;
+    font-size: 0.875rem;
+  }
+
+  .favourite {
+    width: 2.625rem;
+    height: 2.625rem;
+  }
+}

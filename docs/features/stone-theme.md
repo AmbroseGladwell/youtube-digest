@@ -148,6 +148,11 @@ menu also carries `Watch on YouTube`, `Copy link` (the video's link, on either s
 `Delete overview` on the web, and `Open in web app` in the panel, which opens the note in
 the web app once it has synced (`docs/features/extension-panel.md`, "Open in web app").
 
+**The note ends with `Mark read` and the favourite**, centred under its last section, on
+the web and in the panel (`NoteEndActions`). That is where a reader finishes, and the head
+has scrolled away by then. The head's controls stay, and both places read one state. The
+"Saved you" chip stays on the reading line.
+
 **Deleting asks once.** `Delete overview` opens `DeleteOverviewDialog`, the New topic
 dialog cut down to a question, with focus on `Cancel`. There is no undo: the store's delete
 journals a tombstone that sync carries to every device, so the dialog carries that weight.
