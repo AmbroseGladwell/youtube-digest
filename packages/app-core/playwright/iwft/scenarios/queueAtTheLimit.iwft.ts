@@ -15,6 +15,7 @@ const SIGNED_IN_WITHOUT_A_KEY = {
 };
 const SIGNED_IN = { ...SIGNED_IN_WITHOUT_A_KEY, apiKeys: ANTHROPIC_KEY };
 const PSYCHOLOGY = { id: PlaylistId.parse(PSYCHOLOGY_ID), title: "Psychology" };
+const MID_OCTOBER = new Date("2026-10-15T09:00:00.000Z");
 const LAST_EVENING_OF_OCTOBER = new Date("2026-10-31T22:00:00.000Z");
 
 const VIDEOS = [
@@ -120,7 +121,8 @@ test("as the month turns, the queue asks for the counts again and carries on", a
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);
 });
 
-test("refused at the limit mid-run, the video stays waiting with the queue, not failed", async ({ launcher, backendSimulator }) => {
+test("refused at the limit mid-run, the video stays waiting with the queue, not failed", async ({ page, launcher, backendSimulator }) => {
+  await page.clock.install({ time: MID_OCTOBER });
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.refuses(429, "too_many_requests", { quota: "ours", resetsOn: "2026-11-01" });
   followingAt(backendSimulator, "asTheyCome", [queued(0), queued(1)]);
