@@ -70,7 +70,9 @@ test("a page built by script reads the same, because this runs on what the brows
 });
 
 test("a page declared paywalled that shows only a teaser is named as paywalled", () => {
-  assert.deepEqual(read(PAYWALLED_PAGE), { status: "failed", reason: "paywalled" });
+  const teaser = read(PAYWALLED_PAGE);
+  assert.equal(teaser.status === "failed" && teaser.reason, "paywalled");
+  assert.ok(teaser.status === "failed" && (teaser.shownWords ?? 0) > 0, "the words it did show are counted, for the reader");
 });
 
 test("a paywalled page the reader can see in full is read, which is why this runs in their tab", () => {

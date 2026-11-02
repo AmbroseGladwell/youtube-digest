@@ -6,6 +6,7 @@ import {
   isReadButtonState,
   isReportRun,
   isRequestOverview,
+  isTakePageRequest,
   isTakeRequest,
   type ButtonState,
 } from "./overviewBridge.js";
@@ -40,6 +41,8 @@ void installYouTubeOriginRule();
 // before the panel exists to read it (docs/features/injected-button.md).
 const PENDING_REQUEST = "overview/pending-request";
 const LATEST_REPORT = "overview/latest-report";
+const PENDING_PAGE = "overview/pending-page";
+const PAGE_MENU_ITEM = "overview/create-from-page";
 
 async function readSession<T>(key: string): Promise<T | null> {
   const stored = await chrome.storage.session.get(key);
@@ -96,6 +99,38 @@ async function broadcast(report: RunReport | null): Promise<void> {
   );
 }
 
+// An update fires this too, and the item survives one, so a create alone would collide.
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: PAGE_MENU_ITEM,
+      title: "Create an overview of this page",
+      contexts: ["page"],
+      documentUrlPatterns: ["http://*/*", "https://*/*"],
+    });
+  });
+});
+
+// The menu click is what grants activeTab and what lets the panel open, so the panel is opened
+// before the first await spends it. A video goes the injected button's way, since a run for
+// one needs no access to the page (docs/features/article-panel.md).
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) return;
+  const opening = chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => undefined);
+  const { hostname, pathname } = new URL(tab.url);
+  const isVideo = hostname.endsWith("youtube.com") && pathname === "/watch";
+  void (async () => {
+    if (isVideo) {
+      await chrome.storage.session.set({ [PENDING_REQUEST]: tab.url });
+      void chrome.runtime.sendMessage({ type: BridgeMessage.REQUEST_OVERVIEW, videoUrl: tab.url }).catch(() => undefined);
+    } else {
+      await chrome.storage.session.set({ [PENDING_PAGE]: { url: tab.url, title: tab.title ?? "", tabId: tab.id } });
+      void chrome.runtime.sendMessage({ type: BridgeMessage.PAGE_MENU_REQUEST }).catch(() => undefined);
+    }
+    await opening;
+  })();
+});
+
 // Signing in or out changes which overviews are held, so every button says so again.
 onLibraryAccountChanged(() => void readSession<RunReport>(LATEST_REPORT).then(broadcast));
 
@@ -128,6 +163,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const videoUrl = await readSession<string>(PENDING_REQUEST);
       await chrome.storage.session.remove(PENDING_REQUEST);
       sendResponse({ videoUrl });
+    })();
+    return true;
+  }
+
+  if (isTakePageRequest(message)) {
+    void (async () => {
+      const page = await readSession<unknown>(PENDING_PAGE);
+      await chrome.storage.session.remove(PENDING_PAGE);
+      sendResponse({ page });
     })();
     return true;
   }

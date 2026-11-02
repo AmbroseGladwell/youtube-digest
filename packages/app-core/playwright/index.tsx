@@ -14,6 +14,7 @@ import {
 } from "../src/features/sync/types/SyncConnection.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
+import { IwftArticlePages } from "./network/IwftArticlePages.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
 import { IwftRunBridge } from "./network/IwftRunBridge.testHelper.js";
 import { iwftYouTubeFetch } from "./network/IwftYouTubeFetch.testHelper.js";
@@ -79,6 +80,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
     hooksConfig?.activeVideoUrl === undefined
       ? null
       : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
+  window.__iwftArticlePages__ = hooksConfig?.articlePages === undefined ? null : new IwftArticlePages(hooksConfig.articlePages);
   window.__iwftPlayback__ =
     hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
   window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;

@@ -1,3 +1,4 @@
+import type { IwftArticlePagesConfig } from "./IwftArticlePages.testHelper.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import type {
@@ -62,6 +63,8 @@ export interface IwftHooksConfig {
   build?: AppBuild;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
   activeVideoUrl?: string | null;
+  // Absent is a shell with no tabs to read, which is the web app.
+  articlePages?: IwftArticlePagesConfig;
   // Absent is a shell that can't see the player; null is one that can, with nothing to
   // report yet (docs/features/following-playback.md).
   playback?: PlaybackPosition | null;

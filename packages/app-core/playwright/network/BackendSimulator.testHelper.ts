@@ -42,7 +42,7 @@ import {
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
-import { makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
@@ -723,7 +723,10 @@ export class BackendSimulator {
               this.#trialTokensSent.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
               return {
                 status: 200,
-                body: makeOverview({ id: request.overviewId, source: youTubeSource(request.input.video), inOneLine: "Made on our key." }),
+                body:
+                  "article" in request.input
+                    ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
+                    : makeOverview({ id: request.overviewId, source: youTubeSource(request.input.video), inOneLine: "Made on our key." }),
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),

@@ -6,6 +6,7 @@ import {
   App,
   createAppRouter,
   type ActiveVideoSource,
+  type ArticlePages,
   type AppLayout,
   type AppUpdate,
   type PlaybackSource,
@@ -28,6 +29,7 @@ import { PRODUCTION_API_URL } from "./productionApiUrl.js";
 export interface MountOptions {
   layout?: AppLayout;
   activeVideo?: ActiveVideoSource | null;
+  articlePages?: ArticlePages | null;
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
@@ -45,6 +47,7 @@ const openExtensionsPage: AppUpdate = {
 export async function mountApp({
   layout = "full",
   activeVideo = null,
+  articlePages = null,
   playback = null,
   runBridge = null,
   youTubeFetch = null,
@@ -98,6 +101,7 @@ export async function mountApp({
         surface="extension"
         layout={layout}
         activeVideo={activeVideo}
+        articlePages={articlePages}
         playback={playback}
         runBridge={runBridge}
         youTubeFetch={youTubeFetch}

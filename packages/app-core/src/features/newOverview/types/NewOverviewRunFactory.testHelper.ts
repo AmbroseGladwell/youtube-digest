@@ -5,6 +5,7 @@ export const makeNewOverviewRun = (overrides: Partial<NewOverviewRun> = {}): New
   startedAt: 0,
   finishedAt: null,
   video: null,
+  article: null,
   transcriptWords: null,
   overview: null,
   error: null,

@@ -16,6 +16,9 @@ export interface OverviewActionsMenuProps {
   // Absent where there is no account to share under, which is how the item hides itself
   // rather than offering a control that cannot work (docs/features/sharing.md).
   onShare: (() => void) | null;
+  // Articles only (design 13). A note we can't remake right here says so in its label, by
+  // the ellipsis, and explains before anything happens.
+  regenerate: { asksFirst: boolean; onChoose: () => void } | null;
   // Design 6h: the panel's menu offers the web app instead of read state and deletion.
   compact: boolean;
   webApp: OverviewInWebApp;
@@ -37,6 +40,7 @@ export function OverviewActionsMenu({
   compact,
   webApp,
   onShare,
+  regenerate,
   onEditTopics,
   onEditReason,
   onToggleRead,
@@ -107,6 +111,17 @@ export function OverviewActionsMenu({
           >
             {hasReason ? "Edit reason" : "Add reason"}
           </button>
+          {regenerate !== null && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={choose("regenerate", regenerate.onChoose)}
+              data-testid={overviewActionsMenuTestIds.regenerateItem}
+            >
+              {regenerate.asksFirst ? "Regenerate…" : "Regenerate"}
+            </button>
+          )}
           {!compact && (
             <button
               type="button"

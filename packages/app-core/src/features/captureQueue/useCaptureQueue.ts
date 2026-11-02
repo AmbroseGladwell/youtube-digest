@@ -282,6 +282,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         startedAt: Date.now(),
         finishedAt: null,
         video: null,
+        article: null,
         transcriptWords: null,
         overview: null,
         error: null,

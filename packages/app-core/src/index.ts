@@ -4,6 +4,7 @@ export type { AppUpdate } from "./app/AppUpdateContext.js";
 export type { ActiveVideoSource } from "./app/ActiveVideoContext.js";
 export type { AppLayout } from "./app/LayoutContext.js";
 export type { PlaybackPosition, PlaybackSource } from "./app/PlaybackContext.js";
+export type { ActivePage, ArticlePages } from "./app/ArticlePagesContext.js";
 export type { RunBridge } from "./app/RunBridgeContext.js";
 export type { ErrorDestination, ErrorDestinationMirror } from "./app/ErrorDestinationMirrorContext.js";
 export { useYouTubeFetch } from "./app/YouTubeFetchContext.js";

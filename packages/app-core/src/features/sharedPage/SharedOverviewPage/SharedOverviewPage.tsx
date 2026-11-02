@@ -195,7 +195,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       />
                     )
                   }
-                  renderLineEnd={(line) => webArticle !== null && <ArticleLineLinks line={line} {...webArticle} />}
+                  renderLineEnd={(line) => webArticle !== null && <ArticleLineLinks line={line} onPage={null} {...webArticle} />}
                 />
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
               </div>
@@ -217,7 +217,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 onOpenTranscriptAt={openTranscriptAt}
               />
             )}
-            {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} />}
+            {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel onPage={null} {...webArticle} />}
           </div>
 
         </main>

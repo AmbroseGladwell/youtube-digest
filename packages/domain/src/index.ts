@@ -1,6 +1,7 @@
 export * from "./ArticleDetails.js";
 export * from "./ArticlePlace.js";
 export * from "./ArticleRead.js";
+export * from "./canonicalArticleUrl.js";
 export * from "./ExtractedArticle.js";
 export * from "./Provider.js";
 export * from "./KnownModel.js";
