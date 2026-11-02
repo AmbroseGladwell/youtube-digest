@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import type { Locator } from "@playwright/test";
 import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
 import { captureReasonLineTestIds } from "../../src/features/reader/components/CaptureReasonLine/CaptureReasonLineTestIds.js";
+import { noteEndActionsTestIds } from "../../src/features/reader/components/NoteEndActions/NoteEndActionsTestIds.js";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { readerMastheadTestIds } from "../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
 import { readerPlayerBarTestIds } from "../../src/features/reader/components/ReaderPlayerBar/ReaderPlayerBarTestIds.js";
@@ -502,6 +503,29 @@ export class ReaderPageObject extends PageObject {
       await this.openActionsMenu();
       await this.click(overviewActionsMenuTestIds.readItem);
     });
+
+  clickNoteEndMarkRead = () =>
+    this.step("clickNoteEndMarkRead", () => this.click(noteEndActionsTestIds.readButton));
+
+  clickNoteEndFavourite = () =>
+    this.step("clickNoteEndFavourite", () => this.click(noteEndActionsTestIds.favouriteButton));
+
+  verifyNoteEndReadButtonReads = (label: string) =>
+    this.step(`verifyNoteEndReadButtonReads ${label}`, () =>
+      expect(this.get(noteEndActionsTestIds.readButton)).toHaveText(label),
+    );
+
+  verifyNoteEndFavouriteIs = (favourited: boolean) =>
+    this.step(`verifyNoteEndFavouriteIs ${favourited}`, () =>
+      expect(this.get(noteEndActionsTestIds.favouriteButton)).toHaveAttribute("aria-pressed", String(favourited)),
+    );
+
+  verifyNoteEndActionsAreShown = (shown: boolean) =>
+    this.step(`verifyNoteEndActionsAreShown ${shown}`, () =>
+      shown
+        ? this.expectToBeVisible(noteEndActionsTestIds.root)
+        : this.expectNotToBeVisible(noteEndActionsTestIds.root),
+    );
 
   verifySavedChipSays = (text: string) =>
     this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
