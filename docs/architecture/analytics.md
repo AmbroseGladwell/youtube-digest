@@ -134,7 +134,7 @@ value isn't typing and sends nothing.
 
 An event that changes something says what it changed to: `readSwitched({ read: true })`,
 `favouriteSwitched({ favourite: false })`, `rateChanged({ rate: 1.5 })`, and where it was
-done from when there is more than one place (`from: "masthead" | "actionsMenu" | "playerBar"`).
+done from when there is more than one place (`from: "masthead" | "actionsMenu" | "playerBar" | "noteEnd"`).
 
 **One control that means different things says which it meant.** The player's main button is
 play, pause, cancel, buffering or replay depending on the state the player is in, so
