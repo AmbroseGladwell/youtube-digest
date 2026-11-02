@@ -19,8 +19,8 @@ export async function generateTags(client: GenerationClient, input: TagsInput): 
   const raw = await client({
     systemPrompt: `You tag a saved overview of a YouTube video for its reader.\n\n${tagInstructions(input.existingTags)}`,
     userMessage: [
-      `Title: ${overview.video.title}`,
-      `Channel: ${overview.video.channel}`,
+      `Title: ${overview.source.title}`,
+      `Channel: ${overview.source.channel}`,
       `In one line: ${overview.inOneLine}`,
       `Core claim: ${overview.coreClaim}`,
       "Key points:",

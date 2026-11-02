@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION_HEADER, VideoId, type StoredTranscript } from "@overview/domain";
+import { CLIENT_VERSION_HEADER, VideoId, type StoredTranscript, youTubeSource } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -13,7 +13,7 @@ const LONG_TRANSCRIPT_SEGMENTS = 20_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const noteOn = (account: TestAccount, transcript: StoredTranscript) =>
-  account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: transcript.video! }) });
+  account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ source: youTubeSource(transcript.video!) }) });
 
 test("a transcript one device stores is read back exactly by another device on the same account", async () => {
   const testApp = await createTestApp();
@@ -21,7 +21,7 @@ test("a transcript one device stores is read back exactly by another device on t
   const laptop = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const phone = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const transcript = makeStoredTranscript();
-  const overview = storedOverview({ video: transcript.video! });
+  const overview = storedOverview({ source: youTubeSource(transcript.video!) });
   await letInOverview(testApp, laptop.accountId, overview);
   await testApp.app.inject({
     method: "POST",
@@ -175,7 +175,7 @@ test("deleting the last note on a video forgets the account's transcript of it",
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await account.inject({ method: "POST", url: "/api/overviews", body: note });
   await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
 
@@ -189,9 +189,9 @@ test("deleting a note on one account leaves another account's transcript of the 
   const testApp = await createTestApp();
   const [deleter, keeper] = [await makeAccount(testApp), await makeAccount(testApp)];
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   for (const account of [deleter, keeper]) {
-    await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ id: note.id, video: transcript.video! }) });
+    await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ id: note.id, source: youTubeSource(transcript.video!) }) });
     await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   }
 
@@ -218,7 +218,7 @@ test("an upload that arrives after its note was deleted elsewhere is not kept", 
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await account.inject({ method: "POST", url: "/api/overviews", body: note });
   await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });
 
@@ -232,7 +232,7 @@ test("a delete retried after its first attempt left the transcript behind still 
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await account.inject({ method: "POST", url: "/api/overviews", body: note });
   await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   await testApp.sql.query(
@@ -331,7 +331,7 @@ test("one account sending the same copy from two devices counts once", async () 
   const laptop = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const phone = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const transcript = makeStoredTranscript();
-  await testApp.app.inject({ method: "POST", url: "/api/overviews", headers: laptop.headers, payload: storedOverview({ video: transcript.video! }) });
+  await testApp.app.inject({ method: "POST", url: "/api/overviews", headers: laptop.headers, payload: storedOverview({ source: youTubeSource(transcript.video!) }) });
   for (const device of [laptop, phone]) {
     await testApp.app.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, headers: device.headers, payload: transcript });
   }
@@ -417,7 +417,7 @@ test("deleting the last note on a video leaves its confirmed copy in the shared 
   const testApp = await createTestApp();
   const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await first.inject({ method: "POST", url: "/api/overviews", body: note });
   await first.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   await contribute(second, transcript);
@@ -433,7 +433,7 @@ test("a fetch still counts after the note it came with is deleted, so the next m
   const testApp = await createTestApp();
   const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
   const transcript = makeStoredTranscript();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await first.inject({ method: "POST", url: "/api/overviews", body: note });
   await first.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   await first.inject({ method: "DELETE", url: `/api/overviews/${note.id}`, ifMatch: 1 });

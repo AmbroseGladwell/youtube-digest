@@ -1,4 +1,4 @@
-import type { Overview } from "@overview/domain";
+import { sourceKey, type Overview } from "@overview/domain";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import { readableEntries, type LibraryEntry } from "../types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js";
@@ -23,7 +23,7 @@ export function overviewForVideoUrl(
     return null;
   }
   const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
-    ({ overview }) => overview.video.id === videoId,
+    ({ overview }) => sourceKey(overview.source) === videoId,
   );
   return match?.overview ?? null;
 }

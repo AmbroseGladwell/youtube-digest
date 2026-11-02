@@ -9,7 +9,7 @@ const noteOn = (videoId: string | null, savedAt = "2026-09-16T00:00:00.000Z") =>
     ...entry,
     overview: {
       ...entry.overview,
-      video: { ...entry.overview.video, id: videoId === null ? null : VideoId.parse(videoId) },
+      source: { ...entry.overview.source, id: videoId === null ? null : VideoId.parse(videoId) },
     },
   };
 };

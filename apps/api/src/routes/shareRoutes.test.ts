@@ -18,7 +18,7 @@ test("a link is made from an overview, and it is the app's own address", async (
   const app = await createTestApp();
   const account = await makeAccount(app);
 
-  const response = await share(account, { overview: makeOverview({ video: { ...makeOverview().video, title: "Nuclear Baseload" } }) });
+  const response = await share(account, { overview: makeOverview({ source: { ...makeOverview().source, title: "Nuclear Baseload" } }) });
 
   assert.equal(response.statusCode, 201);
   const made: Share = response.json();
@@ -155,4 +155,14 @@ test("sharing needs an account", async () => {
   assert.equal(response.statusCode, 401);
   assert.equal(response.json().error.code, "unauthenticated");
   await app.close();
+});
+
+test("a client at an older version can still share: the overview it posts with a video is moved to a source", async () => {
+  const app = await createTestApp();
+  const account = await makeAccount(app);
+  const { source, ...rest } = makeOverview();
+  const { kind: _kind, ...video } = source;
+  const response = await share(account, { overview: { ...rest, video } });
+  assert.equal(response.statusCode, 201);
+  assert.equal(response.json<Share>().title, source.title);
 });

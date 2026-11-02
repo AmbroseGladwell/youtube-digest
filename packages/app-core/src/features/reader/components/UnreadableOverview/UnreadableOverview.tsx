@@ -20,7 +20,7 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
   const { start } = useNewOverviewRunController();
 
   const heldBack = record.reason === "future-version";
-  const videoUrl = record.salvaged?.video?.url ?? null;
+  const videoUrl = record.salvaged?.source?.url ?? null;
   const overviewId = OverviewId.safeParse(record.id);
   const canGenerateAgain = !heldBack && videoUrl !== null && overviewId.success;
 

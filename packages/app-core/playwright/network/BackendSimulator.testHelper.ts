@@ -38,6 +38,7 @@ import {
   type Topic,
   type UnreadableRecord,
   type VideoId,
+  youTubeSource,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
@@ -722,7 +723,7 @@ export class BackendSimulator {
               this.#trialTokensSent.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
               return {
                 status: 200,
-                body: makeOverview({ id: request.overviewId, video: request.input.video, inOneLine: "Made on our key." }),
+                body: makeOverview({ id: request.overviewId, source: youTubeSource(request.input.video), inOneLine: "Made on our key." }),
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
@@ -805,7 +806,7 @@ export class BackendSimulator {
       token: ShareToken.parse(token),
       url: `https://overview.test/s/${token}`,
       overviewId: overview.id,
-      title: overview.video.title,
+      title: overview.source.title,
       sharedAt: existing?.sharedAt ?? "2026-09-30T11:00:00.000Z",
       updatedAt: "2026-09-30T11:00:00.000Z",
       views: existing?.views ?? 0,

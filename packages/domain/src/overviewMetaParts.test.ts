@@ -5,7 +5,7 @@ import { overviewMetaParts } from "./overviewMetaParts.js";
 
 test("a library row, its note and its shared page read the same three numbers", () => {
   const overview = makeOverview({
-    video: { ...makeOverview().video, durationMs: 698_000 },
+    source: { ...makeOverview().source, durationMs: 698_000 },
     keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
   });
 

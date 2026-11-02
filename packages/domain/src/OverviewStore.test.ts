@@ -61,7 +61,7 @@ class InMemoryOverviewStore implements OverviewStore {
   async listClaims(): Promise<ClaimSummary[]> {
     return [...this.#overviews.values()].map((overview) => ({
       overviewId: overview.id,
-      title: overview.video.title,
+      title: overview.source.title,
       claim: overview.coreClaim,
     }));
   }
@@ -101,7 +101,8 @@ const UNKNOWN_TOPIC_ID = TopicId.parse(randomUUID());
 
 const exampleOverview: Overview = {
   id: OVERVIEW_ID,
-  video: {
+  source: {
+    kind: "youtube",
     id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",

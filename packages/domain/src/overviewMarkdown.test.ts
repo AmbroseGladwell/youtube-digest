@@ -8,7 +8,8 @@ import { overviewMarkdown } from "./overviewMarkdown.js";
 const SIMILAR_ID = OverviewId.parse("c4a9f0d2-7b31-4e68-8f5a-0d1c2b3a4e5f");
 
 const FULL = makeOverview({
-  video: {
+  source: {
+    kind: "youtube",
     id: null,
     url: "https://www.youtube.com/watch?v=kQu7vN2wLpE",
     title: "The only kettlebell swing tutorial you need",

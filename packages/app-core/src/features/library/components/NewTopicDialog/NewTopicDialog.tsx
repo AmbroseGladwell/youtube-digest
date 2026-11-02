@@ -127,7 +127,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
                 <label
                   key={overview.id}
                   className={styles.option}
-                  data-testid={newTopicDialogTestIds.unsortedOption(overview.video.title)}
+                  data-testid={newTopicDialogTestIds.unsortedOption(overview.source.title)}
                 >
                   <input
                     type="checkbox"
@@ -139,7 +139,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
                     <StrokeIcon name="check" size={11} />
                   </span>
                   <span className={styles.optionText}>
-                    {overview.video.title} <span className={styles.channel}>· {overview.video.channel}</span>
+                    {overview.source.title} <span className={styles.channel}>· {overview.source.channel}</span>
                   </span>
                 </label>
               ))}

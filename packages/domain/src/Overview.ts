@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { OverviewId } from "./Brands.js";
-import { VideoSource } from "./VideoSource.js";
+import { Source } from "./Source.js";
 import { CoreFields } from "./CoreFields.js";
 import { Filing } from "./Filing.js";
 import { Verdict } from "./Verdict.js";
@@ -17,7 +17,7 @@ import { PlaylistOrigin } from "./PlaylistOrigin.js";
 export const Overview = z
   .object({
     id: OverviewId,
-    video: VideoSource,
+    source: Source,
     savedAt: z.iso.datetime(),
     // Why the reader wanted this video overviewed, in their own words: asked for while the
     // overview is being made, and editable from its page after. Not a note taken against

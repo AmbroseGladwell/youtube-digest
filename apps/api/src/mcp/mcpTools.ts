@@ -9,6 +9,7 @@ import {
   transcriptBlocks,
   transcriptPlainText,
   type Topic,
+  sourceKey,
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
@@ -47,13 +48,13 @@ const isOutcome = (value: ResolvedFilters | McpToolOutcome): value is McpToolOut
 function listingLine(library: Library, entry: LibraryEntry): string {
   const { overview } = entry;
   const facts = [
-    overview.video.channel,
+    overview.source.channel,
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     `topics: ${topicNames(library.topics, entry).join(", ") || "none"}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
     `id ${overview.id}`,
   ].filter((fact) => fact !== null);
-  return `- **${overview.video.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
+  return `- **${overview.source.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
 }
 
 function overviewText(library: Library, entry: LibraryEntry): string {
@@ -214,13 +215,13 @@ const getTranscript = mcpTool({
     if (entry === undefined) {
       return toolError(`There is no overview with id ${id} in this library.`);
     }
-    const videoId = entry.overview.video.id;
-    const stored = videoId === null ? null : await transcripts.get(accountId, videoId);
+    const key = sourceKey(entry.overview.source);
+    const stored = key === null ? null : await transcripts.get(accountId, key);
     const transcript = StoredTranscript.safeParse(stored);
     if (!transcript.success) {
       return toolError("No transcript is kept for this video.");
     }
-    const text = transcriptPlainText(entry.overview.video, transcriptBlocks(transcript.data.segments));
+    const text = transcriptPlainText(entry.overview.source, transcriptBlocks(transcript.data.segments));
     return {
       text: transcript.data.generated
         ? `Machine-transcribed: the video had no captions of its own, so some words may be misheard.\n\n${text}`

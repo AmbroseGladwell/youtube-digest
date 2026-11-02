@@ -57,11 +57,11 @@ export function RelatedByTag({
                 onClick={() => onOverviewOpened?.(sharedTags)}
                 data-read={state.read || undefined}
               >
-                <OverviewThumbnail video={overview.video} className={styles.thumbnail} />
+                <OverviewThumbnail video={overview.source} className={styles.thumbnail} />
                 <span className={styles.text}>
-                  <span className={styles.title}>{overview.video.title}</span>
+                  <span className={styles.title}>{overview.source.title}</span>
                   <span className={styles.meta}>
-                    {overview.video.channel}
+                    {overview.source.channel}
                     {state.read && " · Read"}
                   </span>
                 </span>

@@ -9,7 +9,7 @@ const noteOf = (overview = makeOverview()) =>
 
 test("the preview leads with the lengths and then the premise", () => {
   const overview = makeOverview({
-    video: { ...makeOverview().video, title: "The Quiet Return of Nuclear Baseload", durationMs: 842_000 },
+    source: { ...makeOverview().source, title: "The Quiet Return of Nuclear Baseload", durationMs: 842_000 },
     inOneLine: "Nuclear is back on the plans because firm capacity became expensive.",
   });
 

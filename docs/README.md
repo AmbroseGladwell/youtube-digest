@@ -141,6 +141,9 @@ Five folders, five different questions.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.
+- `source-identity.md` — what identifies an overview's subject once it need not be a YouTube
+  video: the `Source` union, the one `sourceKey` string every store uses, and why YouTube's
+  key stays unprefixed.
 - `sharing.md` — sharing an overview with a link: why it is a snapshot rather than a live
   view, what a shared copy carries and what it never does, why the server rebuilds the copy
   rather than trusting the client's, the link that stays stopped once stopped, why Fastify

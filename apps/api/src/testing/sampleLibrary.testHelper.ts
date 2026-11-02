@@ -81,7 +81,8 @@ export function sampleLibrary(): SampleLibrary {
       actionStyle: /^\s*\d+\./.test(sample.try) ? "numbered" : "dashed",
       overview: storedOverview({
         id: OverviewId.parse(randomUUID()),
-        video: {
+        source: {
+          kind: "youtube",
           id: VideoId.parse(url.searchParams.get("v")),
           url: sample.source,
           title: sample.title,

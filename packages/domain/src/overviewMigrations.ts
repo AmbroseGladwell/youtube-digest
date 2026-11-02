@@ -119,6 +119,17 @@ const fillMadeOnAddedWithOurKey: RecordMigration = {
   },
 };
 
+// A rename, derivable because every overview so far is of a YouTube video. Exported because a
+// client at an older version still posts this shape to POST /shares, which takes the overview
+// itself rather than a record (docs/features/source-identity.md).
+export function moveVideoToSource(record: unknown): unknown {
+  if (typeof record !== "object" || record === null) {
+    return record;
+  }
+  const { video, ...rest } = record as Record<string, unknown>;
+  return typeof video === "object" && video !== null ? { ...rest, source: { ...video, kind: "youtube" } } : record;
+}
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -128,6 +139,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillFromPlaylistAddedAfterTheFirstNotes,
   allowFewerThanThreeTags,
   fillMadeOnAddedWithOurKey,
+  { newSchemaVersion: 10, alterRecord: moveVideoToSource },
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

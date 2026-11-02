@@ -4,8 +4,8 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { wordsHash } from "./wordsHash.js";
 
-const liveNoteOn = (videoId: string) => `select 1 from records
-  where account_id = $1 and kind = 'overview' and not deleted and body -> 'video' ->> 'id' = ${videoId}`;
+const liveNoteOn = (key: string) => `select 1 from records
+  where account_id = $1 and kind = 'overview' and not deleted and source_key = ${key}`;
 
 const ACCOUNTS_TO_CONFIRM = 2;
 const CONTRIBUTION_RETENTION_DAYS = 365;

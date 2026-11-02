@@ -19,7 +19,7 @@ const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n")
 // The note as it reads outside the app: every section the reader sees, with each moment
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md).
 export function overviewMarkdown(overview: Overview): string {
-  const { video } = overview;
+  const { source: video } = overview;
   const facts = [
     video.channel,
     video.durationMs === null ? null : formatTimestamp(video.durationMs),

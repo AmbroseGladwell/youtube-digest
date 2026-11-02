@@ -12,6 +12,9 @@ const YOUTUBE_HOSTS = new Set([
 
 const VIDEO_PATH = /^\/(?:shorts|embed|live|v)\/([^/]+)/;
 
+// A colon would make the id read as another kind's key (docs/features/source-identity.md).
+const VIDEO_ID = /^[A-Za-z0-9_-]+$/;
+
 function stripHostPrefix(host: string): string {
   return host.startsWith("www.") ? host.slice(4) : host;
 }
@@ -20,6 +23,11 @@ function stripHostPrefix(host: string): string {
 // this exists only to reject an obviously-not-YouTube paste before a rung is asked, and
 // to give the InnerTube rung the id it needs (docs/features/transcript-retrieval.md).
 export function extractYouTubeVideoId(input: string): string | null {
+  const id = idInYouTubeUrl(input);
+  return id !== null && VIDEO_ID.test(id) ? id : null;
+}
+
+function idInYouTubeUrl(input: string): string | null {
   let parsed: URL;
   try {
     parsed = new URL(input.trim());

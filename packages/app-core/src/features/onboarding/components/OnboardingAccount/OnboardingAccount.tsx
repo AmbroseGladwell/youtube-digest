@@ -71,7 +71,7 @@ export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: On
 }
 
 function Teaser({ overview }: { overview: Overview }) {
-  const { video } = overview;
+  const { source: video } = overview;
   return (
     <section className={styles.teaser} aria-label="Your overview, so far" data-testid={onboardingAccountTestIds.teaser}>
       <span className={styles.ready}>

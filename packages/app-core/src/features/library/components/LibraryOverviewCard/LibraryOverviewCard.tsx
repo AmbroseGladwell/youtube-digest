@@ -71,7 +71,7 @@ export function LibraryOverviewCard({
     >
       <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
         <OverviewThumbnail
-          video={overview.video}
+          video={overview.source}
           to={readerPath}
           state={readerState}
           onOpen={() => onOpen("thumbnail")}
@@ -105,9 +105,9 @@ export function LibraryOverviewCard({
             onClick={() => onOpen("title")}
             data-testid={libraryOverviewCardTestIds.titleLink}
           >
-            <span className={styles.title}>{overview.video.title}</span>
+            <span className={styles.title}>{overview.source.title}</span>
             <span className={styles.meta}>
-              <span className={styles.channel}>{overview.video.channel}</span> · {overview.inOneLine}
+              <span className={styles.channel}>{overview.source.channel}</span> · {overview.inOneLine}
             </span>
           </Link>
 

@@ -8,4 +8,4 @@ import { readerMetaParts } from "./readerMetaParts.js";
 // from the same arithmetic rather than a second estimate that can drift
 // (docs/features/overview-redesign.md, "Read and listen times"; docs/features/sharing.md).
 export const overviewMetaParts = (overview: SharedNote): string[] =>
-  readerMetaParts(noteTiming(overviewNoteLines(overview)), overview.video.durationMs);
+  readerMetaParts(noteTiming(overviewNoteLines(overview)), overview.source.durationMs);

@@ -4,7 +4,8 @@ import type { Overview } from "./Overview.js";
 
 export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   id: OverviewId.parse(randomUUID()),
-  video: {
+  source: {
+    kind: "youtube",
     id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",

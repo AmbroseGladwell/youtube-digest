@@ -31,7 +31,7 @@ describe("overviewNeighbours", () => {
   it("steps onto an unreadable record rather than skipping past it", () => {
     const first = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z" });
     const unreadable = makeUnreadableEntry({
-      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", video: null },
+      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", source: null },
     });
     const last = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z" });
 
@@ -52,9 +52,9 @@ describe("overviewNeighbours", () => {
   });
 
   it("walks the view the list was in, filtered and in its order", () => {
-    const zebra = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z", video: { ...makeOverviewWithState().overview.video, title: "Zebra" } });
+    const zebra = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z", source: { ...makeOverviewWithState().overview.source, title: "Zebra" } });
     const read = makeOverviewWithState({ savedAt: "2026-09-15T00:00:00.000Z" }, { read: true });
-    const apple = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z", video: { ...makeOverviewWithState().overview.video, title: "Apple" } });
+    const apple = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z", source: { ...makeOverviewWithState().overview.source, title: "Apple" } });
     const view = { ...DEFAULT_LIBRARY_VIEW, sort: "title" as const };
 
     expect(overviewNeighbours([zebra, read, apple], apple.overview.id, { view, kept: new Set() })).toEqual({

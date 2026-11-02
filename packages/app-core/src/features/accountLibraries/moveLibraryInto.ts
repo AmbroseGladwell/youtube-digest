@@ -1,6 +1,7 @@
 import {
   DEFAULT_OVERVIEW_STATE,
   sameTopicName,
+  sourceKey,
   type Overview,
   type Topic,
   type OverviewStore,
@@ -30,7 +31,7 @@ export interface MovingStores {
 // is written into the account before it leaves here, so a move that stops halfway is
 // finished by running it again: what already arrived now counts as the account's, and only
 // goes from here (docs/features/account-libraries.md, "The move on sign-in").
-export async function moveLibraryInto(from: MovingStores, into: MovingStores): Promise<LibraryMove & { videoIds: VideoId[] }> {
+export async function moveLibraryInto(from: MovingStores, into: MovingStores): Promise<LibraryMove & { sourceKeys: VideoId[] }> {
   const [leaving, held, heldUnreadable, leavingTopics, accountTopics] = await Promise.all([
     from.overviewStore.listOverviews(),
     into.overviewStore.listOverviews(),
@@ -40,8 +41,8 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
   ]);
 
   const heldVideos = new Set<string>([
-    ...held.flatMap(({ video }) => (video.id === null ? [] : [video.id])),
-    ...heldUnreadable.flatMap(({ salvaged }) => (salvaged?.video?.id == null ? [] : [salvaged.video.id])),
+    ...held.flatMap(({ source }) => sourceKey(source) ?? []),
+    ...heldUnreadable.flatMap(({ salvaged }) => (salvaged?.source == null ? [] : (sourceKey(salvaged.source) ?? []))),
   ]);
   const leavingTopicNames = new Map(leavingTopics.map((topic) => [topic.id, topic.name]));
   const knownTopics: Topic[] = [...accountTopics];
@@ -62,7 +63,8 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
       const mapped = await accountTopicFor(topicId);
       if (mapped !== null && !topicIds.includes(mapped)) topicIds.push(mapped);
     }
-    const transcript = overview.video.id === null ? null : await from.transcriptStore.getTranscript(overview.video.id);
+    const key = sourceKey(overview.source);
+    const transcript = key === null ? null : await from.transcriptStore.getTranscript(key);
     if (transcript !== null) await into.transcriptStore.saveTranscript(transcript);
     await into.overviewStore.saveOverview({ ...overview, topicIds });
 
@@ -77,21 +79,21 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
 
   let moved = 0;
   let alreadyThere = 0;
-  const videoIds: VideoId[] = [];
+  const sourceKeys: VideoId[] = [];
   for (const overview of leaving) {
-    const videoId = overview.video.id;
-    if (videoId !== null && heldVideos.has(videoId)) {
+    const key = sourceKey(overview.source);
+    if (key !== null && heldVideos.has(key)) {
       alreadyThere += 1;
     } else {
       await add(overview);
       moved += 1;
-      if (videoId !== null) {
-        heldVideos.add(videoId);
-        videoIds.push(videoId);
+      if (key !== null) {
+        heldVideos.add(key);
+        sourceKeys.push(key);
       }
     }
     await from.overviewStore.deleteOverview(overview.id);
-    if (videoId !== null) await from.transcriptStore.deleteTranscript(videoId);
+    if (key !== null) await from.transcriptStore.deleteTranscript(key);
   }
-  return { moved, alreadyThere, videoIds };
+  return { moved, alreadyThere, sourceKeys };
 }

@@ -1,21 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { FIRST_RESERVING_CLIENT_VERSION, schemaVersionsForClient, type Share } from "@overview/domain";
+import { CLIENT_VERSION, FIRST_RESERVING_CLIENT_VERSION, schemaVersionsForClient, type Share } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { generationRequest, makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
-import { storedOverview } from "../testing/storedRecords.testHelper.js";
+import { storedOverview, withVideo } from "../testing/storedRecords.testHelper.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 
-const RESERVING = FIRST_RESERVING_CLIENT_VERSION;
+const RESERVING = CLIENT_VERSION;
 const OUR_KEY = { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http };
 const BEFORE_RESERVING = FIRST_RESERVING_CLIENT_VERSION - 1;
 
-const fromBeforeReserving = () => ({ ...storedOverview(), schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview });
+const fromBeforeReserving = () => ({ ...withVideo(storedOverview()), schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview });
 
 const reserve = (account: TestAccount, overviewId: string, shareToken?: string) =>
   account.inject({
@@ -28,7 +28,7 @@ const reserve = (account: TestAccount, overviewId: string, shareToken?: string) 
 const release = (account: TestAccount, overviewId: string) =>
   account.inject({ method: "DELETE", url: `/api/overview-reservations/${overviewId}`, clientVersion: RESERVING });
 
-const push = (account: TestAccount, overview: ReturnType<typeof storedOverview>, { ifMatch, clientVersion = RESERVING }: { ifMatch?: number; clientVersion?: number } = {}) =>
+const push = (account: TestAccount, overview: ReturnType<typeof storedOverview> | ReturnType<typeof fromBeforeReserving>, { ifMatch, clientVersion = RESERVING }: { ifMatch?: number; clientVersion?: number } = {}) =>
   account.inject({ method: "POST", url: "/api/overviews", body: overview, clientVersion, reserved: false, ...(ifMatch === undefined ? {} : { ifMatch }) });
 
 const ownUsed = async (account: TestAccount): Promise<number> =>

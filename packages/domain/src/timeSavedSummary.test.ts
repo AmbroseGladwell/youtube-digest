@@ -7,7 +7,7 @@ import { overviewTimeSaved, timeSavedSummary } from "./timeSavedSummary.js";
 const minutesAndSeconds = (minutes: number, seconds = 0) => (minutes * 60 + seconds) * 1000;
 
 const lasting = (durationMs: number | null, overrides: Partial<Overview> = {}): Overview =>
-  makeOverview({ video: { ...makeOverview().video, durationMs }, ...overrides });
+  makeOverview({ source: { ...makeOverview().source, durationMs }, ...overrides });
 
 const read = (overview: Overview) => ({ overview, state: { read: true } });
 const unread = (overview: Overview) => ({ overview, state: { read: false } });

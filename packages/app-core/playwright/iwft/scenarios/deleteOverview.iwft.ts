@@ -6,7 +6,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 const CONNECTED = { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL };
 
 const titled = (title: string, savedAt: string): Overview =>
-  makeOverview({ savedAt, video: { ...makeOverview().video, title } });
+  makeOverview({ savedAt, source: { ...makeOverview().source, title } });
 
 const tombstone = (seq: number, overview: Overview): RecordChange => ({
   kind: "overview",

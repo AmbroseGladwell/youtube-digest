@@ -10,7 +10,7 @@ const version1 = OVERVIEW_CORPUS.get(1) as Record<string, unknown>;
 test("a record written by an older schema is migrated and then read", () => {
   const read = readStoredRecord(version1, Overview, OVERVIEW_MIGRATIONS);
   assert.equal(read.status, "read");
-  assert.equal(read.status === "read" && read.record.video.durationMs, null);
+  assert.equal(read.status === "read" && read.record.source.durationMs, null);
 });
 
 test("a record written by a newer schema is held back rather than read loosely", () => {

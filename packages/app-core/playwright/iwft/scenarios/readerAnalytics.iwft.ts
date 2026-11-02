@@ -20,7 +20,7 @@ const seedOne = (backendSimulator: BackendSimulator) => {
   const overview = makeOverview({
     watchAnyway: { answer: "no", reason: "The claim is in the first minute.", range: null },
   });
-  const seeded = { ...overview, video: { ...overview.video, id: VIDEO_ID } };
+  const seeded = { ...overview, source: { ...overview.source, id: VIDEO_ID } };
   backendSimulator.overviews.seed(seeded);
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
   return seeded;

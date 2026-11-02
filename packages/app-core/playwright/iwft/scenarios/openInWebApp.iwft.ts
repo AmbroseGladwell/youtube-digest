@@ -17,7 +17,7 @@ const signedIn = {
 
 const seedNote = (backendSimulator: BackendSimulator): Overview => {
   const overview = makeOverview();
-  const note = { ...overview, video: { ...overview.video, id: VideoId.parse("webAppVideo01"), url: VIDEO_URL } };
+  const note = { ...overview, source: { ...overview.source, id: VideoId.parse("webAppVideo01"), url: VIDEO_URL } };
   backendSimulator.overviews.seed(note);
   return note;
 };

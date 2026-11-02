@@ -24,7 +24,7 @@ test("a screen that throws while it renders is reported, with what the reader di
 }) => {
   const overview = makeOverview();
   const broken = makeOverview({
-    video: { ...overview.video, title: "My notes on the divorce" },
+    source: { ...overview.source, title: "My notes on the divorce" },
     tags: [{}] as unknown as Overview["tags"],
   });
   backendSimulator.overviews.seed(broken);

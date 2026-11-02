@@ -36,7 +36,7 @@ const seedTranscript = (backendSimulator: BackendSimulator, segments = SEGMENTS)
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VIDEO_ID, url: VIDEO_URL },
+    source: { ...overview.source, id: VIDEO_ID, url: VIDEO_URL },
   });
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments }));
 };

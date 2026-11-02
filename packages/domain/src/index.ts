@@ -45,6 +45,8 @@ export * from "./SharedOverview.js";
 export * from "./SharePayload.js";
 export * from "./shareSnapshot.js";
 export * from "./shareContentHash.js";
+export * from "./Source.js";
+export * from "./sourceKey.js";
 export * from "./shareLink.js";
 export * from "./sharePreview.js";
 export * from "./Share.js";

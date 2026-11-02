@@ -5,8 +5,8 @@ import type { Overview } from "./Overview.js";
 // lowercased blob, checked with a plain substring match.
 export function buildSearchHaystack(overview: Overview): string {
   return [
-    overview.video.title,
-    overview.video.channel,
+    overview.source.title,
+    overview.source.channel,
     overview.inOneLine,
     overview.coreClaim,
     overview.verdict?.reasoning ?? "",

@@ -51,7 +51,7 @@ test("what stands out ends with its start time, which opens a menu that reads th
   });
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` },
+    source: { ...overview.source, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` },
   });
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
   const library = await launcher.launchExpectingLibrary();

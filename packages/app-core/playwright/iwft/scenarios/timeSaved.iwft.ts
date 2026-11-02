@@ -20,7 +20,7 @@ const hoursAgo = (hours: number) => new Date(Date.now() - hours * HOUR_MS).toISO
 // Every factory note takes a minute to read, so a video of n minutes saves n - 1.
 const lasting = (minutes: number | null, overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
-    video: { ...makeOverview().video, title: `${minutes ?? "no"} minute video`, durationMs: minutes && minutes * 60_000 },
+    source: { ...makeOverview().source, title: `${minutes ?? "no"} minute video`, durationMs: minutes && minutes * 60_000 },
     ...overrides,
   });
 
@@ -337,7 +337,7 @@ test.describe("in the panel's overview", () => {
   const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
   const watched = (minutes: number) => {
     const overview = lasting(minutes);
-    return { ...overview, video: { ...overview.video, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL } };
+    return { ...overview, source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL } };
   };
 
   test("Mark read beside Listen brings in what it saved, and the button says it is read", async ({

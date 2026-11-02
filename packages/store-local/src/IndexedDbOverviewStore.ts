@@ -25,6 +25,7 @@ import {
   type SyncedRecordKind,
   type UnreadableRecord,
   type UnreadableRecordKind,
+  sourceKey,
 } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
@@ -101,10 +102,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
       updatedAt,
       change: { op: "replace", record },
     });
-    if (journaled && overview.video.id !== null) {
+    const key = sourceKey(overview.source);
+    if (journaled && key !== null) {
       await appendPendingWrite(transaction, {
         kind: "transcript",
-        id: overview.video.id,
+        id: key,
         updatedAt,
         change: { op: "transcript", overviewId: overview.id },
       });
@@ -187,7 +189,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const overviews = await this.listOverviews();
     return overviews.map((overview) => ({
       overviewId: overview.id,
-      title: overview.video.title,
+      title: overview.source.title,
       claim: overview.coreClaim,
     }));
   }

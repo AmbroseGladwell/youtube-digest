@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION_HEADER, type StoredTranscript } from "@overview/domain";
+import { CLIENT_VERSION_HEADER, type StoredTranscript, youTubeSource } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
@@ -12,7 +12,7 @@ const SPOKEN = "Words only the video said";
 const spoken = () => makeStoredTranscript({ segments: [{ text: SPOKEN, startMs: 0, endMs: 1000 }] });
 
 const noteOn = (account: TestAccount, transcript: StoredTranscript) =>
-  account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: transcript.video! }) });
+  account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ source: youTubeSource(transcript.video!) }) });
 
 const upload = (account: TestAccount, transcript: StoredTranscript) =>
   account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
@@ -101,7 +101,7 @@ test("deleting the last note on a video logs how many transcripts the account st
   const testApp = await createTestApp({}, { logger });
   const account = await makeAccount(testApp);
   const transcript = spoken();
-  const note = storedOverview({ video: transcript.video! });
+  const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await account.inject({ method: "POST", url: "/api/overviews", body: note });
   await upload(account, transcript);
 

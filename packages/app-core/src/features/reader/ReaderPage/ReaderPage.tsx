@@ -336,7 +336,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   <LineRangeTag
                     line={line}
                     range={range}
-                    video={overview.video}
+                    video={overview.source}
                     active={active}
                     asSheet={isPhone && !isPanel}
                     canReadTranscript={true}
@@ -357,8 +357,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           )}
           {tab === "Transcript" && (
             <TranscriptPanel
-              key={overview.video.id}
-              video={overview.video}
+              key={overview.source.id}
+              video={overview.source}
               openAtMs={transcriptOpenAtMs}
               openedFrom={openedFrom}
               onBackToChapters={() => changeTab("Chapters")}
@@ -367,7 +367,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           {tab === "Chapters" && (
             <ChaptersPanel
               chapters={overview.chapters}
-              video={overview.video}
+              video={overview.source}
               onOpenTranscriptAt={openTranscriptAt}
             />
           )}
@@ -416,7 +416,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
         {confirmingDelete && (
           <DeleteOverviewDialog
-            title={overview.video.title}
+            title={overview.source.title}
             onDelete={confirmDelete}
             onClose={() => {
               reader.deleteDialog.cancelled();

@@ -224,7 +224,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
       case "video":
         return (
           <OnboardingVideo
-            video={run.video ?? overview?.video ?? null}
+            video={run.video ?? overview?.source ?? null}
             playlist={playlist.data ?? null}
             failed={failed}
             onLooksRight={next}
@@ -358,7 +358,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         </main>
 
         <div className={styles.wide}>
-          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? overview?.video ?? null} sortedInto={phase === "ready" ? sortedInto : null} />
+          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? overview?.source ?? null} sortedInto={phase === "ready" ? sortedInto : null} />
         </div>
       </div>
     </div>

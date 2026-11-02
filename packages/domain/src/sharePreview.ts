@@ -13,7 +13,7 @@ export interface SharePreview {
 // be guessing (docs/features/sharing.md).
 export function sharePreview(note: SharedNote): SharePreview {
   return {
-    title: note.video.title,
+    title: note.source.title,
     description: `${overviewMetaParts(note).join(" · ")}. ${note.inOneLine}`,
   };
 }

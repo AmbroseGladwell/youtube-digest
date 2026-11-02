@@ -25,7 +25,7 @@ export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
   if (watchAnyway?.answer === "yes") {
     return { kind: "watchVerdict" };
   }
-  const durationMs = overview.video.durationMs;
+  const durationMs = overview.source.durationMs;
   if (!durationMs) {
     return { kind: "withoutLength" };
   }

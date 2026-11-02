@@ -28,11 +28,11 @@ const signOutsCounted = (backendSimulator: BackendSimulator) =>
     .filter(({ name }) => name === "account.signOut.finished")
     .map(({ props }) => props);
 
-const titled = (title: string) => makeOverview({ video: { ...makeOverview().video, title } });
+const titled = (title: string) => makeOverview({ source: { ...makeOverview().source, title } });
 
 const ofVideo = (videoId: string): Overview => {
   const overview = makeOverview();
-  return { ...overview, video: { ...overview.video, id: VideoId.parse(videoId), title: `Video ${videoId}` } };
+  return { ...overview, source: { ...overview.source, id: VideoId.parse(videoId), title: `Video ${videoId}` } };
 };
 
 // The account as the server holds it, arriving on the first pull after signing in.

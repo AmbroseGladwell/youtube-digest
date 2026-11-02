@@ -155,7 +155,7 @@ export function ReaderMasthead({
           topicCount={overview.topicIds.length}
           hasReason={overview.captureReason !== null}
           read={read}
-          videoUrl={overview.video.url}
+          videoUrl={overview.source.url}
           compact={compact}
           webApp={webApp}
           onShare={onShare}
@@ -168,12 +168,12 @@ export function ReaderMasthead({
 
       <div className={styles.head}>
         <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
-          {overview.video.title}
+          {overview.source.title}
         </h2>
 
         <p className={styles.byline}>
           <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
-            {overview.video.channel}
+            {overview.source.channel}
           </span>
           {overview.verdict && (
             <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
@@ -210,7 +210,7 @@ export function ReaderMasthead({
           <div className={styles.dubiousReasons}>
             <DubiousReasonsPanel
               dubiousClaims={overview.verdict.dubiousClaims}
-              video={overview.video}
+              video={overview.source}
               onClose={() => {
                 setExplainingDubious(false);
                 dubiousFlag.current?.focus();
@@ -230,10 +230,10 @@ export function ReaderMasthead({
             says (docs/features/extension-panel.md). */}
         <p className={styles.metaRow}>
           <span data-testid={readerMastheadTestIds.meta}>{metaParts.join(" · ")}</span>
-          {!compact && Boolean(overview.video.publishedAt) && (
+          {!compact && Boolean(overview.source.publishedAt) && (
             <span data-testid={readerMastheadTestIds.published}>
               {" · published "}
-              {formatPublishedDate(overview.video.publishedAt!)}
+              {formatPublishedDate(overview.source.publishedAt!)}
             </span>
           )}
           {!compact && (

@@ -5,6 +5,7 @@ import {
   Verdict,
   WatchAnyway,
   resolveTags,
+  youTubeSource,
   type Chapter,
   type DubiousClaim,
   type Novelty,
@@ -55,7 +56,7 @@ export function assembleOverview(
 
   return Overview.parse({
     id: meta.id,
-    video: input.video,
+    source: youTubeSource(input.video),
     savedAt: meta.savedAt,
     captureReason: input.captureReason,
     fromPlaylist: null,

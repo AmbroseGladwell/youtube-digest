@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { transcriptFileName } from "./transcriptFileName.js";
 
-const videoTitled = (title: string): VideoSource => ({ ...makeOverview().video, title });
+const videoTitled = (title: string): VideoSource => ({ ...makeOverview().source, title });
 
 describe("transcriptFileName", () => {
   it("slugs the video's title", () => {

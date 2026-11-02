@@ -1,3 +1,4 @@
+import { sourceKey } from "@overview/domain";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_NARRATION_VOICE, spokenScript, type Overview, type Share } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
@@ -38,7 +39,7 @@ export function useShareOverviewMutation() {
         // through the query also means the copy is usually already in hand
         // (docs/features/sharing.md).
         transcript: await queryClient.fetchQuery(
-          transcriptQueryOptions(transcriptStore, overview.video.id, fetchTranscript),
+          transcriptQueryOptions(transcriptStore, sourceKey(overview.source), fetchTranscript),
         ),
         narration: await narrationForShare(narrationApi, spokenScript(overview), voice),
       });

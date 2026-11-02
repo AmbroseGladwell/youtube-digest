@@ -21,7 +21,7 @@ test("opens with the video's title, channel and month of publication, tidied for
   const overview = makeOverview();
   const script = spokenScript({
     ...overview,
-    video: { ...overview.video, title: "Arms (Guaranteed!)", publishedAt: "2024-05-02T10:00:00Z" },
+    source: { ...overview.source, title: "Arms (Guaranteed!)", publishedAt: "2024-05-02T10:00:00Z" },
   });
 
   assert.equal(script[0], "Arms, from Example Channel, published in May 2024.");
@@ -29,7 +29,7 @@ test("opens with the video's title, channel and month of publication, tidied for
 
 test("leaves the opening out when the video names nothing to open with", () => {
   const overview = makeOverview();
-  const script = spokenScript({ ...overview, video: { ...overview.video, title: "", channel: "" } });
+  const script = spokenScript({ ...overview, source: { ...overview.source, title: "", channel: "" } });
 
   assert.equal(script.length, overviewNoteLines(overview).length);
 });

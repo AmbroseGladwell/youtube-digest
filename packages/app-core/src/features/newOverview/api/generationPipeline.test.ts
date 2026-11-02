@@ -12,7 +12,7 @@ import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.j
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { runOverviewGeneration, type GenerationPipelineDeps } from "./generationPipeline.js";
 
-const VIDEO = makeOverview().video;
+const VIDEO = makeOverview().source;
 
 const makeDeps = () => {
   const topics: Topic[] = [];

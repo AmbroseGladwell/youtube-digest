@@ -24,7 +24,7 @@ const heldBackRecord = (id: string): UnreadableRecord => ({
   schemaVersion: CURRENT_SCHEMA_VERSIONS.overview + 1,
   reason: "future-version",
   detail: "written by a newer version of the app than this one can read",
-  salvaged: { savedAt: "2026-09-15T00:00:00.000Z", video: null },
+  salvaged: { savedAt: "2026-09-15T00:00:00.000Z", source: null },
 });
 
 // A control that cannot work is worse than no control (CLAUDE.md): a shell with no sync
@@ -38,7 +38,7 @@ test("a shell that cannot sync shows no sync controls", async ({ launcher }) => 
 });
 
 test("what the account holds arrives in the library without a reload", async ({ launcher, backendSimulator }) => {
-  const arriving = makeOverview({ video: { ...makeOverview().video, title: "Arrived From Another Device" } });
+  const arriving = makeOverview({ source: { ...makeOverview().source, title: "Arrived From Another Device" } });
   backendSimulator.sync.seedChange(overviewChange(1, arriving));
 
   const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: CONNECTED });

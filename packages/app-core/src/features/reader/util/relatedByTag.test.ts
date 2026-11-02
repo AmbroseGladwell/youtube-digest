@@ -3,9 +3,9 @@ import { makeOverviewWithState } from "../../overviews/types/OverviewFactory.tes
 import { relatedByTag } from "./relatedByTag.js";
 
 const titled = (title: string, tags: string[], savedAt: string, userTags: string[] = []) =>
-  makeOverviewWithState({ video: { ...makeOverviewWithState().overview.video, title }, tags, savedAt }, { userTags });
+  makeOverviewWithState({ source: { ...makeOverviewWithState().overview.source, title }, tags, savedAt }, { userTags });
 
-const titles = (related: ReturnType<typeof relatedByTag>) => related.map(({ overview }) => overview.video.title);
+const titles = (related: ReturnType<typeof relatedByTag>) => related.map(({ overview }) => overview.source.title);
 
 describe("relatedByTag", () => {
   const current = titled("This one", ["saas", "pricing", "founder"], "2026-10-01T00:00:00.000Z");

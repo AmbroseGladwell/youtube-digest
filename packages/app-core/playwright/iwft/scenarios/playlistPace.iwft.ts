@@ -84,7 +84,7 @@ test("a paced playlist makes its number for the day, the rest of the queue carri
   await launcher.launch({ apiKeys: API_KEYS });
 
   await expect.poll(() => overviewCount(backendSimulator)).toBe(2);
-  const made = (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.video.id).sort();
+  const made = (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.source.id).sort();
   expect(made).toEqual(["otherVideo1", "paceVideo01"]);
   const strip = launcher.appShell.queueStrip;
   await strip.verifyReads("Done for today", "2 waiting for tomorrow, at each playlist’s pace");
@@ -110,7 +110,7 @@ test("Make now makes a paced video next without counting toward its pace, which 
     makeOverview({
       savedAt: new Date(2026, 9, 26, 10, 0).toISOString(),
       fromPlaylist: PSYCHOLOGY,
-      video: { ...makeOverview().video, id: VideoId.parse("madeToday01"), title: "Made This Morning" },
+      source: { ...makeOverview().source, id: VideoId.parse("madeToday01"), title: "Made This Morning" },
     }),
   );
   seedQueuedWithTranscripts(backendSimulator, [queued(0), queued(1)]);

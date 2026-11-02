@@ -110,7 +110,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           <div className={styles.head}>
             <div className={styles.chips}>
               <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
-                {note.video.channel}
+                {note.source.channel}
               </span>
               {note.verdict !== null && (
                 <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
@@ -124,7 +124,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               )}
             </div>
             <h1 className={styles.title} data-testid={sharedOverviewPageTestIds.title}>
-              {note.video.title}
+              {note.source.title}
             </h1>
             <p className={styles.meta} data-testid={sharedOverviewPageTestIds.meta}>
               {sharedMetaParts(note, payload.sharedAt).join(" · ")}
@@ -140,7 +140,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 rememberSharedPageIntent({
                   kind: "save",
                   token: payload.token,
-                  title: note.video.title,
+                  title: note.source.title,
                   snapshot: payload.snapshot,
                 });
                 void navigate(Routes.createAccount());
@@ -152,7 +152,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             </button>
             <a
               className={styles.surfaceAction}
-              href={note.video.url}
+              href={note.source.url}
               target="_blank"
               rel="noopener"
               onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
@@ -178,7 +178,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     <LineRangeTag
                       line={line}
                       range={range}
-                      video={note.video}
+                      video={note.source}
                       active={active}
                       asSheet={isPhone}
                       canReadTranscript={payload.snapshot.transcript !== null}
@@ -191,7 +191,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             )}
             {tab === "Transcript" && (
               <TranscriptPanel
-                video={note.video}
+                video={note.source}
                 held={transcript}
                 openAtMs={transcriptOpenAtMs}
                 openedFrom={openedFrom}
@@ -201,7 +201,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             {tab === "Chapters" && (
               <ChaptersPanel
                 chapters={note.chapters}
-                video={note.video}
+                video={note.source}
                 held={transcript}
                 onOpenTranscriptAt={openTranscriptAt}
               />

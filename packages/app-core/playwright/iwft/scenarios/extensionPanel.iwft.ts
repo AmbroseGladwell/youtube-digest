@@ -120,8 +120,8 @@ test("a video already in the library is offered to read, not bought a second tim
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: {
-      ...overview.video,
+    source: {
+      ...overview.source,
       id: VideoId.parse(IWFT_VIDEO_ID),
       url: WATCHED_URL,
       title: "Held already",
@@ -144,7 +144,7 @@ test("the panel's reader drops the trail, the stepper and the rail it has nothin
   backendSimulator.overviews.seed({
     ...overview,
     savedAt: "2026-09-16T00:00:00.000Z",
-    video: { ...overview.video, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
+    source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
   });
   const capture = await launcher.launchPanel(panel);
 

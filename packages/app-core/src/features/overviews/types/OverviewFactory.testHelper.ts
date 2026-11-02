@@ -11,7 +11,8 @@ import type { OverviewWithState } from "./OverviewWithState.js";
 
 export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   id: OverviewId.parse(crypto.randomUUID()),
-  video: {
+  source: {
+    kind: "youtube",
     id: VideoId.parse("example"),
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",
@@ -68,7 +69,8 @@ export const makeUnreadableEntry = (
       detail: "coreClaim: expected string",
       salvaged: {
         savedAt: new Date().toISOString(),
-        video: {
+        source: {
+          kind: "youtube",
           id: VideoId.parse("example"),
           url: "https://www.youtube.com/watch?v=example",
           title: "Example",

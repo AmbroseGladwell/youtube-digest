@@ -8,7 +8,7 @@ test("a row's Read along opens that note in the reader, and the back link return
   launcher,
   backendSimulator,
 }) => {
-  backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "A Saved Video" } }));
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "A Saved Video" } }));
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
@@ -43,12 +43,12 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
   const withThumbnail = makeOverview();
   backendSimulator.overviews.seed({
     ...withThumbnail,
-    video: { ...withThumbnail.video, thumbnailUrl: WIDE_THUMBNAIL },
+    source: { ...withThumbnail.source, thumbnailUrl: WIDE_THUMBNAIL },
   });
   const withoutThumbnail = makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" });
   backendSimulator.overviews.seed({
     ...withoutThumbnail,
-    video: { ...withoutThumbnail.video, thumbnailUrl: null },
+    source: { ...withoutThumbnail.source, thumbnailUrl: null },
   });
   await page.setViewportSize({ width: 375, height: 800 });
 
@@ -71,7 +71,7 @@ test("a row prints its read, listen and video times, and the note it opens says 
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, durationMs: 698_000 },
+    source: { ...overview.source, durationMs: 698_000 },
   });
 
   const library = await launcher.launchExpectingLibrary();
@@ -88,7 +88,7 @@ test("a row drops the video term when the source recorded no duration, rather th
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, durationMs: null },
+    source: { ...overview.source, durationMs: null },
   });
 
   const library = await launcher.launchExpectingLibrary();
@@ -206,19 +206,19 @@ test("clicking a row's thumbnail opens the same reader its title does", async ({
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg" },
+    source: { ...overview.source, thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg" },
   });
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReaderFromThumbnail();
-  await reader.verifyTitle(overview.video.title);
+  await reader.verifyTitle(overview.source.title);
 });
 
 test("a card shows its thumbnail when the overview has one", async ({ launcher, backendSimulator }) => {
   const withThumbnail = makeOverview();
   backendSimulator.overviews.seed({
     ...withThumbnail,
-    video: { ...withThumbnail.video, thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg" },
+    source: { ...withThumbnail.source, thumbnailUrl: "https://i.ytimg.com/vi/example/hqdefault.jpg" },
   });
 
   const library = await launcher.launchExpectingLibrary();

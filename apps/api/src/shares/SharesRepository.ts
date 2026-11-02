@@ -39,7 +39,7 @@ const describe = (row: RawShare): ShareRow => ({
   contentHash: row.content_hash,
 });
 
-const LIVE_COLUMNS = `token, overview_id, snapshot -> 'note' -> 'video' ->> 'title' as title,
+const LIVE_COLUMNS = `token, overview_id, snapshot -> 'note' -> 'source' ->> 'title' as title,
   shared_at, updated_at, views, content_hash`;
 
 interface RawPublished {

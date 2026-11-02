@@ -8,7 +8,7 @@ import { libraryEntrySavedAt, libraryEntryTitle } from "../../overviews/types/Li
 import { orderLibraryEntries } from "./orderLibraryEntries.js";
 
 const titled = (title: string, savedAt = "2026-09-14T00:00:00.000Z") =>
-  makeOverviewWithState({ savedAt, video: { ...makeOverview().video, title } });
+  makeOverviewWithState({ savedAt, source: { ...makeOverview().source, title } });
 
 describe("orderLibraryEntries", () => {
   it("puts the newest saved first by default order", () => {
@@ -25,7 +25,7 @@ describe("orderLibraryEntries", () => {
     const newer = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z" });
     const older = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z" });
     const between = makeUnreadableEntry({
-      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", video: null },
+      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", source: null },
     });
 
     expect(orderLibraryEntries([newer, between, older], "oldest").map(libraryEntrySavedAt)).toEqual([
@@ -58,12 +58,12 @@ describe("orderLibraryEntries", () => {
 
   it("places an unreadable record by its salvaged title, and one without a title last", () => {
     const untitled = makeUnreadableEntry({
-      salvaged: { savedAt: "2026-09-20T00:00:00.000Z", video: null },
+      salvaged: { savedAt: "2026-09-20T00:00:00.000Z", source: null },
     });
     const salvaged = makeUnreadableEntry({
       salvaged: {
         savedAt: "2026-09-10T00:00:00.000Z",
-        video: { id: null, url: null, title: "Middle" },
+        source: { kind: "youtube", id: null, url: null, title: "Middle" },
       },
     });
 

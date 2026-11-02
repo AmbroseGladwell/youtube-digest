@@ -18,10 +18,10 @@ export interface PlayerTrack {
 export function playerTrackFor(overview: SharedNote, lines: NoteLine[] = overviewNoteLines(overview)): PlayerTrack {
   return {
     overviewId: overview.id,
-    title: overview.video.title,
-    channel: overview.video.channel,
-    artworkUrl: overview.video.thumbnailUrl ?? null,
-    opening: spokenOpening(overview.video),
+    title: overview.source.title,
+    channel: overview.source.channel,
+    artworkUrl: overview.source.thumbnailUrl ?? null,
+    opening: spokenOpening(overview.source),
     lines,
   };
 }

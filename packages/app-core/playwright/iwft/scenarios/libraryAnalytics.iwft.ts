@@ -16,11 +16,11 @@ const seed = (backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seedTopic(ENERGY);
   const grid = makeOverview({
     topicIds: [ENERGY.id],
-    video: { ...makeOverview().video, title: "Grid batteries" },
+    source: { ...makeOverview().source, title: "Grid batteries" },
     verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
   });
   backendSimulator.overviews.seed(grid);
-  backendSimulator.overviews.seed(makeOverview({ video: { ...makeOverview().video, title: "Sourdough" } }));
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Sourdough" } }));
   return grid;
 };
 

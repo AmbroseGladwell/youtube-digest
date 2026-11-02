@@ -15,7 +15,7 @@ const TITLE = "The Quiet Return of Nuclear Baseload";
 const titled = (title = TITLE, overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     savedAt: "2026-09-20T00:00:00.000Z",
-    video: { ...makeOverview().video, title },
+    source: { ...makeOverview().source, title },
     captureReason: "Read before the Thursday review.",
     ...overrides,
   });
@@ -184,7 +184,7 @@ test("the transcript the reader is looking at travels with the copy", async ({
 }) => {
   const overview = titled();
   backendSimulator.overviews.seed(overview);
-  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: overview.video.id! }));
+  backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: overview.source.id! }));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 

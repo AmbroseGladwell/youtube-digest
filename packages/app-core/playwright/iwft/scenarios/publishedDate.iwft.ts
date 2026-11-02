@@ -8,7 +8,7 @@ const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const overviewPublished = (publishedAt: string | null) =>
   makeOverview({
-    video: { ...makeOverview().video, title: "A dated video", publishedAt },
+    source: { ...makeOverview().source, title: "A dated video", publishedAt },
   });
 
 test("the note says when the video went up, year and all", async ({ launcher, backendSimulator }) => {
@@ -39,7 +39,7 @@ test("a note saved before the field existed at all still opens", async ({
   backendSimulator,
 }) => {
   const overview = overviewPublished(null);
-  const video = { ...overview.video, durationMs: 842000 };
+  const video = { ...overview.source, durationMs: 842000 };
   delete (video as { publishedAt?: unknown }).publishedAt;
   delete (video as { durationMs?: unknown }).durationMs;
   backendSimulator.overviews.seed({ ...overview, video } as typeof overview);
@@ -60,5 +60,5 @@ test("a generated note keeps the date the source gave it", async ({ launcher, ba
   await reader.verifyIsShown();
 
   const [overview] = await backendSimulator.overviewStore.listOverviews();
-  expect(overview?.video.publishedAt).not.toBeNull();
+  expect(overview?.source.publishedAt).not.toBeNull();
 });

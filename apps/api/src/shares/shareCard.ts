@@ -46,13 +46,13 @@ const mark = (x: number, y: number) =>
 // snapshot alone and never goes stale (docs/features/sharing.md).
 export function shareCardSvg(note: SharedNote): string {
   const titleLines = wrapToWidth({
-    text: note.video.title,
+    text: note.source.title,
     maxWidth: CONTENT_WIDTH,
     maxLines: TITLE_MAX_LINES,
     measure: (line) => measureText({ text: line, fontFamily: TITLE_FONT_FAMILY, fontSize: TITLE_SIZE }),
   });
   const [metaLine = ""] = wrapToWidth({
-    text: [note.video.channel, ...overviewMetaParts(note)].join(" · "),
+    text: [note.source.channel, ...overviewMetaParts(note)].join(" · "),
     maxWidth: CONTENT_WIDTH,
     maxLines: 1,
     measure: (line) => measureText({ text: line, fontFamily: BODY_FONT_FAMILY, fontSize: META_SIZE }),

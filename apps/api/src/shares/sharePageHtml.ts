@@ -37,10 +37,10 @@ function fallbackBody(payload: SharePayload): string {
   const { note } = payload.snapshot;
   return [
     "<main>",
-    `<h1>${escapeHtml(note.video.title)}</h1>`,
-    `<p>${escapeHtml(note.video.channel)} · ${escapeHtml(overviewMetaParts(note).join(" · "))}</p>`,
+    `<h1>${escapeHtml(note.source.title)}</h1>`,
+    `<p>${escapeHtml(note.source.channel)} · ${escapeHtml(overviewMetaParts(note).join(" · "))}</p>`,
     `<p>${escapeHtml(note.inOneLine)}</p>`,
-    `<p><a href="${escapeHtml(note.video.url)}">Watch on YouTube</a></p>`,
+    `<p><a href="${escapeHtml(note.source.url)}">Watch on YouTube</a></p>`,
     "</main>",
   ].join("");
 }
