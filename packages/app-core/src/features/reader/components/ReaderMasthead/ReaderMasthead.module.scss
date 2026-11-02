@@ -118,7 +118,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--accent);
+  color: var(--alert);
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -129,17 +129,17 @@
   @include controls.control-motion;
 
   &:hover {
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--alert) 10%, transparent);
   }
 
   &:active {
-    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    background: color-mix(in srgb, var(--alert) 16%, transparent);
   }
 }
 
 .dubiousOpen {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: color-mix(in srgb, var(--alert) 10%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--alert);
 }
 
 .dubiousCount {

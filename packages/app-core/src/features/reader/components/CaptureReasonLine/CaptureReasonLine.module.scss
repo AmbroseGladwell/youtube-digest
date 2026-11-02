@@ -51,7 +51,7 @@
   @include controls.pill-sm;
 
   margin-left: auto;
-  color: var(--accent);
+  color: var(--alert);
 
   &:hover:not(:disabled) {
     background: color-mix(in srgb, var(--on-stone-tint) 8%, transparent);

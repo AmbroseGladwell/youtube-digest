@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_NARRATION_VOICE } from "@overview/domain";
+import { DEFAULT_ACCENT_COLOUR, DEFAULT_NARRATION_VOICE, DEFAULT_THEME_MODE } from "@overview/domain";
 import { makeTopic } from "../overviews/types/TopicFactory.testHelper.js";
 import { MovingLibrary } from "./MovingLibrary.testHelper.js";
 import { moveAnswersInto } from "./moveAnswersInto.js";
@@ -46,6 +46,31 @@ describe("moveAnswersInto", () => {
       narrationVoice: "bm_george",
     });
     expect(await from.settingsStore.get()).toMatchObject({ readerContext: null, narrationVoice: DEFAULT_NARRATION_VOICE });
+  });
+
+  it("gives an account with the default appearance this device's, and clears it here", async () => {
+    const from = library();
+    const into = library();
+    await from.settingsStore.update({ theme: "dark", accentColour: "teal" });
+
+    await moveAnswersInto(from, into);
+
+    expect(await into.settingsStore.get()).toMatchObject({ theme: "dark", accentColour: "teal" });
+    expect(await from.settingsStore.get()).toMatchObject({
+      theme: DEFAULT_THEME_MODE,
+      accentColour: DEFAULT_ACCENT_COLOUR,
+    });
+  });
+
+  it("keeps the account's own appearance over this device's", async () => {
+    const from = library();
+    const into = library();
+    await into.settingsStore.update({ theme: "light", accentColour: "gold" });
+    await from.settingsStore.update({ theme: "dark", accentColour: "teal" });
+
+    await moveAnswersInto(from, into);
+
+    expect(await into.settingsStore.get()).toMatchObject({ theme: "light", accentColour: "gold" });
   });
 
   it("keeps the account's own About you and voice over this device's", async () => {

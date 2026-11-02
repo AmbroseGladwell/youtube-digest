@@ -29,7 +29,7 @@
 }
 
 @mixin field-invalid {
-  border-color: var(--accent);
+  border-color: var(--alert);
 }
 
 @mixin field-error {
@@ -39,7 +39,7 @@
   margin: 0;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--alert);
 }
 
 @mixin primary {

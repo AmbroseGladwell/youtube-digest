@@ -24,6 +24,12 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     if (patch.narrationVoice !== undefined) {
       request.log.info(apiLogLines.settings.narrationVoiceChosen({ narrationVoice: patch.narrationVoice }));
     }
+    if (patch.theme !== undefined) {
+      request.log.info(apiLogLines.settings.themeChosen({ theme: patch.theme }));
+    }
+    if (patch.accentColour !== undefined) {
+      request.log.info(apiLogLines.settings.accentColourChosen({ accentColour: patch.accentColour }));
+    }
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {

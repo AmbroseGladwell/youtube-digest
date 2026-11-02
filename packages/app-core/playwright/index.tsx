@@ -84,4 +84,5 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;
   window.__iwftYouTubeFetch__ = hooksConfig?.youTubeFetch === true ? iwftYouTubeFetch : null;
   window.__iwftErrorDestinations__ = hooksConfig?.errorDestinationMirror === true ? [] : null;
+  window.__iwftAccentMirror__ = hooksConfig?.accentMirror === true ? [] : null;
 });

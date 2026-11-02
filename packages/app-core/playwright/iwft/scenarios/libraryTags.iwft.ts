@@ -3,13 +3,13 @@ import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
-const titled = (title: string, tags: string[]) =>
-  makeOverview({ source: { ...makeOverview().source, title }, tags });
+const titled = (title: string, tags: string[], savedAt = new Date().toISOString()) =>
+  makeOverview({ source: { ...makeOverview().source, title }, tags, savedAt });
 
 const seedLibrary = (backendSimulator: BackendSimulator) => {
-  backendSimulator.overviews.seed(titled("Side project to forty k", ["saas", "founder-interview", "pricing"]));
-  backendSimulator.overviews.seed(titled("Chrome extension money", ["saas", "founder-interview"]));
-  backendSimulator.overviews.seed(titled("Nuclear in the UK", ["energy", "nuclear"]));
+  backendSimulator.overviews.seed(titled("Side project to forty k", ["saas", "founder-interview", "pricing"], "2026-10-03T09:00:00.000Z"));
+  backendSimulator.overviews.seed(titled("Chrome extension money", ["saas", "founder-interview"], "2026-10-02T09:00:00.000Z"));
+  backendSimulator.overviews.seed(titled("Nuclear in the UK", ["energy", "nuclear"], "2026-10-01T09:00:00.000Z"));
 };
 
 test("the rail lists the library's tags under More filters, most used first, and choosing one filters to it", async ({

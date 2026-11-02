@@ -9,6 +9,7 @@ import {
   accountRowValue,
   keysRowValue,
   milestonesRowValue,
+  appearanceRowValue,
   personalisationRowValue,
   voiceRowValue,
 } from "./settingsRowValues.js";
@@ -115,5 +116,12 @@ describe("personalisationRowValue", () => {
     expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, "Works in healthcare.")).toBe(
       "Works in healthcare. · Every section",
     );
+  });
+});
+
+describe("appearanceRowValue", () => {
+  it("names the theme and the accent", () => {
+    expect(appearanceRowValue("system", "orange")).toBe("System · Orange");
+    expect(appearanceRowValue("dark", "raspberry")).toBe("Dark · Raspberry");
   });
 });

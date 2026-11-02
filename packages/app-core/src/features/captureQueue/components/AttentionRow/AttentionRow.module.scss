@@ -76,8 +76,8 @@
 }
 
 .tagFailed {
-  color: var(--accent);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--alert);
+  box-shadow: inset 0 0 0 1.5px var(--alert);
 }
 
 .tagSkipped {
