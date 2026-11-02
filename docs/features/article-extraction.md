@@ -79,6 +79,14 @@ a section can be linked to when it has no id is the note's question (text fragme
 one's. Headings Readability keeps vary: of the real articles measured, BBC stories came back as
 one section.
 
+## The picture
+
+`imageUrl` is the page's own share image, which publishers set to control how a link looks when
+shared: `og:image`, then `twitter:image`, then structured data. Only https, because an https app
+can't show anything else. It is a link to the publisher's image, not a copy, so it can move: a
+broken one renders nothing, as `OverviewThumbnail` already does for a video, and the card shows its
+fallback. Loading it tells the publisher's server that someone opened the library.
+
 ## One address
 
 `rel=canonical` wins, including on another site, where a syndicated piece really lives. A canonical

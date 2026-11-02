@@ -16,7 +16,7 @@ const wordsPerSentence = (text: string): number =>
 // page in the reader's tab. isProbablyReaderable looks for paragraphs, so prose laid out
 // with line breaks has to qualify another way (docs/features/article-extraction.md).
 export function readArticle(document: Document, pageUrl: string): ArticleRead {
-  const metadata = articleMetadata(document);
+  const metadata = articleMetadata(document, pageUrl);
   const parsed = new Readability(document.cloneNode(true) as Document).parse();
   const body = document.implementation.createHTMLDocument("").body;
   body.innerHTML = parsed?.content ?? "";
@@ -44,6 +44,7 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
       author: metadata.author ?? parsed?.byline ?? null,
       publishedAt: metadata.publishedAt,
       language: document.documentElement.getAttribute("lang") || parsed?.lang || null,
+      imageUrl: metadata.imageUrl,
       sections,
       wordCount: words,
     },

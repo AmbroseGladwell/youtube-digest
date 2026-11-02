@@ -2,7 +2,7 @@ import type { Overview, OverviewId } from "@overview/domain";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput } from "./GeneratedOutput.js";
-import { composePrompt } from "./composePrompt.js";
+import { composePrompt, type ComposedPrompt } from "./composePrompt.js";
 import { assembleOverview } from "./assembleOverview.js";
 import { SchemaFailureError } from "./GenerationError.js";
 
@@ -27,12 +27,9 @@ export function correctionRequest(previous: unknown, error: z.ZodError): string 
   ].join("\n");
 }
 
-export async function generateOverview(
-  client: GenerationClient,
-  input: GenerationInput,
-  meta: { id: OverviewId; savedAt: string },
-): Promise<Overview> {
-  const { systemPrompt, userMessage, schema } = composePrompt(input);
+// Asks once, and once more with what was wrong, before giving up.
+export async function requestGeneratedOutput<Output>(client: GenerationClient, prompt: ComposedPrompt): Promise<Output> {
+  const { systemPrompt, userMessage, schema } = prompt;
 
   const attempt = async (correction?: string) => {
     const raw = await client({
@@ -54,5 +51,13 @@ export async function generateOverview(
     );
   }
 
-  return assembleOverview(input, parsed.data as unknown as GeneratedOutput, meta);
+  return parsed.data as unknown as Output;
+}
+
+export async function generateOverview(
+  client: GenerationClient,
+  input: GenerationInput,
+  meta: { id: OverviewId; savedAt: string },
+): Promise<Overview> {
+  return assembleOverview(input, await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input)), meta);
 }

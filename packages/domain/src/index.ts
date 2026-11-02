@@ -1,3 +1,5 @@
+export * from "./ArticleNote.js";
+export * from "./ArticlePlace.js";
 export * from "./ArticleRead.js";
 export * from "./ExtractedArticle.js";
 export * from "./Provider.js";

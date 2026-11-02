@@ -52,7 +52,7 @@ test("speaks the Verdict heading without the novelty set beside it", () => {
   const script = spokenScript(overview);
 
   assert.ok(script.includes("The verdict"));
-  assert.ok(!script.some((line) => line.includes("Common knowledge")));
+  assert.ok(!script.some((line) => line.includes("Widely covered")));
 });
 
 test("tidies the spoken text for speech", () => {

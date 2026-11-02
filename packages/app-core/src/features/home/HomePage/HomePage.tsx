@@ -312,7 +312,7 @@ function ExampleOverview() {
       <article className={styles.exampleCard}>
         <div className={styles.exampleHead}>
           <span className={styles.exampleLabel}>Example overview</span>
-          <span className={styles.exampleChip}>Common knowledge</span>
+          <span className={styles.exampleChip}>Widely covered</span>
         </div>
         <div className={styles.exampleSource}>
           <span className={styles.exampleThumb} aria-hidden="true" />

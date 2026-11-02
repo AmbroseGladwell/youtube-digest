@@ -16,6 +16,9 @@ export const ExtractedArticle = z.object({
   author: z.string().nullable(),
   publishedAt: z.iso.datetime().nullable(),
   language: z.string().nullable(),
+  // The picture the page chose for when it is shared. Null where it has none, and never one
+  // an https page could not show (docs/features/article-extraction.md).
+  imageUrl: z.url().nullable(),
   sections: z.array(ArticleSection).min(1),
   wordCount: z.number().int().positive(),
 });

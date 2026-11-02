@@ -97,6 +97,8 @@ Five folders, five different questions.
   before saying so, and the panel the flag opens under the byline.
 - `article-extraction.md` — reading an article out of a web page: the permissions, the
   on-demand script, what counts as an article, and the failures it names.
+- `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
+  positions as numbered paragraphs, and why no article text is kept.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt

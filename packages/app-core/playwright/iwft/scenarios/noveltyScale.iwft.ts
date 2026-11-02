@@ -83,8 +83,8 @@ test("common knowledge names nothing as standing out, so Why is its only sub-lab
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyMastheadMentions(/Common knowledge/);
-  await reader.verifyVerdictChipReads("Common knowledge");
+  await reader.verifyMastheadMentions(/Widely covered/);
+  await reader.verifyVerdictChipReads("Widely covered");
   await reader.verifyNoteLabelsRead(["Why"]);
   await reader.verifyLineTimesRead([]);
   await reader.verifyNoteShowsLine(NOVELTY_BASIS, false);

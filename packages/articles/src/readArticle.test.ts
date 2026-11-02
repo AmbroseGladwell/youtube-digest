@@ -22,6 +22,20 @@ test("a news story gives its text, sections and metadata, in the shape the rest 
   assert.equal(article.author, "Asha Rao, Tom Lee");
   assert.equal(article.publishedAt, "2026-11-01T09:30:00.000Z");
   assert.equal(article.language, "en-GB");
+  assert.equal(article.imageUrl, "https://news.example.com/images/bridge.jpg");
+});
+
+test("the share image falls back through the tags a page may use", () => {
+  const withTags = (tags: string) => NEWS_PAGE.replace('<meta property="og:image" content="/images/bridge.jpg">', tags);
+  assert.equal(articleOf(read(withTags('<meta name="twitter:image" content="https://cdn.example/t.jpg">'))).imageUrl, "https://cdn.example/t.jpg");
+  const linked = withTags("").replace('"headline":"Bridge repairs",', '"headline":"Bridge repairs","image":[{"@type":"ImageObject","url":"https://cdn.example/ld.jpg"}],');
+  assert.equal(articleOf(read(linked)).imageUrl, "https://cdn.example/ld.jpg");
+});
+
+test("a page with no share image, or only an insecure one, has none rather than a broken one", () => {
+  assert.equal(articleOf(read(BLOG_PAGE, "https://sam.example.org/cold-showers")).imageUrl, null);
+  const insecure = NEWS_PAGE.replace('content="/images/bridge.jpg"', 'content="http://cdn.example/a.jpg"');
+  assert.equal(articleOf(read(insecure)).imageUrl, null);
 });
 
 test("sections follow the headings, keep the ids a link can point at, and leave the page's furniture behind", () => {
