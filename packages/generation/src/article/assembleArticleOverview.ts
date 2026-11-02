@@ -1,4 +1,16 @@
-import { ArticleNote, HowToApply, ReadAnyway, resolveTags, Selling, type DubiousBasis, type Novelty } from "@overview/domain";
+import {
+  HowToApply,
+  Overview,
+  ReadAnyway,
+  resolveTags,
+  Selling,
+  webSource,
+  wordCount,
+  type DubiousBasis,
+  type Novelty,
+  type OverviewId,
+  type SourceKey,
+} from "@overview/domain";
 import { GenerationError } from "../GenerationError.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { articleParagraphs, type ArticleParagraph } from "./articleParagraphs.js";
@@ -24,7 +36,14 @@ export interface GeneratedArticleOutput {
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
 }
 
-export function assembleArticleNote(input: ArticleGenerationInput, output: GeneratedArticleOutput): ArticleNote {
+const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
+  chapters.reduce((held, { startParagraphIndex }, index) => (startParagraphIndex <= paragraphIndex ? index : held), 0);
+
+export function assembleArticleOverview(
+  input: ArticleGenerationInput,
+  output: GeneratedArticleOutput,
+  meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
+): Overview {
   const paragraphs = articleParagraphs(input.article);
   const paragraphAt = (index: number): ArticleParagraph => {
     const paragraph = paragraphs[index];
@@ -33,19 +52,28 @@ export function assembleArticleNote(input: ArticleGenerationInput, output: Gener
     }
     return paragraph;
   };
-  const placeAt = (index: number | null) => (index === null ? null : paragraphAt(index).place);
-  const verdict = output.thin ? undefined : output.verdict;
-
-  return ArticleNote.parse({
-    inOneLine: output.inOneLine,
-    coreClaim: output.coreClaim,
-    thin: output.thin,
-    keyPoints: output.keyPoints.map(({ text, paragraphIndex }) => ({ text, place: placeAt(paragraphIndex) })),
-    chapters: output.chapters.map(({ title, summary, startParagraphIndex }) => ({
+  const chapters = output.chapters.map(({ title, summary, startParagraphIndex }, index) => {
+    const end = output.chapters[index + 1]?.startParagraphIndex ?? paragraphs.length;
+    return {
       title,
       summary,
       place: paragraphAt(startParagraphIndex).place,
-    })),
+      wordCount: paragraphs.slice(startParagraphIndex, end).reduce((total, { text }) => total + wordCount(text), 0),
+    };
+  });
+  const verdict = output.thin ? undefined : output.verdict;
+
+  return Overview.parse({
+    id: meta.id,
+    source: webSource(input.article, meta.sourceId),
+    savedAt: meta.savedAt,
+    captureReason: input.captureReason,
+    fromPlaylist: null,
+    madeOn: null,
+    inOneLine: output.inOneLine,
+    coreClaim: output.coreClaim,
+    thin: output.thin,
+    keyPoints: output.keyPoints.map(({ text }) => ({ text, range: null })),
     topicIds: input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id),
     tags: resolveTags(output.tags, { known: new Set(input.existingTags.map(({ tag }) => tag)), aliases: input.tagAliases }),
     verdict:
@@ -56,9 +84,9 @@ export function assembleArticleNote(input: ArticleGenerationInput, output: Gener
             standsOut:
               verdict.novelty === "common_knowledge" || verdict.standsOut === null
                 ? null
-                : { text: verdict.standsOut.text, place: placeAt(verdict.standsOut.paragraphIndex) },
+                : { text: verdict.standsOut.text, range: null },
             dubious: verdict.dubiousClaims.length > 0,
-            dubiousClaims: verdict.dubiousClaims.map(({ paragraphIndex, ...claim }) => ({ ...claim, place: placeAt(paragraphIndex) })),
+            dubiousClaims: verdict.dubiousClaims.map(({ claim, basis, reason }) => ({ claim, basis, reason, startMs: null })),
             reasoning: verdict.reasoning,
             similarTo: verdict.similarToIndices.flatMap((index) => {
               const claim = input.pastClaims[index];
@@ -67,20 +95,14 @@ export function assembleArticleNote(input: ArticleGenerationInput, output: Gener
           },
     selling: output.selling === undefined ? null : Selling.parse(output.selling),
     howToApply: output.howToApply === undefined ? null : HowToApply.parse(output.howToApply),
-    readAnyway:
-      output.readAnyway === undefined
-        ? null
-        : ReadAnyway.parse({
-            answer: output.readAnyway.answer,
-            reason: output.readAnyway.reason,
-            leftOut: output.readAnyway.leftOut,
-            sections: output.readAnyway.chapterIndexes.map((index) => {
-              const chapter = output.chapters[index];
-              if (chapter === undefined) {
-                throw new GenerationError(`the model named chapter ${index} (it wrote ${output.chapters.length})`);
-              }
-              return { title: chapter.title, place: paragraphAt(chapter.startParagraphIndex).place };
-            }),
-          }),
+    watchAnyway: null,
+    chapters: null,
+    article: {
+      chapters,
+      keyPointChapters: output.keyPoints.map(({ paragraphIndex }) =>
+        paragraphIndex === null ? null : chapterHolding(paragraphAt(paragraphIndex).index, output.chapters),
+      ),
+      readAnyway: output.readAnyway === undefined ? null : ReadAnyway.parse(output.readAnyway),
+    },
   });
 }

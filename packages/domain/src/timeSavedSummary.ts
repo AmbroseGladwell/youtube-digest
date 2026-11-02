@@ -1,6 +1,7 @@
 import type { SharedNote } from "./SharedNote.js";
 import { noteTiming } from "./noteTiming.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
+import { articleReadMs } from "./sourceFacts.js";
 
 export type OverviewTimeSaved =
   | { kind: "counted"; minutes: number; lessPartToWatch: boolean }
@@ -20,7 +21,25 @@ const MS_PER_MINUTE = 60_000;
 // The video's length at 1×, minus the reading time the reader is shown, minus any part
 // the verdict says to watch. Whole minutes, so the totals add up to the pills
 // (docs/features/time-saved.md, "Counted honestly").
+function articleTimeSaved(overview: SharedNote, words: number): OverviewTimeSaved {
+  const read = overview.article?.readAnyway ?? null;
+  if (read?.answer === "yes") {
+    return { kind: "watchVerdict" };
+  }
+  const named = read?.answer === "partial" ? read.chapterIndexes : [];
+  const toReadWords = named.reduce((total, index) => total + (overview.article?.chapters[index]?.wordCount ?? 0), 0);
+  const noteMs = noteTiming(overviewNoteLines(overview)).readMinutes * MS_PER_MINUTE;
+  return {
+    kind: "counted",
+    minutes: Math.max(0, Math.floor((articleReadMs(words - toReadWords) - noteMs) / MS_PER_MINUTE)),
+    lessPartToWatch: named.length > 0,
+  };
+}
+
 export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
+  if (overview.source.kind === "web") {
+    return articleTimeSaved(overview, overview.source.wordCount);
+  }
   const watchAnyway = overview.watchAnyway;
   if (watchAnyway?.answer === "yes") {
     return { kind: "watchVerdict" };

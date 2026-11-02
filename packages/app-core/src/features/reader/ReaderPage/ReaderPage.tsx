@@ -28,6 +28,8 @@ import { DeleteOverviewDialog } from "../components/DeleteOverviewDialog/DeleteO
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
+import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/ArticleChaptersPanel.js";
+import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
 import { ShareOverviewDialog } from "../../shares/components/ShareOverviewDialog/ShareOverviewDialog.js";
 import { useShareOverviewMutation } from "../../shares/mutations/useShareOverviewMutation.js";
@@ -41,7 +43,7 @@ import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextS
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { overviewTags } from "../../overviews/util/overviewTags.js";
 import { relatedByTag } from "../util/relatedByTag.js";
-import type { ReaderTab } from "../types/ReaderTab.js";
+import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
@@ -127,6 +129,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   };
 
   const overview = overviewQuery.data?.overview ?? null;
+  const video = overview?.source.kind === "youtube" ? overview.source : null;
+  const webArticle =
+    overview?.source.kind === "web" && overview.article !== null ? { source: overview.source, article: overview.article } : null;
+  const tabsShown = webArticle === null ? READER_TABS : webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
   const captions = useMemo(() => (overview ? overviewNoteCaptions(overview) : {}), [overview]);
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
@@ -302,13 +308,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
         {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
 
-        <ReaderTabs
-          active={tab}
-          tabId={tabId}
-          panelId={panelId}
-          onChange={changeTab}
-          ref={tabsHeight.measured}
-        />
+        {tabsShown.length > 1 && (
+          <ReaderTabs
+            active={tab}
+            tabId={tabId}
+            panelId={panelId}
+            onChange={changeTab}
+            tabs={tabsShown}
+            ref={tabsHeight.measured}
+          />
+        )}
 
         <div
           key={tab}
@@ -332,17 +341,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 activeIndex={notePlayer.activeIndex}
                 speaking={notePlayer.playing}
                 onSelectLine={notePlayer.selectLine}
-                renderRange={(line, range, active) => (
-                  <LineRangeTag
-                    line={line}
-                    range={range}
-                    video={overview.source}
-                    active={active}
-                    asSheet={isPhone && !isPanel}
-                    canReadTranscript={true}
-                    onOpenTranscriptAt={openTranscriptAt}
-                  />
-                )}
+                renderRange={(line, range, active) =>
+                  video !== null && (
+                    <LineRangeTag
+                      line={line}
+                      range={range}
+                      video={video}
+                      active={active}
+                      asSheet={isPhone && !isPanel}
+                      canReadTranscript={true}
+                      onOpenTranscriptAt={openTranscriptAt}
+                    />
+                  )
+                }
+                renderLineEnd={(line) =>
+                  webArticle !== null && <ArticleLineLinks line={line} {...webArticle} />
+                }
               />
               <OnboardingNextSteps overviewId={overview.id} />
               <RelatedByTag
@@ -355,22 +369,23 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               />
             </div>
           )}
-          {tab === "Transcript" && (
+          {tab === "Transcript" && video !== null && (
             <TranscriptPanel
-              key={overview.source.id}
-              video={overview.source}
+              key={video.id}
+              video={video}
               openAtMs={transcriptOpenAtMs}
               openedFrom={openedFrom}
               onBackToChapters={() => changeTab("Chapters")}
             />
           )}
-          {tab === "Chapters" && (
+          {tab === "Chapters" && video !== null && (
             <ChaptersPanel
               chapters={overview.chapters}
-              video={overview.source}
+              video={video}
               onOpenTranscriptAt={openTranscriptAt}
             />
           )}
+          {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} />}
         </div>
 
         {/* Where the library's order takes you next. At the foot rather than on the bar:

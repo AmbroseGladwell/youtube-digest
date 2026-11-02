@@ -23,6 +23,7 @@ describe("parseLibraryFilters", () => {
   it("reads valid topic, verdict, status and q params", () => {
     const params = new URLSearchParams({ topic: TOPIC, verdict: "original", status: "read", q: "botox" });
     expect(parseLibraryFilters(params)).toEqual({
+      source: "all",
       topicId: TOPIC,
       novelty: "original",
       status: "read",

@@ -103,7 +103,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
       change: { op: "replace", record },
     });
     const key = sourceKey(overview.source);
-    if (journaled && key !== null) {
+    if (journaled && key !== null && overview.source.kind === "youtube") {
       await appendPendingWrite(transaction, {
         kind: "transcript",
         id: key,

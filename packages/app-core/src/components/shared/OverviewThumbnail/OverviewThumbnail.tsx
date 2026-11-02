@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import type { VideoSource } from "@overview/domain";
+import { sourceImage, sourceName, type Source, type VideoSource } from "@overview/domain";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./OverviewThumbnail.module.scss";
 import { overviewThumbnailTestIds } from "./OverviewThumbnailTestIds.js";
 
 export interface OverviewThumbnailProps {
-  video: VideoSource;
+  video: VideoSource | Source;
   className?: string | undefined;
   to?: string | undefined;
   state?: unknown;
@@ -23,14 +23,40 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
   const [failed, setFailed] = useState(false);
   const animateNavigation = useShouldAnimateNavigation();
 
-  if (!Boolean(video.thumbnailUrl) || failed) {
+  const isArticle = "kind" in video && video.kind === "web";
+  const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
+
+  if (isArticle && (!Boolean(imageUrl) || failed)) {
+    const tile = (
+      <span className={styles.nameTile} data-testid={overviewThumbnailTestIds.nameTile}>
+        {sourceName(video)}
+      </span>
+    );
+    return to ? (
+      <Link
+        className={`${styles.thumbnail} ${styles.link} ${styles.tileHost} ${className ?? ""}`}
+        to={to}
+        state={state}
+        viewTransition={animateNavigation}
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onOpen}
+      >
+        {tile}
+      </Link>
+    ) : (
+      <span className={`${styles.thumbnail} ${styles.tileHost} ${className ?? ""}`}>{tile}</span>
+    );
+  }
+
+  if (!Boolean(imageUrl) || failed) {
     return null;
   }
 
   const image = (
     <img
       className={to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
-      src={video.thumbnailUrl!}
+      src={imageUrl!}
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}

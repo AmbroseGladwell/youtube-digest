@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NOVELTY_LABEL, NOVELTY_ORDER, type Novelty, type Topic } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
-import type { LibraryFilters } from "../../types/LibraryFilters.js";
+import { LIBRARY_SOURCE_LABEL, LIBRARY_SOURCES, type LibraryFilters } from "../../types/LibraryFilters.js";
 import { cappedTags } from "../../util/cappedTags.js";
 import { cappedTopics } from "../../util/cappedTopics.js";
 import styles from "./FilterPanel.module.scss";
@@ -27,9 +27,11 @@ const moreSummary = (filters: LibraryFilters): string => {
     ...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]),
     ...(filters.dubious ? ["Dubious only"] : []),
   ];
-  return [...(verdict.length === 0 ? ["Any verdict"] : verdict), ...(filters.tag === null ? [] : [`#${filters.tag}`])].join(
-    " · ",
-  );
+  return [
+    ...(filters.source === "all" ? [] : [LIBRARY_SOURCE_LABEL[filters.source]]),
+    ...(verdict.length === 0 ? ["Any verdict"] : verdict),
+    ...(filters.tag === null ? [] : [`#${filters.tag}`]),
+  ].join(" · ");
 };
 
 export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags }: FilterPanelProps) {
@@ -47,6 +49,7 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
   const shownTopics = allTopicsShown ? topics : capped.shown;
   const tags = cappedTags(counts.byTag, filters.tag);
   const shownTags = allTagsShown ? counts.byTag : tags.shown;
+  const sources = LIBRARY_SOURCES.filter((source) => (counts.bySource[source] ?? 0) > 0);
 
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
@@ -144,6 +147,32 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
         </button>
         <div id={MORE_PANEL_ID} className={`${styles.morePanel} ${moreShown ? styles.morePanelOpen : ""}`} inert={!moreShown}>
           <div className={styles.morePanelInner}>
+            {sources.length > 1 && (
+              <>
+                <p className={styles.label}>Source</p>
+                <div className={styles.list} role="group" aria-label="Filter by source">
+                  <ListOption
+                    active={filters.source === "all"}
+                    count={counts.total}
+                    onClick={() => onChange({ source: "all" })}
+                    testId={filterPanelTestIds.sourceChip("all")}
+                  >
+                    Any source
+                  </ListOption>
+                  {sources.map((source) => (
+                    <ListOption
+                      key={source}
+                      active={filters.source === source}
+                      count={counts.bySource[source] ?? 0}
+                      onClick={() => onChange({ source })}
+                      testId={filterPanelTestIds.sourceChip(source)}
+                    >
+                      {LIBRARY_SOURCE_LABEL[source]}
+                    </ListOption>
+                  ))}
+                </div>
+              </>
+            )}
             <p className={styles.label}>Verdict</p>
             <div className={styles.list} role="group" aria-label="Filter by verdict">
               <ListOption

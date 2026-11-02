@@ -1,8 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { OverviewId, VideoId } from "./Brands.js";
 import type { Overview } from "./Overview.js";
+import type { YouTubeSource } from "./Source.js";
 
-export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
+export type VideoOverview = Overview & { source: YouTubeSource };
+
+export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview => ({
   id: OverviewId.parse(randomUUID()),
   source: {
     kind: "youtube",
@@ -19,6 +22,7 @@ export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   captureReason: null,
   fromPlaylist: null,
   madeOn: null,
+  article: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
@@ -31,4 +35,4 @@ export const makeOverview = (overrides: Partial<Overview> = {}): Overview => ({
   watchAnyway: null,
   chapters: null,
   ...overrides,
-});
+}) as VideoOverview;

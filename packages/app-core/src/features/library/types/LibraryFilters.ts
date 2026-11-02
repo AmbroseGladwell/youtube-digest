@@ -1,6 +1,12 @@
 import type { Novelty, TopicId } from "@overview/domain";
 
+export const LIBRARY_SOURCES = ["video", "article"] as const;
+export type LibrarySource = (typeof LIBRARY_SOURCES)[number];
+
+export const LIBRARY_SOURCE_LABEL: Record<LibrarySource, string> = { video: "Videos", article: "Articles" };
+
 export interface LibraryFilters {
+  source: LibrarySource | "all";
   topicId: TopicId | "all";
   novelty: Novelty | "all";
   status: "all" | "read" | "unread";
@@ -12,6 +18,7 @@ export interface LibraryFilters {
 }
 
 export const NO_LIBRARY_FILTERS: LibraryFilters = {
+  source: "all",
   topicId: "all",
   novelty: "all",
   status: "all",

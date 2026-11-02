@@ -1,5 +1,7 @@
 import { tagUsage, type Novelty, type TagCount, type TopicId } from "@overview/domain";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
+import type { LibrarySource } from "../types/LibraryFilters.js";
+import { librarySourceOf } from "./librarySourceOf.js";
 
 export interface LibraryFilterCounts {
   total: number;
@@ -10,6 +12,7 @@ export interface LibraryFilterCounts {
   byTopic: Record<string, number>;
   byNovelty: Record<string, number>;
   byTag: TagCount[];
+  bySource: Partial<Record<LibrarySource, number>>;
 }
 
 // total counts every record the library holds, readable or not: a library that says 28
@@ -19,6 +22,7 @@ export interface LibraryFilterCounts {
 export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCounts {
   const byTopic: Record<string, number> = {};
   const byNovelty: Record<string, number> = {};
+  const bySource: Partial<Record<LibrarySource, number>> = {};
   let unread = 0;
   let favourite = 0;
   let dubious = 0;
@@ -33,6 +37,8 @@ export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCount
     }
     const { overview } = entry;
     if (overview.verdict?.dubious) dubious += 1;
+    const source = librarySourceOf(overview);
+    bySource[source] = (bySource[source] ?? 0) + 1;
     for (const topicId of overview.topicIds as TopicId[]) {
       byTopic[topicId] = (byTopic[topicId] ?? 0) + 1;
     }
@@ -44,5 +50,5 @@ export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCount
     entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]),
   );
 
-  return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag };
+  return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag, bySource };
 }

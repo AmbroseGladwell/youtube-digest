@@ -11,7 +11,8 @@ export interface OverviewActionsMenuProps {
   topicCount: number;
   hasReason: boolean;
   read: boolean;
-  videoUrl: string;
+  sourceUrl: string;
+  isArticle: boolean;
   // Absent where there is no account to share under, which is how the item hides itself
   // rather than offering a control that cannot work (docs/features/sharing.md).
   onShare: (() => void) | null;
@@ -31,7 +32,8 @@ export function OverviewActionsMenu({
   topicCount,
   hasReason,
   read,
-  videoUrl,
+  sourceUrl,
+  isArticle,
   compact,
   webApp,
   onShare,
@@ -134,23 +136,23 @@ export function OverviewActionsMenu({
           <a
             role="menuitem"
             className={styles.item}
-            href={videoUrl}
+            href={sourceUrl}
             target="_blank"
             rel="noopener"
-            onClick={choose("watchOnYouTube", () => undefined)}
+            onClick={choose(isArticle ? "readArticle" : "watchOnYouTube", () => undefined)}
             data-testid={overviewActionsMenuTestIds.watchItem}
           >
-            Watch on YouTube
+            {isArticle ? "Read the article" : "Watch on YouTube"}
           </a>
           {canWriteClipboard() && (
             <button
               type="button"
               role="menuitem"
               className={styles.item}
-              onClick={choose("copyYouTubeLink", () => void navigator.clipboard.writeText(videoUrl))}
+              onClick={choose(isArticle ? "copyArticleLink" : "copyYouTubeLink", () => void navigator.clipboard.writeText(sourceUrl))}
               data-testid={overviewActionsMenuTestIds.copyLinkItem}
             >
-              Copy YouTube link
+              {isArticle ? "Copy article link" : "Copy YouTube link"}
             </button>
           )}
           {compact ? (

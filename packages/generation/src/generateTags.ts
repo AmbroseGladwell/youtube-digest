@@ -1,3 +1,4 @@
+import { sourceName } from "@overview/domain";
 import { z } from "zod";
 import { resolveTags, type Overview, type TagAliases, type TagCount } from "@overview/domain";
 import type { GenerationClient } from "./generateOverview.js";
@@ -20,7 +21,7 @@ export async function generateTags(client: GenerationClient, input: TagsInput): 
     systemPrompt: `You tag a saved overview of a YouTube video for its reader.\n\n${tagInstructions(input.existingTags)}`,
     userMessage: [
       `Title: ${overview.source.title}`,
-      `Channel: ${overview.source.channel}`,
+      `From: ${sourceName(overview.source)}`,
       `In one line: ${overview.inOneLine}`,
       `Core claim: ${overview.coreClaim}`,
       "Key points:",

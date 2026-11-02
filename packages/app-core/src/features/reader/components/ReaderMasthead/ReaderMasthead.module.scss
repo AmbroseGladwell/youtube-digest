@@ -337,3 +337,11 @@
     display: inline;
   }
 }
+
+// Design 77o: the site and the kind above the title.
+.sourceLine {
+  margin: 0 0 0.25rem;
+  color: var(--stone);
+  font-size: 0.78125rem;
+  font-weight: 600;
+}
