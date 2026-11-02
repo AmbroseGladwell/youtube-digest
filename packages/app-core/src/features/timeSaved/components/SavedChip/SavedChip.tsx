@@ -51,7 +51,10 @@ export function SavedChip({ minutes, countUp = false, leaving = false }: SavedCh
         Saved you
       </span>
       <span className={styles.number} aria-hidden="true">
-        {shown} min
+        <span className={styles.count} style={{ minWidth: `${String(minutes).length}ch` }}>
+          {shown}
+        </span>{" "}
+        min
       </span>
     </span>
   );
