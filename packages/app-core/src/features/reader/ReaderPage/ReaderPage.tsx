@@ -120,6 +120,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
   const onetimeHost = oneTimeAccessHost(location.state);
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
+  // The chip comes in where the reader is looking: above the end of the note when marked
+  // read from there, in the head from anywhere else (docs/features/time-saved.md).
+  const [readAtNoteEnd, setReadAtNoteEnd] = useState(false);
 
   // A chapter opens the transcript at its start; choosing the tab yourself opens it at
   // the top, so the target is cleared by every other route to it.
@@ -279,6 +282,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
   };
   const toggleRead = (from: "masthead" | "actionsMenu" | "noteEnd") => {
+    if (!state.read) setReadAtNoteEnd(from === "noteEnd");
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
@@ -308,7 +312,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         <ReaderMasthead
           overview={overview}
           metaParts={overviewMetaParts(overview)}
-          savedChip={savedChip}
+          savedChip={readAtNoteEnd ? null : savedChip}
           read={state.read}
           favourite={state.favourite}
           playing={notePlayer.playing}
@@ -400,6 +404,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               <NoteEndActions
                 read={state.read}
                 favourite={state.favourite}
+                savedChip={readAtNoteEnd ? savedChip : null}
                 onToggleRead={() => toggleRead("noteEnd")}
                 onToggleFavourite={() => toggleFavourite("noteEnd")}
               />
@@ -523,6 +528,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             onCycleRate={() => player.cycleRate()}
             onAction={(action) => {
               if (action === "markRead") {
+                setReadAtNoteEnd(false);
                 reader.overview.readSwitched({ read: true, from: "playerBar" });
                 setOverviewState.mutate({ overviewId, patch: { read: true } });
               } else if (action === "tryAgain") {
