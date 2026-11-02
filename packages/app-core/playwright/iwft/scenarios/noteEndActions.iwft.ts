@@ -10,6 +10,10 @@ const SIGNED_IN = {
 };
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
+// Every factory note takes a minute to read, so a video of n minutes saves n - 1.
+const lasting = (minutes: number) =>
+  makeOverview({ video: { ...makeOverview().video, durationMs: minutes * 60_000 } });
+
 test("Mark read at the end of the note marks it read, agrees with the menu, and undoes", async ({
   launcher,
   backendSimulator,
@@ -76,6 +80,38 @@ test("what the reader does at the end of the note is counted as done from there"
     ]);
 });
 
+test("marking it read here brings the saving in below the buttons, and nothing moves as it comes and goes", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(lasting(11));
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  const before = await reader.noteEndButtonPositions();
+
+  await reader.clickNoteEndMarkRead();
+
+  await reader.verifySavedChipSays("Saved you 10 min");
+  await reader.verifySavedChipIsCentredBelowNoteEndButtons();
+  expect(await reader.noteEndButtonPositions()).toEqual(before);
+
+  await reader.clickNoteEndMarkRead();
+
+  await reader.verifyNoSavedChip();
+  expect(await reader.noteEndButtonPositions()).toEqual(before);
+});
+
+test("marking it read from the head's menu keeps the saving in the head", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(lasting(11));
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickMarkRead();
+
+  await reader.verifySavedChipSays("Saved you 10 min");
+  await reader.verifySavedChipIsInHead();
+});
+
 test("the buttons belong to the note, so the other tabs don't show them", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary();
@@ -88,7 +124,7 @@ test("the buttons belong to the note, so the other tabs don't show them", async 
 });
 
 test("the panel's note ends with them too", async ({ launcher, backendSimulator }) => {
-  const overview = makeOverview();
+  const overview = lasting(11);
   backendSimulator.overviews.seed({
     ...overview,
     source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
@@ -100,4 +136,5 @@ test("the panel's note ends with them too", async ({ launcher, backendSimulator 
 
   await reader.verifyPanelReadButtonReads("Read");
   await reader.verifyNoteEndReadButtonReads("Read");
+  await reader.verifySavedChipIsCentredBelowNoteEndButtons();
 });
