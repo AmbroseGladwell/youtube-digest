@@ -13,6 +13,9 @@ the mark as the only thing that is ours, and **18c**'s state set on top of it.
 one thing shouting in it. 18a is 17c refined: the pill is YouTube's, down to the faint
 top-to-bottom lift and the hairline edge, and the orange appears only in the ring mark.
 
+The orange is the reader's accent now (`appearance.md`, "The logo"): the mark and the ready
+state follow it through `overviewButtonAccent.ts`, and Orange keeps the values here.
+
 The pill is transcribed from the design rather than approximated, including the two
 schemes — with two corrections made against the live site, both on the same principle:
 matching the row is the entire argument for this treatment, so where the drawing and

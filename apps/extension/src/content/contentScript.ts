@@ -1,3 +1,5 @@
+import { DEFAULT_ACCENT_COLOUR, type AccentColour } from "@overview/domain/accentPalette";
+import { onAccentColourChanged, readAccentColour } from "../accentColourStorage.js";
 import {
   BridgeMessage,
   IDLE_BUTTON_STATE,
@@ -15,6 +17,7 @@ const RESIZE_DELAY_MS = 120;
 const CONFIRM_WITHIN_MS = 10_000;
 
 let button: OverviewButton | null = null;
+let accentColour: AccentColour = DEFAULT_ACCENT_COLOUR;
 let watchedVideoId: string | null = null;
 let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
 let confirmTimer: ReturnType<typeof setTimeout> | null = null;
@@ -103,6 +106,7 @@ function reconcile(): void {
   if (button === null || !button.element.isConnected) {
     for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) stale.remove();
     button = new OverviewButton(press);
+    button.setAccentColour(accentColour);
     watchedVideoId = null;
   }
 
@@ -156,3 +160,11 @@ window.addEventListener("resize", () => scheduleReconcile(RESIZE_DELAY_MS));
 
 reconcile();
 observeRebuilds();
+
+async function followAccentColour(): Promise<void> {
+  accentColour = await readAccentColour();
+  button?.setAccentColour(accentColour);
+}
+
+void followAccentColour();
+onAccentColourChanged(() => void followAccentColour());

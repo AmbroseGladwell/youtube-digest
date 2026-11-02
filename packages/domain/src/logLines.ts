@@ -179,6 +179,8 @@ export const apiLogLines = coded("api", {
   settings: {
     analyticsOptOutSet: line("info", "analytics opt-out set", "A reader turned sharing on or off in Settings."),
     narrationVoiceChosen: line("info", "narration voice chosen", "A reader picked a different narration voice."),
+    themeChosen: line("info", "theme chosen", "A reader chose System, Light or Dark."),
+    accentColourChosen: line("info", "accent colour chosen", "A reader chose an accent colour."),
     timeSavedMilestonesChanged: line("info", "time-saved milestones changed", "A reader changed which milestones they are shown."),
   },
   playlists: {

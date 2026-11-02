@@ -34,7 +34,7 @@
   cursor: pointer;
 }
 
-// Action orange with a white label: + New, Generate, Create overview, Save keys.
+// The action colour with its own label colour: + New, Generate, Create overview, Save keys.
 @mixin action-control {
   @include control-motion;
   @include control-disabled;

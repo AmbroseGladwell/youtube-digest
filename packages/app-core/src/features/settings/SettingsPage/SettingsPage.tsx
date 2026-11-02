@@ -3,6 +3,10 @@ import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
+import {
+  APPEARANCE_STANDFIRST,
+  AppearanceSection,
+} from "../../appearance/components/AppearanceSection/AppearanceSection.js";
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
 import { PlaylistsSection } from "../../playlists/components/PlaylistsSection/PlaylistsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
@@ -43,6 +47,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   account: "Who is signed in, and whether this device is in step.",
   voice: NARRATION_VOICE_STANDFIRST,
   personalisation: PERSONALISATION_STANDFIRST,
+  appearance: APPEARANCE_STANDFIRST,
   // Design 110a moves the standing note to the foot of the panel, so the list and the
   // choice land above the fold in the 400x600 panel.
   keys: null,
@@ -63,6 +68,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <NarrationVoicePicker scrollToChosen labelledBy={settingsSectionHeadingId("voice")} />;
     case "personalisation":
       return <PersonalisationSection />;
+    case "appearance":
+      return <AppearanceSection />;
     case "keys":
       return <ApiKeysSection />;
     case "connections":
@@ -103,7 +110,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
       key={summary.id}
       id={summary.id}
       title={summary.title}
-      intro={INTROS[summary.id]}
+      intro={isPanel && summary.id === "appearance" ? null : INTROS[summary.id]}
       focusOnArrival={requested !== undefined}
     >
       <SectionBody id={summary.id} />

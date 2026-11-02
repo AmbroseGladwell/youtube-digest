@@ -174,7 +174,7 @@
 .matchCountEmpty {
   min-width: 0;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--alert);
 }
 
 .searchGap {
@@ -326,7 +326,7 @@
 }
 
 .matchCurrent {
-  background: var(--brand);
+  background: var(--action);
   color: var(--on-action);
 }
 

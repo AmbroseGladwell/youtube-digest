@@ -1,13 +1,17 @@
 import {
+  ACCENT_COLOUR_NAMES,
   MILESTONES,
   PROVIDER_SHORT_LABEL,
+  THEME_MODE_NAMES,
   formatTimeSaved,
   modelLabel,
   narrationAccent,
   narrationVoiceName,
+  type AccentColour,
   type Provider,
   type NarrationVoice,
   type SectionsEnabled,
+  type ThemeMode,
 } from "@overview/domain";
 import { modelFor, type ModelByProvider } from "@overview/domain";
 import type { SyncStatus } from "@overview/sync";
@@ -69,6 +73,10 @@ export function personalisationRowValue(sectionsEnabled: SectionsEnabled, reader
         ? "Summary and key points only"
         : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
   return `${readerContext ?? "About you not set"} · ${sections}`;
+}
+
+export function appearanceRowValue(theme: ThemeMode, accentColour: AccentColour): string {
+  return `${THEME_MODE_NAMES[theme]} · ${ACCENT_COLOUR_NAMES[accentColour]}`;
 }
 
 export function milestonesRowValue(minutes: number): string {
