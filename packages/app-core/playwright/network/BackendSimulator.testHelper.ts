@@ -24,6 +24,7 @@ import {
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
+  type ArticleRead,
   type OurKeyGenerationRequest,
   type OverviewUsage,
   type OutboxEntry,
@@ -157,6 +158,8 @@ export class BackendSimulator {
   #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
+  #articleReads: string[] = [];
+  #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
@@ -706,6 +709,11 @@ export class BackendSimulator {
       };
     };
 
+    await this.#page.route("**/api/articles/read", (route) => {
+      this.#articleReads.push((route.request().postDataJSON() as { url: string }).url);
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
+    });
+
     await this.#page.route("**/api/generations", (route) =>
       route.request().method() === "GET"
         ? this.#respond(route, EndpointKey.OUR_KEY_STATUS, {
@@ -1060,6 +1068,14 @@ export class BackendSimulator {
       this.#sessionHasEnded = true;
       this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
+  };
+
+  // A pasted link, as our server's fetch answers it (docs/features/pasted-article-links.md).
+  articles = {
+    answerWith: (read: ArticleRead): void => {
+      this.#articleAnswer = read;
+    },
+    reads: (): string[] => [...this.#articleReads],
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

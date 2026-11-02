@@ -19,6 +19,7 @@
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@fastify/static": "^10.1.5",
+    "@overview/articles": "*",
     "@overview/domain": "*",
     "@overview/generation": "*",
     "@overview/transcripts": "*",
@@ -26,12 +27,14 @@
     "aws4fetch": "^1.0.20",
     "fastify": "^5.12.5",
     "fastify-plugin": "^6.0.0",
+    "jsdom": "^26.1.0",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
     "undici": "^7.30.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/jsdom": "^21.1.7",
     "@electric-sql/pglite": "^0.5.8",
     "@overview/store-conformance": "*",
     "@overview/store-local": "*",

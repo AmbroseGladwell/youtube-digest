@@ -181,6 +181,9 @@ export const apiLogLines = coded("api", {
     narrationVoiceChosen: line("info", "narration voice chosen", "A reader picked a different narration voice."),
     timeSavedMilestonesChanged: line("info", "time-saved milestones changed", "A reader changed which milestones they are shown."),
   },
+  articles: {
+    read: line("info", "article read", "A pasted link was fetched, and how that went; `outcome` is the reason it failed. Never the link."),
+  },
   playlists: {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),
     unavailable: line("info", "playlist unavailable", "A playlist could not be read; `reason` says why."),

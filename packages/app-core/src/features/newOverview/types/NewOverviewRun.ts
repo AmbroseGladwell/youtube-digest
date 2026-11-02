@@ -10,6 +10,7 @@ export interface ArticleRun {
   asking: boolean;
   // Reached by right-click, on activeTab, so Create may still ask next time (design 77ah).
   oneTimeAccess: boolean;
+  fetched: boolean;
   regenerating: boolean;
   failure: ArticleFailure | null;
 }

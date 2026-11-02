@@ -26,6 +26,8 @@ export interface ArticleRunRequest extends StartOverviewRunOptions {
   access: Promise<boolean>;
   asking: boolean;
   oneTimeAccess: boolean;
+  // Read by our server from a pasted link, not from a page beside the panel.
+  fetched?: boolean;
   read: () => Promise<ArticleRead>;
 }
 
@@ -127,6 +129,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 words: null,
                 asking: articleRequest.asking,
                 oneTimeAccess: articleRequest.oneTimeAccess,
+                fetched: articleRequest.fetched === true,
                 regenerating: options.overviewId !== undefined,
                 failure: null,
               },
