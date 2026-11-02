@@ -70,7 +70,7 @@ const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
-const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar"]);
+const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
