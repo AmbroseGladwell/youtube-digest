@@ -20,6 +20,7 @@ import {
   StartupFailure,
 } from "@overview/app-core";
 import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
+import { writeAccentColour } from "./accentColourStorage.js";
 import { appBuild } from "./appBuild.js";
 import { chromeProviderPermissions } from "./chromeProviderPermissions.js";
 import { writeErrorDestination } from "./errorDestination.js";
@@ -108,6 +109,7 @@ export async function mountApp({
         providerPermissions={chromeProviderPermissions}
         defaultApiUrl={PRODUCTION_API_URL}
         errorDestinationMirror={writeErrorDestination}
+        accentMirror={writeAccentColour}
         build={appBuild}
       />
     </StrictMode>,

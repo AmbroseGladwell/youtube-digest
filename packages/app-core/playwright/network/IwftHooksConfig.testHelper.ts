@@ -77,4 +77,7 @@ export interface IwftHooksConfig {
   // Whether this shell hands where errors go to a worker, as the extension does
   // (docs/architecture/errors-and-logs.md, "The service worker").
   errorDestinationMirror?: boolean;
+  // Whether this shell hands the accent to a worker, as the extension does
+  // (docs/features/appearance.md, "The logo").
+  accentMirror?: boolean;
 }

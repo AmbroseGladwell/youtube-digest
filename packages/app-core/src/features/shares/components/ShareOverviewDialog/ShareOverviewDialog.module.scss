@@ -107,7 +107,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   @include controls.section-label;
 
   margin: 0;
-  color: var(--accent);
+  color: var(--alert);
 }
 
 .status {
@@ -239,7 +239,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   @include controls.ghost-pill;
   @include controls.pill-md;
 
-  color: var(--accent);
+  color: var(--alert);
 }
 
 @media (max-width: 47.9375rem) {

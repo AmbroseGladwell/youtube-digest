@@ -19,9 +19,13 @@ of the rail, a form or a note is a box one step off the ground. The design's own
 > them. Action orange is #CF4718 so white labels pass contrast; the brand orange #E2511E
 > stays on the mark and progress.
 
+The reader can now choose the accent and override the theme (`appearance.md`). Everything
+below describes the roles in Orange, the default; every accent fills the same roles, and a
+failure is `--alert`, which doesn't change.
+
 Two oranges, then, and they are not interchangeable:
 
-- **Action** (`--action`, `#cf4718`) is the fill under a white label, and it is spent only
+- **Action** (`--action`, `#cf4718`) is the fill under a label in `--on-action`, and it is spent only
   on the one action that makes something: `+ New`, `Generate`, `Create overview`, the
   hero's `Generate overview`, `Read overview` when a run has landed, `Save keys` and the
   sync panel's own submits. Everything else is a surface pill.
@@ -239,7 +243,7 @@ with a 16px search mark that is not a button, the query, then a rule and the cou
 its steppers. The three round controls inside it — clear, previous, next — are one 30px
 circle, one colour and one hover, and the browser's own blue cancel glyph is hidden in
 favour of `ClearFieldButton`, which the library's search box uses too. The count is 12.5px
-tabular in the muted ink; `No matches` takes its place in `--accent`, and the steppers
+tabular in the muted ink; `No matches` takes its place in `--alert`, and the steppers
 stay put and disabled rather than vanishing, so the field does not change width as you
 type. Enter walks to the next hit, Shift+Enter the previous, and Escape empties the field
 before it gives the keyboard back.

@@ -164,6 +164,10 @@ Five folders, five different questions.
 - `time-saved.md` — the running total of time saved by reading instead of watching: how it
   is counted and what it leaves out, the rolling figure and its breakdown, the "Saved you"
   moment, and the ten milestones with the rules for when each shows, stored on the account.
+- `appearance.md` — Settings › Appearance: the theme and the eight accent colours on the
+  account, what each role must clear and the test that holds it, why failure is a fixed
+  `--alert`, the script that stops a flash, the signed-out rule, and where the logo follows
+  the accent and where it can't.
 - `settings.md` — Settings as a short list of sections: which sections exist and when each
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.
