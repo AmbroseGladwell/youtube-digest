@@ -2,10 +2,25 @@
 
 .root {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+// Held open while empty, so the chip arriving or leaving moves nothing below it.
+.saved {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+}
+
+.buttons {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding-top: 0.75rem;
 }
 
 .read {

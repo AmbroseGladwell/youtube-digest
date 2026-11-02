@@ -50,6 +50,12 @@ has its own *Mark read* beside *Listen* for this (34v), and the chip starts the 
 when the reading line has no room for it. An overview with no
 length, a watch verdict or nothing saved shows no chip.
 
+Marked read from the end of the note, the chip comes in centred below `Mark read` and the
+favourite instead, because the head has scrolled away by then. Its row is held open from the
+start and the count-up holds the final number's width, so nothing moves when it arrives,
+counts or leaves. Every other control keeps it on the reading line: a chip at the note's end
+would be out of sight from the head, and missing altogether on the other tabs.
+
 ## Milestones
 
 30 minutes, 1, 5, 10, 15, 20, 30, 50, 75 and 100 hours, the last for now (`MILESTONES`).
