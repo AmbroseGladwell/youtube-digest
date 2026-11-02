@@ -5,7 +5,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { SHARE_PAYLOAD_ELEMENT_ID, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled } from "@overview/domain";
+import { SHARE_PAYLOAD_ELEMENT_ID, type AccentColour, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -71,6 +71,9 @@ export interface LaunchOptions {
   // The time-saved milestones the account has already crossed or dismissed.
   milestones?: MilestoneMarks;
   showMilestoneCards?: boolean;
+  theme?: ThemeMode;
+  accentColour?: AccentColour;
+  accentMirror?: boolean;
   onlyMyKey?: boolean;
   readerContext?: string;
   sectionsEnabled?: SectionsEnabled;
@@ -149,6 +152,8 @@ export class Launcher {
           ...(options.modelByProvider === undefined ? {} : { modelByProvider: options.modelByProvider }),
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),
           ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
+          ...(options.theme === undefined ? {} : { theme: options.theme }),
+          ...(options.accentColour === undefined ? {} : { accentColour: options.accentColour }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
           ...(options.readerContext === undefined ? {} : { readerContext: options.readerContext }),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
@@ -171,6 +176,7 @@ export class Launcher {
         youTubeFetch: options.youTubeFetch,
         failingReads: options.failingReads,
         errorDestinationMirror: options.errorDestinationMirror,
+        accentMirror: options.accentMirror,
       },
     });
   };
@@ -222,6 +228,13 @@ export class Launcher {
   // Every destination the app handed the worker, oldest first.
   readErrorDestinations = (): Promise<Array<{ apiUrl: string | null; token: string | null }>> =>
     test.step("Launcher.readErrorDestinations", () => this.page.evaluate(() => window.__iwftErrorDestinations__ ?? []));
+
+  // Every accent the app handed the worker, oldest first.
+  readAccentMirror = (): Promise<AccentColour[]> =>
+    test.step("Launcher.readAccentMirror", () => this.page.evaluate(() => window.__iwftAccentMirror__ ?? []));
+
+  settingsStoreRead = (): Promise<Settings> =>
+    test.step("Launcher.settingsStoreRead", () => this.page.evaluate(() => window.__iwftStores__.settingsStore.get()));
 
   readPlaybackSeeks = (): Promise<number[]> =>
     test.step("Launcher.readPlaybackSeeks", () =>

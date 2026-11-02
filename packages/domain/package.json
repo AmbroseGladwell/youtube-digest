@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./accentPalette": {
+      "types": "./dist/accentPalette.d.ts",
+      "default": "./dist/accentPalette.js"
     }
   },
   "scripts": {

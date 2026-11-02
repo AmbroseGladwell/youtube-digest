@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AccentColour, ThemeMode } from "./Appearance.js";
 import { OverviewId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
@@ -150,6 +151,7 @@ export const SettingsSection = z.enum([
   "account",
   "voice",
   "personalisation",
+  "appearance",
   "keys",
   "connections",
   "playlists",
@@ -527,6 +529,10 @@ export const analyticsEvents = {
         section: SectionsEnabled.keyof(),
         on: z.boolean(),
       }),
+    },
+    appearance: {
+      themeChosen: event("The reader chooses System, Light or Dark in Settings › Appearance", { theme: ThemeMode }),
+      accentChosen: event("The reader chooses an accent colour in Settings › Appearance", { accentColour: AccentColour }),
     },
     sharedLinks: {
       linkCopied: event("The reader copies a share link from Settings › Shared links", { overviewId: OverviewId }),
