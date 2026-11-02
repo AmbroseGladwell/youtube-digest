@@ -1,9 +1,13 @@
+@use "sass:map";
+
 // The stone theme's tokens, from "The Overview - Stone.dc.html" (docs/features/stone-theme.md).
-// Warm neutrals only: surfaces and pills carry structure, and orange is spent on actions,
-// progress, search hits and the mark. Action orange (#cf4718) is what white labels sit
-// on; the brand orange (#e2511e) stays on the mark, the progress bars and the focus ring.
+// Warm neutrals only: surfaces and pills carry structure, and one accent is spent on actions,
+// progress, search hits and the mark. --action is what labels sit on; --brand stays on the
+// mark, the progress bars and the focus ring. The accent is the reader's choice and :root
+// below is Orange (docs/features/appearance.md); --alert stays orange-red under all of them.
 //
-// Contrast, checked on the ground each colour sits on: --muted (#5f5c57 on #f6f4f0) is
+// Contrast in Orange, checked on the ground each colour sits on (accentContrast.test.ts does
+// the same for every accent): --muted (#5f5c57 on #f6f4f0) is
 // 6.6:1, --accent (#b03c12) 6.2:1, and white on --action 4.6:1. The dark --muted
 // (#a6a49e on #151618) is 7.4:1. Preserve those if the palette moves.
 //
@@ -11,6 +15,8 @@
 // 80–160ms, arrivals in 240–300ms, on --motion-ease unless the animation says otherwise.
 
 :root {
+  color-scheme: light dark;
+
   --ground: #f6f4f0;
   --surface: #eae7e1;
   --card: #ffffff;
@@ -37,6 +43,7 @@
   --on-action: #ffffff;
   --brand-wash: color-mix(in srgb, #e2511e 10%, transparent);
   --brand-tint: color-mix(in srgb, #e2511e 18%, #f6f4f0);
+  --alert: #b03c12;
 
   --youtube-pill: #eceae6;
   --youtube-pill-ink: #151618;
@@ -133,6 +140,7 @@
   --accent-hover: #f5a07f;
   --brand-wash: color-mix(in srgb, #e2511e 16%, transparent);
   --brand-tint: color-mix(in srgb, #e2511e 30%, #151618);
+  --alert: #f0794a;
 
   --youtube-pill: #272727;
   --youtube-pill-ink: #f2efe9;
@@ -186,5 +194,87 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     @include dark-tokens;
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+// Orange is :root and the dark block above. packages/domain's ACCENT_PALETTES carries the
+// same values, and accentContrast.test.ts holds the two together.
+$accents: (
+  "gold": (
+    "brand": #9d7f02, "action": #f7c900, "action-hover": #e3b90c, "action-press": #d0aa09,
+    "accent": #776000, "accent-hover": #614d00, "on-action": #151618,
+    "dark-brand": #f7c900, "dark-mark": #f7c900, "dark-accent-hover": #ffdf7c,
+  ),
+  "lime": (
+    "brand": #558c03, "action": #4d8100, "action-hover": #416e00, "action-press": #396100,
+    "accent": #416e00, "accent-hover": #305400, "on-action": #ffffff,
+    "dark-brand": #6cb201, "dark-mark": #6cb201, "dark-accent-hover": #84c939,
+  ),
+  "emerald": (
+    "brand": #058f62, "action": #00845a, "action-hover": #00704c, "action-press": #026343,
+    "accent": #00704c, "accent-hover": #005639, "on-action": #ffffff,
+    "dark-brand": #0bb67d, "dark-mark": #0bb67d, "dark-accent-hover": #5ecb9a,
+  ),
+  "teal": (
+    "brand": #008c89, "action": #00817f, "action-hover": #006e6c, "action-press": #04615f,
+    "accent": #006e6c, "accent-hover": #005453, "on-action": #ffffff,
+    "dark-brand": #09b2ae, "dark-mark": #09b2ae, "dark-accent-hover": #56c8c3,
+  ),
+  "sky": (
+    "brand": #0285c0, "action": #057bb1, "action-hover": #006898, "action-press": #025c86,
+    "accent": #006898, "accent-hover": #025074, "on-action": #ffffff,
+    "dark-brand": #34a9e8, "dark-mark": #34a9e8, "dark-accent-hover": #72bfef,
+  ),
+  "violet": (
+    "brand": #8a6ad5, "action": #8160ca, "action-hover": #6c53a9, "action-press": #61479c,
+    "accent": #6c53a9, "accent-hover": #563a8f, "on-action": #ffffff,
+    "dark-brand": #aa90ef, "dark-mark": #aa90ef, "dark-accent-hover": #beacf4,
+  ),
+  "raspberry": (
+    "brand": #d44a84, "action": #c93f7b, "action-hover": #a93868, "action-press": #9b2a5c,
+    "accent": #a93868, "accent-hover": #8c1b50, "on-action": #ffffff,
+    "dark-brand": #f277a5, "dark-mark": #f277a5, "dark-accent-hover": #f99bbb,
+  ),
+);
+
+@mixin dark-accent($palette) {
+  --brand: #{map.get($palette, "dark-brand")};
+  --mark: #{map.get($palette, "dark-mark")};
+  --accent: #{map.get($palette, "dark-mark")};
+  --accent-hover: #{map.get($palette, "dark-accent-hover")};
+  --brand-wash: color-mix(in srgb, #{map.get($palette, "brand")} 16%, transparent);
+  --brand-tint: color-mix(in srgb, #{map.get($palette, "brand")} 30%, #151618);
+}
+
+@each $name, $palette in $accents {
+  :root[data-accent="#{$name}"] {
+    --brand: #{map.get($palette, "brand")};
+    --mark: #{map.get($palette, "brand")};
+    --accent: #{map.get($palette, "accent")};
+    --accent-hover: #{map.get($palette, "accent-hover")};
+    --action: #{map.get($palette, "action")};
+    --action-hover: #{map.get($palette, "action-hover")};
+    --action-press: #{map.get($palette, "action-press")};
+    --on-action: #{map.get($palette, "on-action")};
+    --brand-wash: color-mix(in srgb, #{map.get($palette, "brand")} 10%, transparent);
+    --brand-tint: color-mix(in srgb, #{map.get($palette, "brand")} 18%, #f6f4f0);
+  }
+
+  :root[data-accent="#{$name}"][data-theme="dark"] {
+    @include dark-accent($palette);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root[data-accent="#{$name}"]:not([data-theme="light"]) {
+      @include dark-accent($palette);
+    }
   }
 }

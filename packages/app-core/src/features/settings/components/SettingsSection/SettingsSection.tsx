@@ -32,7 +32,11 @@ export function SettingsSection({ id, title, intro, focusOnArrival, children }: 
       >
         {title}
       </h2>
-      {intro !== null && <p className={styles.intro}>{intro}</p>}
+      {intro !== null && (
+        <p className={styles.intro} data-testid={settingsSectionTestIds.intro(id)}>
+          {intro}
+        </p>
+      )}
       {children}
     </section>
   );

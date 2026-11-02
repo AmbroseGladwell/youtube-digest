@@ -19,6 +19,7 @@ In order, each with the value its row shows:
 | Connections | `/settings/connections` | "N connected" or "None", or "Sign in first" | the shell can sync |
 | Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |
 | Personalisation | `/settings/personalisation` | "Every section", "3 of 4 sections", or "Summary and key points only" | always (`personalisation.md`) |
+| Appearance | `/settings/appearance` | theme · accent, e.g. "System · Orange" | always (`appearance.md`) |
 | Milestones | `/settings/milestones` | the time saved · how many of the ten milestones are reached, e.g. "9h 47m saved · 3 of 10" | always |
 | YouTube playlists | `/settings/playlists` | "Following 3" or "None" | there is a server to read playlists through (`playlists.md`) |
 | Shared links | `/settings/shared` | "3 shared", or "None" | there is an account to share under (`docs/features/sharing.md`) |
@@ -38,7 +39,7 @@ something a reader checks, not something they set, so it belongs with the other 
 their account rather than beside the version number. The same turn moved Narration voice
 below Connections and Milestones above YouTube playlists.
 
-Personalisation (OV-46) sits after Narration voice, and is described in `personalisation.md`. Privacy sits between
+Personalisation (OV-46) sits after Narration voice, and is described in `personalisation.md`. Appearance follows it (`appearance.md`). Privacy sits between
 Shared links and About (`analytics-consent.md`). About stays last, with the privacy policy
 and terms linked under the version. Connections is described in `mcp-connector.md`, YouTube
 playlists in `playlists.md`, Milestones in `time-saved.md`, Shared links in `sharing.md`.

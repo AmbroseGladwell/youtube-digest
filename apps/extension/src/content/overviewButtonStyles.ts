@@ -1,3 +1,5 @@
+import { accentButtonCss } from "./overviewButtonAccent.js";
+
 export const OVERVIEW_BUTTON_ID = "overview-injected-button";
 
 const STYLE_ID = "overview-injected-button-style";
@@ -115,8 +117,9 @@ html[dark] #${OVERVIEW_BUTTON_ID}[data-state="ready"] {
   color: #F0794A;
 }
 html[dark] #${OVERVIEW_BUTTON_ID}[data-state="ready"]:hover {
-  background: linear-gradient(180deg, #4a352a 0%, #3a2820 100%);
+  background: linear-gradient(180deg, #402e28 0%, #3a2820 100%);
 }
+${accentButtonCss(OVERVIEW_BUTTON_ID)}
 `;
 
 export function ensureOverviewButtonStyles(): void {
