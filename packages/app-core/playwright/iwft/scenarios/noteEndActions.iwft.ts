@@ -91,7 +91,7 @@ test("the panel's note ends with them too", async ({ launcher, backendSimulator 
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
+    source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
   });
   const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
   const reader = await capture.openStoredOverview();
