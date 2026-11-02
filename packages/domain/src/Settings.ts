@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AccentColour, DEFAULT_ACCENT_COLOUR, DEFAULT_THEME_MODE, ThemeMode } from "./Appearance.js";
 import { ModelByProvider } from "./ModelByProvider.js";
 import { DEFAULT_PROVIDER, Provider } from "./Provider.js";
 import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
@@ -54,6 +55,9 @@ export const Settings = z.object({
   // The pace a newly followed playlist starts at. Playlists already followed keep their own
   // (docs/features/playlists.md, "A pace for each playlist").
   defaultPlaylistPace: PlaylistPace.catch(DEFAULT_PLAYLIST_PACE),
+  // On the account, so the app looks the same on every device (docs/features/appearance.md).
+  theme: ThemeMode.catch(DEFAULT_THEME_MODE),
+  accentColour: AccentColour.catch(DEFAULT_ACCENT_COLOUR),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -72,4 +76,6 @@ export const DEFAULT_SETTINGS: Settings = {
   tagAliases: {},
   onlyMyKey: false,
   defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,
+  theme: DEFAULT_THEME_MODE,
+  accentColour: DEFAULT_ACCENT_COLOUR,
 };

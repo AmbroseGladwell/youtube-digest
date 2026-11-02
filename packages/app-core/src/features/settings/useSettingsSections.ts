@@ -3,6 +3,7 @@ import { useAppBuild } from "../../app/AppBuildContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
 import { shareUsageRowValue } from "../analyticsConsent/util/shareUsageStatus.js";
+import { useAppearance } from "../appearance/useAppearance.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
@@ -29,6 +30,7 @@ import { followingRowValue } from "../playlists/util/followedPlaylistLines.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
 import {
   aboutRowValue,
+  appearanceRowValue,
   planRowValue,
   accountRowValue,
   keysRowValue,
@@ -64,6 +66,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const knownApiUrl = useKnownApiUrl();
   const shareUsage = useShareUsageState();
   const followed = useFollowedPlaylistsQuery();
+  const appearance = useAppearance();
 
   return [
     ...(sync.available
@@ -118,6 +121,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
       title: "Personalisation",
       value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.readerContext ?? null),
     },
+    { id: "appearance", title: "Appearance", value: appearanceRowValue(appearance.theme, appearance.accentColour) },
     {
       id: "milestones",
       title: "Milestones",

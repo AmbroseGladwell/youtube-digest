@@ -1,3 +1,4 @@
+import { AppearanceSectionPageObject } from "./AppearanceSectionPageObject.testHelper.js";
 import { PrivacySectionPageObject } from "./PrivacySectionPageObject.testHelper.js";
 import { expect } from "@playwright/experimental-ct-react";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
@@ -47,6 +48,10 @@ export class SettingsPageObject extends PageObject {
     return new NarrationVoicePickerPageObject(this.testContext);
   }
 
+  get appearance(): AppearanceSectionPageObject {
+    return new AppearanceSectionPageObject(this.testContext);
+  }
+
   get personalisation(): PersonalisationSectionPageObject {
     return new PersonalisationSectionPageObject(this.testContext);
   }
@@ -77,6 +82,9 @@ export class SettingsPageObject extends PageObject {
 
   verifySectionIsAbsent = (section: SettingsSectionId) =>
     this.step(`verifySectionIsAbsent ${section}`, () => this.expectToHaveCount(settingsSectionTestIds.root(section), 0));
+
+  verifySectionIntroIsAbsent = (section: SettingsSectionId) =>
+    this.step(`verifySectionIntroIsAbsent ${section}`, () => this.expectToHaveCount(settingsSectionTestIds.intro(section), 0));
 
   verifySectionHeadingIsFocused = (section: SettingsSectionId) =>
     this.step(`verifySectionHeadingIsFocused ${section}`, () =>

@@ -1,3 +1,4 @@
+import type { AccentColour } from "@overview/domain/accentPalette";
 import { elapsedLabel } from "../elapsedLabel.js";
 import { IDLE_BUTTON_STATE, type ButtonState } from "../overviewBridge.js";
 import { ensureOverviewButtonStyles, OVERVIEW_BUTTON_ID } from "./overviewButtonStyles.js";
@@ -54,6 +55,10 @@ export class OverviewButton {
     });
 
     this.setState(IDLE_BUTTON_STATE);
+  }
+
+  setAccentColour(accentColour: AccentColour): void {
+    this.element.dataset.accent = accentColour;
   }
 
   get kind(): ButtonState["kind"] {

@@ -1,0 +1,170 @@
+@use "../../../../theme/controls";
+
+// Settings › Appearance (designs 135a–135d): Theme as the segmented control, Accent colour as
+// eight named tiles in two rows of four.
+.root {
+  --tile-height: 4.875rem;
+  --tile-padding: 0.75rem 0.375rem 0.625rem;
+  --theme-height: 2.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &[data-size="phone"] {
+    --tile-height: 5.25rem;
+    --theme-height: 2.75rem;
+  }
+
+  &[data-size="panel"] {
+    --tile-height: 4.125rem;
+    --tile-padding: 0.5rem 0.25rem 0.4375rem;
+    --theme-height: 2.75rem;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1rem 1.125rem;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.label {
+  @include controls.section-label;
+
+  margin: 0;
+  padding-left: 2px;
+}
+
+.line {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.themes {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.theme {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.themeFace {
+  @include controls.control-motion;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  min-height: var(--theme-height);
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.radio:hover + .themeFace {
+  background: var(--stone-tint);
+  color: var(--ink);
+}
+
+.radio:checked + .themeFace {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.radio:focus-visible + .themeFace,
+.radio:focus-visible + .accentFace {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.accents {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+.accent {
+  position: relative;
+  display: grid;
+}
+
+.accentFace {
+  @include controls.control-motion;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--tile-height);
+  padding: var(--tile-padding);
+  border-radius: 16px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.radio:hover + .accentFace {
+  background: var(--surface);
+}
+
+.radio:active + .accentFace {
+  background: var(--stone-tint);
+}
+
+// Not the house tint and ring: Orange on the stone tint is 2.94:1 (docs/features/appearance.md).
+.radio:checked + .accentFace {
+  box-shadow: inset 0 0 0 2px var(--label);
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 999px;
+}
+
+.check {
+  display: inline-flex;
+
+  svg {
+    stroke-width: 3;
+  }
+}
+
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+}

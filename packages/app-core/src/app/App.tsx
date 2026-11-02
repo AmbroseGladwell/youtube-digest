@@ -3,12 +3,14 @@ import { RouterProvider } from "react-router";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { LibraryMoveRuntime } from "../features/accountLibraries/LibraryMoveRuntime.js";
 import { AnalyticsRuntime } from "../features/analytics/AnalyticsRuntime.js";
+import { AppearanceRuntime } from "../features/appearance/AppearanceRuntime.js";
 import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.js";
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
 import type { Library, OpenLibrary } from "../stores/Library.js";
 import { LibraryRuntime } from "../stores/LibraryRuntime.js";
+import { AccentMirrorProvider, type AccentMirror } from "./AccentMirrorContext.js";
 import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
 import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
@@ -44,6 +46,7 @@ export interface AppProps {
   defaultApiUrl?: string | null;
   build?: AppBuild | null;
   errorDestinationMirror?: ErrorDestinationMirror | null;
+  accentMirror?: AccentMirror | null;
 }
 
 export function App({
@@ -61,6 +64,7 @@ export function App({
   defaultApiUrl = null,
   build = null,
   errorDestinationMirror = null,
+  accentMirror = null,
 }: AppProps) {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
@@ -73,10 +77,12 @@ export function App({
                 <AppUpdateProvider value={appUpdate}>
                   <DefaultApiUrlProvider value={defaultApiUrl}>
                     <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
+                      <AccentMirrorProvider value={accentMirror}>
                       <AppBuildProvider value={build}>
                         <QueryClientProvider client={queryClient}>
                           <LibraryRuntime library={library} openLibrary={openLibrary}>
                             <SyncRuntime>
+                              <AppearanceRuntime>
                               <ErrorReportingRuntime>
                                 <AnalyticsRuntime>
                                   <LibraryMoveRuntime>
@@ -88,10 +94,12 @@ export function App({
                                   </LibraryMoveRuntime>
                                 </AnalyticsRuntime>
                               </ErrorReportingRuntime>
+                              </AppearanceRuntime>
                             </SyncRuntime>
                           </LibraryRuntime>
                         </QueryClientProvider>
                       </AppBuildProvider>
+                      </AccentMirrorProvider>
                     </ErrorDestinationMirrorProvider>
                   </DefaultApiUrlProvider>
                 </AppUpdateProvider>

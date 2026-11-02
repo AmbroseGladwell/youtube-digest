@@ -17,6 +17,8 @@ import { appBuild } from "./appBuild.js";
 import { readErrorDestination } from "./errorDestination.js";
 import { onLibraryAccountChanged, readLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
+import { onAccentColourChanged } from "./accentColourStorage.js";
+import { showAccentOnToolbar } from "./accentToolbarIcon.js";
 import { createWorkerErrorReporter } from "./workerErrorReporter.js";
 
 const errors = createWorkerErrorReporter({
@@ -34,6 +36,12 @@ void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 // Same reasoning as above: top level, so a rule lost to a profile restart or an update
 // comes back rather than the caption fetch silently 403ing.
 void installYouTubeOriginRule();
+
+// Same again: Chrome forgets a setIcon when the profile closes, and onStartup is what wakes
+// the worker to put it back (docs/features/appearance.md, "The logo").
+void showAccentOnToolbar();
+chrome.runtime.onStartup.addListener(() => void showAccentOnToolbar());
+onAccentColourChanged(() => void showAccentOnToolbar());
 
 // A worker is killed between messages, so anything that has to outlive one goes to
 // session storage rather than a module variable — the request in particular is written
