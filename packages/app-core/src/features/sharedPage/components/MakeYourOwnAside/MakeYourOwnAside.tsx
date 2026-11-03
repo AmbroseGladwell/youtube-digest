@@ -1,12 +1,12 @@
 import { useId, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 import { isYouTubeUrl } from "../../../newOverview/util/parseYouTubeUrl.js";
-import { rememberSharedPageIntent } from "../../util/sharedPageIntent.js";
+import { useStartOnboarding } from "../../../onboarding/useStartOnboarding.js";
 import styles from "./MakeYourOwnAside.module.scss";
 import { makeYourOwnAsideTestIds } from "./MakeYourOwnAsideTestIds.js";
 
@@ -16,11 +16,12 @@ const PLUS = [
   "Your library synced across your devices",
 ];
 
-// Design 30e: the page is also the way in. The pasted link is carried through creating an
-// account rather than lost on the way (docs/features/sharing.md).
+// Design 30e: the page is also the way in. The pasted link starts onboarding, as Start's does,
+// so the visitor is asked what shapes it before the account (docs/features/sharing.md).
 export function MakeYourOwnAside() {
-  const navigate = useNavigate();
+  const startOnboarding = useStartOnboarding();
   const [url, setUrl] = useState("");
+  const [refused, setRefused] = useState(false);
   const headingId = useId();
   const urlFieldId = useId();
   const analytics = useAnalytics();
@@ -28,8 +29,7 @@ export function MakeYourOwnAside() {
 
   const make = () => {
     analytics.sharedPage.makeYourOwn.submitted({ recognised: isYouTubeUrl(url.trim()) });
-    rememberSharedPageIntent({ kind: "generate", videoUrl: url.trim() });
-    void navigate(Routes.createAccount());
+    setRefused(!startOnboarding(url));
   };
 
   return (
@@ -63,12 +63,21 @@ export function MakeYourOwnAside() {
             autoCorrect="off"
             spellCheck={false}
             value={url}
-            placeholder="Paste a YouTube link"
+            placeholder="Paste a YouTube video or playlist link"
             aria-label="YouTube link"
-            onChange={(event) => setUrl(event.target.value)}
+            onChange={(event) => {
+              setUrl(event.target.value);
+              setRefused(false);
+            }}
+            aria-describedby={refused ? `${urlFieldId}-error` : undefined}
             data-testid={makeYourOwnAsideTestIds.urlField}
           />
         </div>
+        {refused && (
+          <p id={`${urlFieldId}-error`} className={styles.error} role="alert" data-testid={makeYourOwnAsideTestIds.refused}>
+            We can't make an overview from that link yet. Try a YouTube video or playlist link.
+          </p>
+        )}
         <button
           type="submit"
           className={styles.action}

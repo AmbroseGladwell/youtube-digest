@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { SharedOverview, ShareToken } from "@overview/domain";
 import {
   isOnboardingProgressKey,
   readOnboardingProgress,
@@ -8,7 +9,22 @@ import {
 
 // The home page's link starts onboarding on the screen after Start (design 46a).
 export function startOnboarding(link: string, videoUrl: string | null): void {
-  writeOnboardingProgress({ link, videoUrl, step: "analytics", topics: [], mayWrite: false, overviewId: null, way: null });
+  writeOnboardingProgress({ link, videoUrl, step: "analytics", topics: [], mayWrite: false, overviewId: null, way: null, share: null });
+}
+
+// Save to my overviews on a shared page starts onboarding with the copy as its overview:
+// already made, so there is nothing to wait for and no video to check.
+export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview): void {
+  writeOnboardingProgress({
+    link: snapshot.note.source.url,
+    videoUrl: null,
+    step: "analytics",
+    topics: [],
+    mayWrite: true,
+    overviewId: snapshot.note.id,
+    way: null,
+    share: { token, snapshot },
+  });
 }
 
 // Onboarding's progress, written through as it changes and read again when another tab
