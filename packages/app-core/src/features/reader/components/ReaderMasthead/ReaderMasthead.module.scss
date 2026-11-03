@@ -173,7 +173,7 @@
 // Design 147s: the tile at the library row's size, with only who it's from beside it.
 .lead:has(> .image) {
   display: grid;
-  grid-template-columns: 10.5rem minmax(0, 1fr);
+  grid-template-columns: 11rem minmax(0, 1fr);
   column-gap: 1.125rem;
   align-items: center;
 }

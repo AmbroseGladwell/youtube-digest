@@ -31,7 +31,7 @@ test("a video's image leads the head at the library row's size, with the channel
   const reader = await library.nthCard(0).openReader();
 
   await reader.verifyHeadHasImage(true);
-  await reader.verifyHeadImageSize(168, 94.5);
+  await reader.verifyHeadImageSize(176, 99);
   await reader.verifyHeadImageLeadsWith("channel");
   await reader.verifyHeadImageIsDecoration();
 });

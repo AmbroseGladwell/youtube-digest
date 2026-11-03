@@ -139,8 +139,8 @@ still has none.
 with only who it's from beside it: a video's channel on its own line (up to two, then an
 ellipsis) with the verdict chip and the dubious flag under it, or an article's or
 recipe's `Site · Kind` line (up to two). The title, topics and meta line keep their full
-width below, in the order they had without it. The tile is 168 × 94 on the web and on a
-tablet, and 112 × 63 below the library's phone breakpoint at any phone width, one 16:9
+width below, in the order they had without it. The tile is the row's 176 × 99 on the web and on
+a tablet (the design drew 168, the row's earlier width), and 112 × 63 below the library's phone breakpoint at any phone width, one 16:9
 slot cover-cropped from the centre for every source, as the row crops it. It is
 decoration only: no link, `alt=""` and `aria-hidden`, because the title beside it is the
 heading and an alt would have a screen reader say it twice. It isn't dimmed when the note
