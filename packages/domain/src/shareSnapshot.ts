@@ -30,6 +30,8 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     watchAnyway: overview.watchAnyway,
     chapters: overview.chapters,
     ...(overview.article === null ? {} : { article: overview.article }),
+    // The method is in the author's own words, so a copy sends visitors to the page for it.
+    ...(overview.recipe === null ? {} : { recipe: { ...overview.recipe, steps: [] } }),
   };
   return { note, transcript, narration };
 }

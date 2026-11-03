@@ -40,6 +40,7 @@ export interface ReaderMastheadProps {
   onEditReason: () => void;
   onShare: (() => void) | null;
   regenerate: OverviewActionsMenuProps["regenerate"];
+  recipeActions: OverviewActionsMenuProps["recipe"];
   onDelete: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
@@ -55,11 +56,12 @@ const savedOn = (savedAt: string) =>
 // phone's action row under the title and the panel's Listen beside ⋯ are one DOM order
 // (docs/features/stone-theme.md, "The single overview").
 // Design 77o: each part drops out when the page didn't give it.
-const articleByline = (source: WebSource, saved: string): string =>
+// A recipe's read time sits on its link to the page instead (design 144a).
+const articleByline = (source: WebSource, saved: string, recipe: boolean): string =>
   [
     ...(source.author === null ? [] : [`By ${source.author}`]),
     ...(source.publishedAt === null ? [] : [`Published ${formatPublishedDate(source.publishedAt)}`]),
-    `${articleReadMinutes(source.wordCount)} min read`,
+    ...(recipe ? [] : [`${articleReadMinutes(source.wordCount)} min read`]),
     `Saved ${saved}`,
   ].join(" · ");
 
@@ -82,6 +84,7 @@ export function ReaderMasthead({
   onEditReason,
   onShare,
   regenerate,
+  recipeActions,
   onDelete,
   ref,
 }: ReaderMastheadProps) {
@@ -174,6 +177,7 @@ export function ReaderMasthead({
           webApp={webApp}
           onShare={onShare}
           regenerate={regenerate}
+          recipe={recipeActions}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={() => onToggleRead("actionsMenu")}
@@ -184,7 +188,7 @@ export function ReaderMasthead({
       <div className={styles.head}>
         {isArticle && (
           <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
-            {sourceName(overview.source)} · Article
+            {sourceName(overview.source)} · {overview.recipe === null ? "Article" : "Recipe"}
           </p>
         )}
         <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
@@ -253,7 +257,7 @@ export function ReaderMasthead({
         <p className={styles.metaRow}>
           <span data-testid={readerMastheadTestIds.meta}>
             {overview.source.kind === "web"
-              ? articleByline(overview.source, savedOn(overview.savedAt))
+              ? articleByline(overview.source, savedOn(overview.savedAt), overview.recipe !== null)
               : metaParts.join(" · ")}
           </span>
           {!isArticle && !compact && Boolean(overview.source.publishedAt) && (

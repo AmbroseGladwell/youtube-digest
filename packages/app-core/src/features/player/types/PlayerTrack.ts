@@ -11,7 +11,12 @@ export interface PlayerTrack {
   artworkUrl: string | null;
   opening: string | null;
   lines: NoteLine[];
+  // A recipe's list read aloud on its own, for cooking, rather than the note's narration
+  // (design 144t). Absent on the note itself.
+  part?: RecipePart;
 }
+
+export type RecipePart = "ingredients" | "method";
 
 // Takes SharedNote so a shared copy makes the same track from the same fields: none of
 // the three an Overview has on top of it is played or named (docs/features/sharing.md).

@@ -11,6 +11,8 @@ export interface ArticleRun {
   // Reached by right-click, on activeTab, so Create may still ask next time (design 77ah).
   oneTimeAccess: boolean;
   fetched: boolean;
+  // Known once the page is read, when it turned out to be a recipe (design 144p).
+  recipe: { ingredients: number; steps: number } | null;
   regenerating: boolean;
   failure: ArticleFailure | null;
 }

@@ -34,6 +34,7 @@ export function makeOverview(overrides: Partial<Overview> = {}): VideoOverview {
     watchAnyway: null,
     chapters: null,
     article: null,
+    recipe: null,
     ...overrides,
   } as VideoOverview;
 }

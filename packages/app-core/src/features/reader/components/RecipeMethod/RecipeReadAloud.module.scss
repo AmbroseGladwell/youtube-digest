@@ -1,0 +1,29 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.button {
+  @include controls.quiet-control;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-height: 2rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @media (max-width: 47.9375rem) {
+    min-height: 2.75rem;
+  }
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

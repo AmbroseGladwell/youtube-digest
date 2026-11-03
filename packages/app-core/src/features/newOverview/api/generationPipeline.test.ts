@@ -114,6 +114,7 @@ const READ: ArticleRead = {
     imageUrl: null,
     sections: [{ heading: null, anchor: null, text: "The county reused a survey." }],
     wordCount: 3200,
+    recipe: null,
   },
 };
 

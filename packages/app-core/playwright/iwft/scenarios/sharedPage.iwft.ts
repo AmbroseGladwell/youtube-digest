@@ -3,7 +3,7 @@ import { makeStoredTranscript } from "@overview/store-conformance";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
-import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const TOKEN = ShareToken.parse("k7Qm2x9RfTabcdef");
 const TITLE = "The Quiet Return of Nuclear Baseload";
@@ -202,4 +202,27 @@ test("a stopped link's visit is counted as one, and so is the visitor making the
       { name: "sharedPage.page.opened", props: { stopped: true } },
       { name: "sharedPage.gone.makeChosen", props: {} },
     ]);
+});
+
+test("a shared recipe carries the summary and the ingredients, and leaves the method on the page", async ({ launcher, page }) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload({
+    state: "shared",
+    token: TOKEN,
+    sharedAt: "2026-11-03T11:00:00.000Z",
+    snapshot: shareSnapshot({ overview: makeRecipeOverview(), transcript: null, narration: null }),
+  });
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await launcher.sharedOverviewPage.verifyIsShown();
+
+  await expect(page.getByText("An overview of a recipe from Example Kitchen")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ingredients · 8" })).toBeVisible();
+  await expect(page.getByTestId("RecipeIngredients.units.asWritten")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Method · 4 steps" })).toBeVisible();
+  await expect(page.getByText("The method is in Maya Okafor’s own words, so it stays on Example Kitchen.")).toBeVisible();
+  await expect(page.getByTestId("RecipeMethod.onThePage")).toHaveAttribute(
+    "href",
+    "https://examplekitchen.example/recipes/charred-leek-white-bean-stew",
+  );
+  await expect(page.getByTestId("RecipeMethod.step")).toHaveCount(0);
 });

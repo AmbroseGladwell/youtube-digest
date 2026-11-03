@@ -211,7 +211,12 @@ export function GenerateOverviewForm({
         />
       ) : keysReady ? (
         <p className={styles.note}>
-          {article.link.status === "none" ? "Fetches the transcript" : "Reads the article"}, then writes the overview. Nothing is
+          {article.link.status === "none"
+            ? "Fetches the transcript"
+            : article.link.status === "found" && article.link.article.recipe !== null
+              ? "Reads the recipe"
+              : "Reads the article"}
+          , then writes the overview. Nothing is
           saved to your library unless both succeed.
         </p>
       ) : (

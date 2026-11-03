@@ -1,3 +1,5 @@
+import { isObject, linkedData, typesOf, type JsonObject } from "./linkedData.js";
+
 export interface ArticleMetadata {
   isDeclaredArticle: boolean;
   author: string | null;
@@ -7,32 +9,7 @@ export interface ArticleMetadata {
   declaredPaywalled: boolean;
 }
 
-type JsonObject = Record<string, unknown>;
-
-const isObject = (value: unknown): value is JsonObject => typeof value === "object" && value !== null && !Array.isArray(value);
-
-const flattened = (value: unknown): JsonObject[] => {
-  if (Array.isArray(value)) return value.flatMap(flattened);
-  if (!isObject(value)) return [];
-  return [value, ...flattened(value["@graph"])];
-};
-
-const typesOf = (node: JsonObject): string[] => {
-  const type = node["@type"];
-  return (Array.isArray(type) ? type : [type]).filter((entry): entry is string => typeof entry === "string");
-};
-
 const isArticleNode = (node: JsonObject): boolean => typesOf(node).some((type) => /(Article|BlogPosting)$/.test(type));
-
-function linkedData(document: Document): JsonObject[] {
-  return [...document.querySelectorAll('script[type="application/ld+json"]')].flatMap((script) => {
-    try {
-      return flattened(JSON.parse(script.textContent ?? ""));
-    } catch {
-      return [];
-    }
-  });
-}
 
 const nameOf = (value: unknown): string | null => {
   if (typeof value === "string") return value.trim() || null;

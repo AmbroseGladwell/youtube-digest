@@ -218,7 +218,11 @@ const getTranscript = mcpTool({
     }
     const { source } = entry.overview;
     if (source.kind === "web") {
-      return toolError("Articles have no transcript: only the overview is kept. Read the article at its link.");
+      return toolError(
+        entry.overview.recipe === null
+          ? "Articles have no transcript: only the overview is kept. Read the article at its link."
+          : "Recipes have no transcript. The overview carries the page's ingredients and method, and the page is at its link.",
+      );
     }
     const key = sourceKey(source);
     const stored = key === null ? null : await transcripts.get(accountId, key);

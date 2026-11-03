@@ -141,6 +141,17 @@ const fillArticleAddedWithArticles: RecordMigration = {
   },
 };
 
+// Derivable: everything before recipes is a video or an article (docs/features/recipe-notes.md).
+const fillRecipeAddedWithRecipes: RecordMigration = {
+  newSchemaVersion: 12,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "recipe" in record ? record : { ...record, recipe: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -152,6 +163,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillMadeOnAddedWithOurKey,
   { newSchemaVersion: 10, alterRecord: moveVideoToSource },
   fillArticleAddedWithArticles,
+  fillRecipeAddedWithRecipes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

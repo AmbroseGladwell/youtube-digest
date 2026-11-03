@@ -2,7 +2,8 @@ import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { Source } from "./Source.js";
-import { CoreFields } from "./CoreFields.js";
+import { CoreFields, KeyPoint } from "./CoreFields.js";
+import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
 import { Verdict } from "./Verdict.js";
 import { Selling } from "./Selling.js";
@@ -11,6 +12,21 @@ import { WatchAnyway } from "./WatchAnyway.js";
 import { Chapters } from "./Chapter.js";
 import { MadeOn } from "./MadeOn.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
+
+export const recipeShape = (
+  note: { recipe?: RecipeNote | null | undefined; keyPoints: KeyPoint[]; verdict: unknown; article?: unknown },
+  ctx: z.RefinementCtx,
+) => {
+  if (note.recipe == null) {
+    if (note.keyPoints.length < 3) {
+      ctx.addIssue({ code: "custom", path: ["keyPoints"], message: "a note has at least 3 key points" });
+    }
+    return;
+  }
+  if (note.keyPoints.length > 0 || note.verdict !== null || note.article != null) {
+    ctx.addIssue({ code: "custom", path: ["recipe"], message: "a recipe's note is its summary and recipe alone" });
+  }
+};
 
 // Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
 // in its own table, keyed by overview id, because this record can be replaced
@@ -43,8 +59,13 @@ export const Overview = z
     chapters: Chapters.nullable(),
     // Null for a video (docs/features/article-notes.md).
     article: ArticleDetails.nullable(),
+    // Null for anything but a recipe page, whose note is this in place of the argument-shaped
+    // fields, which stay empty (docs/features/recipe-notes.md).
+    recipe: RecipeNote.nullable(),
+    keyPoints: z.array(KeyPoint).max(7),
   })
   .superRefine((overview, ctx) => {
+    recipeShape(overview, ctx);
     if (overview.thin && overview.verdict !== null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

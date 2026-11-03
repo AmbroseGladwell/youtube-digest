@@ -32,6 +32,7 @@ const ARTICLE: ExtractedArticle = {
   imageUrl: null,
   sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
   wordCount: 3200,
+  recipe: null,
 };
 
 const READ: ArticleRead = { status: "read", article: ARTICLE };

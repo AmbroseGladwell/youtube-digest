@@ -2,7 +2,9 @@ import { z } from "zod";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { Chapters } from "./Chapter.js";
-import { CoreFields } from "./CoreFields.js";
+import { CoreFields, KeyPoint } from "./CoreFields.js";
+import { recipeShape } from "./Overview.js";
+import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
 import { HowToApply } from "./HowToApply.js";
 import { Selling } from "./Selling.js";
@@ -32,7 +34,12 @@ export const SharedNote = z
     // Absent rather than null on a video, so a copy's content hash doesn't move
     // (docs/features/source-identity.md, "Shares").
     article: ArticleDetails.nullish(),
-  });
+    // Absent on anything but a recipe, for the same reason, and never with the method
+    // (docs/features/recipe-notes.md, "Sharing").
+    recipe: RecipeNote.nullish(),
+    keyPoints: z.array(KeyPoint).max(7),
+  })
+  .superRefine(recipeShape);
 export type SharedNote = z.infer<typeof SharedNote>;
 
 export const SHARED_NOTE_FIELDS = Object.keys(SharedNote.shape).sort();

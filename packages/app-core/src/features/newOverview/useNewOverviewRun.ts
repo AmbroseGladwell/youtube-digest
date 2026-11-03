@@ -130,6 +130,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 asking: articleRequest.asking,
                 oneTimeAccess: articleRequest.oneTimeAccess,
                 fetched: articleRequest.fetched === true,
+                recipe: null,
                 regenerating: options.overviewId !== undefined,
                 failure: null,
               },
@@ -175,6 +176,10 @@ export function useNewOverviewRun(): NewOverviewRunController {
                         title: article.title,
                         site: article.siteName ?? current.article.site,
                         words: article.wordCount,
+                        recipe:
+                          article.recipe === null
+                            ? null
+                            : { ingredients: article.recipe.ingredients.length, steps: article.recipe.steps.length },
                       },
                     },
               );

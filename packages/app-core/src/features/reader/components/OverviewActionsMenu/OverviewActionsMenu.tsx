@@ -13,6 +13,8 @@ export interface OverviewActionsMenuProps {
   read: boolean;
   sourceUrl: string;
   isArticle: boolean;
+  // Recipes only (design 144r): the page's recipe as it stands on screen, with its source.
+  recipe: { onCopy: () => void; onPrint: () => void } | null;
   // Absent where there is no account to share under, which is how the item hides itself
   // rather than offering a control that cannot work (docs/features/sharing.md).
   onShare: (() => void) | null;
@@ -37,6 +39,7 @@ export function OverviewActionsMenu({
   read,
   sourceUrl,
   isArticle,
+  recipe,
   compact,
   webApp,
   onShare,
@@ -148,6 +151,30 @@ export function OverviewActionsMenu({
               </button>
             </>
           )}
+          {recipe !== null && (
+            <>
+              {canWriteClipboard() && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={styles.item}
+                  onClick={choose("copyRecipe", recipe.onCopy)}
+                  data-testid={overviewActionsMenuTestIds.copyRecipeItem}
+                >
+                  Copy recipe
+                </button>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.item}
+                onClick={choose("printRecipe", recipe.onPrint)}
+                data-testid={overviewActionsMenuTestIds.printRecipeItem}
+              >
+                Print recipe
+              </button>
+            </>
+          )}
           <a
             role="menuitem"
             className={styles.item}
@@ -157,7 +184,7 @@ export function OverviewActionsMenu({
             onClick={choose(isArticle ? "readArticle" : "watchOnYouTube", () => undefined)}
             data-testid={overviewActionsMenuTestIds.watchItem}
           >
-            {isArticle ? "Read the article" : "Watch on YouTube"}
+            {recipe !== null ? "Open the recipe" : isArticle ? "Read the article" : "Watch on YouTube"}
           </a>
           {canWriteClipboard() && (
             <button
@@ -167,7 +194,7 @@ export function OverviewActionsMenu({
               onClick={choose(isArticle ? "copyArticleLink" : "copyYouTubeLink", () => void navigator.clipboard.writeText(sourceUrl))}
               data-testid={overviewActionsMenuTestIds.copyLinkItem}
             >
-              {isArticle ? "Copy article link" : "Copy YouTube link"}
+              {recipe !== null ? "Copy recipe link" : isArticle ? "Copy article link" : "Copy YouTube link"}
             </button>
           )}
           {compact ? (

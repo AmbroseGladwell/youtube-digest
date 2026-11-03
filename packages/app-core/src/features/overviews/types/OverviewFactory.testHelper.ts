@@ -30,6 +30,7 @@ export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview =
   fromPlaylist: null,
   madeOn: null,
   article: null,
+  recipe: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
@@ -82,6 +83,52 @@ export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview
         leftOut: "It leaves out the line-by-line costs and the engineer's letter.",
         chapterIndexes: [2],
       },
+    },
+    ...overrides,
+  });
+
+export const makeRecipeOverview = (overrides: Partial<Overview> = {}): Overview =>
+  makeOverview({
+    source: {
+      kind: "web",
+      id: VideoId.parse("fedcba9876543210fedcba9876543210"),
+      url: "https://examplekitchen.example/recipes/charred-leek-white-bean-stew",
+      title: "Charred leek and white bean stew",
+      siteName: "Example Kitchen",
+      author: "Maya Okafor",
+      publishedAt: "2026-10-28T09:00:00.000Z",
+      language: "en",
+      imageUrl: null,
+      wordCount: 2070,
+    },
+    inOneLine: "A weeknight stew built on charred leeks.",
+    coreClaim: "",
+    keyPoints: [],
+    tags: ["stews", "weeknight", "leeks"],
+    recipe: {
+      summary:
+        "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in, so the char flavours the whole pot.",
+      ingredients: [
+        "3 large leeks, trimmed and halved lengthways",
+        "3 tbsp olive oil, plus extra to serve",
+        "2 × 400g tins cannellini beans, drained",
+        "500ml vegetable stock",
+        "1 lemon, zested and juiced",
+        "A handful of parsley, roughly chopped",
+        "50g parmesan, finely grated",
+        "Salt and black pepper",
+      ],
+      steps: [
+        { text: "Heat the oven to 220°C (200°C fan) and roast the leeks for 20 to 25 minutes.", group: null },
+        { text: "Warm the rest of the oil and cook the garlic gently for 3 minutes.", group: null },
+        { text: "Add the beans and stock and simmer for 15 minutes.", group: "For the stew" },
+        { text: "Stir the leeks through with the lemon, and serve.", group: "For the stew" },
+      ],
+      stepCount: 4,
+      prepMinutes: 15,
+      cookMinutes: 50,
+      totalMinutes: 65,
+      yield: "4 servings",
     },
     ...overrides,
   });

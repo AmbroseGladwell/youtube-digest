@@ -23,6 +23,7 @@ const ARTICLE: ExtractedArticle = {
   imageUrl: null,
   sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
   wordCount: 3220,
+  recipe: null,
 };
 
 test("a pasted article is named before Generate, then read once and made into a note", async ({ page, launcher, backendSimulator }) => {

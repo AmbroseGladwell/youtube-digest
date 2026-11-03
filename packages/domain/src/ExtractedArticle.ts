@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Recipe } from "./Recipe.js";
 
 export const ArticleSection = z.object({
   // Null for the text before an article's first heading.
@@ -21,5 +22,8 @@ export const ExtractedArticle = z.object({
   imageUrl: z.url().nullable(),
   sections: z.array(ArticleSection).min(1),
   wordCount: z.number().int().positive(),
+  // Defaulted because a device that predates recipes still posts an article without one
+  // (docs/features/recipe-notes.md).
+  recipe: Recipe.nullable().default(null),
 });
 export type ExtractedArticle = z.infer<typeof ExtractedArticle>;

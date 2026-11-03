@@ -103,6 +103,8 @@ Five folders, five different questions.
   what the field says.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
+- `recipe-notes.md` — a recipe page's note: what code reads from the page, which pages count as a
+  recipe, the summary, servings and units, copy and print, each list read aloud, and sharing.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt

@@ -26,3 +26,5 @@ export * from "./article/ArticleGenerationInput.js";
 export * from "./article/composeArticlePrompt.js";
 export * from "./article/generateArticleOverview.js";
 export * from "./article/generateOverviewOf.js";
+export * from "./recipe/composeRecipePrompt.js";
+export * from "./recipe/generateRecipeOverview.js";

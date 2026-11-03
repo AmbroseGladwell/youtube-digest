@@ -3,6 +3,11 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from "react-route
 import {
   KEY_POINTS_SECTION,
   OverviewId,
+  SUMMARY_SECTION,
+  adjustedText,
+  recipeText,
+  sourceName,
+  type RecipeUnits,
   isUnreadableRecordError,
   overviewMetaParts,
   overviewNoteCaptions,
@@ -37,6 +42,14 @@ import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
+import { RecipeIngredients } from "../components/RecipeIngredients/RecipeIngredients.js";
+import { RecipeMethod } from "../components/RecipeMethod/RecipeMethod.js";
+import { RecipePageLink } from "../components/RecipePageLink/RecipePageLink.js";
+import { RecipePrintSheet } from "../components/RecipePrintSheet/RecipePrintSheet.js";
+import { RecipeTimes } from "../components/RecipeTimes/RecipeTimes.js";
+import { readRecipeUnits, writeRecipeUnits } from "../recipeUnitsStorage.js";
+import { initialScale, recipeAdjustment, type RecipeScale } from "../util/recipeAdjustment.js";
+import { useRecipeVoice } from "./useRecipeVoice.js";
 import { ShareOverviewDialog } from "../../shares/components/ShareOverviewDialog/ShareOverviewDialog.js";
 import { useShareOverviewMutation } from "../../shares/mutations/useShareOverviewMutation.js";
 import { useStopSharingMutation } from "../../shares/mutations/useStopSharingMutation.js";
@@ -53,7 +66,7 @@ import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../types/ReaderTab.js
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
-import { usePlayer } from "../../player/PlayerContext.js";
+import { usePlayer, usePlayerSnapshot, usePlayerTime } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
@@ -100,6 +113,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [explainingRegenerate, setExplainingRegenerate] = useState(false);
+  const [recipeScale, setRecipeScale] = useState<RecipeScale | null>(null);
+  const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
+  const [printingRecipe, setPrintingRecipe] = useState(false);
+  const [recipeCopied, setRecipeCopied] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
     READER_MASTHEAD_HEIGHT_PROPERTY,
@@ -147,9 +164,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const video = overview?.source.kind === "youtube" ? overview.source : null;
   const webArticle =
     overview?.source.kind === "web" && overview.article !== null ? { source: overview.source, article: overview.article } : null;
-  const tabsShown = webArticle === null ? READER_TABS : webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
+  const recipe = overview?.recipe ?? null;
+  const recipePage = overview?.source.kind === "web" && recipe !== null ? { source: overview.source, recipe } : null;
+  const webPage = webArticle?.source ?? recipePage?.source ?? null;
+  const tabsShown =
+    recipePage !== null
+      ? ["Overview" as const]
+      : webArticle === null
+        ? READER_TABS
+        : webArticle.article.chapters.length > 1
+          ? ARTICLE_TABS
+          : ["Overview" as const];
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
-  const onPage = useShowOnPage(webArticle?.source ?? null);
+  const onPage = useShowOnPage(webPage);
   const besideArticle = onPage !== null;
   const startArticleRun = useStartArticleRun();
   const captions = useMemo(() => {
@@ -160,7 +187,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [overview, besideArticle]);
   const howToApplySlot = useHowToApplySlot(overview);
   const regenerate =
-    webArticle === null
+    webPage === null
       ? null
       : {
           asksFirst: onPage === null,
@@ -176,6 +203,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
+  const engineSnapshot = usePlayerSnapshot();
+  const engineTime = usePlayerTime();
+  useEffect(() => setRecipeScale(null), [overviewId]);
+  const scale = recipeScale ?? (recipe === null ? null : initialScale(recipe));
+  const adjustment = useMemo(
+    () => (recipe === null || scale === null ? null : recipeAdjustment(recipe, scale, recipeUnits)),
+    [recipe, scale, recipeUnits],
+  );
+  const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
+  const recipeVoice = useRecipeVoice(track, recipe, shownIngredients);
+  useEffect(() => {
+    if (!recipeCopied) return;
+    const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
+    return () => window.clearTimeout(hide);
+  }, [recipeCopied]);
+  const endPrinting = useCallback(() => setPrintingRecipe(false), []);
   const sync = useSync();
   const webApp = useOverviewInWebApp(overviewId);
   const overviewShare = useOverviewShare(overview);
@@ -296,7 +339,40 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     savedPhase !== "hidden" && timeSaved.kind === "counted" && timeSaved.minutes > 0
       ? { minutes: timeSaved.minutes, leaving: savedPhase === "leaving" }
       : null;
-  const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
+  // While a recipe's list reads itself, the bar is about that list (design 144t).
+  const listReading = engineSnapshot.track?.overviewId === overviewId && engineSnapshot.track.part !== undefined;
+  const barSnapshot = listReading ? engineSnapshot : notePlayer.snapshot;
+  const barTime = listReading ? engineTime : notePlayer.time;
+  const noteBarView = playerBarView(barSnapshot, barTime, { read: state.read });
+  const barView =
+    recipeVoice?.nowReading == null
+      ? noteBarView
+      : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
+  const recipeActions =
+    recipePage === null || adjustment === null
+      ? null
+      : {
+          onCopy: () => {
+            const from = sourceName(recipePage.source);
+            void navigator.clipboard
+              .writeText(
+                recipeText({
+                  title: recipePage.source.title,
+                  from,
+                  url: recipePage.source.url,
+                  recipe: recipePage.recipe,
+                  ingredients: shownIngredients,
+                  adjusted: adjustment.copyNote,
+                }),
+              )
+              .then(() => setRecipeCopied(true));
+          },
+          onPrint: () => setPrintingRecipe(true),
+        };
+  const chooseUnits = (units: RecipeUnits) => {
+    setRecipeUnits(units);
+    writeRecipeUnits(units);
+  };
   const confirmDelete = () => {
     reader.deleteDialog.confirmed();
     setConfirmingDelete(false);
@@ -343,12 +419,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               : null
           }
           regenerate={regenerate}
+          recipeActions={recipeActions}
           onDelete={() => setConfirmingDelete(true)}
         />
 
         {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
 
         {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
+
+        {recipeCopied && recipePage !== null && (
+          <ReaderNotice>
+            <span role="status">Recipe copied, with a link to {sourceName(recipePage.source)}</span>
+          </ReaderNotice>
+        )}
 
         {tabsShown.length > 1 && (
           <ReaderTabs
@@ -370,6 +453,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         >
           {tab === "Overview" && (
             <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
+              {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
               <CaptureReasonLine
                 overview={overview}
                 editing={editingReason}
@@ -398,9 +482,39 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   )
                 }
                 renderLineEnd={(line) =>
-                  webArticle !== null && <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
+                  webArticle !== null ? (
+                    <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
+                  ) : (
+                    recipePage !== null &&
+                    line.section === SUMMARY_SECTION &&
+                    !line.heading && <RecipePageLink source={recipePage.source} onPage={onPage} />
+                  )
                 }
               />
+              {recipePage !== null && adjustment !== null && scale !== null && (
+                <>
+                  <RecipeIngredients
+                    adjustment={adjustment}
+                    scale={scale}
+                    units={recipeUnits}
+                    columns={!isPanel && !isPhone}
+                    adjustable={true}
+                    voice={recipeVoice?.ingredients ?? null}
+                    onScaleChange={setRecipeScale}
+                    onUnitsChange={chooseUnits}
+                    onReset={() => {
+                      setRecipeScale(null);
+                      chooseUnits("asWritten");
+                    }}
+                  />
+                  <RecipeMethod
+                    recipe={recipePage.recipe}
+                    source={recipePage.source}
+                    note={adjustment.methodNote}
+                    voice={recipeVoice?.method ?? null}
+                  />
+                </>
+              )}
               {onetimeHost !== null && (
                 <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
               )}
@@ -493,8 +607,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           />
         )}
 
-        {explainingRegenerate && webArticle !== null && (
-          <RegenerateArticleDialog url={webArticle.source.url} onClose={() => setExplainingRegenerate(false)} />
+        {explainingRegenerate && webPage !== null && (
+          <RegenerateArticleDialog url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
+        )}
+
+        {printingRecipe && recipePage !== null && (
+          <RecipePrintSheet
+            source={recipePage.source}
+            from={sourceName(recipePage.source)}
+            recipe={recipePage.recipe}
+            ingredients={shownIngredients}
+            adjusted={adjustment?.copyNote ?? null}
+            onDone={endPrinting}
+          />
         )}
 
         {sharing && (
@@ -518,14 +643,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         {(!isPanel || playerDocked) && (
           <ReaderPlayerBar
             view={barView}
-            status={notePlayer.snapshot.status}
-            time={notePlayer.time}
-            lines={lines}
-            lineStarts={notePlayer.snapshot.timings.lineStarts}
-            durationSeconds={notePlayer.snapshot.timings.durationSeconds}
+            status={barSnapshot.status}
+            time={barTime}
+            lines={listReading ? (engineSnapshot.track?.lines ?? lines) : lines}
+            lineStarts={barSnapshot.timings.lineStarts}
+            durationSeconds={barSnapshot.timings.durationSeconds}
             favourite={isPanel ? { on: state.favourite, onToggle: () => toggleFavourite("playerBar") } : null}
             canSignIn={sync.available}
-            onMain={notePlayer.main}
+            onMain={listReading ? () => player.toggle() : notePlayer.main}
             onSkip={(delta) => player.skip(delta)}
             onSeek={(seconds) => player.seek(seconds)}
             onCycleRate={() => player.cycleRate()}

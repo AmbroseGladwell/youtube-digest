@@ -23,6 +23,7 @@ const baseOverview = {
   id: OVERVIEW_ID,
   source: { ...baseVideo, kind: "youtube" },
   article: null,
+  recipe: null,
   savedAt: new Date().toISOString(),
   captureReason: null,
   fromPlaylist: null,

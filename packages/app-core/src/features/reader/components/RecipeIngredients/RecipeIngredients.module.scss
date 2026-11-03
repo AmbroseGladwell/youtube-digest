@@ -1,0 +1,211 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 144a: the ingredients on a raised card, so the list reads as its own block.
+.root {
+  margin: 1.25rem 0 0.25rem;
+  padding: 1rem 1.25rem 1.125rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: var(--shadow-tile);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.heading {
+  @include controls.section-label;
+}
+
+.count {
+  color: var(--muted);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem 0.75rem;
+  margin: 0.625rem 0 0.875rem;
+}
+
+.stepper,
+.segments {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.step {
+  @include controls.icon-control;
+  @include controls.circle(2rem);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+
+  @media (max-width: 47.9375rem) {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+.step:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.servings {
+  min-width: 5.5rem;
+  padding: 0 0.625rem;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.segment {
+  position: relative;
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.face {
+  @include controls.control-motion;
+
+  display: block;
+  padding: 0.375rem 0.8125rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: 47.9375rem) {
+    padding: 0.75rem 0.875rem;
+  }
+}
+
+.radio:hover + .face {
+  background: var(--stone-tint);
+  color: var(--ink);
+}
+
+.radio:checked + .face {
+  background: var(--ink);
+  color: var(--ground);
+  font-weight: 600;
+}
+
+.radio:focus-visible + .face {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.columns {
+  display: block;
+  columns: 2;
+  column-gap: 2rem;
+
+  .line {
+    break-inside: avoid;
+    margin: 0 0 0.4375rem;
+  }
+}
+
+.line {
+  position: relative;
+  padding-left: 1rem;
+  color: var(--ink);
+  font-size: 0.90625rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+  border-radius: 6px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+}
+
+.lineActive {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.changed {
+  border-radius: 6px;
+  padding: 0 4px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.aside {
+  margin-left: 0.25rem;
+  color: var(--muted);
+  font-size: 0.78125rem;
+  white-space: nowrap;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem 0.75rem;
+  margin: 0.875rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.reset {
+  @include controls.quiet-control;
+
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.1875rem;
+  cursor: pointer;
+}

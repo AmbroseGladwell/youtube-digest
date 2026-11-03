@@ -175,6 +175,8 @@ export const OverviewMenuItem = z.enum([
   "copyYouTubeLink",
   "readArticle",
   "copyArticleLink",
+  "copyRecipe",
+  "printRecipe",
   "regenerate",
   "openInWebApp",
   "delete",
@@ -721,7 +723,7 @@ export const analyticsEvents = {
     filters: {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
       topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
-      sourceChosen: event("The reader filters the library to one kind of source, or back to all", { source: z.enum(["all", "video", "article"]), from: FilterControl }),
+      sourceChosen: event("The reader filters the library to one kind of source, or back to all", { source: z.enum(["all", "video", "article", "recipe"]), from: FilterControl }),
       noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {
         novelty: z.enum([...Novelty.options, "all"]),
         from: FilterControl,
