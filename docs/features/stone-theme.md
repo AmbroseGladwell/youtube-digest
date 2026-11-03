@@ -150,8 +150,9 @@ the web app once it has synced (`docs/features/extension-panel.md`, "Open in web
 
 **The note ends with `Mark read` and the favourite**, centred under its last section, on
 the web and in the panel (`NoteEndActions`). That is where a reader finishes, and the head
-has scrolled away by then. The head's controls stay, and both places read one state. The
-"Saved you" chip stays on the reading line.
+has scrolled away by then. The head's controls stay, and both places read one state.
+Marking it read here brings the "Saved you" chip in below the buttons
+(`docs/features/time-saved.md`, "The moment").
 
 **Deleting asks once.** `Delete overview` opens `DeleteOverviewDialog`, the New topic
 dialog cut down to a question, with focus on `Cancel`. There is no undo: the store's delete
