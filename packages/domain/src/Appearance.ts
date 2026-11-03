@@ -15,5 +15,17 @@ export const THEME_MODE_NAMES: Record<ThemeMode, string> = {
   dark: "Dark",
 };
 
+// How big the image at the top of a note is drawn, on every note that has one
+// (docs/features/stone-theme.md, "The head's image").
+export const HEAD_IMAGE_SIZES = ["small", "full"] as const;
+export const HeadImageSize = z.enum(HEAD_IMAGE_SIZES);
+export type HeadImageSize = z.infer<typeof HeadImageSize>;
+export const DEFAULT_HEAD_IMAGE_SIZE: HeadImageSize = "small";
+
+export const HEAD_IMAGE_SIZE_NAMES: Record<HeadImageSize, string> = {
+  small: "Small",
+  full: "Full width",
+};
+
 export const AccentColour = z.enum(ACCENT_COLOURS);
 export type AccentColour = z.infer<typeof AccentColour>;

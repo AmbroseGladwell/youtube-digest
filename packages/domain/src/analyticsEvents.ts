@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AccentColour, ThemeMode } from "./Appearance.js";
+import { AccentColour, HeadImageSize, ThemeMode } from "./Appearance.js";
 import { OverviewId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
@@ -269,6 +269,11 @@ export const analyticsEvents = {
         from: OverviewControl,
       }),
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
+    },
+    headImage: {
+      resized: event("The reader clicks or taps the image at the top of the note to show it full width or small, to the size chosen", {
+        size: HeadImageSize,
+      }),
     },
     dubiousReasons: {
       opened: event("The reader opens why the overview is marked dubious, with how many reasons it saved; none means it was made before reasons were", {
@@ -551,6 +556,9 @@ export const analyticsEvents = {
     appearance: {
       themeChosen: event("The reader chooses System, Light or Dark in Settings › Appearance", { theme: ThemeMode }),
       accentChosen: event("The reader chooses an accent colour in Settings › Appearance", { accentColour: AccentColour }),
+      headImageChosen: event("The reader chooses Small or Full width for the image at the top of a note in Settings › Appearance", {
+        size: HeadImageSize,
+      }),
     },
     sharedLinks: {
       linkCopied: event("The reader copies a share link from Settings › Shared links", { overviewId: OverviewId }),

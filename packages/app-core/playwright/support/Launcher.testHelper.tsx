@@ -5,7 +5,7 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type LearnedItems, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
+import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type HeadImageSize, type LearnedItems, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
@@ -75,6 +75,7 @@ export interface LaunchOptions {
   showMilestoneCards?: boolean;
   theme?: ThemeMode;
   accentColour?: AccentColour;
+  headImageSize?: HeadImageSize;
   accentMirror?: boolean;
   onlyMyKey?: boolean;
   aboutYou?: AboutYou;
@@ -158,6 +159,7 @@ export class Launcher {
           ...(options.showMilestoneCards === undefined ? {} : { showMilestoneCards: options.showMilestoneCards }),
           ...(options.theme === undefined ? {} : { theme: options.theme }),
           ...(options.accentColour === undefined ? {} : { accentColour: options.accentColour }),
+          ...(options.headImageSize === undefined ? {} : { headImageSize: options.headImageSize }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
           ...(options.aboutYou === undefined ? {} : aboutYouPatch(options.aboutYou)),
           ...(options.learned === undefined ? {} : { learned: options.learned }),

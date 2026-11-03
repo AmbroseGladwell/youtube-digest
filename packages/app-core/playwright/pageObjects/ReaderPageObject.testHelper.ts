@@ -26,6 +26,7 @@ import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.t
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { playlistFromLineTestIds } from "../../src/features/playlists/components/PlaylistFromLine/PlaylistFromLineTestIds.js";
+import { headImageTestIds } from "../../src/features/reader/components/HeadImage/HeadImageTestIds.js";
 import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
 import { madeOnLineTestIds } from "../../src/features/reader/components/MadeOnLine/MadeOnLineTestIds.js";
 
@@ -1278,8 +1279,7 @@ export class ReaderPageObject extends PageObject {
       return new LibraryPageObject(this.testContext).verifyIsShown();
     });
 
-  private headImage = () =>
-    this.get(readerMastheadTestIds.root).getByTestId(overviewThumbnailTestIds.image);
+  private headImage = () => this.get(readerMastheadTestIds.root).getByTestId(headImageTestIds.button);
 
   verifyHeadHasImage = (shown: boolean) =>
     this.step(`verifyHeadHasImage ${shown}`, async () => {
@@ -1289,22 +1289,69 @@ export class ReaderPageObject extends PageObject {
       ).toHaveCount(0);
     });
 
+  // Measured once the grow has settled: mid-way, the transform is part of the box.
   verifyHeadImageSize = (width: number, height: number) =>
     this.step(`verifyHeadImageSize ${width}x${height}`, async () => {
+      await expect.poll(async () => Math.round((await this.headImage().boundingBox())!.width)).toBe(Math.round(width));
       const box = (await this.headImage().boundingBox())!;
-      expect(box.width).toBeCloseTo(width, 0);
       expect(box.height).toBeCloseTo(height, 0);
     });
 
-  // Design 147i and 147k: decoration only, so no link, nothing for a screen reader, and
-  // drawn the same whether or not the note has been read.
-  verifyHeadImageIsDecoration = () =>
-    this.step("verifyHeadImageIsDecoration", async () => {
-      const image = this.headImage();
-      await expect(image).toHaveAttribute("alt", "");
-      await expect(image).toHaveAttribute("aria-hidden", "true");
+  // Design 151b: full width is the reading column, which the title also spans.
+  verifyHeadImageIsFullWidth = () =>
+    this.step("verifyHeadImageIsFullWidth", async () => {
+      const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
+      await expect.poll(async () => Math.round((await this.headImage().boundingBox())!.width)).toBe(Math.round(title.width));
+      const image = (await this.headImage().boundingBox())!;
+      expect(Math.round(image.x)).toBe(Math.round(title.x));
+      expect(image.height).toBeCloseTo((image.width * 9) / 16, 0);
+    });
+
+  // Design 151a and 151r: the image is a named button that says which way it will go, and
+  // still not a link; the picture inside it stays silent.
+  verifyHeadImageOffers = (size: "small" | "full") =>
+    this.step(`verifyHeadImageOffers ${size}`, async () => {
+      const button = this.headImage();
+      await expect(button).toHaveAccessibleName(size === "full" ? "Show the image full width" : "Show the image small");
+      await expect(button).toHaveAttribute("aria-pressed", size === "full" ? "false" : "true");
+      await expect(button.getByTestId(headImageTestIds.image)).toHaveAttribute("alt", "");
       await expect(this.get(readerMastheadTestIds.root).locator("a:has(img)")).toHaveCount(0);
-      await expect(image).toHaveCSS("opacity", "1");
+      await expect(button).toHaveCSS("opacity", "1");
+    });
+
+  clickHeadImage = () => this.step("clickHeadImage", () => this.headImage().click());
+
+  // Design 151l and 151m, read straight after the press: the image grows as a transform, or
+  // with reduced motion it swaps without moving.
+  verifyHeadImageGrows = (grows: boolean) =>
+    this.step(`verifyHeadImageGrows ${grows}`, async () => {
+      const running = await this.headImage().evaluate((button) => button.getAnimations().length);
+      expect(running > 0).toBe(grows);
+    });
+
+  pressHeadImageFromKeyboard = (key: "Enter" | " ") =>
+    this.step(`pressHeadImageFromKeyboard ${key}`, async () => {
+      await this.headImage().focus();
+      await this.page.keyboard.press(key === " " ? "Space" : key);
+    });
+
+  verifyHeadImageHasFocus = () =>
+    this.step("verifyHeadImageHasFocus", () => expect(this.headImage()).toBeFocused());
+
+  verifyHeadImageIconShown = (shown: boolean) =>
+    this.step(`verifyHeadImageIconShown ${shown}`, () =>
+      expect(this.headImage().getByTestId(headImageTestIds.veil)).toHaveCSS("opacity", shown ? "1" : "0"),
+    );
+
+  hoverHeadImage = () => this.step("hoverHeadImage", () => this.headImage().hover());
+
+  hoverTitle = () => this.step("hoverTitle", () => this.get(readerMastheadTestIds.title).hover());
+
+  verifySharperHeadImageShown = (shown: boolean) =>
+    this.step(`verifySharperHeadImageShown ${shown}`, async () => {
+      const sharp = this.headImage().getByTestId(headImageTestIds.sharpImage);
+      if (shown) await expect(sharp).toBeVisible();
+      else await expect(sharp).not.toBeVisible();
     });
 
   // Design 147s: who it's from sits beside the image, and the title starts under both at
@@ -1319,6 +1366,17 @@ export class ReaderPageObject extends PageObject {
       expect(who.y + who.height).toBeLessThanOrEqual(image.y + image.height + 1);
       expect(title.y).toBeGreaterThanOrEqual(image.y + image.height);
       expect(Math.round(title.x)).toBe(Math.round(image.x));
+    });
+
+  // Design 151b: at full width who it's from goes back to its own line under the image.
+  verifyHeadImageAbove = (part: "channel" | "sourceLine") =>
+    this.step(`verifyHeadImageAbove ${part}`, async () => {
+      await expect.poll(async () => (await this.get(readerMastheadTestIds[part]).evaluate((el) => getComputedStyle(el).opacity))).toBe("1");
+      const image = (await this.headImage().boundingBox())!;
+      const who = (await this.get(readerMastheadTestIds[part]).boundingBox())!;
+      const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
+      expect(who.y).toBeGreaterThanOrEqual(image.y + image.height);
+      expect(title.y).toBeGreaterThanOrEqual(who.y + who.height);
     });
 
   verifyAboveTitle = (part: "channel" | "sourceLine") =>
