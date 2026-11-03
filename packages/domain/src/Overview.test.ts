@@ -22,6 +22,7 @@ const baseVideo = {
 const baseOverview = {
   id: OVERVIEW_ID,
   source: { ...baseVideo, kind: "youtube" },
+  article: null,
   savedAt: new Date().toISOString(),
   captureReason: null,
   fromPlaylist: null,

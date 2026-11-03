@@ -1,0 +1,59 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.heading {
+  margin: 0.25rem 0 0;
+  color: var(--stone);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  gap: 0.875rem;
+  padding: 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+
+  @include controls.tile;
+}
+
+.thumbnail {
+  display: block;
+  flex: none;
+  width: 5.5rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+.site {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.facts {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}

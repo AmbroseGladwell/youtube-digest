@@ -17,6 +17,7 @@ import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
 import { ErrorDestinationMirrorProvider, type ErrorDestinationMirror } from "./ErrorDestinationMirrorContext.js";
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
+import { ArticlePagesProvider, type ArticlePages } from "./ArticlePagesContext.js";
 import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
 import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
 import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
@@ -36,6 +37,7 @@ export interface AppProps {
   surface: Surface;
   layout?: AppLayout;
   activeVideo?: ActiveVideoSource | null;
+  articlePages?: ArticlePages | null;
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
@@ -56,6 +58,7 @@ export function App({
   surface,
   layout = "full",
   activeVideo = null,
+  articlePages = null,
   playback = null,
   runBridge = null,
   youTubeFetch = null,
@@ -70,6 +73,7 @@ export function App({
     <YouTubeFetchProvider value={youTubeFetch}>
       <ProviderPermissionProvider value={providerPermissions}>
       <ActiveVideoProvider value={activeVideo}>
+      <ArticlePagesProvider value={articlePages}>
         <PlaybackProvider value={playback}>
           <RunBridgeProvider value={runBridge}>
             <LayoutProvider value={layout}>
@@ -107,6 +111,7 @@ export function App({
             </LayoutProvider>
           </RunBridgeProvider>
         </PlaybackProvider>
+      </ArticlePagesProvider>
       </ActiveVideoProvider>
       </ProviderPermissionProvider>
     </YouTubeFetchProvider>

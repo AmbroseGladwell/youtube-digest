@@ -116,6 +116,7 @@ const exampleOverview: Overview = {
   captureReason: null,
   fromPlaylist: null,
   madeOn: null,
+  article: null,
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,

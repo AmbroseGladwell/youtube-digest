@@ -1,8 +1,7 @@
 import { isProbablyReaderable, Readability } from "@mozilla/readability";
-import { wordCount, type ArticleRead } from "@overview/domain";
+import { canonicalArticleUrl, wordCount, type ArticleRead } from "@overview/domain";
 import { articleMetadata } from "./articleMetadata.js";
 import { articleSections } from "./articleSections.js";
-import { canonicalArticleUrl } from "./canonicalArticleUrl.js";
 
 const FEWEST_WORDS_IN_AN_ARTICLE = 100;
 const MOST_WORDS_IN_A_PAYWALL_TEASER = 400;
@@ -16,7 +15,7 @@ const wordsPerSentence = (text: string): number =>
 // page in the reader's tab. isProbablyReaderable looks for paragraphs, so prose laid out
 // with line breaks has to qualify another way (docs/features/article-extraction.md).
 export function readArticle(document: Document, pageUrl: string): ArticleRead {
-  const metadata = articleMetadata(document);
+  const metadata = articleMetadata(document, pageUrl);
   const parsed = new Readability(document.cloneNode(true) as Document).parse();
   const body = document.implementation.createHTMLDocument("").body;
   body.innerHTML = parsed?.content ?? "";
@@ -24,7 +23,7 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
   const words = sections.reduce((total, { text }) => total + wordCount(text), 0);
 
   if (metadata.declaredPaywalled && words < MOST_WORDS_IN_A_PAYWALL_TEASER) {
-    return { status: "failed", reason: "paywalled" };
+    return { status: "failed", reason: "paywalled", shownWords: words, siteName: metadata.siteName ?? parsed?.siteName ?? null };
   }
   const isMostlyProse =
     words >= FEWEST_WORDS_TO_READ_WITHOUT_MARKUP && wordsPerSentence(body.textContent ?? "") <= MOST_WORDS_PER_SENTENCE_OF_PROSE;
@@ -44,6 +43,7 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
       author: metadata.author ?? parsed?.byline ?? null,
       publishedAt: metadata.publishedAt,
       language: document.documentElement.getAttribute("lang") || parsed?.lang || null,
+      imageUrl: metadata.imageUrl,
       sections,
       wordCount: words,
     },

@@ -280,6 +280,7 @@ function defineMigrationChecks(
     const overview = await store.getOverview(oldRecordId);
 
     assert.ok(overview);
+    assert.ok(overview.source.kind === "youtube");
     assert.equal(overview.source.durationMs, null);
     assert.equal(overview.source.publishedAt, null);
     assert.equal(overview.source.thumbnailUrl, null);

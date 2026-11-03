@@ -1,19 +1,34 @@
 import { useCallback, useRef, useState } from "react";
-import { heldOverviewOf, OverviewId, type CaptureEntry, type CaptureTranscriptSource, type Overview } from "@overview/domain";
+import { heldOverviewOf, OverviewId, type ArticleRead, type CaptureEntry, type CaptureTranscriptSource, type Overview } from "@overview/domain";
 import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSetOverviewCaptureReasonMutation } from "../overviews/mutations/useSetOverviewCaptureReasonMutation.js";
 import { captureReasonFromDraft } from "../overviews/util/captureReasonFromDraft.js";
+import { ArticleAlreadyHeldError } from "./api/ArticleAlreadyHeldError.js";
+import { ArticleReadError } from "./api/ArticleReadError.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
-import type { NewOverviewRun } from "./types/NewOverviewRun.js";
+import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
 
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
+}
+
+export interface ArticleRunRequest extends StartOverviewRunOptions {
+  url: string;
+  title: string;
+  site: string;
+  // Asked for inside the click, since Chrome refuses it anywhere else, and settled here.
+  access: Promise<boolean>;
+  asking: boolean;
+  oneTimeAccess: boolean;
+  // Read by our server from a pasted link, not from a page beside the panel.
+  fetched?: boolean;
+  read: () => Promise<ArticleRead>;
 }
 
 export interface NewOverviewRunController {
@@ -29,6 +44,7 @@ export interface NewOverviewRunController {
   openWith: (url: string) => void;
   close: () => void;
   start: (url: string, options: StartOverviewRunOptions) => void;
+  startArticle: (request: ArticleRunRequest) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -85,13 +101,18 @@ export function useNewOverviewRun(): NewOverviewRunController {
   // The callbacks are stable because the status strip's self-dismiss timer depends on
   // them: a fresh identity every render would restart the countdown on every re-render.
   const generate = useCallback(
-    (url: string, options: StartOverviewRunOptions, runId: number) => {
+    (url: string, options: StartOverviewRunOptions, runId: number, articleRequest: ArticleRunRequest | null = null) => {
       const isCurrent = () => runIdRef.current === runId;
       const { from } = options;
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
       let tagging = { reused: 0, added: 0 };
       analytics.capture.newOverview.started({ from });
+      const updateArticle = (change: Partial<ArticleRun>) => {
+        if (isCurrent()) {
+          setRun((current) => (current?.article == null ? current : { ...current, article: { ...current.article, ...change } }));
+        }
+      };
 
       draftRef.current = "";
       setRun({
@@ -99,21 +120,64 @@ export function useNewOverviewRun(): NewOverviewRunController {
         startedAt: Date.now(),
         finishedAt: null,
         video: null,
+        article:
+          articleRequest === null
+            ? null
+            : {
+                title: articleRequest.title,
+                site: articleRequest.site,
+                words: null,
+                asking: articleRequest.asking,
+                oneTimeAccess: articleRequest.oneTimeAccess,
+                fetched: articleRequest.fetched === true,
+                regenerating: options.overviewId !== undefined,
+                failure: null,
+              },
         transcriptWords: null,
         overview: null,
         error: null,
         captureReason: "",
       });
 
+      const what =
+        articleRequest === null
+          ? { url }
+          : {
+              readArticle: async (): Promise<ArticleRead> => {
+                const allowed = await articleRequest.access;
+                updateArticle({ asking: false });
+                return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
+              },
+            };
+
       mutate(
         {
-          url,
+          ...what,
           overviewId: options.overviewId,
           captureReason: () => draftRef.current,
           onProgress: (progress) => {
             transcriptSource = progress.transcriptSource;
             if (isCurrent()) {
               setRun((current) => (current === null ? null : { ...current, ...progress }));
+            }
+          },
+          onArticleRead: (article) => {
+            transcriptSource = "article";
+            if (isCurrent()) {
+              setRun((current) =>
+                current?.article == null
+                  ? current
+                  : {
+                      ...current,
+                      transcriptWords: article.wordCount,
+                      article: {
+                        ...current.article,
+                        title: article.title,
+                        site: article.siteName ?? current.article.site,
+                        words: article.wordCount,
+                      },
+                    },
+              );
             }
           },
           isCancelled: () => !isCurrent(),
@@ -144,6 +208,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
             }
           },
           onError: (error) => {
+            if (isCurrent() && error instanceof ArticleAlreadyHeldError) {
+              const overviewId = OverviewId.parse(error.held.id);
+              analytics.capture.newOverview.alreadyHeld({ from, overviewId });
+              setRun(null);
+              setHeld({ url, overviewId, readable: error.held.readable });
+              return;
+            }
             if (isCurrent()) {
               analytics.capture.newOverview.failed({
                 from,
@@ -151,7 +222,17 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 durationMs: Date.now() - startedAt,
               });
               setRun((current) =>
-                current === null ? null : { ...current, error: error.message, finishedAt: Date.now() },
+                current === null
+                  ? null
+                  : {
+                      ...current,
+                      article:
+                        current.article !== null && error instanceof ArticleReadError
+                          ? { ...current.article, asking: false, failure: error.failure }
+                          : current.article,
+                      error: error.message,
+                      finishedAt: Date.now(),
+                    },
               );
             }
           },
@@ -177,6 +258,15 @@ export function useNewOverviewRun(): NewOverviewRunController {
       });
     },
     [alreadyHeld, analytics, generate],
+  );
+
+  const startArticle = useCallback(
+    (request: ArticleRunRequest) => {
+      const runId = (runIdRef.current += 1);
+      setHeld(null);
+      generate(request.url, request, runId, request);
+    },
+    [generate],
   );
 
   const setCaptureReason = useCallback((captureReason: string) => {
@@ -224,6 +314,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
     openWith,
     close,
     start,
+    startArticle,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

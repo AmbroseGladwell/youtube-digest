@@ -42,7 +42,7 @@ test("a panel open on something that isn't a video says which page it wants inst
 }) => {
   const capture = await launcher.launchPanel({ apiKeys: API_KEYS, activeVideoUrl: null });
 
-  await capture.verifyOffersToCreate(false);
+  await capture.verifyOffersNothingToCreate();
   await capture.verifySaysThereIsNoVideo();
 });
 

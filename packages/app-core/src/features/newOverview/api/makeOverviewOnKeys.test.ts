@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId, type ApiErrorCode } from "@overview/domain";
 import {
   generateOverview,
+  generateOverviewOf,
   ProviderKeyRefusedError,
   ProviderOutOfCreditError,
   type GenerationClient,
@@ -65,7 +66,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     generate: async ({ input: sent }) => {
       calls.push("generate");
       if (generate !== undefined) throw generate;
-      return generateOverview(async () => answer("Made on our key."), sent, meta);
+      return generateOverviewOf(async () => answer("Made on our key."), sent, meta);
     },
     reserve: async () => {
       calls.push("reserve");

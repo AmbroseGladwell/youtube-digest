@@ -11,6 +11,35 @@ describe("generationRunSteps", () => {
     ]);
   });
 
+  const articleRun = (oneTimeAccess = false) => ({
+    title: "A story",
+    site: "example.com",
+    words: null,
+    asking: false,
+    oneTimeAccess,
+    fetched: false,
+    regenerating: false,
+    failure: null,
+  });
+
+  it("names an article's read, and gives its word count once read", () => {
+    expect(generationRunSteps(makeNewOverviewRun({ article: articleRun() })).map((step) => step.label)).toEqual([
+      "Reading the article",
+      "Writing the overview",
+    ]);
+    const [read, write] = generationRunSteps(makeNewOverviewRun({ article: articleRun(), transcriptWords: 3200 }));
+    expect(read).toMatchObject({ detail: "3,200 words", state: "done" });
+    expect(write?.state).toBe("running");
+  });
+
+  it("says fetching for a pasted link, which our server read", () => {
+    expect(generationRunSteps(makeNewOverviewRun({ article: { ...articleRun(), fetched: true } }))[0]?.label).toBe("Fetching the article");
+  });
+
+  it("says this page on the right-click route, where we don't yet know it's an article", () => {
+    expect(generationRunSteps(makeNewOverviewRun({ article: articleRun(true) }))[0]?.label).toBe("Reading this page");
+  });
+
   it("starts with the transcript running and the overview queued", () => {
     const [transcript, overview] = generationRunSteps(makeNewOverviewRun());
 

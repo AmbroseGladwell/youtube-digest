@@ -32,7 +32,7 @@ confirms they know it. That is a personal signal and doesn't belong in a general
 
 | Level | Means |
 |---|---|
-| Common knowledge | Standard knowledge in the field, however well explained. |
+| Widely covered | Standard knowledge in the field, however well explained. Stored as `common_knowledge`, and called that in the prompt. |
 | Fresh angle | Mostly common knowledge, with one fresh part: a method, a number or a demonstration. |
 | Original | The central claim, method or evidence is something most people in the field would not know. |
 
@@ -41,6 +41,14 @@ was rejected because it suggests "you've seen it", which is the personal questio
 scale gave up. "Established" was rejected because it suggests "well supported", which is
 what `dubious` judges. None of the three names says "new", so the line naming the fresh
 part can't echo a label.
+
+**"Common knowledge" became "Widely covered" on 2026-11-02**, when articles arrived (OV-77). The
+judgement held and the word did not: nobody "knows" a blogger's personal story, and a story that
+broke today is plainly not common knowledge, even when it adds no reporting. "Knowledge" fits facts,
+and most videos deal in those, which is why it lasted. "Nothing new" was close to "Familiar", and
+separate labels per kind would have shown several names for one level in one library. It is the
+same level for videos and articles, so only the displayed word moved: the stored value, the filter
+and every record are unchanged.
 
 Recycled has no successor on this scale. "You already have this" belongs to claim overlap
 (`similarTo`). "Mostly a sales pitch" is already covered by What it sells and by

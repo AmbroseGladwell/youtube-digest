@@ -65,7 +65,7 @@ export function GenerationStatusStrip({
             {status.step} · {formatClock(elapsedSeconds)}
           </span>
           {" · "}
-          {run.video?.title ?? run.url}
+          {run.article?.title ?? run.video?.title ?? run.url}
         </span>
       </span>
 

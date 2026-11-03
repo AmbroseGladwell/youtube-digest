@@ -102,3 +102,9 @@ shared. A share whose overview really was edited still differs, and still says s
 shapes of one video cannot both be live, one id under two kinds is two items, and shares
 move with their edited state intact. `shareRoutes.test.ts`: an older client's share is
 accepted. The existing transcript, sync and IWFT suites are what show YouTube is unchanged.
+
+## The second kind
+
+`web` joined the union with articles (`docs/features/article-notes.md`). Its id is the first 32 hex
+characters of a SHA-256 of the canonical URL, and its key is `web:<id>`. `sourceName`, `sourceImage`
+and `sourceLength` in `sourceFacts.ts` answer the questions every card asks of any kind.

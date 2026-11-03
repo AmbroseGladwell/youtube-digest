@@ -96,7 +96,7 @@ test.describe("the breakdown", () => {
 
     await sheet.verifyFigureSays("1 hour 7 minutes");
     await sheet.verifyHowReads(
-      "From 2 overviews you’ve read: each video’s length, minus the time the overview took to read.",
+      "From 2 overviews you’ve read: each video’s length or article’s reading time, minus the time the overview took to read.",
     );
     await sheet.verifyNextReads("5 hours");
     await sheet.verifyNextReads("233 min to go");
@@ -123,8 +123,8 @@ test.describe("the breakdown", () => {
 
     await sheet.verifyNotCounted([
       "1 overview without a video length",
-      "1 the verdict said to watch",
-      "1 the verdict said to watch in part counts without that part.",
+      "1 the verdict said to watch or read",
+      "1 the verdict said to watch or read in part counts without that part.",
     ]);
   });
 

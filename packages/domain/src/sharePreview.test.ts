@@ -32,5 +32,5 @@ test("the verdict is never in the preview, however blunt it is", () => {
   );
 
   assert.equal(preview.description.includes("Every claim here is secondhand."), false);
-  assert.equal(preview.description.includes("Common knowledge"), false);
+  assert.equal(preview.description.includes("Widely covered"), false);
 });

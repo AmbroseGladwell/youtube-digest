@@ -13,6 +13,7 @@ export const NEWS_PAGE = `<!doctype html><html lang="en-GB"><head>
 <title>Bridge repairs will cost the town twice what it planned | Example News</title>
 <link rel="canonical" href="https://news.example.com/2026/11/bridge-repairs">
 <meta property="og:site_name" content="Example News">
+<meta property="og:image" content="/images/bridge.jpg">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Example"},
 {"@type":"NewsArticle","headline":"Bridge repairs","datePublished":"2026-11-01T09:30:00+00:00",
 "author":[{"@type":"Person","name":"Asha Rao"},{"@type":"Person","name":"Tom Lee"}],"publisher":{"@type":"Organization","name":"Example Group"}}]}</script>
