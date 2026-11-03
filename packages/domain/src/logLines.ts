@@ -137,6 +137,8 @@ export const apiLogLines = coded("api", {
   ourKey: {
     generated: line("info", "overview made on our key", "An overview made on our key: plan, model, tokens, cost in dollars, the month's count and how long it took."),
     failed: line("warn", "overview on our key failed", "A generation on our key failed and its slots were given back; `reason` says why, `fallback` whether it may move to the next key."),
+    smallPass: line("info", "small pass on our key", "A profile or For anyone pass on our key: which, the cost in dollars and how long it took. It doesn't count against the plan."),
+    smallPassFailed: line("warn", "small pass on our key failed", "A profile or For anyone pass on our key failed; the reader's overview isn't affected."),
     quotaSpent: line("info", "our key quota spent", "An account asked for an overview on our key with none left this month."),
     dailyCapSpent: line("warn", "our key daily cap spent", "The global daily cap on our key refused a generation for every plan."),
     signedOutShareSpent: line("warn", "our key signed-out share spent", "The signed-out share of the global daily cap refused a trial overview; accounts carry on."),

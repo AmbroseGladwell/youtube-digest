@@ -56,6 +56,7 @@ import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { bindOverviewId } from "../../analytics/bindOverviewId.js";
 import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
+import { useHowToApplySlot } from "./useHowToApplySlot.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 
@@ -133,6 +134,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overview = overviewQuery.data?.overview ?? null;
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
   const captions = useMemo(() => (overview ? overviewNoteCaptions(overview) : {}), [overview]);
+  const howToApplySlot = useHowToApplySlot(overview);
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
@@ -334,6 +336,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 key={overviewId}
                 lines={lines}
                 captions={captions}
+                sectionSlot={howToApplySlot}
                 activeIndex={notePlayer.activeIndex}
                 speaking={notePlayer.playing}
                 onSelectLine={notePlayer.selectLine}

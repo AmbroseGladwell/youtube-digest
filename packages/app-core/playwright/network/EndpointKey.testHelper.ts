@@ -48,6 +48,8 @@ export enum EndpointKey {
   // own-key overview takes, and the signed-out trial's token (docs/architecture/tiers.md).
   OUR_KEY_STATUS = "OUR_KEY_STATUS",
   OUR_KEY_GENERATE = "OUR_KEY_GENERATE",
+  PROFILE_PASS = "PROFILE_PASS",
+  FOR_ANYONE = "FOR_ANYONE",
   OVERVIEW_USAGE = "OVERVIEW_USAGE",
   OVERVIEW_RESERVE = "OVERVIEW_RESERVE",
   OVERVIEW_RELEASE = "OVERVIEW_RELEASE",

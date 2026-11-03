@@ -311,3 +311,67 @@ test("a server with no key of its own issues no trials", async () => {
   assert.equal(response.json().error.code, "unavailable");
   await testApp.close();
 });
+
+const PROFILE_PASS = {
+  sentence: "I'm a dad.",
+  learned: [],
+  removed: [],
+  overviews: [
+    { title: "One", premise: "A premise.", topics: ["Startups"], captureReason: null },
+    { title: "Two", premise: "A premise.", topics: ["Startups"], captureReason: null },
+  ],
+};
+const profileAnswer = {
+  status: 200,
+  body: {
+    choices: [{ message: { content: JSON.stringify({ items: [{ text: "building a startup", overviewIndices: [0, 1] }] }) } }],
+    usage: { prompt_tokens: 100, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 0 } },
+  },
+};
+
+test("a profile pass answers on our key without counting against the plan or the day", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi(profileAnswer, "valid"), { dailyGenerations: 1 });
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({ method: "POST", url: "/api/generations/profile", body: PROFILE_PASS });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { items: [{ text: "building a startup", source: "From 2 overviews on startups" }] });
+  assert.equal((await usageOf(account)).ours.used, 0);
+  assert.equal((await generate(account)).statusCode, 200);
+});
+
+test("a profile pass needs an account", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi(profileAnswer));
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/generations/profile",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    body: PROFILE_PASS,
+  });
+
+  assert.equal(response.statusCode, 401);
+});
+
+test("How to apply for anyone answers on our key without counting against the plan", async () => {
+  const answer = {
+    status: 200,
+    body: {
+      choices: [{ message: { content: JSON.stringify({ items: ["Practise on one onion."] }) } }],
+      usage: { prompt_tokens: 100, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 0 } },
+    },
+  };
+  const testApp = await ourKeyApp(makeFakeOpenAi(answer));
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/generations/how-to-apply",
+    body: { title: "T", channel: "C", inOneLine: "L", coreClaim: "C", keyPoints: ["K"] },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { items: ["Practise on one onion."] });
+  assert.equal((await usageOf(account)).ours.used, 0);
+});

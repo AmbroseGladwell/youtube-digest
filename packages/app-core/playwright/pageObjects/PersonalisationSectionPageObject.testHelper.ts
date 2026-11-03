@@ -31,6 +31,34 @@ export class PersonalisationSectionPageObject extends PageObject {
       await this.page.getByTestId(whatWeKnowCardTestIds.clear).click();
     });
 
+  verifyLearned = (...items: string[]) =>
+    this.step(`verifyLearned ${items.join(", ")}`, async () => {
+      for (const item of items) await expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toBeVisible();
+    });
+
+  verifyLearnedSource = (item: string, source: string) =>
+    this.step(`verifyLearnedSource ${item}`, () => expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toContainText(source));
+
+  verifyNothingLearned = () =>
+    this.step("verifyNothingLearned", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedEmpty)).toBeVisible());
+
+  verifyMetaReads = (text: string) =>
+    this.step(`verifyMetaReads ${text}`, () => expect(this.page.getByTestId(whatWeKnowCardTestIds.meta)).toHaveText(text));
+
+  removeLearned = (item: string) =>
+    this.step(`removeLearned ${item}`, () => this.page.getByTestId(whatWeKnowCardTestIds.learnedRemove(item)).click());
+
+  switchKeepLearning = () => this.step("switchKeepLearning", () => this.page.getByTestId(whatWeKnowCardTestIds.keepLearning).click());
+
+  verifyCantSwitchLearning = () =>
+    this.step("verifyCantSwitchLearning", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.keepLearning)).toHaveCount(0));
+
+  verifyLearningIsHidden = () =>
+    this.step("verifyLearningIsHidden", async () => {
+      await expect(this.page.getByTestId(whatWeKnowCardTestIds.keepLearning)).toHaveCount(0);
+      await expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedEmpty)).toHaveCount(0);
+    });
+
   clickSwitch = (section: keyof SectionsEnabled) =>
     this.step(`clickSwitch ${section}`, () => this.click(personalisationSectionTestIds.switch(section)));
 }

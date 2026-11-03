@@ -67,7 +67,21 @@ export function sharedLinksRowValue(count: number): string {
   return count === 1 ? "1 shared" : `${count} shared`;
 }
 
-export function personalisationRowValue(sectionsEnabled: SectionsEnabled, aboutYou: AboutYou): string {
+export interface LearningRowState {
+  canLearn: boolean;
+  keepLearning: boolean;
+  learnedCount: number;
+}
+
+const NOT_LEARNING: LearningRowState = { canLearn: false, keepLearning: true, learnedCount: 0 };
+
+// Design 141m: the first section, what was learned, then sections. With learning off the row
+// says so in place of the sections.
+export function personalisationRowValue(
+  sectionsEnabled: SectionsEnabled,
+  aboutYou: AboutYou,
+  { canLearn, keepLearning, learnedCount }: LearningRowState = NOT_LEARNING,
+): string {
   const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
   const sections =
     on === OVERVIEW_SECTIONS.length
@@ -76,7 +90,9 @@ export function personalisationRowValue(sectionsEnabled: SectionsEnabled, aboutY
         ? "Summary and key points only"
         : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
   const first = firstAboutYouText(aboutYou);
-  return `${first === null ? "About you not set" : capitalised(first)} · ${sections}`;
+  const lead = first === null ? "About you not set" : capitalised(first);
+  if (canLearn && !keepLearning) return `${lead} · Learning off`;
+  return canLearn && learnedCount > 0 ? `${lead} · ${learnedCount} learned · ${sections}` : `${lead} · ${sections}`;
 }
 
 export function appearanceRowValue(theme: ThemeMode, accentColour: AccentColour): string {

@@ -129,7 +129,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({ way: progress.way ?? "signIn" });
     libraryMove.dismiss();
-    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [] });
+    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null });
     void navigate(Routes.overview(overviewId), { replace: true });
     writeOnboardingProgress(null);
   };

@@ -20,3 +20,5 @@ export * from "./sections/howToApplySection.js";
 export * from "./sections/watchAnywaySection.js";
 export * from "./sections/chaptersSection.js";
 export * from "./generateTags.js";
+export * from "./generateProfileItems.js";
+export * from "./generateForAnyoneSteps.js";

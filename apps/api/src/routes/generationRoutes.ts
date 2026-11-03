@@ -1,5 +1,15 @@
 import type { FastifyInstance } from "fastify";
-import { apiLogLines, OurKeyGenerationRequest, TRIAL_TOKEN_HEADER, TrialToken, type OurKeyGenerationStatus } from "@overview/domain";
+import {
+  apiLogLines,
+  ForAnyoneInput,
+  OurKeyGenerationRequest,
+  ProfilePassInput,
+  TRIAL_TOKEN_HEADER,
+  TrialToken,
+  type ForAnyoneResult,
+  type OurKeyGenerationStatus,
+  type ProfilePassResult,
+} from "@overview/domain";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
@@ -53,6 +63,33 @@ export function generationRoutes(
       return trial;
     },
   );
+
+  const smallPassLimit = rateLimitHook(rateLimits.smallPassPerAccount, (request) => request.session?.accountId ?? null, clock);
+  const smallPass = async <Result>(run: (generator: OurKeyGenerator) => Promise<Result>): Promise<Result> => {
+    if (generator === null) {
+      throw new ApiError("unavailable", "This server does not make overviews on its own key");
+    }
+    try {
+      return await run(generator);
+    } catch (error) {
+      if (error instanceof OurKeyGenerationError) {
+        throw new ApiError("generation_failed", error.message, { fallback: error.fallback });
+      }
+      throw error;
+    }
+  };
+
+  app.post("/generations/profile", { preHandler: smallPassLimit }, async (request) => {
+    const input = parseOrThrow(ProfilePassInput, request.body, "The profile pass");
+    const result: ProfilePassResult = { items: await smallPass((passes) => passes.profilePass(input, request.log)) };
+    return result;
+  });
+
+  app.post("/generations/how-to-apply", { preHandler: smallPassLimit }, async (request) => {
+    const input = parseOrThrow(ForAnyoneInput, request.body, "The How to apply pass");
+    const result: ForAnyoneResult = { items: await smallPass((passes) => passes.forAnyone(input, request.log)) };
+    return result;
+  });
 
   app.post("/generations", { bodyLimit: GENERATION_BODY_LIMIT_BYTES, config: { optionalSession: true } }, async (request, reply) => {
     const body = parseOrThrow(OurKeyGenerationRequest, request.body, "The generation request");

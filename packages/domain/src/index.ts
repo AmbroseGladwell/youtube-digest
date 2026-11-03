@@ -81,6 +81,8 @@ export * from "./visibleMilestones.js";
 export * from "./timeSavedSummary.js";
 export * from "./formatTimeSaved.js";
 export * from "./AboutYou.js";
+export * from "./ForAnyone.js";
+export * from "./LearnedItem.js";
 export * from "./composeReaderContext.js";
 export * from "./Settings.js";
 export * from "./settingsMigrations.js";
