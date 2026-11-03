@@ -12,7 +12,7 @@ const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 // Every factory note takes a minute to read, so a video of n minutes saves n - 1.
 const lasting = (minutes: number) =>
-  makeOverview({ video: { ...makeOverview().video, durationMs: minutes * 60_000 } });
+  makeOverview({ source: { ...makeOverview().source, durationMs: minutes * 60_000 } });
 
 test("Mark read at the end of the note marks it read, agrees with the menu, and undoes", async ({
   launcher,
