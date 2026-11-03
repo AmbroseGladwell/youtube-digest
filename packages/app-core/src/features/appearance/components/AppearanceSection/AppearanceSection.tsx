@@ -3,9 +3,12 @@ import {
   ACCENT_COLOUR_NAMES,
   ACCENT_COLOURS,
   ACCENT_PALETTES,
+  HEAD_IMAGE_SIZE_NAMES,
+  HEAD_IMAGE_SIZES,
   THEME_MODE_NAMES,
   THEME_MODES,
   type AccentColour,
+  type HeadImageSize,
   type ThemeMode,
 } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
@@ -18,6 +21,7 @@ import { useSync } from "../../../sync/SyncContext.js";
 import { applyAppearance } from "../../applyAppearance.js";
 import { writeAppearance, type Appearance } from "../../appearanceStorage.js";
 import { useAppearance } from "../../useAppearance.js";
+import { useHeadImageSize } from "../../useHeadImageSize.js";
 import styles from "./AppearanceSection.module.scss";
 import { appearanceSectionTestIds } from "./AppearanceSectionTestIds.js";
 
@@ -44,6 +48,8 @@ export function AppearanceSection() {
   const groupName = useId();
   const themeLabelId = useId();
   const accentLabelId = useId();
+  const headImageLabelId = useId();
+  const headImage = useHeadImageSize();
   const [status, setStatus] = useState("");
 
   const dark = appearance.theme === "dark" || (appearance.theme === "system" && deviceIsDark);
@@ -65,6 +71,13 @@ export function AppearanceSection() {
   const chooseAccent = (accentColour: AccentColour) => {
     analytics.settings.appearance.accentChosen({ accentColour });
     choose({ accentColour }, `Accent colour: ${ACCENT_COLOUR_NAMES[accentColour]}.`);
+  };
+
+  // Design 151n: the same setting clicking the image writes, given a name and a way back.
+  const chooseHeadImageSize = (size: HeadImageSize) => {
+    analytics.settings.appearance.headImageChosen({ size });
+    headImage.choose(size);
+    setStatus(`Image at the top of a note: ${HEAD_IMAGE_SIZE_NAMES[size]}. ${savedTo}`);
   };
 
   return (
@@ -144,6 +157,28 @@ export function AppearanceSection() {
           Used for buttons, progress, search hits and the logo. Warnings keep their own colour, so a failure always
           looks like one.
         </p>
+      </div>
+
+      <div className={styles.card}>
+        <p className={styles.label} id={headImageLabelId}>
+          Image at the top of a note
+        </p>
+        <div className={styles.themes} role="radiogroup" aria-labelledby={headImageLabelId}>
+          {HEAD_IMAGE_SIZES.map((size) => (
+            <label key={size} className={styles.theme}>
+              <input
+                className={styles.radio}
+                type="radio"
+                name={`${groupName}-head-image`}
+                checked={headImage.size === size}
+                onChange={() => chooseHeadImageSize(size)}
+                data-testid={appearanceSectionTestIds.headImageSize(size)}
+              />
+              <span className={styles.themeFace}>{HEAD_IMAGE_SIZE_NAMES[size]}</span>
+            </label>
+          ))}
+        </div>
+        <p className={styles.line}>For every note with an image. Clicking the image changes it too.</p>
       </div>
 
       <p className={styles.status} role="status" aria-live="polite" data-testid={appearanceSectionTestIds.status}>

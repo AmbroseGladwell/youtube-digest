@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { AboutYou, EMPTY_ABOUT_YOU } from "./AboutYou.js";
-import { AccentColour, DEFAULT_ACCENT_COLOUR, DEFAULT_THEME_MODE, ThemeMode } from "./Appearance.js";
+import {
+  AccentColour,
+  DEFAULT_ACCENT_COLOUR,
+  DEFAULT_HEAD_IMAGE_SIZE,
+  DEFAULT_THEME_MODE,
+  HeadImageSize,
+  ThemeMode,
+} from "./Appearance.js";
 import { ModelByProvider } from "./ModelByProvider.js";
 import { DEFAULT_PROVIDER, Provider } from "./Provider.js";
 import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
@@ -68,6 +75,7 @@ export const Settings = z.object({
   // On the account, so the app looks the same on every device (docs/features/appearance.md).
   theme: ThemeMode.catch(DEFAULT_THEME_MODE),
   accentColour: AccentColour.catch(DEFAULT_ACCENT_COLOUR),
+  headImageSize: HeadImageSize.catch(DEFAULT_HEAD_IMAGE_SIZE),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -92,4 +100,5 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,
   theme: DEFAULT_THEME_MODE,
   accentColour: DEFAULT_ACCENT_COLOUR,
+  headImageSize: DEFAULT_HEAD_IMAGE_SIZE,
 };

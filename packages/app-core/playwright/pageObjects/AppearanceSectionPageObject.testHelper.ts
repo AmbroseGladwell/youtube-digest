@@ -5,6 +5,7 @@ import {
   THEME_MODE_NAMES,
   THEME_MODES,
   type AccentColour,
+  type HeadImageSize,
   type ThemeMode,
 } from "@overview/domain";
 import { appearanceSectionTestIds } from "../../src/features/appearance/components/AppearanceSection/AppearanceSectionTestIds.js";
@@ -16,6 +17,14 @@ export class AppearanceSectionPageObject extends PageObject {
 
   chooseAccent = (accentColour: AccentColour) =>
     this.step(`chooseAccent ${accentColour}`, () => this.get(appearanceSectionTestIds.accent(accentColour)).check());
+
+  chooseHeadImageSize = (size: HeadImageSize) =>
+    this.step(`chooseHeadImageSize ${size}`, () => this.get(appearanceSectionTestIds.headImageSize(size)).check());
+
+  verifyHeadImageSizeIs = (size: HeadImageSize) =>
+    this.step(`verifyHeadImageSizeIs ${size}`, () =>
+      expect(this.get(appearanceSectionTestIds.headImageSize(size))).toBeChecked(),
+    );
 
   verifyThemeIs = (theme: ThemeMode) =>
     this.step(`verifyThemeIs ${theme}`, () => expect(this.get(appearanceSectionTestIds.theme(theme))).toBeChecked());

@@ -1,4 +1,4 @@
-import type { AccentColour, ThemeMode } from "@overview/domain";
+import type { AccentColour, HeadImageSize, ThemeMode } from "@overview/domain";
 
 export const appearanceSectionTestIds = {
   root: "AppearanceSection.root",
@@ -7,4 +7,5 @@ export const appearanceSectionTestIds = {
   theme: (theme: ThemeMode) => `AppearanceSection.theme.${theme}`,
   accent: (accentColour: AccentColour) => `AppearanceSection.accent.${accentColour}`,
   accentCheck: "AppearanceSection.accentCheck",
+  headImageSize: (size: HeadImageSize) => `AppearanceSection.headImageSize.${size}`,
 };
