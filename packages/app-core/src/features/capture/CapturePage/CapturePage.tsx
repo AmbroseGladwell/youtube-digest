@@ -1,9 +1,10 @@
-import { formatClock, timeSavedSummary } from "@overview/domain";
-import { useEffect } from "react";
+import { domainOf, formatClock, timeSavedSummary } from "@overview/domain";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
+import { useActivePage, useArticlePages, type ActivePage } from "../../../app/ArticlePagesContext.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
@@ -12,7 +13,9 @@ import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptN
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
-import { JUST_GENERATED } from "../../newOverview/justGenerated.js";
+import { ALREADY_MADE, JUST_GENERATED } from "../../newOverview/justGenerated.js";
+import { useStartArticleRun } from "../../newOverview/useStartArticleRun.js";
+import { articleFailureCopy } from "../../newOverview/util/articleFailureCopy.js";
 import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
 import type { NewOverviewRun } from "../../newOverview/types/NewOverviewRun.js";
 import { useElapsedSeconds } from "../../newOverview/useElapsedSeconds.js";
@@ -25,19 +28,47 @@ import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary
 import { useSync } from "../../sync/SyncContext.js";
 import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useWatchedTranscriptQuery } from "../../transcripts/queries/watchedTranscriptQuery.js";
-import { overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
+import { overviewForPageUrl, overviewForVideoUrl } from "../../overviews/util/overviewForVideoUrl.js";
 import { useCaptureQueueController } from "../../captureQueue/CaptureQueueContext.js";
 import { CaptureQueueStripView } from "../../captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
+import { ArticleFailureNotice } from "../components/ArticleFailureNotice/ArticleFailureNotice.js";
+import { ArticleOffer } from "../components/ArticleOffer/ArticleOffer.js";
+import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 
-// The side panel's home: one video, the one in front of it (docs/features/extension-panel.md).
-// There is no list here and no + New — the whole page is the offer to take this video,
-// and it becomes the run's own progress while the run is going.
+// A site's front page is a list of other stories. We can't look before Create, so its address
+// is what tells us; anything subtler is found out by reading (design 77ak).
+const isOfferedPage = (page: ActivePage | null): page is ActivePage => page !== null && new URL(page.url).pathname !== "/";
+
+function usePageAccess(url: string | null): boolean | null {
+  const pages = useArticlePages();
+  const [known, setKnown] = useState<{ url: string; granted: boolean } | null>(null);
+  useEffect(() => {
+    if (pages === null || url === null) return;
+    let current = true;
+    void pages.hasAccess(url).then((granted) => {
+      if (current) setKnown({ url, granted });
+    });
+    return () => {
+      current = false;
+    };
+  }, [pages, url]);
+  return known?.url === url ? known.granted : null;
+}
+
+// The side panel's home: the video or article in front of it (docs/features/extension-panel.md,
+// docs/features/article-panel.md). There is no + New: the page is the offer to take what's
+// beside it, and it becomes the run's own progress while the run is going.
 export function CapturePage() {
   const navigate = useNavigate();
   const activeVideoUrl = useActiveVideoUrl();
+  const activePage = useActivePage();
+  const pages = useArticlePages();
+  const offeredPage = activeVideoUrl === null && isOfferedPage(activePage) ? activePage : null;
+  const pageAccess = usePageAccess(offeredPage?.url ?? null);
+  const startArticleRun = useStartArticleRun();
   const controller = useNewOverviewRunController();
   const overviewsQuery = useOverviewsWithStateQuery();
   const watchedTranscript = useWatchedTranscriptQuery();
@@ -53,13 +84,21 @@ export function CapturePage() {
   const { run, dismiss } = controller;
   const finished = run?.overview ?? null;
 
+  const oneTimeUrl = run?.article?.oneTimeAccess === true ? run.url : null;
   useEffect(() => {
     if (finished === null) {
       return;
     }
-    dismiss();
-    void navigate(Routes.overview(finished.id), { replace: true, state: JUST_GENERATED });
-  }, [finished, dismiss, navigate]);
+    const land = (oneTimeAccessHost: string | null) => {
+      dismiss();
+      void navigate(Routes.overview(finished.id), { replace: true, state: { ...JUST_GENERATED, oneTimeAccessHost } });
+    };
+    if (oneTimeUrl === null || pages === null) {
+      land(null);
+      return;
+    }
+    void pages.hasAccess(oneTimeUrl).then((granted) => land(granted ? null : domainOf(oneTimeUrl)));
+  }, [finished, oneTimeUrl, pages, dismiss, navigate]);
 
   // The panel has no dialog to say "you already have this" in: the overview it holds is
   // the answer, so it opens (docs/features/one-overview-per-video.md, "Prevention").
@@ -69,8 +108,15 @@ export function CapturePage() {
       return;
     }
     dismiss();
-    void navigate(Routes.overview(held.overviewId), { replace: true });
+    void navigate(Routes.overview(held.overviewId), { replace: true, state: ALREADY_MADE });
   }, [held, dismiss, navigate]);
+
+  // A failure belongs to the page it happened on, and "not an article" has no button: going
+  // to another page is the way forward, so that is what clears it.
+  const failedOn = run?.article?.failure != null ? run.url : null;
+  useEffect(() => {
+    if (failedOn !== null && activePage !== null && activePage.url !== failedOn) dismiss();
+  }, [failedOn, activePage, dismiss]);
 
   const analytics = useAnalytics();
   const readOverview = (overview: Overview) => {
@@ -83,7 +129,46 @@ export function CapturePage() {
       analytics.capture.panel.createChosen({ again });
       controller.start(activeVideoUrl, { from: "panel" });
     }
+    if (offeredPage !== null) {
+      analytics.capture.panel.createChosen({ again });
+      const held = again ? overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url) : null;
+      startArticleRun(offeredPage, { from: "panel", overviewId: held?.id, willAsk: pageAccess !== true });
+    }
   };
+
+  const failure = run?.article?.failure ?? null;
+  if (run !== null && failure !== null) {
+    const copy = articleFailureCopy(failure, run.url);
+    const tryAgain = () => {
+      if (activePage === null) return;
+      if (copy.way === "reload") {
+        void pages?.reload(activePage.tabId).then(() => startArticleRun(activePage, { from: "panel", accessInHand: true }));
+        return;
+      }
+      startArticleRun(activePage, { from: "panel", willAsk: copy.way === "askAgain" });
+    };
+    return (
+      <div className={styles.root} data-testid={capturePageTestIds.root}>
+        <ArticleFailureNotice copy={copy} onWay={tryAgain} />
+      </div>
+    );
+  }
+
+  if (run?.article?.asking === true) {
+    return (
+      <div className={styles.root} data-testid={capturePageTestIds.root}>
+        <div className={styles.opening}>
+          <ArticleOffer site={run.article.site} title={run.article.title} words={null} />
+          <button type="button" className={styles.primary} disabled data-testid={capturePageTestIds.createButton}>
+            Create overview
+          </button>
+          <p className={styles.askingNote} data-testid={capturePageTestIds.askingNote}>
+            Choose Allow in Chrome’s box to carry on.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (run !== null && run.overview === null) {
     return (
@@ -106,7 +191,11 @@ export function CapturePage() {
     );
   }
 
-  const alreadyHeld = overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl);
+  const alreadyHeld =
+    offeredPage === null
+      ? overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl)
+      : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
+  const nothingToTake = activeVideoUrl === null && offeredPage === null;
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
@@ -128,17 +217,27 @@ export function CapturePage() {
         <LibraryMoveNotice panel />
       ) : null}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
-        <div>
-          <h2 className={styles.title}>
-            Watch Less,
-            <br />
-            with <em className={styles.em}>The Overview</em>
-          </h2>
-          <p className={styles.standfirst}>
-            Get a succinct overview, with the main premise, key points, actionable steps and a
-            verdict on if it's worth your time.
-          </p>
-        </div>
+        {offeredPage !== null ? (
+          <ArticleOffer site={domainOf(offeredPage.url)} title={offeredPage.title} words={null} />
+        ) : (
+          <div>
+            <h2 className={styles.title}>
+              Watch Less,
+              <br />
+              with <em className={styles.em}>The Overview</em>
+            </h2>
+            {nothingToTake ? (
+              <p className={styles.standfirst} data-testid={capturePageTestIds.noVideoNote}>
+                Open a YouTube video or an article, and you can make an overview of it here.
+              </p>
+            ) : (
+              <p className={styles.standfirst}>
+                Get a succinct overview, with the main premise, key points, actionable steps and a
+                verdict on if it's worth your time.
+              </p>
+            )}
+          </div>
+        )}
 
         {alreadyHeld ? (
           <>
@@ -151,7 +250,7 @@ export function CapturePage() {
               Read overview
             </button>
             <p className={styles.note} data-testid={capturePageTestIds.alreadyInLibraryNote}>
-              This video is already in your library.{" "}
+              This {offeredPage === null ? "video" : "article"} is already in your library.{" "}
               <button
                 type="button"
                 className={styles.quiet}
@@ -166,22 +265,25 @@ export function CapturePage() {
         ) : limit !== null ? (
           <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
         ) : (
-          <button
-            type="button"
-            className={styles.primary}
-            onClick={() => createOverview(false)}
-            disabled={activeVideoUrl === null || !keysReady}
-            data-testid={capturePageTestIds.createButton}
-          >
-            Create overview
-          </button>
+          !nothingToTake && (
+            <button
+              type="button"
+              className={styles.primary}
+              onClick={() => createOverview(false)}
+              disabled={!keysReady}
+              data-testid={capturePageTestIds.createButton}
+            >
+              Create overview
+            </button>
+          )
         )}
 
         {keysReady && limit === null && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
 
-        {activeVideoUrl === null && (
-          <p className={styles.note} data-testid={capturePageTestIds.noVideoNote}>
-            Visit a YouTube video to start creating an overview.
+        {offeredPage !== null && alreadyHeld === null && keysReady && limit === null && pageAccess === false && (
+          <p className={styles.note} data-testid={capturePageTestIds.firstTimeNote}>
+            First time on {domainOf(offeredPage.url)}. Chrome will ask once whether we can read this site. We only read a page
+            when you press Create.
           </p>
         )}
 
@@ -194,6 +296,8 @@ export function CapturePage() {
                 : "Fetches the transcript, then writes the overview."}
           </p>
         )}
+
+        {nothingToTake && <RecentOverviews entries={overviewsQuery.data ?? []} />}
 
         <div className={styles.milestones}>
           <MilestoneStack
@@ -234,16 +338,28 @@ function RunInProgress({
 
   return (
     <div className={styles.working} data-testid={capturePageTestIds.working}>
-      <div>
-        <h2 className={styles.workingTitle} data-testid={capturePageTestIds.workingTitle}>
-          {run.video?.title ?? "New overview"}
-        </h2>
-        <p className={styles.workingChannel} data-testid={capturePageTestIds.workingChannel}>
-          {run.video?.channel ?? run.url}
-        </p>
-      </div>
+      {run.article !== null ? (
+        <ArticleOffer site={run.article.site} title={run.article.title} words={run.article.words} />
+      ) : (
+        <>
+          <div>
+            <h2 className={styles.workingTitle} data-testid={capturePageTestIds.workingTitle}>
+              {run.video?.title ?? "New overview"}
+            </h2>
+            <p className={styles.workingChannel} data-testid={capturePageTestIds.workingChannel}>
+              {run.video?.channel ?? run.url}
+            </p>
+          </div>
 
-      <span className={styles.rule} aria-hidden="true" />
+          <span className={styles.rule} aria-hidden="true" />
+        </>
+      )}
+
+      {run.article?.regenerating === true && (
+        <p className={styles.note} data-testid={capturePageTestIds.regeneratingNote}>
+          Reading the article again
+        </p>
+      )}
 
       <GenerationSteps run={run} />
 

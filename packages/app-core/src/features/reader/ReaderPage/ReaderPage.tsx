@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
+  KEY_POINTS_SECTION,
   OverviewId,
   isUnreadableRecordError,
   overviewMetaParts,
@@ -13,7 +14,8 @@ import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { wasJustGenerated } from "../../newOverview/justGenerated.js";
+import { oneTimeAccessHost, wasAlreadyMade, wasJustGenerated } from "../../newOverview/justGenerated.js";
+import { useStartArticleRun } from "../../newOverview/useStartArticleRun.js";
 import { SavedLocallyNote } from "../../plus/components/SavedLocallyNote/SavedLocallyNote.js";
 import { useSavedLocallyNote } from "../../plus/useSavedLocallyNote.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
@@ -31,6 +33,9 @@ import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
+import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
+import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
+import { useShowOnPage } from "../useShowOnPage.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
 import { ShareOverviewDialog } from "../../shares/components/ShareOverviewDialog/ShareOverviewDialog.js";
 import { useShareOverviewMutation } from "../../shares/mutations/useShareOverviewMutation.js";
@@ -64,6 +69,9 @@ import { readerPageTestIds } from "./ReaderPageTestIds.js";
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 const READER_MASTHEAD_HEIGHT_PROPERTY = "--reader-masthead-height";
 
+const madeOn = (savedAt: string) =>
+  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
+
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
 
@@ -90,6 +98,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [editingReason, setEditingReason] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [explainingRegenerate, setExplainingRegenerate] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
     READER_MASTHEAD_HEIGHT_PROPERTY,
@@ -109,6 +118,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [playerDocked, setPlayerDocked] = useState(false);
   const location = useLocation();
   const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
+  const onetimeHost = oneTimeAccessHost(location.state);
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
   // The chip comes in where the reader is looking: above the end of the note when marked
   // read from there, in the head from anywhere else (docs/features/time-saved.md).
@@ -138,7 +148,29 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     overview?.source.kind === "web" && overview.article !== null ? { source: overview.source, article: overview.article } : null;
   const tabsShown = webArticle === null ? READER_TABS : webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
   const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
-  const captions = useMemo(() => (overview ? overviewNoteCaptions(overview) : {}), [overview]);
+  const onPage = useShowOnPage(webArticle?.source ?? null);
+  const besideArticle = onPage !== null;
+  const startArticleRun = useStartArticleRun();
+  const captions = useMemo(() => {
+    const written = overview ? overviewNoteCaptions(overview) : {};
+    return besideArticle && written[KEY_POINTS_SECTION] !== undefined
+      ? { ...written, [KEY_POINTS_SECTION]: "Chapter links move the article beside this panel to that place." }
+      : written;
+  }, [overview, besideArticle]);
+  const regenerate =
+    webArticle === null
+      ? null
+      : {
+          asksFirst: onPage === null,
+          onChoose: () => {
+            if (onPage === null) {
+              setExplainingRegenerate(true);
+              return;
+            }
+            startArticleRun(onPage.beside, { from: "regenerate", overviewId, willAsk: true });
+            void navigate(Routes.home());
+          },
+        };
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
@@ -308,8 +340,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 }
               : null
           }
+          regenerate={regenerate}
           onDelete={() => setConfirmingDelete(true)}
         />
+
+        {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
 
         {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
 
@@ -360,9 +395,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   )
                 }
                 renderLineEnd={(line) =>
-                  webArticle !== null && <ArticleLineLinks line={line} {...webArticle} />
+                  webArticle !== null && <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
                 }
               />
+              {onetimeHost !== null && (
+                <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
+              )}
               <NoteEndActions
                 read={state.read}
                 favourite={state.favourite}
@@ -397,7 +435,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               onOpenTranscriptAt={openTranscriptAt}
             />
           )}
-          {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} />}
+          {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
         </div>
 
         {/* Where the library's order takes you next. At the foot rather than on the bar:
@@ -450,6 +488,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               setConfirmingDelete(false);
             }}
           />
+        )}
+
+        {explainingRegenerate && webArticle !== null && (
+          <RegenerateArticleDialog url={webArticle.source.url} onClose={() => setExplainingRegenerate(false)} />
         )}
 
         {sharing && (

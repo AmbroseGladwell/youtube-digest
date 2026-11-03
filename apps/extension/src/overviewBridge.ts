@@ -9,6 +9,8 @@ export const BridgeMessage = {
   REPORT_RUN: "overview/report-run",
   READ_BUTTON_STATE: "overview/read-button-state",
   BUTTON_STATE_CHANGED: "overview/button-state-changed",
+  PAGE_MENU_REQUEST: "overview/page-menu-request",
+  TAKE_PAGE_REQUEST: "overview/take-page-request",
 } as const;
 
 export type ButtonStateKind = "idle" | "generating" | "ready";
@@ -61,6 +63,10 @@ export const isReportRun = (message: unknown): boolean =>
 
 export const isReadButtonState = (message: unknown): message is ReadButtonStateMessage =>
   isTyped(message, BridgeMessage.READ_BUTTON_STATE);
+
+export const isPageMenuRequest = (message: unknown): boolean => isTyped(message, BridgeMessage.PAGE_MENU_REQUEST);
+
+export const isTakePageRequest = (message: unknown): boolean => isTyped(message, BridgeMessage.TAKE_PAGE_REQUEST);
 
 export const isButtonStateChanged = (message: unknown): message is ButtonStateChangedMessage =>
   isTyped(message, BridgeMessage.BUTTON_STATE_CHANGED);

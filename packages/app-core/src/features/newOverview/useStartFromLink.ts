@@ -6,6 +6,8 @@ import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { useLimitMessage } from "./useLimitMessage.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
 import { usePlaylistApi } from "../playlists/usePlaylistApi.js";
+import { isArticleLink, useArticleLink } from "./useArticleLink.js";
+import { useStartArticleFromLink } from "./useStartArticleFromLink.js";
 
 // A pasted link handed to the shell's run, which opens the dialog on the progress it makes:
 // one pipeline, wherever the field sits (docs/features/stone-theme.md, "First run").
@@ -17,8 +19,13 @@ export function useStartFromLink() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const playlistsAvailable = usePlaylistApi() !== null;
   const limit = useLimitMessage();
+  const article = useArticleLink(url, "home");
+  const startArticle = useStartArticleFromLink();
   useTypingSettled(url, () =>
-    analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "home" }),
+    analytics.capture.newOverviewForm.linkEntered({
+      recognised: isYouTubeUrl(url) || (article.available && isArticleLink(url)),
+      from: "home",
+    }),
   );
 
   const generate = (event: FormEvent) => {
@@ -33,9 +40,19 @@ export function useStartFromLink() {
     if (limit !== null) {
       return;
     }
+    if (article.link.status === "found") {
+      setValidationError(null);
+      startArticle(article.link.article, "home");
+      controller.open();
+      setUrl("");
+      return;
+    }
+    if (article.link.status !== "none") {
+      return;
+    }
     if (!isYouTubeUrl(url)) {
       analytics.capture.newOverviewForm.linkRefused({ from: "home" });
-      setValidationError("That doesn't look like a YouTube URL.");
+      setValidationError(article.available ? "That doesn't look like a link we can read." : "That doesn't look like a YouTube URL.");
       return;
     }
     setValidationError(null);
@@ -44,5 +61,5 @@ export function useStartFromLink() {
     setUrl("");
   };
 
-  return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate };
+  return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate, article };
 }

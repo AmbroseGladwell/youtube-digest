@@ -7,7 +7,7 @@ export const articleReadMinutes = (words: number): number => Math.max(1, Math.ro
 
 export const articleReadMs = (words: number): number => (words / ARTICLE_WORDS_PER_MINUTE) * 60_000;
 
-const domainOf = (url: string): string => new URL(url).hostname.replace(/^www\./, "");
+export const domainOf = (url: string): string => new URL(url).hostname.replace(/^www\./, "");
 
 // Who the piece is from: the channel, or the site, or failing that its address.
 export const sourceName = (source: Source): string =>

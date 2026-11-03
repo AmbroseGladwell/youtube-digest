@@ -9,7 +9,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
-import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
+import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
@@ -39,6 +39,7 @@ export interface ReaderMastheadProps {
   onEditingTopicsChange: (editing: boolean) => void;
   onEditReason: () => void;
   onShare: (() => void) | null;
+  regenerate: OverviewActionsMenuProps["regenerate"];
   onDelete: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
@@ -80,6 +81,7 @@ export function ReaderMasthead({
   onEditingTopicsChange,
   onEditReason,
   onShare,
+  regenerate,
   onDelete,
   ref,
 }: ReaderMastheadProps) {
@@ -171,6 +173,7 @@ export function ReaderMasthead({
           compact={compact}
           webApp={webApp}
           onShare={onShare}
+          regenerate={regenerate}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={() => onToggleRead("actionsMenu")}

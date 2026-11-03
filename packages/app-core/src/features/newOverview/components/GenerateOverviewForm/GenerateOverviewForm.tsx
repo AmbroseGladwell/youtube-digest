@@ -16,6 +16,9 @@ import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 import { UsageLine } from "../UsageLine/UsageLine.js";
 import { LimitMessageNote } from "../LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../useLimitMessage.js";
+import { isArticleLink, useArticleLink } from "../../useArticleLink.js";
+import { useStartArticleFromLink } from "../../useStartArticleFromLink.js";
+import { ArticleLinkStatus } from "../ArticleLinkStatus/ArticleLinkStatus.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -68,8 +71,13 @@ export function GenerateOverviewForm({
   const [validationError, setValidationError] = useState<string | null>(null);
   const analytics = useAnalytics();
   const urlFieldId = useId();
+  const article = useArticleLink(url, "dialog");
+  const startArticle = useStartArticleFromLink();
   useTypingSettled(url, () =>
-    analytics.capture.newOverviewForm.linkEntered({ recognised: isYouTubeUrl(url), from: "dialog" }),
+    analytics.capture.newOverviewForm.linkEntered({
+      recognised: isYouTubeUrl(url) || (article.available && isArticleLink(url)),
+      from: "dialog",
+    }),
   );
 
   const handleSubmit = (event: FormEvent) => {
@@ -83,14 +91,23 @@ export function GenerateOverviewForm({
     if (choosing !== null || limit !== null) {
       return;
     }
+    if (article.link.status === "found") {
+      setValidationError(null);
+      startArticle(article.link.article, "dialog");
+      return;
+    }
+    if (article.link.status !== "none") {
+      return;
+    }
     if (!isYouTubeUrl(url)) {
       analytics.capture.newOverviewForm.linkRefused({ from: "dialog" });
-      setValidationError("That doesn't look like a YouTube URL.");
+      setValidationError(article.available ? "That doesn't look like a link we can read." : "That doesn't look like a YouTube URL.");
       return;
     }
     setValidationError(null);
     onSubmit(url);
   };
+  const generateOffered = article.link.status !== "held" && article.link.status !== "failed";
 
   const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
   const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
@@ -103,7 +120,7 @@ export function GenerateOverviewForm({
       data-testid={generateOverviewFormTestIds.root}
     >
       <label className={styles.field}>
-        <span className={styles.label}>YouTube link</span>
+        <span className={styles.label}>{article.available ? "Link" : "YouTube link"}</span>
         <input
           id={urlFieldId}
           name="video-url"
@@ -114,7 +131,13 @@ export function GenerateOverviewForm({
           autoCorrect="off"
           spellCheck={false}
           className={styles.urlInput}
-          placeholder={playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link"}
+          placeholder={
+            article.available
+              ? "Paste a YouTube or article link"
+              : playlistsAvailable
+                ? "Paste a YouTube video or playlist link"
+                : "Paste a YouTube link"
+          }
           value={url}
           onChange={(event) => onUrlChange(event.target.value)}
           onPaste={(event) => {
@@ -129,6 +152,15 @@ export function GenerateOverviewForm({
           data-testid={generateOverviewFormTestIds.urlInput}
         />
       </label>
+
+      <ArticleLinkStatus
+        link={article.link}
+        url={url.trim()}
+        place={article.place}
+        onRetry={article.retry}
+        onClear={() => onUrlChange("")}
+        onOpened={onCancel}
+      />
 
       {isWatchedVideo && (
         <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>
@@ -179,8 +211,8 @@ export function GenerateOverviewForm({
         />
       ) : keysReady ? (
         <p className={styles.note}>
-          Fetches the transcript, then writes the overview. Nothing is saved to your library unless
-          both succeed.
+          {article.link.status === "none" ? "Fetches the transcript" : "Reads the article"}, then writes the overview. Nothing is
+          saved to your library unless both succeed.
         </p>
       ) : (
         <KeyPromptNote
@@ -223,11 +255,11 @@ export function GenerateOverviewForm({
         >
           Cancel
         </button>
-        {choosing === null && limit === null && (
+        {choosing === null && limit === null && generateOffered && (
           <button
             type="submit"
             className={styles.generateButton}
-            disabled={!keysReady}
+            disabled={!keysReady || article.link.status === "reading"}
             data-testid={generateOverviewFormTestIds.generateButton}
           >
             Generate

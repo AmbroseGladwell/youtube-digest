@@ -3,4 +3,6 @@ export const articleChaptersPanelTestIds = {
   count: "ArticleChaptersPanel.count",
   row: "ArticleChaptersPanel.row",
   open: "ArticleChaptersPanel.open",
+  show: "ArticleChaptersPanel.show",
+  missing: "ArticleChaptersPanel.missing",
 };

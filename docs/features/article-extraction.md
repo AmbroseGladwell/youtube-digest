@@ -1,8 +1,7 @@
 # Article extraction
 
-Reading an article out of a web page, the second slice of Trello OV-77. Nothing here is visible
-to a reader yet: the panel's Create button for articles arrives with generation. Decided
-2026-11-02.
+Reading an article out of a web page, the second slice of Trello OV-77. Decided 2026-11-02. What
+a reader sees of it is in `article-panel.md`.
 
 **What is built, and where:**
 
@@ -20,7 +19,7 @@ to a reader yet: the panel's Create button for articles arrives with generation.
 ## A package of its own
 
 `@overview/articles` takes a `Document` rather than reaching for `window`, so the server's fetch
-for pasted links can run the same code over a page it parsed.
+for pasted links runs the same code over a page it parsed (`pasted-article-links.md`).
 
 ## Getting at the page
 
@@ -33,9 +32,9 @@ neither prompting on update:
   `chromeProviderPermissions` asks for one provider. It needs a user gesture.
 - **`activeTab`, from outside the panel.** Chrome's documented gestures are the toolbar button, a
   context menu, a shortcut and the omnibox. A click inside the side panel is not one of them, and
-  the grant ends when the reader leaves the site. The menu item is reader-visible, so it comes
-  with generation, which also has to check whether the toolbar button still grants `activeTab`
-  while it opens the panel: the docs don't say.
+  the grant ends when the reader leaves the site. The right-click item uses this. Whether the
+  toolbar button grants `activeTab` while it opens the panel is undocumented, so nothing relies
+  on it.
 
 If per-site prompts prove annoying, the fallback is one optional request for all sites.
 
@@ -55,9 +54,11 @@ untouched, and a test says so.
 
 | Outcome | When |
 |---|---|
-| `paywalled` | structured data says `isAccessibleForFree: false` and the page shows under 400 words. A reader who can see the whole piece gets it read: that is why this runs in their tab |
+| `paywalled` | structured data says `isAccessibleForFree: false` and the page shows under 400 words. A reader who can see the whole piece gets it read: that is why this runs in their tab. Carries the words shown |
 | `nothing-readable` | under 100 words, or no sign of an article |
+| `not-loaded` | the tab is an error page, or nothing readable while it is still loading |
 | `no-access` | the script could not run |
+| `declined` | the reader said no in Chrome's box, so nothing was read |
 
 **A sign of an article is any one of three:** structured data declaring one, Readability's
 `isProbablyReaderable`, or 500 words of prose at no more than 60 words per sentence.

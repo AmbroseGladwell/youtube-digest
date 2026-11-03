@@ -76,10 +76,10 @@ const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
 // Where a new overview was asked for.
-export const CaptureEntry = z.enum(["dialog", "home", "panel", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
+export const CaptureEntry = z.enum(["dialog", "home", "panel", "pageMenu", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
 // Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
-export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service"]);
+export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article"]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
@@ -94,6 +94,14 @@ export const CaptureFailure = z.enum([
   "budget-exhausted",
   "daily-cap",
   "noTranscriptSource",
+  "article-declined",
+  "article-paywalled",
+  "article-not-readable",
+  "article-not-loaded",
+  "article-no-access",
+  "article-blocked",
+  "article-not-found",
+  "article-no-answer",
   "generation",
   "unknown",
 ]);
@@ -167,6 +175,7 @@ export const OverviewMenuItem = z.enum([
   "copyYouTubeLink",
   "readArticle",
   "copyArticleLink",
+  "regenerate",
   "openInWebApp",
   "delete",
 ]);
@@ -586,7 +595,12 @@ export const analyticsEvents = {
         recognised: z.boolean(),
         from: z.enum(["dialog", "home"]),
       }),
-      linkRefused: event("The reader submits something that isn't a YouTube link", { from: z.enum(["dialog", "home"]) }),
+      linkRefused: event("The reader submits something that isn't a link we can read", { from: z.enum(["dialog", "home"]) }),
+      articleLinkFailed: event("A pasted article link couldn't be read by our server, why, and whether the reader was sent to the extension", {
+        from: z.enum(["dialog", "home"]),
+        failure: CaptureFailure,
+        sentToExtension: z.boolean(),
+      }),
       watchingVideoUsed: event("The reader fills the link with the video they're watching"),
       clipboardPasted: event("The reader fills the link from the clipboard"),
       keysLinkFollowed: event("The reader follows the link to set up their keys before making an overview", {
@@ -608,7 +622,7 @@ export const analyticsEvents = {
       typed: event("The reader types why they saved an overview while it's made, once they stop; never the reason"),
     },
     panel: {
-      createChosen: event("The reader asks the side panel for an overview of the video in front of it", {
+      createChosen: event("The reader asks the side panel for an overview of the video or article in front of it", {
         again: z.boolean(),
       }),
       readChosen: event("The reader opens the overview the library already holds for this video", {
