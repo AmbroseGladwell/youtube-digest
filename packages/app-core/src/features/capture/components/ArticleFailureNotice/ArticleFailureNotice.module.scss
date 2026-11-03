@@ -36,3 +36,9 @@
   @include controls.surface-pill;
   @include controls.pill-md;
 }
+
+.after {
+  margin: 0.625rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}

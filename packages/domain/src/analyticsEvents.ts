@@ -99,6 +99,9 @@ export const CaptureFailure = z.enum([
   "article-not-readable",
   "article-not-loaded",
   "article-no-access",
+  "article-blocked",
+  "article-not-found",
+  "article-no-answer",
   "generation",
   "unknown",
 ]);
@@ -592,7 +595,12 @@ export const analyticsEvents = {
         recognised: z.boolean(),
         from: z.enum(["dialog", "home"]),
       }),
-      linkRefused: event("The reader submits something that isn't a YouTube link", { from: z.enum(["dialog", "home"]) }),
+      linkRefused: event("The reader submits something that isn't a link we can read", { from: z.enum(["dialog", "home"]) }),
+      articleLinkFailed: event("A pasted article link couldn't be read by our server, why, and whether the reader was sent to the extension", {
+        from: z.enum(["dialog", "home"]),
+        failure: CaptureFailure,
+        sentToExtension: z.boolean(),
+      }),
       watchingVideoUsed: event("The reader fills the link with the video they're watching"),
       clipboardPasted: event("The reader fills the link from the clipboard"),
       keysLinkFollowed: event("The reader follows the link to set up their keys before making an overview", {

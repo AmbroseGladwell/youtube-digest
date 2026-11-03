@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ExtractedArticle } from "./ExtractedArticle.js";
 
-export const ArticleReadFailure = z.enum(["nothing-readable", "paywalled", "no-access", "not-loaded", "declined"]);
+export const ArticleReadFailure = z.enum(["nothing-readable", "paywalled", "no-access", "not-loaded", "declined", "blocked", "not-found", "no-answer"]);
 export type ArticleReadFailure = z.infer<typeof ArticleReadFailure>;
 
 export const ArticleRead = z.discriminatedUnion("status", [

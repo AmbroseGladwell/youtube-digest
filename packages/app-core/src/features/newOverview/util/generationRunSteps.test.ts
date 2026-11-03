@@ -17,6 +17,7 @@ describe("generationRunSteps", () => {
     words: null,
     asking: false,
     oneTimeAccess,
+    fetched: false,
     regenerating: false,
     failure: null,
   });
@@ -29,6 +30,10 @@ describe("generationRunSteps", () => {
     const [read, write] = generationRunSteps(makeNewOverviewRun({ article: articleRun(), transcriptWords: 3200 }));
     expect(read).toMatchObject({ detail: "3,200 words", state: "done" });
     expect(write?.state).toBe("running");
+  });
+
+  it("says fetching for a pasted link, which our server read", () => {
+    expect(generationRunSteps(makeNewOverviewRun({ article: { ...articleRun(), fetched: true } }))[0]?.label).toBe("Fetching the article");
   });
 
   it("says this page on the right-click route, where we don't yet know it's an article", () => {

@@ -10,6 +10,9 @@ const ARTICLE_FAILURE = {
   "nothing-readable": "article-not-readable",
   "not-loaded": "article-not-loaded",
   "no-access": "article-no-access",
+  blocked: "article-blocked",
+  "not-found": "article-not-found",
+  "no-answer": "article-no-answer",
 } as const;
 
 // A failed run by name, never by its message, which can quote a provider's own words

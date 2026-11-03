@@ -99,6 +99,8 @@ Five folders, five different questions.
   on-demand script, what counts as an article, and the failures it names.
 - `article-panel.md` — making an overview of an article from the panel: Create, Chrome's box,
   right-click, the failures, duplicates, regenerating, and links that move the page.
+- `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
+  what the field says.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,

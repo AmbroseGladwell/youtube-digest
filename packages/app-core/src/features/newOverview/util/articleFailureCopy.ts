@@ -1,7 +1,7 @@
 import { domainOf } from "@overview/domain";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 
-export type ArticleFailureWay = "askAgain" | "tryAgain" | "reload" | null;
+export type ArticleFailureWay = "askAgain" | "tryAgain" | "tryAnother" | "reload" | null;
 
 export interface ArticleFailureCopy {
   title: string;
@@ -12,7 +12,9 @@ export interface ArticleFailureCopy {
 
 // Designs 77ai–77al. Each title says what happened, not what the reader did, and each body
 // says that the month's count is untouched, which holds because nothing is reserved until
-// the page has been read. The site's own name is only known if the page gave it.
+// the page has been read. The site's own name is only known if the page gave it. The last
+// three reasons of no-access's group come from our server, so only a pasted link meets them
+// (pastedLinkFailureCopy.ts).
 export function articleFailureCopy(failure: ArticleFailure, url: string): ArticleFailureCopy {
   const host = domainOf(url);
   const site = failure.siteName ?? host;
@@ -39,6 +41,9 @@ export function articleFailureCopy(failure: ArticleFailure, url: string): Articl
         wayLabel: "Reload and try again",
       };
     case "no-access":
+    case "blocked":
+    case "not-found":
+    case "no-answer":
       return {
         title: "Chrome doesn’t let us read this page",
         body: "Some pages are closed to every extension. Nothing counted.",

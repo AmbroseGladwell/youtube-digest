@@ -78,8 +78,8 @@ function Scene({ slide, topics }: { slide: OnboardingSlideName; topics: readonly
     <div className={styles.card}>
       {[
         ["Videos", "Now"],
+        ["Articles", "Now"],
         ["Podcasts", "Soon"],
-        ["Articles", "Soon"],
         ["PDFs", "Soon"],
       ].map(([name, when]) => (
         <span key={name} className={`${styles.sourceRow} ${when === "Now" ? styles.sourceNow : ""}`}>

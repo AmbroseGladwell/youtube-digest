@@ -19,7 +19,7 @@ a reader sees of it is in `article-panel.md`.
 ## A package of its own
 
 `@overview/articles` takes a `Document` rather than reaching for `window`, so the server's fetch
-for pasted links can run the same code over a page it parsed.
+for pasted links runs the same code over a page it parsed (`pasted-article-links.md`).
 
 ## Getting at the page
 
