@@ -9,6 +9,7 @@ import {
   type RecipeScale,
 } from "../../util/recipeAdjustment.js";
 import { RecipeReadAloud, type RecipeListVoice } from "../RecipeMethod/RecipeReadAloud.js";
+import { useSpokenLineInView } from "../RecipeMethod/useSpokenLineInView.js";
 import styles from "./RecipeIngredients.module.scss";
 import { recipeIngredientsTestIds } from "./RecipeIngredientsTestIds.js";
 
@@ -70,6 +71,7 @@ export function RecipeIngredients({
   const headingId = useId();
   const groupName = useId();
   const { lines } = adjustment;
+  const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
   return (
     <section className={styles.root} aria-labelledby={headingId} data-testid={recipeIngredientsTestIds.root}>
       <div className={styles.head}>
@@ -147,6 +149,7 @@ export function RecipeIngredients({
           return (
             <li
               key={index}
+              ref={active ? spokenLine : undefined}
               className={`${styles.line} ${active ? styles.lineActive : ""}`}
               aria-current={active || undefined}
               data-testid={active ? recipeIngredientsTestIds.activeLine : recipeIngredientsTestIds.line}

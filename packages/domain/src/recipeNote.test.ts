@@ -53,12 +53,31 @@ test("the length line names a recipe by its stated total, or just as a recipe", 
   assert.equal(overviewMetaParts(makeRecipeOverview({ totalMinutes: null })).at(-1), "Recipe");
 });
 
-test("a recipe's narration is its summary alone", () => {
+test("a recipe's narration is the whole recipe, with each step's number said aloud", () => {
   const lines = overviewNoteLines(makeRecipeOverview());
   assert.deepEqual(
-    lines.map(({ text }) => text),
-    ["Summary", "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in."],
+    lines.map(({ section, text, spoken }) => [section, spoken ?? text]),
+    [
+      ["Summary", "In short"],
+      ["Summary", "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in."],
+      ["Ingredients", "There are 3 ingredients"],
+      ["Ingredients", "3 large leeks, trimmed"],
+      ["Ingredients", "2 × 400g tins cannellini beans, drained"],
+      ["Ingredients", "Salt and black pepper"],
+      ["Method", "The method, in 3 steps"],
+      ["Method", "Step 1. Roast the leeks for 20 minutes."],
+      ["Method", "Step 2. Simmer the beans in the stock."],
+      ["Method", "Step 3. Stir the leeks through."],
+    ],
   );
+  assert.equal(lines.at(-1)?.text, "Stir the leeks through.");
+});
+
+test("the ingredients are read as shown, and a copy without the method stops after them", () => {
+  const adjusted = overviewNoteLines(makeRecipeOverview(), { ingredients: ["6 large leeks, trimmed"] });
+  assert.deepEqual(adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text), ["6 large leeks, trimmed"]);
+  const shared = overviewNoteLines(makeRecipeOverview({ steps: [] }));
+  assert.equal(shared.some(({ section }) => section === "Method"), false);
 });
 
 test("recipes don't count towards time saved", () => {

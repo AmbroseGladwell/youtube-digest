@@ -12,6 +12,8 @@ export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
 export const READ_ANYWAY_SECTION = "Read it anyway?";
+export const INGREDIENTS_SECTION = "Ingredients";
+export const METHOD_SECTION = "Method";
 
 interface Body {
   text: string;
@@ -82,7 +84,9 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // Takes SharedNote rather than Overview because a shared copy has to build the same body
 // from the same fields, and the three the copy leaves out are ones this never read
 // (docs/features/sharing.md). An Overview is a SharedNote with more on it.
-export function overviewNoteLines(overview: SharedNote): NoteLine[] {
+// A recipe's ingredients can be read as the reader adjusted them, so what is heard is what is
+// on screen (docs/features/recipe-notes.md, "Reading aloud").
+export function overviewNoteLines(overview: SharedNote, shown: { ingredients?: readonly string[] } = {}): NoteLine[] {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {
@@ -95,10 +99,24 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
     }
   };
 
-  // A recipe's narration is its summary, for deciding; each list has its own Read aloud, for
-  // cooking (design 144t).
+  // A recipe's narration is the whole recipe, one section after another, so a single render
+  // has every part ready; each list's Read aloud plays its own stretch of it (OV-148).
   if (overview.recipe) {
-    section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "In short" }, [{ text: overview.recipe.summary }]);
+    const { recipe } = overview;
+    const ingredients = shown.ingredients ?? recipe.ingredients;
+    section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "In short" }, [{ text: recipe.summary }]);
+    section(
+      INGREDIENTS_SECTION,
+      { text: INGREDIENTS_SECTION, spoken: ingredients.length === 1 ? "There is one ingredient" : `There are ${ingredients.length} ingredients` },
+      ingredients.map((text) => ({ text })),
+      true,
+    );
+    section(
+      METHOD_SECTION,
+      { text: METHOD_SECTION, spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps` },
+      recipe.steps.map(({ text }, index) => ({ text, spoken: `Step ${index + 1}. ${text}` })),
+      true,
+    );
     return lines;
   }
 
