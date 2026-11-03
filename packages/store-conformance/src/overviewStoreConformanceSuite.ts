@@ -159,7 +159,7 @@ export function defineOverviewStoreConformanceSuite(
     const overview = makeOverview();
     await store.saveOverview(overview);
     assert.deepEqual(await store.listClaims(), [
-      { overviewId: overview.id, title: overview.video.title, claim: overview.coreClaim },
+      { overviewId: overview.id, title: overview.source.title, claim: overview.coreClaim },
     ]);
   });
 
@@ -280,9 +280,10 @@ function defineMigrationChecks(
     const overview = await store.getOverview(oldRecordId);
 
     assert.ok(overview);
-    assert.equal(overview.video.durationMs, null);
-    assert.equal(overview.video.publishedAt, null);
-    assert.equal(overview.video.thumbnailUrl, null);
+    assert.ok(overview.source.kind === "youtube");
+    assert.equal(overview.source.durationMs, null);
+    assert.equal(overview.source.publishedAt, null);
+    assert.equal(overview.source.thumbnailUrl, null);
     assert.equal((await store.listOverviews()).length, 1);
     assert.deepEqual(await store.listUnreadable(), []);
   });
@@ -317,7 +318,7 @@ function defineMigrationChecks(
 
     const [unreadable] = await store.listUnreadable();
 
-    assert.equal(unreadable?.salvaged?.video?.title, (oldRecord.video as { title: string }).title);
+    assert.equal(unreadable?.salvaged?.source?.title, (oldRecord.video as { title: string }).title);
     assert.equal(unreadable?.salvaged?.savedAt, oldRecord.savedAt);
   });
 

@@ -53,6 +53,55 @@ test("a signed-in reader with no key gets an overview made on our key with Sol, 
   await testApp.close();
 });
 
+test("an article is made on our key from what the reader's browser read, and counts as one overview", async () => {
+  const note = {
+    inOneLine: "A reported piece on one town's repair bill.",
+    coreClaim: "The repair bill doubled because a survey was never checked.",
+    thin: false,
+    keyPoints: [
+      { text: "The bridge closed in March.", paragraphIndex: 0 },
+      { text: "The county offered half.", paragraphIndex: 2 },
+      { text: "Residents pay the rest.", paragraphIndex: 3 },
+    ],
+    chapters: [
+      { title: "The closure", summary: "Why the bridge shut.", startParagraphIndex: 0 },
+      { title: "Who pays", summary: "How the bill is split.", startParagraphIndex: 2 },
+    ],
+    matchedTopicNames: [],
+    suggestedTopic: null,
+    tags: ["bridges", "local-news", "budgets"],
+    howToApply: { items: [] },
+    readAnyway: { answer: "no", reason: "This carries it.", leftOut: "It leaves out the council meeting.", chapterIndexes: [] },
+  };
+  const openAi = makeFakeOpenAi({ status: 200, body: { choices: [{ message: { content: JSON.stringify(note) } }], usage: {} } });
+  const testApp = await ourKeyApp(openAi);
+  const account = await makeAccount(testApp);
+  const { overviewId, input } = generationRequest(randomUUID());
+  const { video: _video, transcript: _transcript, ...reader } = input as Record<string, unknown>;
+  const article = {
+    url: "https://news.example.com/bridge",
+    title: "Bridge repairs cost twice the plan",
+    siteName: "Example News",
+    author: null,
+    publishedAt: null,
+    language: "en",
+    imageUrl: null,
+    sections: [
+      { heading: null, anchor: null, text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday." },
+      { heading: "Who pays", anchor: "who-pays", text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates." },
+    ],
+    wordCount: 500,
+  };
+
+  const response = await account.inject({ method: "POST", url: "/api/generations", body: { overviewId, input: { ...reader, article } } });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json().source.kind, "web");
+  assert.equal(response.json().article.chapters[1].place.anchor, "who-pays");
+  assert.equal((await usageOf(account)).ours.used, 1);
+  await testApp.close();
+});
+
 test("regenerating counts again, because it costs the same again", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
   const account = await makeAccount(testApp);

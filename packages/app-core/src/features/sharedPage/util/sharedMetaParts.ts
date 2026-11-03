@@ -8,8 +8,8 @@ const SHARED_ON = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "sho
 // (docs/prototype/constraints.md).
 export function sharedMetaParts(note: SharedNote, sharedAt: string): string[] {
   const parts = overviewMetaParts(note);
-  if (note.video.publishedAt !== null) {
-    parts.push(`published ${formatPublishedDate(note.video.publishedAt)}`);
+  if (note.source.publishedAt !== null) {
+    parts.push(`published ${formatPublishedDate(note.source.publishedAt)}`);
   }
   parts.push(`shared ${SHARED_ON.format(new Date(sharedAt))}`);
   return parts;

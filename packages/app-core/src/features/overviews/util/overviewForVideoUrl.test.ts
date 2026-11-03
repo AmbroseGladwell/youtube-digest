@@ -1,6 +1,6 @@
 import { VideoId } from "@overview/domain";
 import { describe, expect, it } from "vitest";
-import { makeOverviewWithState } from "../types/OverviewFactory.testHelper.js";
+import { makeOverviewWithState, type VideoOverview } from "../types/OverviewFactory.testHelper.js";
 import { overviewForVideoUrl } from "./overviewForVideoUrl.js";
 
 const noteOn = (videoId: string | null, savedAt = "2026-09-16T00:00:00.000Z") => {
@@ -9,7 +9,7 @@ const noteOn = (videoId: string | null, savedAt = "2026-09-16T00:00:00.000Z") =>
     ...entry,
     overview: {
       ...entry.overview,
-      video: { ...entry.overview.video, id: videoId === null ? null : VideoId.parse(videoId) },
+      source: { ...(entry.overview as VideoOverview).source, id: videoId === null ? null : VideoId.parse(videoId) },
     },
   };
 };

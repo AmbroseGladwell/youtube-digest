@@ -20,8 +20,8 @@ const shared = (): Overview =>
       reason: "Worth it for the grid-load animations.",
       range: { startMs: 365_000, endMs: 500_000 },
     },
-    video: {
-      ...makeOverview().video,
+    source: {
+      ...makeOverview().source,
       title: TITLE,
       channel: "Practical Engineering",
       durationMs: 842_000,
@@ -35,7 +35,7 @@ const sharedPayload = (overview = shared()): SharePayload => ({
   sharedAt: "2026-09-30T11:00:00.000Z",
   snapshot: shareSnapshot({
     overview,
-    transcript: makeStoredTranscript({ videoId: overview.video.id! }),
+    transcript: makeStoredTranscript({ videoId: overview.source.id! }),
     narration: null,
   }),
 });

@@ -80,7 +80,7 @@ export class InMemoryOverviewStore implements OverviewStore {
   async listClaims(): Promise<ClaimSummary[]> {
     return [...this.#overviews.values()].map((overview) => ({
       overviewId: overview.id,
-      title: overview.video.title,
+      title: overview.source.title,
       claim: overview.coreClaim,
     }));
   }

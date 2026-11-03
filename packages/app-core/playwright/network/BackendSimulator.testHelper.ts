@@ -24,6 +24,7 @@ import {
   type ConnectionRequest,
   type Plan,
   type MagicLinkRequest,
+  type ArticleRead,
   type OurKeyGenerationRequest,
   type ProfilePassInput,
   type ProfilePassItem,
@@ -40,10 +41,11 @@ import {
   type Topic,
   type UnreadableRecord,
   type VideoId,
+  youTubeSource,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
-import { makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
@@ -162,6 +164,8 @@ export class BackendSimulator {
   #profilePasses: ProfilePassInput[] = [];
   #ourKeyHowToApply: string[] | null = null;
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
+  #articleReads: string[] = [];
+  #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
@@ -711,6 +715,11 @@ export class BackendSimulator {
       };
     };
 
+    await this.#page.route("**/api/articles/read", (route) => {
+      this.#articleReads.push((route.request().postDataJSON() as { url: string }).url);
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
+    });
+
     await this.#page.route("**/api/generations", (route) =>
       route.request().method() === "GET"
         ? this.#respond(route, EndpointKey.OUR_KEY_STATUS, {
@@ -728,12 +737,15 @@ export class BackendSimulator {
               this.#trialTokensSent.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
               return {
                 status: 200,
-                body: makeOverview({
-                  id: request.overviewId,
-                  video: request.input.video,
-                  inOneLine: "Made on our key.",
-                  ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
-                }),
+                body:
+                  "article" in request.input
+                    ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
+                    : makeOverview({
+                        id: request.overviewId,
+                        source: youTubeSource(request.input.video),
+                        inOneLine: "Made on our key.",
+                        ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
+                      }),
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
@@ -833,7 +845,7 @@ export class BackendSimulator {
       token: ShareToken.parse(token),
       url: `https://overview.test/s/${token}`,
       overviewId: overview.id,
-      title: overview.video.title,
+      title: overview.source.title,
       sharedAt: existing?.sharedAt ?? "2026-09-30T11:00:00.000Z",
       updatedAt: "2026-09-30T11:00:00.000Z",
       views: existing?.views ?? 0,
@@ -1084,6 +1096,14 @@ export class BackendSimulator {
       this.#sessionHasEnded = true;
       this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
+  };
+
+  // A pasted link, as our server's fetch answers it (docs/features/pasted-article-links.md).
+  articles = {
+    answerWith: (read: ArticleRead): void => {
+      this.#articleAnswer = read;
+    },
+    reads: (): string[] => [...this.#articleReads],
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

@@ -6,7 +6,7 @@ import { makeTranscriptBlock } from "./TranscriptBlockFactory.testHelper.js";
 import { transcriptPlainText } from "./transcriptPlainText.js";
 
 const VIDEO: VideoSource = {
-  ...makeOverview().video,
+  ...makeOverview().source,
   title: "The Quiet Return of Nuclear Baseload",
   channel: "Practical Engineering",
   url: "https://www.youtube.com/watch?v=example",

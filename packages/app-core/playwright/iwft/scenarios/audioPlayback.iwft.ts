@@ -62,7 +62,7 @@ test("narration opens by naming the video, with the bar on its title and no line
   const reader = await library.nthCard(0).openReader();
 
   await reader.clickPlayPause();
-  await reader.verifyBarSays(`Now playing · ${NOTE.video.title}`);
+  await reader.verifyBarSays(`Now playing · ${NOTE.source.title}`);
   await reader.verifyNoLineIsActive();
 
   await reader.verifyBarSays(/^Now playing · Premise$/);
@@ -231,7 +231,7 @@ test("Listen in the library plays in place, and the mini-player follows you into
 
   await card.verifyListenReads("Playing");
   await launcher.miniPlayer.verifyIsShown(true);
-  await launcher.miniPlayer.verifyTitleReads(NOTE.video.title);
+  await launcher.miniPlayer.verifyTitleReads(NOTE.source.title);
   await launcher.miniPlayer.verifyPlayButtonReads("Pause");
 
   const reader = await launcher.miniPlayer.openReader();

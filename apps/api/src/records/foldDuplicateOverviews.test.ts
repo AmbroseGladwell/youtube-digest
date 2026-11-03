@@ -10,6 +10,7 @@ import { migrationsBefore } from "../db/migrationsBefore.testHelper.js";
 import { runMigrations } from "../db/runMigrations.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { RECORD_COLUMNS } from "./RecordsRepository.js";
+import { LAST_SCHEMA_VERSION_WITH_VIDEO, withVideo } from "../testing/storedRecords.testHelper.js";
 import { storedRecordFromRow, type RecordRow } from "./StoredRecord.js";
 
 const ACCOUNT = "a0000000-0000-4000-8000-000000000001";
@@ -56,12 +57,12 @@ const live = async (sql: SqlClient, accountId = ACCOUNT) =>
 
 test("per account and video the earliest-made overview is kept, the others' filing and state fold onto it, and the others are tombstoned", async () => {
   const sql = await databaseBeforeTheIndex();
-  const video = { ...makeOverview().video, id: VideoId.parse("twice") };
-  const earlier = makeOverview({ video, savedAt: "2026-09-01T00:00:00.000Z", topicIds: [TOPIC_A], tags: ["one"], captureReason: null });
-  const later = makeOverview({ video, savedAt: "2026-09-02T00:00:00.000Z", topicIds: [TOPIC_B], tags: ["one", "two"], captureReason: "Why" });
+  const video = { ...makeOverview().source, id: VideoId.parse("twice") };
+  const earlier = makeOverview({ source: video, savedAt: "2026-09-01T00:00:00.000Z", topicIds: [TOPIC_A], tags: ["one"], captureReason: null });
+  const later = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z", topicIds: [TOPIC_B], tags: ["one", "two"], captureReason: "Why" });
   // Seeded in the opposite order, so arrival order and creation order disagree.
-  await seed(sql, ACCOUNT, "overview", later.id, later, "2026-09-02T00:00:00.000Z");
-  await seed(sql, ACCOUNT, "overview", earlier.id, earlier, "2026-09-01T00:00:00.000Z");
+  await seed(sql, ACCOUNT, "overview", later.id, withVideo(later), "2026-09-02T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
+  await seed(sql, ACCOUNT, "overview", earlier.id, withVideo(earlier), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await seed(sql, ACCOUNT, "overviewState", later.id, { overviewId: later.id, read: true, favourite: false, userTags: ["later"] }, "2026-09-03T00:00:00.000Z");
   await seed(sql, ACCOUNT, "overviewState", earlier.id, { overviewId: earlier.id, read: false, favourite: true, userTags: ["keep"] }, "2026-09-02T12:00:00.000Z");
 
@@ -93,10 +94,10 @@ test("per account and video the earliest-made overview is kept, the others' fili
 
 test("an account holding one overview per video is left exactly as it was, and the index then refuses a second", async () => {
   const sql = await databaseBeforeTheIndex();
-  const one = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse("one") } });
-  const two = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse("two") } });
-  await seed(sql, ACCOUNT, "overview", one.id, one, "2026-09-01T00:00:00.000Z");
-  await seed(sql, ACCOUNT, "overview", two.id, two, "2026-09-01T00:00:00.000Z");
+  const one = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("one") } });
+  const two = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("two") } });
+  await seed(sql, ACCOUNT, "overview", one.id, withVideo(one), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
+  await seed(sql, ACCOUNT, "overview", two.id, withVideo(two), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   const before = await live(sql);
 
   const folds: unknown[] = [];
@@ -105,21 +106,21 @@ test("an account holding one overview per video is left exactly as it was, and t
   assert.deepEqual(folds, []);
   assert.deepEqual(await live(sql), before);
   await assert.rejects(
-    seed(sql, ACCOUNT, "overview", OverviewId.parse(randomUUID()), makeOverview({ video: one.video }), "2026-09-02T00:00:00.000Z"),
-    /records_one_live_overview_per_video/,
+    seed(sql, ACCOUNT, "overview", OverviewId.parse(randomUUID()), makeOverview({ source: one.source }), "2026-09-02T00:00:00.000Z"),
+    /records_one_live_overview_per_source/,
   );
   await sql.close();
 });
 
 test("the same video held by two accounts is two overviews, and a tombstoned copy is not a duplicate", async () => {
   const sql = await databaseBeforeTheIndex();
-  const video = { ...makeOverview().video, id: VideoId.parse("shared") };
-  const mine = makeOverview({ video });
-  const theirs = makeOverview({ video });
-  const deleted = makeOverview({ video });
-  await seed(sql, ACCOUNT, "overview", mine.id, mine, "2026-09-01T00:00:00.000Z");
-  await seed(sql, OTHER_ACCOUNT, "overview", theirs.id, theirs, "2026-09-01T00:00:00.000Z");
-  await seed(sql, ACCOUNT, "overview", deleted.id, deleted, "2026-09-01T00:00:00.000Z");
+  const video = { ...makeOverview().source, id: VideoId.parse("shared") };
+  const mine = makeOverview({ source: video });
+  const theirs = makeOverview({ source: video });
+  const deleted = makeOverview({ source: video });
+  await seed(sql, ACCOUNT, "overview", mine.id, withVideo(mine), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
+  await seed(sql, OTHER_ACCOUNT, "overview", theirs.id, withVideo(theirs), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
+  await seed(sql, ACCOUNT, "overview", deleted.id, withVideo(deleted), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await sql.query("update records set deleted = true, body = null, updated_at = null where id = $1", [deleted.id]);
 
   const folds: unknown[] = [];
@@ -133,12 +134,12 @@ test("the same video held by two accounts is two overviews, and a tombstoned cop
 
 test("a copy stored at an older version is read through the migration chain before its filing is folded", async () => {
   const sql = await databaseBeforeTheIndex();
-  const video = { ...makeOverview().video, id: VideoId.parse("old") };
-  const kept = makeOverview({ video, savedAt: "2026-09-01T00:00:00.000Z", captureReason: null });
-  const { captureReason: _reason, fromPlaylist: _from, chapters: _chapters, ...olderShape } = makeOverview({ video, savedAt: "2026-09-02T00:00:00.000Z" });
+  const video = { ...makeOverview().source, id: VideoId.parse("old") };
+  const kept = makeOverview({ source: video, savedAt: "2026-09-01T00:00:00.000Z", captureReason: null });
+  const { captureReason: _reason, fromPlaylist: _from, chapters: _chapters, ...olderShape } = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z" });
   const older = { ...olderShape, savedNote: "From before the rename", keyPoints: ["one", "two", "three"], tags: ["one-tag", "two-tag", "three-tag"] };
-  await seed(sql, ACCOUNT, "overview", kept.id, kept, "2026-09-01T00:00:00.000Z");
-  await seed(sql, ACCOUNT, "overview", older.id, older, "2026-09-02T00:00:00.000Z", 2);
+  await seed(sql, ACCOUNT, "overview", kept.id, withVideo(kept), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
+  await seed(sql, ACCOUNT, "overview", older.id, withVideo(older), "2026-09-02T00:00:00.000Z", 2);
 
   await runMigrations(sql, { before: migrationSteps() });
 

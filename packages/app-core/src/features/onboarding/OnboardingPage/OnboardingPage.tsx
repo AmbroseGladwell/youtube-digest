@@ -114,6 +114,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
     refetchInterval: (query) => (signedIn && query.state.data == null ? 1000 : false),
   });
   const overview: Overview | null = stored.data ?? run.overview;
+  const onboardingVideo = overview?.source.kind === "youtube" ? overview.source : null;
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
@@ -236,7 +237,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
       case "video":
         return (
           <OnboardingVideo
-            video={run.video ?? overview?.video ?? null}
+            video={run.video ?? onboardingVideo}
             playlist={playlist.data ?? null}
             failed={failed}
             onLooksRight={next}
@@ -379,7 +380,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         </main>
 
         <div className={styles.wide}>
-          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? overview?.video ?? null} sortedInto={phase === "ready" ? sortedInto : null} />
+          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? onboardingVideo} sortedInto={phase === "ready" ? sortedInto : null} />
         </div>
       </div>
     </div>

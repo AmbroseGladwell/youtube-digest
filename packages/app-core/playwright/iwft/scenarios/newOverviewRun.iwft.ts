@@ -172,7 +172,7 @@ test("a video the library already holds offers to open the existing overview, an
   launcher,
   backendSimulator,
 }) => {
-  const held = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse(IWFT_VIDEO_ID), title: "Already Here" } });
+  const held = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse(IWFT_VIDEO_ID), title: "Already Here" } });
   backendSimulator.overviews.seed(held);
   await launcher.launchExpectingLibrary({ apiKeys: API_KEYS });
   const dialog = await launcher.appShell.openNewOverview();

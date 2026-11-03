@@ -17,13 +17,13 @@ const seedLibrary = (backendSimulator: BackendSimulator) => {
   }
   const overview = makeOverview({
     topicIds: [ENERGY.id, POLITICS.id],
-    video: { ...makeOverview().video, title: TITLE },
+    source: { ...makeOverview().source, title: TITLE },
   });
   backendSimulator.overviews.seed(overview);
   backendSimulator.overviews.seed(
     makeOverview({
       topicIds: [CLEAN_TECH.id],
-      video: { ...makeOverview().video, title: "A second note" },
+      source: { ...makeOverview().source, title: "A second note" },
     }),
   );
   return overview;

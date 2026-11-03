@@ -13,7 +13,7 @@ test("a link made, opened, stopped and opened again is logged at each step, neve
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
   const account = await makeAccount(testApp);
-  const overview = makeOverview({ video: { ...makeOverview().video, title: TITLE } });
+  const overview = makeOverview({ source: { ...makeOverview().source, title: TITLE } });
 
   const { token } = (await account.inject({ method: "POST", url: "/api/shares", body: { overview } })).json();
   await testApp.app.inject({ method: "GET", url: `/s/${token}` });

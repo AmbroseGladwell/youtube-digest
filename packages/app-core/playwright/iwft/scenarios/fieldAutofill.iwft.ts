@@ -135,7 +135,7 @@ test("the library's search and the new topic dialog name their fields", async ({
 test("the reader's topic, reason and transcript fields name themselves", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
-  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: overview.video.id! }));
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: overview.source.id! }));
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
 

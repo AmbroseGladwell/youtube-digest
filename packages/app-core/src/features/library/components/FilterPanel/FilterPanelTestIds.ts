@@ -1,6 +1,7 @@
 export const filterPanelTestIds = {
   root: "FilterPanel.root",
   topicChip: (topicId: string) => `FilterPanel.topicChip.${topicId}`,
+  sourceChip: (source: string) => `FilterPanel.source.${source}`,
   noveltyChip: (novelty: string) => `FilterPanel.noveltyChip.${novelty}`,
   statusChip: (status: string) => `FilterPanel.statusChip.${status}`,
   favouriteChip: "FilterPanel.favouriteChip",

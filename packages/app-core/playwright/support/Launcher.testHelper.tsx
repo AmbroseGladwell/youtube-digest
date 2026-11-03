@@ -1,3 +1,4 @@
+import type { IwftArticlePagesConfig } from "../network/IwftArticlePages.testHelper.js";
 import { expect, test, type ComponentFixtures } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
@@ -60,6 +61,7 @@ export interface LaunchOptions {
   defaultApiUrl?: string;
   build?: AppBuild;
   activeVideoUrl?: string | null;
+  articlePages?: IwftArticlePagesConfig;
   playback?: PlaybackPosition | null;
   // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
@@ -174,6 +176,7 @@ export class Launcher {
         defaultApiUrl: options.defaultApiUrl,
         build: options.build,
         activeVideoUrl: options.activeVideoUrl,
+        articlePages: options.articlePages,
         playback: options.playback,
         runBridge: options.runBridge,
         youTubeFetch: options.youTubeFetch,

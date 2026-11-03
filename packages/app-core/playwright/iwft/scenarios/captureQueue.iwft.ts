@@ -60,7 +60,7 @@ test("on opening, a video added to a followed playlist is queued and made, and i
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(1);
   const [overview] = await backendSimulator.overviewStore.listOverviews();
-  expect(overview?.video.id).toBe("secondVideo1");
+  expect(overview?.source.id).toBe("secondVideo1");
   expect(overview?.fromPlaylist).toEqual(ORIGIN);
   const reader = await (await home.verifyShowsLibrary()).cardWithTitle("How Your Brain Fills In the Gaps").openReader();
   await reader.verifyFromLine("From Psychology playlist", true);

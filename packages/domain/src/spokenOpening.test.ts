@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { spokenOpening } from "./spokenOpening.js";
 
-const video = (overrides: Partial<ReturnType<typeof makeOverview>["video"]>) => ({
-  ...makeOverview().video,
+const video = (overrides: Partial<ReturnType<typeof makeOverview>["source"]>) => ({
+  ...makeOverview().source,
   title: "Bigger Arms",
   channel: "Lift Lab",
   ...overrides,

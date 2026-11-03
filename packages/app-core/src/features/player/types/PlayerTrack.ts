@@ -1,5 +1,5 @@
 import type { NoteLine, OverviewId, SharedNote } from "@overview/domain";
-import { overviewNoteLines, spokenOpening } from "@overview/domain";
+import { overviewNoteLines, spokenOpening, sourceName, sourceImage } from "@overview/domain";
 
 // What the player plays and what the lock screen names: one note, its lines, and the
 // video it came from. The opening is narrated before the first line and shown nowhere
@@ -18,10 +18,10 @@ export interface PlayerTrack {
 export function playerTrackFor(overview: SharedNote, lines: NoteLine[] = overviewNoteLines(overview)): PlayerTrack {
   return {
     overviewId: overview.id,
-    title: overview.video.title,
-    channel: overview.video.channel,
-    artworkUrl: overview.video.thumbnailUrl ?? null,
-    opening: spokenOpening(overview.video),
+    title: overview.source.title,
+    channel: sourceName(overview.source),
+    artworkUrl: sourceImage(overview.source),
+    opening: spokenOpening(overview.source),
     lines,
   };
 }

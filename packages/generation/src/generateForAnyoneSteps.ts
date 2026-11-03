@@ -11,7 +11,7 @@ const ForAnyoneOutput = z.object(howToApplyShape());
 // the reveal's flip differ only in who they're for (docs/features/personalisation.md).
 export async function generateForAnyoneSteps(client: GenerationClient, input: ForAnyoneInput): Promise<string[]> {
   const raw = await client({
-    systemPrompt: `You write the How to apply section for a saved note on a video, for any reader. ${WRITING_RULES}${howToApplyInstructions(null)}`,
+    systemPrompt: `You write the How to apply section for a saved note, for any reader. ${WRITING_RULES}${howToApplyInstructions(null)}`,
     userMessage: [
       `Title: ${input.title}`,
       `Channel: ${input.channel}`,

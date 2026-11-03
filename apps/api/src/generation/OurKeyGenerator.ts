@@ -14,7 +14,7 @@ import {
   createGenerationClient,
   fallbackReasonOf,
   generateForAnyoneSteps,
-  generateOverview,
+  generateOverviewOf,
   generateProfileItems,
   meteredFetch,
   priceOf,
@@ -107,7 +107,7 @@ export class OurKeyGenerationError extends Error {
   }
 }
 
-// Makes an overview on our key through production's own generateOverview. The global day's
+// Makes an overview on our key through production's own generation. The global day's
 // slot and the caller's slot (the account's month, or the trial's) are both reserved first
 // and both given back on any failure, so an overview counts once, when it succeeds
 // (docs/architecture/tiers.md).
@@ -141,7 +141,7 @@ export class OurKeyGenerator {
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
     try {
-      const overview = await generateOverview(
+      const overview = await generateOverviewOf(
         createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }),
         input,
         { id: overviewId, savedAt: now.toISOString() },

@@ -21,7 +21,8 @@ const baseVideo = {
 
 const baseOverview = {
   id: OVERVIEW_ID,
-  video: baseVideo,
+  source: { ...baseVideo, kind: "youtube" },
+  article: null,
   savedAt: new Date().toISOString(),
   captureReason: null,
   fromPlaylist: null,
@@ -216,7 +217,8 @@ test("the business/adaptability sample's real content, filed under two topics, v
   assert.doesNotThrow(() =>
     Overview.parse({
       ...baseOverview,
-      video: {
+      source: {
+        kind: "youtube",
         ...baseVideo,
         title: "Ray Dalio: Advice for the Next Generation (AI Era).",
         channel: "The Leader's Inner Compass",

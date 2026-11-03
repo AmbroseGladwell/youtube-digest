@@ -1,5 +1,5 @@
 import { FallbackCause, type KeySource, type MadeOn, type Overview, type OverviewId, type Provider } from "@overview/domain";
-import { fallbackReasonOf, generateOverview, type GenerationClient, type GenerationInput } from "@overview/generation";
+import { fallbackReasonOf, generateOverviewOf, type GenerationClient, type OverviewInput } from "@overview/generation";
 import { isSyncRequestError, type GenerationApi } from "@overview/sync";
 
 export interface OverviewKeys {
@@ -46,7 +46,7 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
 // on the key that made it.
 export async function makeOverviewOnKeys(
   { order, own, api, trial = null }: OverviewKeys,
-  input: GenerationInput,
+  input: OverviewInput,
   meta: OverviewMeta,
 ): Promise<Overview> {
   let passedOver: MadeOn["fallback"] = null;
@@ -67,7 +67,7 @@ export async function makeOverviewOnKeys(
 async function onOwnKey(
   own: NonNullable<OverviewKeys["own"]>,
   api: GenerationApi | null,
-  input: GenerationInput,
+  input: OverviewInput,
   meta: OverviewMeta,
 ): Promise<Overview> {
   // Only a spent quota stops the reader's own key. Offline, or with the server down, the
@@ -78,7 +78,7 @@ async function onOwnKey(
     if (fallbackCauseOf(error) === "quota-spent") throw error;
   }
   try {
-    return await generateOverview(own.client, input, meta);
+    return await generateOverviewOf(own.client, input, meta);
   } catch (error) {
     await api?.release(meta.id).catch(() => undefined);
     throw error;

@@ -22,7 +22,7 @@ const hoursAgo = (hours: number) => new Date(Date.now() - hours * HOUR_MS).toISO
 // Every factory note takes a minute to read, so a video of n minutes saves n - 1.
 const seedRead = (backendSimulator: BackendSimulator, minutes: number) => {
   const overview: Overview = makeOverview({
-    video: { ...makeOverview().video, title: `${minutes} minute video`, durationMs: minutes * 60_000 },
+    source: { ...makeOverview().source, title: `${minutes} minute video`, durationMs: minutes * 60_000 },
   });
   backendSimulator.overviews.seed(overview);
   backendSimulator.overviews.seedState(makeOverviewState(overview.id, { read: true }));

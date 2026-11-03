@@ -48,7 +48,7 @@ test("shows the novelty beside the Verdict heading, then the reasoning under Why
   );
 
   assert.deepEqual(lines.filter((line) => line.section === "Verdict"), [
-    { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict", chip: "Common knowledge" },
+    { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict", chip: "Widely covered" },
     { section: "Verdict", heading: false, bullet: false, text: "Standard advice.", label: "Why" },
   ]);
 });

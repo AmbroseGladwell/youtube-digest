@@ -29,7 +29,7 @@ test("the page a link opens carries the preview a chat app reads", async () => {
   const made = await publish(
     account,
     makeOverview({
-      video: { ...makeOverview().video, title: "The Quiet Return of Nuclear Baseload", durationMs: 842_000 },
+      source: { ...makeOverview().source, title: "The Quiet Return of Nuclear Baseload", durationMs: 842_000 },
       inOneLine: "Nuclear is back on the plans because firm capacity became expensive.",
     }),
     NARRATION,
@@ -114,7 +114,7 @@ test("a stopped link says so, straight away, and says nothing about what was the
   const { app, account } = await reader();
   const made = await publish(
     account,
-    makeOverview({ video: { ...makeOverview().video, title: "The Quiet Return of Nuclear Baseload" } }),
+    makeOverview({ source: { ...makeOverview().source, title: "The Quiet Return of Nuclear Baseload" } }),
   );
   await account.inject({ method: "DELETE", url: `/api/shares/${made.token}` });
 
@@ -188,7 +188,7 @@ test("the card is a PNG of the size every unfurler crops to", async () => {
   const { app, account } = await reader();
   const made = await publish(
     account,
-    makeOverview({ video: { ...makeOverview().video, title: "The Quiet Return of Nuclear Baseload" } }),
+    makeOverview({ source: { ...makeOverview().source, title: "The Quiet Return of Nuclear Baseload" } }),
   );
 
   const response = await app.app.inject({ method: "GET", url: `/s/${made.token}/card.png` });

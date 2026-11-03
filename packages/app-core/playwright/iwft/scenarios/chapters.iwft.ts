@@ -58,7 +58,7 @@ const seedNote = (
   backendSimulator.overviews.seed({
     ...overview,
     chapters,
-    video: { ...overview.video, id: videoId, url: VIDEO_URL },
+    source: { ...overview.source, id: videoId, url: VIDEO_URL },
   });
   if (transcript) {
     backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));

@@ -97,7 +97,7 @@ anyone stands in for the lines on the page without moving them in the list the v
 `Settings.readerContext` used to be the line itself. Migration 3 turns it into an entry under
 "What you spend your time on", where it can be seen and edited, and may exceed 120 characters
 until the reader changes it. An older client can't read the parts, so the composed sentence is
-still written to `readerContext` (`aboutYouPatch`) until the write floor passes client 8, as
+still written to `readerContext` (`aboutYouPatch`) until the write floor passes client 10, as
 `record-migrations.md` says of a rename. Generation never reads it. An older client writing the
 line onto an empty sentence is taken up by the migration; a filled sentence is left alone.
 

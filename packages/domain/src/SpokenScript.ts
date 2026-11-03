@@ -26,5 +26,5 @@ export function spokenLines(lines: NoteLine[], opening: string | null = null): S
 }
 
 export function spokenScript(overview: SharedNote): SpokenScript {
-  return spokenLines(overviewNoteLines(overview), spokenOpening(overview.video));
+  return spokenLines(overviewNoteLines(overview), spokenOpening(overview.source));
 }

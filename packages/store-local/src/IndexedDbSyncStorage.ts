@@ -30,6 +30,7 @@ import {
   type SyncStorage,
   type SyncedRecordKind,
   type WriteAcknowledgement,
+  storedSourceKey,
 } from "@overview/domain";
 import {
   CAPTURE_QUEUE_STORE,
@@ -150,7 +151,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll()),
       promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
     ]);
-    const noteOn = new Map(overviews.flatMap(notedVideo));
+    const noteOn = new Map(overviews.flatMap(notedSource));
     const queued = new Set(pending.filter((entry) => entry.kind === "transcript").map((entry) => entry.id));
     return transcripts.flatMap((raw) => {
       const transcript = readableTranscript(raw);
@@ -303,7 +304,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
       promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
     ]);
-    if (raw === undefined || !overviews.flatMap(notedVideo).some(([noted]) => noted === videoId)) return null;
+    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) return null;
     return readableTranscript(raw);
   }
 
@@ -464,12 +465,10 @@ function readableTranscript(raw: unknown): StoredTranscript | null {
   return read.status === "read" ? read.record : null;
 }
 
-function notedVideo(raw: unknown): Array<[videoId: string, overviewId: string]> {
+function notedSource(raw: unknown): Array<[key: string, overviewId: string]> {
   const overview = readable("overview", raw);
-  const video = overview?.video;
-  return isObject(video) && typeof video.id === "string" && typeof overview?.id === "string"
-    ? [[video.id, overview.id]]
-    : [];
+  const key = storedSourceKey(overview);
+  return key !== null && typeof overview?.id === "string" ? [[key, overview.id]] : [];
 }
 
 function transcriptWrite(transcript: StoredTranscript, overviewId: string): PendingWrite {

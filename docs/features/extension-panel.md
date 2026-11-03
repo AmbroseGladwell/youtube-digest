@@ -1,5 +1,9 @@
 # The side panel is one video, not a library
 
+The panel now takes articles too, and has a home for pages that are neither
+(`article-panel.md`). A disabled Create with its reason under it, described below, stays for
+missing keys; on a page with nothing to take there is no button at all.
+
 The extension shipped as the web app in a 400px column: the same masthead with `+ New`
 and a two-item nav, the same library, the same reader with a rail beside it. Design turn
 15 argues that is the wrong shape for the surface — "the extension exists to capture the

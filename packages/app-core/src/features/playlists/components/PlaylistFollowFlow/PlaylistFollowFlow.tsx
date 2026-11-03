@@ -1,3 +1,4 @@
+import { sourceKey } from "@overview/domain";
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistPace } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
@@ -58,7 +59,7 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
   const held = useMemo(
     () =>
       new Set<string>([
-        ...readableEntries(overviews.data ?? []).flatMap(({ overview }) => (overview.video.id === null ? [] : [overview.video.id])),
+        ...readableEntries(overviews.data ?? []).flatMap(({ overview }) => sourceKey(overview.source) ?? []),
         ...(queue.data ?? []).map((capture) => capture.videoId),
       ]),
     [overviews.data, queue.data],

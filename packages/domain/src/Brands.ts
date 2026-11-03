@@ -12,6 +12,11 @@ export type TopicId = z.infer<typeof TopicId>;
 export const VideoId = z.string().min(1).brand("VideoId");
 export type VideoId = z.infer<typeof VideoId>;
 
+// What every store keys an item by, from sourceKey. A YouTube key is its VideoId, unprefixed,
+// so the two are one type (docs/features/source-identity.md).
+export const SourceKey = VideoId;
+export type SourceKey = VideoId;
+
 // YouTube's own id for a playlist: the value of a link's list= parameter
 // (docs/features/playlists.md).
 export const PlaylistId = z.string().min(1).brand("PlaylistId");

@@ -1,5 +1,8 @@
 # One overview per video
 
+The rule now holds per source, on `records.source_key`, of which a video is one kind
+(`docs/features/source-identity.md`). `video_id` below is kept until a later migration drops it.
+
 An account holds one overview of each video, on every device. Decided 2026-10-02 (Trello
 OV-20): there is no reason to keep two overviews of the same video, and nothing had stopped
 an account holding them. An overview's id is a fresh UUID made at generation, so two copies

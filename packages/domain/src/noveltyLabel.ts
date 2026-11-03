@@ -1,7 +1,7 @@
 import type { Novelty } from "./Verdict.js";
 
 export const NOVELTY_LABEL: Record<Novelty, string> = {
-  common_knowledge: "Common knowledge",
+  common_knowledge: "Widely covered",
   fresh_angle: "Fresh angle",
   original: "Original",
 };

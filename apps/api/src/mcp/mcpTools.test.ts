@@ -49,7 +49,7 @@ test("search_overviews with no filters lists the whole library, newest saved fir
 
   assert.match(text, /^5 saved overview\(s\) match\./);
   for (const { overview } of library.notes) {
-    assert.ok(text.includes(`id ${overview.id}`), overview.video.title);
+    assert.ok(text.includes(`id ${overview.id}`), overview.source.title);
   }
   await testApp.close();
 });
@@ -138,9 +138,9 @@ test("get_overview returns every real note as Markdown, whichever way its action
     const { text, isError } = await client.callTool("get_overview", { id: overview.id });
 
     assert.equal(isError, false);
-    assert.ok(text.startsWith(`Overview id: ${overview.id}\nTopics: ${topic}\n\n# ${overview.video.title}\n`));
-    assert.ok(text.includes(overview.video.url));
-    assert.ok(text.includes("## How to apply\n\n- "), `${overview.video.title} lists its actions`);
+    assert.ok(text.startsWith(`Overview id: ${overview.id}\nTopics: ${topic}\n\n# ${overview.source.title}\n`));
+    assert.ok(text.includes(overview.source.url));
+    assert.ok(text.includes("## How to apply\n\n- "), `${overview.source.title} lists its actions`);
     assert.ok(!text.includes("## How to apply\n\n- 1."), "the list mark is not doubled");
   }
   await testApp.close();
@@ -157,7 +157,7 @@ test("get_overview links each chapter to its moment in the video", async () => {
 
   const { text } = await client.callTool("get_overview", { id: overview.id });
 
-  assert.ok(text.includes(`[1:35](${overview.video.url}&t=95) **The hinge**`));
+  assert.ok(text.includes(`[1:35](${overview.source.url}&t=95) **The hinge**`));
   await testApp.close();
 });
 
@@ -166,8 +166,8 @@ test("get_overviews reads every overview under a topic in one call, and never a 
   const fitness = note(library, "fitness").overview;
   await reader.inject({
     method: "PUT",
-    url: `/api/transcripts/${fitness.video.id}`,
-    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.video.id!), segments: [{ text: "A line only the transcript has.", startMs: 0, endMs: 3000 }] }),
+    url: `/api/transcripts/${fitness.source.id}`,
+    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.source.id!), segments: [{ text: "A line only the transcript has.", startMs: 0, endMs: 3000 }] }),
   });
 
   const { text } = await client.callTool("get_overviews", { topic: "fitness" });
@@ -231,9 +231,9 @@ test("get_transcript reads the video's transcript with a time on every paragraph
   const fitness = note(library, "fitness").overview;
   await reader.inject({
     method: "PUT",
-    url: `/api/transcripts/${fitness.video.id}`,
+    url: `/api/transcripts/${fitness.source.id}`,
     body: makeStoredTranscript({
-      videoId: VideoId.parse(fitness.video.id!),
+      videoId: VideoId.parse(fitness.source.id!),
       segments: [
         { text: "Add a set before you add weight.", startMs: 0, endMs: 3000 },
         { text: "Cables keep tension at length.", startMs: 65_000, endMs: 68_000 },
@@ -244,7 +244,7 @@ test("get_transcript reads the video's transcript with a time on every paragraph
   const { text, isError } = await client.callTool("get_transcript", { id: fitness.id });
 
   assert.equal(isError, false);
-  assert.ok(text.startsWith(`${fitness.video.title}\n${fitness.video.channel}\n${fitness.video.url}\n`));
+  assert.ok(text.startsWith(`${fitness.source.title}\n${fitness.source.channel}\n${fitness.source.url}\n`));
   assert.ok(text.includes("0:00\tAdd a set before you add weight."));
   assert.ok(text.includes("1:05\tCables keep tension at length."));
   await testApp.close();
@@ -255,8 +255,8 @@ test("get_transcript says so when the transcript was machine-heard", async () =>
   const fitness = note(library, "fitness").overview;
   await reader.inject({
     method: "PUT",
-    url: `/api/transcripts/${fitness.video.id}`,
-    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.video.id!), generated: true }),
+    url: `/api/transcripts/${fitness.source.id}`,
+    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.source.id!), generated: true }),
   });
 
   const { text } = await client.callTool("get_transcript", { id: fitness.id });
@@ -279,11 +279,11 @@ test("get_transcript never serves another reader's copy of the same video's tran
   const { testApp, library, client } = await connectedToSamples();
   const fitness = note(library, "fitness").overview;
   const other = await makeAccount(testApp);
-  await other.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: fitness.video }) });
+  await other.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ source: fitness.source }) });
   await other.inject({
     method: "PUT",
-    url: `/api/transcripts/${fitness.video.id}`,
-    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.video.id!) }),
+    url: `/api/transcripts/${fitness.source.id}`,
+    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.source.id!) }),
   });
 
   const result = await client.callTool("get_transcript", { id: fitness.id });
@@ -312,7 +312,7 @@ test("mark_overviews marks overviews read, stamped by the server's clock, and th
   assert.equal(isError, false);
   assert.match(text, /^Marked 2 overview\(s\) read:/);
   for (const overview of marked) {
-    assert.ok(text.includes(`- **${overview.video.title}**`), overview.video.title);
+    assert.ok(text.includes(`- **${overview.source.title}**`), overview.source.title);
     const change = await reader.change("overviewState", overview.id);
     assert.deepEqual(change.body, { overviewId: overview.id, read: true, favourite: false, userTags: [] });
     assert.equal(change.updatedAt, testApp.clock.now.toISOString());
@@ -342,13 +342,13 @@ test("mark_overviews marks an overview unread and no longer a favourite, and lea
 
 test("mark_overviews leaves an overview already marked as asked as it is, so the feed carries no empty change", async () => {
   const { testApp, reader, library, client } = await connectedToSamples();
-  const { id, video } = note(library, "business").overview;
+  const { id, source } = note(library, "business").overview;
   await client.callTool("mark_overviews", { ids: [id], favourite: true });
 
   const again = await client.callTool("mark_overviews", { ids: [id], favourite: true });
   const unread = await client.callTool("mark_overviews", { ids: [id], read: false });
 
-  assert.equal(again.text, `Already a favourite, left as they were:\n- **${video.title}**`);
+  assert.equal(again.text, `Already a favourite, left as they were:\n- **${source.title}**`);
   assert.doesNotMatch(unread.text, /^Marked/);
   assert.equal((await reader.change("overviewState", id)).rev, 1);
   await testApp.close();

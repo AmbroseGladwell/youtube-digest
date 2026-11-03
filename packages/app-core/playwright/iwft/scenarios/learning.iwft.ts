@@ -11,7 +11,7 @@ const SIGNED_IN_WITHOUT_A_KEY = {
 };
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
-const seededOverview = (videoId: string) => makeOverview({ video: { ...makeOverview().video, id: VideoId.parse(videoId) } });
+const seededOverview = (videoId: string) => makeOverview({ source: { ...makeOverview().source, id: VideoId.parse(videoId) } });
 
 const learnedItem = (text: string, overrides: Partial<LearnedItem> = {}): LearnedItem => ({
   text,

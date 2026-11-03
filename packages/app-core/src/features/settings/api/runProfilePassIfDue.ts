@@ -52,7 +52,7 @@ export async function runProfilePassIfDue({ madeOn, own, api, overviewStore, set
         .slice(0, PROFILE_PASS_REMOVED_ITEMS)
         .map(({ text }) => text),
       overviews: recent.map((overview) => ({
-        title: overview.video.title,
+        title: overview.source.title,
         premise: overview.inOneLine,
         topics: overview.topicIds.flatMap((id) => topics.find((topic) => topic.id === id)?.name ?? []),
         captureReason: overview.captureReason,

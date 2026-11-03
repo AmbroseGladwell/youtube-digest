@@ -89,6 +89,12 @@
   color: var(--muted);
 }
 
+.askingNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
 // Design 34af: the card sits a little further under the hint than the page's own rhythm,
 // and on any other day the stack renders nothing and the wrapper takes no gap.
 .milestones {

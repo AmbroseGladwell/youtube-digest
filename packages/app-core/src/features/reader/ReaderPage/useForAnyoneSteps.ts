@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { composeReaderContext, DEFAULT_PROVIDER, modelFor, type Overview } from "@overview/domain";
+import { composeReaderContext, DEFAULT_PROVIDER, modelFor, sourceName, type Overview } from "@overview/domain";
 import { generateForAnyoneSteps } from "@overview/generation";
 import { createFetchGenerationApi } from "@overview/sync";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -46,8 +46,8 @@ export function useForAnyoneSteps(overview: Overview | null): ForAnyoneSteps {
     const provider = settings.provider ?? DEFAULT_PROVIDER;
     const apiKey = apiKeys.keys[provider]?.key;
     const input = {
-      title: overview.video.title,
-      channel: overview.video.channel,
+      title: overview.source.title,
+      channel: sourceName(overview.source),
       inOneLine: overview.inOneLine,
       coreClaim: overview.coreClaim,
       keyPoints: overview.keyPoints.map(({ text }) => text),

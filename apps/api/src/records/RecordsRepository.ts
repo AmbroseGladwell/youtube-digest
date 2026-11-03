@@ -21,7 +21,7 @@ export interface WriteOperation {
   // The video an overview being written is of. The decision is handed the live overview
   // under another id that already holds it, if there is one, so it can refuse a second
   // (docs/features/one-overview-per-video.md).
-  videoId?: string | null;
+  sourceKey?: string | null;
   decide: (current: StoredRecord | null, held: StoredRecord | null) => WriteDecision;
 }
 
@@ -49,10 +49,10 @@ export class RecordsRepository {
   async write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
-      for (const { kind, id, videoId, decide } of operations) {
+      for (const { kind, id, sourceKey, decide } of operations) {
         const seq = await allocateSeq(tx, accountId);
         const current = await this.#get(tx, accountId, kind, id);
-        const held = videoId == null ? null : await this.#liveOverviewOf(tx, accountId, videoId, id);
+        const held = sourceKey == null ? null : await this.#liveOverviewOf(tx, accountId, sourceKey, id);
         const decision = decide(current, held);
         if (decision.action === "nothing") {
           outcomes.push(null);
@@ -115,23 +115,12 @@ export class RecordsRepository {
     return this.#get(this.#sql, accountId, kind, id);
   }
 
-  // Live overviews of one video, other than the one being written.
-  async liveOverviewsOf(accountId: AccountId, videoId: string): Promise<StoredRecord[]> {
-    const rows = await this.#sql.query<RecordRow>(
-      `select ${RECORD_COLUMNS} from records
-       where account_id = $1 and kind = 'overview' and not deleted and video_id = $2
-       order by seq`,
-      [accountId, videoId],
-    );
-    return rows.map(storedRecordFromRow);
-  }
-
-  async #liveOverviewOf(tx: SqlClient, accountId: AccountId, videoId: string, exceptId: string): Promise<StoredRecord | null> {
+  async #liveOverviewOf(tx: SqlClient, accountId: AccountId, sourceKey: string, exceptId: string): Promise<StoredRecord | null> {
     const rows = await tx.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records
-       where account_id = $1 and kind = 'overview' and not deleted and video_id = $2 and id <> $3
+       where account_id = $1 and kind = 'overview' and not deleted and source_key = $2 and id <> $3
        order by seq limit 1`,
-      [accountId, videoId, exceptId],
+      [accountId, sourceKey, exceptId],
     );
     return rows[0] === undefined ? null : storedRecordFromRow(rows[0]);
   }

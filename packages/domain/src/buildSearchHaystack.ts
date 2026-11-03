@@ -1,3 +1,4 @@
+import { sourceName } from "./sourceFacts.js";
 import type { Overview } from "./Overview.js";
 
 // Logic ported from prototype/index_template.html's haystack() (CLAUDE.md: port the
@@ -5,8 +6,8 @@ import type { Overview } from "./Overview.js";
 // lowercased blob, checked with a plain substring match.
 export function buildSearchHaystack(overview: Overview): string {
   return [
-    overview.video.title,
-    overview.video.channel,
+    overview.source.title,
+    sourceName(overview.source),
     overview.inOneLine,
     overview.coreClaim,
     overview.verdict?.reasoning ?? "",

@@ -15,7 +15,7 @@ export interface ShareSnapshotInput {
 export function shareSnapshot({ overview, transcript, narration }: ShareSnapshotInput): SharedOverview {
   const note: SharedNote = {
     id: overview.id,
-    video: overview.video,
+    source: overview.source,
     savedAt: overview.savedAt,
     inOneLine: overview.inOneLine,
     coreClaim: overview.coreClaim,
@@ -29,6 +29,7 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     howToApply: overview.howToApply,
     watchAnyway: overview.watchAnyway,
     chapters: overview.chapters,
+    ...(overview.article === null ? {} : { article: overview.article }),
   };
   return { note, transcript, narration };
 }

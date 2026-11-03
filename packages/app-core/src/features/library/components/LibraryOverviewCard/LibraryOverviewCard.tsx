@@ -4,7 +4,7 @@ import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js"
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved } from "@overview/domain";
+import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved, sourceName, type Source } from "@overview/domain";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
@@ -35,6 +35,9 @@ const SELLING_LABEL: Record<string, string> = {
 // Design 10a: a thumbnail-first row on a raised tile. Every verdict is the same stone
 // chip, so a library that is three-quarters common knowledge reads calm; a row already read
 // recedes to the muted ink instead (docs/features/stone-theme.md).
+const bylineOf = (source: Source): string =>
+  source.kind === "web" && source.author !== null ? `${sourceName(source)} · ${source.author}` : sourceName(source);
+
 export function LibraryOverviewCard({
   overviewWithState,
   entering = false,
@@ -71,7 +74,7 @@ export function LibraryOverviewCard({
     >
       <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
         <OverviewThumbnail
-          video={overview.video}
+          video={overview.source}
           to={readerPath}
           state={readerState}
           onOpen={() => onOpen("thumbnail")}
@@ -105,9 +108,9 @@ export function LibraryOverviewCard({
             onClick={() => onOpen("title")}
             data-testid={libraryOverviewCardTestIds.titleLink}
           >
-            <span className={styles.title}>{overview.video.title}</span>
+            <span className={styles.title}>{overview.source.title}</span>
             <span className={styles.meta}>
-              <span className={styles.channel}>{overview.video.channel}</span> · {overview.inOneLine}
+              <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
             </span>
           </Link>
 

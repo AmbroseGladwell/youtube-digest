@@ -14,6 +14,7 @@ import {
   type StoredTranscript,
   type SyncStorage,
   type WriteAcknowledgement,
+  sourceKey,
 } from "@overview/domain";
 import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
@@ -96,7 +97,7 @@ export class InMemorySyncStorage implements SyncStorage {
   }
 
   async transcriptToPush(videoId: string) {
-    const noted = (await this.overviewStore.listOverviews()).some((overview) => overview.video.id === videoId);
+    const noted = (await this.overviewStore.listOverviews()).some((overview) => sourceKey(overview.source) === videoId);
     return noted ? this.transcriptStore.getTranscript(videoId as never) : null;
   }
 

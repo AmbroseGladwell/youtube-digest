@@ -40,7 +40,7 @@ export function LibraryUnreadableCard({ record, entering = false, onOpen, reader
         onClick={onOpen}
         data-testid={libraryUnreadableCardTestIds.titleLink}
       >
-        <span className={styles.title}>{record.salvaged?.video?.title ?? "An overview you saved"}</span>
+        <span className={styles.title}>{record.salvaged?.source?.title ?? "An overview you saved"}</span>
       </Link>
 
       <p className={styles.meta} data-testid={libraryUnreadableCardTestIds.meta}>

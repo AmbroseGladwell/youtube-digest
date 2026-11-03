@@ -5,7 +5,7 @@ import { LibraryPageObject } from "../../pageObjects/LibraryPageObject.testHelpe
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-const titled = (title: string, savedAt: string) => makeOverview({ savedAt, video: { ...makeOverview().video, title } });
+const titled = (title: string, savedAt: string) => makeOverview({ savedAt, source: { ...makeOverview().source, title } });
 
 const seedLibrary = (backendSimulator: BackendSimulator) => {
   const apple = titled("Apple", "2026-09-16T00:00:00.000Z");

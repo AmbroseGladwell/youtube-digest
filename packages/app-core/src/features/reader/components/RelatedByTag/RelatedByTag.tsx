@@ -1,3 +1,4 @@
+import { sourceName } from "@overview/domain";
 import { useId, useState } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
@@ -57,11 +58,11 @@ export function RelatedByTag({
                 onClick={() => onOverviewOpened?.(sharedTags)}
                 data-read={state.read || undefined}
               >
-                <OverviewThumbnail video={overview.video} className={styles.thumbnail} />
+                <OverviewThumbnail video={overview.source} className={styles.thumbnail} />
                 <span className={styles.text}>
-                  <span className={styles.title}>{overview.video.title}</span>
+                  <span className={styles.title}>{overview.source.title}</span>
                   <span className={styles.meta}>
-                    {overview.video.channel}
+                    {sourceName(overview.source)}
                     {state.read && " · Read"}
                   </span>
                 </span>

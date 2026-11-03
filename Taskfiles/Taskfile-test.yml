@@ -26,7 +26,7 @@ tasks:
   test:
     desc: Run every unit suite, in the order CI does, then the IWFT suite
     cmds:
-      - for: [domain, transcripts, generation, store-conformance, store-local, sync, app-core]
+      - for: [domain, articles, transcripts, generation, store-conformance, store-local, sync, app-core]
         task: test:{{.ITEM}}
       - task: test:extension
       - task: test:api

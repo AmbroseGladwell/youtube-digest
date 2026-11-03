@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GenerationError } from "@overview/generation";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
+import { ArticleReadError } from "../api/ArticleReadError.js";
 import { captureFailureOf } from "./captureFailureOf.js";
 
 const before = { transcriptResolved: false };
@@ -14,6 +15,11 @@ describe("captureFailureOf", () => {
     expect(captureFailureOf(new NoTranscriptSourceError("No rung answered", []), before)).toBe("noTranscriptSource");
     expect(captureFailureOf(new GenerationError("The note didn't parse"), before)).toBe("generation");
     expect(captureFailureOf(new Error("Something else entirely"), before)).toBe("unknown");
+  });
+
+  it("names an unreadable article by why, even after the page was reached", () => {
+    expect(captureFailureOf(new ArticleReadError({ status: "failed", reason: "paywalled" }), before)).toBe("article-paywalled");
+    expect(captureFailureOf(new ArticleReadError({ status: "failed", reason: "declined" }), before)).toBe("article-declined");
   });
 
   it("counts anything thrown once the transcript is in hand as the generation failing", () => {

@@ -24,7 +24,7 @@ const seedNote = (backendSimulator: BackendSimulator) => {
       { text: "The video builds its case for frequency throughout.", range: null },
     ],
   });
-  const seeded = { ...overview, video: { ...overview.video, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` } };
+  const seeded = { ...overview, source: { ...overview.source, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` } };
   backendSimulator.overviews.seed(seeded);
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
   return seeded;

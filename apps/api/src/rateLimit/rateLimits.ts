@@ -20,6 +20,7 @@ export const rateLimits = {
   sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
   serviceTranscriptPerAddress: { name: "serviceTranscriptAddress", limit: 60, windowMs: HOUR_MS },
   smallPassPerAccount: { name: "smallPassAccount", limit: 30, windowMs: DAY_MS },
+  articleReadPerAddress: { name: "articleReadAddress", limit: 120, windowMs: HOUR_MS },
   trialPerAddress: { name: "trialAddress", limit: 10, windowMs: HOUR_MS },
   playlistPerAddress: { name: "playlistAddress", limit: 120, windowMs: HOUR_MS },
   eventsPerAccount: { name: "eventsAccount", limit: 60, windowMs: MINUTE_MS },

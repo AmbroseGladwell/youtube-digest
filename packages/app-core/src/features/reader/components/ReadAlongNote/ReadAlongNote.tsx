@@ -25,6 +25,7 @@ export interface ReadAlongNoteProps {
   captions?: Record<string, string>;
   sectionSlot?: NoteSectionSlot | null;
   renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
+  renderLineEnd?: (line: NoteLine) => ReactNode;
 }
 
 // Design 4a numbers the key points rather than bulleting them, so each list line carries
@@ -52,6 +53,7 @@ export function ReadAlongNote({
   captions = {},
   sectionSlot = null,
   renderRange,
+  renderLineEnd,
 }: ReadAlongNoteProps) {
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
@@ -117,6 +119,7 @@ export function ReadAlongNote({
                   </span>
                 )}
                 {line.range && renderRange?.(line, line.range, active)}
+                {renderLineEnd?.(line)}
               </span>
               {line.heading && slot && (
                 <span className={styles.slotBeside} onClick={(event) => event.stopPropagation()}>

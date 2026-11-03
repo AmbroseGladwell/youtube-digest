@@ -42,7 +42,7 @@ const alreadyMarked = (entry: LibraryEntry, marks: Marks): boolean => {
   return (marks.read === undefined || state.read === marks.read) && (marks.favourite === undefined || state.favourite === marks.favourite);
 };
 
-const titled = (entries: LibraryEntry[]) => entries.map((entry) => `- **${entry.overview.video.title}**`);
+const titled = (entries: LibraryEntry[]) => entries.map((entry) => `- **${entry.overview.source.title}**`);
 
 // The reader's own marks on an overview, written as the state record every device syncs,
 // stamped by the server's clock: an assistant is never asked for the time

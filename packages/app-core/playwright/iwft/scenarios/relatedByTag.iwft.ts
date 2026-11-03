@@ -12,7 +12,7 @@ const SIGNED_IN = {
 };
 
 const titled = (title: string, tags: string[], savedAt: string) =>
-  makeOverview({ video: { ...makeOverview().video, title, channel: "Starter Story" }, tags, savedAt });
+  makeOverview({ source: { ...makeOverview().source, title, channel: "Starter Story" }, tags, savedAt });
 
 const THIS_ONE = titled("This one", ["saas", "founder-interview", "pricing"], "2026-10-01T00:00:00.000Z");
 

@@ -4,7 +4,7 @@ import type { BackendSimulator } from "../../network/BackendSimulator.testHelper
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const titled = (title: string, savedAt: string) =>
-  makeOverview({ savedAt, video: { ...makeOverview().video, title } });
+  makeOverview({ savedAt, source: { ...makeOverview().source, title } });
 
 const unreadable = (salvaged: UnreadableRecord["salvaged"]): UnreadableRecord => ({
   kind: "overview",
@@ -23,13 +23,13 @@ const seedMixedLibrary = (backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seedUnreadable(
     unreadable({
       savedAt: "2026-09-14T00:00:00.000Z",
-      video: { id: null, url: null, title: "Charlie salvaged" },
+      source: { kind: "youtube", id: null, url: null, title: "Charlie salvaged" },
     }),
   );
   backendSimulator.overviews.seedUnreadable({
     ...unreadable({
       savedAt: "2026-09-10T00:00:00.000Z",
-      video: { id: null, url: null, title: "Alpha held back" },
+      source: { kind: "youtube", id: null, url: null, title: "Alpha held back" },
     }),
     reason: "future-version",
     schemaVersion: 99,

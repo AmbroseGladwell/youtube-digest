@@ -1,4 +1,4 @@
-import { formatClock, type AuthIntent, type Overview } from "@overview/domain";
+import { formatClock, type AuthIntent, type Overview, sourceName } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingAccount.module.scss";
@@ -71,7 +71,7 @@ export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: On
 }
 
 function Teaser({ overview }: { overview: Overview }) {
-  const { video } = overview;
+  const { source: video } = overview;
   return (
     <section className={styles.teaser} aria-label="Your overview, so far" data-testid={onboardingAccountTestIds.teaser}>
       <span className={styles.ready}>
@@ -82,7 +82,7 @@ function Teaser({ overview }: { overview: Overview }) {
         {video.title}
       </h2>
       <p className={styles.byline}>
-        {[video.channel, video.durationMs === null ? null : formatClock(video.durationMs / 1000)].filter(Boolean).join(" · ")}
+        {[sourceName(video), video.kind === "web" || video.durationMs === null ? null : formatClock(video.durationMs / 1000)].filter(Boolean).join(" · ")}
       </p>
       <p className={styles.sectionLabel}>Premise</p>
       <p className={styles.premise} data-testid={onboardingAccountTestIds.teaserPremise}>

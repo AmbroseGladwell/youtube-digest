@@ -13,7 +13,7 @@ const unreadableRecord = (overrides: Partial<UnreadableRecord> = {}): Unreadable
   detail: "coreClaim: expected string",
   salvaged: {
     savedAt: "2026-09-15T00:00:00.000Z",
-    video: { id: null, url: VIDEO_URL, title: "The Unreadable Video" },
+    source: { kind: "youtube", id: null, url: VIDEO_URL, title: "The Unreadable Video" },
   },
   ...overrides,
 });
@@ -27,13 +27,13 @@ test("a record that cannot be read sits in the library where the reader left it"
   backendSimulator.overviews.seed(
     makeOverview({
       savedAt: "2026-09-16T00:00:00.000Z",
-      video: { ...makeOverview().video, title: "A Readable Video" },
+      source: { ...makeOverview().source, title: "A Readable Video" },
     }),
   );
   backendSimulator.overviews.seed(
     makeOverview({
       savedAt: "2026-09-14T00:00:00.000Z",
-      video: { ...makeOverview().video, title: "An Older Readable Video" },
+      source: { ...makeOverview().source, title: "An Older Readable Video" },
     }),
   );
   backendSimulator.overviews.seedUnreadable(unreadableRecord());

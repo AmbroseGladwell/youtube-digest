@@ -18,4 +18,4 @@ export const readableEntries = (entries: LibraryEntry[]): OverviewWithState[] =>
   entries.filter((entry) => entry.kind === "overview");
 
 export const libraryEntryTitle = (entry: LibraryEntry): string | null =>
-  entry.kind === "overview" ? entry.overview.video.title : (entry.record.salvaged?.video?.title ?? null);
+  entry.kind === "overview" ? entry.overview.source.title : (entry.record.salvaged?.source?.title ?? null);

@@ -14,6 +14,28 @@ export function generationRunSteps(run: NewOverviewRun): GenerationStep[] {
   const transcriptDone = run.transcriptWords !== null;
   const overviewDone = run.overview !== null;
 
+  if (run.article !== null) {
+    const label = run.article.fetched ? "Fetching the article" : run.article.oneTimeAccess ? "Reading this page" : "Reading the article";
+    return [
+      {
+        number: "01",
+        label,
+        detail: transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : run.article.fetched ? "From the link" : "Reading what's on the page",
+        state: transcriptDone ? "done" : "running",
+      },
+      {
+        number: "02",
+        label: "Writing the overview",
+        detail: overviewDone
+          ? `Overview written · ${overviewReadMinutes(run.overview!)} min read`
+          : transcriptDone
+            ? "Summarising, scoring and filing"
+            : "Queued",
+        state: overviewDone ? "done" : transcriptDone ? "running" : "waiting",
+      },
+    ];
+  }
+
   return [
     {
       number: "01",
