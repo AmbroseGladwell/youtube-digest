@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { recipeFigures, recipeFiguresLine, recipeStepGroups, type RecipeNote, type WebSource } from "@overview/domain";
+import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import styles from "./RecipePrintSheet.module.scss";
 import { recipePrintSheetTestIds } from "./RecipePrintSheetTestIds.js";
 
@@ -13,21 +14,39 @@ export interface RecipePrintSheetProps {
   onDone: () => void;
 }
 
-// Design 144s: the page's recipe on one sheet, black on white whatever the theme, and
-// nothing of ours. It exists only while the print dialog is open.
+// Design 144s: the page's recipe on one sheet, black on white whatever the theme, with the
+// page's own image above it and our name and mark at the foot, and none of our words
+// (OV-148). It exists only while the print dialog is open, which waits for the image.
 export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, onDone }: RecipePrintSheetProps) {
+  const [imageSettled, setImageSettled] = useState(source.imageUrl === null);
+
   useEffect(() => {
     window.addEventListener("afterprint", onDone);
-    const printing = window.setTimeout(() => window.print(), 0);
-    return () => {
-      window.clearTimeout(printing);
-      window.removeEventListener("afterprint", onDone);
-    };
+    return () => window.removeEventListener("afterprint", onDone);
   }, [onDone]);
+
+  useEffect(() => {
+    if (!imageSettled) return;
+    const printing = window.setTimeout(() => window.print(), 0);
+    return () => window.clearTimeout(printing);
+  }, [imageSettled]);
 
   const figures = recipeFigures(recipe);
   return createPortal(
     <div className={styles.root} data-recipe-print data-testid={recipePrintSheetTestIds.root}>
+      {source.imageUrl !== null && (
+        <img
+          className={styles.image}
+          src={source.imageUrl}
+          alt=""
+          onLoad={() => setImageSettled(true)}
+          onError={(event) => {
+            event.currentTarget.hidden = true;
+            setImageSettled(true);
+          }}
+          data-testid={recipePrintSheetTestIds.image}
+        />
+      )}
       <h1 className={styles.title}>{source.title}</h1>
       <p className={styles.source}>
         {from} · {source.url.replace(/^https?:\/\/(www\.)?/, "")}
@@ -73,6 +92,10 @@ export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, 
           )}
         </div>
       </div>
+      <p className={styles.madeWith} data-testid={recipePrintSheetTestIds.madeWith}>
+        <OverviewMark size={16} />
+        Made with The Overview
+      </p>
     </div>,
     document.body,
   );

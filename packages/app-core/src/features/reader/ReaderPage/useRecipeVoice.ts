@@ -1,70 +1,89 @@
-import { useMemo } from "react";
-import { recipeStepGroups, type NoteLine, type RecipeNote } from "@overview/domain";
-import { usePlayer, usePlayerLine, usePlayerSnapshot } from "../../player/PlayerContext.js";
-import type { PlayerTrack, RecipePart } from "../../player/types/PlayerTrack.js";
+import { useEffect, useState } from "react";
+import { INGREDIENTS_SECTION, METHOD_SECTION, type NoteLine } from "@overview/domain";
+import { usePlayer } from "../../player/PlayerContext.js";
+import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
 import type { RecipeListVoice } from "../components/RecipeMethod/RecipeReadAloud.js";
+import type { NotePlayer } from "./useNotePlayer.js";
 
 export interface RecipeVoice {
   ingredients: RecipeListVoice;
   method: RecipeListVoice;
   // "Method · step 3 of 6", for the bar while a list is being read.
   nowReading: string | null;
+  // Listen plays on through every section, so a list's stop no longer applies.
+  release: () => void;
 }
 
-const SECTION: Record<RecipePart, string> = { ingredients: "Ingredients", method: "Method" };
+interface Stretch {
+  first: number;
+  last: number;
+}
 
-const listLines = (part: RecipePart, texts: readonly string[]): NoteLine[] =>
-  texts.map((text) => ({ section: SECTION[part], heading: false, bullet: true, text }));
+// The item lines of one section of the narration, without its heading.
+const stretchOf = (lines: readonly NoteLine[], section: string): Stretch | null => {
+  const indexes = lines.flatMap((line, index) => (line.section === section && !line.heading ? [index] : []));
+  return indexes.length === 0 ? null : { first: indexes[0]!, last: indexes.at(-1)! };
+};
 
-// Each list reads itself aloud exactly as shown, line by line, in the reader's voice: every
-// spoken word is a line on screen (design 144t, docs/features/recipe-notes.md).
-export function useRecipeVoice(
-  note: PlayerTrack | null,
-  recipe: RecipeNote | null,
-  ingredients: readonly string[],
-): RecipeVoice | null {
+const NO_VOICE: RecipeListVoice = { activeIndex: null, reading: false, speaking: false, onPress: () => undefined };
+
+// A recipe's narration is the whole recipe, so one render has every section ready (OV-148).
+// Listen plays straight through; a list's Read aloud plays its own stretch of the same audio
+// and stops at the end of it, and each list tints the line being read.
+export function useRecipeVoice(track: PlayerTrack | null, lines: readonly NoteLine[], notePlayer: NotePlayer): RecipeVoice | null {
   const engine = usePlayer();
-  const snapshot = usePlayerSnapshot();
-  const line = usePlayerLine();
-  const steps = useMemo(() => recipeStepGroups(recipe?.steps ?? []).flatMap(({ steps: texts }) => texts), [recipe]);
+  const [stopAfter, setStopAfter] = useState<number | null>(null);
+  const { activeIndex, playing } = notePlayer;
+  const ended = notePlayer.snapshot.status === "ended";
 
-  const tracks = useMemo<Record<RecipePart, PlayerTrack> | null>(
-    () =>
-      note === null
-        ? null
-        : {
-            ingredients: { ...note, opening: null, part: "ingredients", lines: listLines("ingredients", ingredients) },
-            method: { ...note, opening: null, part: "method", lines: listLines("method", steps) },
-          },
-    [note, ingredients, steps],
-  );
+  useEffect(() => {
+    if (stopAfter === null) return;
+    if (ended) {
+      setStopAfter(null);
+    } else if (activeIndex > stopAfter) {
+      engine.pause();
+      engine.seekLine(stopAfter);
+      setStopAfter(null);
+    }
+  }, [activeIndex, stopAfter, ended, engine]);
 
-  if (recipe === null || tracks === null || note === null) return null;
-  const base = note;
+  const ingredients = stretchOf(lines, INGREDIENTS_SECTION);
+  const method = stretchOf(lines, METHOD_SECTION);
+  if (track === null || ingredients === null) return null;
 
-  const playing = snapshot.status === "playing" || snapshot.status === "buffering";
-  const currentPart =
-    snapshot.track?.overviewId === base.overviewId && snapshot.track.part !== undefined ? snapshot.track.part : null;
-  const voiceOf = (part: RecipePart): RecipeListVoice => {
-    const current = currentPart === part;
+  const within = (stretch: Stretch) => activeIndex >= stretch.first && activeIndex <= stretch.last;
+  const voiceOf = (stretch: Stretch | null): RecipeListVoice => {
+    if (stretch === null) return NO_VOICE;
+    const here = within(stretch);
+    const reading = playing && here;
     return {
-      activeIndex: current && snapshot.status !== "ready" && snapshot.status !== "ended" ? line : null,
-      reading: current && playing,
+      activeIndex: here ? activeIndex - stretch.first : null,
+      reading,
+      speaking: reading,
       onPress: () => {
-        if (!current) engine.load(tracks[part]);
-        engine.toggle();
+        if (reading) {
+          notePlayer.pause();
+          return;
+        }
+        engine.load(track, stretch.first);
+        engine.seekLine(stretch.first);
+        setStopAfter(stretch.last);
+        engine.play();
       },
     };
   };
-  const total = currentPart === null ? 0 : tracks[currentPart].lines.length;
+
+  const position = (stretch: Stretch) => `${activeIndex - stretch.first + 1} of ${stretch.last - stretch.first + 1}`;
   return {
-    ingredients: voiceOf("ingredients"),
-    method: voiceOf("method"),
-    nowReading:
-      currentPart === null || !playing
-        ? null
-        : currentPart === "method"
-          ? `Method · step ${line + 1} of ${total}`
-          : `Ingredients · ${line + 1} of ${total}`,
+    ingredients: voiceOf(ingredients),
+    method: voiceOf(method),
+    nowReading: !playing
+      ? null
+      : method !== null && within(method)
+        ? `Method · step ${position(method)}`
+        : within(ingredients)
+          ? `Ingredients · ${position(ingredients)}`
+          : null,
+    release: () => setStopAfter(null),
   };
 }

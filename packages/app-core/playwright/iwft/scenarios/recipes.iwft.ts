@@ -104,3 +104,71 @@ test("copy recipe gives the page's recipe with its source, and never the summary
   expect(copied).toContain("Method\n1. Heat the oven");
   expect(copied).not.toContain("weeknight stew rests");
 });
+
+test("a list's Read aloud starts at its first line, and the bar says where the voice is", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeRecipeOverview());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId("RecipeIngredients.readAloud").click();
+
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("3 large leeks, trimmed and halved lengthways");
+  await expect(page.getByTestId("ReaderPlayerBar.label")).toContainText("Now reading · Ingredients · 1 of 8");
+  await expect(page.getByTestId("RecipeIngredients.readAloud")).toHaveText("Pause reading");
+  await expect(page.getByText("Ingredients · 8", { exact: false }).first()).toBeVisible();
+  await expect(page.getByTestId("ReadAlongNote.line").filter({ hasText: "3 large leeks" })).toHaveCount(0);
+});
+
+test("the narration runs from the summary through the ingredients into the method", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeRecipeOverview());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("]");
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("3 large leeks, trimmed and halved lengthways");
+  for (let step = 0; step < 9; step += 1) await page.keyboard.press("]");
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveCount(0);
+  await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Heat the oven");
+});
+
+test("Read aloud plays just its list, and stops before the method", async ({ page, launcher, backendSimulator }) => {
+  const recipe = makeRecipeOverview();
+  backendSimulator.overviews.seed({ ...recipe, recipe: { ...recipe.recipe!, ingredients: ["2 leeks", "Salt"] } });
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId("RecipeIngredients.readAloud").click();
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("2 leeks");
+
+  await expect(page.getByTestId("RecipeIngredients.readAloud")).toHaveText("Read them aloud", { timeout: 20_000 });
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toContainText("Salt");
+  await expect(page.getByTestId("RecipeMethod.activeStep")).toHaveCount(0);
+});
+
+test("the print sheet carries the page's image and our name and mark, and nothing of our summary", async ({ page, launcher, backendSimulator }) => {
+  await page.route("https://images.example/**", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64"),
+    }),
+  );
+  const recipe = makeRecipeOverview();
+  backendSimulator.overviews.seed({ ...recipe, source: { ...recipe.source, imageUrl: "https://images.example/stew.png" } as never });
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  await page.evaluate(() => {
+    (window as unknown as { printed: number }).printed = 0;
+    window.print = () => {
+      (window as unknown as { printed: number }).printed += 1;
+    };
+  });
+
+  await page.getByTestId("OverviewActionsMenu.trigger").click();
+  await page.getByTestId("OverviewActionsMenu.printRecipeItem").click();
+
+  const sheet = page.getByTestId("RecipePrintSheet.root");
+  await expect(sheet.getByTestId("RecipePrintSheet.image")).toHaveAttribute("src", "https://images.example/stew.png");
+  await expect(sheet.getByTestId("RecipePrintSheet.madeWith")).toHaveText("Made with The Overview");
+  await expect(sheet).not.toContainText("weeknight stew rests");
+  await expect.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
+});

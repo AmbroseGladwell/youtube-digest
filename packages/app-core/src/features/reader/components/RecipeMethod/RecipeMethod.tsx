@@ -2,6 +2,7 @@ import { useId } from "react";
 import { recipeStepGroups, sourceName, type RecipeNote, type WebSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { RecipeReadAloud, type RecipeListVoice } from "./RecipeReadAloud.js";
+import { useSpokenLineInView } from "./useSpokenLineInView.js";
 import styles from "./RecipeMethod.module.scss";
 import { recipeMethodTestIds } from "./RecipeMethodTestIds.js";
 
@@ -19,6 +20,7 @@ export interface RecipeMethodProps {
 export function RecipeMethod({ recipe, source, note, voice }: RecipeMethodProps) {
   const headingId = useId();
   const from = sourceName(source);
+  const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
   return (
     <section className={styles.root} aria-labelledby={headingId} data-testid={recipeMethodTestIds.root}>
       <div className={styles.head}>
@@ -59,6 +61,7 @@ export function RecipeMethod({ recipe, source, note, voice }: RecipeMethodProps)
                   return (
                     <li
                       key={number}
+                      ref={active ? spokenLine : undefined}
                       className={`${styles.step} ${active ? styles.stepActive : ""}`}
                       aria-current={active || undefined}
                       data-testid={active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step}

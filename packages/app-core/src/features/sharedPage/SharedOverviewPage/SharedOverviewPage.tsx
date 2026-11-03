@@ -29,6 +29,7 @@ import { initialScale, recipeAdjustment } from "../../reader/util/recipeAdjustme
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
+import { useRecipeVoice } from "../../reader/ReaderPage/useRecipeVoice.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { usePlayer } from "../../player/PlayerContext.js";
@@ -96,6 +97,11 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const captions = useMemo(() => overviewNoteCaptions(note), [note]);
   const track = useMemo(() => playerTrackFor(note, lines), [note, lines]);
   const notePlayer = useNotePlayer(track);
+  const recipeVoice = useRecipeVoice(track, lines, notePlayer);
+  const summaryLines = useMemo(
+    () => (note.recipe == null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
+    [lines, note.recipe],
+  );
   const player = usePlayer();
   const navigate = useNavigate();
   const analytics = useAnalytics();
@@ -130,7 +136,11 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       ? null
       : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
 
-  const barView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: false });
+  const noteBarView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: false });
+  const barView =
+    recipeVoice?.nowReading == null
+      ? noteBarView
+      : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
 
   return (
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
@@ -207,7 +217,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               <div className={styles.note} data-testid={sharedOverviewPageTestIds.overviewPanel}>
                 {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
                 <ReadAlongNote
-                  lines={lines}
+                  lines={summaryLines}
                   captions={captions}
                   activeIndex={notePlayer.activeIndex}
                   speaking={notePlayer.playing}
@@ -245,7 +255,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       units="asWritten"
                       columns={!isPhone}
                       adjustable={false}
-                      voice={null}
+                      voice={recipeVoice?.ingredients ?? null}
                       onScaleChange={() => undefined}
                       onUnitsChange={() => undefined}
                       onReset={() => undefined}
@@ -290,7 +300,10 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         durationSeconds={notePlayer.snapshot.timings.durationSeconds}
         favourite={null}
         canSignIn={false}
-        onMain={notePlayer.main}
+        onMain={() => {
+          recipeVoice?.release();
+          notePlayer.main();
+        }}
         onSkip={(delta) => player.skip(delta)}
         onSeek={(seconds) => player.seek(seconds)}
         onCycleRate={() => player.cycleRate()}

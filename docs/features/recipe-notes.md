@@ -15,7 +15,7 @@ note. Trello OV-144, decided 2026-11-03. The designs are 144a–144ab in Claude 
 | Times, step groups, copy text | `recipeFacts.ts`, `recipeText.ts` |
 | Servings and units | `adjustIngredient.ts`, `app-core/.../reader/util/recipeAdjustment.ts` |
 | The screens | `RecipeTimes`, `RecipeIngredients`, `RecipeMethod`, `RecipePageLink`, `RecipePrintSheet` |
-| Each list read aloud | `useRecipeVoice`, `PlayerTrack.part` |
+| Narrating the whole recipe | `overviewNoteLines`, `useRecipeVoice` |
 
 ## Web pages first, shaped for video too
 
@@ -115,15 +115,29 @@ Copy and Print take the lines as shown, with a line saying what they were adjust
 ⋯ gains Copy recipe and Print recipe (144r, 144s). Both give the page's recipe only: title, where it
 came from with the link, the time row, the ingredients and the method. Never the summary, which is
 ours. Copy is plain text with "-" and numbers so it pastes cleanly anywhere. Print is one sheet in
-two columns, black on white whatever the theme, rendered only while the print dialog is open.
+two columns, black on white whatever the theme, rendered only while the print dialog is open. Since
+OV-148 it opens with the page's own image where there is one (the dialog waits for it to load, and a
+dead link is left out) and closes with "Made with The Overview" beside the mark.
 
 ## Reading aloud
 
-Listen reads the Summary: it is the narration, for deciding. Each list has its own Read aloud, for
-cooking (144t), which reads that list exactly as shown, line by line, in the reader's voice, and
-tints the line it is on. Every spoken word is a line on screen. It plays through the app's one
-player as a track of its own, marked by `PlayerTrack.part`, so the note's highlight doesn't follow it,
-and the bar says "Now reading · Method · step 3 of 6". Audio is keyed by its words, as the note's is.
+Changed by the owner on 2026-11-03 (OV-148, https://trello.com/c/WEIryD5R). A recipe's narration is
+the whole recipe: the Summary, then the ingredients, then the method. So pressing Listen makes one
+render that has every section ready, and plays straight through. The ingredients are read as shown,
+so an adjusted amount is what is heard, and adjusting servings or units makes a fresh render.
+
+- **Headings are counted, as key points are.** "There are 8 ingredients" and "The method, in 6
+  steps", counted in code.
+- **Each step says its number.** "Step 1. Heat the oven…", in `spoken`, so the screen keeps the
+  page's words.
+- **Read aloud plays one list from the same audio.** It seeks to the list's first line and
+  pauses when the voice moves past the last, so it never needs a render of its own. Listen, or the
+  bar's play button, lifts that stop and plays on.
+- **The highlight follows the voice into the lists.** The note shows only the Summary's lines;
+  the ingredients card and the method tint the line being read and keep it on screen, and the bar
+  says "Now reading · Method · step 3 of 6".
+
+A shared copy carries no method, so its narration ends after the ingredients.
 
 ## Sharing
 

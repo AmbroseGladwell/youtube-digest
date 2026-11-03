@@ -66,7 +66,7 @@ import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../types/ReaderTab.js
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
-import { usePlayer, usePlayerSnapshot, usePlayerTime } from "../../player/PlayerContext.js";
+import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
@@ -175,7 +175,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         : webArticle.article.chapters.length > 1
           ? ARTICLE_TABS
           : ["Overview" as const];
-  const lines = useMemo(() => (overview ? overviewNoteLines(overview) : []), [overview]);
+  useEffect(() => setRecipeScale(null), [overviewId]);
+  const scale = recipeScale ?? (recipe === null ? null : initialScale(recipe));
+  const adjustment = useMemo(
+    () => (recipe === null || scale === null ? null : recipeAdjustment(recipe, scale, recipeUnits)),
+    [recipe, scale, recipeUnits],
+  );
+  const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
+  // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
+  const lines = useMemo(
+    () => (overview ? overviewNoteLines(overview, recipe === null ? {} : { ingredients: shownIngredients }) : []),
+    [overview, recipe, shownIngredients],
+  );
+  const summaryLines = useMemo(
+    () => (recipe === null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
+    [lines, recipe],
+  );
   const onPage = useShowOnPage(webPage);
   const besideArticle = onPage !== null;
   const startArticleRun = useStartArticleRun();
@@ -203,16 +218,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
-  const engineSnapshot = usePlayerSnapshot();
-  const engineTime = usePlayerTime();
-  useEffect(() => setRecipeScale(null), [overviewId]);
-  const scale = recipeScale ?? (recipe === null ? null : initialScale(recipe));
-  const adjustment = useMemo(
-    () => (recipe === null || scale === null ? null : recipeAdjustment(recipe, scale, recipeUnits)),
-    [recipe, scale, recipeUnits],
-  );
-  const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
-  const recipeVoice = useRecipeVoice(track, recipe, shownIngredients);
+  const recipeVoice = useRecipeVoice(track, lines, notePlayer);
   useEffect(() => {
     if (!recipeCopied) return;
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
@@ -247,6 +253,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // (docs/features/audio-player.md). Docking is its own state rather than a read of
   // playing: pausing from the bar must not take the bar away.
   const listen = () => {
+    recipeVoice?.release();
     reader.overview.listenPressed({ listening: !playerDocked });
     if (playerDocked) {
       setPlayerDocked(false);
@@ -339,11 +346,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     savedPhase !== "hidden" && timeSaved.kind === "counted" && timeSaved.minutes > 0
       ? { minutes: timeSaved.minutes, leaving: savedPhase === "leaving" }
       : null;
-  // While a recipe's list reads itself, the bar is about that list (design 144t).
-  const listReading = engineSnapshot.track?.overviewId === overviewId && engineSnapshot.track.part !== undefined;
-  const barSnapshot = listReading ? engineSnapshot : notePlayer.snapshot;
-  const barTime = listReading ? engineTime : notePlayer.time;
-  const noteBarView = playerBarView(barSnapshot, barTime, { read: state.read });
+  // While the narration is in a recipe's list, the bar says where (design 144t).
+  const noteBarView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
   const barView =
     recipeVoice?.nowReading == null
       ? noteBarView
@@ -405,6 +409,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           onToggleFavourite={() => toggleFavourite("masthead")}
           onTogglePlaying={() => {
             reader.overview.listenPressed({ listening: !notePlayer.playing });
+            recipeVoice?.release();
             notePlayer.main();
           }}
           onListen={listen}
@@ -462,7 +467,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               />
               <ReadAlongNote
                 key={overviewId}
-                lines={lines}
+                lines={summaryLines}
                 captions={captions}
                 sectionSlot={howToApplySlot}
                 activeIndex={notePlayer.activeIndex}
@@ -643,14 +648,17 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         {(!isPanel || playerDocked) && (
           <ReaderPlayerBar
             view={barView}
-            status={barSnapshot.status}
-            time={barTime}
-            lines={listReading ? (engineSnapshot.track?.lines ?? lines) : lines}
-            lineStarts={barSnapshot.timings.lineStarts}
-            durationSeconds={barSnapshot.timings.durationSeconds}
+            status={notePlayer.snapshot.status}
+            time={notePlayer.time}
+            lines={lines}
+            lineStarts={notePlayer.snapshot.timings.lineStarts}
+            durationSeconds={notePlayer.snapshot.timings.durationSeconds}
             favourite={isPanel ? { on: state.favourite, onToggle: () => toggleFavourite("playerBar") } : null}
             canSignIn={sync.available}
-            onMain={listReading ? () => player.toggle() : notePlayer.main}
+            onMain={() => {
+              recipeVoice?.release();
+              notePlayer.main();
+            }}
             onSkip={(delta) => player.skip(delta)}
             onSeek={(seconds) => player.seek(seconds)}
             onCycleRate={() => player.cycleRate()}
