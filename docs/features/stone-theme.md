@@ -128,10 +128,30 @@ Design 4 (`4 Single Overview.dc.html`: 4a–4d on the desktop, 5c on a phone, 6d
 panel) replaces the editorial reader's two-column page with **one 760px reading column
 and nothing beside it**. What the old rail carried has moved rather than gone: `Watch on
 YouTube` is in the ⋯ menu, the section list is retired (the tabs and the page itself do
-that job), and the watch-anyway range still prints under the note. The breadcrumb, the
-stepper in the top bar and the thumbnail are gone; where the library's order takes you
-next is a `Previous · 2 of 4 · Next` foot under the note, since the next note is a thing
-to want once this one is read.
+that job), and the watch-anyway range still prints under the note. The breadcrumb and
+the stepper are gone; where the library's order takes you next is a `Previous · 2 of 4 ·
+Next` foot under the note, since the next note is a thing to want once this one is read.
+The thumbnail came back in OV-147 as the library row's own tile leading the head, with
+who it's from beside it and the title, topics and meta full width below; the panel's head
+still has none.
+
+**The head's image (OV-147, designs 147a–147af).** The source's image leads the head
+with only who it's from beside it: a video's channel on its own line (up to two, then an
+ellipsis) with the verdict chip and the dubious flag under it, or an article's or
+recipe's `Site · Kind` line (up to two). The title, topics and meta line keep their full
+width below, in the order they had without it. The tile is 168 × 94 on the web and on a
+tablet, and 112 × 63 below the library's phone breakpoint at any phone width, one 16:9
+slot cover-cropped from the centre for every source, as the row crops it. It is
+decoration only: no link, `alt=""` and `aria-hidden`, because the title beside it is the
+heading and an alt would have a screen reader say it twice. It isn't dimmed when the note
+is read: the library dims a read row so the unread ones stand out in a list, and on the
+note there is no list. With no image there is no slot and no name tile, since the
+`Site · Kind` line already says what the tile would. A loading image holds its slot on
+the surface colour and is fetched eagerly, being the first thing on the page; one that
+fails removes itself (`OverviewThumbnail`'s rule), and the head falls back to the
+no-image layout. The lead switches on `:has()` rather than a prop, so a failed image
+needs no state of its own in `ReaderMasthead`. The panel's head has no image: the
+video or page is beside it, and its sticky head is the scarcest height in the product.
 
 **One head, three arrangements.** `ReaderMasthead` lays its four parts — the back link,
 the actions, the ⋯ menu and the title block — out by grid area, so the desktop's top bar
