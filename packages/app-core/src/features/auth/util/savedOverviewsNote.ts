@@ -22,7 +22,7 @@ export function savedOverviewsNote(count: number, intent: AuthIntent, place: Lib
     return `The ${overviews} ${count === 1 ? "comes" : "come"} with you${everywhere}.`;
   }
   const overviews = count === 1 ? `Overview ${WHERE[place]}` : `${count} Overviews ${WHERE[place]}`;
-  const except = count === 1 ? "unless it already has one for that video" : "except any for videos it already has";
+  const except = count === 1 ? "unless it already has it" : "except any it already has";
   const everywhere =
     place === "browser"
       ? ` You’ll then have ${count === 1 ? "it" : "them"} on your phone, in the extension and on any other device.`

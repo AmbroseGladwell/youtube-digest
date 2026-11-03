@@ -1,5 +1,5 @@
 import { NOVELTY_LABEL, type Topic } from "@overview/domain";
-import type { LibraryFilters } from "../types/LibraryFilters.js";
+import { LIBRARY_SOURCE_LABEL, type LibraryFilters } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 
 export interface LibraryFilterChip {
@@ -24,6 +24,10 @@ export function libraryFilterChips(filters: LibraryFilters, topics: Topic[]): Li
       removeLabel: `Remove tag filter ${filters.tag}`,
       clear: { tag: DEFAULTS.tag },
     });
+  }
+  if (filters.source !== "all") {
+    const label = LIBRARY_SOURCE_LABEL[filters.source];
+    chips.push({ key: "source", label, removeLabel: `Remove source filter ${label}`, clear: { source: "all" } });
   }
   if (filters.topicId !== DEFAULTS.topicId) {
     const name = topics.find((topic) => topic.id === filters.topicId)?.name ?? "Topic";

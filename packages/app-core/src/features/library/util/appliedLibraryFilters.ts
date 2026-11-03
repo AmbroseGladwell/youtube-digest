@@ -1,5 +1,5 @@
 import { NOVELTY_LABEL, type Topic } from "@overview/domain";
-import type { LibraryFilters } from "../types/LibraryFilters.js";
+import { LIBRARY_SOURCE_LABEL, type LibraryFilters } from "../types/LibraryFilters.js";
 
 export interface AppliedLibraryFilter {
   key: string;
@@ -13,6 +13,9 @@ export function appliedLibraryFilters(
 ): AppliedLibraryFilter[] {
   const applied: AppliedLibraryFilter[] = [];
 
+  if (filters.source !== "all") {
+    applied.push({ key: "source", label: LIBRARY_SOURCE_LABEL[filters.source], clear: { source: "all" } });
+  }
   if (filters.topicId !== "all") {
     const topic = topics.find((candidate) => candidate.id === filters.topicId);
     applied.push({

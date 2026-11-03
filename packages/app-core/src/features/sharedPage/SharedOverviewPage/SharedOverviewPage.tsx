@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { NOVELTY_LABEL, overviewNoteCaptions, overviewNoteLines, formatClock, type SharePayload } from "@overview/domain";
+import { NOVELTY_LABEL, overviewNoteCaptions, overviewNoteLines, formatClock, type SharePayload, sourceName } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
@@ -11,8 +11,10 @@ import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { LineRangeTag } from "../../reader/components/LineRangeTag/LineRangeTag.js";
 import { RelatedByTag } from "../../reader/components/RelatedByTag/RelatedByTag.js";
+import { ArticleChaptersPanel } from "../../reader/components/ArticleChaptersPanel/ArticleChaptersPanel.js";
+import { ArticleLineLinks } from "../../reader/components/ArticleLineLinks/ArticleLineLinks.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
-import type { ReaderTab } from "../../reader/types/ReaderTab.js";
+import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
@@ -57,6 +59,10 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
 
 function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
   const { note, transcript } = payload.snapshot;
+  const video = note.source.kind === "youtube" ? note.source : null;
+  const webArticle =
+    note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
+  const tabsShown = webArticle === null ? READER_TABS : webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const isPhone = useIsPhone();
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
@@ -110,7 +116,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           <div className={styles.head}>
             <div className={styles.chips}>
               <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
-                {note.source.channel}
+                {webArticle === null ? sourceName(note.source) : `An overview of an article from ${sourceName(note.source)}`}
               </span>
               {note.verdict !== null && (
                 <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
@@ -158,12 +164,14 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
               data-testid={sharedOverviewPageTestIds.watchButton}
             >
-              Watch on YouTube
+              {webArticle === null ? "Watch on YouTube" : `Read the article on ${sourceName(note.source)}`}
               <StrokeIcon name="openOut" size={16} />
             </a>
           </div>
 
-          <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} ref={tabsHeight.measured} />
+          {tabsShown.length > 1 && (
+            <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} tabs={tabsShown} ref={tabsHeight.measured} />
+          )}
 
           <div id={panelId(tab)} role="tabpanel" aria-labelledby={tabId(tab)}>
             {tab === "Overview" && (
@@ -174,38 +182,42 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                   activeIndex={notePlayer.activeIndex}
                   speaking={notePlayer.playing}
                   onSelectLine={notePlayer.selectLine}
-                  renderRange={(line, range, active) => (
-                    <LineRangeTag
-                      line={line}
-                      range={range}
-                      video={note.source}
-                      active={active}
-                      asSheet={isPhone}
-                      canReadTranscript={payload.snapshot.transcript !== null}
-                      onOpenTranscriptAt={openTranscriptAt}
-                    />
-                  )}
+                  renderRange={(line, range, active) =>
+                    video !== null && (
+                      <LineRangeTag
+                        line={line}
+                        range={range}
+                        video={video}
+                        active={active}
+                        asSheet={isPhone}
+                        canReadTranscript={payload.snapshot.transcript !== null}
+                        onOpenTranscriptAt={openTranscriptAt}
+                      />
+                    )
+                  }
+                  renderLineEnd={(line) => webArticle !== null && <ArticleLineLinks line={line} onPage={null} {...webArticle} />}
                 />
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
               </div>
             )}
-            {tab === "Transcript" && (
+            {tab === "Transcript" && video !== null && (
               <TranscriptPanel
-                video={note.source}
+                video={video}
                 held={transcript}
                 openAtMs={transcriptOpenAtMs}
                 openedFrom={openedFrom}
                 onBackToChapters={() => changeTab("Chapters")}
               />
             )}
-            {tab === "Chapters" && (
+            {tab === "Chapters" && video !== null && (
               <ChaptersPanel
                 chapters={note.chapters}
-                video={note.source}
+                video={video}
                 held={transcript}
                 onOpenTranscriptAt={openTranscriptAt}
               />
             )}
+            {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel onPage={null} {...webArticle} />}
           </div>
 
         </main>

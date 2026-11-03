@@ -13,6 +13,9 @@ export function recordLibraryFilterChange(
   patch: Partial<LibraryFilters>,
   from: FilterControl,
 ): void {
+  if (patch.source !== undefined && patch.source !== before.source) {
+    analytics.sourceChosen({ source: patch.source, from });
+  }
   if (patch.topicId !== undefined && patch.topicId !== before.topicId) {
     if (patch.topicId === "all") analytics.topicCleared({ from });
     else analytics.topicChosen({ topicId: patch.topicId, from });

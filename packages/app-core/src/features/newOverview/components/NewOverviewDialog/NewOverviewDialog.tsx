@@ -286,6 +286,13 @@ function RunProgress({
               </p>
             </div>
           </>
+        ) : run.article !== null ? (
+          <div className={styles.sourceText}>
+            <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+              {run.article.title}
+            </h2>
+            <p className={styles.sourceMeta}>{run.article.site}</p>
+          </div>
         ) : (
           <div className={styles.sourceText}>
             <h2 className={styles.sourceTitle} id={headingId}>

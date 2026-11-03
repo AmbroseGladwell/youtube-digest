@@ -42,6 +42,8 @@ import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
 import { generationRoutes } from "./routes/generationRoutes.js";
 import { healthRoutes } from "./routes/healthRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
+import { articleRoutes } from "./routes/articleRoutes.js";
+import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
@@ -106,6 +108,7 @@ export interface BuildAppOptions {
   audio?: AudioSetup | null;
   transcriptService?: TranscriptServiceSetup | null;
   ourKey?: OurKeySetup | null;
+  fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -146,6 +149,7 @@ export async function buildApp({
   clock = () => new Date(),
   logger = null,
   slowQueryMs = SLOW_QUERY_MS,
+  fetchArticlePage = createArticlePageFetcher(),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -215,6 +219,7 @@ export async function buildApp({
       topicRoutes(api, records);
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
+      articleRoutes(api, { fetchPage: fetchArticlePage, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });

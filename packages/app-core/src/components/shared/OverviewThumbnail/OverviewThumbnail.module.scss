@@ -20,3 +20,26 @@
   height: 100%;
   object-fit: cover;
 }
+
+// Design 77k: the site's name on a stone tile, for a page with no image or one that failed.
+// Sized from the slot, because the phone and related rows are half as wide as the library's.
+.tileHost {
+  display: block;
+  container-type: inline-size;
+  text-decoration: none;
+}
+
+.nameTile {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 6cqi 7cqi;
+  overflow: hidden;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-family: var(--font-heading);
+  font-size: clamp(0.75rem, 10.5cqi, 1.125rem);
+  line-height: 1.05;
+}

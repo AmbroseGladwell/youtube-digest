@@ -1,6 +1,7 @@
-export * from "./ArticleNote.js";
+export * from "./ArticleDetails.js";
 export * from "./ArticlePlace.js";
 export * from "./ArticleRead.js";
+export * from "./canonicalArticleUrl.js";
 export * from "./ExtractedArticle.js";
 export * from "./Provider.js";
 export * from "./KnownModel.js";
@@ -50,6 +51,7 @@ export * from "./SharePayload.js";
 export * from "./shareSnapshot.js";
 export * from "./shareContentHash.js";
 export * from "./Source.js";
+export * from "./sourceFacts.js";
 export * from "./sourceKey.js";
 export * from "./shareLink.js";
 export * from "./sharePreview.js";

@@ -11,6 +11,6 @@ export const DEFAULT_LIBRARY_VIEW: LibraryView = {
   sort: DEFAULT_LIBRARY_SORT,
 };
 
-export const SAVED_LIBRARY_VIEW_FIELDS = ["topic", "novelty", "status", "favourite", "dubious", "sort"] as const;
+export const SAVED_LIBRARY_VIEW_FIELDS = ["source", "topic", "novelty", "status", "favourite", "dubious", "sort"] as const;
 
 export type SavedLibraryViewField = (typeof SAVED_LIBRARY_VIEW_FIELDS)[number];

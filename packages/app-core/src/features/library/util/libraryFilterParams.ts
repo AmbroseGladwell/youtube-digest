@@ -1,10 +1,10 @@
 import { Novelty, Tag, TopicId } from "@overview/domain";
-import { NO_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
+import { LIBRARY_SOURCES, NO_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
 import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
-const LIBRARY_VIEW_PARAMS = ["topic", "verdict", "status", "fav", "dubious", "tag", "q", "sort"];
+const LIBRARY_VIEW_PARAMS = ["source", "topic", "verdict", "status", "fav", "dubious", "tag", "q", "sort"];
 
 export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilters {
   const topicParam = searchParams.get("topic");
@@ -18,6 +18,7 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
     statusParam && STATUS_VALUES.has(statusParam) ? (statusParam as LibraryFilters["status"]) : "all";
 
   return {
+    source: LIBRARY_SOURCES.find((source) => source === searchParams.get("source")) ?? "all",
     topicId,
     novelty,
     status,
@@ -34,6 +35,7 @@ export function applyLibraryFilterPatch(
 ): URLSearchParams {
   const next = new URLSearchParams(current);
 
+  if ("source" in patch) setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
   if ("topicId" in patch) setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
   if ("novelty" in patch) setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
   if ("status" in patch) setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);

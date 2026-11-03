@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { Chapters } from "./Chapter.js";
 import { CoreFields } from "./CoreFields.js";
@@ -28,6 +29,9 @@ export const SharedNote = z
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
     chapters: Chapters.nullable(),
+    // Absent rather than null on a video, so a copy's content hash doesn't move
+    // (docs/features/source-identity.md, "Shares").
+    article: ArticleDetails.nullish(),
   });
 export type SharedNote = z.infer<typeof SharedNote>;
 

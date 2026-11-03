@@ -75,6 +75,7 @@ export function assembleOverview(
     howToApply,
     watchAnyway,
     chapters: resolveChapters(input, output.chapters),
+    article: null,
   });
 }
 

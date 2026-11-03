@@ -12,7 +12,7 @@ const HEADING_ID = "DubiousReasonsPanel-heading";
 
 export interface DubiousReasonsPanelProps {
   dubiousClaims: DubiousClaim[] | null;
-  video: VideoSource;
+  video: Pick<VideoSource, "id" | "url">;
   onClose: () => void;
 }
 

@@ -4,6 +4,7 @@ export const overviewActionsMenuTestIds = {
   menu: "OverviewActionsMenu.menu",
   editTopicsItem: "OverviewActionsMenu.editTopicsItem",
   topicCount: "OverviewActionsMenu.topicCount",
+  regenerateItem: "OverviewActionsMenu.regenerateItem",
   reasonItem: "OverviewActionsMenu.reasonItem",
   readItem: "OverviewActionsMenu.readItem",
   watchItem: "OverviewActionsMenu.watchItem",

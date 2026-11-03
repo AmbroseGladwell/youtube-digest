@@ -1,8 +1,7 @@
 # Article notes
 
-What generation makes of an article, the first half of Trello OV-77's third slice. Decided
-2026-11-02. Nothing here is visible to a reader yet: the record, the reader and the panel wait
-for the agreed design (`OV-77 1 Articles` in Claude Design).
+What generation makes of an article, and how it reads. Trello OV-77's third slice, decided
+2026-11-02. A reader can't make one yet: the panel's Create button is the next piece.
 
 **What is built, and where:**
 
@@ -10,9 +9,9 @@ for the agreed design (`OV-77 1 Articles` in Claude Design).
 |---|---|
 | The forked sections | `packages/generation/src/article/sections/` |
 | The prompt, and the article as numbered paragraphs | `composeArticlePrompt.ts`, `articleParagraphs.ts` |
-| Paragraph numbers turned into places | `assembleArticleNote.ts` |
+| Paragraph numbers turned into places | `assembleArticleOverview.ts` |
 | Calling the model, with one correction | `requestGeneratedOutput`, shared with videos |
-| The result | `ArticleNote`, `ArticlePlace`, `articlePlaceUrl` in `packages/domain` |
+| The result | `ArticleDetails`, `ArticlePlace`, `articlePlaceUrl`, `WebSource` in `packages/domain` |
 
 ## Forked, not conditional
 
@@ -104,22 +103,29 @@ Decided 2026-11-02. Only the note and metadata are stored. So there's no Transcr
 to the live page, regenerating means opening the article again, and the shared cache holds no
 articles. Nothing in this slice writes to `TranscriptStore`.
 
-## Why ArticleNote isn't an Overview yet
+## The record
 
-`Overview` holds times: `TimeRange` on key points, `startMs` on chapters. Adding `web` to `Source`
-makes every reader that assumes a video a compile error, and each needs a design answer. So
-`ArticleNote` stands alone until that's agreed, and the next PR decides how it becomes a record.
-One article will count as one overview against a plan's total.
+An article is an `Overview` with a `web` source and an `article` block: chapters, the chapter each
+key point comes from, and Read it anyway. Everything timed stays null, so no video path changed. The
+block is one field at schema version 11, with null filled in for every video. On a shared copy it is
+absent rather than null on a video, so a share's content hash doesn't move.
+
+## On screen
+
+Designs 77k–77bb in Claude Design. The note is visibly the same note: a source line above the title,
+the author, date and read time under it, no Transcript tab, and key points ending in their chapter
+where a video shows a timestamp. One chapter drops the tabs and the links, since a link could only go
+to the top. Time saved uses 230 words a minute in place of a video's length.
 
 ## Not built
 
-The `web` kind and its id, the stored record, spoken lines
-for "Read it anyway", the panel's Create button, the right-click menu item, and the reader and
-library screens.
+The panel's Create button and right-click item, regenerating, reading the page from the panel, pasted
+links, and storing a thumbnail-size copy of a share image. The design asks for that copy; for now the
+URL alone is kept, and a dead one falls back to the site-name tile.
 
 ## Testing
 
-`generateArticleNote.test.ts` covers the prompt's wording, paragraph numbering, a hostile title, a
+`generateArticleOverview.test.ts` covers the prompt's wording, paragraph numbering, a hostile title, a
 section switched off, places, partial answers, corrections going back to the model, thin notes and
 the conversion each provider receives. All use a simulated model.
 

@@ -11,12 +11,13 @@ export interface ReaderTabsProps {
   panelId: (tab: ReaderTab) => string;
   tabId: (tab: ReaderTab) => string;
   onChange: (tab: ReaderTab) => void;
+  tabs?: readonly ReaderTab[];
   ref?: Ref<HTMLDivElement>;
 }
 
 const readerTabChoice = (tab: ReaderTab): ReaderTabChoice => ReaderTabChoice.parse(tab.toLowerCase());
 
-export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabsProps) {
+export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TABS, ref }: ReaderTabsProps) {
   const indicator = useTabIndicator(active);
   const analytics = useOverviewPageAnalytics();
   const choose = (tab: ReaderTab) => {
@@ -34,7 +35,7 @@ export function ReaderTabs({ active, panelId, tabId, onChange, ref }: ReaderTabs
     >
       <div className={styles.column}>
         <div className={styles.track}>
-          {READER_TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
               type="button"

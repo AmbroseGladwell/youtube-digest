@@ -81,7 +81,7 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
         <p className={styles.how} data-testid={timeSavedSheetTestIds.how}>
           {summary.counted === 0
             ? "Nothing counted yet. Mark an overview read and what it saved you shows here."
-            : `From ${overviews(summary.counted)} you’ve read: each video’s length, minus the time the overview took to read.`}
+            : `From ${overviews(summary.counted)} you’ve read: each video’s length or article’s reading time, minus the time the overview took to read.`}
         </p>
 
         {next !== undefined && (
@@ -125,11 +125,11 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
               <p className={styles.leftOutLine}>{overviews(summary.withoutLength)} without a video length</p>
             )}
             {summary.watchVerdict > 0 && (
-              <p className={styles.leftOutLine}>{summary.watchVerdict} the verdict said to watch</p>
+              <p className={styles.leftOutLine}>{summary.watchVerdict} the verdict said to watch or read</p>
             )}
             {summary.lessPartToWatch > 0 && (
               <p className={styles.leftOutAside}>
-                {summary.lessPartToWatch} the verdict said to watch in part {summary.lessPartToWatch === 1 ? "counts" : "count"}{" "}
+                {summary.lessPartToWatch} the verdict said to watch or read in part {summary.lessPartToWatch === 1 ? "counts" : "count"}{" "}
                 without that part.
               </p>
             )}

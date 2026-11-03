@@ -1,6 +1,6 @@
 import { useRef, useState, type Ref } from "react";
 import { Link } from "react-router";
-import { NOVELTY_LABEL, type Overview } from "@overview/domain";
+import { NOVELTY_LABEL, type Overview, sourceName, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
@@ -9,7 +9,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
-import { OverviewActionsMenu } from "../OverviewActionsMenu/OverviewActionsMenu.js";
+import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
@@ -39,6 +39,7 @@ export interface ReaderMastheadProps {
   onEditingTopicsChange: (editing: boolean) => void;
   onEditReason: () => void;
   onShare: (() => void) | null;
+  regenerate: OverviewActionsMenuProps["regenerate"];
   onDelete: () => void;
   ref?: Ref<HTMLElement> | undefined;
 }
@@ -53,6 +54,15 @@ const savedOn = (savedAt: string) =>
 // menu and the title block are laid out by grid area, so the desktop's top bar, the
 // phone's action row under the title and the panel's Listen beside ⋯ are one DOM order
 // (docs/features/stone-theme.md, "The single overview").
+// Design 77o: each part drops out when the page didn't give it.
+const articleByline = (source: WebSource, saved: string): string =>
+  [
+    ...(source.author === null ? [] : [`By ${source.author}`]),
+    ...(source.publishedAt === null ? [] : [`Published ${formatPublishedDate(source.publishedAt)}`]),
+    `${articleReadMinutes(source.wordCount)} min read`,
+    `Saved ${saved}`,
+  ].join(" · ");
+
 export function ReaderMasthead({
   overview,
   metaParts,
@@ -71,6 +81,7 @@ export function ReaderMasthead({
   onEditingTopicsChange,
   onEditReason,
   onShare,
+  regenerate,
   onDelete,
   ref,
 }: ReaderMastheadProps) {
@@ -80,6 +91,8 @@ export function ReaderMasthead({
   const [explainingDubious, setExplainingDubious] = useState(false);
   const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
   const dubiousLabel = dubiousClaimCount > 1 ? `${dubiousClaimCount} dubious claims` : "Dubious claim";
+
+  const isArticle = overview.source.kind === "web";
 
   return (
     <header
@@ -155,10 +168,12 @@ export function ReaderMasthead({
           topicCount={overview.topicIds.length}
           hasReason={overview.captureReason !== null}
           read={read}
-          videoUrl={overview.source.url}
+          sourceUrl={overview.source.url}
+          isArticle={isArticle}
           compact={compact}
           webApp={webApp}
           onShare={onShare}
+          regenerate={regenerate}
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={() => onToggleRead("actionsMenu")}
@@ -167,18 +182,25 @@ export function ReaderMasthead({
       </div>
 
       <div className={styles.head}>
+        {isArticle && (
+          <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
+            {sourceName(overview.source)} · Article
+          </p>
+        )}
         <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
           {overview.source.title}
         </h2>
 
         <p className={styles.byline}>
-          <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
-            {overview.source.channel}
-          </span>
-          {overview.verdict && (
+          {!isArticle && (
+            <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
+              {sourceName(overview.source)}
+            </span>
+          )}
+          {!isArticle && overview.verdict && (
             <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
           )}
-          {overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
+          {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
           {overview.verdict?.dubious && (
             <button
               type="button"
@@ -229,14 +251,18 @@ export function ReaderMasthead({
             "saved" are two facts about when, and what the head is for is what the note
             says (docs/features/extension-panel.md). */}
         <p className={styles.metaRow}>
-          <span data-testid={readerMastheadTestIds.meta}>{metaParts.join(" · ")}</span>
-          {!compact && Boolean(overview.source.publishedAt) && (
+          <span data-testid={readerMastheadTestIds.meta}>
+            {overview.source.kind === "web"
+              ? articleByline(overview.source, savedOn(overview.savedAt))
+              : metaParts.join(" · ")}
+          </span>
+          {!isArticle && !compact && Boolean(overview.source.publishedAt) && (
             <span data-testid={readerMastheadTestIds.published}>
               {" · published "}
               {formatPublishedDate(overview.source.publishedAt!)}
             </span>
           )}
-          {!compact && (
+          {!isArticle && !compact && (
             <span>
               {" · saved "}
               {savedOn(overview.savedAt)}

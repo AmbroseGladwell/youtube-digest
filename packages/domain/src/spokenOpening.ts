@@ -1,4 +1,5 @@
-import type { VideoSource } from "./VideoSource.js";
+import { sourceName } from "./sourceFacts.js";
+import type { Source } from "./Source.js";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -10,13 +11,14 @@ const monthAndYear = (iso: string) => {
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 };
 
-export function spokenOpening(video: VideoSource): string | null {
-  const title = video.title.trim();
-  const channel = video.channel.trim();
+export function spokenOpening(source: Source): string | null {
+  const title = source.title.trim();
+  const from = sourceName(source).trim();
   const parts = [
     title === "" ? null : title,
-    channel === "" ? null : `from ${channel}`,
-    video.publishedAt === null ? null : `published in ${monthAndYear(video.publishedAt)}`,
+    from === "" ? null : `from ${from}`,
+    source.kind === "web" && source.author !== null ? `by ${source.author}` : null,
+    source.publishedAt === null ? null : `published in ${monthAndYear(source.publishedAt)}`,
   ].filter((part) => part !== null);
   return parts.length === 0 ? null : `${parts.join(", ")}.`;
 }

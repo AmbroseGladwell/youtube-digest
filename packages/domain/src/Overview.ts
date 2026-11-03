@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { OverviewId } from "./Brands.js";
+import { ArticleDetails } from "./ArticleDetails.js";
 import { Source } from "./Source.js";
 import { CoreFields } from "./CoreFields.js";
 import { Filing } from "./Filing.js";
@@ -40,6 +41,8 @@ export const Overview = z
     // Null for a record written before chapters existed; a list, possibly empty, for one
     // written since (docs/features/chapters.md).
     chapters: Chapters.nullable(),
+    // Null for a video (docs/features/article-notes.md).
+    article: ArticleDetails.nullable(),
   })
   .superRefine((overview, ctx) => {
     if (overview.thin && overview.verdict !== null) {

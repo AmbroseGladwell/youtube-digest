@@ -2,11 +2,24 @@ import type { CaptureFailure } from "@overview/domain";
 import { GenerationError } from "@overview/generation";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
+import { ArticleReadError } from "../api/ArticleReadError.js";
+
+const ARTICLE_FAILURE = {
+  declined: "article-declined",
+  paywalled: "article-paywalled",
+  "nothing-readable": "article-not-readable",
+  "not-loaded": "article-not-loaded",
+  "no-access": "article-no-access",
+  blocked: "article-blocked",
+  "not-found": "article-not-found",
+  "no-answer": "article-no-answer",
+} as const;
 
 // A failed run by name, never by its message, which can quote a provider's own words
 // (docs/architecture/analytics.md, "What an event may carry"). Once the transcript is in
 // hand, whatever fails is the generation, however its client chose to throw.
 export function captureFailureOf(error: unknown, { transcriptResolved }: { transcriptResolved: boolean }): CaptureFailure {
+  if (error instanceof ArticleReadError) return ARTICLE_FAILURE[error.failure.reason];
   if (error instanceof TranscriptFetchError) return error.failure;
   if (error instanceof NoTranscriptSourceError) return "noTranscriptSource";
   if (error instanceof GenerationError || transcriptResolved) return "generation";

@@ -1,4 +1,4 @@
-import { sourceKey, type Overview } from "@overview/domain";
+import { canonicalArticleUrl, sourceKey, type Overview } from "@overview/domain";
 import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import { readableEntries, type LibraryEntry } from "../types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js";
@@ -24,6 +24,16 @@ export function overviewForVideoUrl(
   }
   const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
     ({ overview }) => sourceKey(overview.source) === videoId,
+  );
+  return match?.overview ?? null;
+}
+
+// Before Create the tab's address is all there is, so this catches the ordinary case and the
+// run's check on the page's own canonical address catches the rest.
+export function overviewForPageUrl(entries: LibraryEntry[], pageUrl: string): Overview | null {
+  const wanted = canonicalArticleUrl(pageUrl, null);
+  const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
+    ({ overview }) => overview.source.kind === "web" && overview.source.url === wanted,
   );
   return match?.overview ?? null;
 }
