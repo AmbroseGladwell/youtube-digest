@@ -53,16 +53,16 @@ test("the length line names a recipe by its stated total, or just as a recipe", 
   assert.equal(overviewMetaParts(makeRecipeOverview({ totalMinutes: null })).at(-1), "Recipe");
 });
 
-test("a recipe's narration is the whole recipe, with each step's number said aloud", () => {
+test("a recipe's narration is the whole recipe, with each step's number and its units said aloud", () => {
   const lines = overviewNoteLines(makeRecipeOverview());
   assert.deepEqual(
     lines.map(({ section, text, spoken }) => [section, spoken ?? text]),
     [
-      ["Summary", "In short"],
+      ["Summary", "The summary"],
       ["Summary", "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in."],
       ["Ingredients", "There are 3 ingredients"],
       ["Ingredients", "3 large leeks, trimmed"],
-      ["Ingredients", "2 × 400g tins cannellini beans, drained"],
+      ["Ingredients", "2 × 400 gram tins cannellini beans, drained"],
       ["Ingredients", "Salt and black pepper"],
       ["Method", "The method, in 3 steps"],
       ["Method", "Step 1. Roast the leeks for 20 minutes."],

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { INGREDIENTS_SECTION, METHOD_SECTION, type NoteLine } from "@overview/domain";
+import { useOverviewPageAnalytics } from "../../analytics/OverviewAnalyticsContext.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
 import type { RecipeListVoice } from "../components/RecipeMethod/RecipeReadAloud.js";
@@ -25,13 +26,21 @@ const stretchOf = (lines: readonly NoteLine[], section: string): Stretch | null 
   return indexes.length === 0 ? null : { first: indexes[0]!, last: indexes.at(-1)! };
 };
 
-const NO_VOICE: RecipeListVoice = { activeIndex: null, reading: false, speaking: false, onPress: () => undefined };
+const NO_VOICE: RecipeListVoice = {
+  activeIndex: null,
+  reading: false,
+  speaking: false,
+  onPress: () => undefined,
+  onSelect: () => undefined,
+};
 
 // A recipe's narration is the whole recipe, so one render has every section ready (OV-148).
 // Listen plays straight through; a list's Read aloud plays its own stretch of the same audio
-// and stops at the end of it, and each list tints the line being read.
+// and stops at the end of it, and each list tints the line being read. Tapping an ingredient
+// or a step moves the voice there, as tapping a line of the note does (OV-149).
 export function useRecipeVoice(track: PlayerTrack | null, lines: readonly NoteLine[], notePlayer: NotePlayer): RecipeVoice | null {
   const engine = usePlayer();
+  const analytics = useOverviewPageAnalytics();
   const [stopAfter, setStopAfter] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
   const ended = notePlayer.snapshot.status === "ended";
@@ -69,6 +78,11 @@ export function useRecipeVoice(track: PlayerTrack | null, lines: readonly NoteLi
         engine.seekLine(stretch.first);
         setStopAfter(stretch.last);
         engine.play();
+      },
+      onSelect: (index) => {
+        analytics.readAlong.lineChosen();
+        if (stopAfter !== stretch.last) setStopAfter(null);
+        notePlayer.selectLine(stretch.first + index);
       },
     };
   };

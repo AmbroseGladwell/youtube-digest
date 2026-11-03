@@ -165,6 +165,16 @@
   }
 }
 
+// A line the voice can move to takes the pointer as the note's lines do (OV-149).
+.lineChoosable {
+  cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+
+  &:hover:not(.lineActive) {
+    background: var(--surface);
+  }
+}
+
 .lineActive {
   background: var(--stone-tint);
   color: var(--on-stone-tint);

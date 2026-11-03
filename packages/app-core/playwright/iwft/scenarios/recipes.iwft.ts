@@ -131,6 +131,34 @@ test("the narration runs from the summary through the ingredients into the metho
   await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Heat the oven");
 });
 
+test("tapping a step or an ingredient moves the voice there, as tapping a line of the note does", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeRecipeOverview());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId("RecipeMethod.step").filter({ hasText: "Add the beans" }).click();
+  await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Add the beans");
+
+  await page.getByTestId("ReaderPlayerBar.playButton").click();
+  await expect(page.getByTestId("ReaderPlayerBar.label")).toContainText("Now reading · Method · step 3 of 4");
+
+  await page.getByTestId("RecipeIngredients.line").filter({ hasText: "500ml vegetable stock" }).click();
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("500ml vegetable stock");
+  await expect(page.getByTestId("RecipeMethod.activeStep")).toHaveCount(0);
+  await expect(page.getByTestId("ReaderPlayerBar.label")).toContainText("Now reading · Ingredients · 4 of 8");
+});
+
+test("a recipe line is reached and chosen by keyboard", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeRecipeOverview());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await page.getByRole("button", { name: "50g parmesan, finely grated" }).focus();
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("50g parmesan, finely grated");
+});
+
 test("Read aloud plays just its list, and stops before the method", async ({ page, launcher, backendSimulator }) => {
   const recipe = makeRecipeOverview();
   backendSimulator.overviews.seed({ ...recipe, recipe: { ...recipe.recipe!, ingredients: ["2 leeks", "Salt"] } });

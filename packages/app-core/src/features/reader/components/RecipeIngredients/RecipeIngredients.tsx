@@ -8,6 +8,7 @@ import {
   type RecipeAdjustment,
   type RecipeScale,
 } from "../../util/recipeAdjustment.js";
+import { RecipeLineChoice } from "../RecipeMethod/RecipeLineChoice.js";
 import { RecipeReadAloud, type RecipeListVoice } from "../RecipeMethod/RecipeReadAloud.js";
 import { useSpokenLineInView } from "../RecipeMethod/useSpokenLineInView.js";
 import styles from "./RecipeIngredients.module.scss";
@@ -150,11 +151,18 @@ export function RecipeIngredients({
             <li
               key={index}
               ref={active ? spokenLine : undefined}
-              className={`${styles.line} ${active ? styles.lineActive : ""}`}
-              aria-current={active || undefined}
+              className={`${styles.line} ${voice === null ? "" : styles.lineChoosable} ${active ? styles.lineActive : ""}`}
+              aria-current={(voice === null && active) || undefined}
+              onClick={voice === null ? undefined : () => voice.onSelect(index)}
               data-testid={active ? recipeIngredientsTestIds.activeLine : recipeIngredientsTestIds.line}
             >
-              <Line line={line} />
+              {voice === null ? (
+                <Line line={line} />
+              ) : (
+                <RecipeLineChoice active={active} onChoose={() => voice.onSelect(index)}>
+                  <Line line={line} />
+                </RecipeLineChoice>
+              )}
             </li>
           );
         })}

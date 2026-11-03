@@ -2,12 +2,14 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./RecipeReadAloud.module.scss";
 
 // One list's part of the narration: the line it is on, whether the voice is in this list, and
-// the press that plays just this list or pauses it (design 144t, OV-148).
+// the press that plays just this list or pauses it (design 144t, OV-148), and the tap on one
+// of its lines that moves the voice there (OV-149).
 export interface RecipeListVoice {
   activeIndex: number | null;
   reading: boolean;
   speaking: boolean;
   onPress: () => void;
+  onSelect: (index: number) => void;
 }
 
 export interface RecipeReadAloudProps {
