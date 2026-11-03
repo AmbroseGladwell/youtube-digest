@@ -6,6 +6,15 @@ import { useFollowTheVoice } from "./useFollowTheVoice.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
+// Something a section carries beside its heading and under it. With replacement set, that
+// stands in for the section's lines, which stay in the list so the voice keeps its place.
+export interface NoteSectionSlot {
+  section: string;
+  beside: ReactNode;
+  under: ReactNode;
+  replacement: ReactNode | null;
+}
+
 export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
@@ -14,6 +23,7 @@ export interface ReadAlongNoteProps {
   speaking: boolean;
   onSelectLine: (index: number) => void;
   captions?: Record<string, string>;
+  sectionSlot?: NoteSectionSlot | null;
   renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
 }
 
@@ -40,6 +50,7 @@ export function ReadAlongNote({
   speaking,
   onSelectLine,
   captions = {},
+  sectionSlot = null,
   renderRange,
 }: ReadAlongNoteProps) {
   const analytics = useOverviewPageAnalytics();
@@ -61,13 +72,15 @@ export function ReadAlongNote({
       {lines.map((line, index) => {
         const active = index === activeIndex;
         const caption = lines[index + 1]?.section === line.section ? undefined : captions[line.section];
+        const slot = sectionSlot?.section === line.section ? sectionSlot : null;
+        if (slot?.replacement && !line.heading) return null;
         return (
           <Fragment key={`${line.section}-${index}`}>
             <div
               ref={active ? follow.spokenLine : undefined}
               className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
                 line.bullet ? styles.bulletLine : ""
-              } ${active ? styles.lineActive : ""}`}
+              } ${line.heading && slot ? styles.headingWithSlot : ""} ${active ? styles.lineActive : ""}`}
               onClick={() => select(index)}
               data-read-along-line
               data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
@@ -105,7 +118,14 @@ export function ReadAlongNote({
                 )}
                 {line.range && renderRange?.(line, line.range, active)}
               </span>
+              {line.heading && slot && (
+                <span className={styles.slotBeside} onClick={(event) => event.stopPropagation()}>
+                  {slot.beside}
+                </span>
+              )}
             </div>
+            {line.heading && slot?.under}
+            {line.heading && slot?.replacement}
             {caption && (
               <p className={styles.caption} data-testid={readAlongNoteTestIds.caption}>
                 {caption}

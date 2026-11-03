@@ -353,3 +353,25 @@ test("a profile pass needs an account", async () => {
 
   assert.equal(response.statusCode, 401);
 });
+
+test("How to apply for anyone answers on our key without counting against the plan", async () => {
+  const answer = {
+    status: 200,
+    body: {
+      choices: [{ message: { content: JSON.stringify({ items: ["Practise on one onion."] }) } }],
+      usage: { prompt_tokens: 100, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 0 } },
+    },
+  };
+  const testApp = await ourKeyApp(makeFakeOpenAi(answer));
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/generations/how-to-apply",
+    body: { title: "T", channel: "C", inOneLine: "L", coreClaim: "C", keyPoints: ["K"] },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { items: ["Practise on one onion."] });
+  assert.equal((await usageOf(account)).ours.used, 0);
+});

@@ -1,4 +1,4 @@
-import { OurKeyGenerationStatus, Overview, OverviewUsage, ProfilePassResult, TrialToken } from "@overview/domain";
+import { ForAnyoneResult, OurKeyGenerationStatus, Overview, OverviewUsage, ProfilePassResult, TrialToken } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { GenerationApi } from "./GenerationApi.js";
 
@@ -8,6 +8,7 @@ export function createFetchGenerationApi(options: ApiRequesterOptions): Generati
     status: () => answered(request("GET", "/generations", OurKeyGenerationStatus)),
     usage: () => answered(request("GET", "/overview-usage", OverviewUsage)),
     generate: (body) => answered(request("POST", "/generations", Overview, { body })),
+    forAnyone: (body) => answered(request("POST", "/generations/how-to-apply", ForAnyoneResult, { body })),
     profilePass: (body) => answered(request("POST", "/generations/profile", ProfilePassResult, { body })),
     reserve: (overviewId, shareToken) =>
       answered(

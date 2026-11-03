@@ -433,6 +433,11 @@ export const analyticsEvents = {
         typed: z.number().int().nonnegative(),
       }),
     },
+    writtenForYou: {
+      shown: event("The reveal's Written for you / For anyone flip is ready", {}),
+      flipped: event("The reader flips How to apply on the reveal", { to: z.enum(["you", "anyone"]) }),
+      failed: event("How to apply for anyone couldn't be written, so the flip stays hidden", {}),
+    },
     aboutYou: {
       continued: event("The reader leaves About you; never what it says, only how it was made", {
         who: z.number().int().nonnegative(),
