@@ -89,8 +89,8 @@ test("pressing it on a video already in the library opens that note and buys not
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: {
-      ...overview.video,
+    source: {
+      ...overview.source,
       id: VideoId.parse(IWFT_VIDEO_ID),
       url: WATCHED_URL,
       title: "Held already",

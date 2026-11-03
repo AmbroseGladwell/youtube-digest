@@ -51,7 +51,7 @@ const BLOCK_TIMES = ["0:00", "1:05", "1:01:01"];
 
 const noteOn = (videoId: VideoId | null, url: string = VIDEO_URL) => {
   const overview = makeOverview();
-  return makeOverview({ video: { ...overview.video, id: videoId, url } });
+  return makeOverview({ source: { ...overview.source, id: videoId, url } });
 };
 
 test("the transcript tab merges the captions into blocks, each against the time its first words were said", async ({

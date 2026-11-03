@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 import { Overview } from "./Overview.js";
+import { moveVideoToSource } from "./overviewMigrations.js";
 import { ShareToken } from "./shareLink.js";
 import { SharedNarration } from "./SharedOverview.js";
 import { StoredTranscript } from "./StoredTranscript.js";
@@ -9,7 +10,7 @@ import { StoredTranscript } from "./StoredTranscript.js";
 // the shared copy itself through shareSnapshot rather than trusting one the client
 // assembled (docs/features/sharing.md).
 export const ShareRequest = z.object({
-  overview: Overview,
+  overview: z.preprocess(moveVideoToSource, Overview),
   transcript: StoredTranscript.nullable().default(null),
   narration: SharedNarration.nullable().default(null),
 });

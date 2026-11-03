@@ -67,7 +67,7 @@ export function useOnboardingRun({
       .then((overview) => {
         if (cancelled) return;
         latest.current.onMade(overview);
-        setRun({ phase: "ready", video: overview.video, overview, error: null });
+        setRun({ phase: "ready", video: overview.source.kind === "youtube" ? overview.source : null, overview, error: null });
       })
       .catch((error: unknown) => {
         if (cancelled || error instanceof GenerationCancelledError) return;

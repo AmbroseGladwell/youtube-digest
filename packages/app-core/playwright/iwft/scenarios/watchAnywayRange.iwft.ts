@@ -17,7 +17,7 @@ const seedNote = (
   backendSimulator.overviews.seed({
     ...overview,
     watchAnyway,
-    video: { ...overview.video, id: VideoId.parse(VIDEO_ID), url: VIDEO_URL },
+    source: { ...overview.source, id: VideoId.parse(VIDEO_ID), url: VIDEO_URL },
   });
 };
 

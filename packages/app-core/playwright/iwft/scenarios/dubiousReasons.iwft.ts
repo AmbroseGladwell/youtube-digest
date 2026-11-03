@@ -40,7 +40,7 @@ const seedNote = (backendSimulator: BackendSimulator, dubiousClaims: DubiousClai
       similarTo: [],
     },
   });
-  const seeded = { ...overview, video: { ...overview.video, id: VideoId.parse(VIDEO_ID), url: VIDEO_URL } };
+  const seeded = { ...overview, source: { ...overview.source, id: VideoId.parse(VIDEO_ID), url: VIDEO_URL } };
   backendSimulator.overviews.seed(seeded);
   return seeded;
 };

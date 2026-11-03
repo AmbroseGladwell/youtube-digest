@@ -55,8 +55,8 @@ const seedNote = (backendSimulator: {
     verdict: VERDICT,
     thin: true,
     savedAt: "2026-09-16T00:00:00.000Z",
-    video: {
-      ...overview.video,
+    source: {
+      ...overview.source,
       id: VIDEO_ID,
       url: VIDEO_URL,
       channel: "Practical Engineering",

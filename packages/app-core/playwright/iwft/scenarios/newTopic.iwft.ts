@@ -3,7 +3,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 
 const unsortedOverview = (title: string) =>
-  makeOverview({ video: { ...makeOverview().video, title, channel: "Practical Engineering" } });
+  makeOverview({ source: { ...makeOverview().source, title, channel: "Practical Engineering" } });
 
 test("the rail offers a new topic even when the library has none to filter by", async ({
   launcher,
@@ -66,7 +66,7 @@ test("a library with nothing unsorted offers no list to move in", async ({
   const topic = makeTopic({ name: "energy" });
   backendSimulator.overviews.seedTopic(topic);
   backendSimulator.overviews.seed(
-    makeOverview({ topicIds: [topic.id], video: { ...makeOverview().video, title: "Already filed" } }),
+    makeOverview({ topicIds: [topic.id], source: { ...makeOverview().source, title: "Already filed" } }),
   );
 
   const library = await launcher.launchExpectingLibrary();

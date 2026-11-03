@@ -362,7 +362,7 @@ test("a second overview of a video the account already holds is refused, naming 
   const first = storedOverview();
   await account.inject({ method: "POST", url: "/api/overviews", body: first });
 
-  const response = await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ video: first.video }) });
+  const response = await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ source: first.source }) });
 
   assert.equal(response.statusCode, 409);
   assert.equal(response.json().error.code, "video_already_held");
@@ -407,8 +407,8 @@ test("once an overview is deleted, the account can hold a new one of the same vi
 test("two overviews of different videos sit side by side, and one of a video with no id is never held", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
-  const other = storedOverview({ video: { ...storedOverview().video, id: VideoId.parse("another") } });
-  const unidentified = () => storedOverview({ video: { ...storedOverview().video, id: null } });
+  const other = storedOverview({ source: { ...storedOverview().source, id: VideoId.parse("another") } });
+  const unidentified = () => storedOverview({ source: { ...storedOverview().source, id: null } });
   await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview() });
 
   const responses = await Promise.all(

@@ -49,7 +49,7 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
           void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
         }
         if (result.moved + result.alreadyThere === 0) return;
-        moveReadingPositions(result.videoIds, accountId);
+        moveReadingPositions(result.sourceKeys, accountId);
         void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
         void queryClient.invalidateQueries({ queryKey: topicKeys.all });
         analytics.account.signIn.libraryMoved({ moved: result.moved, alreadyThere: result.alreadyThere });

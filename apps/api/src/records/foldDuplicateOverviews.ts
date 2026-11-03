@@ -57,7 +57,14 @@ async function foldOne(
   videoId: string,
   now: () => Date,
 ): Promise<DuplicateFold> {
-  const copies = (await records.liveOverviewsOf(accountId, videoId))
+  const rows = await sql.query<RecordRow>(
+    `select ${RECORD_COLUMNS} from records
+     where account_id = $1 and kind = 'overview' and not deleted and video_id = $2
+     order by seq`,
+    [accountId, videoId],
+  );
+  const copies = rows
+    .map(storedRecordFromRow)
     .map((record) => readCurrent(record, OVERVIEW_MIGRATIONS, accountId, videoId))
     .sort(earliestFirst);
   const [winner, ...losers] = copies as [ReadCopy, ...ReadCopy[]];

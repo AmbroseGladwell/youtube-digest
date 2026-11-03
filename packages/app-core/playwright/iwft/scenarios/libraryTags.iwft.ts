@@ -4,7 +4,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
 const titled = (title: string, tags: string[], savedAt = new Date().toISOString()) =>
-  makeOverview({ video: { ...makeOverview().video, title }, tags, savedAt });
+  makeOverview({ source: { ...makeOverview().source, title }, tags, savedAt });
 
 const seedLibrary = (backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seed(titled("Side project to forty k", ["saas", "founder-interview", "pricing"], "2026-10-03T09:00:00.000Z"));

@@ -12,7 +12,7 @@ const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 // Every factory note takes a minute to read, so a video of n minutes saves n - 1.
 const lasting = (minutes: number) =>
-  makeOverview({ video: { ...makeOverview().video, durationMs: minutes * 60_000 } });
+  makeOverview({ source: { ...makeOverview().source, durationMs: minutes * 60_000 } });
 
 test("Mark read at the end of the note marks it read, agrees with the menu, and undoes", async ({
   launcher,
@@ -127,7 +127,7 @@ test("the panel's note ends with them too", async ({ launcher, backendSimulator 
   const overview = lasting(11);
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
+    source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL },
   });
   const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
   const reader = await capture.openStoredOverview();

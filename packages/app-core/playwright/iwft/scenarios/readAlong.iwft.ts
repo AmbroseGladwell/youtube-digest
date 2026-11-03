@@ -170,7 +170,7 @@ test("the meta line names the video's length only when the source recorded one",
   launcher,
   backendSimulator,
 }) => {
-  const timed = makeOverview({ video: { ...NOTE.video, durationMs: 698_000 } });
+  const timed = makeOverview({ source: { ...NOTE.source, durationMs: 698_000 } });
   backendSimulator.overviews.seed(timed);
 
   const library = await launcher.launchExpectingLibrary();
@@ -214,7 +214,7 @@ test("a full-width thumbnail on a phone stays in its column instead of widening 
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, thumbnailUrl: WIDE_THUMBNAIL },
+    source: { ...overview.source, thumbnailUrl: WIDE_THUMBNAIL },
   });
   await page.setViewportSize({ width: 390, height: 780 });
 

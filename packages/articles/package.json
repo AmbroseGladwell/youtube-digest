@@ -1,0 +1,29 @@
+{
+  "name": "@overview/articles",
+  "version": "0.0.0",
+  "description": "Reading an article out of a web page: the text, its sections and its metadata. Takes a Document, so the extension can run it on the page in a reader's tab and the server on a page it fetched. @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"dist/**/*.test.js\""
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@overview/domain": "*"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.7.5",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.6.3"
+  }
+}

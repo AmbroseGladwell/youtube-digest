@@ -1,3 +1,5 @@
+import { articlePlaceUrl } from "./ArticlePlace.js";
+import { sourceLength, sourceName } from "./sourceFacts.js";
 import { DUBIOUS_BASIS_LABEL } from "./dubiousBasisLabel.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
@@ -7,6 +9,8 @@ import { SELLING_LABEL } from "./sellingLabel.js";
 import type { DubiousClaim } from "./Verdict.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
+
+const READ_ANYWAY_ANSWER = { yes: "Yes", no: "No", partial: "Just part of it" } as const;
 
 const moment = (videoUrl: string, startMs: number, label = formatTimestamp(startMs)) =>
   `[${label}](${youtubeTimestampUrl(videoUrl, startMs)})`;
@@ -19,10 +23,15 @@ const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n")
 // The note as it reads outside the app: every section the reader sees, with each moment
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md).
 export function overviewMarkdown(overview: Overview): string {
-  const { video } = overview;
+  const { source: video } = overview;
   const facts = [
-    video.channel,
-    video.durationMs === null ? null : formatTimestamp(video.durationMs),
+    sourceName(video),
+    video.kind === "web" ? (video.author === null ? null : `by ${video.author}`) : null,
+    video.kind === "web"
+      ? sourceLength(video)
+      : video.durationMs === null
+        ? null
+        : formatTimestamp(video.durationMs),
     video.publishedAt === null ? null : `published ${video.publishedAt.slice(0, 10)}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
   ].filter((fact) => fact !== null);
@@ -80,6 +89,17 @@ export function overviewMarkdown(overview: Overview): string {
     const { answer, reason, range } = overview.watchAnyway;
     const where = range === null ? "" : ` ${stretch(video.url, range)}`;
     section("Watch it anyway?", `${WATCH_ANYWAY_LABEL[answer]}. ${reason}${where}`.trim());
+  }
+  const article = overview.article;
+  if (article?.readAnyway) {
+    const { answer, reason, leftOut } = article.readAnyway;
+    section("Read it anyway?", `${READ_ANYWAY_ANSWER[answer]}. ${reason} ${leftOut}`.trim());
+  }
+  if (article !== null) {
+    section(
+      "Chapters",
+      bullets(article.chapters.map(({ title, summary, place }) => `[${title}](${articlePlaceUrl(video.url, place)}): ${summary}`)),
+    );
   }
   if (overview.chapters !== null && overview.chapters.length > 0) {
     section(

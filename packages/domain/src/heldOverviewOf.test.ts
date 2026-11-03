@@ -16,11 +16,11 @@ const quarantined = (id: string, videoId: string | null): UnreadableRecord => ({
   schemaVersion: 99,
   reason: "future-version",
   detail: "from the future",
-  salvaged: { savedAt: null, video: { id: videoId === null ? null : VideoId.parse(videoId), url: null, title: null } },
+  salvaged: { savedAt: null, source: { kind: "youtube", id: videoId === null ? null : VideoId.parse(videoId), url: null, title: null } },
 });
 
 test("a readable overview of the video is found by its id", async () => {
-  const overview = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse("held") } });
+  const overview = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("held") } });
 
   assert.deepEqual(await heldOverviewOf(storeWith([overview]), "held"), { id: overview.id, readable: true });
 });
@@ -32,7 +32,13 @@ test("a quarantined record of the video counts as held, and says it cannot be re
 });
 
 test("a library with no overview of the video answers null", async () => {
-  const overview = makeOverview({ video: { ...makeOverview().video, id: VideoId.parse("other") } });
+  const overview = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("other") } });
 
   assert.equal(await heldOverviewOf(storeWith([overview], [quarantined("x", null)]), "held"), null);
+});
+
+test("the same id under another kind is not held", async () => {
+  const overview = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("same") } });
+  assert.equal(await heldOverviewOf(storeWith([overview]), "web:same"), null);
+  assert.deepEqual(await heldOverviewOf(storeWith([overview]), "same"), { id: overview.id, readable: true });
 });

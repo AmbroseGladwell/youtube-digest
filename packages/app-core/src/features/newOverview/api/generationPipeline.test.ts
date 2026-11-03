@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SETTINGS,
+  articleSourceId,
+  type ArticleRead,
+  type OverviewId,
   type OverviewStore,
   type Settings,
   type StoredTranscript,
@@ -8,11 +11,13 @@ import {
   type TranscriptStore,
 } from "@overview/domain";
 import type { GenerationInput } from "@overview/generation";
-import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
-import { runOverviewGeneration, type GenerationPipelineDeps } from "./generationPipeline.js";
+import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
+import { ArticleReadError } from "./ArticleReadError.js";
+import { runArticleOverviewGeneration, runOverviewGeneration, type GenerationPipelineDeps } from "./generationPipeline.js";
 
-const VIDEO = makeOverview().video;
+const VIDEO = makeOverview().source;
 
 const makeDeps = () => {
   const topics: Topic[] = [];
@@ -40,7 +45,7 @@ const makeDeps = () => {
     } as unknown as OverviewStore,
     settingsStore: { get: async () => settings },
     makeOverview: async (input, { id }) => {
-      inputs.push(input);
+      inputs.push(input as GenerationInput);
       return makeOverview({ id });
     },
   };
@@ -76,5 +81,80 @@ describe("runOverviewGeneration", () => {
     expect(inputs).toHaveLength(1);
     expect(inputs[0]!.existingTopics).toEqual([food]);
     expect(inputs[0]!.readerContext).toBe("Works in healthcare, learning about cooking.");
+  });
+});
+
+const ARTICLE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
+const READ: ArticleRead = {
+  status: "read",
+  article: {
+    url: ARTICLE_URL,
+    title: "The town that pays its bridge bill twice",
+    siteName: "The Harbour Post",
+    author: null,
+    publishedAt: null,
+    language: "en",
+    imageUrl: null,
+    sections: [{ heading: null, anchor: null, text: "The county reused a survey." }],
+    wordCount: 3200,
+  },
+};
+
+describe("runArticleOverviewGeneration", () => {
+  const withLibrary = (held: boolean) => {
+    const made: unknown[] = [];
+    const overview = makeArticleOverview();
+    const store = {
+      listTopics: async () => [],
+      listClaims: async () => [],
+      listUnreadable: async () => [],
+      saveOverview: async () => {},
+      listOverviews: async () => (held ? [{ ...overview, source: { ...overview.source, id: heldId } }] : []),
+    } as unknown as OverviewStore;
+    const makeIt: GenerationPipelineDeps["makeOverview"] = async (input, { id }) => {
+      made.push(input);
+      return makeArticleOverview({ id });
+    };
+    return { deps: { overviewStore: store, settingsStore: { get: async () => DEFAULT_SETTINGS }, makeOverview: makeIt }, made };
+  };
+  let heldId: string;
+
+  it("hands the article to the keys, and reports its words before writing", async () => {
+    heldId = await articleSourceId(ARTICLE_URL);
+    const { deps, made } = withLibrary(false);
+    const words: number[] = [];
+
+    await runArticleOverviewGeneration(async () => READ, deps, { onArticleRead: (article) => words.push(article.wordCount) });
+
+    expect(words).toEqual([3200]);
+    expect(made).toHaveLength(1);
+    expect(made[0]).toHaveProperty("article.url", ARTICLE_URL);
+    expect(made[0]).not.toHaveProperty("transcript");
+  });
+
+  it("makes nothing from a page that couldn't be read", async () => {
+    const { deps, made } = withLibrary(false);
+
+    const run = runArticleOverviewGeneration(async () => ({ status: "failed", reason: "paywalled", shownWords: 180 }), deps);
+
+    await expect(run).rejects.toBeInstanceOf(ArticleReadError);
+    expect(made).toEqual([]);
+  });
+
+  it("stops at an article already held under its canonical address", async () => {
+    heldId = await articleSourceId(ARTICLE_URL);
+    const { deps, made } = withLibrary(true);
+
+    await expect(runArticleOverviewGeneration(async () => READ, deps)).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
+    expect(made).toEqual([]);
+  });
+
+  it("writes over what it holds when regenerating, which is the reader's deliberate act", async () => {
+    heldId = await articleSourceId(ARTICLE_URL);
+    const { deps, made } = withLibrary(true);
+
+    await runArticleOverviewGeneration(async () => READ, deps, { overviewId: makeArticleOverview().id as OverviewId });
+
+    expect(made).toHaveLength(1);
   });
 });

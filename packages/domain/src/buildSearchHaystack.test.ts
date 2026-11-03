@@ -7,7 +7,8 @@ import { buildSearchHaystack } from "./buildSearchHaystack.js";
 describe("buildSearchHaystack", () => {
   it("includes title, channel, claim, key points and tags, lowercased", () => {
     const overview = makeOverview({
-      video: {
+      source: {
+        kind: "youtube",
         id: VideoId.parse("x"),
         url: "https://www.youtube.com/watch?v=x",
         title: "The Platysma Trick",

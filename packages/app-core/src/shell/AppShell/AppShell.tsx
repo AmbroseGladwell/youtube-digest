@@ -17,6 +17,7 @@ import { GenerationStatusStrip } from "../../features/newOverview/components/Gen
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
+import { useArticleMenuRequest } from "../../features/newOverview/useArticleMenuRequest.js";
 import { useRunBridgeExchange } from "../../features/newOverview/useRunBridgeExchange.js";
 import { StaleClientBanner } from "../../features/sync/components/StaleClientBanner/StaleClientBanner.js";
 import { WriteFloorWall } from "../../features/sync/components/WriteFloorWall/WriteFloorWall.js";
@@ -97,6 +98,7 @@ export function AppShell() {
   // The injected YouTube button's end of that same run
   // (docs/features/injected-button.md).
   useRunBridgeExchange(newOverview);
+  useArticleMenuRequest(newOverview);
 
   // Held here rather than in the dialog so the captions are already in hand by the time
   // the dialog is opened at all (docs/features/watching-detection.md).

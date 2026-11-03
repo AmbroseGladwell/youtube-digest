@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { canonicalYouTubeUrl, extractYouTubeVideoId, isYouTubeUrl, youTubeLink } from "./parseYouTubeUrl.js";
 
 describe("extractYouTubeVideoId", () => {
+  it("refuses an id that could read as another kind's key", () => {
+    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=web:9f2c")).toBeNull();
+  });
+
   it("reads the v= param from a standard watch URL", () => {
     expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
   });

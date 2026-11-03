@@ -12,7 +12,9 @@ const WRITTEN_AT = new Date("2026-09-24T09:15:00.000Z");
 
 const overview = {
   id: randomUUID(),
-  video: {
+  article: null,
+  source: {
+    kind: "youtube",
     id: "example",
     url: "https://www.youtube.com/watch?v=example",
     title: "Example",

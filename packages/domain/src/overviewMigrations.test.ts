@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { Overview } from "./Overview.js";
 import { OVERVIEW_CORPUS } from "./overviewCorpus.js";
-import { CURRENT_OVERVIEW_SCHEMA_VERSION, OVERVIEW_MIGRATIONS } from "./overviewMigrations.js";
+import { CURRENT_OVERVIEW_SCHEMA_VERSION, moveVideoToSource, OVERVIEW_MIGRATIONS } from "./overviewMigrations.js";
 import { applyRecordMigration, migrateRecord } from "./migrateRecord.js";
 import { RecordMigrationError } from "./RecordMigrationError.js";
 import { FIRST_SCHEMA_VERSION, storedSchemaVersion } from "./storedSchemaVersion.js";
@@ -102,11 +102,11 @@ test("a record with no verdict is left without one", () => {
 
 test("the filled video fields are null rather than absent, which is what every reader guards on", () => {
   const migrated = migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS) as {
-    video: Record<string, unknown>;
+    source: Record<string, unknown>;
   };
   for (const field of ["durationMs", "publishedAt", "thumbnailUrl"]) {
-    assert.ok(field in migrated.video, `${field} is absent`);
-    assert.equal(migrated.video[field], null);
+    assert.ok(field in migrated.source, `${field} is absent`);
+    assert.equal(migrated.source[field], null);
   }
 });
 
@@ -155,4 +155,16 @@ test("a record that already says which key made it keeps it", () => {
   const madeOn = { key: "ours", fallback: { from: "own", provider: "anthropic", cause: "out-of-credit" } };
   const named = { ...(corpusAt(8) as Record<string, unknown>), madeOn };
   assert.deepEqual((applyRecordMigration(named, OVERVIEW_MIGRATIONS[7]!) as { madeOn: unknown }).madeOn, madeOn);
+});
+
+test("a video becomes a YouTube source, keeping every field and its id", () => {
+  const version9 = OVERVIEW_CORPUS.get(9) as { video: Record<string, unknown> };
+  const { source, video } = moveVideoToSource(version9) as { source: Record<string, unknown>; video?: unknown };
+  assert.equal(video, undefined);
+  assert.deepEqual(source, { ...version9.video, kind: "youtube" });
+});
+
+test("a record with no video to move is left as it is", () => {
+  assert.deepEqual(moveVideoToSource({ id: "a" }), { id: "a" });
+  assert.equal(moveVideoToSource("not a record"), "not a record");
 });

@@ -5,7 +5,7 @@ import {
 } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
-const titled = (title: string, tags: string[]) => makeOverview({ video: { ...makeOverview().video, title }, tags });
+const titled = (title: string, tags: string[]) => makeOverview({ source: { ...makeOverview().source, title }, tags });
 
 const SIDE_PROJECT = titled("Side project", ["saas", "pricing"]);
 const CHROME = titled("Chrome extension", ["saas", "micro-saas"]);

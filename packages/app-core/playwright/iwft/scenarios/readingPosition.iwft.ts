@@ -28,7 +28,7 @@ const seedNote = (backendSimulator: BackendSimulator, videoId: VideoId = VIDEO_I
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` },
+    source: { ...overview.source, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` },
   });
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId, segments: longTranscript() }));
 };
@@ -136,7 +136,7 @@ test("opening the transcript from a chapter goes to the chapter, not to where yo
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VIDEO_ID, url: VIDEO_URL },
+    source: { ...overview.source, id: VIDEO_ID, url: VIDEO_URL },
     chapters: [
       { title: "The start", summary: "Opens.", startMs: 0, endMs: 1_500_000 },
       { title: "Paragraph twenty-five", summary: "Late on.", startMs: 1_500_000, endMs: 1_800_000 },

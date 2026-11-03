@@ -11,7 +11,7 @@ const fromPsychology = (videoId: string, savedAt: string) =>
   makeOverview({
     savedAt,
     fromPlaylist: PSYCHOLOGY,
-    video: { ...makeOverview().video, id: VideoId.parse(videoId) },
+    source: { ...makeOverview().source, id: VideoId.parse(videoId) },
   });
 
 describe("madeTodayByPlaylist", () => {

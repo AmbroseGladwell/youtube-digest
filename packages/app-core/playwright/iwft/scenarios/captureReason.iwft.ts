@@ -14,7 +14,7 @@ const TITLE = "The Quiet Return of Nuclear Baseload";
 
 const storedReasonFor = (backendSimulator: BackendSimulator, title: string) => async () =>
   (await backendSimulator.overviewStore.listOverviews()).find(
-    (overview) => overview.video.title === title,
+    (overview) => overview.source.title === title,
   )?.captureReason;
 
 const openReader = async (
@@ -24,7 +24,7 @@ const openReader = async (
 ) => {
   const overview = makeOverview({
     captureReason,
-    video: { ...makeOverview().video, title: TITLE },
+    source: { ...makeOverview().source, title: TITLE },
   });
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary();
@@ -251,8 +251,8 @@ test("the panel's ⋯ menu edits the reason in place the same way, with a shorte
   const overview = makeOverview({ captureReason: REASON });
   backendSimulator.overviews.seed({
     ...overview,
-    video: {
-      ...overview.video,
+    source: {
+      ...overview.source,
       id: VideoId.parse(IWFT_VIDEO_ID),
       url: VALID_URL,
       title: "Held already",

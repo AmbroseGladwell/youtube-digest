@@ -37,8 +37,8 @@ const seedTranscript = (backendSimulator: {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
-    video: {
-      ...overview.video,
+    source: {
+      ...overview.source,
       id: VIDEO_ID,
       url: VIDEO_URL,
       title: "The Quiet Return of Nuclear Baseload",
@@ -190,7 +190,7 @@ test("a note with no stored transcript offers no tools to copy, export or search
   backendSimulator,
 }) => {
   const overview = makeOverview();
-  backendSimulator.overviews.seed({ ...overview, video: { ...overview.video, id: VIDEO_ID } });
+  backendSimulator.overviews.seed({ ...overview, source: { ...overview.source, id: VIDEO_ID } });
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
   await reader.clickTab("Transcript");

@@ -51,7 +51,7 @@ test("following with the backfill makes every video oldest first, and each overv
     { id: PSYCHOLOGY_ID, title: "Psychology" },
     { id: PSYCHOLOGY_ID, title: "Psychology" },
   ]);
-  expect(overviews.map((overview) => overview.video.id).sort()).toEqual([IWFT_VIDEO_ID, "secondVideo1"].sort());
+  expect(overviews.map((overview) => overview.source.id).sort()).toEqual([IWFT_VIDEO_ID, "secondVideo1"].sort());
   expect(await backendSimulator.playlists.listFollowed()).toMatchObject([{ id: PSYCHOLOGY_ID, title: "Psychology", unavailable: null }]);
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("playlists.")))
@@ -102,7 +102,7 @@ test("a video link inside a playlist asks which was meant, and Just this video c
 
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
   const [overview] = await backendSimulator.overviewStore.listOverviews();
-  expect(overview?.video.url).toBe(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
+  expect(overview?.source.url).toBe(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   expect(overview?.fromPlaylist).toBeNull();
 });
 

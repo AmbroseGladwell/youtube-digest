@@ -51,7 +51,7 @@ test("what stands out ends with its start time, which opens a menu that reads th
   });
   backendSimulator.overviews.seed({
     ...overview,
-    video: { ...overview.video, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` },
+    source: { ...overview.source, id: VIDEO_ID, url: `https://www.youtube.com/watch?v=${VIDEO_ID}` },
   });
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
   const library = await launcher.launchExpectingLibrary();
@@ -83,8 +83,8 @@ test("common knowledge names nothing as standing out, so Why is its only sub-lab
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyMastheadMentions(/Common knowledge/);
-  await reader.verifyVerdictChipReads("Common knowledge");
+  await reader.verifyMastheadMentions(/Widely covered/);
+  await reader.verifyVerdictChipReads("Widely covered");
   await reader.verifyNoteLabelsRead(["Why"]);
   await reader.verifyLineTimesRead([]);
   await reader.verifyNoteShowsLine(NOVELTY_BASIS, false);

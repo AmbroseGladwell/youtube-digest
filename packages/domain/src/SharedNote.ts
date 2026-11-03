@@ -1,12 +1,13 @@
 import { z } from "zod";
+import { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { Chapters } from "./Chapter.js";
 import { CoreFields } from "./CoreFields.js";
 import { Filing } from "./Filing.js";
 import { HowToApply } from "./HowToApply.js";
 import { Selling } from "./Selling.js";
+import { Source } from "./Source.js";
 import { Verdict } from "./Verdict.js";
-import { VideoSource } from "./VideoSource.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 
 // The overview as someone without an account reads it: every field of Overview except the
@@ -17,7 +18,7 @@ import { WatchAnyway } from "./WatchAnyway.js";
 export const SharedNote = z
   .object({
     id: OverviewId,
-    video: VideoSource,
+    source: Source,
     savedAt: z.iso.datetime(),
   })
   .extend(CoreFields.shape)
@@ -28,6 +29,9 @@ export const SharedNote = z
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
     chapters: Chapters.nullable(),
+    // Absent rather than null on a video, so a copy's content hash doesn't move
+    // (docs/features/source-identity.md, "Shares").
+    article: ArticleDetails.nullish(),
   });
 export type SharedNote = z.infer<typeof SharedNote>;
 

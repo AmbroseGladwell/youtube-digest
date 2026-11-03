@@ -10,6 +10,7 @@ import {
   TopicId,
   VideoId,
   type RecordChange,
+  youTubeSource,
 } from "@overview/domain";
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
@@ -319,7 +320,7 @@ test("enrolling journals the transcript behind each note, by its video, without 
   const db = await openTestDatabase();
   const transcript = makeStoredTranscript();
   await putRaw(db, TRANSCRIPTS_STORE, transcript);
-  const note = makeOverview({ video: transcript.video! });
+  const note = makeOverview({ source: youTubeSource(transcript.video!) });
   await new IndexedDbOverviewStore(db).saveOverview(note);
   const storage = new IndexedDbSyncStorage(db, { now });
 
@@ -346,7 +347,7 @@ test("a library enrolled before transcripts were synced journals its notes' tran
   const db = await openTestDatabase();
   const transcript = makeStoredTranscript();
   await putRaw(db, TRANSCRIPTS_STORE, transcript);
-  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ source: youTubeSource(transcript.video!) }));
   await markEnrolled(db);
   const storage = new IndexedDbSyncStorage(db, { now });
 
@@ -365,7 +366,7 @@ test("the transcript backfill skips a video whose transcript is already waiting 
   const db = await openEnrolledDatabase();
   const transcript = makeStoredTranscript();
   await putRaw(db, TRANSCRIPTS_STORE, transcript);
-  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ source: youTubeSource(transcript.video!) }));
   const storage = new IndexedDbSyncStorage(db, { now });
 
   await storage.enrol();
@@ -397,7 +398,7 @@ test("saving a note on an enrolled library journals its video's transcript along
     (await readOutbox(db)).map((entry) => [entry.kind, entry.id, entry.change.op]),
     [
       ["overview", overview.id, "replace"],
-      ["transcript", overview.video.id, "transcript"],
+      ["transcript", overview.source.id, "transcript"],
     ],
   );
   assert.deepEqual(
@@ -409,7 +410,7 @@ test("saving a note on an enrolled library journals its video's transcript along
 
 test("saving a note whose video has no id journals no transcript", async () => {
   const db = await openEnrolledDatabase();
-  const overview = makeOverview({ video: { ...makeOverview().video, id: null } });
+  const overview = makeOverview({ source: { ...makeOverview().source, id: null } });
 
   await new IndexedDbOverviewStore(db).saveOverview(overview);
 
@@ -439,7 +440,7 @@ test("acknowledging a sent transcript removes it and remembers no revision", asy
   const db = await openEnrolledDatabase();
   const transcript = makeStoredTranscript();
   await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
-  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ video: transcript.video! }));
+  await new IndexedDbOverviewStore(db).saveOverview(makeOverview({ source: youTubeSource(transcript.video!) }));
   const storage = new IndexedDbSyncStorage(db, { now });
   const entry = (await storage.listPending()).find((pending) => pending.kind === "transcript");
 
@@ -454,7 +455,7 @@ test("a transcript is pushed while a note uses its video, and not once that note
   const transcript = makeStoredTranscript();
   await new IndexedDbTranscriptStore(db).saveTranscript(transcript);
   const overviews = new IndexedDbOverviewStore(db);
-  const overview = makeOverview({ video: transcript.video! });
+  const overview = makeOverview({ source: youTubeSource(transcript.video!) });
   await overviews.saveOverview(overview);
   const storage = new IndexedDbSyncStorage(db, { now });
 
@@ -521,9 +522,9 @@ test("folding an overview into the account's copy re-files the copy field by fie
   const storage = new IndexedDbSyncStorage(db, { now });
   const overviews = new IndexedDbOverviewStore(db);
   const transcripts = new IndexedDbTranscriptStore(db);
-  const video = { ...makeOverview().video, id: VideoId.parse("twice") };
-  const theirs = makeOverview({ video, topicIds: [TopicId.parse(randomUUID())], tags: ["one", "two"], captureReason: null });
-  const mine = makeOverview({ video, topicIds: [TopicId.parse(randomUUID())], tags: ["two", "three"], captureReason: "Why" });
+  const video = { ...makeOverview().source, id: VideoId.parse("twice") };
+  const theirs = makeOverview({ source: video, topicIds: [TopicId.parse(randomUUID())], tags: ["one", "two"], captureReason: null });
+  const mine = makeOverview({ source: video, topicIds: [TopicId.parse(randomUUID())], tags: ["two", "three"], captureReason: "Why" });
   await storage.applyChanges(
     [
       change({ kind: "overview", id: theirs.id, body: theirs }),
@@ -585,7 +586,7 @@ test("a fold whose copy already matches the account's journals nothing but still
   const overviews = new IndexedDbOverviewStore(db);
   const theirs = makeOverview({ tags: ["one"], topicIds: [] });
   await storage.applyChanges([change({ kind: "overview", id: theirs.id, body: theirs })], 1);
-  const mine = makeOverview({ video: theirs.video, tags: ["one"], topicIds: [] });
+  const mine = makeOverview({ source: theirs.source, tags: ["one"], topicIds: [] });
   await overviews.saveOverview(mine);
 
   await storage.foldOverview(mine.id, theirs.id);

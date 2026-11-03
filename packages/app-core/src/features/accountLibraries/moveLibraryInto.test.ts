@@ -10,7 +10,7 @@ const library = () => new MovingLibrary();
 
 const ofVideo = (videoId: string, overrides: Partial<Overview> = {}): Overview => {
   const overview = makeOverview(overrides);
-  return { ...overview, video: { ...overview.video, id: VideoId.parse(videoId) } };
+  return { ...overview, source: { ...overview.source, id: VideoId.parse(videoId) } };
 };
 
 describe("moveLibraryInto", () => {
@@ -23,7 +23,7 @@ describe("moveLibraryInto", () => {
     const move = await moveLibraryInto(from, into);
 
     expect(move).toMatchObject({ moved: 2, alreadyThere: 0 });
-    expect((await into.overviewStore.listOverviews()).map(({ video }) => video.id).sort()).toEqual(["one", "two"]);
+    expect((await into.overviewStore.listOverviews()).map(({ source }) => source.id).sort()).toEqual(["one", "two"]);
     expect(await from.overviewStore.listOverviews()).toEqual([]);
   });
 

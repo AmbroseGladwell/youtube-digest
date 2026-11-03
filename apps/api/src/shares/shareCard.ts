@@ -1,5 +1,5 @@
 import { Resvg } from "@resvg/resvg-js";
-import { overviewMetaParts, type SharedNote } from "@overview/domain";
+import { overviewMetaParts, type SharedNote, sourceName } from "@overview/domain";
 import { escapeHtml } from "./escapeHtml.js";
 import { measureText } from "./measureText.js";
 import { BODY_FONT_FAMILY, FONT_FILES, TITLE_FONT_FAMILY } from "./shareFonts.js";
@@ -46,13 +46,13 @@ const mark = (x: number, y: number) =>
 // snapshot alone and never goes stale (docs/features/sharing.md).
 export function shareCardSvg(note: SharedNote): string {
   const titleLines = wrapToWidth({
-    text: note.video.title,
+    text: note.source.title,
     maxWidth: CONTENT_WIDTH,
     maxLines: TITLE_MAX_LINES,
     measure: (line) => measureText({ text: line, fontFamily: TITLE_FONT_FAMILY, fontSize: TITLE_SIZE }),
   });
   const [metaLine = ""] = wrapToWidth({
-    text: [note.video.channel, ...overviewMetaParts(note)].join(" · "),
+    text: [sourceName(note.source), ...overviewMetaParts(note)].join(" · "),
     maxWidth: CONTENT_WIDTH,
     maxLines: 1,
     measure: (line) => measureText({ text: line, fontFamily: BODY_FONT_FAMILY, fontSize: META_SIZE }),

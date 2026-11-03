@@ -32,7 +32,7 @@ describe("orderLibraryEntriesBySavedAt", () => {
     const newer = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z" });
     const older = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z" });
     const between = makeUnreadableEntry({
-      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", video: null },
+      salvaged: { savedAt: "2026-09-15T00:00:00.000Z", source: null },
     });
 
     expect(

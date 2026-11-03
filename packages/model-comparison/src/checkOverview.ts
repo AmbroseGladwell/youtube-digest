@@ -21,7 +21,7 @@ const DUBIOUS_CLAIM_TARGET_WORDS = 25;
 const DUBIOUS_REASON_TARGET_WORDS = 30;
 const LONGEST_CHAPTER_SHARE = 0.5;
 const CHAPTERED_FROM_MS = 10 * 60_000;
-const NOVELTY_WORDS = ["common knowledge", "fresh angle", "original"];
+const NOVELTY_WORDS = ["common knowledge", "widely covered", "fresh angle", "original"];
 const ONE_LINE_OPENINGS = ["this video", "a video about"];
 
 const result = (check: string, area: CheckArea, problems: string[]): CheckResult => ({

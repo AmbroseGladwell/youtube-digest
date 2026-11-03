@@ -8,12 +8,13 @@ import {
   TopicId,
   UnreadableRecordError,
   VideoId,
+  youTubeSource,
 } from "@overview/domain";
 import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
 import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
-import { distinctVideo, storedOverview } from "../testing/storedRecords.testHelper.js";
+import { distinctVideo, LAST_SCHEMA_VERSION_WITH_VIDEO, storedOverview, withVideo } from "../testing/storedRecords.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeDevice } from "./SyncedDevice.testHelper.js";
 
@@ -181,8 +182,8 @@ test("a record from a newer client arrives, is held back and counted, and cannot
 test("a write the server refuses is kept and counted as stuck, and the rest of the library still syncs", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
-  const good = makeOverview({ video: distinctVideo() });
-  const bad = makeOverview({ video: distinctVideo(), keyPoints: [{ text: "only one", range: null }] });
+  const good = makeOverview({ source: distinctVideo() });
+  const bad = makeOverview({ source: distinctVideo(), keyPoints: [{ text: "only one", range: null }] });
   const laptop = await makeDevice(testApp, account, {
     before: async ({ overviews }) => {
       await overviews.saveOverview(bad);
@@ -248,7 +249,7 @@ test("the feed is pulled page by page, and the cursor ends where the feed does",
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const laptop = await makeDevice(testApp, account);
-  for (let i = 0; i < 5; i += 1) await laptop.overviews.saveOverview(makeOverview({ video: distinctVideo() }));
+  for (let i = 0; i < 5; i += 1) await laptop.overviews.saveOverview(makeOverview({ source: distinctVideo() }));
   await laptop.sync();
   const phone = await makeDevice(testApp, account, { pageSize: 2 });
 
@@ -267,7 +268,7 @@ test("a note's transcript made on one device is read on another, which then hold
   await laptop.sync();
   const transcript = makeStoredTranscript();
   await laptop.transcripts.saveTranscript(transcript);
-  await laptop.overviews.saveOverview(makeOverview({ video: transcript.video! }));
+  await laptop.overviews.saveOverview(makeOverview({ source: youTubeSource(transcript.video!) }));
 
   const pushed = await laptop.sync();
   await phone.sync();
@@ -287,7 +288,7 @@ test("the transcripts behind the notes a device held before sync was switched on
   const laptop = await makeDevice(testApp, account, {
     before: async ({ transcripts, overviews }) => {
       await transcripts.saveTranscript(transcript);
-      await overviews.saveOverview(makeOverview({ video: transcript.video! }));
+      await overviews.saveOverview(makeOverview({ source: youTubeSource(transcript.video!) }));
     },
   });
   const phone = await makeDevice(testApp, account);
@@ -333,7 +334,7 @@ test("a note deleted before it was ever synced sends no transcript, and the acco
   const phone = await makeDevice(testApp, account);
   await laptop.sync();
   const transcript = makeStoredTranscript();
-  const note = makeOverview({ video: transcript.video! });
+  const note = makeOverview({ source: youTubeSource(transcript.video!) });
   await laptop.transcripts.saveTranscript(transcript);
   await laptop.overviews.saveOverview(note);
   await laptop.overviews.deleteOverview(note.id);
@@ -353,7 +354,7 @@ test("deleting a synced note on one device leaves the account no transcript for 
   const phone = await makeDevice(testApp, account);
   await laptop.sync();
   const transcript = makeStoredTranscript();
-  const note = makeOverview({ video: transcript.video! });
+  const note = makeOverview({ source: youTubeSource(transcript.video!) });
   await laptop.transcripts.saveTranscript(transcript);
   await laptop.overviews.saveOverview(note);
   await laptop.sync();
@@ -373,8 +374,8 @@ test("two devices that generate the same video offline end with one overview car
   await laptop.sync();
   await phone.sync();
   const video = distinctVideo();
-  const onLaptop = makeOverview({ video, tags: ["one", "two"] });
-  const onPhone = makeOverview({ video, tags: ["two", "three"], captureReason: "Because" });
+  const onLaptop = makeOverview({ source: video, tags: ["one", "two"] });
+  const onPhone = makeOverview({ source: video, tags: ["two", "three"], captureReason: "Because" });
   const laptopTopic = await laptop.overviews.createTopic({ name: "Finance" });
   const phoneTopic = await phone.overviews.createTopic({ name: "Cooking" });
   await laptop.overviews.saveOverview({ ...onLaptop, topicIds: [laptopTopic.id] });
@@ -413,10 +414,10 @@ test("a device that generates a video the account already holds, before pulling 
   const laptop = await makeDevice(testApp, account);
   const phone = await makeDevice(testApp, account);
   const video = distinctVideo();
-  const theirs = makeOverview({ video });
+  const theirs = makeOverview({ source: video });
   await laptop.overviews.saveOverview(theirs);
   await laptop.sync();
-  const mine = makeOverview({ video });
+  const mine = makeOverview({ source: video });
   const folds: unknown[] = [];
   const telling = await makeDevice(testApp, account, { onFolded: (fold) => folds.push(fold) });
   await telling.overviews.saveOverview(mine);
@@ -437,11 +438,11 @@ test("an account that already held duplicates ends with one overview per video, 
   const testApp = await createTestApp({}, { migrationsUpTo: 17 });
   const account = await makeAccount(testApp);
   const video = distinctVideo();
-  const earlier = makeOverview({ video, savedAt: "2026-09-01T00:00:00.000Z", tags: ["one"] });
-  const later = makeOverview({ video, savedAt: "2026-09-02T00:00:00.000Z", tags: ["two"] });
+  const earlier = makeOverview({ source: video, savedAt: "2026-09-01T00:00:00.000Z", tags: ["one"] });
+  const later = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z", tags: ["two"] });
   const { schemaVersion: _v, updatedAt: _u, ...stored } = storedOverview();
   for (const overview of [later, earlier]) {
-    await account.seedRaw("overview", overview.id, CURRENT_SCHEMA_VERSIONS.overview, { ...stored, ...overview });
+    await account.seedRaw("overview", overview.id, LAST_SCHEMA_VERSION_WITH_VIDEO, { ...withVideo({ ...stored, ...overview }) });
   }
   await account.seedRaw("overviewState", later.id, CURRENT_SCHEMA_VERSIONS.overviewState, { overviewId: later.id, read: true, favourite: false, userTags: [] });
   const laptop = await makeDevice(testApp, account);
