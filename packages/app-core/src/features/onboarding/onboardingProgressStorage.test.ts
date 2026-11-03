@@ -24,6 +24,7 @@ const progress: OnboardingProgress = {
   mayWrite: false,
   overviewId: OverviewId.parse(crypto.randomUUID()),
   way: null,
+  share: null,
 };
 
 describe("onboardingProgressStorage", () => {
@@ -38,6 +39,13 @@ describe("onboardingProgressStorage", () => {
     writeOnboardingProgress(progress, storage);
     writeOnboardingProgress(null, storage);
     expect(readOnboardingProgress(storage)).toBeNull();
+  });
+
+  it("reads progress written before a share could start it as not from a share", () => {
+    const storage = memoryStorage();
+    const { share: _share, ...older } = progress;
+    storage.setItem("overview.onboarding.v1", JSON.stringify(older));
+    expect(readOnboardingProgress(storage)).toEqual(progress);
   });
 
   it("reads nothing back from a record it can't parse", () => {

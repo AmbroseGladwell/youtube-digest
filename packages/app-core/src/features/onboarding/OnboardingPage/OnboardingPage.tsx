@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -17,6 +17,7 @@ import {
 import { Routes } from "../../../app/Routes.js";
 import { OverviewMark } from "../../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useLibraryAccountId } from "../../../stores/LibraryAccountContext.js";
 import { useStores } from "../../../stores/StoresContext.js";
 import { useLibraryMove } from "../../accountLibraries/LibraryMoveContext.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -25,6 +26,8 @@ import { useAnalyticsDecline } from "../../analyticsConsent/useAnalyticsDecline.
 import { consentAnswered } from "../../analyticsConsent/util/consentAllowsSharing.js";
 import { RequestLinkFlow } from "../../auth/components/RequestLinkFlow/RequestLinkFlow.js";
 import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
+import { useSaveFromShare } from "../../sharedPage/useSaveFromShare.js";
+import { savedFromShare } from "../../sharedPage/util/savedFromShare.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { usePlaylistLookupQuery } from "../../playlists/queries/playlistLookupQuery.js";
@@ -52,12 +55,9 @@ import { useOnboardingRun } from "../useOnboardingRun.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
-// Start, the screens here, then the reveal and its next steps: fourteen in the story's
-// segments (design 46b's second layer).
-const STORY_LENGTH = ONBOARDING_STEPS.length + 3;
 const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"];
-const WRITES_AFTER = ONBOARDING_STEPS.indexOf("stepsForYou");
-const indexOf = (step: OnboardingStep) => ONBOARDING_STEPS.indexOf(step);
+// A copy saved from a shared page is already made, so there is no video to check.
+const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video");
 
 // Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
 // or skips what shapes it, then makes an account, picks a plan and lands on it. Where they are
@@ -93,6 +93,15 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const [asking, setAsking] = useState<AuthIntent | null>(null);
   const [savingTopics, setSavingTopics] = useState(false);
   const step = progress.step;
+  const share = progress.share;
+  const steps = share === null ? ONBOARDING_STEPS : FROM_SHARE_STEPS;
+  const indexOf = (of: OnboardingStep) => steps.indexOf(of);
+  // Start, the screens here, then the reveal and its next steps: in the story's segments
+  // (design 46b's second layer).
+  const storyLength = steps.length + 3;
+  const sharedCopy = useMemo(() => (share === null ? null : savedFromShare(share.snapshot.note)), [share]);
+  const saveFromShare = useSaveFromShare();
+  const openLibraryAccountId = useLibraryAccountId();
 
   const link = youTubeLink(progress.link);
   const playlist = usePlaylistLookupQuery(link?.kind === "playlist" ? link.playlistId : null);
@@ -113,18 +122,21 @@ function Onboarding({ progress, update }: OnboardingProps) {
     enabled: progress.overviewId !== null,
     refetchInterval: (query) => (signedIn && query.state.data == null ? 1000 : false),
   });
-  const overview: Overview | null = stored.data ?? run.overview;
+  const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const onboardingVideo = overview?.source.kind === "youtube" ? overview.source : null;
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
 
   const go = (next: OnboardingStep) =>
-    update({ step: next, ...(indexOf(next) > WRITES_AFTER ? { mayWrite: true } : {}) });
-  const next = () => go(ONBOARDING_STEPS[indexOf(step) + 1] ?? "account");
+    update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
+  const next = () => go(steps[indexOf(step) + 1] ?? "account");
+  // From a shared page, leaving the questions goes back to the page. It's a full load, since
+  // the copy is read from the document the server writes (docs/features/sharing.md).
   const startAgain = () => {
     update(null);
-    void navigate(Routes.home(), { replace: true });
+    if (share === null) void navigate(Routes.home(), { replace: true });
+    else globalThis.location.assign(Routes.sharedOverview(share.token));
   };
 
   const finish = (overviewId: string) => {
@@ -135,9 +147,27 @@ function Onboarding({ progress, update }: OnboardingProps) {
     writeOnboardingProgress(null);
   };
 
+  const afterAnalytics = steps[indexOf("analytics") + 1] ?? "account";
   useEffect(() => {
-    if (step === "analytics" && analyticsAnswered) update({ step: "video" });
-  }, [step, analyticsAnswered, update]);
+    if (step === "analytics" && analyticsAnswered) update({ step: afterAnalytics });
+  }, [step, analyticsAnswered, afterAnalytics, update]);
+
+  // Signed in to an account that already holds the copy, it's left as it is, with the
+  // reader's own reason and topics.
+  const savingShare = useRef(false);
+  const { refetch: refetchStored } = stored;
+  useEffect(() => {
+    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount || savingShare.current) return;
+    savingShare.current = true;
+    void (async () => {
+      if ((await overviewStore.getOverview(share.snapshot.note.id)) === null) {
+        await saveFromShare(share.token, share.snapshot);
+      }
+      await refetchStored();
+    })().finally(() => {
+      savingShare.current = false;
+    });
+  }, [share, signedIn, openLibraryAccountId, accountId, inAccount, overviewStore, saveFromShare, refetchStored]);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -308,7 +338,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const position = indexOf(step) + 2;
   const back = () => {
     analytics.onboarding.step.backChosen({ step });
-    const before = ONBOARDING_STEPS[indexOf(step) - 1];
+    const before = steps[indexOf(step) - 1];
     if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
   };
@@ -340,12 +370,12 @@ function Onboarding({ progress, update }: OnboardingProps) {
                   </button>
                 )}
                 <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
-                  {Array.from({ length: STORY_LENGTH }, (_, index) => (
+                  {Array.from({ length: storyLength }, (_, index) => (
                     <span key={index} className={index < position ? styles.segmentDone : styles.segment} />
                   ))}
                 </span>
                 <span className={styles.visuallyHidden}>
-                  Screen {position} of {STORY_LENGTH}
+                  Screen {position} of {storyLength}
                 </span>
                 {SKIPPABLE.includes(step) && (
                   <button
