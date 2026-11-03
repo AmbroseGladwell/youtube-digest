@@ -3,18 +3,21 @@ import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel
 import type { SharedNote } from "./SharedNote.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
-import type { TimeRange, WatchAnyway } from "./WatchAnyway.js";
+import type { ReadAnyway } from "./ArticleDetails.js";
+import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
 export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
+export const READ_ANYWAY_SECTION = "Read it anyway?";
 
 interface Body {
   text: string;
   spoken?: string;
   range?: TimeRange;
+  chapterIndex?: number;
   label?: string;
   chip?: string;
 }
@@ -65,6 +68,17 @@ const spokenWatchAnswer = ({ answer, range }: WatchAnyway) => {
     : `Yes, it's worth watching one part, from ${spokenDuration(range.startMs)} to ${spokenDuration(range.endMs)}.`;
 };
 
+const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
+
+const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) => {
+  if (answer === "yes") return "Yes, it's worth reading.";
+  if (answer === "no") return "No, you can probably skip the article, the overview covers it.";
+  return chapters.length === 0 ? "Yes, it's worth reading one part." : `Yes, it's worth reading part of it: ${chapters.join(", and ")}.`;
+};
+
+// One chapter has nowhere to link but the top of the page (design 77p).
+export const hasChapterLinks = (overview: SharedNote): boolean => (overview.article?.chapters.length ?? 0) > 1;
+
 // Takes SharedNote rather than Overview because a shared copy has to build the same body
 // from the same fields, and the three the copy leaves out are ones this never read
 // (docs/features/sharing.md). An Overview is a SharedNote with more on it.
@@ -107,7 +121,13 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
   section(
     KEY_POINTS_SECTION,
     { text: KEY_POINTS_SECTION, spoken: keyPointsHeading(overview.keyPoints.length) },
-    inOrder(overview.keyPoints.map(withRange), KEY_POINT_LINKS),
+    inOrder(
+      overview.keyPoints.map((point, index) => {
+        const chapterIndex = hasChapterLinks(overview) ? overview.article?.keyPointChapters[index] : null;
+        return { ...withRange(point), ...(chapterIndex == null ? {} : { chapterIndex }) };
+      }),
+      KEY_POINT_LINKS,
+    ),
     true,
   );
   section(
@@ -130,6 +150,15 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
         ...withRange({ text: `${WATCH_ANYWAY_LABEL[watchAnyway.answer]}. ${watchAnyway.reason}`.trim(), range: watchAnyway.range }),
         spoken: `${spokenWatchAnswer(watchAnyway)} ${watchAnyway.reason}`.trim(),
       },
+    ]);
+  }
+
+  const readAnyway = overview.article?.readAnyway;
+  if (readAnyway) {
+    const titles = readAnyway.chapterIndexes.flatMap((index) => overview.article?.chapters[index]?.title ?? []);
+    const body = `${readAnyway.reason} ${readAnyway.leftOut}`.trim();
+    section(READ_ANYWAY_SECTION, { text: READ_ANYWAY_SECTION, spoken: "Should you read it anyway?" }, [
+      { text: `${READ_ANYWAY_LABEL[readAnyway.answer]}. ${body}`, spoken: `${spokenReadAnswer(readAnyway, titles)} ${body}` },
     ]);
   }
 

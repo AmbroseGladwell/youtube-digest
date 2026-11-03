@@ -11,3 +11,15 @@ export function wasJustGenerated(state: unknown): boolean {
     (state as { justGenerated?: unknown }).justGenerated === true
   );
 }
+
+// The right-click route got in on one-time access, so the Create button there may still ask
+// (design 77ah). Null is a site already allowed, which needs no explaining.
+export const oneTimeAccessHost = (state: unknown): string | null => {
+  const host = (state as { oneTimeAccessHost?: unknown } | null)?.oneTimeAccessHost;
+  return typeof host === "string" ? host : null;
+};
+
+// The panel opened what it already had rather than making another (design 77as).
+export const ALREADY_MADE = { alreadyMade: true };
+
+export const wasAlreadyMade = (state: unknown): boolean => (state as { alreadyMade?: unknown } | null)?.alreadyMade === true;

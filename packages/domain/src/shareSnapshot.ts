@@ -29,6 +29,7 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     howToApply: overview.howToApply,
     watchAnyway: overview.watchAnyway,
     chapters: overview.chapters,
+    ...(overview.article === null ? {} : { article: overview.article }),
   };
   return { note, transcript, narration };
 }

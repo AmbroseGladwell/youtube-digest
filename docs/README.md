@@ -95,6 +95,14 @@ Five folders, five different questions.
 - `dubious-reasons.md` — why a note is dubious: the claims behind the flag, each with
   its basis, a reason and its moment in the video; the flag derived from them, notes from
   before saying so, and the panel the flag opens under the byline.
+- `article-extraction.md` — reading an article out of a web page: the permissions, the
+  on-demand script, what counts as an article, and the failures it names.
+- `article-panel.md` — making an overview of an article from the panel: Create, Chrome's box,
+  right-click, the failures, duplicates, regenerating, and links that move the page.
+- `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
+  what the field says.
+- `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
+  positions as numbered paragraphs, and why no article text is kept.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt

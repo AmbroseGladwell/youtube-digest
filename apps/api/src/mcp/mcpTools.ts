@@ -10,6 +10,7 @@ import {
   transcriptPlainText,
   type Topic,
   sourceKey,
+  sourceName,
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
@@ -48,7 +49,7 @@ const isOutcome = (value: ResolvedFilters | McpToolOutcome): value is McpToolOut
 function listingLine(library: Library, entry: LibraryEntry): string {
   const { overview } = entry;
   const facts = [
-    overview.source.channel,
+    sourceName(overview.source),
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     `topics: ${topicNames(library.topics, entry).join(", ") || "none"}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
@@ -215,13 +216,17 @@ const getTranscript = mcpTool({
     if (entry === undefined) {
       return toolError(`There is no overview with id ${id} in this library.`);
     }
-    const key = sourceKey(entry.overview.source);
+    const { source } = entry.overview;
+    if (source.kind === "web") {
+      return toolError("Articles have no transcript: only the overview is kept. Read the article at its link.");
+    }
+    const key = sourceKey(source);
     const stored = key === null ? null : await transcripts.get(accountId, key);
     const transcript = StoredTranscript.safeParse(stored);
     if (!transcript.success) {
       return toolError("No transcript is kept for this video.");
     }
-    const text = transcriptPlainText(entry.overview.source, transcriptBlocks(transcript.data.segments));
+    const text = transcriptPlainText(source, transcriptBlocks(transcript.data.segments));
     return {
       text: transcript.data.generated
         ? `Machine-transcribed: the video had no captions of its own, so some words may be misheard.\n\n${text}`

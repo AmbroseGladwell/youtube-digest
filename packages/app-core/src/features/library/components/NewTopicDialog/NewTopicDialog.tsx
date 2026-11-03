@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { OverviewId, type Overview } from "@overview/domain";
+import { OverviewId, type Overview, sourceName } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
@@ -139,7 +139,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
                     <StrokeIcon name="check" size={11} />
                   </span>
                   <span className={styles.optionText}>
-                    {overview.source.title} <span className={styles.channel}>· {overview.source.channel}</span>
+                    {overview.source.title} <span className={styles.channel}>· {sourceName(overview.source)}</span>
                   </span>
                 </label>
               ))}

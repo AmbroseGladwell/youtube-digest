@@ -2,6 +2,7 @@ export const readerMastheadTestIds = {
   root: "ReaderMasthead.root",
   backLink: "ReaderMasthead.backLink",
   published: "ReaderMasthead.published",
+  sourceLine: "ReaderMasthead.sourceLine",
   title: "ReaderMasthead.title",
   channel: "ReaderMasthead.channel",
   meta: "ReaderMasthead.meta",

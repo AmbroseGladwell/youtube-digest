@@ -1,3 +1,4 @@
+import { sourceName } from "@overview/domain";
 import { useId, useState } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
@@ -61,7 +62,7 @@ export function RelatedByTag({
                 <span className={styles.text}>
                   <span className={styles.title}>{overview.source.title}</span>
                   <span className={styles.meta}>
-                    {overview.source.channel}
+                    {sourceName(overview.source)}
                     {state.read && " · Read"}
                   </span>
                 </span>

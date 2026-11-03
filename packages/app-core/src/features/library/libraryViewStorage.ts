@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Novelty, TopicId } from "@overview/domain";
-import { NO_LIBRARY_FILTERS } from "./types/LibraryFilters.js";
+import { LIBRARY_SOURCES, NO_LIBRARY_FILTERS } from "./types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS } from "./types/LibrarySort.js";
 import type { LibraryView, SavedLibraryViewField } from "./types/LibraryView.js";
 
@@ -10,6 +10,7 @@ const NO_ACCOUNT = "noAccount";
 const SavedLibraryView = z.looseObject({ version: z.literal(VERSION) });
 
 const FIELDS = {
+  source: z.enum(["all", ...LIBRARY_SOURCES]).default("all"),
   topic: z.union([TopicId, z.literal("all")]),
   novelty: z.union([Novelty, z.literal("all")]),
   status: z.enum(["all", "read", "unread"]),
@@ -52,6 +53,7 @@ export function readLibraryView(
 
   const view: LibraryView = {
     filters: {
+      source: field("source", NO_LIBRARY_FILTERS.source),
       topicId: field("topic", NO_LIBRARY_FILTERS.topicId),
       novelty: field("novelty", NO_LIBRARY_FILTERS.novelty),
       status: field("status", NO_LIBRARY_FILTERS.status),
@@ -75,6 +77,7 @@ export function writeLibraryView(
       storageKey(accountId),
       JSON.stringify({
         version: VERSION,
+        source: filters.source,
         topic: filters.topicId,
         novelty: filters.novelty,
         status: filters.status,

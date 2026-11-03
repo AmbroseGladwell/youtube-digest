@@ -23,6 +23,8 @@ export interface NoteLine {
   text: string;
   spoken?: string;
   range?: TimeRange;
+  // The chapter of an article a key point comes from, the counterpart of `range`.
+  chapterIndex?: number;
   label?: string;
   chip?: string;
 }

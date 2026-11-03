@@ -130,6 +130,17 @@ export function moveVideoToSource(record: unknown): unknown {
   return typeof video === "object" && video !== null ? { ...rest, source: { ...video, kind: "youtube" } } : record;
 }
 
+// Derivable: everything before articles is a video (docs/features/article-notes.md).
+const fillArticleAddedWithArticles: RecordMigration = {
+  newSchemaVersion: 11,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "article" in record ? record : { ...record, article: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -140,6 +151,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   allowFewerThanThreeTags,
   fillMadeOnAddedWithOurKey,
   { newSchemaVersion: 10, alterRecord: moveVideoToSource },
+  fillArticleAddedWithArticles,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

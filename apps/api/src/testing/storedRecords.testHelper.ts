@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { CURRENT_SCHEMA_VERSIONS, OVERVIEW_CORPUS, VideoId, type Overview, type Topic } from "@overview/domain";
-import { makeOverview } from "@overview/store-conformance";
+import { makeOverview, type VideoOverview } from "@overview/store-conformance";
 
 export const UPDATED_AT = "2026-09-26T08:30:00.000Z";
 
@@ -12,7 +12,7 @@ export const storedOverview = (overrides: Partial<Overview> = {}) => ({
   updatedAt: UPDATED_AT,
 });
 
-export function distinctVideo(): Overview["source"] {
+export function distinctVideo(): VideoOverview["source"] {
   const id = randomUUID().slice(0, 11);
   return { ...makeOverview().source, id: VideoId.parse(id), url: `https://www.youtube.com/watch?v=${id}` };
 }

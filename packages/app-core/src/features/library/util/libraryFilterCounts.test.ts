@@ -43,6 +43,7 @@ describe("libraryFilterCounts", () => {
         { tag: "pricing", count: 2 },
         { tag: "saas", count: 2 },
       ],
+      bySource: { video: 3 },
     });
   });
 
@@ -77,6 +78,7 @@ describe("libraryFilterCounts", () => {
       byTopic: {},
       byNovelty: {},
       byTag: [],
+      bySource: {},
     });
   });
 });

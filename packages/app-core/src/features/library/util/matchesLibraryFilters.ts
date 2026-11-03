@@ -1,5 +1,6 @@
 import { buildSearchHaystack } from "@overview/domain";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
+import { librarySourceOf } from "./librarySourceOf.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 
 // Read and favourite are answerable for an unreadable record, because they live in their
@@ -16,10 +17,11 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   const query = filters.query.trim().toLowerCase();
 
   if (entry.kind === "unreadable") {
-    return filters.topicId === "all" && filters.novelty === "all" && !filters.dubious && filters.tag === null && !query;
+    return filters.source === "all" && filters.topicId === "all" && filters.novelty === "all" && !filters.dubious && filters.tag === null && !query;
   }
 
   const { overview } = entry;
+  if (filters.source !== "all" && librarySourceOf(overview) !== filters.source) return false;
   if (filters.topicId !== "all" && !overview.topicIds.includes(filters.topicId)) return false;
   if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) return false;
   if (filters.dubious && !overview.verdict?.dubious) return false;

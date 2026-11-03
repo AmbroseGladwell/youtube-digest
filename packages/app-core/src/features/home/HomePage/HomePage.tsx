@@ -8,6 +8,7 @@ import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
+import { ArticleLinkStatus } from "../../newOverview/components/ArticleLinkStatus/ArticleLinkStatus.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
@@ -118,12 +119,15 @@ function SignedInHome() {
 // progress it makes — so there is one pipeline and one place a run lives
 // (docs/features/stone-theme.md, "First run").
 function FirstRunHero() {
-  const { readiness, ready, limit, url, setUrl, validationError, generate } = useStartFromLink();
+  const { readiness, ready, limit, url, setUrl, validationError, generate, article } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
+  const linkName = article.available ? "YouTube or article link" : "YouTube link";
 
   return (
-    <Hero standfirst="Paste a YouTube URL. Get a succinct overview, with the main premise, key points, actionable steps and a verdict on if it's worth your time.">
+    <Hero
+      standfirst={`Paste a ${article.available ? "YouTube or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, key points, actionable steps and a verdict on if it's worth your time.`}
+    >
       <form className={styles.heroForm} onSubmit={generate}>
         <span className={styles.heroFormIcon}>
           <StrokeIcon name="link" size={18} />
@@ -138,24 +142,26 @@ function FirstRunHero() {
           autoCorrect="off"
           spellCheck={false}
           className={styles.heroInput}
-          placeholder="Paste a YouTube link"
+          placeholder={`Paste a ${linkName}`}
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           disabled={!ready}
-          aria-label="YouTube link"
+          aria-label={linkName}
           data-testid={homePageTestIds.urlInput}
         />
-        {limit === null && (
+        {limit === null && article.link.status !== "held" && article.link.status !== "failed" && (
           <button
             type="submit"
             className={styles.heroGenerate}
-            disabled={!ready}
+            disabled={!ready || article.link.status === "reading"}
             data-testid={homePageTestIds.generateButton}
           >
             Generate overview
           </button>
         )}
       </form>
+
+      <ArticleLinkStatus link={article.link} url={url.trim()} place={article.place} onRetry={article.retry} onClear={() => setUrl("")} />
 
       {validationError && (
         <p className={styles.heroError} data-testid={homePageTestIds.validationError}>
@@ -312,7 +318,7 @@ function ExampleOverview() {
       <article className={styles.exampleCard}>
         <div className={styles.exampleHead}>
           <span className={styles.exampleLabel}>Example overview</span>
-          <span className={styles.exampleChip}>Common knowledge</span>
+          <span className={styles.exampleChip}>Widely covered</span>
         </div>
         <div className={styles.exampleSource}>
           <span className={styles.exampleThumb} aria-hidden="true" />

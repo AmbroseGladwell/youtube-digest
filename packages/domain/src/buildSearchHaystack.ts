@@ -1,3 +1,4 @@
+import { sourceName } from "./sourceFacts.js";
 import type { Overview } from "./Overview.js";
 
 // Logic ported from prototype/index_template.html's haystack() (CLAUDE.md: port the
@@ -6,7 +7,7 @@ import type { Overview } from "./Overview.js";
 export function buildSearchHaystack(overview: Overview): string {
   return [
     overview.source.title,
-    overview.source.channel,
+    sourceName(overview.source),
     overview.inOneLine,
     overview.coreClaim,
     overview.verdict?.reasoning ?? "",

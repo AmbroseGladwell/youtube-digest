@@ -20,3 +20,7 @@ export * from "./sections/howToApplySection.js";
 export * from "./sections/watchAnywaySection.js";
 export * from "./sections/chaptersSection.js";
 export * from "./generateTags.js";
+export * from "./article/ArticleGenerationInput.js";
+export * from "./article/composeArticlePrompt.js";
+export * from "./article/generateArticleOverview.js";
+export * from "./article/generateOverviewOf.js";

@@ -10,4 +10,5 @@ export const savedFromShare = (note: SharedNote): Overview => ({
   topicIds: [],
   fromPlaylist: null,
   madeOn: null,
+  article: note.article ?? null,
 });
