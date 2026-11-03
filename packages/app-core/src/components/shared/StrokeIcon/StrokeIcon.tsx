@@ -3,6 +3,8 @@ import styles from "./StrokeIcon.module.scss";
 
 export type StrokeIconName =
   | "plus"
+  | "minus"
+  | "volume"
   | "check"
   | "sun"
   | "moon"
@@ -70,6 +72,13 @@ export interface StrokeIconProps {
 // The stone design's icons are stroked line work rather than typed glyphs, all on one
 // 24-unit grid at a 2.25 stroke (docs/features/stone-theme.md).
 const GEOMETRY: Record<StrokeIconName, ReactNode> = {
+  minus: <path d="M5 12h14" />,
+  volume: (
+    <>
+      <path d="M11 5 6 9H2v6h4l5 4V5z" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </>
+  ),
   plus: (
     <>
       <path d="M5 12h14" />

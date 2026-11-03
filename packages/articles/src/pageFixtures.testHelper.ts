@@ -49,3 +49,28 @@ export const LINE_BROKEN_ESSAY = `<!doctype html><html><head><title>How to do gr
 export const FRONT_PAGE = `<!doctype html><html><head><title>Example News: the latest</title></head><body><main>
 ${Array.from({ length: 80 }, (_, index) => `<div>Story ${index} about something that happened today and was reported at some length</div>`).join("\n")}
 </main></body></html>`;
+
+const RECIPE_JSON = {
+  "@type": "Recipe",
+  name: "Weeknight dal",
+  prepTime: "PT10M",
+  cookTime: "PT1H5M",
+  totalTime: "PT1H15M",
+  recipeYield: ["4", "4 servings"],
+  recipeIngredient: ["250g red lentils", "1 tsp cumin seeds &amp; a pinch of salt", "  2 <b>large</b> onions "],
+  recipeInstructions: [
+    { "@type": "HowToSection", name: "For the dal", itemListElement: [{ "@type": "HowToStep", text: "Rinse the lentils.", name: "Rinse" }, { "@type": "HowToStep", text: "Simmer until soft." }] },
+    { "@type": "HowToSection", name: "For the tarka", itemListElement: [{ "@type": "HowToStep", text: "Fry the cumin in butter." }, { "@type": "HowToTip", text: "Use ghee if you have it." }] },
+  ],
+};
+
+export const recipePage = (declared: unknown, body = paragraphs(6, "My grandmother made this every winter.")) =>
+  `<!doctype html><html><head><title>Weeknight dal | Example Kitchen</title>
+<script type="application/ld+json">${JSON.stringify(declared)}</script>
+</head><body><article><h1>Weeknight dal</h1>${body}</article></body></html>`;
+
+export const RECIPE_PAGE = recipePage({ "@graph": [{ "@type": "WebSite", name: "Example Kitchen" }, { "@type": "BlogPosting", headline: "Weeknight dal" }, RECIPE_JSON] });
+
+export const recipeWith = (fields: Record<string, unknown>) => ({ ...RECIPE_JSON, ...fields });
+
+export const FOOD_ARTICLE_PAGE = recipePage({ "@type": "NewsArticle", headline: "Why lentils are having a moment" });

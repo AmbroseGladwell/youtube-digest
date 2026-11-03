@@ -18,6 +18,7 @@ describe("generationRunSteps", () => {
     asking: false,
     oneTimeAccess,
     fetched: false,
+    recipe: null,
     regenerating: false,
     failure: null,
   });
@@ -38,6 +39,13 @@ describe("generationRunSteps", () => {
 
   it("says this page on the right-click route, where we don't yet know it's an article", () => {
     expect(generationRunSteps(makeNewOverviewRun({ article: articleRun(true) }))[0]?.label).toBe("Reading this page");
+  });
+
+  it("names a recipe once the page is read as one, with its counts", () => {
+    const run = makeNewOverviewRun({ article: { ...articleRun(), recipe: { ingredients: 10, steps: 6 } }, transcriptWords: 900 });
+    expect(generationRunSteps(run)[0]).toMatchObject({ label: "Reading the recipe", detail: "10 ingredients, 6 steps" });
+    const fetched = makeNewOverviewRun({ article: { ...articleRun(), fetched: true, recipe: { ingredients: 1, steps: 1 } } });
+    expect(generationRunSteps(fetched)[0]).toMatchObject({ label: "Fetching the recipe", detail: "1 ingredient, 1 step" });
   });
 
   it("starts with the transcript running and the overview queued", () => {

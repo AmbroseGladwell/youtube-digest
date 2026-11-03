@@ -14,6 +14,8 @@ export function buildSearchHaystack(overview: Overview): string {
     overview.selling?.detail ?? "",
     ...(overview.howToApply?.items ?? []),
     ...overview.keyPoints.map((point) => point.text),
+    overview.recipe?.summary ?? "",
+    ...(overview.recipe?.ingredients ?? []),
     ...overview.tags,
   ]
     .join(" ")

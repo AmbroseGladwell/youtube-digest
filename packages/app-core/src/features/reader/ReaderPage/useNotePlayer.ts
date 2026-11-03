@@ -33,7 +33,7 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
   const time = usePlayerTime();
   const engineLine = usePlayerLine();
   const [restingLine, setRestingLine] = useState(0);
-  const current = track !== null && snapshot.track?.overviewId === track.overviewId;
+  const current = track !== null && snapshot.track?.overviewId === track.overviewId && snapshot.track.part === undefined;
 
   useEffect(() => setRestingLine(0), [track?.overviewId]);
 

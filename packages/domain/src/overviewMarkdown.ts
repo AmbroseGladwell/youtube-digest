@@ -1,5 +1,6 @@
 import { articlePlaceUrl } from "./ArticlePlace.js";
-import { sourceLength, sourceName } from "./sourceFacts.js";
+import { noteSourceLength, sourceName } from "./sourceFacts.js";
+import { recipeFigures, recipeFiguresLine, recipeStepGroups } from "./recipeFacts.js";
 import { DUBIOUS_BASIS_LABEL } from "./dubiousBasisLabel.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
@@ -28,7 +29,7 @@ export function overviewMarkdown(overview: Overview): string {
     sourceName(video),
     video.kind === "web" ? (video.author === null ? null : `by ${video.author}`) : null,
     video.kind === "web"
-      ? sourceLength(video)
+      ? noteSourceLength(overview)
       : video.durationMs === null
         ? null
         : formatTimestamp(video.durationMs),
@@ -45,6 +46,26 @@ export function overviewMarkdown(overview: Overview): string {
   if (overview.captureReason !== null && overview.captureReason.trim() !== "") {
     section("Why I saved it", overview.captureReason.trim());
   }
+  const { recipe } = overview;
+  if (recipe !== null) {
+    const figures = recipeFigures(recipe);
+    section("Summary", figures.length === 0 ? recipe.summary : `${recipeFiguresLine(figures)}\n\n${recipe.summary}`);
+    section("Ingredients", bullets(recipe.ingredients));
+    section(
+      "Method",
+      recipe.steps.length === 0
+        ? `${recipe.stepCount} steps, on the page: ${video.url}`
+        : recipeStepGroups(recipe.steps)
+            .map(({ name, start, steps }) =>
+              [name === null ? null : `### ${name}`, steps.map((step, index) => `${start + index}. ${step}`).join("\n")]
+                .filter((part) => part !== null)
+                .join("\n\n"),
+            )
+            .join("\n\n"),
+    );
+    return `${sections.join("\n\n")}\n`;
+  }
+
   section("Premise", overview.inOneLine);
   section(overview.thin ? "No clear claim" : "Core claim", overview.coreClaim);
 

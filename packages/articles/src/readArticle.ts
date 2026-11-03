@@ -2,6 +2,7 @@ import { isProbablyReaderable, Readability } from "@mozilla/readability";
 import { canonicalArticleUrl, wordCount, type ArticleRead } from "@overview/domain";
 import { articleMetadata } from "./articleMetadata.js";
 import { articleSections } from "./articleSections.js";
+import { pageRecipe } from "./pageRecipe.js";
 
 const FEWEST_WORDS_IN_AN_ARTICLE = 100;
 const MOST_WORDS_IN_A_PAYWALL_TEASER = 400;
@@ -19,7 +20,12 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
   const parsed = new Readability(document.cloneNode(true) as Document).parse();
   const body = document.implementation.createHTMLDocument("").body;
   body.innerHTML = parsed?.content ?? "";
-  const sections = articleSections(body, parsed?.title ?? "");
+  const recipe = pageRecipe(document);
+  const written = articleSections(body, parsed?.title ?? "");
+  const sections =
+    written.length === 0 && recipe !== null
+      ? [{ heading: null, anchor: null, text: recipe.steps.map(({ text }) => text).join(" ") }]
+      : written;
   const words = sections.reduce((total, { text }) => total + wordCount(text), 0);
 
   if (metadata.declaredPaywalled && words < MOST_WORDS_IN_A_PAYWALL_TEASER) {
@@ -27,9 +33,9 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
   }
   const isMostlyProse =
     words >= FEWEST_WORDS_TO_READ_WITHOUT_MARKUP && wordsPerSentence(body.textContent ?? "") <= MOST_WORDS_PER_SENTENCE_OF_PROSE;
-  const looksLikeAnArticle = metadata.isDeclaredArticle || isProbablyReaderable(document) || isMostlyProse;
+  const looksLikeAnArticle = recipe !== null || metadata.isDeclaredArticle || isProbablyReaderable(document) || isMostlyProse;
   const title = parsed?.title?.trim() || document.title.trim();
-  if (!looksLikeAnArticle || words < FEWEST_WORDS_IN_AN_ARTICLE || title === "") {
+  if (!looksLikeAnArticle || (words < FEWEST_WORDS_IN_AN_ARTICLE && recipe === null) || title === "") {
     return { status: "failed", reason: "nothing-readable" };
   }
 
@@ -46,6 +52,7 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
       imageUrl: metadata.imageUrl,
       sections,
       wordCount: words,
+      recipe,
     },
   };
 }

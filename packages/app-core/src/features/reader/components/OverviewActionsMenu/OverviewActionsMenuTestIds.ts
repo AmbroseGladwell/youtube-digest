@@ -9,6 +9,8 @@ export const overviewActionsMenuTestIds = {
   readItem: "OverviewActionsMenu.readItem",
   watchItem: "OverviewActionsMenu.watchItem",
   shareItem: "OverviewActionsMenu.shareItem",
+  copyRecipeItem: "OverviewActionsMenu.copyRecipeItem",
+  printRecipeItem: "OverviewActionsMenu.printRecipeItem",
   copyLinkItem: "OverviewActionsMenu.copyLinkItem",
   openInWebItem: "OverviewActionsMenu.openInWebItem",
   openInWebReason: "OverviewActionsMenu.openInWebReason",

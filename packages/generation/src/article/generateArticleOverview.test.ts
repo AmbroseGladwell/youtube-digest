@@ -21,6 +21,7 @@ const article: ExtractedArticle = {
     { heading: "Who pays", anchor: "who-pays", text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates." },
   ],
   wordCount: 500,
+  recipe: null,
 };
 
 const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerationInput => ({

@@ -6,7 +6,8 @@ import { articleReadMs } from "./sourceFacts.js";
 export type OverviewTimeSaved =
   | { kind: "counted"; minutes: number; lessPartToWatch: boolean }
   | { kind: "withoutLength" }
-  | { kind: "watchVerdict" };
+  | { kind: "watchVerdict" }
+  | { kind: "recipe" };
 
 export interface TimeSavedSummary {
   minutes: number;
@@ -14,6 +15,7 @@ export interface TimeSavedSummary {
   lessPartToWatch: number;
   withoutLength: number;
   watchVerdict: number;
+  recipe: number;
 }
 
 const MS_PER_MINUTE = 60_000;
@@ -37,6 +39,11 @@ function articleTimeSaved(overview: SharedNote, words: number): OverviewTimeSave
 }
 
 export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
+  // Reading time is the wrong measure for something the reader means to cook
+  // (docs/features/recipe-notes.md, "Time saved").
+  if (overview.recipe != null) {
+    return { kind: "recipe" };
+  }
   if (overview.source.kind === "web") {
     return articleTimeSaved(overview, overview.source.wordCount);
   }
@@ -61,7 +68,7 @@ export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
 export function timeSavedSummary(
   entries: ReadonlyArray<{ overview: SharedNote; state: { read: boolean } }>,
 ): TimeSavedSummary {
-  const summary: TimeSavedSummary = { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0 };
+  const summary: TimeSavedSummary = { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 };
   for (const { overview, state } of entries) {
     if (!state.read) {
       continue;

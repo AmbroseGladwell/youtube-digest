@@ -95,6 +95,13 @@ export function overviewNoteLines(overview: SharedNote): NoteLine[] {
     }
   };
 
+  // A recipe's narration is its summary, for deciding; each list has its own Read aloud, for
+  // cooking (design 144t).
+  if (overview.recipe) {
+    section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "In short" }, [{ text: overview.recipe.summary }]);
+    return lines;
+  }
+
   section(SUMMARY_SECTION, { text: "Premise", spoken: "The premise" }, [{ text: overview.inOneLine }]);
   section(
     "Core claim",

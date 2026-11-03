@@ -25,7 +25,7 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
   const reached = MILESTONES.filter((milestone) => milestone.minutes <= minutes);
   const next = MILESTONES.find((milestone) => milestone.minutes > minutes);
   const from = reached.at(-1)?.minutes ?? 0;
-  const leftOut = summary.withoutLength + summary.watchVerdict + summary.lessPartToWatch;
+  const leftOut = summary.withoutLength + summary.watchVerdict + summary.lessPartToWatch + summary.recipe;
 
   useEffect(() => {
     const element = dialog.current;
@@ -126,6 +126,11 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
             )}
             {summary.watchVerdict > 0 && (
               <p className={styles.leftOutLine}>{summary.watchVerdict} the verdict said to watch or read</p>
+            )}
+            {summary.recipe > 0 && (
+              <p className={styles.leftOutLine}>
+                {summary.recipe} {summary.recipe === 1 ? "recipe" : "recipes"}, since you’d cook {summary.recipe === 1 ? "it" : "them"} rather than read {summary.recipe === 1 ? "it" : "them"}
+              </p>
             )}
             {summary.lessPartToWatch > 0 && (
               <p className={styles.leftOutAside}>

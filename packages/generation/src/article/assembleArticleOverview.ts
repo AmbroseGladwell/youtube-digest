@@ -97,6 +97,7 @@ export function assembleArticleOverview(
     howToApply: output.howToApply === undefined ? null : HowToApply.parse(output.howToApply),
     watchAnyway: null,
     chapters: null,
+    recipe: null,
     article: {
       chapters,
       keyPointChapters: output.keyPoints.map(({ paragraphIndex }) =>

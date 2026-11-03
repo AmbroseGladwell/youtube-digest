@@ -1,0 +1,61 @@
+.root {
+  display: none;
+}
+
+@media print {
+  :global(body > :not([data-recipe-print])) {
+    display: none !important;
+  }
+
+  :global(body) {
+    background: #fff !important;
+  }
+
+  .root {
+    display: block;
+    padding: 0;
+    background: #fff;
+    color: #151618;
+    font: 13px/1.5 var(--font-body);
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.125rem;
+    }
+
+    li {
+      margin: 0 0 0.3125rem;
+    }
+  }
+
+  .title {
+    margin: 0 0 0.25rem;
+    font: 400 1.625rem/1.15 var(--font-heading);
+  }
+
+  .source {
+    margin: 0 0 0.875rem;
+    color: #5f5c57;
+    font-size: 0.71875rem;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 12.5rem 1fr;
+    gap: 1.625rem;
+  }
+
+  .heading {
+    margin: 0 0 0.375rem;
+    color: #3a3835;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .group {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}

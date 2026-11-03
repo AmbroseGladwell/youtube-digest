@@ -1,4 +1,6 @@
 import { formatClock } from "./formatClock.js";
+import type { RecipeNote } from "./RecipeNote.js";
+import { recipeMinutes } from "./recipeFacts.js";
 import type { Source } from "./Source.js";
 
 const ARTICLE_WORDS_PER_MINUTE = 230;
@@ -20,4 +22,13 @@ export const sourceImage = (source: Source): string | null =>
 export function sourceLength(source: Source): string | null {
   if (source.kind === "web") return `${articleReadMinutes(source.wordCount)} min article`;
   return source.durationMs ? `${formatClock(source.durationMs / 1000)} video` : null;
+}
+
+// A recipe names itself by the page's stated total, "1 hr 5 min recipe", or just "Recipe",
+// never by a sum of prep and cook (design 144m).
+export function noteSourceLength(note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null {
+  if (note.recipe != null) {
+    return note.recipe.totalMinutes === null ? "Recipe" : `${recipeMinutes(note.recipe.totalMinutes)} recipe`;
+  }
+  return sourceLength(note.source);
 }

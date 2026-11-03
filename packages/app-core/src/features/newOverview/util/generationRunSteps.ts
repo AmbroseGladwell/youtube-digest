@@ -1,5 +1,6 @@
 import type { NewOverviewRun } from "../types/NewOverviewRun.js";
 import { overviewReadMinutes } from "./overviewReadMinutes.js";
+import { recipeCounts } from "./recipeCounts.js";
 
 export type GenerationStepState = "waiting" | "running" | "done";
 
@@ -15,12 +16,21 @@ export function generationRunSteps(run: NewOverviewRun): GenerationStep[] {
   const overviewDone = run.overview !== null;
 
   if (run.article !== null) {
-    const label = run.article.fetched ? "Fetching the article" : run.article.oneTimeAccess ? "Reading this page" : "Reading the article";
+    const { recipe } = run.article;
+    const kind = recipe === null ? "article" : "recipe";
+    const label = run.article.fetched ? `Fetching the ${kind}` : run.article.oneTimeAccess ? "Reading this page" : `Reading the ${kind}`;
     return [
       {
         number: "01",
         label,
-        detail: transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : run.article.fetched ? "From the link" : "Reading what's on the page",
+        detail:
+          recipe !== null
+            ? recipeCounts(recipe)
+            : transcriptDone
+              ? `${run.transcriptWords!.toLocaleString("en-GB")} words`
+              : run.article.fetched
+                ? "From the link"
+                : "Reading what's on the page",
         state: transcriptDone ? "done" : "running",
       },
       {

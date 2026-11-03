@@ -47,7 +47,7 @@ test("an overview whose verdict says to watch part of it does not count that par
 test("only overviews marked read count towards the total", () => {
   const summary = timeSavedSummary([read(lasting(minutesAndSeconds(11))), unread(lasting(minutesAndSeconds(60)))]);
 
-  assert.deepEqual(summary, { minutes: 10, counted: 1, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0 });
+  assert.deepEqual(summary, { minutes: 10, counted: 1, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 });
 });
 
 test("the summary says how many read overviews it left out, and why", () => {
@@ -60,9 +60,9 @@ test("the summary says how many read overviews it left out, and why", () => {
     read(lasting(minutesAndSeconds(40), { watchAnyway: { answer: "yes", reason: "x", range: null } })),
   ]);
 
-  assert.deepEqual(summary, { minutes: 51, counted: 2, lessPartToWatch: 0, withoutLength: 2, watchVerdict: 1 });
+  assert.deepEqual(summary, { minutes: 51, counted: 2, lessPartToWatch: 0, withoutLength: 2, watchVerdict: 1, recipe: 0 });
 });
 
 test("an empty library has saved nothing and left nothing out", () => {
-  assert.deepEqual(timeSavedSummary([]), { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0 });
+  assert.deepEqual(timeSavedSummary([]), { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 });
 });

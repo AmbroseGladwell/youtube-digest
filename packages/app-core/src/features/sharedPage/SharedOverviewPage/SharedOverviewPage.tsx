@@ -1,6 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { NOVELTY_LABEL, overviewNoteCaptions, overviewNoteLines, formatClock, type SharePayload, sourceName } from "@overview/domain";
+import {
+  NOVELTY_LABEL,
+  SUMMARY_SECTION,
+  overviewNoteCaptions,
+  overviewNoteLines,
+  formatClock,
+  type SharePayload,
+  sourceName,
+} from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
@@ -13,6 +21,11 @@ import { LineRangeTag } from "../../reader/components/LineRangeTag/LineRangeTag.
 import { RelatedByTag } from "../../reader/components/RelatedByTag/RelatedByTag.js";
 import { ArticleChaptersPanel } from "../../reader/components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../../reader/components/ArticleLineLinks/ArticleLineLinks.js";
+import { RecipeIngredients } from "../../reader/components/RecipeIngredients/RecipeIngredients.js";
+import { RecipeMethod } from "../../reader/components/RecipeMethod/RecipeMethod.js";
+import { RecipePageLink } from "../../reader/components/RecipePageLink/RecipePageLink.js";
+import { RecipeTimes } from "../../reader/components/RecipeTimes/RecipeTimes.js";
+import { initialScale, recipeAdjustment } from "../../reader/util/recipeAdjustment.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
@@ -62,7 +75,19 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const video = note.source.kind === "youtube" ? note.source : null;
   const webArticle =
     note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
-  const tabsShown = webArticle === null ? READER_TABS : webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
+  const recipePage = note.source.kind === "web" && note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
+  const tabsShown =
+    recipePage !== null
+      ? ["Overview" as const]
+      : webArticle === null
+        ? READER_TABS
+        : webArticle.article.chapters.length > 1
+          ? ARTICLE_TABS
+          : ["Overview" as const];
+  const recipeAsWritten = useMemo(
+    () => (note.recipe == null ? null : recipeAdjustment(note.recipe, initialScale(note.recipe), "asWritten")),
+    [note.recipe],
+  );
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const isPhone = useIsPhone();
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
@@ -116,7 +141,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           <div className={styles.head}>
             <div className={styles.chips}>
               <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
-                {webArticle === null ? sourceName(note.source) : `An overview of an article from ${sourceName(note.source)}`}
+                {note.source.kind === "youtube"
+                  ? sourceName(note.source)
+                  : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
               </span>
               {note.verdict !== null && (
                 <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
@@ -164,7 +191,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
               data-testid={sharedOverviewPageTestIds.watchButton}
             >
-              {webArticle === null ? "Watch on YouTube" : `Read the article on ${sourceName(note.source)}`}
+              {note.source.kind === "youtube"
+                ? "Watch on YouTube"
+                : `${recipePage === null ? "Read the article" : "Open the recipe"} on ${sourceName(note.source)}`}
               <StrokeIcon name="openOut" size={16} />
             </a>
           </div>
@@ -176,6 +205,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           <div id={panelId(tab)} role="tabpanel" aria-labelledby={tabId(tab)}>
             {tab === "Overview" && (
               <div className={styles.note} data-testid={sharedOverviewPageTestIds.overviewPanel}>
+                {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
                 <ReadAlongNote
                   lines={lines}
                   captions={captions}
@@ -195,8 +225,34 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       />
                     )
                   }
-                  renderLineEnd={(line) => webArticle !== null && <ArticleLineLinks line={line} onPage={null} {...webArticle} />}
+                  renderLineEnd={(line) =>
+                    webArticle !== null ? (
+                      <ArticleLineLinks line={line} onPage={null} {...webArticle} />
+                    ) : (
+                      recipePage !== null &&
+                      line.section === SUMMARY_SECTION &&
+                      !line.heading && <RecipePageLink source={recipePage.source} onPage={null} />
+                    )
+                  }
                 />
+                {/* Design 144u: the summary and the ingredients, and the method left on the
+                    page, since it is in the author's own words. */}
+                {recipePage !== null && recipeAsWritten !== null && (
+                  <>
+                    <RecipeIngredients
+                      adjustment={recipeAsWritten}
+                      scale={initialScale(recipePage.recipe)}
+                      units="asWritten"
+                      columns={!isPhone}
+                      adjustable={false}
+                      voice={null}
+                      onScaleChange={() => undefined}
+                      onUnitsChange={() => undefined}
+                      onReset={() => undefined}
+                    />
+                    <RecipeMethod recipe={recipePage.recipe} source={recipePage.source} note={null} voice={null} />
+                  </>
+                )}
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
               </div>
             )}

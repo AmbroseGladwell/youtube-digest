@@ -339,7 +339,7 @@ function RunInProgress({
   return (
     <div className={styles.working} data-testid={capturePageTestIds.working}>
       {run.article !== null ? (
-        <ArticleOffer site={run.article.site} title={run.article.title} words={run.article.words} />
+        <ArticleOffer site={run.article.site} title={run.article.title} words={run.article.words} recipe={run.article.recipe} />
       ) : (
         <>
           <div>

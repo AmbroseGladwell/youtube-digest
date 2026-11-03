@@ -41,7 +41,9 @@ function fallbackBody(payload: SharePayload): string {
     `<p>${escapeHtml(sourceName(note.source))} · ${escapeHtml(overviewMetaParts(note).join(" · "))}</p>`,
     `<p>${escapeHtml(note.inOneLine)}</p>`,
     `<p><a href="${escapeHtml(note.source.url)}">${
-      note.source.kind === "web" ? `Read the article on ${escapeHtml(sourceName(note.source))}` : "Watch on YouTube"
+      note.source.kind === "web"
+        ? `${note.recipe == null ? "Read the article" : "Open the recipe"} on ${escapeHtml(sourceName(note.source))}`
+        : "Watch on YouTube"
     }</a></p>`,
     "</main>",
   ].join("");

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { articleReadMinutes, domainOf } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
+import { recipeCounts } from "../../util/recipeCounts.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
 import type { ArticleLink } from "../../useArticleLink.js";
 import { pastedLinkFailureCopy, type ReaderPlace } from "../../util/pastedLinkFailureCopy.js";
@@ -32,7 +33,9 @@ export function ArticleLinkStatus({ link, url, place, onRetry, onClear, onOpened
     case "found":
       return (
         <p className={styles.line} data-testid={articleLinkStatusTestIds.found}>
-          Article on {link.article.siteName ?? domainOf(link.article.url)} · {articleReadMinutes(link.article.wordCount)} min read
+          {link.article.recipe === null
+            ? `Article on ${link.article.siteName ?? domainOf(link.article.url)} · ${articleReadMinutes(link.article.wordCount)} min read`
+            : `Recipe on ${link.article.siteName ?? domainOf(link.article.url)} · ${recipeCounts({ ingredients: link.article.recipe.ingredients.length, steps: link.article.recipe.steps.length })}`}
         </p>
       );
     case "held":

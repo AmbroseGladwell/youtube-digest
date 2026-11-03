@@ -76,6 +76,7 @@ export function assembleOverview(
     watchAnyway,
     chapters: resolveChapters(input, output.chapters),
     article: null,
+    recipe: null,
   });
 }
 
