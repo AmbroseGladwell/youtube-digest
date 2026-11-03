@@ -5,12 +5,12 @@ import styles from "./OnboardingHeading.module.scss";
 export const ONBOARDING_HEADING_ID = "onboarding-heading";
 
 // Every screen's heading, which takes focus as the screen arrives (the brief's accessibility).
-export function OnboardingHeading({ children }: { children: ReactNode }) {
+export function OnboardingHeading({ children, small = false }: { children: ReactNode; small?: boolean }) {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const isPanel = useIsPanel();
   useEffect(() => heading.current?.focus(), []);
   return (
-    <h1 id={ONBOARDING_HEADING_ID} className={`${styles.root} ${isPanel ? styles.panel : ""}`} ref={heading} tabIndex={-1}>
+    <h1 id={ONBOARDING_HEADING_ID} className={small ? styles.small : `${styles.root} ${isPanel ? styles.panel : ""}`} ref={heading} tabIndex={-1}>
       {children}
     </h1>
   );

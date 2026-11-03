@@ -34,8 +34,13 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();
   await onboarding.next();
-  await onboarding.pickRole("Healthcare");
+  await onboarding.sentence.openSection("time");
+  await onboarding.sentence.pick("healthcare");
+  await onboarding.sentence.backToSentence();
+  await onboarding.sentence.verifySectionHasFocus("time");
+  await onboarding.verifyWhatThisChangesShowsExample(false);
   await onboarding.continueFromAboutYou();
+  await onboarding.verifyOnScreen("stepsForYou");
   await onboarding.seeOverview();
 
   await onboarding.verifyOnScreen("account", "Create your free account");
@@ -53,11 +58,11 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await launcher.onboardingNextSteps.verifyOffers(["ai"]);
   await launcher.onboardingNextSteps.connectYourAi();
   await launcher.settingsPage.verifySectionIsShown("connections");
-  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("Works in healthcare.");
+  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("I spend my time on healthcare.");
   expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
 });
 
-test("About you in the panel shows five of each, with More for the rest", async ({ launcher, backendSimulator }) => {
+test("the sheet takes the panel over, and every suggestion is offered", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel(signedOutPanelAnswered);
   await (await launcher.panelStart.verifyIsShown()).makeOverview();
@@ -67,9 +72,13 @@ test("About you in the panel shows five of each, with More for the rest", async 
   await onboarding.skip();
 
   await onboarding.verifyOnScreen("aboutYou");
-  await onboarding.verifyRoleOffered("Retired", false);
-  await onboarding.showMoreRoles();
-  await onboarding.verifyRoleOffered("Retired", true);
+  await onboarding.sentence.openSection("who");
+  await onboarding.sentence.verifySheetHasFocus("Who you are");
+  await onboarding.sentence.verifyOffered("retired");
+  await onboarding.sentence.pick("retired");
+  await onboarding.sentence.backToSentence();
+
+  await onboarding.sentence.verifySectionName("who", "Who you are: retired. Edit.");
 });
 
 test("with no video beside it, Start takes a pasted link instead, and refuses one it can't use", async ({

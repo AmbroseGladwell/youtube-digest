@@ -53,6 +53,7 @@ import { useMilestones } from "../../timeSaved/useMilestones.js";
 import { useFirstOverviewMilestone } from "../../timeSaved/useFirstOverviewMilestone.js";
 import { FirstOverviewMilestone } from "../../timeSaved/components/FirstOverviewMilestone/FirstOverviewMilestone.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
+import { LearnedNotice } from "../../settings/components/LearnedNotice/LearnedNotice.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
@@ -228,6 +229,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
+      <LearnedNotice />
       <div className={styles.grid}>
         <aside
           ref={rail}

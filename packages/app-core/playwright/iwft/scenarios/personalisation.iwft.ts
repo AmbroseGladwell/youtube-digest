@@ -16,7 +16,7 @@ test("the reader context and sections in Settings are what the next overview is 
 }) => {
   backendSimulator.ourKey.isAvailable();
   const sectionsEnabled = { ...DEFAULT_SECTIONS_ENABLED, selling: false };
-  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, readerContext: "A nurse learning to cook.", sectionsEnabled });
+  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["nurse"], time: [], focus: ["new recipes"] }, sectionsEnabled });
   const dialog = await launcher.appShell.openNewOverview();
 
   await dialog.form.submitUrl(VALID_URL);
@@ -24,7 +24,7 @@ test("the reader context and sections in Settings are what the next overview is 
 
   await launcher.readerPage.verifyIsShown();
   const [request] = backendSimulator.ourKey.generations();
-  expect(request?.input.readerContext).toBe("A nurse learning to cook.");
+  expect(request?.input.readerContext).toBe("I'm a nurse, and right now I'm focusing on new recipes.");
   expect(request?.input.sectionsEnabled).toEqual(sectionsEnabled);
 });
 
@@ -62,19 +62,39 @@ test("About you set in Settings › Personalisation is what the next overview is
   backendSimulator.ourKey.isAvailable();
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
   const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
-  await settings.personalisation.verifyAboutYouReads("Not set, so overviews are written for anyone.");
+  await settings.personalisation.verifyAboutYouIsNotSet();
 
-  await settings.personalisation.setAboutYou({ role: "Teaching", goals: ["Tech"] });
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.sentence.fill("who", "parent");
+  await settings.personalisation.sentence.fill("time", "teaching");
+  await settings.personalisation.closeAboutYou();
 
-  await settings.personalisation.verifyAboutYouReads("A teacher, learning about tech.");
-  await settings.verifyRowReads("personalisation", "A teacher, learning about tech. · Every section");
+  await settings.personalisation.verifyAboutYouReads("I'm a parent, and I spend my time on teaching.");
+  await settings.verifyRowReads("personalisation", "A parent · Every section");
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.submitUrl(VALID_URL);
   await dialog.clickReadOverview();
   await launcher.readerPage.verifyIsShown();
-  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("A teacher, learning about tech.");
+  expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("I'm a parent, and I spend my time on teaching.");
 
   const again = await (await launcher.appShell.openSettings()).openSection("personalisation");
   await again.personalisation.clearAboutYou();
-  await again.personalisation.verifyAboutYouReads("Not set, so overviews are written for anyone.");
+  await again.personalisation.verifyAboutYouIsNotSet();
+});
+
+test("the sentence reopens in Settings as it was left, and an old line can be seen and edited", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["dad"], time: ["A nurse learning to cook"], focus: [] } });
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await settings.personalisation.verifyAboutYouReads("I'm a dad, and I spend my time on A nurse learning to cook.");
+
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.sentence.openSection("time");
+  await settings.personalisation.sentence.verifyInSection("A nurse learning to cook");
+  await settings.personalisation.sentence.remove("A nurse learning to cook");
+  await settings.personalisation.sentence.pick("healthcare");
+  await settings.personalisation.sentence.done();
+  await settings.personalisation.closeAboutYou();
+
+  await settings.personalisation.verifyAboutYouReads("I'm a dad, and I spend my time on healthcare.");
 });

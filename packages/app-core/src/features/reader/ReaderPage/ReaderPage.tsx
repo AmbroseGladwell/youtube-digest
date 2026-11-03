@@ -63,6 +63,7 @@ import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { bindOverviewId } from "../../analytics/bindOverviewId.js";
 import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
+import { useHowToApplySlot } from "./useHowToApplySlot.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 
@@ -157,6 +158,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       ? { ...written, [KEY_POINTS_SECTION]: "Chapter links move the article beside this panel to that place." }
       : written;
   }, [overview, besideArticle]);
+  const howToApplySlot = useHowToApplySlot(overview);
   const regenerate =
     webArticle === null
       ? null
@@ -378,6 +380,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 key={overviewId}
                 lines={lines}
                 captions={captions}
+                sectionSlot={howToApplySlot}
                 activeIndex={notePlayer.activeIndex}
                 speaking={notePlayer.playing}
                 onSelectLine={notePlayer.selectLine}

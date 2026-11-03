@@ -1,14 +1,26 @@
 import type { FastifyBaseLogger } from "fastify";
-import { apiLogLines, TRIAL_OVERVIEWS, type Overview, type OurKeyGenerationRequest, type Plan } from "@overview/domain";
+import {
+  apiLogLines,
+  TRIAL_OVERVIEWS,
+  type ForAnyoneInput,
+  type Overview,
+  type OurKeyGenerationRequest,
+  type Plan,
+  type ProfilePassInput,
+  type ProfilePassItem,
+} from "@overview/domain";
 import {
   costInDollars,
   createGenerationClient,
   fallbackReasonOf,
+  generateForAnyoneSteps,
   generateOverviewOf,
+  generateProfileItems,
   meteredFetch,
   priceOf,
   ProviderKeyRefusedError,
   type FallbackReason,
+  type GenerationClient,
 } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
 import { secondsToNextUsageDay, usageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -181,6 +193,48 @@ export class OurKeyGenerator {
         }),
       );
       throw new OurKeyGenerationError(fallback, error);
+    }
+  }
+
+  // Small passes for an account: no overview is made, so nothing counts against the plan or
+  // the day's overviews, and their routes share a limit of their own
+  // (docs/features/personalisation.md).
+  profilePass(input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
+    return this.#smallPass("profile", (client) => generateProfileItems(client, input), log);
+  }
+
+  forAnyone(input: ForAnyoneInput, log: FastifyBaseLogger): Promise<string[]> {
+    return this.#smallPass("forAnyone", (client) => generateForAnyoneSteps(client, input), log);
+  }
+
+  async #smallPass<Result>(pass: "profile" | "forAnyone", run: (client: GenerationClient) => Promise<Result>, log: FastifyBaseLogger): Promise<Result> {
+    const { apiKey, http, clock } = this.#options;
+    const startedAt = clock().getTime();
+    const metered = meteredFetch(ourKeyModel.provider, http);
+    try {
+      const result = await run(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }));
+      const price = priceOf(ourKeyModel);
+      log.info(
+        apiLogLines.ourKey.smallPass({
+          pass,
+          model: ourKeyModel.model,
+          costDollars:
+            price === undefined
+              ? null
+              : metered.calls.reduce((total, call) => total + (call.usage === null ? 0 : costInDollars(price, call.usage)), 0),
+          ms: clock().getTime() - startedAt,
+        }),
+      );
+      return result;
+    } catch (error) {
+      log.warn(
+        apiLogLines.ourKey.smallPassFailed({
+          pass,
+          reason: error instanceof Error ? error.constructor.name : "unknown",
+          ms: clock().getTime() - startedAt,
+        }),
+      );
+      throw new OurKeyGenerationError(fallbackReasonOf(error), error);
     }
   }
 

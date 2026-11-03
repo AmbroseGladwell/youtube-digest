@@ -26,6 +26,8 @@ import {
   type MagicLinkRequest,
   type ArticleRead,
   type OurKeyGenerationRequest,
+  type ProfilePassInput,
+  type ProfilePassItem,
   type OverviewUsage,
   type OutboxEntry,
   type Overview,
@@ -158,6 +160,10 @@ export class BackendSimulator {
   #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
+  #profilePassItems: ProfilePassItem[] = [];
+  #profilePasses: ProfilePassInput[] = [];
+  #ourKeyHowToApply: string[] | null = null;
+  #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #articleReads: string[] = [];
   #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #trialTokensIssued = 0;
@@ -734,11 +740,33 @@ export class BackendSimulator {
                 body:
                   "article" in request.input
                     ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
-                    : makeOverview({ id: request.overviewId, source: youTubeSource(request.input.video), inOneLine: "Made on our key." }),
+                    : makeOverview({
+                        id: request.overviewId,
+                        source: youTubeSource(request.input.video),
+                        inOneLine: "Made on our key.",
+                        ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
+                      }),
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
           }),
+    );
+
+    await this.#page.route("**/api/generations/profile", (route) =>
+      this.#respond(route, EndpointKey.PROFILE_PASS, {
+        onDefault: () => {
+          this.#profilePasses.push(route.request().postDataJSON() as ProfilePassInput);
+          return { status: 200, body: { items: this.#profilePassItems } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+      }),
+    );
+
+    await this.#page.route("**/api/generations/how-to-apply", (route) =>
+      this.#respond(route, EndpointKey.FOR_ANYONE, {
+        onDefault: () => ({ status: 200, body: { items: this.#forAnyoneItems } }),
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+      }),
     );
 
     await this.#page.route("**/api/trials", (route) =>
@@ -1098,6 +1126,13 @@ export class BackendSimulator {
       this.#anthropicOutOfCredit = true;
     },
     generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
+    writesHowToApply: (items: string[]): void => {
+      this.#ourKeyHowToApply = items;
+    },
+    profilePassFinds: (items: ProfilePassItem[]): void => {
+      this.#profilePassItems = items;
+    },
+    profilePasses: (): ProfilePassInput[] => [...this.#profilePasses],
     // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_SYNC_STATUS } from "@overview/sync";
-import { DEFAULT_SECTIONS_ENABLED, type Provider } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED,
+  EMPTY_ABOUT_YOU, type Provider } from "@overview/domain";
 import { DEFAULT_API_KEYS } from "../../apiKeys/ApiKeys.js";
 import { DEFAULT_SYNC_CONNECTION } from "../../sync/types/SyncConnection.js";
 import {
@@ -103,19 +104,34 @@ describe("milestonesRowValue", () => {
 
 describe("personalisationRowValue", () => {
   it("says how many of the four optional sections the next overview will have", () => {
-    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, null)).toBe("About you not set · Every section");
-    expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, null)).toBe(
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, EMPTY_ABOUT_YOU)).toBe("About you not set · Every section");
+    expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, EMPTY_ABOUT_YOU)).toBe(
       "About you not set · 3 of 4 sections",
     );
     expect(
-      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, null),
+      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, EMPTY_ABOUT_YOU),
     ).toBe("About you not set · Summary and key points only");
   });
 
-  it("leads with About you once it is set", () => {
-    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, "Works in healthcare.")).toBe(
-      "Works in healthcare. · Every section",
+  it("says how many things were learned, or that learning is off, and nothing of it where learning can't run", () => {
+    const aboutYou = { ...EMPTY_ABOUT_YOU, who: ["dad"] };
+
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: true, keepLearning: true, learnedCount: 3 })).toBe(
+      "A dad · 3 learned · Every section",
     );
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: true, keepLearning: false, learnedCount: 3 })).toBe(
+      "A dad · Learning off",
+    );
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, aboutYou, { canLearn: false, keepLearning: false, learnedCount: 3 })).toBe(
+      "A dad · Every section",
+    );
+  });
+
+  it("leads with the first section that's filled, once there is one", () => {
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, { ...EMPTY_ABOUT_YOU, who: ["dad", "husband"] })).toBe(
+      "A dad and a husband · Every section",
+    );
+    expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, { ...EMPTY_ABOUT_YOU, focus: ["sleep"] })).toBe("Sleep · Every section");
   });
 });
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AboutYou, EMPTY_ABOUT_YOU } from "./AboutYou.js";
 import { AccentColour, DEFAULT_ACCENT_COLOUR, DEFAULT_THEME_MODE, ThemeMode } from "./Appearance.js";
 import { ModelByProvider } from "./ModelByProvider.js";
 import { DEFAULT_PROVIDER, Provider } from "./Provider.js";
@@ -6,6 +7,7 @@ import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
 import { TagAliases } from "./TagAliases.js";
+import { LearnedItems } from "./LearnedItem.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
 
 export const SectionsEnabled = z.object({
@@ -25,7 +27,15 @@ export const DEFAULT_SECTIONS_ENABLED: SectionsEnabled = {
 
 export const Settings = z.object({
   sectionsEnabled: SectionsEnabled,
+  // The sentence as it was composed, written beside aboutYou for clients from before it
+  // (docs/features/personalisation.md, "The old line"). Generation reads aboutYou.
   readerContext: z.string().nullable(),
+  aboutYou: AboutYou.catch(EMPTY_ABOUT_YOU),
+  // What the profile pass has picked up, and how far through the library it had got. Learned
+  // items merge one by one (docs/features/personalisation.md, "A profile that learns").
+  learned: LearnedItems.catch({}),
+  keepLearning: z.boolean().catch(true),
+  overviewsAtLastProfilePass: z.number().int().nonnegative().catch(0),
   // Which provider and model is not a secret (unlike the API keys they are called with),
   // so the choice belongs here rather than in the device-local ApiKeys store — a genuine
   // sync-eligible preference, per docs/architecture/v1-architecture-decisions.md's split.
@@ -64,6 +74,10 @@ export type Settings = z.infer<typeof Settings>;
 export const DEFAULT_SETTINGS: Settings = {
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   readerContext: null,
+  aboutYou: EMPTY_ABOUT_YOU,
+  learned: {},
+  keepLearning: true,
+  overviewsAtLastProfilePass: 0,
   provider: DEFAULT_PROVIDER,
   modelByProvider: {},
   plan: DEFAULT_PLAN,

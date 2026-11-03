@@ -18,6 +18,9 @@ import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGener
 import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { runProfilePassIfDue } from "../settings/api/runProfilePassIfDue.js";
+import { settingsKeys } from "../settings/settingsKeys.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
 import { generationKeys } from "./generationKeys.js";
 
@@ -33,7 +36,7 @@ export const missingKeyMessage = (provider: keyof typeof PROVIDER_SHORT_LABEL): 
 // (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
 // capture queue (docs/features/capture-queue.md).
 export function useRunOverviewGeneration(apiKeys: ApiKeys) {
-  const { makeWith, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const { overviewStore, settingsStore, transcriptStore } = useStores();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
@@ -61,19 +64,23 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
           warn: (warning) => reporter.warn(warning),
         },
         options,
-      ).finally(settled),
-    [makeWith, settled, signedIn, knownApiUrl, youTubeFetch, connection.token, overviewStore, settingsStore, transcriptStore, reporter],
+      )
+        .then(learnFrom)
+        .finally(settled),
+    [makeWith, learnFrom, settled, signedIn, knownApiUrl, youTubeFetch, connection.token, overviewStore, settingsStore, transcriptStore, reporter],
   );
 }
 
 export function useRunArticleGeneration(apiKeys: ApiKeys) {
-  const { makeWith, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const { overviewStore, settingsStore } = useStores();
 
   return useCallback(
     async (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions): Promise<Overview> =>
-      runArticleOverviewGeneration(read, { makeOverview: makeWith(), overviewStore, settingsStore }, options).finally(settled),
-    [makeWith, settled, overviewStore, settingsStore],
+      runArticleOverviewGeneration(read, { makeOverview: makeWith(), overviewStore, settingsStore }, options)
+        .then(learnFrom)
+        .finally(settled),
+    [makeWith, learnFrom, settled, overviewStore, settingsStore],
   );
 }
 
@@ -90,21 +97,46 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   const signedIn = libraryAccountIdOf(connection) !== null;
   const queryClient = useQueryClient();
 
-  const makeWith = useCallback(() => {
+  const { overviewStore, settingsStore } = useStores();
+  const analytics = useAnalytics();
+
+  const keysNow = useCallback(() => {
     const order = keyOrderFor({ ourKeyUsable, plan, hasOwnKey: apiKey !== undefined && !accountNeeded, onlyMyKey });
     if (order.length === 0) {
       throw new Error(missingKeyMessage(provider));
     }
-    const keys = {
+    return {
       order,
       own: apiKey === undefined ? null : { provider, client: createGenerationClient(provider, apiKey, model) },
       api: signedIn && knownApiUrl !== null ? createFetchGenerationApi({ baseUrl: knownApiUrl, token: connection.token }) : null,
       trial: !signedIn && knownApiUrl !== null ? createTrialGenerationApi({ baseUrl: knownApiUrl }) : null,
     };
-    return (input: OverviewInput, meta: OverviewMeta) => makeOverviewOnKeys(keys, input, meta);
   }, [apiKey, provider, model, ourKeyUsable, accountNeeded, plan, onlyMyKey, signedIn, knownApiUrl, connection.token]);
+
+  const makeWith = useCallback(() => {
+    const keys = keysNow();
+    return (input: OverviewInput, meta: OverviewMeta) => makeOverviewOnKeys(keys, input, meta);
+  }, [keysNow]);
+
+  const learnFrom = useCallback(
+    (overview: Overview): Overview => {
+      const keys = keysNow();
+      void runProfilePassIfDue({
+        madeOn: overview.madeOn?.key ?? null,
+        own: keys.own?.client ?? null,
+        api: keys.api,
+        overviewStore,
+        settingsStore,
+        analytics,
+      }).then((ran) => {
+        if (ran) void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+      });
+      return overview;
+    },
+    [keysNow, overviewStore, settingsStore, analytics, queryClient],
+  );
 
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);
 
-  return { makeWith, settled };
+  return { makeWith, learnFrom, settled };
 }

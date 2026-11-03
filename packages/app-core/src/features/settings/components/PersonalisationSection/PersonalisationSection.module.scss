@@ -1,4 +1,4 @@
-// Settings › Personalisation: About you, then one card with a switch for each section an
+// Settings › Personalisation: What we know about you, then one card with a switch for each section an
 // overview can leave out.
 .root {
   display: flex;
@@ -14,6 +14,11 @@
   border-radius: 20px;
   background: var(--card);
   box-shadow: var(--shadow-card);
+}
+
+.cardTitle {
+  font-size: 0.90625rem;
+  font-weight: 600;
 }
 
 .switchRow {

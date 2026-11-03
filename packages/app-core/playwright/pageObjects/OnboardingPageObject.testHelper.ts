@@ -6,10 +6,12 @@ import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/compon
 import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
 import { onboardingProgressBarTestIds } from "../../src/features/onboarding/components/OnboardingProgressBar/OnboardingProgressBarTestIds.js";
 import { onboardingSlideTestIds } from "../../src/features/onboarding/components/OnboardingSlide/OnboardingSlideTestIds.js";
+import { onboardingStepsForYouTestIds } from "../../src/features/onboarding/components/OnboardingStepsForYou/OnboardingStepsForYouTestIds.js";
 import { onboardingTopicsTestIds } from "../../src/features/onboarding/components/OnboardingTopics/OnboardingTopicsTestIds.js";
 import { onboardingVideoTestIds } from "../../src/features/onboarding/components/OnboardingVideo/OnboardingVideoTestIds.js";
 import { onboardingVoiceTestIds } from "../../src/features/onboarding/components/OnboardingVoice/OnboardingVoiceTestIds.js";
 import { onboardingPageTestIds } from "../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
+import { AboutYouSentencePageObject } from "./AboutYouSentencePageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
@@ -19,6 +21,7 @@ const SCREEN_ROOT: Record<OnboardingStep, string> = {
   topics: onboardingTopicsTestIds.root,
   library: onboardingSlideTestIds.root,
   aboutYou: onboardingAboutYouTestIds.root,
+  stepsForYou: onboardingStepsForYouTestIds.root,
   voice: onboardingVoiceTestIds.root,
   askYourAi: onboardingSlideTestIds.root,
   moreSources: onboardingSlideTestIds.root,
@@ -114,25 +117,23 @@ export class OnboardingPageObject extends PageObject {
 
   next = () => this.step("next", () => this.click(onboardingSlideTestIds.next));
 
-  pickRole = (label: string) => this.step(`pickRole ${label}`, () => this.click(onboardingAboutYouTestIds.role(label)));
+  get sentence() {
+    return new AboutYouSentencePageObject(this.testContext);
+  }
 
-  verifyRoleOffered = (label: string, offered: boolean) =>
-    this.step(`verifyRoleOffered ${label} ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(onboardingAboutYouTestIds.role(label))
-        : this.expectNotToBeVisible(onboardingAboutYouTestIds.role(label)),
+  verifyWhatThisChangesShowsExample = (shown: boolean) =>
+    this.step(`verifyWhatThisChangesShowsExample ${shown}`, () =>
+      shown
+        ? expect(this.get(onboardingAboutYouTestIds.why)).toContainText("For a dad who cooks after work")
+        : expect(this.get(onboardingAboutYouTestIds.why)).not.toContainText("For a dad who cooks after work"),
     );
 
-  showMoreRoles = () =>
-    this.step("showMoreRoles", () => this.get(onboardingAboutYouTestIds.root).getByRole("button", { name: "More" }).first().click());
+  verifySentenceQuoted = (text: string) =>
+    this.step("verifySentenceQuoted", () => expect(this.get(onboardingStepsForYouTestIds.quote)).toHaveText(`"${text}"`));
 
-  pickGoal = (label: string) => this.step(`pickGoal ${label}`, () => this.click(onboardingAboutYouTestIds.goal(label)));
+  personalise = () => this.step("personalise", () => this.click(onboardingStepsForYouTestIds.personalise));
 
-  typeOwnWords = (text: string) =>
-    this.step(`typeOwnWords ${text}`, () => this.get(onboardingAboutYouTestIds.ownWords).fill(text));
-
-  verifyAboutYouLineReads = (text: string) =>
-    this.step(`verifyAboutYouLineReads ${text}`, () => expect(this.get(onboardingAboutYouTestIds.line)).toHaveText(text));
+  nextFromStepsForYou = () => this.step("nextFromStepsForYou", () => this.click(onboardingStepsForYouTestIds.next));
 
   continueFromAboutYou = () => this.step("continueFromAboutYou", () => this.click(onboardingAboutYouTestIds.continue));
 

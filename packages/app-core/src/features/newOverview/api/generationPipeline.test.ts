@@ -9,6 +9,8 @@ import {
   type StoredTranscript,
   type Topic,
   type TranscriptStore,
+  type AboutYou,
+  type LearnedItems,
 } from "@overview/domain";
 import type { GenerationInput } from "@overview/generation";
 import { makeArticleOverview, makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
@@ -53,13 +55,14 @@ const makeDeps = () => {
     deps,
     inputs,
     addTopic: (topic: Topic) => topics.push(topic),
-    setReaderContext: (readerContext: string) => (settings = { ...settings, readerContext }),
+    setAboutYou: (aboutYou: AboutYou) => (settings = { ...settings, aboutYou }),
+    setLearned: (learned: LearnedItems) => (settings = { ...settings, learned }),
   };
 };
 
 describe("runOverviewGeneration", () => {
   it("waits to write until told, and writes with the topics and reader context chosen meanwhile", async () => {
-    const { deps, inputs, addTopic, setReaderContext } = makeDeps();
+    const { deps, inputs, addTopic, setAboutYou } = makeDeps();
     let startWriting!: () => void;
     const answered = new Promise<void>((resolve) => (startWriting = resolve));
     let fetched = false;
@@ -74,13 +77,27 @@ describe("runOverviewGeneration", () => {
 
     const food = makeTopic({ name: "Food", description: "Cooking, recipes and eating well." });
     addTopic(food);
-    setReaderContext("Works in healthcare, learning about cooking.");
+    setAboutYou({ who: ["nurse"], time: [], focus: ["new recipes"] });
     startWriting();
     await run;
 
     expect(inputs).toHaveLength(1);
     expect(inputs[0]!.existingTopics).toEqual([food]);
-    expect(inputs[0]!.readerContext).toBe("Works in healthcare, learning about cooking.");
+    expect(inputs[0]!.readerContext).toBe("I'm a nurse, and right now I'm focusing on new recipes.");
+  });
+
+  it("writes for what was learned as well as the sentence, and leaves a removed item out", async () => {
+    const { deps, inputs, setAboutYou, setLearned } = makeDeps();
+    const learnedItem = { source: "From 2 overviews", learnedAt: "2026-11-01T10:00:00.000Z", noticedAt: null };
+    setAboutYou({ who: ["nurse"], time: [], focus: [] });
+    setLearned({
+      "building an app": { ...learnedItem, text: "building an app", removedAt: null },
+      "saving for a home": { ...learnedItem, text: "saving for a home", removedAt: "2026-11-02T10:00:00.000Z" },
+    });
+
+    await runOverviewGeneration(VIDEO.url, deps);
+
+    expect(inputs[0]!.readerContext).toBe("I'm a nurse. Also: building an app.");
   });
 });
 

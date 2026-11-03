@@ -7,6 +7,7 @@ export type NextStep = z.infer<typeof NextStep>;
 export const NextSteps = z.object({
   overviewId: OverviewId,
   dismissed: z.array(NextStep).catch([]),
+  forAnyone: z.union([z.array(z.string()), z.literal("failed")]).nullable().catch(null),
 });
 export type NextSteps = z.infer<typeof NextSteps>;
 

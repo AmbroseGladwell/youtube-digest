@@ -1,7 +1,10 @@
 import {
+  aboutYouIsEmpty,
+  aboutYouPatch,
   DEFAULT_ACCENT_COLOUR,
   DEFAULT_NARRATION_VOICE,
   DEFAULT_THEME_MODE,
+  EMPTY_ABOUT_YOU,
   sameTopicName,
   type OverviewStore,
   type Settings,
@@ -36,7 +39,7 @@ export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): P
   }
 
   const patch: Partial<Settings> = {
-    ...(held.readerContext === null && leaving.readerContext !== null ? { readerContext: leaving.readerContext } : {}),
+    ...(aboutYouIsEmpty(held.aboutYou) && !aboutYouIsEmpty(leaving.aboutYou) ? aboutYouPatch(leaving.aboutYou) : {}),
     ...(held.narrationVoice === DEFAULT_NARRATION_VOICE && leaving.narrationVoice !== DEFAULT_NARRATION_VOICE
       ? { narrationVoice: leaving.narrationVoice }
       : {}),
@@ -47,13 +50,13 @@ export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): P
   };
   if (Object.keys(patch).length > 0) await into.settingsStore.update(patch);
   const leavingAnswers =
-    leaving.readerContext !== null ||
+    !aboutYouIsEmpty(leaving.aboutYou) ||
     leaving.narrationVoice !== DEFAULT_NARRATION_VOICE ||
     leaving.theme !== DEFAULT_THEME_MODE ||
     leaving.accentColour !== DEFAULT_ACCENT_COLOUR;
   if (leavingAnswers) {
     await from.settingsStore.update({
-      readerContext: null,
+      ...aboutYouPatch(EMPTY_ABOUT_YOU),
       narrationVoice: DEFAULT_NARRATION_VOICE,
       theme: DEFAULT_THEME_MODE,
       accentColour: DEFAULT_ACCENT_COLOUR,

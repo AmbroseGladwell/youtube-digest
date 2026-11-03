@@ -1,0 +1,201 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.card {
+  padding: 1rem 1.125rem;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.closed,
+.open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.open {
+  gap: 0.75rem;
+}
+
+.closedTop,
+.closedEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.unset {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.sentence {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.filled {
+  text-decoration: underline;
+  text-decoration-color: var(--label);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.help {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.learned {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.learnedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.learnedItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.375rem 0.5rem 0.875rem;
+  border-radius: 1rem;
+  background: var(--ground);
+}
+
+.source {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.remove {
+  @include controls.icon-control;
+  @include controls.circle(2.75rem);
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.keepLearning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.switch {
+  flex: none;
+  display: flex;
+  justify-content: flex-start;
+  width: 46px;
+  height: 28px;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+  cursor: pointer;
+
+  &[aria-checked="true"] {
+    justify-content: flex-end;
+    background: var(--label);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.knob {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-badge);
+  background: var(--muted);
+
+  .switch[aria-checked="true"] & {
+    background: var(--ground);
+  }
+}
+
+.costNote {
+  margin: 0;
+  font-size: 0.78125rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.ghost {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+  min-height: 2.75rem;
+}
+
+.done,
+.openButton {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  min-height: 2.75rem;
+  flex: none;
+}

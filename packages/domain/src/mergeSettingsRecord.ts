@@ -8,7 +8,8 @@ const mergeOneLevel = (key: string, base: Record<string, unknown>, patch: Record
 // one toggle used to take the other three with it, and one device dismissing a milestone
 // would take another's newly crossed one with it. modelByProvider joins them for the same
 // reason: a device choosing a model for OpenAI must not drop the model another device
-// chose for Gemini (docs/features/byo-providers.md). One function, run by the local store,
+// chose for Gemini (docs/features/byo-providers.md). learned joins them so that two
+// devices adding and removing items at once both land. One function, run by the local store,
 // the server and the rebase, so the three cannot drift (docs/features/record-migrations.md).
 export function mergeSettingsRecord(
   base: Record<string, unknown>,
@@ -20,5 +21,6 @@ export function mergeSettingsRecord(
     ...mergeOneLevel("sectionsEnabled", base, patch),
     ...mergeOneLevel("milestones", base, patch),
     ...mergeOneLevel("modelByProvider", base, patch),
+    ...mergeOneLevel("learned", base, patch),
   };
 }

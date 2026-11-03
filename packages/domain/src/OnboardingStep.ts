@@ -8,6 +8,7 @@ export const OnboardingStep = z.enum([
   "topics",
   "library",
   "aboutYou",
+  "stepsForYou",
   "voice",
   "askYourAi",
   "moreSources",

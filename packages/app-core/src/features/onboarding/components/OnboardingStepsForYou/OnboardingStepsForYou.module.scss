@@ -1,0 +1,101 @@
+@use "../../onboarding" as onboarding;
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.intro {
+  @include onboarding.intro;
+}
+
+.lead {
+  @include onboarding.lead;
+}
+
+.scene {
+  margin: 0;
+  padding: 1.125rem;
+  border-radius: 1.75rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.card,
+.cardYou,
+.waiting {
+  padding: 0.875rem 1rem;
+  border-radius: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card,
+.cardYou {
+  background: var(--card);
+}
+
+.cardYou {
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.waiting {
+  border: 1.5px dashed var(--muted);
+}
+
+.waitingLine {
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.quote {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
+.foot {
+  @include onboarding.foot;
+}
+
+.primary {
+  @include onboarding.primary;
+}
+
+.personalise {
+  @include onboarding.secondary;
+
+  @media (min-width: 64rem) {
+    align-self: flex-start;
+  }
+}
