@@ -19,12 +19,13 @@ const PHASE_FILL: Record<Exclude<OnboardingRunPhase, "ready" | "failed">, number
 
 export interface OnboardingProgressBarProps {
   phase: OnboardingRunPhase;
+  personal: boolean;
   onSeeOverview: () => void;
 }
 
 // The overview's own progress, above the screens (design 46b's first layer): what the run is
 // doing, then See your overview once it's ready, which never waits on the questions.
-export function OnboardingProgressBar({ phase, onSeeOverview }: OnboardingProgressBarProps) {
+export function OnboardingProgressBar({ phase, personal, onSeeOverview }: OnboardingProgressBarProps) {
   if (phase === "failed") {
     return (
       <p className={styles.failed} role="alert" data-testid={onboardingProgressBarTestIds.failed}>
@@ -57,7 +58,7 @@ export function OnboardingProgressBar({ phase, onSeeOverview }: OnboardingProgre
         <span className={styles.lead}>Making your overview</span>
         <span className={styles.phase} data-testid={onboardingProgressBarTestIds.phase}>
           {" "}
-          · {PHASE_LINE[phase]}
+          · {phase === "writing" && !personal ? "Writing it" : PHASE_LINE[phase]}
         </span>
       </p>
       <span className={styles.track} aria-hidden="true">

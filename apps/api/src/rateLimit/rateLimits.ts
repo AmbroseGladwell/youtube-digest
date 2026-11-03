@@ -2,6 +2,7 @@ import type { RateLimit } from "./RateLimit.js";
 
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 
 // Why each number is what it is: docs/architecture/api.md, "Rate limits".
 export const rateLimits = {
@@ -18,6 +19,7 @@ export const rateLimits = {
   mcpPerAccount: { name: "mcpAccount", limit: 120, windowMs: MINUTE_MS },
   sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
   serviceTranscriptPerAddress: { name: "serviceTranscriptAddress", limit: 60, windowMs: HOUR_MS },
+  smallPassPerAccount: { name: "smallPassAccount", limit: 30, windowMs: DAY_MS },
   articleReadPerAddress: { name: "articleReadAddress", limit: 120, windowMs: HOUR_MS },
   trialPerAddress: { name: "trialAddress", limit: 10, windowMs: HOUR_MS },
   playlistPerAddress: { name: "playlistAddress", limit: 120, windowMs: HOUR_MS },

@@ -1,4 +1,6 @@
-import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED,
+  EMPTY_ABOUT_YOU,
+  keptLearnedItems, timeSavedSummary } from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
@@ -25,6 +27,7 @@ import { useSync } from "../sync/SyncContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useSettingsQuery } from "./queries/settingsQuery.js";
+import { useCanLearn } from "./useCanLearn.js";
 import { useFollowedPlaylistsQuery } from "../playlists/queries/followedPlaylistsQuery.js";
 import { followingRowValue } from "../playlists/util/followedPlaylistLines.js";
 import type { SettingsSectionId } from "./SettingsSectionId.js";
@@ -53,6 +56,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const { connection } = useSyncConnection();
   const narrationApi = useNarrationApi();
   const settings = useSettingsQuery().data;
+  const canLearn = useCanLearn();
   const { apiKeys } = useApiKeys();
   const { plan, status: planStatus } = usePlan();
   const nextQuota = useNextQuota();
@@ -119,7 +123,11 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     {
       id: "personalisation",
       title: "Personalisation",
-      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.readerContext ?? null),
+      value: personalisationRowValue(settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED, settings?.aboutYou ?? EMPTY_ABOUT_YOU, {
+        canLearn,
+        keepLearning: settings?.keepLearning ?? true,
+        learnedCount: keptLearnedItems(settings?.learned ?? {}).length,
+      }),
     },
     { id: "appearance", title: "Appearance", value: appearanceRowValue(appearance.theme, appearance.accentColour) },
     {

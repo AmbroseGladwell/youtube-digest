@@ -181,3 +181,13 @@ test("the shared page's own link field is a link field", async ({ launcher }) =>
   await page.verifyFieldAttributes("video-url", LINK_FIELD);
 });
 
+test("the field in About you's sheet identifies itself", async ({ launcher }) => {
+  await launcher.launch(SIGNED_IN);
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.sentence.openSection("who");
+  await settings.personalisation.sentence.typeOwn("Family and home", "stepdad");
+
+  await settings.verifyFieldsIdentifyThemselves();
+  await settings.verifyFieldAttributes("about-you-entry", { autocomplete: "off" });
+});

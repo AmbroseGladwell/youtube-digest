@@ -1,4 +1,5 @@
 import {
+  composeReaderContext,
   articleSourceId,
   heldOverviewOf,
   OverviewId,
@@ -123,7 +124,7 @@ async function writeOverview(
     {
       ...what,
       captureReason: null,
-      readerContext: settings.readerContext,
+      readerContext: composeReaderContext(settings.aboutYou, settings.learned),
       sectionsEnabled: settings.sectionsEnabled,
       existingTopics,
       pastClaims,

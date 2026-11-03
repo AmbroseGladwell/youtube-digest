@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  aboutYouIsEmpty,
+  aboutYouPatch,
+  EMPTY_ABOUT_YOU,
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
   STARTER_TOPICS,
+  type AboutYou,
   type AuthIntent,
   type OnboardingStep,
   type Overview,
@@ -26,9 +30,10 @@ import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { usePlaylistLookupQuery } from "../../playlists/queries/playlistLookupQuery.js";
 import { useUpdateSettingsMutation } from "../../settings/mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
+import { typedEntryCount } from "../../settings/util/aboutYouCopy.js";
 import { libraryAccountIdOf } from "../../sync/types/SyncConnection.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
-import { OnboardingAboutYou, type AboutYouAnswer } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
+import { OnboardingAboutYou } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
 import { OnboardingAccount } from "../components/OnboardingAccount/OnboardingAccount.js";
 import { OnboardingAnalytics } from "../components/OnboardingAnalytics/OnboardingAnalytics.js";
 import { ONBOARDING_HEADING_ID } from "../components/OnboardingHeading/OnboardingHeading.js";
@@ -36,6 +41,7 @@ import { OnboardingPlan } from "../components/OnboardingPlan/OnboardingPlan.js";
 import { OnboardingPreview } from "../components/OnboardingPreview/OnboardingPreview.js";
 import { OnboardingProgressBar } from "../components/OnboardingProgressBar/OnboardingProgressBar.js";
 import { OnboardingSlide } from "../components/OnboardingSlide/OnboardingSlide.js";
+import { OnboardingStepsForYou } from "../components/OnboardingStepsForYou/OnboardingStepsForYou.js";
 import { OnboardingTopics } from "../components/OnboardingTopics/OnboardingTopics.js";
 import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
 import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
@@ -46,11 +52,11 @@ import { useOnboardingRun } from "../useOnboardingRun.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
-// Start, the screens here, then the reveal and its next steps: thirteen in the story's
+// Start, the screens here, then the reveal and its next steps: fourteen in the story's
 // segments (design 46b's second layer).
 const STORY_LENGTH = ONBOARDING_STEPS.length + 3;
-const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "voice", "askYourAi", "moreSources"];
-const WRITES_AFTER = ONBOARDING_STEPS.indexOf("aboutYou");
+const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"];
+const WRITES_AFTER = ONBOARDING_STEPS.indexOf("stepsForYou");
 const indexOf = (step: OnboardingStep) => ONBOARDING_STEPS.indexOf(step);
 
 // Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
@@ -81,7 +87,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const { overviewStore } = useStores();
   const createTopic = useCreateTopicMutation();
   const updateSettings = useUpdateSettingsMutation();
-  const readerContext = useSettingsQuery().data?.readerContext ?? null;
+  const aboutYou = useSettingsQuery().data?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
   const [attempt, setAttempt] = useState(0);
   const [asking, setAsking] = useState<AuthIntent | null>(null);
@@ -124,7 +130,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({ way: progress.way ?? "signIn" });
     libraryMove.dismiss();
-    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [] });
+    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null });
     void navigate(Routes.overview(overviewId), { replace: true });
     writeOnboardingProgress(null);
   };
@@ -185,15 +191,21 @@ function Onboarding({ progress, update }: OnboardingProps) {
     next();
   };
 
-  const saveAboutYou = async (answer: AboutYouAnswer) => {
-    await updateSettings.mutateAsync({ readerContext: answer.readerContext });
-    analytics.onboarding.aboutYou.continued({ role: answer.role, goals: answer.goals, ownWords: answer.ownWords });
-    next();
+  const saveAboutYou = async (answer: AboutYou) => {
+    await updateSettings.mutateAsync(aboutYouPatch(answer));
+    analytics.onboarding.aboutYou.continued({
+      who: answer.who.length,
+      time: answer.time.length,
+      focus: answer.focus.length,
+      typed: typedEntryCount(answer, progress.topics),
+    });
+    update({ step: "stepsForYou", mayWrite: !aboutYouIsEmpty(answer) });
   };
 
   const progressBar = (
     <OnboardingProgressBar
       phase={phase}
+      personal={!aboutYouIsEmpty(aboutYou)}
       onSeeOverview={() => {
         analytics.onboarding.overview.seenEarly({ step });
         go("account");
@@ -244,9 +256,18 @@ function Onboarding({ progress, update }: OnboardingProps) {
       case "aboutYou":
         return (
           <OnboardingAboutYou
-            readerContext={readerContext}
+            aboutYou={aboutYou}
+            topicNames={progress.topics}
             saving={updateSettings.isPending}
             onContinue={(answer) => void saveAboutYou(answer)}
+          />
+        );
+      case "stepsForYou":
+        return (
+          <OnboardingStepsForYou
+            aboutYou={aboutYou}
+            onPersonalise={() => update({ step: "aboutYou" })}
+            onNext={next}
           />
         );
       case "voice":

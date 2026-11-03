@@ -21,7 +21,7 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
   const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && !(isPanel && step === "extension");
   const dismiss = (step: NextStep) => {
     analytics.onboarding.nextSteps.dismissed({ step });
-    const next = { ...nextSteps, dismissed: [...nextSteps.dismissed, step] };
+    const next = { ...(readNextSteps() ?? nextSteps), dismissed: [...nextSteps.dismissed, step] };
     writeNextSteps(next);
     setNextSteps(next);
   };

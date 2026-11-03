@@ -1,0 +1,40 @@
+.line {
+  margin: 0 0 0.375rem;
+  font-size: 0.78125rem;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: var(--note-size, 1rem);
+  line-height: 1.55;
+}
+
+.step {
+  border-radius: 6px;
+  animation: wash 600ms ease-out;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation:
+      ease-in-step 200ms var(--motion-ease),
+      wash 600ms ease-out;
+  }
+}
+
+@keyframes ease-in-step {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes wash {
+  from {
+    background: var(--stone-tint);
+  }
+}

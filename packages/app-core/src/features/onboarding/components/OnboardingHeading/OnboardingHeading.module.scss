@@ -7,3 +7,15 @@
 .panel {
   font-size: 1.5rem;
 }
+
+.small {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--label);
+
+  &:focus {
+    outline: none;
+  }
+}

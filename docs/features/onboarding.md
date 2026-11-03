@@ -1,8 +1,8 @@
 # Onboarding: inside the first overview
 
 Card: OV-46. Designs: "OV-46 1 Start and Questions", "OV-46 2 Account Plan and Reveal" and
-"OV-46 3 Panel and Afterwards" (46a–46s). Built as stacked PRs; this file says what each
-one settled, and grows with them.
+"OV-46 3 Panel and Afterwards" (46a–46s), with About you replaced by OV-141 (141a–141j). Built
+as stacked PRs; this file says what each one settled, and grows with them.
 
 A new reader pastes a link and the overview starts at once. While it is made they answer,
 or skip, a few questions that shape it: analytics, the video, topics, about you and a
@@ -23,8 +23,10 @@ chosen after that would miss the first overview. Onboarding passes `waitToWrite`
 resolves the video and fetches the transcript straight away (so the "Is this the right
 video?" screen has something to show, and a transcript that can't be had fails early), then
 waits on that promise before reading topics and Settings and writing. The flow settles it
-when About you is answered or skipped, or when the reader leaves the questions some other
-way. Other runs pass nothing and write at once, as before.
+when About you is answered, or when the reader leaves the questions some other way. With an
+empty sentence it waits through the slide after About you too, because that slide offers the
+sentence once more and anything added has to reach the first overview. Other runs pass nothing
+and write at once, as before.
 
 ## Starter topics
 
@@ -70,25 +72,29 @@ first available video, and "Choose a different video" picks another; the playlis
 followed. "Try a sample" waits on which samples to offer.
 
 **The screens:** analytics (46b, passed by where it was answered before), Is this the right
-video? (46c), topics (46d), A library that sorts itself (46e), About you (46f), the voice
-(46g), Ask your AI (46h), More sources on the way (46i), the account (46j) and the plan (46k).
-Topics, the three slides, About you and the voice have Skip, which keeps the default. Back
+video? (46c), topics (46d), A library that sorts itself (46e), About you (141a), Steps that fit
+around you (141j), the voice (46g), Ask your AI (46h), More sources on the way (46i), the account
+(46j) and the plan (46k). Topics, the four slides, About you and the voice have Skip, which keeps the default. Back
 goes a screen back, and from the first screen back to Start. "Use a different link" goes back
 to Start and forgets the progress. Every screen's heading takes focus as it arrives.
 
 **Two layers at the top.** The overview's own progress says what the run is doing: fetching,
 waiting for About you, writing, then See your overview, which goes straight to the account
 from whatever screen the reader is on. A failure says so on that screen, and the account
-screen offers Try again. The bar is filled by stage, not measured. Below it, thirteen
+screen offers Try again. The bar is filled by stage, not measured. Below it, fourteen
 segments say where the reader is in the story, Start and the reveal included. On a wide
 screen the progress sits in a preview beside the screens, with the video and its sections
 marked Waiting, Writing or Written, and the topics it was sorted into: never the overview's
 text.
 
-**About you** is design B with A as an inset: one thing they do and up to two things to get
-better at build a line ("Works in healthcare, learning about cooking."), or their own words,
-at most 140 characters, take its place. Continue saves it as `Settings.readerContext` before
-writing is let go. The screen says it goes through our server to OpenAI on us.
+**About you** is a sentence to finish (`personalisation.md`), with What this changes showing a
+fixed before-and-after under it. Continue saves it before writing is let go. The screen says it
+goes through our server to OpenAI on us.
+
+**Steps that fit around you** follows it with a fixed example about sleep and the reader's own
+sentence quoted, never their overview's text. With an empty sentence, whether skipped or
+continued through, it becomes "Let's make your overviews personal and actionable" with
+Personalise my overviews back to the sentence, and the progress line drops "for you".
 
 **Topics** are made on Continue, not as chips are pressed, so pressing one off again leaves
 nothing behind. A starter topic is made with its description; a typed one with none.
@@ -116,7 +122,8 @@ then goes to it. "This overview counts as your first of the month."
 move notice as it goes there. Under the Verdict of that overview, and no other, the next
 steps (46l): Save in one click with Add to Chrome, which stays disabled until the extension
 is in the Web Store, and Ask your AI with Connect your AI, which opens Settings ›
-Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`).
+Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`). How to apply
+there carries Written for you / For anyone (`personalisation.md`).
 The library then shows the first-overview milestone (46m, `time-saved.md`).
 
 ## In the extension panel
@@ -128,7 +135,7 @@ this video", "Make my overview", "Or paste a different link" for a field in plac
 "Already have an account? Sign in". With no video beside it, Make my overview is disabled
 and the field is the way in. The video itself is first shown on the next screen once it has
 resolved, since the panel knows only its address until then. Headings are set smaller, and
-About you shows five chips of each group with More for the rest (46o).
+About you's sheet takes the panel over (141g).
 
 **The account is made with a code**, as the extension always signs in (`sign-in.md`): the
 link opens in the browser, which shows a code to type into the panel. Then the plan, and the
@@ -152,8 +159,8 @@ analytics answer carries in as it always has.
 
 `onboarding.*`: the link given at Start or refused; each screen shown, skipped or gone back
 from; the video being the wrong one or another of a playlist's chosen; how many topics were
-picked and typed; how About you was made (a role, how many goals, their own words), never
-what it says; See your overview before the end; the overview failing, and on which screen, and
+picked and typed; how many entries each section of About you holds and how many were typed,
+never what they say; See your overview before the end; the overview failing, and on which screen, and
 being tried again; the way to an account; the plan; the reveal; and a next step followed or
 dismissed. The run itself is counted
 as `capture.newOverview.started` with `from: "onboarding"`.

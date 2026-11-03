@@ -148,7 +148,7 @@ counted.
 
 `ExtractedArticle.recipe` defaults to null, so an older device's request still parses, and a newer
 device talking to an older server has the field stripped and gets an article note. `Overview.recipe`
-is schema version 12, null for everything before it, and moves `CLIENT_VERSION` to 11, so older
+is schema version 12, null for everything before it, and moves `CLIENT_VERSION` to 12, so older
 clients are handled as for any record change (`record-migrations.md`).
 
 ## Not built
