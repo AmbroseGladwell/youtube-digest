@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { recipeStepGroups, sourceName, type RecipeNote, type WebSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { RecipeLineChoice } from "./RecipeLineChoice.js";
 import { RecipeReadAloud, type RecipeListVoice } from "./RecipeReadAloud.js";
 import { useSpokenLineInView } from "./useSpokenLineInView.js";
 import styles from "./RecipeMethod.module.scss";
@@ -62,14 +63,23 @@ export function RecipeMethod({ recipe, source, note, voice }: RecipeMethodProps)
                     <li
                       key={number}
                       ref={active ? spokenLine : undefined}
-                      className={`${styles.step} ${active ? styles.stepActive : ""}`}
-                      aria-current={active || undefined}
+                      className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""}`}
+                      aria-current={(voice === null && active) || undefined}
+                      onClick={voice === null ? undefined : () => voice.onSelect(number - 1)}
                       data-testid={active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step}
                     >
                       <i className={styles.number} aria-hidden="true">
                         {number}
                       </i>
-                      <div>{text}</div>
+                      <div>
+                        {voice === null ? (
+                          text
+                        ) : (
+                          <RecipeLineChoice active={active} onChoose={() => voice.onSelect(number - 1)}>
+                            {text}
+                          </RecipeLineChoice>
+                        )}
+                      </div>
                     </li>
                   );
                 })}

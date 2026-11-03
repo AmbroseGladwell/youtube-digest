@@ -81,6 +81,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+// A step the voice can move to takes the pointer as the note's lines do (OV-149). The hover
+// is drawn into the active step's room behind it, so nothing moves under the pointer.
+.stepChoosable {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+
+  &:hover:not(.stepActive)::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.625rem;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--surface);
+  }
+}
+
 .stepActive {
   margin: 0 -0.625rem;
   padding: 0.5rem 0.625rem;

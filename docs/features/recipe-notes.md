@@ -16,6 +16,7 @@ note. Trello OV-144, decided 2026-11-03. The designs are 144a–144ab in Claude 
 | Servings and units | `adjustIngredient.ts`, `app-core/.../reader/util/recipeAdjustment.ts` |
 | The screens | `RecipeTimes`, `RecipeIngredients`, `RecipeMethod`, `RecipePageLink`, `RecipePrintSheet` |
 | Narrating the whole recipe | `overviewNoteLines`, `useRecipeVoice` |
+| Units said in full | `spokenMeasures.ts` |
 
 ## Web pages first, shaped for video too
 
@@ -137,7 +138,26 @@ so an adjusted amount is what is heard, and adjusting servings or units makes a 
   the ingredients card and the method tint the line being read and keep it on screen, and the bar
   says "Now reading · Method · step 3 of 6".
 
+- **The Summary heading is said "The summary"** (OV-149). "In short" sounded odd before the
+  summary was the only thing read; now it opens a whole recipe.
+- **Tapping an ingredient or a step moves the voice there**, as tapping a line of the note does
+  (OV-149, https://trello.com/c/4CCEWv18): while playing it plays on from there, and while
+  paused it moves the reading mark, so play starts from it. Enter and Space do the same. A tap
+  inside the list that Read aloud is playing keeps its stop; a tap anywhere else lifts it.
+- **Units are said in full, and only said** (OV-149). `spokenMeasures` rewrites a line's
+  `spoken`, never its `text`, so the screen, Copy and Print keep the page's words. A unit is
+  expanded only straight after an amount, so "g" in "garlic" is safe: "1 tsp" is "1 teaspoon",
+  "½ tsp" "half a teaspoon", "1½ tbsp" "1 and a half tablespoons", "2-3 tbsp" "2 to 3
+  tablespoons". A size that describes a thing stays singular: "400g tins" is "400 gram tins",
+  "2cm pieces" "2 centimetre pieces", while "3mm thick" stays plural. Oven lines read
+  "200 degrees Celsius, or 180 degrees Celsius fan, or gas mark 6", and "mins" and "hrs" are
+  said in full. A conversion in brackets is dropped, as `speakable` already drops brackets, and
+  one after a slash is read "or". The words change, so each recipe's audio re-renders the next
+  time it is played (`tts-pre-rendered-speech.md`).
+
 A shared copy carries no method, so its narration ends after the ingredients.
+
+Step-by-step cooking, which reads one action at a time and waits, is its own card (OV-150).
 
 ## Sharing
 

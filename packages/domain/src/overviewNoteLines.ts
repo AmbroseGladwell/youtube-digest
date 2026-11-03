@@ -3,6 +3,7 @@ import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel
 import type { SharedNote } from "./SharedNote.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
+import { spokenMeasures } from "./spokenMeasures.js";
 import type { ReadAnyway } from "./ArticleDetails.js";
 import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
@@ -104,17 +105,20 @@ export function overviewNoteLines(overview: SharedNote, shown: { ingredients?: r
   if (overview.recipe) {
     const { recipe } = overview;
     const ingredients = shown.ingredients ?? recipe.ingredients;
-    section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "In short" }, [{ text: recipe.summary }]);
+    section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "The summary" }, [{ text: recipe.summary }]);
     section(
       INGREDIENTS_SECTION,
       { text: INGREDIENTS_SECTION, spoken: ingredients.length === 1 ? "There is one ingredient" : `There are ${ingredients.length} ingredients` },
-      ingredients.map((text) => ({ text })),
+      ingredients.map((text) => {
+        const spoken = spokenMeasures(text);
+        return spoken === text ? { text } : { text, spoken };
+      }),
       true,
     );
     section(
       METHOD_SECTION,
       { text: METHOD_SECTION, spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps` },
-      recipe.steps.map(({ text }, index) => ({ text, spoken: `Step ${index + 1}. ${text}` })),
+      recipe.steps.map(({ text }, index) => ({ text, spoken: `Step ${index + 1}. ${spokenMeasures(text)}` })),
       true,
     );
     return lines;
