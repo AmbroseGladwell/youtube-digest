@@ -26,6 +26,7 @@ import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.t
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { playlistFromLineTestIds } from "../../src/features/playlists/components/PlaylistFromLine/PlaylistFromLineTestIds.js";
+import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
 import { madeOnLineTestIds } from "../../src/features/reader/components/MadeOnLine/MadeOnLineTestIds.js";
 
 export class ReaderPageObject extends PageObject {
@@ -1276,4 +1277,55 @@ export class ReaderPageObject extends PageObject {
       await this.click(readerMastheadTestIds.backLink);
       return new LibraryPageObject(this.testContext).verifyIsShown();
     });
+
+  private headImage = () =>
+    this.get(readerMastheadTestIds.root).getByTestId(overviewThumbnailTestIds.image);
+
+  verifyHeadHasImage = (shown: boolean) =>
+    this.step(`verifyHeadHasImage ${shown}`, async () => {
+      await expect(this.headImage()).toHaveCount(shown ? 1 : 0);
+      await expect(
+        this.get(readerMastheadTestIds.root).getByTestId(overviewThumbnailTestIds.nameTile),
+      ).toHaveCount(0);
+    });
+
+  verifyHeadImageSize = (width: number, height: number) =>
+    this.step(`verifyHeadImageSize ${width}x${height}`, async () => {
+      const box = (await this.headImage().boundingBox())!;
+      expect(box.width).toBeCloseTo(width, 0);
+      expect(box.height).toBeCloseTo(height, 0);
+    });
+
+  // Design 147i and 147k: decoration only, so no link, nothing for a screen reader, and
+  // drawn the same whether or not the note has been read.
+  verifyHeadImageIsDecoration = () =>
+    this.step("verifyHeadImageIsDecoration", async () => {
+      const image = this.headImage();
+      await expect(image).toHaveAttribute("alt", "");
+      await expect(image).toHaveAttribute("aria-hidden", "true");
+      await expect(this.get(readerMastheadTestIds.root).locator("a:has(img)")).toHaveCount(0);
+      await expect(image).toHaveCSS("opacity", "1");
+    });
+
+  // Design 147s: who it's from sits beside the image, and the title starts under both at
+  // the image's left edge, so it keeps the column's whole measure.
+  verifyHeadImageLeadsWith = (beside: "channel" | "sourceLine") =>
+    this.step(`verifyHeadImageLeadsWith ${beside}`, async () => {
+      const image = (await this.headImage().boundingBox())!;
+      const who = (await this.get(readerMastheadTestIds[beside]).boundingBox())!;
+      const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
+      expect(who.x).toBeGreaterThan(image.x + image.width);
+      expect(who.y).toBeGreaterThanOrEqual(image.y);
+      expect(who.y + who.height).toBeLessThanOrEqual(image.y + image.height + 1);
+      expect(title.y).toBeGreaterThanOrEqual(image.y + image.height);
+      expect(Math.round(title.x)).toBe(Math.round(image.x));
+    });
+
+  verifyAboveTitle = (part: "channel" | "sourceLine") =>
+    this.step(`verifyAboveTitle ${part}`, async () => {
+      const box = (await this.get(readerMastheadTestIds[part]).boundingBox())!;
+      const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
+      expect(box.y + box.height).toBeLessThanOrEqual(title.y);
+    });
+
 }

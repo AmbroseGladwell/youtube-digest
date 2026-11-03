@@ -6,6 +6,7 @@ import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
@@ -186,51 +187,62 @@ export function ReaderMasthead({
       </div>
 
       <div className={styles.head}>
-        {isArticle && (
-          <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
-            {sourceName(overview.source)} · {overview.recipe === null ? "Article" : "Recipe"}
-          </p>
-        )}
-        <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
-          {overview.source.title}
-        </h2>
-
-        <p className={styles.byline}>
-          {!isArticle && (
-            <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
-              {sourceName(overview.source)}
-            </span>
+        {/* Design 147s: the library row's tile leads the head with only who it's from
+            beside it. Without an image, or once it fails, the lead lays out as the head
+            always did. */}
+        <div className={styles.lead}>
+          {!compact && (
+            <OverviewThumbnail
+              video={overview.source}
+              className={styles.image}
+              nameTile={false}
+              loading="eager"
+            />
           )}
-          {!isArticle && overview.verdict && (
-            <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
-          )}
-          {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
-          {overview.verdict?.dubious && (
-            <button
-              type="button"
-              ref={dubiousFlag}
-              className={`${styles.dubious} ${explainingDubious ? styles.dubiousOpen : ""}`}
-              onClick={() => {
-                if (!explainingDubious) {
-                  analytics.dubiousReasons.opened({ reasonsSaved: dubiousClaimCount });
-                }
-                setExplainingDubious(!explainingDubious);
-              }}
-              aria-expanded={explainingDubious}
-              aria-controls={DUBIOUS_REASONS_PANEL_ID}
-              data-testid={readerMastheadTestIds.dubiousFlag}
-            >
-              <StrokeIcon name="alert" size={13} />
-              <span className={styles.dubiousWords}>{dubiousLabel}</span>
-              {dubiousClaimCount > 1 && (
-                <span className={styles.dubiousCount} aria-hidden="true">
-                  {dubiousClaimCount}
+          <div className={styles.who}>
+            {isArticle && (
+              <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
+                {sourceName(overview.source)} · {overview.recipe === null ? "Article" : "Recipe"}
+              </p>
+            )}
+            <p className={styles.byline}>
+              {!isArticle && (
+                <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
+                  {sourceName(overview.source)}
                 </span>
               )}
-              <StrokeIcon name={explainingDubious ? "chevronUp" : "chevronDown"} size={14} />
-            </button>
-          )}
-        </p>
+              {!isArticle && overview.verdict && (
+                <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
+              )}
+              {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
+              {overview.verdict?.dubious && (
+                <button
+                  type="button"
+                  ref={dubiousFlag}
+                  className={`${styles.dubious} ${explainingDubious ? styles.dubiousOpen : ""}`}
+                  onClick={() => {
+                    if (!explainingDubious) {
+                      analytics.dubiousReasons.opened({ reasonsSaved: dubiousClaimCount });
+                    }
+                    setExplainingDubious(!explainingDubious);
+                  }}
+                  aria-expanded={explainingDubious}
+                  aria-controls={DUBIOUS_REASONS_PANEL_ID}
+                  data-testid={readerMastheadTestIds.dubiousFlag}
+                >
+                  <StrokeIcon name="alert" size={13} />
+                  <span className={styles.dubiousWords}>{dubiousLabel}</span>
+                  {dubiousClaimCount > 1 && (
+                    <span className={styles.dubiousCount} aria-hidden="true">
+                      {dubiousClaimCount}
+                    </span>
+                  )}
+                  <StrokeIcon name={explainingDubious ? "chevronUp" : "chevronDown"} size={14} />
+                </button>
+              )}
+            </p>
+          </div>
+        </div>
 
         {explainingDubious && overview.verdict !== null && (
           <div className={styles.dubiousReasons}>
@@ -244,6 +256,10 @@ export function ReaderMasthead({
             />
           </div>
         )}
+
+        <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
+          {overview.source.title}
+        </h2>
 
         <TopicLine
           overview={overview}

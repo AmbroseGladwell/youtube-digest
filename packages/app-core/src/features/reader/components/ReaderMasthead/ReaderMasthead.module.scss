@@ -88,7 +88,6 @@
 }
 
 .byline {
-  order: -1;
   margin: 0;
   display: flex;
   flex-wrap: wrap;
@@ -105,6 +104,10 @@
 
 .verdict {
   @include controls.chip;
+}
+
+.image {
+  display: block;
 }
 
 // Design OV-85 (85a): warning-coloured text that opens the explanation under the byline,
@@ -147,9 +150,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.dubiousReasons {
-  order: -1;
-}
 
 .metaRow {
   margin: 0;
@@ -162,6 +162,51 @@
   display: inline-block;
   margin-left: 0.625rem;
   vertical-align: middle;
+}
+
+// No image: the lead and its parts are the head's own rows, as they always were.
+.lead,
+.who {
+  display: contents;
+}
+
+// Design 147s: the tile at the library row's size, with only who it's from beside it.
+.lead:has(> .image) {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  column-gap: 1.125rem;
+  align-items: center;
+}
+
+.lead:has(> .image) .who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.lead:has(> .image) .byline:empty {
+  display: none;
+}
+
+.lead:has(> .image) .byline {
+  flex-wrap: wrap;
+}
+
+.lead:has(> .image) .channel,
+.lead:has(> .image) .sourceLine {
+  flex: 0 0 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  margin: 0;
+}
+
+.lead:has(> .image) .channel {
+  color: var(--ink);
 }
 
 .title {
@@ -196,12 +241,16 @@
   gap: 0.5rem;
 }
 
-.rootCompact .dubiousReasons {
-  order: 0;
+// The panel keeps its head as it was: the site above the title, the channel below it.
+.rootCompact .sourceLine {
+  order: -2;
+}
+
+.rootCompact .title {
+  order: -1;
 }
 
 .rootCompact .byline {
-  order: 0;
   font-size: 0.8125rem;
   font-weight: 400;
 }
@@ -344,4 +393,12 @@
   color: var(--label);
   font-size: 0.78125rem;
   font-weight: 600;
+}
+
+// Design 147ad: a phone's tile is the phone row's size, at any phone width.
+@media (max-width: 47.9375rem) {
+  .lead:has(> .image) {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: 0.875rem;
+  }
 }

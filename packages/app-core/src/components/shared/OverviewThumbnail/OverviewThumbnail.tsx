@@ -11,6 +11,10 @@ export interface OverviewThumbnailProps {
   to?: string | undefined;
   state?: unknown;
   onOpen?: (() => void) | undefined;
+  // The reader's head (design 147m): the site's name already sits beside where the tile
+  // would be, so an article with no image shows nothing rather than a tile repeating it.
+  nameTile?: boolean | undefined;
+  loading?: "lazy" | "eager" | undefined;
 }
 
 // Renders nothing at all when there is no usable image, rather than leaving an empty
@@ -19,14 +23,22 @@ export interface OverviewThumbnailProps {
 // model reads whatever was saved), so an overview saved before thumbnailUrl existed has
 // no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
-export function OverviewThumbnail({ video, className, to, state, onOpen }: OverviewThumbnailProps) {
+export function OverviewThumbnail({
+  video,
+  className,
+  to,
+  state,
+  onOpen,
+  nameTile = true,
+  loading = "lazy",
+}: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
   const animateNavigation = useShouldAnimateNavigation();
 
   const isArticle = "kind" in video && video.kind === "web";
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
 
-  if (isArticle && (!Boolean(imageUrl) || failed)) {
+  if (nameTile && isArticle && (!Boolean(imageUrl) || failed)) {
     const tile = (
       <span className={styles.nameTile} data-testid={overviewThumbnailTestIds.nameTile}>
         {sourceName(video)}
@@ -58,7 +70,8 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
       className={to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
       src={imageUrl!}
       alt=""
-      loading="lazy"
+      loading={loading}
+      aria-hidden="true"
       onError={() => setFailed(true)}
       data-testid={overviewThumbnailTestIds.image}
     />
