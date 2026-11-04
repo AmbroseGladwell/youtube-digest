@@ -74,3 +74,24 @@ export const RECIPE_PAGE = recipePage({ "@graph": [{ "@type": "WebSite", name: "
 export const recipeWith = (fields: Record<string, unknown>) => ({ ...RECIPE_JSON, ...fields });
 
 export const FOOD_ARTICLE_PAGE = recipePage({ "@type": "NewsArticle", headline: "Why lentils are having a moment" });
+
+export const markupRecipePage = (recipe: string, declared?: unknown) =>
+  `<!doctype html><html><head><title>Bean &amp; halloumi stew - Good Food Middle East</title>
+<meta property="og:type" content="article">
+${declared === undefined ? "" : `<script type="application/ld+json">${JSON.stringify(declared)}</script>`}
+</head><body><div class="menu"><div class="col"><h4><a href="/categories/ingredients">Ingredients</a></h4>
+<a href="/fruit">Fruit</a><a href="/vegetables">Vegetables</a><a href="/meat">Meat</a></div></div>
+<div class="entry"><h1>Bean &amp; halloumi stew</h1><p>Use a can of mixed beans to make this tomato-based veggie stew with halloumi.</p>
+${recipe}</div>
+<div class="widget"><h3>Restaurant Reviews</h3><ul><li><a href="/r/1">Review: brunch at Above Eleven</a></li><li><a href="/r/2">Review: Hanu Dubai</a></li></ul></div>
+<footer><h3>Method</h3><ol><li>Sign up to our newsletter for the best recipes every week.</li></ol></footer></body></html>`;
+
+export const MARKUP_INGREDIENTS = `<div class="ingredient-list"><h3 class="bubble">Ingredients</h3><ul>
+<li>3 tbsp olive oil</li><li>1 onion, thinly sliced</li><li>400g can mixed beans,  drained</li><li>½ x 250g block halloumi, sliced</li><li>garlic bread, to serve (optional)</li></ul>
+<div class="cooking-tip"><h4>Tip</h4><p>Swap the halloumi for fried aubergine slices.</p></div></div>`;
+
+export const MARKUP_METHOD = `<div class="method-list"><h3 class="bubble">Method</h3><ol>
+<li><p>Heat 2 tbsp of oil in a frying pan and fry the onion for 10 mins.</p></li>
+<li><p>Fry the halloumi for 2 mins on each side until golden.&nbsp;</p></li></ol></div>`;
+
+export const MARKUP_RECIPE_PAGE = markupRecipePage(MARKUP_INGREDIENTS + MARKUP_METHOD);
