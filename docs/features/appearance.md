@@ -8,6 +8,14 @@ account, in `Settings.theme` and `Settings.accentColour`, so they follow the rea
 device. Settings › Appearance sits after Personalisation, its row reads "System · Orange",
 and a choice applies as it is made, with no save step.
 
+## The image at the top of a note
+
+Design: "OV-151 1–3" (151n). Card: OV-151. Appearance's third card offers Small or Full width
+for the image at the top of every note that has one. It is `Settings.headImageSize`, the same
+setting clicking the image on a note writes, so this row gives the choice a name and a way
+back after a stray click. Synced like the theme; written on press. How the image looks at
+each size is in `docs/features/stone-theme.md`, "Full width".
+
 ## The eight accents
 
 Orange, Gold, Lime, Emerald, Teal, Sky, Violet and Raspberry, in wheel order. Stone's rule

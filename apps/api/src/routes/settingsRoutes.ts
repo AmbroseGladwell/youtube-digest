@@ -30,6 +30,9 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     if (patch.accentColour !== undefined) {
       request.log.info(apiLogLines.settings.accentColourChosen({ accentColour: patch.accentColour }));
     }
+    if (patch.headImageSize !== undefined) {
+      request.log.info(apiLogLines.settings.headImageSizeChosen({ headImageSize: patch.headImageSize }));
+    }
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {

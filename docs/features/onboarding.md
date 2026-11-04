@@ -126,6 +126,29 @@ Connections. Each has ×; which were dismissed is kept on the device (`overview.
 there carries Written for you / For anyone (`personalisation.md`).
 The library then shows the first-overview milestone (46m, `time-saved.md`).
 
+## From a shared page
+
+OV-152. A visitor who chooses **Save to my overviews** on a shared page (`sharing.md`)
+goes through onboarding with the shared copy as its overview, instead of straight to an
+account. Nothing is made: the copy travels in onboarding's progress, beside the share's
+token, so there is no "Is this the right video?" screen and no run. The story is a segment
+shorter. The other screens are the same: the questions and slides, then the account screen
+with the copy's title and Premise, the plan, and the copy as the reveal.
+
+**The answers don't rewrite the copy.** Topics, About you and the voice are saved for every
+overview after it. The copy itself is someone else's note, so it isn't sorted or written
+for the reader, and the preview says Unsorted.
+
+**It's saved once the account's library is open**, not before. The share's token goes to
+the server first, so the copy's push is let in uncounted (`tiers.md`, "Reserving on the
+reader's own key"). If the account already holds that overview, it's left as it is.
+
+**Back from the first screen returns to the shared page**, with a full load, since the copy
+is read from the document the server writes.
+
+The aside's pasted link starts onboarding exactly as Start's field does, and the page's
+other ways in go to Start.
+
 ## In the extension panel
 
 The same screens at 400 × 600 (designs 46n–46q), with the narrow layout throughout.

@@ -39,7 +39,7 @@ import { MakeYourOwnAside } from "../components/MakeYourOwnAside/MakeYourOwnAsid
 import { SharedOverviewGone } from "../components/SharedOverviewGone/SharedOverviewGone.js";
 import { SharedPageHeader } from "../components/SharedPageHeader/SharedPageHeader.js";
 import { SharedPlayerRuntime } from "../SharedPlayerRuntime.js";
-import { rememberSharedPageIntent } from "../util/sharedPageIntent.js";
+import { startOnboardingFromShare } from "../../onboarding/useOnboardingProgress.js";
 import { sharedMetaParts } from "../util/sharedMetaParts.js";
 import styles from "./SharedOverviewPage.module.scss";
 import { sharedOverviewPageTestIds } from "./SharedOverviewPageTestIds.js";
@@ -182,13 +182,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               className={styles.surfaceAction}
               onClick={() => {
                 analytics.sharedPage.actions.saveChosen();
-                rememberSharedPageIntent({
-                  kind: "save",
-                  token: payload.token,
-                  title: note.source.title,
-                  snapshot: payload.snapshot,
-                });
-                void navigate(Routes.createAccount());
+                startOnboardingFromShare(payload.token, payload.snapshot);
+                void navigate(Routes.onboarding());
               }}
               data-testid={sharedOverviewPageTestIds.saveButton}
             >

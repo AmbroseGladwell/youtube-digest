@@ -1,0 +1,102 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 151a and 151d: under the pointer the image darkens a little and shows what a click
+// will do in its middle, as a stone disc that holds its contrast on light, busy and dark
+// pictures. Touch has no hover, so nothing is drawn on it there (151e).
+.root {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-thumb);
+  overflow: hidden;
+  background: var(--surface);
+  cursor: zoom-in;
+  font: inherit;
+
+  @include controls.control-motion;
+
+  &:active {
+    filter: brightness(0.82);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #ffffff;
+  }
+}
+
+.full {
+  border-radius: 1.125rem;
+  cursor: zoom-out;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Design 151p: the sharper picture sits over the tile's until it has arrived, then shows
+// without a fade.
+.sharp {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+
+  &[data-loaded="true"] {
+    visibility: visible;
+  }
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
+.root:focus-visible .veil {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .root:hover .veil {
+    opacity: 1;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(21, 22, 24, 0.55);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+
+  svg {
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.95));
+  }
+}
+
+.full .icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+@media (max-width: 47.9375rem) {
+  .full {
+    border-radius: 0.875rem;
+  }
+}

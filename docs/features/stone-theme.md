@@ -142,16 +142,33 @@ recipe's `Site · Kind` line (up to two). The title, topics and meta line keep t
 width below, in the order they had without it. The tile is the row's 176 × 99 on the web and on
 a tablet (the design drew 168, the row's earlier width), and 112 × 63 below the library's phone breakpoint at any phone width, one 16:9
 slot cover-cropped from the centre for every source, as the row crops it. It is
-decoration only: no link, `alt=""` and `aria-hidden`, because the title beside it is the
-heading and an alt would have a screen reader say it twice. It isn't dimmed when the note
+not a link, and the picture is `alt=""`, because the title beside it is the heading and
+an alt would have a screen reader say it twice. It isn't dimmed when the note
 is read: the library dims a read row so the unread ones stand out in a list, and on the
 note there is no list. With no image there is no slot and no name tile, since the
 `Site · Kind` line already says what the tile would. A loading image holds its slot on
 the surface colour and is fetched eagerly, being the first thing on the page; one that
-fails removes itself (`OverviewThumbnail`'s rule), and the head falls back to the
-no-image layout. The lead switches on `:has()` rather than a prop, so a failed image
+fails removes itself, and the head falls back to the no-image layout. The lead switches on `:has()` rather than a prop, so a failed image
 needs no state of its own in `ReaderMasthead`. The panel's head has no image: the
 video or page is beside it, and its sticky head is the scarcest height in the product.
+
+**Full width (OV-151, designs 151a–151r).** Since OV-151 the reader can click or tap the
+image to make it full width, and again to make it small. Full width is the same 16:9 crop
+across the reading column (760 × 428 on the web), with the head below in its no-image
+order: channel and verdict, title, topics, meta. The image itself is the control, a
+`HeadImage` button labelled "Show the image full width" or "Show the image small" with
+`aria-pressed`, so this reverses OV-147's "decoration only" (147i), though it is still
+not a link. On a pointer, hovering darkens it slightly and shows an expand or shrink icon
+in its middle with the zoom cursor; touch shows nothing on it. Keyboard focus draws the
+brand ring and the same icon. It grows from its own top-left corner over 500ms as a
+transform measured from where it was (`useHeadImageMotion`), the text below slides with
+it, and who it's from fades in at its new place; with reduced motion the layouts swap at
+once and the head crossfades. Full width asks YouTube for `maxresdefault`, keeping the
+tile's picture until it arrives and when it doesn't (YouTube's grey 120px placeholder
+counts as not arriving). The choice is the synced `Settings.headImageSize`, default
+Small, written on press, and also in Settings › Appearance as "Image at the top of a
+note". On a phone at full width the title and Listen stay on the first screen, and the
+tabs may drop below it with a long title. The panel has neither image nor button.
 
 **One head, three arrangements.** `ReaderMasthead` lays its four parts — the back link,
 the actions, the ⋯ menu and the title block — out by grid area, so the desktop's top bar

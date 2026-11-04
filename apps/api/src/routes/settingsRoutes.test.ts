@@ -98,6 +98,22 @@ test("the chosen theme and accent are kept in the synced settings, so they follo
   await testApp.close();
 });
 
+test("the head image's size is kept in the synced settings, so every device opens notes at it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: { headImageSize: "full", updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(response.statusCode, 200);
+  const synced = (await account.change("settings", "settings")).body;
+  assert.equal(synced?.headImageSize, "full");
+  await testApp.close();
+});
+
 test("the chosen narration voice is kept in the synced settings, so it follows the reader to every device", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

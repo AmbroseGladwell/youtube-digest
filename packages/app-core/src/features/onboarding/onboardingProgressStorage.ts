@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthIntent, OnboardingStep, OverviewId } from "@overview/domain";
+import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken } from "@overview/domain";
 
 export const OnboardingProgress = z.object({
   // What the reader gave the home page, and the video being made from it: the same link,
@@ -13,6 +13,10 @@ export const OnboardingProgress = z.object({
   mayWrite: z.boolean(),
   overviewId: OverviewId.nullable(),
   way: AuthIntent.nullable(),
+  // A copy saved from a shared page is the first overview, so nothing is made: it goes into
+  // the account once there is one, let in uncounted through its link
+  // (docs/features/onboarding.md, "From a shared page").
+  share: z.object({ token: ShareToken, snapshot: SharedOverview }).nullable().catch(null),
 });
 export type OnboardingProgress = z.infer<typeof OnboardingProgress>;
 
