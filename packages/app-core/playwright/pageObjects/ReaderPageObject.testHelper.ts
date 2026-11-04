@@ -1323,10 +1323,16 @@ export class ReaderPageObject extends PageObject {
 
   // Design 151l and 151m, read straight after the press: the image grows as a transform, or
   // with reduced motion it swaps without moving.
+  // The grow starts once the press has re-rendered the head, which can be a moment after the
+  // click returns, so it is looked for until it shows rather than once.
   verifyHeadImageGrows = (grows: boolean) =>
     this.step(`verifyHeadImageGrows ${grows}`, async () => {
-      const running = await this.headImage().evaluate((button) => button.getAnimations().length);
-      expect(running > 0).toBe(grows);
+      const running = () => this.headImage().evaluate((button) => button.getAnimations().length);
+      if (grows) {
+        await expect.poll(running, { intervals: [10], timeout: 2_000 }).toBeGreaterThan(0);
+      } else {
+        expect(await running()).toBe(0);
+      }
     });
 
   pressHeadImageFromKeyboard = (key: "Enter" | " ") =>
