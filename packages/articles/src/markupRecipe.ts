@@ -1,12 +1,12 @@
 import type { Recipe, RecipeStep } from "@overview/domain";
+import { isPageFurniture } from "./isPageFurniture.js";
+import { labelledRecipeFacts } from "./labelledRecipeFacts.js";
 
 type Part = "ingredients" | "method";
 type Section = { part: Part; heading: Element; items: RecipeStep[] };
 
 const INGREDIENTS_HEADING = /^(the )?(ingredients?|what you('ll| will)? need|you('ll| will)? need)$/;
 const METHOD_HEADING = /^(the )?(method|instructions|directions|steps|preparation|how to make it)$/;
-const OUTSIDE_THE_CONTENT =
-  'nav, footer, aside, form, [hidden], [aria-hidden="true"], [role="navigation"], [role="complementary"], [role="contentinfo"], #comments, .comments, .comments-area, .comment, .comment-body, .comment-content';
 const QUANTITY = /\d|[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]|\b(pinch|handful|bunch|sprigs?|cloves?|knob|splash|dash|drizzle|cans?|tins?|tbsp|tsp|cups?|to taste|to serve)\b/i;
 const FEWEST_WORDS_IN_A_STEP = 4;
 const NUMBERED_STEP = /^step \d+$/i;
@@ -19,15 +19,13 @@ const levelOf = (element: Element): number | null => {
   return level === undefined ? null : Number(level);
 };
 
-const isOutsideTheContent = (element: Element): boolean => element.closest(OUTSIDE_THE_CONTENT) !== null;
-
 const isLink = (heading: Element): boolean => {
   const linked = [...heading.querySelectorAll("a")].map(({ textContent }) => tidied(textContent)).join(" ");
   return linked !== "" && linked === tidied(heading.textContent);
 };
 
 const partNamed = (heading: Element): Part | null => {
-  if (isLink(heading) || isOutsideTheContent(heading)) return null;
+  if (isLink(heading) || isPageFurniture(heading)) return null;
   const name = tidied(heading.textContent).toLowerCase().replace(/[:.]$/, "");
   if (INGREDIENTS_HEADING.test(name)) return "ingredients";
   if (METHOD_HEADING.test(name)) return "method";
@@ -52,7 +50,7 @@ const sectionUnder = (document: Document, heading: Element, part: Part): Section
   let group: string | null = null;
   for (let node = walker.nextNode() as Element | null; node !== null; node = walker.nextNode() as Element | null) {
     if (heading.contains(node)) continue;
-    if (isOutsideTheContent(node)) break;
+    if (isPageFurniture(node)) break;
     const nodeLevel = levelOf(node);
     if (nodeLevel !== null) {
       if (nodeLevel <= level || partNamed(node) !== null) break;
@@ -100,9 +98,6 @@ export function markupRecipe(document: Document): Recipe | null {
   return {
     ingredients: ingredients.items.map(({ text }) => text),
     steps: method.items,
-    prepMinutes: null,
-    cookMinutes: null,
-    totalMinutes: null,
-    yield: null,
+    ...labelledRecipeFacts(document.body, method.heading),
   };
 }
