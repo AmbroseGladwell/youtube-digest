@@ -99,7 +99,7 @@ test("in US units the method's oven temperatures are shown and read in Fahrenhei
   assert.equal(line?.spoken, "Step 1. Heat the oven to 425 degrees Fahrenheit.");
 });
 
-test("the ingredients are read as shown, and a copy without the method stops after them", () => {
+test("the ingredients are read as shown, and a copy shared without the method stops after them", () => {
   const adjusted = overviewNoteLines(makeRecipeOverview(), { ingredients: ["6 large leeks, trimmed"] });
   assert.deepEqual(adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text), ["6 large leeks, trimmed"]);
   const shared = overviewNoteLines(makeRecipeOverview({ steps: [] }));
@@ -110,9 +110,10 @@ test("recipes don't count towards time saved", () => {
   assert.deepEqual(overviewTimeSaved(makeRecipeOverview()), { kind: "recipe" });
 });
 
-test("a shared copy keeps the ingredients and leaves the method on the page", () => {
-  const { note } = shareSnapshot({ overview: makeRecipeOverview(), transcript: null, narration: null });
-  assert.deepEqual(note.recipe?.steps, []);
+test("a shared copy carries the whole recipe, method included", () => {
+  const overview = makeRecipeOverview();
+  const { note } = shareSnapshot({ overview, transcript: null, narration: null });
+  assert.deepEqual(note.recipe?.steps, overview.recipe?.steps);
   assert.equal(note.recipe?.stepCount, 3);
   assert.equal(note.recipe?.ingredients.length, 3);
   assert.equal(SharedNote.safeParse(note).success, true);
