@@ -74,6 +74,10 @@ export class AboutYouSentencePageObject extends PageObject {
 
   backToSentence = () => this.step("backToSentence", () => this.click(aboutYouEditorTestIds.panelBack));
 
+  clickAwayFromSheet = () => this.step("clickAwayFromSheet", () => this.page.mouse.click(4, 4));
+
+  verifySheetIsClosed = () => this.step("verifySheetIsClosed", () => this.expectNotToBeVisible(aboutYouEditorTestIds.sheet));
+
   closeSheetWithEscape = () => this.step("closeSheetWithEscape", () => this.page.keyboard.press("Escape"));
 
   fill = (section: AboutYouSection, ...entries: string[]) =>

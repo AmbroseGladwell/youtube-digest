@@ -82,6 +82,19 @@ test("About you set in Settings › Personalisation is what the next overview is
   await again.personalisation.verifyAboutYouIsNotSet();
 });
 
+test("a pick in Settings is kept when the card's Done is pressed with the sheet still open", async ({ launcher }) => {
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.sentence.openSection("who");
+  await settings.personalisation.sentence.pick("parent");
+  await settings.personalisation.sentence.verifySentenceReads("I'm a parent, I spend my time on all sorts, and right now I'm focusing on getting better at something.");
+  await settings.personalisation.closeAboutYou();
+
+  await settings.personalisation.verifyAboutYouReads("I'm a parent.");
+});
+
 test("the sentence reopens in Settings as it was left, and an old line can be seen and edited", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["dad"], time: ["A nurse learning to cook"], focus: [] } });

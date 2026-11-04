@@ -365,6 +365,31 @@ test("a section stops taking text at its limit and says why, and Escape folds th
   await onboarding.sentence.verifySectionHasFocus("focus");
 });
 
+test("the sentence fills in as entries are picked, and Continue keeps a pick that Done never closed", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+
+  await onboarding.sentence.openSection("who");
+  await onboarding.sentence.pick("dad");
+  await onboarding.sentence.verifySectionName("who", "Who you are: a dad. Edit.");
+  await onboarding.sentence.clickAwayFromSheet();
+  await onboarding.sentence.verifySheetIsClosed();
+  await onboarding.sentence.verifySectionName("who", "Who you are: a dad. Edit.");
+
+  await onboarding.sentence.openSection("focus");
+  await onboarding.sentence.addOwn("Life", "building with AI");
+  await onboarding.sentence.verifySentenceReads("I'm a dad, I spend my time on all sorts, and right now I'm focusing on building with AI.");
+  await onboarding.continueFromAboutYou();
+
+  await onboarding.verifyOnScreen("stepsForYou");
+  await onboarding.verifySentenceQuoted("I'm a dad, and right now I'm focusing on building with AI.");
+});
+
 const ARTICLE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
 const ARTICLE: ExtractedArticle = {
   url: ARTICLE_URL,
