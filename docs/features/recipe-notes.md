@@ -213,6 +213,12 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   can go on and it joins them where they are), text only (said once, on the first screen, when
   there is no narration), or stopped, in the warning ink with Try again. Say it again goes when there
   is nothing to repeat. No auto-advance.
+- **Swiping (OV-158, owner 4 Nov 2026).** Swipe up for Next and down for Back, on the action
+  area, not the controls. The next action rises from where it was previewed and the last one comes
+  back down from above, and Next by button, key or headphones moves the same way, so the motion
+  means one thing. The action follows the finger while dragging; a drag under 56px, or one that is
+  mostly sideways, springs back. Up and down rather than left and right because the next action is
+  already shown beneath. Under reduced motion it simply changes.
 - **Progress and jumping (150k–150m).** A dot per step up to 20 steps, a 3px line by action past
   that. The count opens the steps, each by its first action; choosing one reads it.
 - **Ingredients (150ah–150aj).** In the top bar on every screen, opening the note's list as it is
