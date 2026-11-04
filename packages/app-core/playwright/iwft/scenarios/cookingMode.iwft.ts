@@ -208,3 +208,19 @@ test("the step being cooked fills a little with each of its actions, and is full
   await page.getByTestId("CookingMode.forward").click();
   await expect(fill).toHaveAttribute("style", /width: 100%/);
 });
+
+test("the button above the summary starts cooking, and carries on from the place once there is one", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(cookingRecipe());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await expect(page.getByTestId("RecipeCookButton.root")).toHaveText("Cook step by step");
+  await page.getByTestId("RecipeCookButton.root").click();
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Heat the oil in a large pan.");
+  for (let press = 0; press < 3; press += 1) await page.getByTestId("CookingMode.forward").click();
+  await page.getByTestId("CookingMode.done").click();
+
+  await expect(page.getByTestId("RecipeCookButton.root")).toHaveText("Carry on from step 2");
+  await page.getByTestId("RecipeCookButton.root").click();
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Turn the heat up to high.");
+});

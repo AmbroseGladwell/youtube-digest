@@ -207,6 +207,9 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   phone, starts at step 1. "Cook from here" in the bar, whenever the voice is in the method, starts
   at the action it is on, so tapping a step and then Cook from here starts there. Not in ⋯. On a
   shared copy too since OV-159, unless it was shared before the method travelled with it.
+  Since OV-172 (owner, 4 Nov 2026) it is also a centred button above the summary, so it is in
+  sight when the note opens; it reads "Carry on from step N" while a place is kept, and its starts
+  are counted as `from: "summary"`.
 - **The screen (150c–150h).** The group, "Step 4 · 2 of 2" ("Step 7" for a one-action step), the
   action large in Figtree 400 sized by its length (34px to 23px on a phone, 30 to 20 in the panel,
   52 to 32 on the web, in rem), and the next action muted under it: "Then", or "Then step 5" when

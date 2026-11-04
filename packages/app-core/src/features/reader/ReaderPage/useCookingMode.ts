@@ -15,7 +15,7 @@ import {
 import type { RecipeVoice } from "./useRecipeVoice.js";
 
 export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textOnly" | "stopped";
-export type CookingEntry = "heading" | "bar" | "carryOn";
+export type CookingEntry = "heading" | "summary" | "bar" | "carryOn";
 
 export interface CookingMode {
   open: boolean;
