@@ -246,42 +246,44 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                 </div>
               )}
 
-              <div
-                key={mode.at}
-                className={`${styles.main} ${arrival.from === "below" ? styles.fromBelow : arrival.from === "above" ? styles.fromAbove : ""} ${swipe.dragging ? styles.dragging : ""}`}
-                style={swipe.dragY === 0 ? undefined : { transform: `translateY(${swipe.dragY}px)` }}
-                {...swipe.handlers}
-                data-testid={cookingModeTestIds.swipeArea}
-              >
-                {group !== null && (
-                  <p className={styles.group} data-testid={cookingModeTestIds.group}>
-                    {group}
+              <div className={styles.stage}>
+                <div
+                  key={mode.at}
+                  className={`${styles.main} ${arrival.from === "below" ? styles.fromBelow : arrival.from === "above" ? styles.fromAbove : ""} ${swipe.dragging ? styles.dragging : ""}`}
+                  style={swipe.dragY === 0 ? undefined : { transform: `translateY(${swipe.dragY}px)` }}
+                  {...swipe.handlers}
+                  data-testid={cookingModeTestIds.swipeArea}
+                >
+                  {group !== null && (
+                    <p className={styles.group} data-testid={cookingModeTestIds.group}>
+                      {group}
+                    </p>
+                  )}
+                  <p className={styles.place} data-testid={cookingModeTestIds.place}>
+                    {placeOf(action)}
                   </p>
-                )}
-                <p className={styles.place} data-testid={cookingModeTestIds.place}>
-                  {placeOf(action)}
-                </p>
-                {actionNote !== null && (
-                  <p className={styles.note} data-testid={cookingModeTestIds.note}>
-                    {actionNote}
+                  {actionNote !== null && (
+                    <p className={styles.note} data-testid={cookingModeTestIds.note}>
+                      {actionNote}
+                    </p>
+                  )}
+                  {action.label !== null && (
+                    <p className={styles.label} data-testid={cookingModeTestIds.label}>
+                      {action.label}
+                    </p>
+                  )}
+                  <p className={styles.action} style={{ "--length": length } as CSSProperties} data-testid={cookingModeTestIds.action}>
+                    <ActionText action={action} us={usTemperatures} />
                   </p>
-                )}
-                {action.label !== null && (
-                  <p className={styles.label} data-testid={cookingModeTestIds.label}>
-                    {action.label}
-                  </p>
-                )}
-                <p className={styles.action} style={{ "--length": length } as CSSProperties} data-testid={cookingModeTestIds.action}>
-                  <ActionText action={action} us={usTemperatures} />
-                </p>
-                {showPreview && (
-                  <div className={styles.preview} data-testid={cookingModeTestIds.next}>
-                    <b data-testid={cookingModeTestIds.nextLead}>{following.step === action.step ? "Then" : `Then step ${following.step + 1}`}</b>
-                    <span>
-                      <OvenText text={following.text} us={usTemperatures} />
-                    </span>
-                  </div>
-                )}
+                  {showPreview && (
+                    <div className={styles.preview} data-testid={cookingModeTestIds.next}>
+                      <b data-testid={cookingModeTestIds.nextLead}>{following.step === action.step ? "Then" : `Then step ${following.step + 1}`}</b>
+                      <span>
+                        <OvenText text={following.text} us={usTemperatures} />
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <p className={styles.announce} aria-live="polite">
