@@ -137,7 +137,7 @@ can read. Try the address of a video or a web page." The shared page's Make your
 same (154c). The link is saved as onboarding's progress and the reader goes to `/start`
 (`OnboardingPage`), which the shell renders without its masthead. A playlist starts with its
 first available video, and "Choose a different video" picks another; the playlist isn't
-followed. "Try a sample" waits on which samples to offer.
+followed. Below the field Start offers samples ("Try a sample").
 
 **The screens:** analytics (46b, passed by where it was answered before), Is this the right
 video? (46c), topics (46d), A library that sorts itself (46e), About you (141a), Steps that fit
@@ -217,6 +217,49 @@ is read from the document the server writes.
 The aside's pasted link starts onboarding exactly as Start's field does, and the page's
 other ways in go to Start.
 
+## Try a sample
+
+OV-155. Start offers a few ready-made overviews below the link field, on the web and in the
+panel, so a new reader can begin without leaving to find a link. **Choosing one starts onboarding
+around it exactly as Save to my overviews does around a shared copy** ("From a shared page"):
+there's no "Is this the right one?" screen and no run. The questions and slides are the same,
+then the account screen with the sample's title and Premise (or a recipe's Summary), the plan,
+and the sample as the reveal, saved into the new account as the reader's own. The answers
+apply from the next overview on.
+
+**Samples are shares.** Each is a live share owned by a house account (decided 4 Nov 2026), so
+it's made, replaced and stopped the way any share is (`sharing.md`), and nothing new is stored.
+`SAMPLE_SHARE_TOKENS` lists their tokens in the order Start offers them
+(`docs/architecture/api.md`), so samples change without a release. `GET /api/samples`, signed
+out, lists each one's note without its transcript or narration. `GET /api/samples/:token` gives
+the whole copy once one is chosen, and only for a listed token. A listed token that isn't live
+is left out and logged as `sample missing`. Neither counts a visit to the share.
+
+**A sample is free.** It's saved through its share token, so the push is let in uncounted
+(`tiers.md`, "Reserving on the reader's own key"), and it isn't one of the plan's overviews on
+us. A few live shares are far below an account's limit of 50.
+
+**Back from the first screen goes to Start**, not to a shared page: the progress marks the copy
+as a sample (`share.sample`).
+
+**With no samples, none are shown**: a server with none listed, one that doesn't answer, or a
+shell with no server leaves Start with its field alone. A sample whose copy can't be fetched
+says so under the list, and Start stays as it was.
+
+Slice 1 draws them plainly: a labelled group of buttons, each named by its title and by the
+teaser's byline ("The Harbour Post · Article · 14 min read"). The Claude Design round draws the
+cards and decides whether the reveal says it was a sample.
+
+## Every Create account
+
+OV-155. Where there are accounts, no new account skips onboarding. `/create-account` is a
+redirect: to onboarding already under way, or else to Start, and that covers every way in at once,
+including the account menu, the signed-out gate, sign-in's "Create an account", Settings, plan usage, the
+saved-locally note, and the extension's injected button and article menu. In the panel, once the device has had an
+account, home leads with signing back in (46q), so the redirect asks home for Start instead.
+The create-account form itself is onboarding's account screen (46j). A shell with no server
+keeps design 9b's page (`sign-in.md`, "Creating an account").
+
 ## In the extension panel
 
 The same screens at 400 × 600 (designs 46n–46q), with the narrow layout throughout.
@@ -254,14 +297,17 @@ analytics answer carries in as it always has.
 ## Analytics
 
 `onboarding.*`: the link given at Start, with its kind (video, playlist or article; a recipe
-isn't known until it's read), or refused; each screen shown, skipped or gone back
+isn't known until it's read), or refused; the sample chosen, by where it sat in the list and its
+kind, never its title or link; each screen shown, skipped or gone back
 from; the video being the wrong one or another of a playlist's chosen; how many topics were
 picked and typed; how many entries each section of About you holds and how many were typed,
 never what they say; See your overview before the end; the overview failing, and on which screen, and
-being tried again; the way to an account; the plan; the reveal; and a next step followed or
+being tried again; the way to an account; the plan; the reveal, and whether its overview was made from a link or saved from a sample or a
+shared page; and a next step followed or
 dismissed. The run itself is counted
 as `capture.newOverview.started` with `from: "onboarding"`.
 
 ## Not built yet
 
-- "Try a sample", "Vote for what's next", the unsorted reveal prompt.
+- "Vote for what's next", the unsorted reveal prompt.
+- Samples drawn as cards, and whether the reveal says it was a sample: OV-155's Claude Design round.

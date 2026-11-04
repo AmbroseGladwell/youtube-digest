@@ -162,6 +162,7 @@ export const apiLogLines = coded("api", {
     revoked: line("info", "share revoked", "A reader withdrew a share link."),
     viewed: line("info", "share viewed", "A share page was opened. Nothing about the viewer is logged."),
     pageMissing: line("info", "share page missing", "A share page was asked for that is unknown or revoked."),
+    sampleMissing: line("warn", "sample missing", "A sample in SAMPLE_SHARE_TOKENS isn't a live share, so Start doesn't offer it."),
   },
   analytics: {
     clientEvent: line("info", "client event", "One checked analytics event, logged as well as passed on to PostHog."),

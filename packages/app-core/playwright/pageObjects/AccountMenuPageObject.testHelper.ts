@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { accountMenuTestIds } from "../../src/features/auth/components/AccountMenu/AccountMenuTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
+import { OnboardingSamplesPageObject } from "./OnboardingSamplesPageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
 export type AccountMenuItem =
@@ -98,7 +99,7 @@ export class AccountMenuPageObject extends PageObject {
   chooseCreateAccount = (): Promise<SignInPageObject> =>
     this.step("chooseCreateAccount", async () => {
       await this.click(accountMenuTestIds.createAccountItem);
-      return new SignInPageObject(this.testContext).verifyAsksForEmail("Create your account");
+      return new OnboardingSamplesPageObject(this.testContext).createAccountThroughFirst();
     });
 
   chooseEnterCode = (): Promise<SignInPageObject> =>

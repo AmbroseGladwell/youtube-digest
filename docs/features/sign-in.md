@@ -133,6 +133,11 @@ Design 9b gives creating an account a page of its own, `/create-account`, with a
 name to greet the reader by. It sends the same kind of link as signing in, carrying
 `intent: "createAccount"` and the name. Nothing else about the flow differs.
 
+**Where there are accounts, the page is onboarding's account screen (46j).** Since OV-155 no
+new account skips onboarding, so `/create-account` sends a signed-out reader to Start, or back
+to onboarding already under way. Every link to it keeps pointing there. Only a shell with no
+server still shows 9b's page (`docs/features/onboarding.md`, "Every Create account").
+
 **The answer still does not say whether an address has an account.** `POST
 /api/auth/magic-link` answers `202 { accepted: true }` for either intent, as before. Only
 the mail differs: an address with no account gets "Finish creating your account", greeted

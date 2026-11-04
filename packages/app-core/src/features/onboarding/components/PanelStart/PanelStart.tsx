@@ -7,6 +7,7 @@ import { Routes } from "../../../../app/Routes.js";
 import { rememberPageAccess } from "../../pageAccess.js";
 import { REFUSED_LINK } from "../../util/refusedLink.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
+import { OnboardingSamples } from "../OnboardingSamples/OnboardingSamples.js";
 import { useStartOnboarding } from "../../useStartOnboarding.js";
 import styles from "./PanelStart.module.scss";
 import { panelStartTestIds } from "./PanelStartTestIds.js";
@@ -103,6 +104,8 @@ export function PanelStart() {
           )}
         </form>
       )}
+
+      <OnboardingSamples />
 
       <div className={styles.foot}>
         {nothingBeside ? (

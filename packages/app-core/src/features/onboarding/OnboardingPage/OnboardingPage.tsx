@@ -169,15 +169,19 @@ function Onboarding({ progress, update }: OnboardingProps) {
     update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
   const next = () => go(steps[indexOf(step) + 1] ?? "account");
   // From a shared page, leaving the questions goes back to the page. It's a full load, since
-  // the copy is read from the document the server writes (docs/features/sharing.md).
+  // the copy is read from the document the server writes (docs/features/sharing.md). A sample
+  // came from Start, so it goes back there.
   const startAgain = () => {
     update(null);
-    if (share === null) void navigate(Routes.home(), { replace: true });
+    if (share === null || share.sample) void navigate(Routes.home(), { replace: true });
     else globalThis.location.assign(Routes.sharedOverview(share.token));
   };
 
   const finish = (overviewId: string) => {
-    analytics.onboarding.finished.revealed({ way: progress.way ?? "signIn" });
+    analytics.onboarding.finished.revealed({
+      way: progress.way ?? "signIn",
+      from: share === null ? "link" : share.sample ? "sample" : "share",
+    });
     libraryMove.dismiss();
     writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null });
     void navigate(Routes.overview(overviewId), { replace: true });

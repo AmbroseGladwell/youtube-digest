@@ -20,9 +20,18 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     transcriptService: null,
     ourKey: null,
     youTubeApiKey: null,
+    sampleShareTokens: [],
     analytics: { environment: "development", postHog: null },
     logs: null,
   });
+});
+
+test("samples are the share tokens listed, in order, and a token that isn't one is refused", () => {
+  assert.deepEqual(loadConfig({ DATABASE_URL, SAMPLE_SHARE_TOKENS: "k7Qm2x9RfTabcdef, a1B2c3D4e5F6g7H8" }).sampleShareTokens, [
+    "k7Qm2x9RfTabcdef",
+    "a1B2c3D4e5F6g7H8",
+  ]);
+  assert.throws(() => loadConfig({ DATABASE_URL, SAMPLE_SHARE_TOKENS: "not-a-token" }), ConfigError);
 });
 
 test("playlists are read only with a YouTube Data API key", () => {

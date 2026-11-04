@@ -27,11 +27,7 @@ export class SyncPanelPageObject extends PageObject {
       return new SignInPageObject(this.testContext).verifyAsksForEmail("Sign in");
     });
 
-  clickCreateAccount = (): Promise<SignInPageObject> =>
-    this.step("clickCreateAccount", async () => {
-      await this.click(syncPanelTestIds.createAccountLink);
-      return new SignInPageObject(this.testContext).verifyAsksForEmail("Create your account");
-    });
+  clickCreateAccount = () => this.step("clickCreateAccount", () => this.click(syncPanelTestIds.createAccountLink));
 
   verifyOffersConnectingExtension = (offers: boolean) =>
     this.step(`verifyOffersConnectingExtension ${offers}`, () =>

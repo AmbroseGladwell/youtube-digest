@@ -39,6 +39,9 @@ export enum EndpointKey {
   SHARE_LIST = "SHARE_LIST",
   SHARE_CREATE = "SHARE_CREATE",
   SHARE_STOP = "SHARE_STOP",
+  // Start's samples, and the whole copy of the one chosen (docs/features/onboarding.md).
+  SAMPLES = "SAMPLES",
+  SAMPLE = "SAMPLE",
   EVENTS = "EVENTS",
   EVENTS_DECLINED = "EVENTS_DECLINED",
   SHARED_PAGE_EVENTS = "SHARED_PAGE_EVENTS",

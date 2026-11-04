@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { Link, Navigate } from "react-router";
+import { Link, Navigate, useLocation } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -27,17 +27,21 @@ import { useStartOnboarding } from "../../onboarding/useStartOnboarding.js";
 import { onboardingSourceOf } from "../../onboarding/onboardingSources.js";
 import { REFUSED_LINK } from "../../onboarding/util/refusedLink.js";
 import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
+import { OnboardingSamples } from "../../onboarding/components/OnboardingSamples/OnboardingSamples.js";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
+import { isStartAsked } from "../../onboarding/startAsked.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
 // Signed out where there are accounts, home is onboarding's Start, or in the panel, once this
-// device has had an account, the way back into it (docs/features/onboarding.md).
+// device has had an account, the way back into it, unless Create account asked for Start
+// (docs/features/onboarding.md).
 export function HomePage() {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
+  const location = useLocation();
   // Onboarding under way on this device carries on where it was, signed out or just signed
   // in by its link (docs/features/onboarding.md, "Leaving and coming back").
   const onboarding = readOnboardingProgress();
@@ -46,7 +50,7 @@ export function HomePage() {
   }
   if (isPanel) {
     if (!accountNeeded) return <CapturePage />;
-    return readAccountSeen() ? <SignedOutGate panel /> : <PanelStart />;
+    return readAccountSeen() && !isStartAsked(location.state) ? <SignedOutGate panel /> : <PanelStart />;
   }
   return <LibraryHome accountNeeded={accountNeeded} />;
 }
@@ -201,8 +205,9 @@ function FirstRunHero() {
 }
 
 // Design 46a: signed out, the same hero is onboarding's Start. A link we can read goes
-// straight on to the questions while its overview is made, and nothing else is offered: no
-// overview is made or seen without an account (docs/features/onboarding.md).
+// straight on to the questions while its overview is made, or a sample starts them around one
+// already made. Nothing else is offered: no overview is made or seen without an account
+// (docs/features/onboarding.md).
 function StartHero() {
   const startOnboarding = useStartOnboarding();
   const analytics = useAnalytics();
@@ -253,6 +258,7 @@ function StartHero() {
           {REFUSED_LINK}
         </p>
       )}
+      <OnboardingSamples />
     </Hero>
   );
 }
