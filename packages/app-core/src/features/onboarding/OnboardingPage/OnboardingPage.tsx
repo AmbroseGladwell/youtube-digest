@@ -54,7 +54,13 @@ import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingP
 import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRun } from "../useOnboardingRun.js";
-import { foundIn, onboardingSourceOf } from "../onboardingSources.js";
+import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
+import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
+import { OnboardingReadFailure } from "../components/OnboardingReadFailure/OnboardingReadFailure.js";
+import { OnboardingTeaser } from "../components/OnboardingTeaser/OnboardingTeaser.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
@@ -118,6 +124,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const run = useOnboardingRun({
     source: kind,
     target: signedIn || progress.overviewId !== null || kind === null ? null : kind.target(progress),
+    tabId: progress.tabId,
     mayWrite: progress.mayWrite,
     attempt,
     onFound: (found) => {
@@ -136,6 +143,27 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
+  const wide = useMediaQuery("(min-width: 64rem)");
+  const surface = useSurface();
+  const phone = useIsPhone();
+  // A page that couldn't be read, or reads the trial can't spend, is shown at the confirm step
+  // with a field for another link (154l–154n); a video's failure keeps its own words.
+  const readFailure =
+    phase === "failed" && run.found === null && run.failure !== null && (run.failure.kind !== "other" || kind === onboardingSources.web)
+      ? run.failure
+      : null;
+
+  const anotherLink = (link: string): boolean => {
+    const another = onboardingSourceOf(link);
+    if (another === null) {
+      analytics.onboarding.start.linkRefused();
+      return false;
+    }
+    analytics.onboarding.start.linkSubmitted({ kind: another.linkKind });
+    update({ link: link.trim(), sourceKey: another.source.keyFromLink(link), tabId: null, overviewId: null });
+    setAttempt((current) => current + 1);
+    return true;
+  };
 
   const go = (next: OnboardingStep) =>
     update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
@@ -275,10 +303,24 @@ function Onboarding({ progress, update }: OnboardingProps) {
           />
         );
       case "video":
+        if (readFailure !== null) {
+          return (
+            <OnboardingReadFailure
+              copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
+              link={progress.link}
+              onTryAgain={() => {
+                analytics.onboarding.overview.retried();
+                setAttempt((current) => current + 1);
+              }}
+              onAnotherLink={anotherLink}
+            />
+          );
+        }
         return (
           <OnboardingVideo
             kind={kind}
             linkKind={recognised?.linkKind ?? "video"}
+            link={progress.link}
             found={found}
             playlist={playlist.data ?? null}
             failed={failed}
@@ -322,6 +364,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingAccount
             overview={overview}
+            teaserBeside={wide}
             failed={failed}
             onTryAgain={() => {
               analytics.onboarding.overview.retried();
@@ -426,8 +469,11 @@ function Onboarding({ progress, update }: OnboardingProps) {
             progress={progressBar}
             phase={phase}
             kind={kind}
+            link={progress.link}
             found={found}
+            unusable={readFailure !== null}
             sortedInto={phase === "ready" ? sortedInto : null}
+            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} beside /> : null}
           />
         </div>
       </div>

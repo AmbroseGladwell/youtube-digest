@@ -25,6 +25,7 @@ import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
 import { readOnboardingProgress } from "../../onboarding/onboardingProgressStorage.js";
 import { useStartOnboarding } from "../../onboarding/useStartOnboarding.js";
 import { onboardingSourceOf } from "../../onboarding/onboardingSources.js";
+import { REFUSED_LINK } from "../../onboarding/util/refusedLink.js";
 import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
@@ -218,7 +219,7 @@ function StartHero() {
   };
 
   return (
-    <Hero standfirst="Paste a link and we'll make your first overview: the main premise, key points, steps to apply and a verdict on whether it's worth your time, to read or listen to.">
+    <Hero standfirst="Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to.">
       <form className={styles.heroForm} onSubmit={start}>
         <span className={styles.heroFormIcon}>
           <StrokeIcon name="link" size={18} />
@@ -233,7 +234,7 @@ function StartHero() {
           autoCorrect="off"
           spellCheck={false}
           className={styles.heroInput}
-          placeholder="Paste a link"
+          placeholder="Paste a link to a video or a page"
           value={url}
           onChange={(event) => {
             setUrl(event.target.value);
@@ -249,7 +250,7 @@ function StartHero() {
       </form>
       {refused && (
         <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
-          That doesn't look like a link we can read.
+          {REFUSED_LINK}
         </p>
       )}
     </Hero>

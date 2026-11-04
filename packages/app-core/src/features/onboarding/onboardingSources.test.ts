@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Source } from "@overview/domain";
-import { makeArticleOverview, makeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
 import { foundIn, onboardingSourceOf, onboardingSources } from "./onboardingSources.js";
 
 const kindsOfSource = Source.options.map((option) => option.shape.kind.value);
@@ -35,18 +35,51 @@ describe("onboardingSources", () => {
     expect(onboardingSources.web.target({ link, sourceKey: null })).toBe(link);
   });
 
+  const RECIPE = { prepMinutes: 15, cookMinutes: 50, totalMinutes: 65, yield: "4" };
+
   it("names what was found, so the confirm screen asks about the right thing", () => {
     const article = foundIn(makeArticleOverview());
     expect(onboardingSources.youtube.noun("playlist", null)).toBe("playlist");
     expect(onboardingSources.youtube.noun("video", foundIn(makeOverview()))).toBe("video");
-    expect(onboardingSources.web.noun("article", null)).toBe("article");
+    expect(onboardingSources.web.noun("article", null)).toBe("page");
     expect(onboardingSources.web.noun("article", article)).toBe("article");
-    expect(onboardingSources.web.noun("article", { ...article, recipe: true })).toBe("recipe");
+    expect(onboardingSources.web.noun("article", { ...article, recipe: RECIPE })).toBe("recipe");
   });
 
-  it("gives an article's byline its site and reading time, and a recipe's its kind", () => {
-    const article = foundIn(makeArticleOverview());
-    expect(onboardingSources.web.byline(article)).toMatch(/ · \d+ min article$/);
-    expect(onboardingSources.web.byline({ ...article, recipe: true })).toMatch(/ · Recipe$/);
+  it("gives an article's card its site and kind, then its author and reading time", () => {
+    const overview = makeArticleOverview();
+    const card = onboardingSources.web.card(foundIn(overview));
+    expect(card.kicker).toMatch(/ · Article$/);
+    expect(card.facts).toEqual({ line: expect.stringMatching(/\d+ min read$/) });
+  });
+
+  it("gives a recipe's card the page's own times, never summed", () => {
+    const card = onboardingSources.web.card({ ...foundIn(makeArticleOverview()), recipe: { ...RECIPE, totalMinutes: null } });
+    expect(card.kicker).toMatch(/ · Recipe$/);
+    expect(card.facts).toEqual({
+      figures: [
+        { label: "Prep", value: "15 min" },
+        { label: "Cook", value: "50 min" },
+        { label: "Makes", value: "4" },
+      ],
+    });
+  });
+
+  it("previews a recipe's ingredients and method as the page's own, and writes only its summary", () => {
+    const found = { ...foundIn(makeArticleOverview()), recipe: RECIPE };
+    expect(onboardingSources.web.sections(found)).toEqual([
+      { name: "Summary", fromPage: false },
+      { name: "Ingredients", fromPage: true },
+      { name: "Method", fromPage: true },
+    ]);
+    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual(["Premise", "Key points", "How to apply", "Verdict"]);
+  });
+
+  it("teases a recipe by its summary and total, and says what an account opens", () => {
+    const teaser = onboardingSources.web.teaser(makeRecipeOverview());
+    expect(teaser.byline).toMatch(/ · Recipe · 1 hr 5 min$/);
+    expect(teaser.first.label).toBe("Summary");
+    expect(teaser.locked).toBe("The ingredients and method open with an account.");
+    expect(onboardingSources.web.teaser(makeArticleOverview()).byline).toMatch(/ · Article · \d+ min read$/);
   });
 });

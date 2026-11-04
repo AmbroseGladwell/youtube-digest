@@ -19,6 +19,7 @@ const memoryStorage = (): Storage => {
 const progress: OnboardingProgress = {
   link: "https://www.youtube.com/watch?v=abc",
   sourceKey: SourceKey.parse("abc"),
+  tabId: null,
   step: "topics",
   topics: ["Food", "chess"],
   mayWrite: false,

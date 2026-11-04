@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, TRIAL_READS, TRIAL_TOKEN_HEADER, type ArticleRead } from "@overview/domain";
+import { apiLogLines, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY, TRIAL_TOKEN_HEADER, type ArticleRead } from "@overview/domain";
 import { fetchedArticle } from "../articles/fetchedArticle.js";
 import type { FetchedPage } from "../articles/fetchArticlePage.js";
 import { ApiError } from "../http/ApiError.js";
@@ -8,7 +8,7 @@ import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
-import { TRIAL_READS_PER_ADDRESS_DAILY, type TrialsRepository } from "../usage/TrialsRepository.js";
+import type { TrialsRepository } from "../usage/TrialsRepository.js";
 
 const Body = z.object({ url: z.url() });
 

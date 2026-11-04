@@ -1,4 +1,4 @@
-import { TRIAL_OVERVIEWS, TRIAL_READS } from "@overview/domain";
+import { TRIAL_OVERVIEWS, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY } from "@overview/domain";
 import { generateToken } from "../auth/generateToken.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -8,8 +8,6 @@ import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 // Trial overviews on our key a UTC day per address, across every token: a private window
 // mints a new token, so the cap counts what costs money (docs/architecture/tiers.md, "Counting").
 export const TRIAL_OVERVIEWS_PER_ADDRESS_DAILY = 3;
-// Links read without an account a UTC day per address, across every token: three tokens' worth.
-export const TRIAL_READS_PER_ADDRESS_DAILY = 15;
 
 const ADDRESS_RETENTION_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;

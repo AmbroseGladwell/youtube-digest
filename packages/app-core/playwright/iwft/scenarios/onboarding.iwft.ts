@@ -259,7 +259,7 @@ test("Start refuses a link it can't make an overview from, and starts nothing", 
 
   await home.submitHeroUrl("https://www.youtube.com/playlist?list=WL");
 
-  await home.verifyHeroValidationError("That doesn't look like a link we can read.");
+  await home.verifyHeroValidationError("That doesn't look like a link we can read. Try the address of a video or a web page.");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });
 
@@ -379,6 +379,21 @@ const ARTICLE: ExtractedArticle = {
   recipe: null,
 };
 
+const RECIPE_ARTICLE: ExtractedArticle = {
+  ...ARTICLE,
+  title: "Charred leek and white bean stew",
+  siteName: "Example Kitchen",
+  recipe: {
+    ingredients: ["2 leeks", "1 tin white beans"],
+    steps: [{ text: "Char the leeks.", group: null }],
+    prepMinutes: 15,
+    cookMinutes: 50,
+    totalMinutes: 65,
+    yield: "4",
+  },
+};
+const PASTED = "theharbourpost.example/2026/11/bridge-bill-twice";
+
 test("an article link is read on the device's trial, confirmed as an article, and made once the questions are passed", async ({
   launcher,
   backendSimulator,
@@ -391,7 +406,7 @@ test("an article link is read on the device's trial, confirmed as an article, an
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.verifyOnScreen("video", "Is this the right article?");
   await onboarding.verifyVideoTitle(ARTICLE.title);
-  await onboarding.verifyFoundByline("The Harbour Post · 14 min article");
+  await onboarding.verifyFound({ kicker: "The Harbour Post · Article", facts: "By Asha Rao · 14 min read" });
   await onboarding.confirmVideo();
   await onboarding.skip();
   await onboarding.skip();
@@ -402,41 +417,32 @@ test("an article link is read on the device's trial, confirmed as an article, an
   await onboarding.seeOverview();
 
   await onboarding.verifyOnScreen("account", "Create your free account");
-  await onboarding.verifyTeaserByline("The Harbour Post · 14 min article");
+  await onboarding.verifyTeaserReads({
+    byline: "The Harbour Post · Article · 14 min read",
+    locked: "Key points, How to apply and Verdict open with an account.",
+  });
   const [made] = backendSimulator.ourKey.generations();
   expect(made?.input).toHaveProperty("article.url", ARTICLE_URL);
   expect(backendSimulator.articles.reads()).toEqual([ARTICLE_URL]);
   expect(backendSimulator.articles.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
 });
 
-test("a recipe page is confirmed as a recipe", async ({ launcher, backendSimulator }) => {
+test("a recipe page is confirmed as a recipe, with the page's own times", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
-  backendSimulator.articles.answerWith({
-    status: "read",
-    article: {
-      ...ARTICLE,
-      title: "Charred leek and white bean stew",
-      siteName: "Example Kitchen",
-      recipe: {
-        ingredients: ["2 leeks", "1 tin white beans"],
-        steps: [{ text: "Char the leeks.", group: null }],
-        prepMinutes: 15,
-        cookMinutes: 50,
-        totalMinutes: 65,
-        yield: "Serves 4",
-      },
-    },
-  });
+  backendSimulator.articles.answerWith({ status: "read", article: RECIPE_ARTICLE });
   const home = await launcher.launch(signedOutAnswered);
 
   await home.submitHeroUrl(ARTICLE_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
 
   await onboarding.verifyOnScreen("video", "Is this the right recipe?");
-  await onboarding.verifyFoundByline("Example Kitchen · Recipe");
+  await onboarding.verifyFound({ kicker: "Example Kitchen · Recipe", facts: /Prep\s*15 min.*Cook\s*50 min.*Total\s*1 hr 5 min.*Makes\s*4/ });
 });
 
-test("a page that can't be read says so on the confirm screen, and nothing is made", async ({ launcher, backendSimulator }) => {
+test("a paywalled page says so where the read lands, keeps the link, and takes another in its place", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.articles.answerWith({ status: "failed", reason: "paywalled", shownWords: 180 });
   const home = await launcher.launch(signedOutAnswered);
@@ -444,6 +450,66 @@ test("a page that can't be read says so on the confirm screen, and nothing is ma
   await home.submitHeroUrl(ARTICLE_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
 
-  await onboarding.verifyFindingReads("We couldn't read that page.");
+  await onboarding.verifyReadFailure({ title: "That article is behind a paywall", link: PASTED });
+  await onboarding.verifyOffersTryAgain(false);
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+
+  await onboarding.tryAnotherLink("not a link");
+  await onboarding.verifyAnotherLinkAsks("Paste a link to a video or a page");
+  await onboarding.tryAnotherLink(VIDEO_URL);
+  await onboarding.verifyOnScreen("video", "Is this the right video?");
+  await onboarding.verifyVideoTitle(VIDEO_TITLE);
+});
+
+test("a site that turns us away asks for another link rather than sending a new reader to the extension", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "failed", reason: "blocked", siteName: "The Harbour Post" });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyReadFailure({ title: "The Harbour Post didn't let us in", link: PASTED });
+  await onboarding.verifyTellsOfExtension(true);
+});
+
+test("a site that doesn't respond can be tried again, which reads it once more", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "failed", reason: "no-answer" });
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.verifyReadFailure({ title: "theharbourpost.example didn't respond", link: PASTED });
+
+  backendSimulator.articles.answerWith({ status: "read", article: ARTICLE });
+  await onboarding.tryReadingAgain();
+
+  await onboarding.verifyOnScreen("video", "Is this the right article?");
+  expect(backendSimulator.articles.reads()).toEqual([ARTICLE_URL, ARTICLE_URL]);
+});
+
+test("a device out of trial reads is asked for a video link, which uses none", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.trialReadsSpent("trial-reads");
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyReadFailure({ title: "You've tried 5 pages on this device", link: PASTED });
+  await onboarding.verifyAnotherLinkAsks("Paste a video link");
+});
+
+test("a network out of trial reads for the day says to try a page tomorrow", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.trialReadsSpent("trial-reads-address");
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyReadFailure({ title: "We've read a lot of pages from your network today", link: PASTED });
 });

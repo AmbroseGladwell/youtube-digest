@@ -86,15 +86,55 @@ the overview, so a wrong paste, a paywall or a front page doesn't use up a reade
 the link or the playlist video chosen, or the article's once it has been read. Progress kept
 before this held the video's address, and reads as that video.
 
-The screens for an article and a recipe are plain for now: the same card with the page's image
-or name tile, its title, and its site with its reading time or "Recipe". Their designs, the
-panel's Start beside an article, and the failures by reason are the card's second part.
+**The screens by kind** (designs "OV-154 1–13", 154a–154n). Each entry in the table also gives
+what these read:
+
+- **Is this the right one? (154d–154g):** one card for every kind (`OnboardingSourceCard`):
+  - the image, or the site's name on a stone tile;
+  - a kicker naming the source and the kind ("The Harbour Post · Article");
+  - the title, and facts that belong to the kind: "By … · 14 min read" for an article, the page's
+    own Prep, Cook, Total and Makes for a recipe, never summed.
+
+  The heading says the kind's noun and takes focus again when it changes. Before the page is
+  read it says "page", and the card shows the address with "Reading the page…". A recipe changes
+  only the words and the facts, never the layout. A playlist keeps its lower row, because there's
+  a choice inside it. In the panel the card is compact, with the image beside the title.
+- **The preview (154h):** the same card made small, then the kind's sections. A recipe's are
+  Summary, Ingredients and Method, and the last two say "From the page" once it's read, because
+  they're the page's own.
+- **The progress line (154i):** "Reading the page" in place of "Fetching the video". Every later
+  stage reads the same for every kind.
+- **The teaser (154j, 154k):** "The Harbour Post · Article · 14 min read" or "… · Recipe · 1 hr
+  5 min", then the first section (Premise, or a recipe's Summary), and a last line naming what an
+  account opens for that kind. On a wide screen it sits in the preview beside the account screen;
+  narrower, above it.
+
+**When a page can't be used (154l–154n).** The failure shows at the confirm step, where the read
+lands (`OnboardingReadFailure`, words in `onboardingFailureCopy.ts`). It has a short bar, what
+happened, the link that was pasted, and a field for another, and the preview waits for a link it
+can read.
+
+- **The words are onboarding's own, not the paste field's.** They never say "nothing counted",
+  since a trial read counts whether or not the page could be read. Instead the foot says the free
+  overview hasn't been used.
+- **A site that turns us away asks for another link.** It doesn't send a new reader to the
+  extension, since installing it mid-onboarding leaves the answers half given. On a computer one
+  line mentions the extension, for after the first overview.
+- **No response adds Try again**, which reads the page once more.
+- **A front page** is a page with nothing readable at a site's root.
+- **Out of trial reads,** on the device or across the network, the field asks for a video link,
+  since those use none. The network's says to try a page tomorrow, and neither counts down.
+
+Another link given there replaces the first, and onboarding carries on from the same screen.
 
 ## The flow on the web
 
 **Start is the home page.** Signed out where there are accounts, `/` is the first-run hero
-with "Make my overview" (46a), taking any link we can read ("Any kind of link"); anything else
-is refused in place. The link is saved as onboarding's progress and the reader goes to `/start`
+with "Make my overview" (46a), taking any link we can read ("Any kind of link"). It asks for "a
+link to a video or a page" (154a), the two shapes every kind arrives in, so the hint doesn't go
+stale as kinds are added. Anything else is refused in place: "That doesn't look like a link we
+can read. Try the address of a video or a web page." The shared page's Make your own says the
+same (154c). The link is saved as onboarding's progress and the reader goes to `/start`
 (`OnboardingPage`), which the shell renders without its masthead. A playlist starts with its
 first available video, and "Choose a different video" picks another; the playlist isn't
 followed. "Try a sample" waits on which samples to offer.
@@ -183,8 +223,13 @@ The same screens at 400 × 600 (designs 46n–46q), with the narrow layout throu
 
 **Start offers the video the panel is beside** (`PanelStart`, 46n): "Make an overview of
 this video", "Make my overview", "Or paste a different link" for a field in place, and
-"Already have an account? Sign in". With no video beside it, Make my overview is disabled
-and the field is the way in. The video itself is first shown on the next screen once it has
+"Already have an account? Sign in". **Beside a page** (154b) it says "Make an overview of this
+page" and shows what the tab gives, its address and title, since an article can't be told from a
+recipe before it's read. The page is read in the browser, as signed-in capture reads it
+(`article-panel.md`). Chrome is asked inside the press (`pageAccess.ts`), so the read spends no
+trial read and isn't turned away by the site; without access it falls back to our server on the
+trial. **On a tab with nothing to read** it says "Paste a link to start", and the field is the
+way in. The video itself is first shown on the next screen once it has
 resolved, since the panel knows only its address until then. Headings are set smaller, and
 About you's sheet takes the panel over (141g).
 

@@ -166,6 +166,7 @@ export class BackendSimulator {
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #articleReads: string[] = [];
   #articleReadTrialTokens: Array<string | null> = [];
+  #articleReadsSpent: "trial-reads" | "trial-reads-address" | null = null;
   #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
@@ -719,6 +720,15 @@ export class BackendSimulator {
     await this.#page.route("**/api/articles/read", (route) => {
       this.#articleReads.push((route.request().postDataJSON() as { url: string }).url);
       this.#articleReadTrialTokens.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
+      if (this.#articleReadsSpent !== null) {
+        return route.fulfill({
+          status: 429,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: { code: "too_many_requests", message: "Simulated: trial reads spent", details: { quota: this.#articleReadsSpent } },
+          }),
+        });
+      }
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
@@ -1107,6 +1117,10 @@ export class BackendSimulator {
     },
     reads: (): string[] => [...this.#articleReads],
     trialTokensSent: (): Array<string | null> => [...this.#articleReadTrialTokens],
+    // Signed out, the trial's reads used up on the device or across its network.
+    trialReadsSpent: (quota: "trial-reads" | "trial-reads-address"): void => {
+      this.#articleReadsSpent = quota;
+    },
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

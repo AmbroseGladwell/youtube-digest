@@ -4,9 +4,12 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import { useRunArticleGeneration, useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { useArticlePages } from "../../app/ArticlePagesContext.js";
 import { createTrialArticleApi } from "../signedOutTrial/api/createTrialArticleApi.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { foundIn, type OnboardingFound, type OnboardingMakers, type OnboardingSource } from "./onboardingSources.js";
+import { pageAccessFor } from "./pageAccess.js";
+import { onboardingFailureOf, type OnboardingFailure } from "./util/onboardingFailureOf.js";
 
 export type OnboardingRunPhase = "fetching" | "waiting" | "writing" | "ready" | "failed";
 
@@ -14,18 +17,20 @@ export interface OnboardingRun {
   phase: OnboardingRunPhase;
   found: OnboardingFound | null;
   overview: Overview | null;
-  error: string | null;
+  failure: OnboardingFailure | null;
 }
 
-const FETCHING: OnboardingRun = { phase: "fetching", found: null, overview: null, error: null };
+const FETCHING: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null };
 
 // Onboarding's one overview, of whatever kind the link is: found straight away, written once
 // the reader may be written for, so it is made from their answers. Signed out it is read and
-// made on us through the device's trial, into the library that moves into the account
+// made on us through the device's trial, into the library that moves into the account. A page
+// the panel was beside is read in the browser where Chrome allows it, spending no trial read
 // (docs/features/onboarding.md, "Writing waits for the answers").
 export function useOnboardingRun({
   source,
   target,
+  tabId,
   mayWrite,
   attempt,
   onFound,
@@ -33,6 +38,7 @@ export function useOnboardingRun({
 }: {
   source: OnboardingSource | null;
   target: string | null;
+  tabId: number | null;
   mayWrite: boolean;
   attempt: number;
   onFound: (found: OnboardingFound) => void;
@@ -42,12 +48,14 @@ export function useOnboardingRun({
   const runVideo = useRunOverviewGeneration(apiKeys);
   const runArticle = useRunArticleGeneration(apiKeys);
   const knownApiUrl = useKnownApiUrl();
+  const pages = useArticlePages();
   const analytics = useAnalytics();
   const [run, setRun] = useState<OnboardingRun>(FETCHING);
   const makers: OnboardingMakers = {
     video: runVideo,
     article: runArticle,
-    readArticle: (url) => {
+    readArticle: async (url) => {
+      if (tabId !== null && pages !== null && (await pageAccessFor(pages, url))) return pages.read(tabId);
       if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
       return createTrialArticleApi({ baseUrl: knownApiUrl }).read(url);
     },
@@ -83,7 +91,7 @@ export function useOnboardingRun({
           latest.current.onFound(found);
           setRun((current) =>
             current.phase === "fetching"
-              ? { phase: mayWriteNow.current ? "writing" : "waiting", found, overview: null, error: null }
+              ? { phase: mayWriteNow.current ? "writing" : "waiting", found, overview: null, failure: null }
               : current,
           );
         },
@@ -91,12 +99,11 @@ export function useOnboardingRun({
       .then((overview) => {
         if (cancelled) return;
         latest.current.onMade(overview);
-        setRun({ phase: "ready", found: foundIn(overview), overview, error: null });
+        setRun({ phase: "ready", found: foundIn(overview), overview, failure: null });
       })
       .catch((error: unknown) => {
         if (cancelled || error instanceof GenerationCancelledError) return;
-        const message = error instanceof Error ? error.message : String(error);
-        setRun((current) => ({ ...current, phase: "failed", error: message }));
+        setRun((current) => ({ ...current, phase: "failed", failure: onboardingFailureOf(error) }));
       });
 
     return () => {

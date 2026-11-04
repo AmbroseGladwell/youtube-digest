@@ -113,7 +113,7 @@ export class SharedOverviewPageObject extends PageObject {
   verifyRefusesLink = () =>
     this.step("verifyRefusesLink", () =>
       expect(this.get(makeYourOwnAsideTestIds.refused)).toHaveText(
-        "That doesn't look like a link we can read.",
+        "That doesn't look like a link we can read. Try the address of a video or a web page.",
       ),
     );
 

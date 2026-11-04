@@ -14,6 +14,8 @@ const OnboardingProgressShape = z.object({
   // own video, the playlist video they chose, or the article it was read as.
   link: z.string(),
   sourceKey: SourceKey.nullable(),
+  // The panel's tab the link came from, read in the browser rather than by our server.
+  tabId: z.number().int().nullable().catch(null),
   step: OnboardingStep,
   // The topics chosen, so going back to the screen shows them; made on Continue.
   topics: z.array(z.string()).catch([]),

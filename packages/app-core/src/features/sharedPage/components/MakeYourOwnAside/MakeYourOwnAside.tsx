@@ -6,6 +6,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 import { onboardingSourceOf } from "../../../onboarding/onboardingSources.js";
+import { REFUSED_LINK } from "../../../onboarding/util/refusedLink.js";
 import { useStartOnboarding } from "../../../onboarding/useStartOnboarding.js";
 import styles from "./MakeYourOwnAside.module.scss";
 import { makeYourOwnAsideTestIds } from "./MakeYourOwnAsideTestIds.js";
@@ -41,8 +42,7 @@ export function MakeYourOwnAside() {
         Watch Less, with The Overview
       </h2>
       <p className={styles.body}>
-        Paste a link. You get a short read and a listen like this one, with a verdict on whether
-        it's worth your time.
+        Paste a link to a video or a page and we'll make an overview of it, to read or listen to.
       </p>
 
       <form
@@ -75,7 +75,7 @@ export function MakeYourOwnAside() {
         </div>
         {refused && (
           <p id={`${urlFieldId}-error`} className={styles.error} role="alert" data-testid={makeYourOwnAsideTestIds.refused}>
-            That doesn't look like a link we can read.
+            {REFUSED_LINK}
           </p>
         )}
         <button

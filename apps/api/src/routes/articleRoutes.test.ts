@@ -1,13 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_READS, TRIAL_TOKEN_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import type { FetchedPage } from "../articles/fetchArticlePage.js";
 import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
-import { TRIAL_READS_PER_ADDRESS_DAILY } from "../usage/TrialsRepository.js";
 
 const URL_OF_PAGE = "https://news.example.com/bridge";
 const paragraphs = Array.from({ length: 30 }, (_, index) => `<p>Paragraph ${index} says the county reused an old survey, and that residents will pay for the repair twice over.</p>`).join("");
