@@ -237,7 +237,15 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
               {steps.length <= DOTS_UP_TO ? (
                 <div className={styles.dots} aria-hidden="true" data-testid={cookingModeTestIds.progress}>
                   {steps.map((_, index) => (
-                    <i key={index} className={index < action.step ? styles.dotDone : index === action.step ? styles.dotHere : undefined} />
+                    <i key={index} className={index < action.step ? styles.dotDone : undefined}>
+                      {index === action.step && (
+                        <b
+                          className={styles.dotFill}
+                          style={{ width: `${((action.index + 1) / action.count) * 100}%` }}
+                          data-testid={cookingModeTestIds.stepFill}
+                        />
+                      )}
+                    </i>
                   ))}
                 </div>
               ) : (

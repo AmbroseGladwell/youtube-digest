@@ -228,7 +228,8 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   that clips at its edges and fades over its own padding, so text on its way up dissolves before
   the progress dots and never shows under the top bar (OV-160).
 - **Progress and jumping (150k–150m).** A dot per step up to 20 steps, a 3px line by action past
-  that. The count opens the steps, each by its first action; choosing one reads it.
+  that. The step being cooked fills a little with each of its actions and is full on its last, so
+  moving through a step shows (OV-162, owner 4 Nov 2026). The count opens the steps, each by its first action; choosing one reads it.
 - **Ingredients (150ah–150aj).** In the top bar on every screen, opening the note's list as it is
   shown, adjusted amounts and their line included, as a sheet, or a drawer on the right on the web
   with the step beside it. The voice carries on. While servings or units are adjusted, every action
