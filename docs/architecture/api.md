@@ -291,7 +291,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 |---|---|---|---|
 | `address` | 1,200 | minute, per address | every `/api`, `/oauth` and `/mcp` request, before anything else runs |
 | `account` | 600 | minute, per account | every request with a session, after the session is known |
-| `articleReadAddress` | 120 | hour, per address | `POST /api/articles/read`, which reads a link as it is pasted and counts nothing against the month |
+| `articleReadAddress` | 120 | hour, per address | `POST /api/articles/read`, which reads a link as it is pasted and counts nothing against the month; signed out, a trial's reads are counted on top (`tiers.md`) |
 | `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
 | `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |

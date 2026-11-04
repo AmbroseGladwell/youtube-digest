@@ -5,6 +5,9 @@ import { onboardingAccountTestIds } from "../../src/features/onboarding/componen
 import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
 import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
 import { onboardingProgressBarTestIds } from "../../src/features/onboarding/components/OnboardingProgressBar/OnboardingProgressBarTestIds.js";
+import { onboardingReadFailureTestIds } from "../../src/features/onboarding/components/OnboardingReadFailure/OnboardingReadFailureTestIds.js";
+import { onboardingSourceCardTestIds } from "../../src/features/onboarding/components/OnboardingSourceCard/OnboardingSourceCardTestIds.js";
+import { onboardingTeaserTestIds } from "../../src/features/onboarding/components/OnboardingTeaser/OnboardingTeaserTestIds.js";
 import { onboardingSlideTestIds } from "../../src/features/onboarding/components/OnboardingSlide/OnboardingSlideTestIds.js";
 import { onboardingStepsForYouTestIds } from "../../src/features/onboarding/components/OnboardingStepsForYou/OnboardingStepsForYouTestIds.js";
 import { onboardingTopicsTestIds } from "../../src/features/onboarding/components/OnboardingTopics/OnboardingTopicsTestIds.js";
@@ -79,7 +82,46 @@ export class OnboardingPageObject extends PageObject {
     });
 
   verifyVideoTitle = (title: string) =>
-    this.step(`verifyVideoTitle ${title}`, () => expect(this.get(onboardingVideoTestIds.title)).toHaveText(title));
+    this.step(`verifyVideoTitle ${title}`, () => expect(this.#confirm(onboardingSourceCardTestIds.title)).toHaveText(title));
+
+  verifyFound = ({ kicker, facts }: { kicker?: string; facts: string | RegExp }) =>
+    this.step(`verifyFound ${facts}`, async () => {
+      if (kicker !== undefined) await expect(this.#confirm(onboardingSourceCardTestIds.kicker)).toHaveText(kicker);
+      await expect(this.#confirm(onboardingSourceCardTestIds.facts)).toHaveText(facts);
+    });
+
+  #confirm = (testId: string) => this.get(onboardingVideoTestIds.root).getByTestId(testId);
+
+  verifyReadFailure = ({ title, link }: { title: string; link: string }) =>
+    this.step(`verifyReadFailure ${title}`, async () => {
+      await expect(this.page.getByRole("heading", { level: 1, name: title })).toBeFocused();
+      await expect(this.get(onboardingReadFailureTestIds.link)).toHaveText(link);
+      await expect(this.get(onboardingReadFailureTestIds.root)).toContainText("Your free overview hasn't been used.");
+    });
+
+  verifyOffersTryAgain = (offered: boolean) =>
+    this.step(`verifyOffersTryAgain ${offered}`, () =>
+      expect(this.get(onboardingReadFailureTestIds.tryAgain)).toHaveCount(offered ? 1 : 0),
+    );
+
+  verifyTellsOfExtension = (told: boolean) =>
+    this.step(`verifyTellsOfExtension ${told}`, () =>
+      expect(this.get(onboardingReadFailureTestIds.extension)).toHaveCount(told ? 1 : 0),
+    );
+
+  verifyAnotherLinkAsks = (placeholder: string) =>
+    this.step(`verifyAnotherLinkAsks ${placeholder}`, () =>
+      expect(this.get(onboardingReadFailureTestIds.linkField)).toHaveAttribute("placeholder", placeholder),
+    );
+
+  tryAnotherLink = (link: string) =>
+    this.step(`tryAnotherLink ${link}`, async () => {
+      await this.get(onboardingReadFailureTestIds.linkField).fill(link);
+      await this.get(onboardingReadFailureTestIds.linkField).press("Enter");
+    });
+
+  verifyFindingReads = (text: string) =>
+    this.step(`verifyFindingReads ${text}`, () => expect(this.get(onboardingVideoTestIds.finding)).toHaveText(text));
 
   verifyPlaylistTitle = (title: string) =>
     this.step(`verifyPlaylistTitle ${title}`, () => expect(this.get(onboardingVideoTestIds.playlistTitle)).toHaveText(title));
@@ -141,14 +183,22 @@ export class OnboardingPageObject extends PageObject {
 
   verifyTeaser = ({ title, premise }: { title: string; premise: string }) =>
     this.step(`verifyTeaser ${title}`, async () => {
-      await expect(this.get(onboardingAccountTestIds.teaserTitle)).toHaveText(title);
-      await expect(this.get(onboardingAccountTestIds.teaserPremise)).toHaveText(premise);
+      await expect(this.get(onboardingTeaserTestIds.title)).toHaveText(title);
+      await expect(this.get(onboardingTeaserTestIds.first)).toHaveText(premise);
+    });
+
+  verifyTeaserReads = ({ byline, locked }: { byline: string; locked: string }) =>
+    this.step(`verifyTeaserReads ${byline}`, async () => {
+      await expect(this.get(onboardingTeaserTestIds.byline)).toHaveText(byline);
+      await expect(this.get(onboardingTeaserTestIds.locked)).toHaveText(locked);
     });
 
   verifyPageHasNoText = (text: string) =>
     this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));
 
   tryAgain = () => this.step("tryAgain", () => this.click(onboardingAccountTestIds.tryAgain));
+
+  tryReadingAgain = () => this.step("tryReadingAgain", () => this.click(onboardingReadFailureTestIds.tryAgain));
 
   continueWithEmail = (): Promise<SignInPageObject> =>
     this.step("continueWithEmail", async () => {

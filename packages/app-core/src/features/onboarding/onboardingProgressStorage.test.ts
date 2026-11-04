@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OverviewId } from "@overview/domain";
+import { OverviewId, SourceKey } from "@overview/domain";
 import { readOnboardingProgress, writeOnboardingProgress, type OnboardingProgress } from "./onboardingProgressStorage.js";
 
 const memoryStorage = (): Storage => {
@@ -18,7 +18,8 @@ const memoryStorage = (): Storage => {
 
 const progress: OnboardingProgress = {
   link: "https://www.youtube.com/watch?v=abc",
-  videoUrl: "https://www.youtube.com/watch?v=abc",
+  sourceKey: SourceKey.parse("abc"),
+  tabId: null,
   step: "topics",
   topics: ["Food", "chess"],
   mayWrite: false,
@@ -46,6 +47,20 @@ describe("onboardingProgressStorage", () => {
     const { share: _share, ...older } = progress;
     storage.setItem("overview.onboarding.v1", JSON.stringify(older));
     expect(readOnboardingProgress(storage)).toEqual(progress);
+  });
+
+  it("reads progress written before any kind of link was taken as the video it named", () => {
+    const storage = memoryStorage();
+    const { sourceKey: _sourceKey, ...rest } = progress;
+    storage.setItem("overview.onboarding.v1", JSON.stringify({ ...rest, videoUrl: "https://www.youtube.com/watch?v=abc" }));
+    expect(readOnboardingProgress(storage)).toEqual(progress);
+  });
+
+  it("reads an older playlist's progress, before its video was chosen, as nothing chosen yet", () => {
+    const storage = memoryStorage();
+    const { sourceKey: _sourceKey, ...rest } = progress;
+    storage.setItem("overview.onboarding.v1", JSON.stringify({ ...rest, videoUrl: null }));
+    expect(readOnboardingProgress(storage)?.sourceKey).toBeNull();
   });
 
   it("reads nothing back from a record it can't parse", () => {

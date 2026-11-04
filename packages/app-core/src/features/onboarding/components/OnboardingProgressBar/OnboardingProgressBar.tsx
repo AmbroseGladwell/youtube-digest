@@ -3,8 +3,7 @@ import type { OnboardingRunPhase } from "../../useOnboardingRun.js";
 import styles from "./OnboardingProgressBar.module.scss";
 import { onboardingProgressBarTestIds } from "./OnboardingProgressBarTestIds.js";
 
-const PHASE_LINE: Record<Exclude<OnboardingRunPhase, "ready" | "failed">, string> = {
-  fetching: "Fetching the video",
+const PHASE_LINE: Record<Exclude<OnboardingRunPhase, "ready" | "failed" | "fetching">, string> = {
   waiting: "Writing starts once you've told us about you",
   writing: "Writing it for you",
 };
@@ -19,13 +18,15 @@ const PHASE_FILL: Record<Exclude<OnboardingRunPhase, "ready" | "failed">, number
 
 export interface OnboardingProgressBarProps {
   phase: OnboardingRunPhase;
+  // What fetching is called for this kind of source; null when the link wasn't recognised.
+  fetching: string | null;
   personal: boolean;
   onSeeOverview: () => void;
 }
 
 // The overview's own progress, above the screens (design 46b's first layer): what the run is
 // doing, then See your overview once it's ready, which never waits on the questions.
-export function OnboardingProgressBar({ phase, personal, onSeeOverview }: OnboardingProgressBarProps) {
+export function OnboardingProgressBar({ phase, fetching, personal, onSeeOverview }: OnboardingProgressBarProps) {
   if (phase === "failed") {
     return (
       <p className={styles.failed} role="alert" data-testid={onboardingProgressBarTestIds.failed}>
@@ -58,7 +59,7 @@ export function OnboardingProgressBar({ phase, personal, onSeeOverview }: Onboar
         <span className={styles.lead}>Making your overview</span>
         <span className={styles.phase} data-testid={onboardingProgressBarTestIds.phase}>
           {" "}
-          · {phase === "writing" && !personal ? "Writing it" : PHASE_LINE[phase]}
+          · {phase === "fetching" ? (fetching ?? "Fetching it") : phase === "writing" && !personal ? "Writing it" : PHASE_LINE[phase]}
         </span>
       </p>
       <span className={styles.track} aria-hidden="true">

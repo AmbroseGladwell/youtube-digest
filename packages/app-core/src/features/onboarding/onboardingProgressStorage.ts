@@ -1,11 +1,21 @@
 import { z } from "zod";
-import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken } from "@overview/domain";
+import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
+import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 
-export const OnboardingProgress = z.object({
-  // What the reader gave the home page, and the video being made from it: the same link,
-  // or the playlist video they chose.
+// Progress from before any kind of link was taken held the video's address instead of its key.
+const keyedBySource = (raw: unknown): unknown => {
+  if (typeof raw !== "object" || raw === null || "sourceKey" in raw || !("videoUrl" in raw)) return raw;
+  const { videoUrl, ...rest } = raw as { videoUrl: unknown };
+  return { ...rest, sourceKey: typeof videoUrl === "string" ? extractYouTubeVideoId(videoUrl) : null };
+};
+
+const OnboardingProgressShape = z.object({
+  // What the reader gave Start, and what is being made from it once that's known: the link's
+  // own video, the playlist video they chose, or the article it was read as.
   link: z.string(),
-  videoUrl: z.string().nullable(),
+  sourceKey: SourceKey.nullable(),
+  // The panel's tab the link came from, read in the browser rather than by our server.
+  tabId: z.number().int().nullable().catch(null),
   step: OnboardingStep,
   // The topics chosen, so going back to the screen shows them; made on Continue.
   topics: z.array(z.string()).catch([]),
@@ -18,7 +28,8 @@ export const OnboardingProgress = z.object({
   // (docs/features/onboarding.md, "From a shared page").
   share: z.object({ token: ShareToken, snapshot: SharedOverview }).nullable().catch(null),
 });
-export type OnboardingProgress = z.infer<typeof OnboardingProgress>;
+export const OnboardingProgress = z.preprocess(keyedBySource, OnboardingProgressShape);
+export type OnboardingProgress = z.infer<typeof OnboardingProgressShape>;
 
 const STORAGE_KEY = "overview.onboarding.v1";
 

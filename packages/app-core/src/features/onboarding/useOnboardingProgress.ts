@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { SharedOverview, ShareToken } from "@overview/domain";
+import { sourceKey, type SharedOverview, type ShareToken, type SourceKey } from "@overview/domain";
 import {
   isOnboardingProgressKey,
   readOnboardingProgress,
@@ -8,8 +8,8 @@ import {
 } from "./onboardingProgressStorage.js";
 
 // The home page's link starts onboarding on the screen after Start (design 46a).
-export function startOnboarding(link: string, videoUrl: string | null): void {
-  writeOnboardingProgress({ link, videoUrl, step: "analytics", topics: [], mayWrite: false, overviewId: null, way: null, share: null });
+export function startOnboarding(link: string, key: SourceKey | null, tabId: number | null = null): void {
+  writeOnboardingProgress({ link, sourceKey: key, tabId, step: "analytics", topics: [], mayWrite: false, overviewId: null, way: null, share: null });
 }
 
 // Save to my overviews on a shared page starts onboarding with the copy as its overview:
@@ -17,7 +17,8 @@ export function startOnboarding(link: string, videoUrl: string | null): void {
 export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview): void {
   writeOnboardingProgress({
     link: snapshot.note.source.url,
-    videoUrl: null,
+    sourceKey: sourceKey(snapshot.note.source),
+    tabId: null,
     step: "analytics",
     topics: [],
     mayWrite: true,

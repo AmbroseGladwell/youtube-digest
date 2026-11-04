@@ -1,6 +1,7 @@
 import { ShareToken, shareSnapshot, type Overview, type SharePayload } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { test, expect } from "../../support/fixtures.testHelper.js";
+import type { Launcher } from "../../support/Launcher.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
@@ -190,7 +191,7 @@ test("a link pasted beside the copy starts onboarding with it, and one it can't 
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   const page = await launcher.sharedOverviewPage.verifyIsShown();
 
-  await page.pasteLinkAndMakeOverview("https://example.com/not-a-video");
+  await page.pasteLinkAndMakeOverview("https://www.youtube.com/playlist?list=WL");
   await page.verifyRefusesLink();
 
   await page.pasteLinkAndMakeOverview(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
@@ -275,20 +276,49 @@ test("a stopped link's visit is counted as one, and so is the visitor making the
     ]);
 });
 
-test("a shared recipe carries the summary and the ingredients, and leaves the method on the page", async ({ launcher, page }) => {
+const sharedRecipe = async (
+  launcher: Launcher,
+  overview: ReturnType<typeof makeRecipeOverview>,
+) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload({
     state: "shared",
     token: TOKEN,
     sharedAt: "2026-11-03T11:00:00.000Z",
-    snapshot: shareSnapshot({ overview: makeRecipeOverview(), transcript: null, narration: null }),
+    snapshot: shareSnapshot({ overview, transcript: null, narration: null }),
   });
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   await launcher.sharedOverviewPage.verifyIsShown();
+};
+
+test("a shared recipe carries the whole method, and can be cooked step by step", async ({ launcher, page, backendSimulator }) => {
+  await sharedRecipe(launcher, makeRecipeOverview());
 
   await expect(page.getByText("An overview of a recipe from Example Kitchen")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ingredients · 8" })).toBeVisible();
   await expect(page.getByTestId("RecipeIngredients.units.asWritten")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Method · 4 steps" })).toBeVisible();
+  await expect(page.getByTestId("RecipeMethod.step")).toHaveCount(4);
+  await expect(page.getByTestId("RecipeMethod.onThePage")).toHaveCount(0);
+
+  await page.getByTestId("RecipeMethod.cook").click();
+  await expect(page.getByTestId("CookingMode.root")).toBeVisible();
+  await expect(page.getByTestId("CookingMode.place")).toHaveText(/^Step 1/);
+  await page.getByTestId("CookingMode.forward").click();
+  await expect(page.getByTestId("CookingMode.back")).toBeEnabled();
+  await page.getByTestId("CookingMode.done").click();
+  await expect(page.getByTestId("CookingMode.root")).toBeHidden();
+  await expect(page.getByTestId("RecipeMethod.carryOn")).toBeVisible();
+
+  await expect
+    .poll(() => backendSimulator.analytics.sharedPage.events().map(({ name }) => name))
+    .toEqual(expect.arrayContaining(["sharedPage.cooking.started", "sharedPage.cooking.left"]));
+});
+
+test("a recipe shared before the method travelled with it sends the visitor to the page, with nothing to cook", async ({ launcher, page }) => {
+  const base = makeRecipeOverview();
+  await sharedRecipe(launcher, makeRecipeOverview({ recipe: { ...base.recipe!, steps: [] } }));
+
   await expect(page.getByRole("heading", { name: "Method · 4 steps" })).toBeVisible();
   await expect(page.getByText("The method is in Maya Okafor’s own words, so it stays on Example Kitchen.")).toBeVisible();
   await expect(page.getByTestId("RecipeMethod.onThePage")).toHaveAttribute(
@@ -296,4 +326,5 @@ test("a shared recipe carries the summary and the ingredients, and leaves the me
     "https://examplekitchen.example/recipes/charred-leek-white-bean-stew",
   );
   await expect(page.getByTestId("RecipeMethod.step")).toHaveCount(0);
+  await expect(page.getByTestId("RecipeMethod.cook")).toHaveCount(0);
 });

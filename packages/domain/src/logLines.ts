@@ -188,6 +188,8 @@ export const apiLogLines = coded("api", {
   },
   articles: {
     read: line("info", "article read", "A pasted link was fetched, and how that went; `outcome` is the reason it failed. Never the link."),
+    trialReadsSpent: line("warn", "trial reads spent", "A signed-out device asked to read another link after its trial's reads were used."),
+    trialReadAddressSpent: line("warn", "trial read address cap spent", "An address read its links for the day without an account, across every token. Never the address."),
   },
   playlists: {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),

@@ -8,6 +8,8 @@ import {
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
+  sourceKey,
+  SourceKey,
   STARTER_TOPICS,
   type AboutYou,
   type AuthIntent,
@@ -52,11 +54,18 @@ import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingP
 import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRun } from "../useOnboardingRun.js";
+import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
+import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
+import { OnboardingReadFailure } from "../components/OnboardingReadFailure/OnboardingReadFailure.js";
+import { OnboardingTeaser } from "../components/OnboardingTeaser/OnboardingTeaser.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
 const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"];
-// A copy saved from a shared page is already made, so there is no video to check.
+// A copy saved from a shared page is already made, so there is nothing to check.
 const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video");
 
 // Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
@@ -103,17 +112,24 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const saveFromShare = useSaveFromShare();
   const openLibraryAccountId = useLibraryAccountId();
 
+  const recognised = useMemo(() => onboardingSourceOf(progress.link), [progress.link]);
+  const kind = recognised?.source ?? null;
   const link = youTubeLink(progress.link);
   const playlist = usePlaylistLookupQuery(link?.kind === "playlist" ? link.playlistId : null);
   const firstVideo = playlist.data?.entries.find((entry) => entry.availability === "available") ?? null;
   useEffect(() => {
-    if (progress.videoUrl === null && firstVideo !== null) update({ videoUrl: watchUrl(firstVideo.videoId) });
-  }, [progress.videoUrl, firstVideo, update]);
+    if (progress.sourceKey === null && firstVideo !== null) update({ sourceKey: SourceKey.parse(firstVideo.videoId) });
+  }, [progress.sourceKey, firstVideo, update]);
 
   const run = useOnboardingRun({
-    videoUrl: signedIn || progress.overviewId !== null ? null : progress.videoUrl,
+    source: kind,
+    target: signedIn || progress.overviewId !== null || kind === null ? null : kind.target(progress),
+    tabId: progress.tabId,
     mayWrite: progress.mayWrite,
     attempt,
+    onFound: (found) => {
+      if (progress.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
+    },
     onMade: (overview) => update({ overviewId: overview.id }),
   });
   const stored = useQuery({
@@ -123,10 +139,31 @@ function Onboarding({ progress, update }: OnboardingProps) {
     refetchInterval: (query) => (signedIn && query.state.data == null ? 1000 : false),
   });
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
-  const onboardingVideo = overview?.source.kind === "youtube" ? overview.source : null;
+  const found = run.found ?? (overview === null ? null : foundIn(overview));
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
+  const wide = useMediaQuery("(min-width: 64rem)");
+  const surface = useSurface();
+  const phone = useIsPhone();
+  // A page that couldn't be read, or reads the trial can't spend, is shown at the confirm step
+  // with a field for another link (154l–154n); a video's failure keeps its own words.
+  const readFailure =
+    phase === "failed" && run.found === null && run.failure !== null && (run.failure.kind !== "other" || kind === onboardingSources.web)
+      ? run.failure
+      : null;
+
+  const anotherLink = (link: string): boolean => {
+    const another = onboardingSourceOf(link);
+    if (another === null) {
+      analytics.onboarding.start.linkRefused();
+      return false;
+    }
+    analytics.onboarding.start.linkSubmitted({ kind: another.linkKind });
+    update({ link: link.trim(), sourceKey: another.source.keyFromLink(link), tabId: null, overviewId: null });
+    setAttempt((current) => current + 1);
+    return true;
+  };
 
   const go = (next: OnboardingStep) =>
     update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
@@ -235,6 +272,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const progressBar = (
     <OnboardingProgressBar
       phase={phase}
+      fetching={kind?.fetching ?? null}
       personal={!aboutYouIsEmpty(aboutYou)}
       onSeeOverview={() => {
         analytics.onboarding.overview.seenEarly({ step });
@@ -265,9 +303,25 @@ function Onboarding({ progress, update }: OnboardingProps) {
           />
         );
       case "video":
+        if (readFailure !== null) {
+          return (
+            <OnboardingReadFailure
+              copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
+              link={progress.link}
+              onTryAgain={() => {
+                analytics.onboarding.overview.retried();
+                setAttempt((current) => current + 1);
+              }}
+              onAnotherLink={anotherLink}
+            />
+          );
+        }
         return (
           <OnboardingVideo
-            video={run.video ?? onboardingVideo}
+            kind={kind}
+            linkKind={recognised?.linkKind ?? "video"}
+            link={progress.link}
+            found={found}
             playlist={playlist.data ?? null}
             failed={failed}
             onLooksRight={next}
@@ -277,7 +331,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             }}
             onChooseVideo={(videoId) => {
               analytics.onboarding.video.differentVideoChosen();
-              update({ videoUrl: watchUrl(videoId), overviewId: null });
+              update({ sourceKey: SourceKey.parse(videoId), overviewId: null });
             }}
           />
         );
@@ -310,6 +364,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingAccount
             overview={overview}
+            teaserBeside={wide}
             failed={failed}
             onTryAgain={() => {
               analytics.onboarding.overview.retried();
@@ -410,11 +465,19 @@ function Onboarding({ progress, update }: OnboardingProps) {
         </main>
 
         <div className={styles.wide}>
-          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? onboardingVideo} sortedInto={phase === "ready" ? sortedInto : null} />
+          <OnboardingPreview
+            progress={progressBar}
+            phase={phase}
+            kind={kind}
+            link={progress.link}
+            found={found}
+            unusable={readFailure !== null}
+            sortedInto={phase === "ready" ? sortedInto : null}
+            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} beside /> : null}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;

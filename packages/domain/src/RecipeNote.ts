@@ -11,7 +11,7 @@ export const RecipeNote = Recipe.extend({
     .string()
     .min(1)
     .refine((s) => wordCount(s) <= RECIPE_SUMMARY_MOST_WORDS, `docs/features/recipe-notes.md: max ${RECIPE_SUMMARY_MOST_WORDS} words`),
-  // Empty where the method stayed on the page: a shared copy, and one saved from it.
+  // Empty where the method stayed on the page: a copy shared before OV-159, and one saved from it.
   steps: z.array(RecipeStep),
   stepCount: z.number().int().positive(),
 }).refine((note) => note.steps.length === 0 || note.steps.length === note.stepCount, {

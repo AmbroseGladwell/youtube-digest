@@ -150,6 +150,26 @@ describe("runArticleOverviewGeneration", () => {
     expect(made[0]).not.toHaveProperty("transcript");
   });
 
+  it("reads the article at once but waits to write until told, as onboarding's does", async () => {
+    heldId = await articleSourceId(ARTICLE_URL);
+    const { deps, made } = withLibrary(false);
+    let startWriting!: () => void;
+    const answered = new Promise<void>((resolve) => (startWriting = resolve));
+    let read = false;
+
+    const run = runArticleOverviewGeneration(async () => READ, deps, {
+      onArticleRead: () => (read = true),
+      waitToWrite: () => answered,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(read).toBe(true);
+    expect(made).toEqual([]);
+
+    startWriting();
+    await run;
+    expect(made).toHaveLength(1);
+  });
+
   it("makes nothing from a page that couldn't be read", async () => {
     const { deps, made } = withLibrary(false);
 
