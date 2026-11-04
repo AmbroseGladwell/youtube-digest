@@ -36,9 +36,11 @@ The ingredients, steps, times and yield come from the page's schema.org `Recipe`
 
 - **An ingredient is one string, as the page wrote it.** It is stored that way, and parsed only on
   screen when the reader adjusts it.
-- **Times are read from ISO 8601 only.** "10 minutes" is left empty, and zero counts as not stated.
-  A total the page didn't give is never worked out from the other two, on the note or in the
-  library.
+- **Times are read from ISO 8601 only** in structured data. "10 minutes" there is left empty, and
+  zero counts as not stated. A recipe read from markup reads labelled text instead (below). A total
+  the page didn't give is never worked out from the other two, on the note or in the library: the
+  time row says "As the recipe gives them", and prep plus cook leaves out marinating, proving and
+  resting.
 - **Yield** prefers the form with words: `["4", "4 servings"]` gives "4 servings".
 - **The method** arrives as a string, a list of strings, HTML, `HowToStep`s or `HowToSection`s. A
   section's name becomes the step's `group`. `HowToTip`s are left out, because they aren't steps.
@@ -86,8 +88,14 @@ code and never by a model:
   words or more. Ingredients come before the method.
 - **One recipe**, as with structured data: two different ingredient lists or methods are a round-up,
   and the same one shown twice, as a page with a mobile and a desktop layout does, is one.
-- **Times and yield stay empty.** "Serves 4" and "25 mins" in a page's text are exactly what is
-  never parsed.
+- **Times and yield are read where the page labels them** (OV-180), ahead of the method, since
+  labels after it belong to related recipes. A label is "Prep", "Prepare", "Preparation", "Cook",
+  "Cooking" (each with an optional "time"), "Total", "Total time" or "Ready in", on the same line
+  as a plain duration ("Prep: 5 mins", "1 hr 15 mins") or alone on the line before it. Yield is a
+  line starting "Serves", "Makes", "Yield", "Servings" or "Portions" with a number in it, kept as
+  written ("Serves 4–6"). A range ("30 mins to 1 hour"), a time in words, a zero, or one label given
+  two different values stays empty. Unlabelled durations, like the bare `PT5M`s Good Food Middle
+  East leaves in its markup, are never read: nothing says which is which.
 
 A page that declares a `Recipe` is never read this way, even one left out above for being hidden
 or missing its method: the publisher said what the recipe is.
