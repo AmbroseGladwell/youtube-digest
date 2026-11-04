@@ -1,5 +1,6 @@
 import type { Recipe, RecipeStep } from "@overview/domain";
 import { isObject, linkedData, typesOf, type JsonObject } from "./linkedData.js";
+import { markupRecipe } from "./markupRecipe.js";
 
 const inertBody = (document: Document, html: string): HTMLElement => {
   const { body } = document.implementation.createHTMLDocument("");
@@ -71,13 +72,14 @@ const recipeFrom = (document: Document, node: JsonObject): Recipe | null => {
 const isHidden = ({ isAccessibleForFree: free }: JsonObject): boolean =>
   free === false || (typeof free === "string" && free.toLowerCase() === "false");
 
-// One page, one recipe: a page declaring several is a round-up, and reads as an article
-// (docs/features/recipe-notes.md).
+// One page, one recipe: a page declaring several is a round-up, and reads as an article. A page
+// declaring none is read from its markup (docs/features/recipe-notes.md).
 export function pageRecipe(document: Document): Recipe | null {
   const declared = linkedData(document)
     .flatMap((node) => [node, ...(isObject(node.mainEntity) ? [node.mainEntity] : [])])
-    .filter((node) => typesOf(node).includes("Recipe") && !isHidden(node));
-  const usable = declared.flatMap((node) => {
+    .filter((node) => typesOf(node).includes("Recipe"));
+  if (declared.length === 0) return markupRecipe(document);
+  const usable = declared.filter((node) => !isHidden(node)).flatMap((node) => {
     const recipe = recipeFrom(document, node);
     return recipe === null ? [] : [{ name: node.name, recipe }];
   });

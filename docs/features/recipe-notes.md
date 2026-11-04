@@ -31,7 +31,8 @@ a step is.
 ## Code reads the recipe, never a model
 
 The ingredients, steps, times and yield come from the page's schema.org `Recipe` JSON-LD
-(`docs/prototype/constraints.md`), and code copies them onto the note.
+(`docs/prototype/constraints.md`), and code copies them onto the note. A page that declares no
+`Recipe` at all is read from its markup instead ("Read from the page itself", below).
 
 - **An ingredient is one string, as the page wrote it.** It is stored that way, and parsed only on
   screen when the reader adjusts it.
@@ -44,12 +45,14 @@ The ingredients, steps, times and yield come from the page's schema.org `Recipe`
 
 ## What counts as a recipe page
 
-Both ingredients and a method have to be declared. Anything else reads as an article, and nothing
-is said about recipes, because anything we said would be a guess (design 144v):
+Both ingredients and a method have to be there, declared or laid out under their headings. Anything
+else reads as an article, and nothing is said about recipes, because anything we said would be a
+guess (design 144v):
 
 | The page | What happens |
 |---|---|
-| No `Recipe` in its structured data | An article, with no attempt at a recipe from the text |
+| No `Recipe` in its structured data | Read from the page itself, below; an article if that finds none |
+| A `Recipe` in its structured data | Taken at its word: its markup is never read, whatever the rows below decide |
 | A `Recipe` with no method, as some subscription sites publish | An article |
 | Several different recipes, a round-up | An article |
 | The same recipe declared twice, as when two plugins both do it | One recipe |
@@ -58,6 +61,36 @@ is said about recipes, because anything we said would be a guess (design 144v):
 A recipe page skips the word-count floor, because a recipe with one line of introduction is a
 complete page. With no prose at all, the steps stand in as the article's text, so `sections` and
 `wordCount` stay valid.
+
+## Read from the page itself
+
+Smaller sites often publish no structured data (OV-173). Good Food Middle East's recipes are an
+"Ingredients" heading over a list and a "Method" heading over a numbered list, with nothing
+declared, and read as `nothing-readable` before this. `markupRecipe.ts` reads that layout, still in
+code and never by a model:
+
+- **The headings it knows** are English: "Ingredients", "What you need", "You will need" for the
+  ingredients; "Method", "Instructions", "Directions", "Steps", "Preparation", "How to make it"
+  for the method. A page in another language reads as an article.
+- **A section runs** from its heading to the next heading as important, or the other part's
+  heading, and never past the heading's own container: the nearest ancestor holding more than the
+  heading. That keeps the sidebar's "Restaurant Reviews" out of a method above it.
+- **Ingredients are list items.** The method is list items, or its paragraphs when it has no list.
+  A smaller heading inside the method becomes the steps' `group`, unless it only numbers them
+  ("Step 2").
+- **Not the page's furniture.** A heading that is all link is navigation: Good Food Middle East's
+  menu has an "Ingredients" link over Fruit, Vegetables and Meat. Nothing in `nav`, `footer`,
+  `aside`, a form, something hidden, or comments is read.
+- **It has to look like a recipe.** At least half the ingredient lines carry a quantity (a number,
+  a fraction, or a word like "pinch", "tbsp", "to taste"), and at least half the steps are four
+  words or more. Ingredients come before the method.
+- **One recipe**, as with structured data: two different ingredient lists or methods are a round-up,
+  and the same one shown twice, as a page with a mobile and a desktop layout does, is one.
+- **Times and yield stay empty.** "Serves 4" and "25 mins" in a page's text are exactly what is
+  never parsed.
+
+A page that declares a `Recipe` is never read this way, even one left out above for being hidden
+or missing its method: the publisher said what the recipe is.
 
 ## The note
 
