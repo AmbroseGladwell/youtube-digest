@@ -48,9 +48,10 @@ test("servings and units adjust the amounts they can read, mark them, and say wh
     "Adjusted for 8 servings in US units. 2 lines have no amount to adjust.",
   );
   await expect(page.getByTestId("RecipeMethod.note")).toHaveText(
-    "The method gives the recipe’s own amounts and temperatures, for 4 servings.",
+    "The method gives the recipe’s own amounts, for 4 servings, with oven temperatures in °F.",
   );
-  await expect(page.getByTestId("RecipeMethod.step").first()).toContainText("220°C");
+  await expect(page.getByTestId("RecipeMethod.step").first()).toContainText("Heat the oven to 425°F (400°F fan)");
+  await expect(page.getByTestId("OvenText.converted")).toHaveText(["425°F", "400°F"]);
 
   await page.getByTestId("RecipeIngredients.backToWritten").click();
   await expect(page.getByTestId("RecipeIngredients.servings")).toHaveText("4 servings");
@@ -199,4 +200,23 @@ test("the print sheet carries the page's image and our name and mark, and nothin
   await expect(sheet.getByTestId("RecipePrintSheet.madeWith")).toHaveText("Made with The Overview");
   await expect(sheet).not.toContainText("weeknight stew rests");
   await expect.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
+});
+
+test("Listen moves through a step one sentence at a time, and the bar still counts steps", async ({ page, launcher, backendSimulator }) => {
+  const recipe = makeRecipeOverview().recipe!;
+  const steps = recipe.steps.map((step, index) =>
+    index === 1 ? { ...step, text: "Warm the rest of the oil. Cook the garlic gently for 3 minutes." } : step,
+  );
+  backendSimulator.overviews.seed(makeRecipeOverview({ recipe: { ...recipe, steps } }));
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId("RecipeMethod.step").filter({ hasText: "Warm the rest" }).click();
+  await expect(page.getByTestId("RecipeMethod.spokenAction")).toHaveText("Warm the rest of the oil.");
+  await page.keyboard.press("]");
+  await expect(page.getByTestId("RecipeMethod.spokenAction")).toHaveText("Cook the garlic gently for 3 minutes.");
+  await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Warm the rest of the oil.");
+
+  await page.getByTestId("ReaderPlayerBar.playButton").click();
+  await expect(page.getByTestId("ReaderPlayerBar.label")).toContainText("Now reading · Method · step 2 of 4");
 });

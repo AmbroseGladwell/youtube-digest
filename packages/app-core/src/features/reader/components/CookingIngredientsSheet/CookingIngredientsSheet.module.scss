@@ -1,0 +1,46 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  margin: 0;
+  height: 100%;
+  box-shadow: var(--shadow-dialog);
+  border-radius: var(--radius-dialog) 0 0 var(--radius-dialog);
+
+  .panel {
+    width: min(24rem, calc(100vw - 2.5rem));
+    height: 100%;
+    max-height: none;
+    border-radius: var(--radius-dialog) 0 0 var(--radius-dialog);
+  }
+}
+
+.panel {
+  @include dialog.dialog-panel;
+
+  gap: 0.5rem;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.head {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 0.25rem;
+}
+
+.close {
+  @include controls.surface-pill;
+
+  width: 2.75rem;
+  height: 2.75rem;
+}

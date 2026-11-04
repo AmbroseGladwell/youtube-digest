@@ -3,7 +3,13 @@ export const recipeMethodTestIds = {
   group: "RecipeMethod.group",
   step: "RecipeMethod.step",
   activeStep: "RecipeMethod.activeStep",
+  spokenAction: "RecipeMethod.spokenAction",
   note: "RecipeMethod.note",
   onThePage: "RecipeMethod.onThePage",
   readAloud: "RecipeMethod.readAloud",
+  cook: "RecipeMethod.cook",
+  stopped: "RecipeMethod.stopped",
+  carryOn: "RecipeMethod.carryOn",
+  startOver: "RecipeMethod.startOver",
+  reachedStep: "RecipeMethod.reachedStep",
 };

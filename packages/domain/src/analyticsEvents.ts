@@ -199,6 +199,17 @@ export const overviewPageEvents = {
       by: RangeReach,
     }),
   },
+  cooking: {
+    started: event("The reader starts cooking a recipe step by step, from the method's heading, the bar's Cook from here, or the place they left", {
+      from: z.enum(["heading", "bar", "carryOn"]),
+      step: z.number().int().positive(),
+    }),
+    left: event("The reader leaves cooking step by step, by Done or by finishing, with how many actions they heard", {
+      by: z.enum(["done", "finish"]),
+      actionsHeard: z.number().int().nonnegative(),
+      reachedLastStep: z.boolean(),
+    }),
+  },
   watchAnyway: {
     followed: event("The reader goes to the stretch of the video the verdict says is worth watching", {
       by: RangeReach,

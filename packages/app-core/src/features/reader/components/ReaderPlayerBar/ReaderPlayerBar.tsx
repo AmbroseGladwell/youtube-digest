@@ -32,6 +32,9 @@ export interface ReaderPlayerBarProps {
   onCycleRate: () => void;
   onAction: (action: Exclude<PlayerBarAction, "signIn">) => void;
   onReRecord: () => void;
+  // Cooking step by step from the action the voice is on, while it is in a recipe's method
+  // (design 150b).
+  onCookFromHere: (() => void) | null;
 }
 
 const ACTION_LABELS: Record<PlayerBarAction, string> = {
@@ -77,6 +80,7 @@ export function ReaderPlayerBar({
   onCycleRate,
   onAction,
   onReRecord,
+  onCookFromHere,
 }: ReaderPlayerBarProps) {
   const actions = view.actions.filter((action) => action !== "signIn" || canSignIn);
   const analytics = useOverviewPageAnalytics();
@@ -211,8 +215,14 @@ export function ReaderPlayerBar({
         </button>
       )}
 
-      {actions.length > 0 && (
+      {(actions.length > 0 || onCookFromHere !== null) && (
         <div className={styles.actions}>
+          {onCookFromHere !== null && (
+            <button type="button" className={styles.action} onClick={onCookFromHere} data-testid={readerPlayerBarTestIds.cookFromHere}>
+              <StrokeIcon name="chefHat" size={14} />
+              Cook from here
+            </button>
+          )}
           {actions.map((action) =>
             action === "signIn" ? (
               <Link
