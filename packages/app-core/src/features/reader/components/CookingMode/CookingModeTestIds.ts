@@ -6,6 +6,7 @@ export const cookingModeTestIds = {
   progress: "CookingMode.progress",
   group: "CookingMode.group",
   place: "CookingMode.place",
+  swipeArea: "CookingMode.swipeArea",
   label: "CookingMode.label",
   note: "CookingMode.note",
   action: "CookingMode.action",

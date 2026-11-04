@@ -166,3 +166,29 @@ test("in US units the mode shows the oven in Fahrenheit and says the amounts are
   await expect(page.getByTestId("CookingMode.note")).toHaveText("Temperatures in °F. Amounts as written, for 4 servings");
   await expect(page.getByTestId("CookingMode.action")).toContainText("Heat the oven to 425°F (400°F fan)");
 });
+
+test("a swipe up moves on, a swipe down goes back, and a short drag doesn't move", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(cookingRecipe());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  await page.getByTestId("RecipeMethod.cook").click();
+
+  const drag = async (dy: number) => {
+    const box = (await page.getByTestId("CookingMode.swipeArea").boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y + dy, { steps: 8 });
+    await page.mouse.up();
+  };
+
+  await drag(-150);
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
+  await drag(-150);
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("…then cook for 10 minutes.");
+  await drag(150);
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
+  await drag(-20);
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
+});

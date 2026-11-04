@@ -8,6 +8,7 @@ import { CookingStepsSheet } from "../CookingStepsSheet/CookingStepsSheet.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import styles from "./CookingMode.module.scss";
 import { cookingModeTestIds } from "./CookingModeTestIds.js";
+import { useActionSwipe } from "./useActionSwipe.js";
 
 export type CookingSurface = "phone" | "panel" | "web";
 
@@ -105,6 +106,9 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
   const isLast = mode.at >= actions.length - 1;
   const voiced = mode.voice === "reading" || mode.voice === "waiting" || mode.voice === "paused";
   const web = surface === "web";
+  const swipe = useActionSwipe(mode.next, () => mode.at > 0 && mode.back(), mode.open && !mode.finished);
+  const [arrival, setArrival] = useState<{ at: number; from: "below" | "above" | null }>({ at: mode.at, from: null });
+  if (arrival.at !== mode.at) setArrival({ at: mode.at, from: mode.at > arrival.at ? "below" : "above" });
 
   useEffect(() => {
     const element = dialog.current;
@@ -242,7 +246,13 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                 </div>
               )}
 
-              <div className={styles.main}>
+              <div
+                key={mode.at}
+                className={`${styles.main} ${arrival.from === "below" ? styles.fromBelow : arrival.from === "above" ? styles.fromAbove : ""} ${swipe.dragging ? styles.dragging : ""}`}
+                style={swipe.dragY === 0 ? undefined : { transform: `translateY(${swipe.dragY}px)` }}
+                {...swipe.handlers}
+                data-testid={cookingModeTestIds.swipeArea}
+              >
                 {group !== null && (
                   <p className={styles.group} data-testid={cookingModeTestIds.group}>
                     {group}
@@ -264,9 +274,6 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                 <p className={styles.action} style={{ "--length": length } as CSSProperties} data-testid={cookingModeTestIds.action}>
                   <ActionText action={action} us={usTemperatures} />
                 </p>
-                <p className={styles.announce} aria-live="polite">
-                  {`${placeOf(action).replace(" · ", ", ")}. ${usTemperatures ? inUsOvenTemperatures(action.text) : action.text}`}
-                </p>
                 {showPreview && (
                   <div className={styles.preview} data-testid={cookingModeTestIds.next}>
                     <b data-testid={cookingModeTestIds.nextLead}>{following.step === action.step ? "Then" : `Then step ${following.step + 1}`}</b>
@@ -276,6 +283,10 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                   </div>
                 )}
               </div>
+
+              <p className={styles.announce} aria-live="polite">
+                {`${placeOf(action).replace(" · ", ", ")}. ${usTemperatures ? inUsOvenTemperatures(action.text) : action.text}`}
+              </p>
 
               <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
                 <VoiceLine voice={mode.voice} step={action.step + 1} firstScreen={mode.firstScreen} onTryAgain={mode.tryAgain} />
