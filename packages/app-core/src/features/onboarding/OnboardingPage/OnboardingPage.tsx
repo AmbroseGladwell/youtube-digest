@@ -8,6 +8,8 @@ import {
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
+  sourceKey,
+  SourceKey,
   STARTER_TOPICS,
   type AboutYou,
   type AuthIntent,
@@ -52,11 +54,12 @@ import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingP
 import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRun } from "../useOnboardingRun.js";
+import { foundIn, onboardingSourceOf } from "../onboardingSources.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
 const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"];
-// A copy saved from a shared page is already made, so there is no video to check.
+// A copy saved from a shared page is already made, so there is nothing to check.
 const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video");
 
 // Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
@@ -103,17 +106,23 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const saveFromShare = useSaveFromShare();
   const openLibraryAccountId = useLibraryAccountId();
 
+  const recognised = useMemo(() => onboardingSourceOf(progress.link), [progress.link]);
+  const kind = recognised?.source ?? null;
   const link = youTubeLink(progress.link);
   const playlist = usePlaylistLookupQuery(link?.kind === "playlist" ? link.playlistId : null);
   const firstVideo = playlist.data?.entries.find((entry) => entry.availability === "available") ?? null;
   useEffect(() => {
-    if (progress.videoUrl === null && firstVideo !== null) update({ videoUrl: watchUrl(firstVideo.videoId) });
-  }, [progress.videoUrl, firstVideo, update]);
+    if (progress.sourceKey === null && firstVideo !== null) update({ sourceKey: SourceKey.parse(firstVideo.videoId) });
+  }, [progress.sourceKey, firstVideo, update]);
 
   const run = useOnboardingRun({
-    videoUrl: signedIn || progress.overviewId !== null ? null : progress.videoUrl,
+    source: kind,
+    target: signedIn || progress.overviewId !== null || kind === null ? null : kind.target(progress),
     mayWrite: progress.mayWrite,
     attempt,
+    onFound: (found) => {
+      if (progress.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
+    },
     onMade: (overview) => update({ overviewId: overview.id }),
   });
   const stored = useQuery({
@@ -123,7 +132,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
     refetchInterval: (query) => (signedIn && query.state.data == null ? 1000 : false),
   });
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
-  const onboardingVideo = overview?.source.kind === "youtube" ? overview.source : null;
+  const found = run.found ?? (overview === null ? null : foundIn(overview));
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
@@ -235,6 +244,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const progressBar = (
     <OnboardingProgressBar
       phase={phase}
+      fetching={kind?.fetching ?? null}
       personal={!aboutYouIsEmpty(aboutYou)}
       onSeeOverview={() => {
         analytics.onboarding.overview.seenEarly({ step });
@@ -267,7 +277,9 @@ function Onboarding({ progress, update }: OnboardingProps) {
       case "video":
         return (
           <OnboardingVideo
-            video={run.video ?? onboardingVideo}
+            kind={kind}
+            linkKind={recognised?.linkKind ?? "video"}
+            found={found}
             playlist={playlist.data ?? null}
             failed={failed}
             onLooksRight={next}
@@ -277,7 +289,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             }}
             onChooseVideo={(videoId) => {
               analytics.onboarding.video.differentVideoChosen();
-              update({ videoUrl: watchUrl(videoId), overviewId: null });
+              update({ sourceKey: SourceKey.parse(videoId), overviewId: null });
             }}
           />
         );
@@ -410,11 +422,16 @@ function Onboarding({ progress, update }: OnboardingProps) {
         </main>
 
         <div className={styles.wide}>
-          <OnboardingPreview progress={progressBar} phase={phase} video={run.video ?? onboardingVideo} sortedInto={phase === "ready" ? sortedInto : null} />
+          <OnboardingPreview
+            progress={progressBar}
+            phase={phase}
+            kind={kind}
+            found={found}
+            sortedInto={phase === "ready" ? sortedInto : null}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;

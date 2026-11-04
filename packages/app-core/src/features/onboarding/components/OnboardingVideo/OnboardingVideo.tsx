@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { formatClock, type PlaylistLookup, type VideoSource } from "@overview/domain";
+import type { PlaylistLookup } from "@overview/domain";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
+import type { OnboardingFound, OnboardingLinkKind, OnboardingSource } from "../../onboardingSources.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingVideo.module.scss";
 import { onboardingVideoTestIds } from "./OnboardingVideoTestIds.js";
 
 export interface OnboardingVideoProps {
-  video: VideoSource | null;
+  kind: OnboardingSource | null;
+  linkKind: OnboardingLinkKind;
+  found: OnboardingFound | null;
   // The playlist the link named, which starts with its first video; null for a video link.
   playlist: PlaylistLookup | null;
   failed: boolean;
@@ -15,17 +18,28 @@ export interface OnboardingVideoProps {
   onChooseVideo: (videoId: string) => void;
 }
 
-// Design 46c: the video the link found, once it has resolved, so the reader can say it's the
-// wrong one before anything is written. A playlist starts with its first video, and any other
+// Design 46c: what the link found, once it has resolved, so the reader can say it's the
+// wrong one before anything is written. Kinds differ only by what onboardingSources says. A playlist starts with its first video, and any other
 // can be chosen instead; the playlist itself isn't followed (docs/features/onboarding.md).
-export function OnboardingVideo({ video, playlist, failed, onLooksRight, onDifferentLink, onChooseVideo }: OnboardingVideoProps) {
+export function OnboardingVideo({
+  kind,
+  linkKind,
+  found,
+  playlist,
+  failed,
+  onLooksRight,
+  onDifferentLink,
+  onChooseVideo,
+}: OnboardingVideoProps) {
   const [choosing, setChoosing] = useState(false);
+  const source = found?.source ?? null;
+  const noun = kind?.noun(linkKind, found) ?? "video";
   const entries = playlist?.entries.filter((entry) => entry.availability === "available") ?? [];
 
   return (
     <div className={styles.root} data-testid={onboardingVideoTestIds.root}>
       <div className={styles.intro}>
-        <OnboardingHeading>{playlist === null ? "Is this the right video?" : "Is this the right playlist?"}</OnboardingHeading>
+        <OnboardingHeading>{playlist === null ? `Is this the right ${noun}?` : "Is this the right playlist?"}</OnboardingHeading>
         <p className={styles.lead}>We'll turn it into an overview you can read, listen to and come back to.</p>
       </div>
 
@@ -41,21 +55,19 @@ export function OnboardingVideo({ video, playlist, failed, onLooksRight, onDiffe
           </span>
         )}
         {playlist !== null && <span className={styles.startWith}>We'll start with this video</span>}
-        {video === null ? (
+        {found === null || source === null ? (
           <p className={styles.finding} data-testid={onboardingVideoTestIds.finding}>
-            {failed ? "We couldn't find that video." : "Finding the video…"}
+            {failed ? (kind?.notFound ?? "We couldn't find that video.") : (kind?.finding ?? "Finding the video…")}
           </p>
         ) : (
           <div className={playlist === null ? styles.video : styles.videoSmall}>
-            <OverviewThumbnail video={video} className={styles.thumb} />
+            <OverviewThumbnail video={source} className={styles.thumb} />
             <span className={styles.meta}>
               <span className={styles.title} data-testid={onboardingVideoTestIds.title}>
-                {video.title}
+                {source.title}
               </span>
-              <span className={styles.byline}>
-                {[video.channel, video.durationMs === null ? null : formatClock(video.durationMs / 1000)]
-                  .filter(Boolean)
-                  .join(" · ")}
+              <span className={styles.byline} data-testid={onboardingVideoTestIds.byline}>
+                {kind?.byline(found)}
               </span>
             </span>
           </div>
@@ -77,7 +89,7 @@ export function OnboardingVideo({ video, playlist, failed, onLooksRight, onDiffe
                 <button
                   type="button"
                   className={styles.entry}
-                  aria-current={video?.id === entry.videoId ? "true" : undefined}
+                  aria-current={source?.id === entry.videoId ? "true" : undefined}
                   onClick={() => {
                     setChoosing(false);
                     onChooseVideo(entry.videoId);
@@ -96,7 +108,7 @@ export function OnboardingVideo({ video, playlist, failed, onLooksRight, onDiffe
         <button
           type="button"
           className={styles.primary}
-          disabled={video === null}
+          disabled={found === null}
           onClick={onLooksRight}
           data-testid={onboardingVideoTestIds.looksRight}
         >

@@ -90,7 +90,7 @@ test("with no video beside it, Start takes a pasted link instead, and refuses on
   const start = await launcher.panelStart.verifyIsShown();
   await start.verifyCantMakeWithoutAVideo();
 
-  await start.pasteLink("https://example.com/recipes/onion");
+  await start.pasteLink("https://www.youtube.com/playlist?list=WL");
   await start.verifyRefused();
   await start.pasteLink(VIDEO_URL);
 

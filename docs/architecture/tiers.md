@@ -399,6 +399,14 @@ overview both allow is counted. Each overview made in a trial is remembered by i
 - **A token this server never issued:** `401 unauthenticated` with `details.trial: "unknown"`,
   so the device asks for another. Without an account or a token, `401` as before.
 
+**The trial reads onboarding's link too** (OV-154), on `POST /api/articles/read`. It has reads
+of its own, apart from its overview: 5 a token (`TRIAL_READS`), and 15 a UTC day per address
+across every token, counted whether or not the page could be read. Past the token's,
+`429` with `details.quota: "trial-reads"`, logged as `trial reads spent`; past the address's,
+`429` with `details.quota: "trial-reads-address"` and a `Retry-After` at UTC midnight, logged
+as `trial read address cap spent`, never the address. A token it never issued is `401` with
+`details.trial: "unknown"`, as for a generation.
+
 ## Reserving on the reader's own key
 
 `POST /api/overview-reservations` with `{ overviewId }` (OV-102) takes a slot on the

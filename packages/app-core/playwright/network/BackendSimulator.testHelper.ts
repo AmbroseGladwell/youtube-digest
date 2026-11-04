@@ -165,6 +165,7 @@ export class BackendSimulator {
   #ourKeyHowToApply: string[] | null = null;
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #articleReads: string[] = [];
+  #articleReadTrialTokens: Array<string | null> = [];
   #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
@@ -717,6 +718,7 @@ export class BackendSimulator {
 
     await this.#page.route("**/api/articles/read", (route) => {
       this.#articleReads.push((route.request().postDataJSON() as { url: string }).url);
+      this.#articleReadTrialTokens.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
@@ -1104,6 +1106,7 @@ export class BackendSimulator {
       this.#articleAnswer = read;
     },
     reads: (): string[] => [...this.#articleReads],
+    trialTokensSent: (): Array<string | null> => [...this.#articleReadTrialTokens],
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

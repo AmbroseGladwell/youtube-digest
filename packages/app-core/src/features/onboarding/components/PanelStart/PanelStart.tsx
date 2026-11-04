@@ -37,7 +37,7 @@ export function PanelStart() {
       {pasting && (
         <form className={styles.form} onSubmit={submit}>
           <label htmlFor={fieldId} className={styles.label}>
-            YouTube link
+            Link
           </label>
           <span className={styles.field}>
             <input
@@ -48,7 +48,7 @@ export function PanelStart() {
               autoComplete="off"
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="Paste a YouTube video or playlist link"
+              placeholder="Paste a link"
               value={link}
               onChange={(event) => {
                 setLink(event.target.value);
@@ -62,7 +62,7 @@ export function PanelStart() {
           </span>
           {refused && (
             <p className={styles.refused} role="alert" data-testid={panelStartTestIds.refused}>
-              We can't make an overview from that link yet. Try a YouTube video or playlist link.
+              That doesn't look like a link we can read.
             </p>
           )}
         </form>

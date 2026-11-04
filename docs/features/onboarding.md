@@ -62,11 +62,39 @@ cap per address and signed-out share of the day. It is saved to the no-account l
 unseen, and the move on sign-in carries it into the account, where it counts as one of the
 plan's overviews on us.
 
+## Any kind of link
+
+OV-154. Onboarding takes every kind of source the product reads, and stays in step as kinds
+are added. Everything it does differently by kind comes from one table,
+`onboardingSources.ts`, keyed on `Source["kind"]`: how a link given at Start is recognised,
+using the same recognisers as the shell's own field; what the run makes from it; what the
+confirm screen, the preview, the teaser's byline and the progress line call it. The table's
+type and `onboardingSources.test.ts` both fail when `Source` gains a kind with no entry
+(`source-identity.md`, "Adding a kind").
+
+A playlist and a recipe aren't kinds of their own: a playlist is a way into a video, and a
+recipe is a web page that turned out to hold one, so it's named a recipe once it has been read.
+
+**Reading a link signed out.** An article is read by our server, which is otherwise only for
+accounts. Signed out, the device's trial token reads it: 5 links a token (`TRIAL_READS`), and
+15 a UTC day per address across every token, apart from the trial's one overview. A read is
+counted whether or not the page could be read, since fetching it is the cost; it never spends
+the overview, so a wrong paste, a paywall or a front page doesn't use up a reader's only try
+(decided 3 Nov 2026). Podcasts and reels join the table when they ship.
+
+**The progress** keeps the link given and, once known, the source's key: the video's id from
+the link or the playlist video chosen, or the article's once it has been read. Progress kept
+before this held the video's address, and reads as that video.
+
+The screens for an article and a recipe are plain for now: the same card with the page's image
+or name tile, its title, and its site with its reading time or "Recipe". Their designs, the
+panel's Start beside an article, and the failures by reason are the card's second part.
+
 ## The flow on the web
 
 **Start is the home page.** Signed out where there are accounts, `/` is the first-run hero
-with "Make my overview" (46a), taking a video or playlist link; anything else is refused in
-place. The link is saved as onboarding's progress and the reader goes to `/start`
+with "Make my overview" (46a), taking any link we can read ("Any kind of link"); anything else
+is refused in place. The link is saved as onboarding's progress and the reader goes to `/start`
 (`OnboardingPage`), which the shell renders without its masthead. A playlist starts with its
 first available video, and "Choose a different video" picks another; the playlist isn't
 followed. "Try a sample" waits on which samples to offer.
@@ -180,7 +208,8 @@ analytics answer carries in as it always has.
 
 ## Analytics
 
-`onboarding.*`: the link given at Start or refused; each screen shown, skipped or gone back
+`onboarding.*`: the link given at Start, with its kind (video, playlist or article; a recipe
+isn't known until it's read), or refused; each screen shown, skipped or gone back
 from; the video being the wrong one or another of a playlist's chosen; how many topics were
 picked and typed; how many entries each section of About you holds and how many were typed,
 never what they say; See your overview before the end; the overview failing, and on which screen, and

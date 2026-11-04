@@ -1,4 +1,4 @@
-import { TRIAL_OVERVIEWS } from "@overview/domain";
+import { TRIAL_OVERVIEWS, TRIAL_READS } from "@overview/domain";
 import { generateToken } from "../auth/generateToken.js";
 import { hashToken } from "../auth/hashToken.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -8,9 +8,15 @@ import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 // Trial overviews on our key a UTC day per address, across every token: a private window
 // mints a new token, so the cap counts what costs money (docs/architecture/tiers.md, "Counting").
 export const TRIAL_OVERVIEWS_PER_ADDRESS_DAILY = 3;
+// Links read without an account a UTC day per address, across every token: three tokens' worth.
+export const TRIAL_READS_PER_ADDRESS_DAILY = 15;
 
 const ADDRESS_RETENTION_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type TrialReadReservation =
+  | { reserved: true }
+  | { reserved: false; reason: "unknown" | "spent" | "address-spent"; used: number };
 
 export type TrialReservation =
   | { reserved: true; day: string; used: number }
@@ -71,6 +77,33 @@ export class TrialsRepository {
       return { reserved: false, reason: "address-spent", used: row?.overviews ?? 0 };
     }
     return { reserved: true, day, used: held.overviews };
+  }
+
+  // A read is counted whether or not the page can be read, since fetching it is the work.
+  async reserveRead(now: Date, token: string, address: string): Promise<TrialReadReservation> {
+    const tokenHash = hashToken(token);
+    const [held] = await this.#sql.query<{ reads: number }>(
+      "update trial_tokens set reads = reads + 1 where token_hash = $1 and reads < $2 returning reads",
+      [tokenHash, TRIAL_READS],
+    );
+    if (held === undefined) {
+      const [row] = await this.#sql.query<{ reads: number }>("select reads from trial_tokens where token_hash = $1", [tokenHash]);
+      return row === undefined ? { reserved: false, reason: "unknown", used: 0 } : { reserved: false, reason: "spent", used: row.reads };
+    }
+    const day = usageDay(now);
+    const addressKey = hashedAddress(address);
+    const [counted] = await this.#sql.query<{ reads: number }>(
+      `insert into trial_address_usage (day, address, reads) values ($1::date, $2, 1)
+       on conflict (day, address) do update set reads = trial_address_usage.reads + 1
+       where trial_address_usage.reads < $3
+       returning reads`,
+      [day, addressKey, TRIAL_READS_PER_ADDRESS_DAILY],
+    );
+    if (counted === undefined) {
+      await this.#sql.query("update trial_tokens set reads = greatest(reads - 1, 0) where token_hash = $1", [tokenHash]);
+      return { reserved: false, reason: "address-spent", used: TRIAL_READS_PER_ADDRESS_DAILY };
+    }
+    return { reserved: true };
   }
 
   async release(token: string, day: string, address: string): Promise<void> {

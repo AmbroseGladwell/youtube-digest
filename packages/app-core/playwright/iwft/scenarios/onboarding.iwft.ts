@@ -5,6 +5,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { PSYCHOLOGY_URL, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { Routes } from "../../../src/app/Routes.js";
+import type { ExtractedArticle } from "@overview/domain";
 
 // Onboarding inside the first overview (docs/features/onboarding.md, designs 46a–46k).
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
@@ -256,9 +257,9 @@ test("Use a different link goes back to Start", async ({ launcher, backendSimula
 test("Start refuses a link it can't make an overview from, and starts nothing", async ({ launcher, backendSimulator }) => {
   const home = await launcher.launch(signedOut);
 
-  await home.submitHeroUrl("https://example.com/recipes/onion");
+  await home.submitHeroUrl("https://www.youtube.com/playlist?list=WL");
 
-  await home.verifyHeroValidationError("We can't make an overview from that link yet. Try a YouTube video or playlist link.");
+  await home.verifyHeroValidationError("That doesn't look like a link we can read.");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });
 
@@ -362,4 +363,87 @@ test("a section stops taking text at its limit and says why, and Escape folds th
   await onboarding.sentence.verifyOwnChipHasFocus("Life");
   await onboarding.sentence.closeSheetWithEscape();
   await onboarding.sentence.verifySectionHasFocus("focus");
+});
+
+const ARTICLE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
+const ARTICLE: ExtractedArticle = {
+  url: ARTICLE_URL,
+  title: "The town that pays its bridge bill twice",
+  siteName: "The Harbour Post",
+  author: "Asha Rao",
+  publishedAt: null,
+  language: "en",
+  imageUrl: null,
+  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+  wordCount: 3220,
+  recipe: null,
+};
+
+test("an article link is read on the device's trial, confirmed as an article, and made once the questions are passed", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "read", article: ARTICLE });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.verifyOnScreen("video", "Is this the right article?");
+  await onboarding.verifyVideoTitle(ARTICLE.title);
+  await onboarding.verifyFoundByline("The Harbour Post · 14 min article");
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("aboutYou");
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.seeOverview();
+
+  await onboarding.verifyOnScreen("account", "Create your free account");
+  await onboarding.verifyTeaserByline("The Harbour Post · 14 min article");
+  const [made] = backendSimulator.ourKey.generations();
+  expect(made?.input).toHaveProperty("article.url", ARTICLE_URL);
+  expect(backendSimulator.articles.reads()).toEqual([ARTICLE_URL]);
+  expect(backendSimulator.articles.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+});
+
+test("a recipe page is confirmed as a recipe", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({
+    status: "read",
+    article: {
+      ...ARTICLE,
+      title: "Charred leek and white bean stew",
+      siteName: "Example Kitchen",
+      recipe: {
+        ingredients: ["2 leeks", "1 tin white beans"],
+        steps: [{ text: "Char the leeks.", group: null }],
+        prepMinutes: 15,
+        cookMinutes: 50,
+        totalMinutes: 65,
+        yield: "Serves 4",
+      },
+    },
+  });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyOnScreen("video", "Is this the right recipe?");
+  await onboarding.verifyFoundByline("Example Kitchen · Recipe");
+});
+
+test("a page that can't be read says so on the confirm screen, and nothing is made", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "failed", reason: "paywalled", shownWords: 180 });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyFindingReads("We couldn't read that page.");
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });

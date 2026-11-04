@@ -81,6 +81,12 @@ export class OnboardingPageObject extends PageObject {
   verifyVideoTitle = (title: string) =>
     this.step(`verifyVideoTitle ${title}`, () => expect(this.get(onboardingVideoTestIds.title)).toHaveText(title));
 
+  verifyFoundByline = (byline: string) =>
+    this.step(`verifyFoundByline ${byline}`, () => expect(this.get(onboardingVideoTestIds.byline)).toHaveText(byline));
+
+  verifyFindingReads = (text: string) =>
+    this.step(`verifyFindingReads ${text}`, () => expect(this.get(onboardingVideoTestIds.finding)).toHaveText(text));
+
   verifyPlaylistTitle = (title: string) =>
     this.step(`verifyPlaylistTitle ${title}`, () => expect(this.get(onboardingVideoTestIds.playlistTitle)).toHaveText(title));
 
@@ -144,6 +150,9 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.get(onboardingAccountTestIds.teaserTitle)).toHaveText(title);
       await expect(this.get(onboardingAccountTestIds.teaserPremise)).toHaveText(premise);
     });
+
+  verifyTeaserByline = (byline: string) =>
+    this.step(`verifyTeaserByline ${byline}`, () => expect(this.get(onboardingAccountTestIds.teaserByline)).toHaveText(byline));
 
   verifyPageHasNoText = (text: string) =>
     this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));

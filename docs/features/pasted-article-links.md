@@ -20,7 +20,9 @@ A pasted link is an address chosen by a stranger, and our server sits on a priva
 care, "read this link" would be a way to reach Fly's internal addresses, the metadata service, or
 the machine itself. So, in order:
 
-- **Accounts only**, rate limited at 120 an hour per address.
+- **An account, or onboarding's trial**, rate limited at 120 an hour per address. Signed out, the
+  device's trial token reads a few links of its own, apart from its one overview
+  (`docs/features/onboarding.md`, "Any kind of link").
 - **http and https on ports 80 and 443**, with no credentials in the address.
 - **Public addresses only.** `isPublicAddress` closes loopback, private, link-local, carrier-grade
   NAT, multicast and reserved ranges, in both families, including IPv4 written as mapped IPv6.
@@ -62,8 +64,6 @@ the page gave.
 - 77aq's "That link is a front page" reads "That link isn't an article", and "didn't respond in 20
   seconds" loses the number: the same failure covers a 5xx.
 - Regenerating on the web still explains itself, even for an article our server could read again.
-- **Onboarding stays video-only.** The slide says Articles Now, which is true of the product. The
-  Start screen's hint keeps saying YouTube, because signed out there is no account to fetch through,
-  and the run behind it only takes videos.
+- **Onboarding takes articles too** (OV-154), through the trial rather than an account.
 - There's no way to tell from the web app whether a reader has the extension, so on a computer the
   web app always offers the Web Store. 77an's route appears on the extension's own full page.

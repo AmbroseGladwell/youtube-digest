@@ -24,10 +24,10 @@ import { PROVIDER_SHORT_LABEL } from "@overview/domain";
 import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
 import { readOnboardingProgress } from "../../onboarding/onboardingProgressStorage.js";
 import { useStartOnboarding } from "../../onboarding/useStartOnboarding.js";
+import { onboardingSourceOf } from "../../onboarding/onboardingSources.js";
 import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
-import { youTubeLink } from "../../newOverview/util/parseYouTubeUrl.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
@@ -199,7 +199,7 @@ function FirstRunHero() {
   );
 }
 
-// Design 46a: signed out, the same hero is onboarding's Start. A video or playlist link goes
+// Design 46a: signed out, the same hero is onboarding's Start. A link we can read goes
 // straight on to the questions while its overview is made, and nothing else is offered: no
 // overview is made or seen without an account (docs/features/onboarding.md).
 function StartHero() {
@@ -209,7 +209,7 @@ function StartHero() {
   const [url, setUrl] = useState("");
   const [refused, setRefused] = useState(false);
   useTypingSettled(url, () =>
-    analytics.capture.newOverviewForm.linkEntered({ recognised: youTubeLink(url) !== null, from: "home" }),
+    analytics.capture.newOverviewForm.linkEntered({ recognised: onboardingSourceOf(url) !== null, from: "home" }),
   );
 
   const start = (event: FormEvent) => {
@@ -218,7 +218,7 @@ function StartHero() {
   };
 
   return (
-    <Hero standfirst="Paste a YouTube link and we'll make your first overview: the main premise, key points, steps to apply and a verdict on whether it's worth your time, to read or listen to.">
+    <Hero standfirst="Paste a link and we'll make your first overview: the main premise, key points, steps to apply and a verdict on whether it's worth your time, to read or listen to.">
       <form className={styles.heroForm} onSubmit={start}>
         <span className={styles.heroFormIcon}>
           <StrokeIcon name="link" size={18} />
@@ -233,13 +233,13 @@ function StartHero() {
           autoCorrect="off"
           spellCheck={false}
           className={styles.heroInput}
-          placeholder="Paste a YouTube video or playlist link"
+          placeholder="Paste a link"
           value={url}
           onChange={(event) => {
             setUrl(event.target.value);
             setRefused(false);
           }}
-          aria-label="YouTube link"
+          aria-label="Link"
           aria-describedby={refused ? `${urlFieldId}-error` : undefined}
           data-testid={homePageTestIds.urlInput}
         />
@@ -249,7 +249,7 @@ function StartHero() {
       </form>
       {refused && (
         <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
-          We can't make an overview from that link yet. Try a YouTube video or playlist link.
+          That doesn't look like a link we can read.
         </p>
       )}
     </Hero>

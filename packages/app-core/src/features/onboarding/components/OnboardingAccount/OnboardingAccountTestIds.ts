@@ -3,6 +3,7 @@ export const onboardingAccountTestIds = {
   teaser: "onboarding-account-teaser",
   teaserTitle: "onboarding-account-teaser-title",
   teaserPremise: "onboarding-account-teaser-premise",
+  teaserByline: "onboarding-account-teaser-byline",
   notReady: "onboarding-account-not-ready",
   failed: "onboarding-account-failed",
   tryAgain: "onboarding-account-try-again",

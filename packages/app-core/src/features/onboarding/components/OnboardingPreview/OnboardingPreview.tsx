@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { formatClock, type VideoSource } from "@overview/domain";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import type { OnboardingFound, OnboardingSource } from "../../onboardingSources.js";
 import type { OnboardingRunPhase } from "../../useOnboardingRun.js";
 import styles from "./OnboardingPreview.module.scss";
 import { onboardingPreviewTestIds } from "./OnboardingPreviewTestIds.js";
@@ -11,7 +11,8 @@ const SECTIONS = ["Premise", "Key points", "How to apply", "Verdict"];
 export interface OnboardingPreviewProps {
   progress: ReactNode;
   phase: OnboardingRunPhase;
-  video: VideoSource | null;
+  kind: OnboardingSource | null;
+  found: OnboardingFound | null;
   // The topics it was sorted into, once it is written; an empty list is Unsorted.
   sortedInto: readonly string[] | null;
 }
@@ -19,21 +20,17 @@ export interface OnboardingPreviewProps {
 // Design 46d's right-hand side on a wide screen: the overview taking shape beside the
 // questions. Its sections are drawn, never their text, so nothing can be read before an
 // account; each says only what the run is known to be doing.
-export function OnboardingPreview({ progress, phase, video, sortedInto }: OnboardingPreviewProps) {
+export function OnboardingPreview({ progress, phase, kind, found, sortedInto }: OnboardingPreviewProps) {
   const state = phase === "ready" ? "written" : phase === "writing" ? "writing" : "waiting";
   return (
     <aside className={styles.root} aria-label="Your overview" data-testid={onboardingPreviewTestIds.root}>
       {progress}
-      {video !== null && (
+      {found !== null && (
         <div className={styles.video}>
-          <OverviewThumbnail video={video} className={styles.thumb} />
+          <OverviewThumbnail video={found.source} className={styles.thumb} />
           <span className={styles.meta}>
-            <span className={styles.title}>{video.title}</span>
-            <span className={styles.byline}>
-              {[video.channel, video.durationMs === null ? null : formatClock(video.durationMs / 1000)]
-                .filter(Boolean)
-                .join(" · ")}
-            </span>
+            <span className={styles.title}>{found.source.title}</span>
+            <span className={styles.byline}>{kind?.byline(found)}</span>
           </span>
         </div>
       )}

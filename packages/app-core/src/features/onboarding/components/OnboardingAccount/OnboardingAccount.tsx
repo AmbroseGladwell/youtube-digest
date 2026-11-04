@@ -1,4 +1,5 @@
-import { formatClock, type AuthIntent, type Overview, sourceName } from "@overview/domain";
+import type { AuthIntent, Overview } from "@overview/domain";
+import { foundIn, onboardingSources } from "../../onboardingSources.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingAccount.module.scss";
@@ -71,7 +72,6 @@ export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: On
 }
 
 function Teaser({ overview }: { overview: Overview }) {
-  const { source: video } = overview;
   return (
     <section className={styles.teaser} aria-label="Your overview, so far" data-testid={onboardingAccountTestIds.teaser}>
       <span className={styles.ready}>
@@ -79,10 +79,10 @@ function Teaser({ overview }: { overview: Overview }) {
         Your overview is ready
       </span>
       <h2 className={styles.teaserTitle} data-testid={onboardingAccountTestIds.teaserTitle}>
-        {video.title}
+        {overview.source.title}
       </h2>
-      <p className={styles.byline}>
-        {[sourceName(video), video.kind === "web" || video.durationMs === null ? null : formatClock(video.durationMs / 1000)].filter(Boolean).join(" · ")}
+      <p className={styles.byline} data-testid={onboardingAccountTestIds.teaserByline}>
+        {onboardingSources[overview.source.kind].byline(foundIn(overview))}
       </p>
       <p className={styles.sectionLabel}>Premise</p>
       <p className={styles.premise} data-testid={onboardingAccountTestIds.teaserPremise}>

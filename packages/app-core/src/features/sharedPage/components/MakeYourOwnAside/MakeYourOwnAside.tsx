@@ -5,7 +5,7 @@ import { OverviewMark } from "../../../../components/shared/OverviewMark/Overvie
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
-import { isYouTubeUrl } from "../../../newOverview/util/parseYouTubeUrl.js";
+import { onboardingSourceOf } from "../../../onboarding/onboardingSources.js";
 import { useStartOnboarding } from "../../../onboarding/useStartOnboarding.js";
 import styles from "./MakeYourOwnAside.module.scss";
 import { makeYourOwnAsideTestIds } from "./MakeYourOwnAsideTestIds.js";
@@ -25,10 +25,10 @@ export function MakeYourOwnAside() {
   const headingId = useId();
   const urlFieldId = useId();
   const analytics = useAnalytics();
-  useTypingSettled(url, () => analytics.sharedPage.makeYourOwn.linkEntered({ recognised: isYouTubeUrl(url.trim()) }));
+  useTypingSettled(url, () => analytics.sharedPage.makeYourOwn.linkEntered({ recognised: onboardingSourceOf(url) !== null }));
 
   const make = () => {
-    analytics.sharedPage.makeYourOwn.submitted({ recognised: isYouTubeUrl(url.trim()) });
+    analytics.sharedPage.makeYourOwn.submitted({ recognised: onboardingSourceOf(url) !== null });
     setRefused(!startOnboarding(url));
   };
 
@@ -41,8 +41,8 @@ export function MakeYourOwnAside() {
         Watch Less, with The Overview
       </h2>
       <p className={styles.body}>
-        Paste any YouTube link. You get a short read and a listen like this one, with a verdict on
-        whether the video is worth your time.
+        Paste a link. You get a short read and a listen like this one, with a verdict on whether
+        it's worth your time.
       </p>
 
       <form
@@ -63,8 +63,8 @@ export function MakeYourOwnAside() {
             autoCorrect="off"
             spellCheck={false}
             value={url}
-            placeholder="Paste a YouTube video or playlist link"
-            aria-label="YouTube link"
+            placeholder="Paste a link"
+            aria-label="Link"
             onChange={(event) => {
               setUrl(event.target.value);
               setRefused(false);
@@ -75,7 +75,7 @@ export function MakeYourOwnAside() {
         </div>
         {refused && (
           <p id={`${urlFieldId}-error`} className={styles.error} role="alert" data-testid={makeYourOwnAsideTestIds.refused}>
-            We can't make an overview from that link yet. Try a YouTube video or playlist link.
+            That doesn't look like a link we can read.
           </p>
         )}
         <button
