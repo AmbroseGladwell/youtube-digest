@@ -59,7 +59,7 @@ export interface RunOverviewGenerationOptions {
   // How many of the note's tags were already in the library, counted against the library
   // as the run saw it (docs/features/tag-reuse.md).
   onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
-  // Onboarding fetches the transcript at once but writes only once the reader has answered
+  // Onboarding fetches the transcript, or reads the article, at once but writes only once the reader has answered
   // or skipped About you, so the first overview is made from their answers. Topics and
   // Settings are read after it settles (docs/features/onboarding.md, "Writing waits").
   waitToWrite?: (() => Promise<void>) | undefined;
@@ -75,10 +75,7 @@ export async function runOverviewGeneration(
 
   stopIfCancelled(options);
   options.onProgress?.({ video, transcriptWords, transcriptSource });
-  if (options.waitToWrite) {
-    await options.waitToWrite();
-    stopIfCancelled(options);
-  }
+  await waitToWrite(options);
   return writeOverview({ video, transcript }, deps, options);
 }
 
@@ -99,11 +96,18 @@ export async function runArticleOverviewGeneration(
     const held = await heldOverviewOf(deps.overviewStore, key);
     if (held !== null) throw new ArticleAlreadyHeldError(held);
   }
+  await waitToWrite(options);
   return writeOverview({ article: result.article }, deps, options);
 }
 
 function stopIfCancelled(options: RunOverviewGenerationOptions): void {
   if (options.isCancelled?.()) throw new GenerationCancelledError();
+}
+
+async function waitToWrite(options: RunOverviewGenerationOptions): Promise<void> {
+  if (!options.waitToWrite) return;
+  await options.waitToWrite();
+  stopIfCancelled(options);
 }
 
 type WhatToWrite = Pick<Extract<OverviewInput, { video: unknown }>, "video" | "transcript"> | { article: ExtractedArticle };

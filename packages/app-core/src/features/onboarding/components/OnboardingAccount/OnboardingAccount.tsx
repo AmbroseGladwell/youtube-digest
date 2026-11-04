@@ -1,11 +1,14 @@
-import { formatClock, type AuthIntent, type Overview, sourceName } from "@overview/domain";
+import type { AuthIntent, Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
+import { OnboardingTeaser } from "../OnboardingTeaser/OnboardingTeaser.js";
 import styles from "./OnboardingAccount.module.scss";
 import { onboardingAccountTestIds } from "./OnboardingAccountTestIds.js";
 
 export interface OnboardingAccountProps {
   overview: Overview | null;
+  // On a wide screen the teaser sits in the preview beside the screens instead (154k).
+  teaserBeside: boolean;
   failed: boolean;
   onTryAgain: () => void;
   onChoose: (way: AuthIntent) => void;
@@ -15,7 +18,7 @@ export interface OnboardingAccountProps {
 // and nothing more: the rest is drawn, not the overview's text, so none of it can be read
 // before there is an account. There's no way past without one. Email only for now
 // (docs/features/onboarding.md, "The account").
-export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: OnboardingAccountProps) {
+export function OnboardingAccount({ overview, teaserBeside, failed, onTryAgain, onChoose }: OnboardingAccountProps) {
   return (
     <div className={styles.root} data-testid={onboardingAccountTestIds.root}>
       {failed ? (
@@ -33,8 +36,8 @@ export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: On
         <p className={styles.notReady} data-testid={onboardingAccountTestIds.notReady}>
           Your overview is still being made. You can create your account as soon as it's ready.
         </p>
-      ) : (
-        <Teaser overview={overview} />
+      ) : teaserBeside ? null : (
+        <OnboardingTeaser overview={overview} />
       )}
 
       <div className={styles.intro}>
@@ -67,34 +70,5 @@ export function OnboardingAccount({ overview, failed, onTryAgain, onChoose }: On
         Already have an account? Sign in
       </button>
     </div>
-  );
-}
-
-function Teaser({ overview }: { overview: Overview }) {
-  const { source: video } = overview;
-  return (
-    <section className={styles.teaser} aria-label="Your overview, so far" data-testid={onboardingAccountTestIds.teaser}>
-      <span className={styles.ready}>
-        <StrokeIcon name="check" size={13} />
-        Your overview is ready
-      </span>
-      <h2 className={styles.teaserTitle} data-testid={onboardingAccountTestIds.teaserTitle}>
-        {video.title}
-      </h2>
-      <p className={styles.byline}>
-        {[sourceName(video), video.kind === "web" || video.durationMs === null ? null : formatClock(video.durationMs / 1000)].filter(Boolean).join(" · ")}
-      </p>
-      <p className={styles.sectionLabel}>Premise</p>
-      <p className={styles.premise} data-testid={onboardingAccountTestIds.teaserPremise}>
-        {overview.inOneLine}
-      </p>
-      <span className={styles.fade} aria-hidden="true">
-        <span style={{ width: "100%" }} />
-        <span style={{ width: "92%" }} />
-        <span style={{ width: "96%" }} />
-        <span style={{ width: "70%" }} />
-      </span>
-      <p className={styles.opens}>Key points, How to apply and Verdict open with an account.</p>
-    </section>
   );
 }

@@ -191,7 +191,7 @@ test("a link pasted beside the copy starts onboarding with it, and one it can't 
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   const page = await launcher.sharedOverviewPage.verifyIsShown();
 
-  await page.pasteLinkAndMakeOverview("https://example.com/not-a-video");
+  await page.pasteLinkAndMakeOverview("https://www.youtube.com/playlist?list=WL");
   await page.verifyRefusesLink();
 
   await page.pasteLinkAndMakeOverview(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);

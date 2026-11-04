@@ -219,7 +219,7 @@ export async function buildApp({
       topicRoutes(api, records);
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
-      articleRoutes(api, { fetchPage: fetchArticlePage, clock });
+      articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });

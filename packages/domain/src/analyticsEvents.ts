@@ -443,9 +443,9 @@ export const analyticsEvents = {
   onboarding: {
     start: {
       linkSubmitted: event("A reader with no account gives the home page a link to start their first overview", {
-        kind: z.enum(["video", "playlist"]),
+        kind: z.enum(["video", "playlist", "article"]),
       }),
-      linkRefused: event("A reader with no account gives the home page something that isn't a video or playlist link"),
+      linkRefused: event("A reader with no account gives the home page something that isn't a link we can read"),
     },
     step: {
       shown: event("A screen of onboarding is shown", { step: OnboardingStep }),

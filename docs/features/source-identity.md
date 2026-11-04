@@ -103,6 +103,17 @@ shapes of one video cannot both be live, one id under two kinds is two items, an
 move with their edited state intact. `shareRoutes.test.ts`: an older client's share is
 accepted. The existing transcript, sync and IWFT suites are what show YouTube is unchanged.
 
+## Adding a kind
+
+A kind joining `Source` is not done until each of these handles it. The compiler names most of
+them; the ones marked with a test fail one until it does.
+
+- **Its key**: `sourceKey`, and its id kept free of a colon.
+- **What every card asks of it**: `sourceName`, `sourceImage` and `sourceLength` in
+  `sourceFacts.ts`.
+- **Onboarding**: an entry in `onboardingSources.ts`, saying how its link is recognised, read
+  signed out and shown (`onboarding.md`, "Any kind of link"). `onboardingSources.test.ts`.
+
 ## The second kind
 
 `web` joined the union with articles (`docs/features/article-notes.md`). Its id is the first 32 hex

@@ -90,7 +90,7 @@ test("with no video beside it, Start takes a pasted link instead, and refuses on
   const start = await launcher.panelStart.verifyIsShown();
   await start.verifyCantMakeWithoutAVideo();
 
-  await start.pasteLink("https://example.com/recipes/onion");
+  await start.pasteLink("https://www.youtube.com/playlist?list=WL");
   await start.verifyRefused();
   await start.pasteLink(VIDEO_URL);
 
@@ -105,4 +105,54 @@ test("signed out on a device that has had an account, the panel offers signing b
   await launcher.signedOutGate.verifyIsShown();
   await launcher.signedOutGate.verifyTitle("Sign in to see your overviews");
   await launcher.panelStart.verifyIsAbsent();
+});
+
+const PAGE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
+const PAGE_TITLE = "The town that pays its bridge bill twice";
+
+test("beside a page, the panel's Start offers it, and the page is read in the browser rather than spending a trial read", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  await launcher.launchPanel({
+    ...signedOutPanelAnswered,
+    activeVideoUrl: null,
+    articlePages: {
+      page: { url: PAGE_URL, title: PAGE_TITLE, tabId: 7 },
+      granted: true,
+      read: {
+        status: "read",
+        article: {
+          url: PAGE_URL,
+          title: PAGE_TITLE,
+          siteName: "The Harbour Post",
+          author: null,
+          publishedAt: null,
+          language: "en",
+          imageUrl: null,
+          sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+          wordCount: 3220,
+          recipe: null,
+        },
+      },
+    },
+  });
+
+  const start = await launcher.panelStart.verifyIsShown();
+  await start.verifyHeading("Make an overview of this page");
+  await start.makeOverview();
+
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.verifyOnScreen("video", "Is this the right article?");
+  await onboarding.verifyVideoTitle(PAGE_TITLE);
+  expect(backendSimulator.articles.reads()).toEqual([]);
+});
+
+test("on a tab with nothing to read, the panel's Start asks for a link", async ({ launcher }) => {
+  await launcher.launchPanel({ ...signedOutPanelAnswered, activeVideoUrl: null });
+
+  const start = await launcher.panelStart.verifyIsShown();
+
+  await start.verifyHeading("Paste a link to start");
 });
