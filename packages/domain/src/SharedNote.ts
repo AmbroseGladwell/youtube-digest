@@ -34,8 +34,8 @@ export const SharedNote = z
     // Absent rather than null on a video, so a copy's content hash doesn't move
     // (docs/features/source-identity.md, "Shares").
     article: ArticleDetails.nullish(),
-    // Absent on anything but a recipe, for the same reason, and never with the method
-    // (docs/features/recipe-notes.md, "Sharing").
+    // Absent on anything but a recipe, for the same reason. Copies shared before OV-159 have
+    // an empty method (docs/features/recipe-notes.md, "Sharing").
     recipe: RecipeNote.nullish(),
     keyPoints: z.array(KeyPoint).max(7),
   })

@@ -167,7 +167,7 @@ so an adjusted amount is what is heard, and adjusting servings or units makes a 
   one after a slash is read "or". The words change, so each recipe's audio re-renders the next
   time it is played (`tts-pre-rendered-speech.md`).
 
-A shared copy carries no method, so its narration ends after the ingredients.
+A copy shared before OV-159 carries no method, so on its page the voice has nothing to follow after the ingredients.
 
 ## A step's actions
 
@@ -205,8 +205,8 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
 
 - **Getting in (150a, 150b).** "Cook step by step" on the Method heading, full width under it on a
   phone, starts at step 1. "Cook from here" in the bar, whenever the voice is in the method, starts
-  at the action it is on, so tapping a step and then Cook from here starts there. Not in ⋯, and not
-  on a shared copy, which has no method.
+  at the action it is on, so tapping a step and then Cook from here starts there. Not in ⋯. On a
+  shared copy too since OV-159, unless it was shared before the method travelled with it.
 - **The screen (150c–150h).** The group, "Step 4 · 2 of 2" ("Step 7" for a one-action step), the
   action large in Figtree 400 sized by its length (34px to 23px on a phone, 30 to 20 in the panel,
   52 to 32 on the web, in rem), and the next action muted under it: "Then", or "Then step 5" when
@@ -258,13 +258,26 @@ Gas marks, Fahrenheit and the method's amounts stay as written, and the method's
 
 ## Sharing
 
-The owner hasn't settled this; the build takes the design's recommendation (144u). A shared copy
-carries the summary, the times and the ingredients, and leaves the method on the page: an
-ingredient list is generally free to copy, a method in the author's own words may not be, and
-sending readers to it is fair to the site. `shareSnapshot` empties `steps` and keeps `stepCount`, so
-the heading still says "Method · 6 steps" beside "See the method on {site}". A copy saved from a
-share keeps no method either. Like `article`, `recipe` is absent rather than null on anything
-else, so a share's hash doesn't move.
+Decided by the owner on 4 Nov 2026 (OV-159, https://trello.com/c/qDVVDm4z): a shared copy is the
+whole recipe, method included, so the person it was sent to can read it, hear it and cook from it
+step by step. That reverses the first build, which took design 144u's recommendation and left the
+method on the page because it is in the author's own words. "Open the recipe on {site}" stays at
+the top of the shared page, so the site is still one tap away.
+
+- **The shared page is the reader's recipe, read-only.** The method with Read aloud, Cook step by
+  step and Cook from here in the bar, through the same `useRecipeVoice` and `useCookingMode`.
+  Servings and units are not adjustable there, so cooking shows the amounts as written. Its
+  analytics are `sharedPage.cooking.*`, and the kept place is on the visitor's device.
+- **The narration is the sharer's,** as for any share (`sharing.md`): the as-written render, which
+  has always read the method, so the voice now has lines on the page to follow all the way through.
+- **Copies shared before OV-159 have no method.** `RecipeNote` still lets `steps` be empty with
+  `stepCount` kept, and such a copy still says "Method · 6 steps" beside "See the method on
+  {site}", with nothing to cook. The sharer sees "Edited since sharing" on it, because the hash of
+  what they would share now includes the method, and Replace updates the copy behind the same
+  link. A copy saved from one of those keeps no method either.
+
+Like `article`, `recipe` is absent rather than null on anything else, so a share's hash doesn't
+move.
 
 This is the one place a note keeps the page's text, which OV-77 decided against for articles: the
 owner's own note carries the method, because the design puts it there.

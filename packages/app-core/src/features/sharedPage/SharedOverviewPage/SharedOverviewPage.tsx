@@ -13,6 +13,7 @@ import {
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
+import { CookingMode } from "../../reader/components/CookingMode/CookingMode.js";
 import { ChaptersPanel } from "../../reader/components/ChaptersPanel/ChaptersPanel.js";
 import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
@@ -30,6 +31,7 @@ import { initialScale, recipeAdjustment } from "../../reader/util/recipeAdjustme
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
+import { useCookingMode } from "../../reader/ReaderPage/useCookingMode.js";
 import { useRecipeVoice } from "../../reader/ReaderPage/useRecipeVoice.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
@@ -107,6 +109,26 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const player = usePlayer();
   const navigate = useNavigate();
   const analytics = useAnalytics();
+  const cooking = useCookingMode({
+    overviewId: note.id,
+    title: note.source.title,
+    steps: note.recipe?.steps ?? [],
+    actions: methodActions,
+    recipeVoice,
+    snapshot: notePlayer.snapshot,
+    analytics: analytics.sharedPage,
+  });
+  const cookable = recipePage !== null && recipePage.recipe.steps.length > 0 && recipeVoice !== null;
+  const recipeCooking = !cookable
+    ? null
+    : {
+        placeStep: cooking.place === null ? null : (methodActions[cooking.place.action]?.step ?? null),
+        reachedStep: cooking.reachedStep,
+        onStart: () => cooking.start("heading", 0),
+        onCarryOn: () => cooking.start("carryOn", cooking.place?.action ?? 0),
+      };
+  const methodAction = recipeVoice?.methodAction ?? null;
+  const cookFromHere = cookable && methodAction !== null ? () => cooking.start("bar", methodAction) : null;
   // Both are measured rather than assumed, because the read-along's scroll margin and the
   // tab strip's own offset are built from them (docs/features/overview-redesign.md).
   const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(MASTHEAD_HEIGHT_PROPERTY);
@@ -242,8 +264,6 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     )
                   }
                 />
-                {/* Design 144u: the summary and the ingredients, and the method left on the
-                    page, since it is in the author's own words. */}
                 {recipePage !== null && recipeAsWritten !== null && (
                   <>
                     <RecipeIngredients
@@ -257,7 +277,16 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       onUnitsChange={() => undefined}
                       onReset={() => undefined}
                     />
-                    <RecipeMethod recipe={recipePage.recipe} actions={methodActions} source={recipePage.source} note={null} voice={null} cooking={null} stacked={false} usTemperatures={false} />
+                    <RecipeMethod
+                      recipe={recipePage.recipe}
+                      actions={methodActions}
+                      source={recipePage.source}
+                      note={null}
+                      voice={recipeVoice?.method ?? null}
+                      cooking={recipeCooking}
+                      stacked={isPhone}
+                      usTemperatures={false}
+                    />
                   </>
                 )}
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
@@ -288,8 +317,34 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         <MakeYourOwnAside />
       </div>
 
+      {cookable && recipeAsWritten !== null && (
+        <CookingMode
+          mode={cooking}
+          title={recipePage.source.title}
+          from={sourceName(recipePage.source)}
+          steps={recipePage.recipe.steps}
+          actions={methodActions}
+          actionNote={null}
+          surface={isPhone ? "phone" : "web"}
+          usTemperatures={false}
+          ingredients={
+            <RecipeIngredients
+              adjustment={recipeAsWritten}
+              scale={initialScale(recipePage.recipe)}
+              units="asWritten"
+              columns={false}
+              adjustable={false}
+              voice={null}
+              onScaleChange={() => undefined}
+              onUnitsChange={() => undefined}
+              onReset={() => undefined}
+            />
+          }
+        />
+      )}
+
       <ReaderPlayerBar
-        onCookFromHere={null}
+        onCookFromHere={cookFromHere}
         view={barView}
         status={notePlayer.snapshot.status}
         time={notePlayer.time}

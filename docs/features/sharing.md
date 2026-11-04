@@ -35,6 +35,7 @@ would have given for free:
 | The video's title, channel, link, duration, publish date and thumbnail | Topics — the reader's filing |
 | The transcript | Read and favourite state, which was never on this record anyway (`docs/prototype/decisions.md`) |
 | The narration: its key, voice, duration and line starts | The reader's name, anywhere on the page or in its head |
+| A recipe's whole recipe, method included (OV-159, `recipe-notes.md`) | |
 | | The verdict's "similar to" list |
 
 **The transcript is in, which is a departure from the Trello card.** The card said the

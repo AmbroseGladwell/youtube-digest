@@ -32,8 +32,8 @@ export interface RecipeCooking {
 }
 
 // Designs 144g and 144u: a numbered list whose numbering carries on through the page's own
-// groups, so "step 9" means one thing. Where the method stayed on the page, a shared copy and
-// one saved from it, the heading keeps its count and the page is one link away.
+// groups, so "step 9" means one thing. Where the method stayed on the page, a copy shared before
+// OV-159 and one saved from it, the heading keeps its count and the page is one link away.
 export function RecipeMethod({ recipe, actions, source, note, voice, cooking, stacked, usTemperatures }: RecipeMethodProps) {
   const headingId = useId();
   const from = sourceName(source);
