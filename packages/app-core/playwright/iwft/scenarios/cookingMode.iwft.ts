@@ -192,3 +192,19 @@ test("a swipe up moves on, a swipe down goes back, and a short drag doesn't move
   await drag(-20);
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
 });
+
+test("the step being cooked fills a little with each of its actions, and is full on its last", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(cookingRecipe());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  await page.getByTestId("RecipeMethod.cook").click();
+
+  const fill = page.getByTestId("CookingMode.stepFill");
+  await expect(fill).toHaveAttribute("style", /width: 33\.33/);
+  await page.getByTestId("CookingMode.forward").click();
+  await expect(fill).toHaveAttribute("style", /width: 66\.66/);
+  await page.getByTestId("CookingMode.forward").click();
+  await expect(fill).toHaveAttribute("style", /width: 100%/);
+  await page.getByTestId("CookingMode.forward").click();
+  await expect(fill).toHaveAttribute("style", /width: 100%/);
+});

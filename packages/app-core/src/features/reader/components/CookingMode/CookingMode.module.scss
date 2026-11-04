@@ -118,6 +118,7 @@
   i {
     flex: 1;
     height: 6px;
+    overflow: hidden;
     border-radius: 3px;
     background: var(--surface);
   }
@@ -127,8 +128,24 @@
   background: var(--muted) !important;
 }
 
-.dotHere {
-  background: var(--mark) !important;
+// The step being cooked fills a little with each of its actions, and is full on its last
+// (OV-162).
+.dotFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mark);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: fillFromEmpty var(--motion-travel) var(--motion-ease);
+    transition: width var(--motion-travel) var(--motion-ease);
+  }
+}
+
+@keyframes fillFromEmpty {
+  from {
+    width: 0;
+  }
 }
 
 .line {

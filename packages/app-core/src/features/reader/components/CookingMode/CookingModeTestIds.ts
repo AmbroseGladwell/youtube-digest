@@ -4,6 +4,7 @@ export const cookingModeTestIds = {
   ingredients: "CookingMode.ingredients",
   steps: "CookingMode.steps",
   progress: "CookingMode.progress",
+  stepFill: "CookingMode.stepFill",
   group: "CookingMode.group",
   place: "CookingMode.place",
   swipeArea: "CookingMode.swipeArea",
