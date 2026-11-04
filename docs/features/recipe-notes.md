@@ -137,8 +137,14 @@ so an adjusted amount is what is heard, and adjusting servings or units makes a 
   up to high.", in `spoken`, so the screen keeps the page's words. Its other actions are read
   plainly.
 - **Read aloud plays one list from the same audio.** It seeks to the list's first line and
-  pauses when the voice moves past the last, so it never needs a render of its own. Listen, or the
-  bar's play button, lifts that stop and plays on.
+  stops at the end of the last, so it never needs a render of its own. Listen, or the bar's play
+  button, lifts that stop and plays on.
+- **A stop lands exactly at a line's end.** The engine is told the line to stop after
+  (`stopAfterLine`) and pauses 40ms before the next line starts, on a timer set from the audio's
+  own clock and set again on every play, seek, rate change and time update. A stop the voice has
+  already passed (the pacer moves in 250ms steps) is pulled back inside the line. Pausing once the
+  next line showed as active, as Read aloud first did, let up to a quarter of a second of it through:
+  the "the" of a following "then" in cooking step by step.
 - **The highlight follows the voice into the lists.** The note shows only the Summary's lines;
   the ingredients card tints the line being read, and the method tints the sentence being read
   inside its step, wrapping with the text, rather than the step as a block (design 150ac). Both

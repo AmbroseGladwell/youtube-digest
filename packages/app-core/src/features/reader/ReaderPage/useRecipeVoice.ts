@@ -54,18 +54,21 @@ export function useRecipeVoice(
 ): RecipeVoice | null {
   const engine = usePlayer();
   const analytics = useOverviewPageAnalytics();
-  const [stopAfter, setStopAfter] = useState<number | null>(null);
+  const [stopAfter, setStop] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
   const ended = notePlayer.snapshot.status === "ended";
+  const setStopAfter = (line: number | null) => {
+    setStop(line);
+    engine.stopAfterLine(line);
+  };
 
+  // The engine stops at the line's end itself; this only forgets a stop the voice has gone past,
+  // by a seek or by reaching the end.
   useEffect(() => {
     if (stopAfter === null) return;
-    if (ended) {
-      setStopAfter(null);
-    } else if (activeIndex > stopAfter) {
-      engine.pause();
-      engine.seekLine(stopAfter);
-      setStopAfter(null);
+    if (ended || activeIndex > stopAfter) {
+      setStop(null);
+      engine.stopAfterLine(null);
     }
   }, [activeIndex, stopAfter, ended, engine]);
 
