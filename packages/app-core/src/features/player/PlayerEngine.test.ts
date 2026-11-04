@@ -6,6 +6,7 @@ import {
   PREPARING_LONG_AFTER_MS,
   POLL_INTERVAL_MS,
   PlayerEngine,
+  STOP_AHEAD_SECONDS,
   WATCH_GIVES_UP_AFTER_MS,
   WATCH_INTERVAL_MS,
   type PlayerMedia,
@@ -128,6 +129,65 @@ describe("PlayerEngine", () => {
 
     media.reachTime(5);
     expect(engine.getLine()).toBe(2);
+  });
+
+  it("a stop after a line pauses just before the next line's first sound, not once it is heard", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.stopAfterLine(0);
+    engine.play();
+
+    media.reachTime(0.5);
+    await vi.advanceTimersByTimeAsync(400);
+    expect(engine.getSnapshot().status).toBe("playing");
+
+    media.currentTime = 1.02 - STOP_AHEAD_SECONDS;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(engine.getSnapshot().status).toBe("paused");
+    expect(media.paused).toBe(true);
+    expect(engine.getTime()).toBeLessThan(1.02);
+    expect(engine.getLine()).toBe(0);
+  });
+
+  it("a stop the audio has already passed, between two time updates, pulls it back inside the line", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.stopAfterLine(0);
+    engine.play();
+
+    media.reachTime(1.2);
+    expect(engine.getSnapshot().status).toBe("paused");
+    expect(media.currentTime).toBeLessThan(1.02);
+    expect(engine.getLine()).toBe(0);
+  });
+
+  it("the pacer stops at the line's end too, though it moves in steps", async () => {
+    const engine = engineWith(null);
+    engine.load(TRACK);
+    engine.stopAfterLine(0);
+    engine.play();
+
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(engine.getSnapshot().status).toBe("paused");
+    expect(engine.getLine()).toBe(0);
+  });
+
+  it("a stop's timer that fires while the audio is behind waits again rather than cutting the line short", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.stopAfterLine(0);
+    engine.play();
+
+    media.currentTime = 0.6;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(engine.getSnapshot().status).toBe("playing");
+
+    media.reachTime(1.0);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(engine.getSnapshot().status).toBe("paused");
   });
 
   it("narrates the opening before the first line, with no line on screen standing for it", async () => {

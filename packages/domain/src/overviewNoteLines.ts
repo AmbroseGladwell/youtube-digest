@@ -1,6 +1,9 @@
 import type { NoteLine } from "./NoteLine.js";
 import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
+import type { RecipeUnits } from "./adjustIngredient.js";
+import { recipeActions } from "./recipeActions.js";
+import { inUsOvenTemperatures } from "./usOvenTemperatures.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
 import { spokenMeasures } from "./spokenMeasures.js";
@@ -87,7 +90,10 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // (docs/features/sharing.md). An Overview is a SharedNote with more on it.
 // A recipe's ingredients can be read as the reader adjusted them, so what is heard is what is
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
-export function overviewNoteLines(overview: SharedNote, shown: { ingredients?: readonly string[] } = {}): NoteLine[] {
+export function overviewNoteLines(
+  overview: SharedNote,
+  shown: { ingredients?: readonly string[]; units?: RecipeUnits } = {},
+): NoteLine[] {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {
@@ -118,7 +124,11 @@ export function overviewNoteLines(overview: SharedNote, shown: { ingredients?: r
     section(
       METHOD_SECTION,
       { text: METHOD_SECTION, spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps` },
-      recipe.steps.map(({ text }, index) => ({ text, spoken: `Step ${index + 1}. ${spokenMeasures(text)}` })),
+      recipeActions(recipe.steps).map(({ text: written, step, index, label }) => {
+        const text = shown.units === "us" ? inUsOvenTemperatures(written) : written;
+        const said = spokenMeasures(text.replace(/^…/, ""));
+        return { text, spoken: index === 0 ? `Step ${step + 1}. ${label === null ? "" : `${label}. `}${said}` : said };
+      }),
       true,
     );
     return lines;

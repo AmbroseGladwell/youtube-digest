@@ -21,6 +21,8 @@ export interface RecipeAdjustment {
   copyNote: string | null;
   // Said once above the method, which keeps the author's amounts.
   methodNote: string | null;
+  // Said under the step on every action of cooking step by step, for the same reason (150af).
+  actionNote: string | null;
   servings: string | null;
 }
 
@@ -38,7 +40,7 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
   const lines = recipe.ingredients.map((line) => adjustIngredient(line, factor, units));
   const servings = scale.kind === "servings" && recipe.yield !== null ? servingsLabel(recipe.yield, scale.count) : null;
   if (factor === 1 && units === "asWritten") {
-    return { lines, adjusted: false, status: null, copyNote: null, methodNote: null, servings };
+    return { lines, adjusted: false, status: null, copyNote: null, methodNote: null, actionNote: null, servings };
   }
 
   const unread = lines.filter(({ kind }) => kind === "unreadable").length;
@@ -63,9 +65,12 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     status,
     copyNote: `${what.slice(0, -1)}, from ${asWritten}.`,
     methodNote:
-      recipe.yield === null
-        ? "The method gives the recipe’s own amounts and temperatures."
-        : `The method gives the recipe’s own amounts and temperatures, for ${recipe.yield}.`,
+      units === "us"
+        ? `The method gives the recipe’s own amounts${recipe.yield === null ? "" : `, for ${recipe.yield}`}, with oven temperatures in °F.`
+        : recipe.yield === null
+          ? "The method gives the recipe’s own amounts and temperatures."
+          : `The method gives the recipe’s own amounts and temperatures, for ${recipe.yield}.`,
+    actionNote: `${units === "us" ? "Temperatures in °F. " : ""}Amounts as written${recipe.yield === null ? "" : `, for ${recipe.yield}`}`,
     servings,
   };
 }

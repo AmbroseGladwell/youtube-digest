@@ -24,6 +24,10 @@ export const WATCH_INTERVAL_MS = 5000;
 export const WATCH_GIVES_UP_AFTER_MS = 120_000;
 export const PREPARING_LONG_AFTER_MS = 45_000;
 export const PACER_TICK_MS = 250;
+// A line's stop lands just before the next line's first sound, and a timer that fires a little
+// early is set again rather than trusted.
+export const STOP_AHEAD_SECONDS = 0.04;
+const STOP_TIMER_SLACK_SECONDS = 0.005;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
 
 export type PlayerMedia = Pick<
@@ -92,6 +96,8 @@ export class PlayerEngine {
   #pollTimer: ReturnType<typeof setTimeout> | null = null;
   #longTimer: ReturnType<typeof setTimeout> | null = null;
   #pacerTimer: ReturnType<typeof setInterval> | null = null;
+  #stopLine: number | null = null;
+  #stopTimer: ReturnType<typeof setTimeout> | null = null;
   #pollFailures = 0;
   #watchChecks = 0;
   #warn: (warning: ClientWarningReport) => void;
@@ -206,6 +212,7 @@ export class PlayerEngine {
     if (source === "pacer") this.#stopPacer();
     else this.#media?.pause();
     this.#set({ status: "paused" });
+    this.#armStop();
   }
 
   // The render carries on without anyone waiting for it, so the bar goes back to saying
@@ -245,6 +252,7 @@ export class PlayerEngine {
     this.#time = Math.min(Math.max(seconds, 0), timings.durationSeconds);
     if (this.#mediaIsCurrent()) this.#media!.currentTime = this.#time;
     if (status === "ended") this.#set({ status: "paused" });
+    this.#armStop();
     this.#emitTime();
   }
 
@@ -252,6 +260,14 @@ export class PlayerEngine {
     const { lineStarts } = this.#snapshot.timings;
     const clamped = Math.min(Math.max(index, 0), Math.max(lineStarts.length - 1, 0));
     this.seek(lineStarts[clamped] ?? 0);
+  }
+
+  // Read one line and no further: Read aloud's lists and cooking step by step. The engine pauses at
+  // the end of that line itself, timed from the audio's own clock, because waiting to see the next
+  // line become active lets the first sound of it through (docs/features/recipe-notes.md).
+  stopAfterLine(index: number | null): void {
+    this.#stopLine = index;
+    this.#armStop();
   }
 
   stepLine(delta: number): void {
@@ -266,6 +282,7 @@ export class PlayerEngine {
     const next = PLAYER_RATES[(PLAYER_RATES.indexOf(this.#snapshot.rate) + 1) % PLAYER_RATES.length]!;
     if (this.#media !== null) this.#media.playbackRate = next;
     this.#set({ rate: next });
+    this.#armStop();
   }
 
   // A note that has just been made asks for its narration straight away, behind anything
@@ -523,13 +540,57 @@ export class PlayerEngine {
     return isSyncRequestError(error) && error.code === "unauthenticated" ? "signedOut" : "unavailable";
   }
 
+  #stopTime(): number | null {
+    if (this.#stopLine === null) return null;
+    return this.#snapshot.timings.lineStarts[this.#stopLine + 1] ?? null;
+  }
+
+  #now(): number {
+    return this.#mediaIsCurrent() ? this.#media!.currentTime : this.#time;
+  }
+
+  #pastStop(): boolean {
+    const stopAt = this.#stopTime();
+    return stopAt !== null && this.#now() >= stopAt - STOP_AHEAD_SECONDS;
+  }
+
+  #armStop(): void {
+    if (this.#stopTimer !== null) clearTimeout(this.#stopTimer);
+    this.#stopTimer = null;
+    const stopAt = this.#stopTime();
+    if (stopAt === null || this.#snapshot.status !== "playing") return;
+    const wait = (stopAt - STOP_AHEAD_SECONDS - this.#now()) / this.#snapshot.rate;
+    this.#stopTimer = setTimeout(() => this.#reachStop(), Math.max(0, wait * 1000));
+  }
+
+  #reachStop(): void {
+    this.#stopTimer = null;
+    const stopAt = this.#stopTime();
+    if (stopAt === null) return;
+    if (this.#now() < stopAt - STOP_AHEAD_SECONDS - STOP_TIMER_SLACK_SECONDS) {
+      this.#armStop();
+      return;
+    }
+    const at = Math.min(this.#now(), stopAt - STOP_AHEAD_SECONDS);
+    this.#stopLine = null;
+    this.pause();
+    this.#time = at;
+    if (this.#mediaIsCurrent()) this.#media!.currentTime = at;
+    this.#emitTime();
+  }
+
   #startPacer(): void {
     this.#stopPacer();
     const { durationSeconds } = this.#snapshot.timings;
     if (this.#time >= durationSeconds) this.#time = 0;
     this.#set({ status: "playing" });
+    this.#armStop();
     this.#pacerTimer = setInterval(() => {
       this.#time = Math.min(this.#time + (PACER_TICK_MS / 1000) * this.#snapshot.rate, durationSeconds);
+      if (this.#pastStop()) {
+        this.#reachStop();
+        return;
+      }
       if (this.#time >= durationSeconds) {
         this.#stopPacer();
         this.#set({ status: "ended" });
@@ -561,6 +622,11 @@ export class PlayerEngine {
       media.addEventListener("timeupdate", () => {
         if (!this.#mediaIsCurrent()) return;
         this.#time = media.currentTime;
+        if (this.#pastStop()) {
+          this.#reachStop();
+          return;
+        }
+        this.#armStop();
         this.#emitTime();
       });
       this.#media = media;
@@ -605,6 +671,7 @@ export class PlayerEngine {
   #playMedia(): void {
     const media = this.#loadMedia();
     this.#set({ status: "playing" });
+    this.#armStop();
     media.play().catch(() => {
       if (this.#mediaIsCurrent() && media.paused) this.#set({ status: "paused" });
     });
@@ -614,6 +681,7 @@ export class PlayerEngine {
     if (!this.#mediaIsCurrent()) return;
     if (status === "ended") this.#time = this.#snapshot.timings.durationSeconds;
     this.#set({ status });
+    this.#armStop();
     this.#emitTime();
   }
 
@@ -625,6 +693,8 @@ export class PlayerEngine {
   }
 
   #teardown(): void {
+    this.#stopLine = null;
+    this.#armStop();
     this.#generation += 1;
     this.#clearPreparing();
     this.#stopPacer();

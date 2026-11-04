@@ -6,6 +6,7 @@ import {
   overviewNoteCaptions,
   overviewNoteLines,
   formatClock,
+  recipeActions,
   type SharePayload,
   sourceName,
 } from "@overview/domain";
@@ -97,7 +98,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const captions = useMemo(() => overviewNoteCaptions(note), [note]);
   const track = useMemo(() => playerTrackFor(note, lines), [note, lines]);
   const notePlayer = useNotePlayer(track);
-  const recipeVoice = useRecipeVoice(track, lines, notePlayer);
+  const methodActions = useMemo(() => (note.recipe == null ? [] : recipeActions(note.recipe.steps)), [note.recipe]);
+  const recipeVoice = useRecipeVoice(track, lines, methodActions, note.recipe?.stepCount ?? 0, notePlayer);
   const summaryLines = useMemo(
     () => (note.recipe == null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
     [lines, note.recipe],
@@ -255,7 +257,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       onUnitsChange={() => undefined}
                       onReset={() => undefined}
                     />
-                    <RecipeMethod recipe={recipePage.recipe} source={recipePage.source} note={null} voice={null} />
+                    <RecipeMethod recipe={recipePage.recipe} actions={methodActions} source={recipePage.source} note={null} voice={null} cooking={null} stacked={false} usTemperatures={false} />
                   </>
                 )}
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
@@ -287,6 +289,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       </div>
 
       <ReaderPlayerBar
+        onCookFromHere={null}
         view={barView}
         status={notePlayer.snapshot.status}
         time={notePlayer.time}

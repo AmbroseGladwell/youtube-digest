@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { INGREDIENTS_SECTION, METHOD_SECTION, type NoteLine } from "@overview/domain";
+import { INGREDIENTS_SECTION, METHOD_SECTION, type NoteLine, type RecipeAction } from "@overview/domain";
 import { useOverviewPageAnalytics } from "../../analytics/OverviewAnalyticsContext.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
@@ -13,6 +13,12 @@ export interface RecipeVoice {
   nowReading: string | null;
   // Listen plays on through every section, so a list's stop no longer applies.
   release: () => void;
+  // The method's action under the voice, for the bar's Cook from here (design 150b).
+  methodAction: number | null;
+  // Cooking step by step: one action read and then the voice waits, or the place moved with no
+  // voice where there is none to read it (OV-150).
+  readAction: (action: number) => void;
+  holdAt: (action: number) => void;
 }
 
 interface Stretch {
@@ -35,24 +41,34 @@ const NO_VOICE: RecipeListVoice = {
 };
 
 // A recipe's narration is the whole recipe, so one render has every section ready (OV-148).
+// The method's lines are its actions (OV-150), so its voice counts in actions and the bar in steps.
 // Listen plays straight through; a list's Read aloud plays its own stretch of the same audio
 // and stops at the end of it, and each list tints the line being read. Tapping an ingredient
 // or a step moves the voice there, as tapping a line of the note does (OV-149).
-export function useRecipeVoice(track: PlayerTrack | null, lines: readonly NoteLine[], notePlayer: NotePlayer): RecipeVoice | null {
+export function useRecipeVoice(
+  track: PlayerTrack | null,
+  lines: readonly NoteLine[],
+  actions: readonly RecipeAction[],
+  stepCount: number,
+  notePlayer: NotePlayer,
+): RecipeVoice | null {
   const engine = usePlayer();
   const analytics = useOverviewPageAnalytics();
-  const [stopAfter, setStopAfter] = useState<number | null>(null);
+  const [stopAfter, setStop] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
   const ended = notePlayer.snapshot.status === "ended";
+  const setStopAfter = (line: number | null) => {
+    setStop(line);
+    engine.stopAfterLine(line);
+  };
 
+  // The engine stops at the line's end itself; this only forgets a stop the voice has gone past,
+  // by a seek or by reaching the end.
   useEffect(() => {
     if (stopAfter === null) return;
-    if (ended) {
-      setStopAfter(null);
-    } else if (activeIndex > stopAfter) {
-      engine.pause();
-      engine.seekLine(stopAfter);
-      setStopAfter(null);
+    if (ended || activeIndex > stopAfter) {
+      setStop(null);
+      engine.stopAfterLine(null);
     }
   }, [activeIndex, stopAfter, ended, engine]);
 
@@ -94,10 +110,26 @@ export function useRecipeVoice(track: PlayerTrack | null, lines: readonly NoteLi
     nowReading: !playing
       ? null
       : method !== null && within(method)
-        ? `Method · step ${position(method)}`
+        ? `Method · step ${(actions[activeIndex - method.first]?.step ?? 0) + 1} of ${stepCount}`
         : within(ingredients)
           ? `Ingredients · ${position(ingredients)}`
           : null,
     release: () => setStopAfter(null),
+    methodAction: method !== null && within(method) ? activeIndex - method.first : null,
+    readAction: (action) => {
+      if (method === null) return;
+      const line = method.first + action;
+      engine.load(track, line);
+      engine.seekLine(line);
+      setStopAfter(line);
+      engine.play();
+    },
+    holdAt: (action) => {
+      if (method === null) return;
+      engine.load(track, method.first + action);
+      engine.pause();
+      engine.seekLine(method.first + action);
+      setStopAfter(null);
+    },
   };
 }

@@ -14,6 +14,7 @@ import {
   overviewNoteLines,
   overviewTimeSaved,
   formatClock,
+  recipeActions as actionsOf,
 } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
@@ -42,6 +43,7 @@ import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
+import { CookingMode } from "../components/CookingMode/CookingMode.js";
 import { RecipeIngredients } from "../components/RecipeIngredients/RecipeIngredients.js";
 import { RecipeMethod } from "../components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../components/RecipePageLink/RecipePageLink.js";
@@ -49,6 +51,7 @@ import { RecipePrintSheet } from "../components/RecipePrintSheet/RecipePrintShee
 import { RecipeTimes } from "../components/RecipeTimes/RecipeTimes.js";
 import { readRecipeUnits, writeRecipeUnits } from "../recipeUnitsStorage.js";
 import { initialScale, recipeAdjustment, type RecipeScale } from "../util/recipeAdjustment.js";
+import { useCookingMode } from "./useCookingMode.js";
 import { useRecipeVoice } from "./useRecipeVoice.js";
 import { ShareOverviewDialog } from "../../shares/components/ShareOverviewDialog/ShareOverviewDialog.js";
 import { useShareOverviewMutation } from "../../shares/mutations/useShareOverviewMutation.js";
@@ -184,9 +187,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
-    () => (overview ? overviewNoteLines(overview, recipe === null ? {} : { ingredients: shownIngredients }) : []),
-    [overview, recipe, shownIngredients],
+    () => (overview ? overviewNoteLines(overview, recipe === null ? {} : { ingredients: shownIngredients, units: recipeUnits }) : []),
+    [overview, recipe, shownIngredients, recipeUnits],
   );
+  const methodActions = useMemo(() => (recipe === null ? [] : actionsOf(recipe.steps)), [recipe]);
   const summaryLines = useMemo(
     () => (recipe === null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
     [lines, recipe],
@@ -218,7 +222,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
-  const recipeVoice = useRecipeVoice(track, lines, notePlayer);
+  const recipeVoice = useRecipeVoice(track, lines, methodActions, recipe?.stepCount ?? 0, notePlayer);
   useEffect(() => {
     if (!recipeCopied) return;
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
@@ -233,6 +237,15 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const analytics = useAnalytics();
   const reader = useMemo(() => bindOverviewId(analytics.reader, overviewId), [analytics, overviewId]);
   const overviewAnalytics = useMemo(() => ({ page: reader, reader }), [reader]);
+  const cooking = useCookingMode({
+    overviewId,
+    title: overview?.source.title ?? "",
+    steps: recipe?.steps ?? [],
+    actions: methodActions,
+    recipeVoice,
+    snapshot: notePlayer.snapshot,
+    analytics: reader,
+  });
 
   const opened = useRef<string | null>(null);
   const loaded = overviewQuery.data ?? null;
@@ -373,6 +386,18 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           },
           onPrint: () => setPrintingRecipe(true),
         };
+  const cookable = recipePage !== null && recipePage.recipe.steps.length > 0 && recipeVoice !== null;
+  const cookFrom = cooking.place;
+  const recipeCooking = !cookable
+    ? null
+    : {
+        placeStep: cookFrom === null ? null : (methodActions[cookFrom.action]?.step ?? null),
+        reachedStep: cooking.reachedStep,
+        onStart: () => cooking.start("heading", 0),
+        onCarryOn: () => cooking.start("carryOn", cookFrom?.action ?? 0),
+      };
+  const methodAction = recipeVoice?.methodAction ?? null;
+  const cookFromHere = cookable && methodAction !== null ? () => cooking.start("bar", methodAction) : null;
   const chooseUnits = (units: RecipeUnits) => {
     setRecipeUnits(units);
     writeRecipeUnits(units);
@@ -514,9 +539,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   />
                   <RecipeMethod
                     recipe={recipePage.recipe}
+                    actions={methodActions}
                     source={recipePage.source}
                     note={adjustment.methodNote}
                     voice={recipeVoice?.method ?? null}
+                    cooking={recipeCooking}
+                    stacked={isPhone && !isPanel}
+                    usTemperatures={recipeUnits === "us"}
                   />
                 </>
               )}
@@ -627,6 +656,40 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           />
         )}
 
+        {cookable && adjustment !== null && scale !== null && (
+          <CookingMode
+            mode={cooking}
+            title={recipePage.source.title}
+            from={sourceName(recipePage.source)}
+            steps={recipePage.recipe.steps}
+            actions={methodActions}
+            actionNote={adjustment.actionNote}
+            surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
+            usTemperatures={recipeUnits === "us"}
+            ingredients={
+              <>
+                {adjustment.status !== null && (
+                  <p className={styles.cookingAdjusted}>
+                    {adjustment.status} The method keeps the recipe’s amounts
+                    {recipePage.recipe.yield === null ? "" : `, for ${recipePage.recipe.yield}`}.
+                  </p>
+                )}
+                <RecipeIngredients
+                  adjustment={adjustment}
+                  scale={scale}
+                  units={recipeUnits}
+                  columns={false}
+                  adjustable={false}
+                  voice={null}
+                  onScaleChange={setRecipeScale}
+                  onUnitsChange={chooseUnits}
+                  onReset={() => undefined}
+                />
+              </>
+            }
+          />
+        )}
+
         {sharing && (
           <ShareOverviewDialog
             share={overviewShare.share}
@@ -674,6 +737,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               }
             }}
             onReRecord={() => player.reRecord()}
+            onCookFromHere={cookFromHere}
           />
         )}
       </article>

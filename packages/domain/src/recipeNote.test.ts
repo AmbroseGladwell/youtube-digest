@@ -73,6 +73,32 @@ test("a recipe's narration is the whole recipe, with each step's number and its 
   assert.equal(lines.at(-1)?.text, "Stir the leeks through.");
 });
 
+test("the method is narrated one action to a line, saying the step's number and label only on its first", () => {
+  const steps = [
+    { text: "Cook beef - Turn the heat up to high. Add the beef, then cook for 2 mins.", group: null },
+    { text: "Season to taste.", group: null },
+  ];
+  const lines = overviewNoteLines(makeRecipeOverview({ steps, stepCount: 2 })).filter(({ section, heading }) => section === "Method" && !heading);
+  assert.deepEqual(
+    lines.map(({ text, spoken }) => [text, spoken]),
+    [
+      ["Turn the heat up to high.", "Step 1. Cook beef. Turn the heat up to high."],
+      ["Add the beef", "Add the beef"],
+      ["…then cook for 2 mins.", "then cook for 2 minutes."],
+      ["Season to taste.", "Step 2. Season to taste."],
+    ],
+  );
+});
+
+test("in US units the method's oven temperatures are shown and read in Fahrenheit", () => {
+  const steps = [{ text: "Heat the oven to 220°C (200°C fan).", group: null }];
+  const [line] = overviewNoteLines(makeRecipeOverview({ steps, stepCount: 1 }), { units: "us" }).filter(
+    ({ section, heading }) => section === "Method" && !heading,
+  );
+  assert.equal(line?.text, "Heat the oven to 425°F (400°F fan).");
+  assert.equal(line?.spoken, "Step 1. Heat the oven to 425 degrees Fahrenheit.");
+});
+
 test("the ingredients are read as shown, and a copy without the method stops after them", () => {
   const adjusted = overviewNoteLines(makeRecipeOverview(), { ingredients: ["6 large leeks, trimmed"] });
   assert.deepEqual(adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text), ["6 large leeks, trimmed"]);

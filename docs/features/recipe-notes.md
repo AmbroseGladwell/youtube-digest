@@ -16,6 +16,9 @@ note. Trello OV-144, decided 2026-11-03. The designs are 144a–144ab in Claude 
 | Servings and units | `adjustIngredient.ts`, `app-core/.../reader/util/recipeAdjustment.ts` |
 | The screens | `RecipeTimes`, `RecipeIngredients`, `RecipeMethod`, `RecipePageLink`, `RecipePrintSheet` |
 | Narrating the whole recipe | `overviewNoteLines`, `useRecipeVoice` |
+| A step's actions | `recipeActions.ts` |
+| Cooking step by step | `useCookingMode`, `CookingMode`, `CookingStepsSheet`, `CookingIngredientsSheet`, `cookingPlaceStorage.ts` |
+| Oven temperatures in US units | `usOvenTemperatures.ts`, `OvenText` |
 | Units said in full | `spokenMeasures.ts` |
 
 ## Web pages first, shaped for video too
@@ -106,8 +109,8 @@ guess:
 - One becoming several takes the plural of its noun: "1 small garlic clove" doubled is "2 small
   garlic cloves".
 - The method keeps the author's words and amounts, and says so above step 1 once anything is
-  adjusted. Oven temperatures are not converted for US units: that is still open for the owner,
-  since it is the only change that would edit the author's text.
+  adjusted. Its oven temperatures are the one thing US units change (OV-150, see "Oven
+  temperatures in US units").
 
 Copy and Print take the lines as shown, with a line saying what they were adjusted from.
 
@@ -129,14 +132,23 @@ so an adjusted amount is what is heard, and adjusting servings or units makes a 
 
 - **Headings are counted, as key points are.** "There are 8 ingredients" and "The method, in 6
   steps", counted in code.
-- **Each step says its number.** "Step 1. Heat the oven…", in `spoken`, so the screen keeps the
-  page's words.
+- **The method is read one action to a line** (OV-150, see "A step's actions" below). A step's
+  first action says its number, and its label where it has one: "Step 3. Cook beef. Turn the heat
+  up to high.", in `spoken`, so the screen keeps the page's words. Its other actions are read
+  plainly.
 - **Read aloud plays one list from the same audio.** It seeks to the list's first line and
-  pauses when the voice moves past the last, so it never needs a render of its own. Listen, or the
-  bar's play button, lifts that stop and plays on.
+  stops at the end of the last, so it never needs a render of its own. Listen, or the bar's play
+  button, lifts that stop and plays on.
+- **A stop lands exactly at a line's end.** The engine is told the line to stop after
+  (`stopAfterLine`) and pauses 40ms before the next line starts, on a timer set from the audio's
+  own clock and set again on every play, seek, rate change and time update. A stop the voice has
+  already passed (the pacer moves in 250ms steps) is pulled back inside the line. Pausing once the
+  next line showed as active, as Read aloud first did, let up to a quarter of a second of it through:
+  the "the" of a following "then" in cooking step by step.
 - **The highlight follows the voice into the lists.** The note shows only the Summary's lines;
-  the ingredients card and the method tint the line being read and keep it on screen, and the bar
-  says "Now reading · Method · step 3 of 6".
+  the ingredients card tints the line being read, and the method tints the sentence being read
+  inside its step, wrapping with the text, rather than the step as a block (design 150ac). Both
+  keep it on screen. The bar counts steps, not actions: "Now reading · Method · step 3 of 6".
 
 - **The Summary heading is said "The summary"** (OV-149). "In short" sounded odd before the
   summary was the only thing read; now it opens a whole recipe.
@@ -157,7 +169,92 @@ so an adjusted amount is what is heard, and adjusting servings or units makes a 
 
 A shared copy carries no method, so its narration ends after the ingredients.
 
-Step-by-step cooking, which reads one action at a time and waits, is its own card (OV-150).
+## A step's actions
+
+A page's step is often several things to do ("Heat the oil. Add the onions and cook for 10 minutes.
+Stir in the garlic."), so the method is split into actions, in code and never by a model
+(`docs/prototype/constraints.md`). Trello OV-150, designs 150a–150au in Claude Design (OV-150 1–10).
+The rules were set by a test on 115 steps from 11 real recipe pages, on 3 Nov 2026:
+
+- **At a sentence's end**, where the next sentence starts with a capital or a digit. "approx.",
+  "e.g.", "i.e." and "vs." don't end one; a temperature ("200C.") does.
+- **At ", then" and a verb**, which the owner chose to read as "…then drain the pasta." on its own
+  screen, with the comma dropped (3 Nov 2026). Not when "then" is followed by a thing ("then the
+  chips"), a word ending -ing or -ly ("then gradually beat in"), or when the sentence starts "If",
+  so "If you're using a bread machine, …, then skip to step 7" keeps its condition.
+- **Never** at "then" without a comma (that is nearly always a list of ingredients: "tofu, noodles
+  then Sauce"), at a semicolon (an action and its reason), at a dash (an aside or a range) or at a
+  colon.
+- **A sentence that is only an aside in brackets** stays with the action before it, since narration
+  drops brackets and it would be a silent screen.
+- **A label is lifted**: one to four words before " - " and a capital, or before ":", at the very
+  start of a step ("Cook beef - Turn the heat…", "To make pizza later: …"). Each of the step's
+  actions carries it, and the voice says it once, after the number. Words before a dash that run on
+  in lower case are the sentence, not a label.
+- **A condition is marked**: an action that starts "If " carries its words up to the first comma, to
+  set in bold (150at).
+
+Every action keeps its step and its place in the page's text, so "step 3" still means one thing and
+the method can tint a sentence in place. Checks and explanations ("The sauce should be thick…")
+come out as actions too, since code can't tell them apart (150p).
+
+## Cooking step by step
+
+Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the owner's choices of
+3 Nov 2026. One action on screen, read once, and then the voice waits for the reader.
+
+- **Getting in (150a, 150b).** "Cook step by step" on the Method heading, full width under it on a
+  phone, starts at step 1. "Cook from here" in the bar, whenever the voice is in the method, starts
+  at the action it is on, so tapping a step and then Cook from here starts there. Not in ⋯, and not
+  on a shared copy, which has no method.
+- **The screen (150c–150h).** The group, "Step 4 · 2 of 2" ("Step 7" for a one-action step), the
+  action large in Figtree 400 sized by its length (34px to 23px on a phone, 30 to 20 in the panel,
+  52 to 32 on the web, in rem), and the next action muted under it: "Then", or "Then step 5" when
+  it starts a new step. In the panel the preview drops for an action over 30 words. Next is the
+  biggest thing on the screen; Back and Say it again sit above it. Next becomes Finish on the last
+  action.
+- **The voice (150i, 150j).** It reads the action's own line of the recipe's narration and stops,
+  using the same stop as Read aloud, so the mode needs no render of its own. One line says what it
+  is doing: Reading step 4, Waiting for you, the voice on its way while the audio renders (the reader
+  can go on and it joins them where they are), text only (said once, on the first screen, when
+  there is no narration), or stopped, in the warning ink with Try again. Say it again goes when there
+  is nothing to repeat. No auto-advance.
+- **Swiping (OV-158, owner 4 Nov 2026).** Swipe up for Next and down for Back, on the action
+  area, not the controls. The next action rises from where it was previewed and the last one comes
+  back down from above, and Next by button, key or headphones moves the same way, so the motion
+  means one thing. The action follows the finger while dragging; a drag under 56px, or one that is
+  mostly sideways, springs back. Up and down rather than left and right because the next action is
+  already shown beneath. Under reduced motion it simply changes.
+- **Progress and jumping (150k–150m).** A dot per step up to 20 steps, a 3px line by action past
+  that. The count opens the steps, each by its first action; choosing one reads it.
+- **Ingredients (150ah–150aj).** In the top bar on every screen, opening the note's list as it is
+  shown, adjusted amounts and their line included, as a sheet, or a drawer on the right on the web
+  with the step beside it. The voice carries on. While servings or units are adjusted, every action
+  carries "Amounts as written, for 4 servings".
+- **Labels, conditions and checks (150p–150au).** See "A step's actions". A label is a small
+  heading over each of its step's actions; a condition is in Bold 700 in the label colour, the
+  action at 400. Checks read as actions.
+- **The end (150n, 150o).** "That's the method." with Back to the recipe, Last step and Start again.
+  Nothing about serving. Finish forgets the place and lets the screen sleep.
+- **Screen and hands-free (150t–150v).** "Screen stays on while you cook" only while the browser
+  holds a wake lock. While the mode is open the media session's track buttons are Next and Back, and
+  play/pause is Next while the voice waits and pause or resume while it reads (owner). A dismissible
+  line says so on the first two entries where there is a voice. Keys: Space or → Next, ← Back,
+  R Say it again, I Ingredients, Esc Done, shown on the web's buttons.
+- **Leaving (150w).** Done or Esc, no confirm. The place is kept on this device for 24 hours (owner)
+  and cleared by Finish; the method says "You stopped at step 8 of 16.", tints that step, and offers
+  "Carry on from step 8" and "Start from step 1".
+- **Analytics.** `reader.cooking.started` with where from and the step, and `reader.cooking.left`
+  with Done or Finish, the actions reached, and whether the last step was.
+
+## Oven temperatures in US units
+
+Decided by the owner on 3 Nov 2026 (150ak), closing 144x's question. US units turn the method's
+Celsius into Fahrenheit, fan figures included, on the note, in cooking step by step and in what is
+read aloud, marked on the stone tint like a changed amount. Oven figures land on a dial's 25° marks,
+as the usual tables do (180°C is 350°F, 220°C is 425°F); anything under 120°C converts exactly.
+Gas marks, Fahrenheit and the method's amounts stay as written, and the method's note says
+"…with oven temperatures in °F". Copy and Print still give the method as the page wrote it.
 
 ## Sharing
 
@@ -188,13 +285,17 @@ clients are handled as for any record change (`record-migrations.md`).
 ## Not built
 
 - OV-122's moment link under each step (144i).
-- Converting oven temperatures in the method for US units (open).
+- The voice saying "That's the method." at the end of cooking step by step (150o): every spoken
+  word comes from a line of the narration, and the method has no such line.
+- Oven temperatures converted in Copy and Print.
 - Copy and Print from a shared page.
 
 ## Testing
 
 `pageRecipe.test.ts` runs handwritten pages, for the same reason as `readArticle.test.ts`: others'
 text stays out of the repo. `recipeNote.test.ts` and `adjustIngredient.test.ts` cover the record and
-the arithmetic, `generateRecipeOverview.test.ts` the prompt and routing with a simulated model, and
+the arithmetic, `recipeActions.test.ts` the splitting on steps taken from real pages,
+`usOvenTemperatures.test.ts` the conversion, `cookingPlaceStorage.test.ts` the kept place, and
+`cookingMode.iwft.ts` the mode, `generateRecipeOverview.test.ts` the prompt and routing with a simulated model, and
 `recipes.iwft.ts` with the shared page scenario cover the screens. Nothing has been run against real
 recipe sites or a real model yet.
