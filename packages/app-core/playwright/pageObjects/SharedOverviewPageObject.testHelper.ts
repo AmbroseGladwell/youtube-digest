@@ -109,4 +109,14 @@ export class SharedOverviewPageObject extends PageObject {
       await this.get(makeYourOwnAsideTestIds.urlField).fill(url);
       await this.click(makeYourOwnAsideTestIds.makeButton);
     });
+
+  verifyRefusesLink = () =>
+    this.step("verifyRefusesLink", () =>
+      expect(this.get(makeYourOwnAsideTestIds.refused)).toHaveText(
+        "We can't make an overview from that link yet. Try a YouTube video or playlist link.",
+      ),
+    );
+
+  clickMakeAnOverviewInHeader = () =>
+    this.step("clickMakeAnOverviewInHeader", () => this.click(sharedPageHeaderTestIds.makeButton));
 }

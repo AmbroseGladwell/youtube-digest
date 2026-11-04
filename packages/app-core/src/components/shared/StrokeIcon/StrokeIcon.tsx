@@ -66,6 +66,8 @@ export type StrokeIconName =
   | "chefHat"
   | "list"
   | "textOnly";
+  | "expand"
+  | "shrink";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -444,6 +446,22 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   ),
   zap: (
     <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+  ),
+  expand: (
+    <>
+      <polyline points="15 3 21 3 21 9" />
+      <polyline points="9 21 3 21 3 15" />
+      <line x1="21" x2="14" y1="3" y2="10" />
+      <line x1="3" x2="10" y1="21" y2="14" />
+    </>
+  ),
+  shrink: (
+    <>
+      <polyline points="4 14 10 14 10 20" />
+      <polyline points="20 10 14 10 14 4" />
+      <line x1="14" x2="21" y1="10" y2="3" />
+      <line x1="3" x2="10" y1="21" y2="14" />
+    </>
   ),
 };
 

@@ -322,17 +322,17 @@ does.
 
 ## The way in
 
-The page is also how new people arrive, so both of its doors lead to Create account and
-**both remember what they were doing**.
+The page is also how new people arrive, and **every way in goes through onboarding**
+(OV-152, `onboarding.md`, "From a shared page"), so someone who came by a link is asked the
+same questions and picks a plan like anyone else.
 
-- **Save to my overviews** stores the copy itself.
-- **The aside's paste-a-link** stores the link.
+- **Save to my overviews** starts onboarding with the copy as its overview.
+- **The aside's paste-a-link** starts onboarding with that link, as Start's field does, and
+  refuses one that isn't a video or playlist in place.
+- **Make an overview** in the head, and on the page for a stopped link, go to Start.
 
-The intent lives in `localStorage`, validated on read, because the magic link opens a fresh
-tab and a shape written by an older build must not break the account it is confirming. The
-Create account page reads it and says what confirming will finish (design 30l's stone
-note); `SignInPage` acts on it the moment the session exists, and **forgets it first**, so a
-failure cannot leave one to fire again on the next sign-in.
+They used to go straight to Create account, with what the visitor was doing kept beside it
+and finished on sign-in. That skipped every question and the plan, so it was taken out.
 
 A saved copy becomes the new reader's own overview with `captureReason: null` and no
 topics: the sharer's reason and filing were never theirs to inherit.

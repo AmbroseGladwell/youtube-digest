@@ -37,7 +37,7 @@ export function SharedOverviewGone({ state }: SharedOverviewGoneProps) {
       <div>
         <Link
           className={styles.action}
-          to={Routes.createAccount()}
+          to={Routes.home()}
           onClick={() => analytics.sharedPage.gone.makeChosen()}
           data-testid={sharedOverviewGoneTestIds.makeButton}
         >

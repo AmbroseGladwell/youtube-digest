@@ -6,13 +6,15 @@ import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
+import { HeadImage } from "../HeadImage/HeadImage.js";
+import { useHeadImageSize } from "../../../appearance/useHeadImageSize.js";
+import { useHeadImageMotion } from "./useHeadImageMotion.js";
 import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
 import styles from "./ReaderMasthead.module.scss";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
@@ -98,10 +100,33 @@ export function ReaderMasthead({
 
   const isArticle = overview.source.kind === "web";
 
+  const headImage = useHeadImageSize();
+  const full = headImage.size === "full";
+  const header = useRef<HTMLElement | null>(null);
+  const image = useRef<HTMLButtonElement | null>(null);
+  const title = useRef<HTMLHeadingElement | null>(null);
+  const captureBeforeResize = useHeadImageMotion(full, {
+    header,
+    image,
+    title,
+    who: () => [...(header.current?.querySelectorAll(`.${styles.sourceLine}, .${styles.byline}`) ?? [])],
+  });
+  const toggleHeadImage = () => {
+    const size = full ? "small" : "full";
+    captureBeforeResize();
+    analytics.headImage.resized({ size });
+    headImage.choose(size);
+  };
+  const setHeader = (element: HTMLElement | null) => {
+    header.current = element;
+    if (typeof ref === "function") ref(element);
+    else if (ref) ref.current = element;
+  };
+
   return (
     <header
       className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
-      ref={ref}
+      ref={setHeader}
       data-testid={readerMastheadTestIds.root}
     >
       {!compact && (
@@ -188,15 +213,17 @@ export function ReaderMasthead({
 
       <div className={styles.head}>
         {/* Design 147s: the library row's tile leads the head with only who it's from
-            beside it. Without an image, or once it fails, the lead lays out as the head
-            always did. */}
-        <div className={styles.lead}>
+            beside it. Without an image, once it fails, or at full width (151b), the lead
+            lays out as the head always did, under the image. */}
+        <div className={`${styles.lead} ${full ? styles.leadFull : ""}`}>
           {!compact && (
-            <OverviewThumbnail
-              video={overview.source}
+            <HeadImage
+              key={overview.id}
+              ref={image}
+              source={overview.source}
+              full={full}
               className={styles.image}
-              nameTile={false}
-              loading="eager"
+              onToggle={toggleHeadImage}
             />
           )}
           <div className={styles.who}>
@@ -257,7 +284,7 @@ export function ReaderMasthead({
           </div>
         )}
 
-        <h2 className={styles.title} data-testid={readerMastheadTestIds.title}>
+        <h2 className={styles.title} ref={title} data-testid={readerMastheadTestIds.title}>
           {overview.source.title}
         </h2>
 

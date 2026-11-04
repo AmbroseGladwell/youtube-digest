@@ -35,7 +35,7 @@ export function SharedPageHeader({ ref }: { ref?: Ref<HTMLElement> }) {
         </Link>
         <Link
           className={styles.action}
-          to={Routes.createAccount()}
+          to={Routes.home()}
           onClick={() => analytics.sharedPage.header.makeChosen()}
           data-testid={sharedPageHeaderTestIds.makeButton}
         >
