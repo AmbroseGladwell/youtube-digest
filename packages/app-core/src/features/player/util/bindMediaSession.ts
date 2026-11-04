@@ -1,5 +1,6 @@
 import type { PlayerEngine } from "../PlayerEngine.js";
 import { SKIP_SECONDS } from "../PlayerEngine.js";
+import { currentMediaSessionOverride, onMediaSessionOverride } from "./mediaSessionOverride.js";
 
 const POSITION_REPORT_MS = 5000;
 
@@ -28,6 +29,13 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
 
   const update = () => {
     const { track, status, source } = engine.getSnapshot();
+    const override = currentMediaSessionOverride();
+    if (override !== null && track !== null) {
+      session.metadata = new MediaMetadata({ title: override.title, artist: override.artist, album: "The Overview" });
+      session.playbackState = status === "playing" || status === "buffering" ? "playing" : "paused";
+      lastTrack = null;
+      return;
+    }
     if (track === null || source !== "audio") {
       session.metadata = null;
       session.playbackState = "none";
@@ -48,8 +56,8 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
   };
 
   const handlers: Array<[MediaSessionAction, MediaSessionActionHandler | null]> = [
-    ["play", () => engine.play()],
-    ["pause", () => engine.pause()],
+    ["play", () => (currentMediaSessionOverride()?.onPlay ?? (() => engine.play()))()],
+    ["pause", () => (currentMediaSessionOverride()?.onPause ?? (() => engine.pause()))()],
     ["stop", () => engine.stop()],
     ["seekbackward", (details) => engine.skip(-(details.seekOffset ?? SKIP_SECONDS))],
     ["seekforward", (details) => engine.skip(details.seekOffset ?? SKIP_SECONDS)],
@@ -60,13 +68,24 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
     ["previoustrack", null],
     ["nexttrack", null],
   ];
-  for (const [action, handler] of handlers) {
+  const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
     try {
       session.setActionHandler(action, handler);
     } catch {
       // A browser that does not know an action refuses it; the rest still work.
     }
-  }
+  };
+  for (const [action, handler] of handlers) setHandler(action, handler);
+
+  // Track buttons exist only while something gives them a meaning, so iOS keeps its skip buttons
+  // the rest of the time.
+  const applyOverride = () => {
+    const override = currentMediaSessionOverride();
+    setHandler("nexttrack", override === null ? null : () => override.onNext());
+    setHandler("previoustrack", override === null ? null : () => override.onPrevious());
+    update();
+  };
+  const stopOverride = onMediaSessionOverride(applyOverride);
 
   const stopState = engine.subscribe(update);
   const stopTime = engine.subscribeTime(() => {
@@ -77,6 +96,7 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
   return () => {
     stopState();
     stopTime();
+    stopOverride();
     for (const [action] of handlers) {
       try {
         session.setActionHandler(action, null);

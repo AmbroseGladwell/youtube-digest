@@ -1,4 +1,5 @@
 export const readerPlayerBarTestIds = {
+  cookFromHere: "ReaderPlayerBar.cookFromHere",
   root: "ReaderPlayerBar.root",
   skipBackButton: "ReaderPlayerBar.skipBackButton",
   playButton: "ReaderPlayerBar.playButton",

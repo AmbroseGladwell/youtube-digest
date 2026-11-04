@@ -16,6 +16,41 @@
   @include controls.section-label;
 }
 
+.headActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.cook {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+}
+
+.cookWide {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.stopped {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.carryOn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.startOver {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+}
+
 .count {
   color: var(--muted);
   font-size: 0.78125rem;
@@ -98,7 +133,19 @@
   }
 }
 
-.stepActive {
+// The voice's place is a sentence inside the step, marked where it wraps, so the step itself
+// stays plain (design 150ac).
+.spoken {
+  border-radius: 0.375rem;
+  padding: 1px 3px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+// The step the reader left cooking at, until they go on (design 150w).
+.stepReached {
   margin: 0 -0.625rem;
   padding: 0.5rem 0.625rem;
   background: var(--stone-tint);

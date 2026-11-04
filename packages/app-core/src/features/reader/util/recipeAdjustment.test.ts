@@ -18,7 +18,8 @@ describe("recipeAdjustment", () => {
     const adjustment = recipeAdjustment(recipe, { kind: "servings", base: 4, count: 8 }, "us");
     expect(adjustment.status).toBe("Adjusted for 8 servings in US units. 2 lines have no amount to adjust.");
     expect(adjustment.copyNote).toBe("Adjusted for 8 servings in US units, from the recipe’s 4 servings.");
-    expect(adjustment.methodNote).toBe("The method gives the recipe’s own amounts and temperatures, for 4 servings.");
+    expect(adjustment.methodNote).toBe("The method gives the recipe’s own amounts, for 4 servings, with oven temperatures in °F.");
+    expect(adjustment.actionNote).toBe("Temperatures in °F. Amounts as written, for 4 servings");
     expect(adjustment.servings).toBe("8 servings");
   });
 

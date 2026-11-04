@@ -62,7 +62,10 @@ export type StrokeIconName =
   | "pencil"
   | "sort"
   | "gauge"
-  | "zap";
+  | "zap"
+  | "chefHat"
+  | "list"
+  | "textOnly";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -86,6 +89,29 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  chefHat: (
+    <>
+      <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" />
+      <path d="M6 17h12" />
+    </>
+  ),
+  list: (
+    <>
+      <path d="M3 12h.01" />
+      <path d="M3 18h.01" />
+      <path d="M3 6h.01" />
+      <path d="M8 12h13" />
+      <path d="M8 18h13" />
+      <path d="M8 6h13" />
+    </>
+  ),
+  textOnly: (
+    <>
+      <path d="M17 6.1H3" />
+      <path d="M21 12.1H3" />
+      <path d="M15.1 18H3" />
+    </>
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />
