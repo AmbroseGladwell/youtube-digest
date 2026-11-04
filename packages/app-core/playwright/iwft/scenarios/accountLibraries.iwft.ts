@@ -118,13 +118,13 @@ test.describe("signed out", () => {
     await launcher.appShell.verifyNewOverviewButtonIsAbsent();
   });
 
-  test("Create an account goes to creating an account", async ({ launcher }) => {
+  test("Create an account goes to Start, since no new account skips onboarding", async ({ launcher }) => {
     await launcher.launch({ sync: true });
     await launcher.openPage(Routes.queue());
 
     await launcher.signedOutGate.chooseCreateAccount();
 
-    await launcher.signInPage.verifyAsksForEmail("Create your account");
+    await launcher.homePage.verifyShowsStart();
   });
 
   test("an overview's own address shows the ways to an account, not the overview", async ({ launcher, backendSimulator }) => {

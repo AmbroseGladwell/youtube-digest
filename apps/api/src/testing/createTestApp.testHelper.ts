@@ -79,7 +79,7 @@ export async function createTestApp(
   const eventSink = makeRecordingEventSink();
   const errorSink = makeRecordingErrorSink();
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, ...config },
+    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, sampleShareTokens: [], ...config },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,

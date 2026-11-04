@@ -446,6 +446,10 @@ export const analyticsEvents = {
         kind: z.enum(["video", "playlist", "article"]),
       }),
       linkRefused: event("A reader with no account gives the home page something that isn't a link we can read"),
+      sampleChosen: event("A reader with no account starts onboarding from one of Start's samples: where it sat in the list and its kind, never its title or link", {
+        sample: z.number().int().nonnegative(),
+        kind: z.enum(["video", "article", "recipe"]),
+      }),
     },
     step: {
       shown: event("A screen of onboarding is shown", { step: OnboardingStep }),
@@ -493,7 +497,10 @@ export const analyticsEvents = {
       dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["extension", "ai"]) }),
     },
     finished: {
-      revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had", { way: AuthIntent }),
+      revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had, made from a link or saved from a sample or a shared page", {
+        way: AuthIntent,
+        from: z.enum(["link", "sample", "share"]),
+      }),
     },
   },
   analyticsConsent: {

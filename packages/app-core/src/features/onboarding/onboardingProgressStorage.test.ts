@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { OverviewId, SourceKey } from "@overview/domain";
+import { OverviewId, ShareToken, shareSnapshot, SourceKey } from "@overview/domain";
+import { makeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
 import { readOnboardingProgress, writeOnboardingProgress, type OnboardingProgress } from "./onboardingProgressStorage.js";
 
 const memoryStorage = (): Storage => {
@@ -47,6 +48,13 @@ describe("onboardingProgressStorage", () => {
     const { share: _share, ...older } = progress;
     storage.setItem("overview.onboarding.v1", JSON.stringify(older));
     expect(readOnboardingProgress(storage)).toEqual(progress);
+  });
+
+  it("reads a share started before samples could start one as a share, not a sample", () => {
+    const storage = memoryStorage();
+    const share = { token: ShareToken.parse("k7Qm2x9RfTabcdef"), snapshot: shareSnapshot({ overview: makeOverview(), transcript: null, narration: null }) };
+    storage.setItem("overview.onboarding.v1", JSON.stringify({ ...progress, share }));
+    expect(readOnboardingProgress(storage)?.share?.sample).toBe(false);
   });
 
   it("reads progress written before any kind of link was taken as the video it named", () => {

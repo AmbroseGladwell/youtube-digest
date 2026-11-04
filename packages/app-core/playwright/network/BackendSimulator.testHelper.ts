@@ -72,6 +72,9 @@ export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
+// Start offers one sample unless a test offers others, as it will once the house account's
+// shares are configured (docs/features/onboarding.md, "Try a sample").
+export const SIMULATED_SAMPLE_TITLE = "A Sample To Start From";
 
 // Where a simulated assistant is sent back to once the reader has answered.
 export const SIMULATED_ASSISTANT_CALLBACK = "https://assistant.test/callback";
@@ -129,6 +132,9 @@ export class BackendSimulator {
   #shares = new Map<string, Share>();
   #shareSnapshots = new Map<string, SharedOverview>();
   #nextShareToken = 0;
+  // The house account's shares Start offers as samples, in order; none unless a test offers them
+  // (docs/features/onboarding.md, "Try a sample").
+  #startSamples: ShareToken[] = [];
   #stalled: Array<{
     endpoint: EndpointKey;
     route: Route;
@@ -194,6 +200,7 @@ export class BackendSimulator {
 
   constructor(page: Page) {
     this.#page = page;
+    this.startSamples.offer(makeOverview({ source: { ...makeOverview().source, title: SIMULATED_SAMPLE_TITLE } }));
   }
 
   simulateEndpointDefault = (endpoint: EndpointKey): void => {
@@ -438,6 +445,7 @@ export class BackendSimulator {
     );
 
     await this.#handleConnectionNetworking();
+    await this.#handleSampleNetworking();
     await this.#handleAnalyticsNetworking();
 
     await this.#page.route("**/api/handshake", (route) =>
@@ -842,6 +850,34 @@ export class BackendSimulator {
     );
   };
 
+  #handleSampleNetworking = async (): Promise<void> => {
+    const unavailable = () => ({
+      status: 503,
+      body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
+    });
+    await this.#page.route("**/api/samples", (route) =>
+      this.#respond(route, EndpointKey.SAMPLES, {
+        onDefault: () => ({
+          status: 200,
+          body: { samples: this.#startSamples.map((token) => ({ token, note: this.#shareSnapshots.get(token)!.note })) },
+        }),
+        onError: unavailable,
+      }),
+    );
+    await this.#page.route("**/api/samples/*", (route) =>
+      this.#respond(route, EndpointKey.SAMPLE, {
+        onDefault: () => {
+          const token = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1) ?? "");
+          const snapshot = this.#startSamples.some((sample) => sample === token) ? this.#shareSnapshots.get(token) : undefined;
+          return snapshot === undefined
+            ? { status: 404, body: { error: { code: "not_found", message: "Simulated: no such sample" } } }
+            : { status: 200, body: snapshot };
+        },
+        onError: unavailable,
+      }),
+    );
+  };
+
   // The server's own job, done here so an IWFT sees what a reader would: the copy is built
   // from the overview that was posted, and a link keeps its token, its share date and its
   // view count when the copy behind it is replaced (docs/features/sharing.md).
@@ -1081,6 +1117,20 @@ export class BackendSimulator {
       for (const [token, share] of this.#shares) {
         this.#shares.set(token, { ...share, contentHash: "stale".padEnd(64, "0") });
       }
+    },
+  };
+
+  // Start's samples: each overview is shared by the house account, not the reader, so it isn't
+  // among the reader's own links. Replaces the one offered by default, and offering none
+  // offers none. Says the tokens, in the order Start offers them.
+  startSamples = {
+    offer: (...overviews: Overview[]): ShareToken[] => {
+      this.#startSamples = overviews.map((overview, index) => {
+        const token = ShareToken.parse(`iwftSample${index}`.padEnd(16, "0"));
+        this.#shareSnapshots.set(token, shareSnapshot({ overview, transcript: null, narration: null }));
+        return token;
+      });
+      return [...this.#startSamples];
     },
   };
 

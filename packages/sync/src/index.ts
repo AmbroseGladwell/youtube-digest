@@ -11,6 +11,8 @@ export * from "./NarrationApi.js";
 export * from "./fetchNarrationApi.js";
 export * from "./ShareApi.js";
 export * from "./fetchShareApi.js";
+export * from "./SampleApi.js";
+export * from "./fetchSampleApi.js";
 export * from "./SharedTranscriptApi.js";
 export * from "./fetchSharedTranscriptApi.js";
 export * from "./ServiceTranscriptApi.js";

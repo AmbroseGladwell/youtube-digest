@@ -66,7 +66,7 @@ test("without keys the press goes to Settings rather than starting a run that ca
 
 // Signed out where there are accounts, nothing is made on either key, so the press goes to
 // creating one (docs/architecture/tiers.md, "Signed out").
-test("signed out, the press goes to creating an account, whatever keys the device holds", async ({
+test("signed out, the press goes to the panel's Start, whatever keys the device holds", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -74,7 +74,7 @@ test("signed out, the press goes to creating an account, whatever keys the devic
 
   await launcher.pressInjectedButton(WATCHED_URL);
 
-  await launcher.signInPage.verifyAsksForEmail("Create your account");
+  await launcher.panelStart.verifyIsShown();
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   expect(await launcher.readRunReports()).toEqual([null, null]);
 });

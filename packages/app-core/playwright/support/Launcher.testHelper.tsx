@@ -34,6 +34,7 @@ import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePag
 import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObject.testHelper.js";
 import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
+import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
 import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
 import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
@@ -308,6 +309,10 @@ export class Launcher {
 
   get panelStart(): PanelStartPageObject {
     return new PanelStartPageObject(this.testContext);
+  }
+
+  get onboardingSamples(): OnboardingSamplesPageObject {
+    return new OnboardingSamplesPageObject(this.testContext);
   }
 
   get onboardingPage(): OnboardingPageObject {

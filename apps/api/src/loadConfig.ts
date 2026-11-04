@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CLIENT_VERSION } from "@overview/domain";
+import { CLIENT_VERSION, ShareToken } from "@overview/domain";
 import type { R2Settings } from "./audio/r2AudioStore.js";
 import { allowedOriginsFromEnv } from "./http/allowedOriginsFromEnv.js";
 import { OtlpLogsConfigError, otlpLogsConfig, type OtlpLogsConfig } from "./logs/otlpLogsConfig.js";
@@ -44,6 +44,11 @@ const ConfigEnv = z
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
     YOUTUBE_API_KEY: z.string().min(1).optional(),
+    SAMPLE_SHARE_TOKENS: z
+      .string()
+      .default("")
+      .transform((value) => value.split(",").map((token) => token.trim()).filter((token) => token !== ""))
+      .pipe(z.array(ShareToken)),
     OPENAI_API_KEY: z.string().min(1).optional(),
     OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
     OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(50),
@@ -129,6 +134,9 @@ export interface Config {
   // The YouTube Data API key playlists are read with, or null to read none
   // (docs/features/playlists.md).
   youTubeApiKey: string | null;
+  // The house account's live shares Start offers as samples, in order, or none to offer none
+  // (docs/features/onboarding.md, "Try a sample").
+  sampleShareTokens: ShareToken[];
   analytics: AnalyticsConfig;
   // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
@@ -193,6 +201,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
             signedOutDailyGenerations: data.OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS,
           },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
+    sampleShareTokens: data.SAMPLE_SHARE_TOKENS,
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
       postHog,

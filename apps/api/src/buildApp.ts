@@ -1,5 +1,5 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
-import { REQUEST_ID_HEADER } from "@overview/domain";
+import { REQUEST_ID_HEADER, type ShareToken } from "@overview/domain";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
@@ -49,6 +49,7 @@ import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { shareRoutes } from "./routes/shareRoutes.js";
+import { sampleRoutes } from "./routes/sampleRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
@@ -75,6 +76,7 @@ export interface AppConfig {
   staticRoot: string | null;
   // The header a trusted proxy puts the caller's address in, or null to use the socket's.
   clientIpHeader: string | null;
+  sampleShareTokens: readonly ShareToken[];
 }
 
 export interface AudioSetup {
@@ -247,6 +249,7 @@ export async function buildApp({
         clock,
       });
       shareRoutes(api, shares, config.appUrl);
+      sampleRoutes(api, shares, config.sampleShareTokens);
       eventRoutes(api, { sink: eventSink, records, clock });
       sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
       errorRoutes(api, errorSink, clock);

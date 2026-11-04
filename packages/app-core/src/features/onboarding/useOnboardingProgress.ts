@@ -12,9 +12,9 @@ export function startOnboarding(link: string, key: SourceKey | null, tabId: numb
   writeOnboardingProgress({ link, sourceKey: key, tabId, step: "analytics", topics: [], mayWrite: false, overviewId: null, way: null, share: null });
 }
 
-// Save to my overviews on a shared page starts onboarding with the copy as its overview:
-// already made, so there is nothing to wait for and no video to check.
-export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview): void {
+// Save to my overviews on a shared page, or a sample chosen at Start, starts onboarding with
+// the copy as its overview: already made, so there is nothing to wait for and no video to check.
+export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview, sample = false): void {
   writeOnboardingProgress({
     link: snapshot.note.source.url,
     sourceKey: sourceKey(snapshot.note.source),
@@ -24,7 +24,7 @@ export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOver
     mayWrite: true,
     overviewId: snapshot.note.id,
     way: null,
-    share: { token, snapshot },
+    share: { token, snapshot, sample },
   });
 }
 

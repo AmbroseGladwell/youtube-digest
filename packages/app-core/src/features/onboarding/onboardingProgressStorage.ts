@@ -23,10 +23,13 @@ const OnboardingProgressShape = z.object({
   mayWrite: z.boolean(),
   overviewId: OverviewId.nullable(),
   way: AuthIntent.nullable(),
-  // A copy saved from a shared page is the first overview, so nothing is made: it goes into
-  // the account once there is one, let in uncounted through its link
-  // (docs/features/onboarding.md, "From a shared page").
-  share: z.object({ token: ShareToken, snapshot: SharedOverview }).nullable().catch(null),
+  // A copy saved from a shared page, or a sample chosen at Start, is the first overview, so
+  // nothing is made: it goes into the account once there is one, let in uncounted through its
+  // link (docs/features/onboarding.md, "From a shared page" and "Try a sample").
+  share: z
+    .object({ token: ShareToken, snapshot: SharedOverview, sample: z.boolean().catch(false) })
+    .nullable()
+    .catch(null),
 });
 export const OnboardingProgress = z.preprocess(keyedBySource, OnboardingProgressShape);
 export type OnboardingProgress = z.infer<typeof OnboardingProgressShape>;

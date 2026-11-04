@@ -295,12 +295,14 @@ test.describe("signing in on the web", () => {
     await launcher.homePage.verifyIsShown();
   });
 
-  test("settings, signed out, points at the sign-in and create-account pages", async ({ launcher }) => {
+  test("settings, signed out, points at signing in, and at Start to create an account", async ({ launcher }) => {
     await launcher.launch({ sync: true });
     const settings = await launcher.appShell.openSettings();
     await settings.syncPanel.verifyAsksToSignIn();
 
     await settings.syncPanel.clickCreateAccount();
+
+    await launcher.homePage.verifyShowsStart();
   });
 
   test("on a phone, the sign-in page's one way out is Not now", async ({ page, launcher }) => {
@@ -363,16 +365,21 @@ test.describe("creating an account on the web", () => {
     await signIn.verifySubmitReads("Create account");
     await signIn.enterCode("ABCD-EFGH");
 
-    await launcher.homePage.verifyIsShown();
+    await launcher.onboardingPage.verifyOnScreen("plan", "Choose your plan");
     test.expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: "ABCD-EFGH" }]);
   });
 
-  test("the two pages lead to each other", async ({ launcher }) => {
+  test("signing in leads to Start for a reader with no account, and creating one leads back to signing in", async ({
+    launcher,
+  }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
-    await (await signIn.switchToOtherPage()).verifyAsksForEmail("Create your account");
-    await (await signIn.switchToOtherPage()).verifyAsksForEmail("Sign in");
+    await signIn.switchToOtherPage();
+    await launcher.homePage.verifyShowsStart();
+
+    const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
+    await (await createAccount.switchToOtherPage()).verifyAsksForEmail("Sign in");
   });
 });
 

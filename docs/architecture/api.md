@@ -408,6 +408,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
 | `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
+| `SAMPLE_SHARE_TOKENS` | unset | comma-separated share tokens, in order, of the house account's live shares that Start offers as samples. Not a secret, since each is a public link. Unset, `/api/samples` lists none and Start offers only its field (`docs/features/onboarding.md`, "Try a sample") |
 | `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`; the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
 | `OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS` | 50 | the share of that day a signed-out trial may spend, so proxies rotating addresses can't turn accounts away: about £2 (`tiers.md`, "Counting") |
