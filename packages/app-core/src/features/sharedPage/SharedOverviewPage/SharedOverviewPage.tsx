@@ -26,6 +26,7 @@ import { ArticleLineLinks } from "../../reader/components/ArticleLineLinks/Artic
 import { RecipeIngredients } from "../../reader/components/RecipeIngredients/RecipeIngredients.js";
 import { RecipeMethod } from "../../reader/components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../../reader/components/RecipePageLink/RecipePageLink.js";
+import { RecipeCookButton } from "../../reader/components/RecipeCookButton/RecipeCookButton.js";
 import { RecipeTimes } from "../../reader/components/RecipeTimes/RecipeTimes.js";
 import { initialScale, recipeAdjustment } from "../../reader/util/recipeAdjustment.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
@@ -235,6 +236,13 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             {tab === "Overview" && (
               <div className={styles.note} data-testid={sharedOverviewPageTestIds.overviewPanel}>
                 {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
+                {recipeCooking !== null && (
+                  <RecipeCookButton
+                    placeStep={recipeCooking.placeStep}
+                    onStart={() => cooking.start("summary", 0)}
+                    onCarryOn={recipeCooking.onCarryOn}
+                  />
+                )}
                 <ReadAlongNote
                   lines={summaryLines}
                   captions={captions}

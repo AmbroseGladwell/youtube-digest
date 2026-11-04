@@ -301,6 +301,7 @@ test("a shared recipe carries the whole method, and can be cooked step by step",
   await expect(page.getByTestId("RecipeMethod.step")).toHaveCount(4);
   await expect(page.getByTestId("RecipeMethod.onThePage")).toHaveCount(0);
 
+  await expect(page.getByTestId("RecipeCookButton.root")).toHaveText("Cook step by step");
   await page.getByTestId("RecipeMethod.cook").click();
   await expect(page.getByTestId("CookingMode.root")).toBeVisible();
   await expect(page.getByTestId("CookingMode.place")).toHaveText(/^Step 1/);

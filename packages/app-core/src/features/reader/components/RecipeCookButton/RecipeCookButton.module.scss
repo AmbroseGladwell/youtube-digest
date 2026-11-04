@@ -1,0 +1,12 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.button {
+  @include controls.surface-pill;
+
+  display: flex;
+  width: fit-content;
+  min-height: 2.75rem;
+  margin: 0.25rem auto 1rem;
+  padding: 0 1.25rem;
+  font-size: 0.9375rem;
+}

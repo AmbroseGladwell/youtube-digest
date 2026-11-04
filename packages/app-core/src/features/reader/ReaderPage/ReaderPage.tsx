@@ -48,6 +48,7 @@ import { RecipeIngredients } from "../components/RecipeIngredients/RecipeIngredi
 import { RecipeMethod } from "../components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../components/RecipePageLink/RecipePageLink.js";
 import { RecipePrintSheet } from "../components/RecipePrintSheet/RecipePrintSheet.js";
+import { RecipeCookButton } from "../components/RecipeCookButton/RecipeCookButton.js";
 import { RecipeTimes } from "../components/RecipeTimes/RecipeTimes.js";
 import { readRecipeUnits, writeRecipeUnits } from "../recipeUnitsStorage.js";
 import { initialScale, recipeAdjustment, type RecipeScale } from "../util/recipeAdjustment.js";
@@ -490,6 +491,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 compact={isPanel}
                 onEditingChange={setEditingReason}
               />
+              {recipeCooking !== null && (
+                <RecipeCookButton
+                  placeStep={recipeCooking.placeStep}
+                  onStart={() => cooking.start("summary", 0)}
+                  onCarryOn={recipeCooking.onCarryOn}
+                />
+              )}
               <ReadAlongNote
                 key={overviewId}
                 lines={summaryLines}

@@ -200,8 +200,8 @@ export const overviewPageEvents = {
     }),
   },
   cooking: {
-    started: event("The reader starts cooking a recipe step by step, from the method's heading, the bar's Cook from here, or the place they left", {
-      from: z.enum(["heading", "bar", "carryOn"]),
+    started: event("The reader starts cooking a recipe step by step, from the method's heading, the button above the summary, the bar's Cook from here, or the place they left", {
+      from: z.enum(["heading", "summary", "bar", "carryOn"]),
       step: z.number().int().positive(),
     }),
     left: event("The reader leaves cooking step by step, by Done or by finishing, with how many actions they heard", {
