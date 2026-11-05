@@ -7,4 +7,5 @@ export const panelStartTestIds = {
   linkSubmit: "panel-start-link-submit",
   refused: "panel-start-refused",
   signIn: "panel-start-sign-in",
+  backToSignIn: "panel-start-back-to-sign-in",
 };

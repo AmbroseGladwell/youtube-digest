@@ -4,4 +4,5 @@ export const howToApplyFlipTestIds = {
   forAnyone: "HowToApplyFlip.forAnyone",
   line: "HowToApplyFlip.line",
   steps: "HowToApplyFlip.steps",
+  sampleLine: "HowToApplyFlip.sampleLine",
 };

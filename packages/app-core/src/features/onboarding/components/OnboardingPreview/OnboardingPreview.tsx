@@ -7,7 +7,7 @@ import styles from "./OnboardingPreview.module.scss";
 import { onboardingPreviewTestIds } from "./OnboardingPreviewTestIds.js";
 
 export interface OnboardingPreviewProps {
-  progress: ReactNode;
+  progress: ReactNode | null;
   phase: OnboardingRunPhase;
   kind: OnboardingSource | null;
   link: string;
@@ -18,13 +18,15 @@ export interface OnboardingPreviewProps {
   sortedInto: readonly string[] | null;
   // On the account screen, the teaser takes the preview's place (154k).
   teaser: ReactNode;
+  // A sample isn't made from the answers, so it says it's written for anyone (155g).
+  forAnyone: boolean;
 }
 
 // Designs 46d and 154h, the right-hand side on a wide screen: the overview taking shape beside
 // the questions. Its card is the confirm card made small, and its sections are the kind's.
 // Sections are drawn, never their text, so nothing can be read before an account; each says only
 // what the run is known to be doing, and what a recipe takes from the page is known once it's read.
-export function OnboardingPreview({ progress, phase, kind, link, found, unusable, sortedInto, teaser }: OnboardingPreviewProps) {
+export function OnboardingPreview({ progress, phase, kind, link, found, unusable, sortedInto, teaser, forAnyone }: OnboardingPreviewProps) {
   if (unusable) {
     return (
       <aside className={styles.root} aria-label="Your overview" data-testid={onboardingPreviewTestIds.root}>
@@ -87,6 +89,11 @@ export function OnboardingPreview({ progress, phase, kind, link, found, unusable
                 )}
               </li>
             </ul>
+          )}
+          {forAnyone && (
+            <p className={styles.forAnyone} data-testid={onboardingPreviewTestIds.forAnyone}>
+              Written for anyone. The overviews you make are written for you.
+            </p>
           )}
         </>
       )}

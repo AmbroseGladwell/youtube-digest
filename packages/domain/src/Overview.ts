@@ -46,6 +46,9 @@ export const Overview = z
     // Null for an overview made before keys were recorded, and for one saved from a share
     // (docs/architecture/tiers.md, "Which key an overview uses").
     madeOn: MadeOn.nullable(),
+    // Saved from one of Start's samples, so it isn't the reader's first overview of their own.
+    // Absent on everything else (docs/features/onboarding.md, "Try a sample").
+    fromSample: z.literal(true).optional(),
   })
   .extend(CoreFields.shape)
   .extend(Filing.shape)

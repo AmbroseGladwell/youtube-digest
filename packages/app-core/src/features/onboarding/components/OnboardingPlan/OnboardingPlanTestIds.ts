@@ -3,4 +3,5 @@ export const onboardingPlanTestIds = {
   continueWithFree: "onboarding-plan-continue-with-free",
   startPlus: "onboarding-plan-start-plus",
   bringingIn: "onboarding-plan-bringing-in",
+  counts: "onboarding-plan-counts",
 };

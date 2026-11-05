@@ -23,6 +23,9 @@ export type StrokeIconName =
   | "chevronDown"
   | "chevronUp"
   | "chevronRight"
+  | "chevronLeft"
+  | "layoutGrid"
+  | "stack"
   | "play"
   | "skipBack"
   | "skipForward"
@@ -200,6 +203,22 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronUp: <path d="m18 15-6-6-6 6" />,
   chevronRight: <path d="m9 18 6-6-6-6" />,
+  chevronLeft: <path d="m15 18-6-6 6-6" />,
+  layoutGrid: (
+    <>
+      <rect width="7" height="7" x="3" y="3" rx="1" />
+      <rect width="7" height="7" x="14" y="3" rx="1" />
+      <rect width="7" height="7" x="14" y="14" rx="1" />
+      <rect width="7" height="7" x="3" y="14" rx="1" />
+    </>
+  ),
+  stack: (
+    <>
+      <path d="M4 10c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2" />
+      <path d="M10 16c-1.1 0-2-.9-2-2v-4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2" />
+      <rect width="8" height="8" x="14" y="14" rx="2" />
+    </>
+  ),
   play: <polygon points="6 3 20 12 6 21 6 3" />,
   skipBack: (
     <>

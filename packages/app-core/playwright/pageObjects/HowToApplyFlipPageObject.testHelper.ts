@@ -3,6 +3,13 @@ import { howToApplyFlipTestIds } from "../../src/features/reader/components/HowT
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class HowToApplyFlipPageObject extends PageObject {
+  verifySampleLine = () =>
+    this.step("verifySampleLine", () =>
+      expect(this.get(howToApplyFlipTestIds.sampleLine)).toHaveText(
+        "Written for anyone, like every sample. The overviews you make are written for you.",
+      ),
+    );
+
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectNotToBeVisible(howToApplyFlipTestIds.root));
 
   verifyWriting = () =>

@@ -115,7 +115,9 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
-  const firstOverview = useFirstOverviewMilestone(readableEntries(entries).length);
+  // A sample saved during onboarding isn't the reader's first overview of their own
+  // (docs/features/onboarding.md, "Try a sample").
+  const firstOverview = useFirstOverviewMilestone(readableEntries(entries).filter(({ overview }) => !overview.fromSample).length);
   const milestoneStack = (
     <>
       <MilestoneStack

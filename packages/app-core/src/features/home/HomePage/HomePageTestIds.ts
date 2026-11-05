@@ -18,4 +18,6 @@ export const homePageTestIds = {
   separateLibraryNote: "HomePage.separateLibraryNote",
   getExtensionButton: "HomePage.getExtensionButton",
   exampleOverview: "HomePage.exampleOverview",
+  heroTitle: "HomePage.heroTitle",
+  fromCreateNote: "HomePage.fromCreateNote",
 };

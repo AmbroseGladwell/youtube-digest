@@ -493,8 +493,10 @@ export const analyticsEvents = {
       chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),
     },
     nextSteps: {
-      chosen: event("The reader follows a next step under their first overview", { step: z.enum(["extension", "ai"]) }),
-      dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["extension", "ai"]) }),
+      chosen: event("The reader follows a next step under their first overview: making their own after a sample, the extension or their AI", {
+        step: z.enum(["own", "extension", "ai"]),
+      }),
+      dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["own", "extension", "ai"]) }),
     },
     finished: {
       revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had, made from a link or saved from a sample or a shared page", {

@@ -1,5 +1,5 @@
 export const onboardingSamplesTestIds = {
   root: "onboarding-samples",
-  sample: "onboarding-samples-sample",
+  more: "onboarding-samples-more",
   failed: "onboarding-samples-failed",
 };

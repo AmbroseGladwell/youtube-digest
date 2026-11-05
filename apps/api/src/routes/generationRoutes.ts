@@ -5,8 +5,10 @@ import {
   OurKeyGenerationRequest,
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
+  TopicMatchInput,
   TrialToken,
   type ForAnyoneResult,
+  type TopicMatchResult,
   type OurKeyGenerationStatus,
   type ProfilePassResult,
 } from "@overview/domain";
@@ -88,6 +90,12 @@ export function generationRoutes(
   app.post("/generations/how-to-apply", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(ForAnyoneInput, request.body, "The How to apply pass");
     const result: ForAnyoneResult = { items: await smallPass((passes) => passes.forAnyone(input, request.log)) };
+    return result;
+  });
+
+  app.post("/generations/topics", { preHandler: smallPassLimit }, async (request) => {
+    const input = parseOrThrow(TopicMatchInput, request.body, "The topic pass");
+    const result: TopicMatchResult = { names: await smallPass((passes) => passes.topics(input, request.log)) };
     return result;
   });
 

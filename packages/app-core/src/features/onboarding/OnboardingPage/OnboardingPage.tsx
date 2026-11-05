@@ -103,6 +103,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const [savingTopics, setSavingTopics] = useState(false);
   const step = progress.step;
   const share = progress.share;
+  const sample = share?.sample ?? false;
   const steps = share === null ? ONBOARDING_STEPS : FROM_SHARE_STEPS;
   const indexOf = (of: OnboardingStep) => steps.indexOf(of);
   // Start, the screens here, then the reveal and its next steps: in the story's segments
@@ -183,7 +184,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
       from: share === null ? "link" : share.sample ? "sample" : "share",
     });
     libraryMove.dismiss();
-    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null });
+    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null, sample });
     void navigate(Routes.overview(overviewId), { replace: true });
     writeOnboardingProgress(null);
   };
@@ -194,21 +195,24 @@ function Onboarding({ progress, update }: OnboardingProps) {
   }, [step, analyticsAnswered, afterAnalytics, update]);
 
   // Signed in to an account that already holds the copy, it's left as it is, with the
-  // reader's own reason and topics.
+  // reader's own reason and topics. A sample waits for the topics picked here to reach the
+  // account, since it's sorted into them.
   const savingShare = useRef(false);
   const { refetch: refetchStored } = stored;
+  const answersIn = libraryMove.answersIn === accountId;
   useEffect(() => {
     if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount || savingShare.current) return;
+    if (share.sample && !answersIn) return;
     savingShare.current = true;
     void (async () => {
       if ((await overviewStore.getOverview(share.snapshot.note.id)) === null) {
-        await saveFromShare(share.token, share.snapshot);
+        await saveFromShare(share.token, share.snapshot, { sample: share.sample });
       }
       await refetchStored();
     })().finally(() => {
       savingShare.current = false;
     });
-  }, [share, signedIn, openLibraryAccountId, accountId, inAccount, overviewStore, saveFromShare, refetchStored]);
+  }, [share, signedIn, openLibraryAccountId, accountId, inAccount, answersIn, overviewStore, saveFromShare, refetchStored]);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -273,7 +277,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
     update({ step: "stepsForYou", mayWrite: !aboutYouIsEmpty(answer) });
   };
 
-  const progressBar = (
+  // A sample is already made, so there is no overview's progress to show (155f).
+  const progressBar = sample ? null : (
     <OnboardingProgressBar
       phase={phase}
       fetching={kind?.fetching ?? null}
@@ -369,6 +374,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
           <OnboardingAccount
             overview={overview}
             teaserBeside={wide}
+            sample={sample}
             failed={failed}
             onTryAgain={() => {
               analytics.onboarding.overview.retried();
@@ -385,6 +391,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingPlan
             inAccount={inAccount}
+            sample={sample}
             onFree={() => {
               analytics.onboarding.plan.chosen({ plan: "free" });
               if (progress.overviewId !== null) finish(progress.overviewId);
@@ -413,7 +420,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
 
       <div className={styles.layout}>
         <main className={styles.main} aria-labelledby={ONBOARDING_HEADING_ID}>
-          <div className={styles.narrowProgress}>{progressBar}</div>
+          {progressBar !== null && <div className={styles.narrowProgress}>{progressBar}</div>}
           {asking === null || signedIn ? (
             <>
               <div className={styles.nav}>
@@ -477,7 +484,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
             found={found}
             unusable={readFailure !== null}
             sortedInto={phase === "ready" ? sortedInto : null}
-            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} beside /> : null}
+            forAnyone={sample}
+            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
           />
         </div>
       </div>

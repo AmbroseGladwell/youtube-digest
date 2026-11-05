@@ -27,6 +27,14 @@
   width: 100%;
 }
 
+.heroTop {
+  align-items: start;
+
+  .heroText {
+    padding-top: 3.5rem;
+  }
+}
+
 .heroText {
   display: flex;
   flex-direction: column;
@@ -427,6 +435,10 @@
 }
 
 @media (max-width: 61.9375rem) {
+  .heroTop .heroText {
+    padding-top: 0;
+  }
+
   .root {
     padding: 1.25rem 1.25rem 3rem;
   }
@@ -470,4 +482,19 @@
   .example {
     padding: 1.5rem 0.75rem 0 0;
   }
+}
+
+// Design 155e: Create account brought the reader here, so say why it isn't a form.
+.fromCreate {
+  margin: 0;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }

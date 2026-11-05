@@ -9,6 +9,7 @@ export interface OnboardingAccountProps {
   overview: Overview | null;
   // On a wide screen the teaser sits in the preview beside the screens instead (154k).
   teaserBeside: boolean;
+  sample: boolean;
   failed: boolean;
   onTryAgain: () => void;
   onChoose: (way: AuthIntent) => void;
@@ -18,7 +19,7 @@ export interface OnboardingAccountProps {
 // and nothing more: the rest is drawn, not the overview's text, so none of it can be read
 // before there is an account. There's no way past without one. Email only for now
 // (docs/features/onboarding.md, "The account").
-export function OnboardingAccount({ overview, teaserBeside, failed, onTryAgain, onChoose }: OnboardingAccountProps) {
+export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTryAgain, onChoose }: OnboardingAccountProps) {
   return (
     <div className={styles.root} data-testid={onboardingAccountTestIds.root}>
       {failed ? (
@@ -37,7 +38,7 @@ export function OnboardingAccount({ overview, teaserBeside, failed, onTryAgain, 
           Your overview is still being made. You can create your account as soon as it's ready.
         </p>
       ) : teaserBeside ? null : (
-        <OnboardingTeaser overview={overview} />
+        <OnboardingTeaser overview={overview} sample={sample} />
       )}
 
       <div className={styles.intro}>

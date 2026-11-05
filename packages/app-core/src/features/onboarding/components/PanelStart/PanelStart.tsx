@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { domainOf } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useActivePage, useArticlePages } from "../../../../app/ArticlePagesContext.js";
@@ -8,6 +8,10 @@ import { rememberPageAccess } from "../../pageAccess.js";
 import { REFUSED_LINK } from "../../util/refusedLink.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import { OnboardingSamples } from "../OnboardingSamples/OnboardingSamples.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { readAccountSeen } from "../../../accountLibraries/accountSeenStorage.js";
+import { useSamplesQuery } from "../../queries/samplesQuery.js";
+import { isStartAsked } from "../../startAsked.js";
 import { useStartOnboarding } from "../../useStartOnboarding.js";
 import styles from "./PanelStart.module.scss";
 import { panelStartTestIds } from "./PanelStartTestIds.js";
@@ -16,7 +20,9 @@ import { panelStartTestIds } from "./PanelStartTestIds.js";
 // any other link a tap away. Beside a page it can't yet tell an article from a recipe, so it
 // says "this page" and shows what the tab gives; the page is read in the browser, so Chrome is
 // asked inside the click. On a tab with nothing to read, the field is the way in
-// (docs/features/onboarding.md, "In the extension panel").
+// (docs/features/onboarding.md, "In the extension panel"). Samples follow, three at a time
+// (155d). Reached from Create account, the lead says why it isn't a form, and on a device that
+// has had an account Back returns to signing in (155e).
 export function PanelStart() {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
@@ -27,6 +33,9 @@ export function PanelStart() {
   const [link, setLink] = useState("");
   const [refused, setRefused] = useState(false);
   const fieldId = useId();
+  const navigate = useNavigate();
+  const fromCreate = isStartAsked(useLocation().state);
+  const samples = useSamplesQuery().data ?? [];
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -44,16 +53,23 @@ export function PanelStart() {
 
   return (
     <div className={styles.root} data-testid={panelStartTestIds.root}>
+      {fromCreate && readAccountSeen() && (
+        <button
+          type="button"
+          className={styles.backToSignIn}
+          aria-label="Back to sign in"
+          onClick={() => void navigate(Routes.signIn())}
+          data-testid={panelStartTestIds.backToSignIn}
+        >
+          <StrokeIcon name="chevronLeft" size={18} />
+        </button>
+      )}
       <div className={styles.intro}>
         <OnboardingHeading>
           {activeVideoUrl !== null ? "Make an overview of this video" : activePage !== null ? "Make an overview of this page" : "Paste a link to start"}
         </OnboardingHeading>
         <p className={styles.lead}>
-          {activeVideoUrl !== null
-            ? "We'll make your first overview from the video you're on."
-            : activePage !== null
-              ? "We'll make your first overview from the page you're on."
-              : "There's nothing on this tab we can make an overview of. Paste a link to a video or a page, or open one and come back."}
+          {leadFor(activeVideoUrl !== null ? "video" : activePage !== null ? "page" : null, fromCreate, samples.length > 0)}
         </p>
       </div>
 
@@ -105,9 +121,7 @@ export function PanelStart() {
         </form>
       )}
 
-      <OnboardingSamples />
-
-      <div className={styles.foot}>
+      <div className={styles.actions}>
         {nothingBeside ? (
           <button
             type="submit"
@@ -128,10 +142,27 @@ export function PanelStart() {
             Or paste a different link
           </button>
         )}
+      </div>
+
+      {samples.length > 0 && <OnboardingSamples samples={samples} />}
+
+      <div className={styles.foot}>
         <Link className={styles.quiet} to={Routes.signIn()} data-testid={panelStartTestIds.signIn}>
           Already have an account? Sign in
         </Link>
       </div>
     </div>
   );
+}
+
+function leadFor(beside: "video" | "page" | null, fromCreate: boolean, samples: boolean): string {
+  if (beside === null) {
+    return samples
+      ? "There's nothing on this tab we can make an overview of. Paste a link, or try a sample."
+      : "There's nothing on this tab we can make an overview of. Paste a link to a video or a page, or open one and come back.";
+  }
+  if (fromCreate) {
+    return `New accounts start with your first overview. Make one of this ${beside}${samples ? ", or try a sample" : ""}.`;
+  }
+  return `We'll make your first overview from the ${beside} you're on.`;
 }

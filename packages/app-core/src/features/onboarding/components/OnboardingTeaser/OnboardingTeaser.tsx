@@ -8,13 +8,14 @@ import { onboardingTeaserTestIds } from "./OnboardingTeaserTestIds.js";
 // drawn, not the overview's text, so none of it can be read before there is an account; the
 // last line names what an account opens for this kind. Beside the screens it's already in the
 // preview's card (154k).
-export function OnboardingTeaser({ overview, beside = false }: { overview: Overview; beside?: boolean }) {
+// A sample says so here, where it changes what counts (155h).
+export function OnboardingTeaser({ overview, sample = false, beside = false }: { overview: Overview; sample?: boolean; beside?: boolean }) {
   const { byline, first, locked } = onboardingSources[overview.source.kind].teaser(overview);
   return (
     <section className={beside ? `${styles.root} ${styles.beside}` : styles.root} aria-label="Your overview, so far" data-testid={onboardingTeaserTestIds.root}>
       <span className={styles.ready}>
         <StrokeIcon name="check" size={13} />
-        Your overview is ready
+        {sample ? "Your sample overview is ready" : "Your overview is ready"}
       </span>
       <h2 className={styles.title} data-testid={onboardingTeaserTestIds.title}>
         {overview.source.title}
