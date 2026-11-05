@@ -61,10 +61,13 @@ screen opens. The fetch lands before or during the confirm screen, so the answer
 before the reader reaches topics, and there's no wait. It's a small pass on our key on the
 device's trial (`generateTopicSuggestions`, `POST /api/generations/topic-suggestions`), sent the
 title and a video's description and transcript opening, or a page's opening: never counted as
-the trial's overview, and capped on its own (`docs/architecture/tiers.md`). The model names a
-new topic only when no starter topic is a good home for the subject, as a broad interest in the
-list's own style ("Knife skills"), never the title, a person or a brand; one that repeats a
-starter topic, runs past three words, or would make a fourth suggestion is dropped.
+the trial's overview, and capped on its own (`docs/architecture/tiers.md`). The starter topics
+are deliberately broad, so the new one is **a more specific interest the source is clearly
+about, and may sit inside a starter topic** (decided 5 Nov 2026): "Knife skills" within Food,
+"Chess" within Gaming. That's where readers' real interests are. It's an interest a reader
+would want a shelf for, not a tag ("Knife skills", not "Dicing onions"), and never the title,
+a person or a brand. Code drops one that repeats a starter topic or runs past four words, and
+a kept one takes the third place ahead of a third starter topic.
 
 **Matched in code until the answer is in, and if it never is** (`suggestStarterTopics`,
 `packages/domain`): each starter topic has a few `keywords`, matched as whole words against the
