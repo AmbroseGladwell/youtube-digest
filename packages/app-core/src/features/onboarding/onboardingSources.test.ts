@@ -72,7 +72,13 @@ describe("onboardingSources", () => {
       { name: "Ingredients", fromPage: true },
       { name: "Method", fromPage: true },
     ]);
-    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual(["Premise", "Key points", "How to apply", "Verdict"]);
+    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual(["Premise", "Key points", "How to apply", "Verdict", "Chapters"]);
+  });
+
+  it("says what's in hand by kind once the source is read", () => {
+    expect(onboardingSources.youtube.ready(null)).toBe("Transcript ready");
+    expect(onboardingSources.web.ready(foundIn(makeArticleOverview()))).toBe("Page read");
+    expect(onboardingSources.web.ready({ ...foundIn(makeArticleOverview()), recipe: RECIPE })).toBe("Recipe read");
   });
 
   it("teases a recipe by its summary and total, and says what an account opens", () => {

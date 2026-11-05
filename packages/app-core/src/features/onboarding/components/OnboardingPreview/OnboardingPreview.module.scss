@@ -1,3 +1,4 @@
+@use "../../../../theme/controls.scss" as controls;
 @use "../../onboarding" as onboarding;
 
 .root {
@@ -7,6 +8,90 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kicker {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.status {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+// Looks right carries the card across (175a): it arrives at the top of the preview as the
+// confirm screen leaves.
+.arriving {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: arrive 240ms var(--motion-ease);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+.madeWith {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+
+.pill,
+.pillOn {
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 3px 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pillOn {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.failure {
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.alert {
+  display: inline-flex;
+  flex: none;
+  color: var(--alert);
+}
+
+.failureText {
+  flex: 1;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
+.tryAgain {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  flex: none;
+  background: var(--card);
 }
 
 .sections {
@@ -78,38 +163,17 @@
   border-radius: 6px;
   background: var(--surface);
 
-  .section[data-state="waiting"] & {
-    opacity: 0.6;
-  }
-
-  .section[data-state="written"] & {
+  .section[data-state="written"] &,
+  .section[data-state="fromPage"] & {
     background: var(--surface-press);
   }
 }
 
-.pending {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.domain {
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
 .empty {
   margin: 0;
-  padding: 2rem 1rem;
-  font-size: 0.8125rem;
+  font-size: 0.84375rem;
   line-height: 1.5;
   color: var(--muted);
-  text-align: center;
-
-  .pending & {
-    padding: 0;
-    text-align: left;
-  }
 }
 
 .forAnyone {

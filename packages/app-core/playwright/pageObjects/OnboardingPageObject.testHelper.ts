@@ -5,6 +5,7 @@ import { onboardingAccountTestIds } from "../../src/features/onboarding/componen
 import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
 import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
 import { onboardingPreviewTestIds } from "../../src/features/onboarding/components/OnboardingPreview/OnboardingPreviewTestIds.js";
+import { onboardingPreviewStepsTestIds } from "../../src/features/onboarding/components/OnboardingPreviewSteps/OnboardingPreviewStepsTestIds.js";
 import { onboardingProgressBarTestIds } from "../../src/features/onboarding/components/OnboardingProgressBar/OnboardingProgressBarTestIds.js";
 import { onboardingReadFailureTestIds } from "../../src/features/onboarding/components/OnboardingReadFailure/OnboardingReadFailureTestIds.js";
 import { onboardingSourceCardTestIds } from "../../src/features/onboarding/components/OnboardingSourceCard/OnboardingSourceCardTestIds.js";
@@ -57,11 +58,54 @@ export class OnboardingPageObject extends PageObject {
       expect(this.#progress(onboardingProgressBarTestIds.phase)).toHaveText(` · ${phase}`),
     );
 
+  // On a wide screen the preview says it in a sentence; narrower, the line above the screen does.
+  verifyPreviewSays = (status: string) =>
+    this.step(`verifyPreviewSays ${status}`, () => expect(this.get(onboardingPreviewTestIds.status)).toHaveText(status));
+
+  verifyReadyLineReads = (line: string) =>
+    this.step(`verifyReadyLineReads ${line}`, () =>
+      expect(this.#progress(onboardingProgressBarTestIds.status)).toHaveText(line),
+    );
+
+  verifyHasNoProgressBar = () =>
+    this.step("verifyHasNoProgressBar", () => expect(this.get(onboardingProgressBarTestIds.root)).toHaveCount(0));
+
+  verifyWritingHasStarted = () =>
+    this.step("verifyWritingHasStarted", () => expect(this.#progress(onboardingProgressBarTestIds.root)).toBeVisible());
+
+  verifyPreviewMarksNow = (step: "source" | "topics" | "you" | null) =>
+    this.step(`verifyPreviewMarksNow ${step}`, async () => {
+      for (const row of ["source", "topics", "you"] as const) {
+        const marked = this.get(onboardingPreviewStepsTestIds.row(row));
+        if (row === step) await expect(marked).toHaveAttribute("aria-current", "step");
+        else await expect(marked).not.toHaveAttribute("aria-current");
+      }
+    });
+
+  verifyPreviewStepReads = (step: "source" | "topics" | "you", value: string) =>
+    this.step(`verifyPreviewStepReads ${step} ${value}`, () =>
+      expect(this.get(onboardingPreviewStepsTestIds.value(step))).toHaveText(value),
+    );
+
+  verifyPreviewMadeWith = (...pills: string[]) =>
+    this.step(`verifyPreviewMadeWith ${pills.join(", ")}`, () =>
+      expect(this.get(onboardingPreviewTestIds.madeWith).locator("span")).toHaveText(pills),
+    );
+
   verifyCanSeeOverview = () =>
     this.step("verifyCanSeeOverview", () => expect(this.#progress(onboardingProgressBarTestIds.seeOverview)).toBeVisible());
 
   verifySaysItFailed = () =>
-    this.step("verifySaysItFailed", () => expect(this.#progress(onboardingProgressBarTestIds.failed)).toBeVisible());
+    this.step("verifySaysItFailed", () =>
+      expect(
+        this.#progress(onboardingProgressBarTestIds.failed).or(
+          this.get(onboardingPreviewTestIds.status).filter({ visible: true, hasText: "Couldn't make your overview" }),
+        ),
+      ).toBeVisible(),
+    );
+
+  verifyPreviewOffersTryAgain = () =>
+    this.step("verifyPreviewOffersTryAgain", () => expect(this.get(onboardingPreviewTestIds.tryAgain)).toBeVisible());
 
   seeOverview = () => this.step("seeOverview", () => this.#progress(onboardingProgressBarTestIds.seeOverview).click());
 

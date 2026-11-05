@@ -29,16 +29,57 @@
   overflow: hidden;
 }
 
+// Drawn by stage, not measured (docs/prototype/constraints.md): writing is one stage, so the fill
+// grows in once as it starts and then holds.
 .fill {
   display: block;
+  width: 60%;
   height: 100%;
   border-radius: 4px;
   background: var(--brand);
-  transition: width var(--motion-travel) var(--motion-ease);
 
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: grow var(--motion-travel) var(--motion-ease);
   }
+}
+
+@keyframes grow {
+  from {
+    width: 0;
+  }
+}
+
+.status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.3125rem;
+  font-size: 0.78125rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.spinner {
+  display: inline-flex;
+  flex: none;
+  color: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tick {
+  display: inline-flex;
+  flex: none;
+  color: var(--label);
 }
 
 .announce {
