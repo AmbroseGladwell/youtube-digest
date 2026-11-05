@@ -59,6 +59,19 @@ test("servings and units adjust the amounts they can read, mark them, and say wh
   await expect(page.getByTestId("RecipeIngredients.line").nth(3)).toHaveText("500ml vegetable stock");
 });
 
+test("a thin recipe page is named a recipe in the library, and only a thin video says it has no claim", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeRecipeOverview({ thin: true }));
+  backendSimulator.overviews.seed(
+    makeOverview({ thin: true, verdict: null, source: { ...makeOverview().source, title: "A video that argues nothing" } }),
+  );
+  await launcher.launchExpectingLibrary();
+  const recipeCard = page.getByRole("article").filter({ hasText: "Charred leek and white bean stew" });
+  const videoCard = page.getByRole("article").filter({ hasText: "A video that argues nothing" });
+  await expect(recipeCard.getByText("Recipe · 4 servings")).toBeVisible();
+  await expect(recipeCard.getByText("Thin · no clear claim")).toHaveCount(0);
+  await expect(videoCard.getByText("Thin · no clear claim")).toBeVisible();
+});
+
 test("a recipe with no yield scales by a multiplier, and one with no times shows no row", async ({ page, launcher, backendSimulator }) => {
   const plain = makeRecipeOverview();
   backendSimulator.overviews.seed({
@@ -67,6 +80,7 @@ test("a recipe with no yield scales by a multiplier, and one with no times shows
   });
   const library = await launcher.launchExpectingLibrary();
   await expect(page.getByText(/· Recipe$/)).toBeVisible();
+  await expect(page.getByText("Recipe", { exact: true })).toBeVisible();
   await library.nthCard(0).openReader();
 
   await expect(page.getByTestId("RecipeTimes.root")).toHaveCount(0);

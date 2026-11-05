@@ -3,7 +3,6 @@ import type { ArticleGenerationInput } from "../article/ArticleGenerationInput.j
 
 export interface GeneratedRecipeOutput {
   inOneLine: string;
-  thin: boolean;
   summary: string;
   matchedTopicNames: string[];
   tags: string[];
@@ -26,7 +25,7 @@ export function assembleRecipeOverview(
     madeOn: null,
     inOneLine: output.inOneLine,
     coreClaim: "",
-    thin: output.thin,
+    thin: false,
     keyPoints: [],
     topicIds: input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id),
     tags: resolveTags(output.tags, { known: new Set(input.existingTags.map(({ tag }) => tag)), aliases: input.tagAliases }),

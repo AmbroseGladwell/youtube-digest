@@ -106,8 +106,11 @@ No verdict and no Make it? judgement (owner, 2026-11-03). One Summary paragraph 
 Core claim, Key points and the verdict: what the dish is in the author's framing, quoted where the
 page has a line worth keeping, with what makes it work kept in the prose. The prompt forbids
 repeating a step, an amount, a time or a temperature, and working out a figure, since the recipe sits
-right below. A thin page gets only what it says, quoted. The model also writes the library's one
-line, topics and tags.
+right below. A thin page gets only what it says, quoted, and the note is never marked `thin`: that
+flag means "no clear claim", which has no sense for a recipe, so the prompt no longer asks for it and
+the record carries `false` (OV-179, https://trello.com/c/GQNQ5RQr; recipes written before it may
+still carry `true`, which nothing reads for a recipe). The model also writes the library's one line,
+topics and tags.
 
 So an `Overview` with a `recipe` has empty `keyPoints` and `coreClaim`, and no verdict, article,
 chapters or Read it anyway. The schema checks that, and still asks every other note for three key
@@ -124,7 +127,10 @@ points. `CoreFields` keeps its minimum, because it is also the model's schema fo
   Nothing collapses behind Show more: a hidden ingredient is a missed one.
 - **In the panel (144l)** the link moves the recipe page beside it to its top, as articles do.
 - **The library (144m)** names a recipe by its stated total, "1 hr 5 min recipe", or just "Recipe".
-  Recipes are their own kind in the source filter.
+  Where a video's row carries its verdict chip, a recipe's carries "Recipe · 4 servings", or
+  "Recipe" when the page gives no yield, and never "Thin · no clear claim" (OV-179, decided
+  without a design; the yield is the one figure the row didn't already give). Recipes are their own
+  kind in the source filter.
 - **Creating (144o–144q)** says "Reading the recipe" or "Fetching the recipe" with its counts once
   the page has been read, and "Recipe on {site}" under a pasted link. The panel names the kind only
   after Create, not on the card before it as 144o draws: we promise not to read a page until then.

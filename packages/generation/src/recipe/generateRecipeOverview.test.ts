@@ -47,7 +47,6 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
 
 const output = (overrides: Record<string, unknown> = {}) => ({
   inOneLine: "A weeknight stew built on charred leeks.",
-  thin: false,
   summary: "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in.",
   matchedTopicNames: [],
   suggestedTopic: null,
@@ -74,6 +73,12 @@ test("a page with a recipe gets a recipe note, and the recipe is the page's, cop
   assert.equal(overview.verdict, null);
   assert.equal(overview.article, null);
   assert.equal(overview.inOneLine, "A weeknight stew built on charred leeks.");
+});
+
+test("a recipe is never thin, however little the page says around it: there is no claim to judge (OV-179)", async () => {
+  const overview = await generate(answering(output({ thin: true })));
+  assert.equal(overview.thin, false);
+  assert.doesNotMatch(composeRecipePrompt(input(), recipe).systemPrompt, /\bthin\b/);
 });
 
 test("a page without one still gets an article note", async () => {
