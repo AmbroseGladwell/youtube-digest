@@ -63,6 +63,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     profilePass: async () => ({ items: [] }),
     forAnyone: async () => ({ items: [] }),
     topics: async () => ({ names: [] }),
+    topicSuggestions: async () => ({ starter: [], newTopic: null }),
     usage: async () => {
       throw new Error("not asked");
     },

@@ -11,7 +11,7 @@ import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import { TRIAL_OVERVIEWS_PER_ADDRESS_DAILY } from "../usage/TrialsRepository.js";
+import { TRIAL_OVERVIEWS_PER_ADDRESS_DAILY, TrialsRepository } from "../usage/TrialsRepository.js";
 
 const OUR_KEY = "sk-test-ours";
 
@@ -467,4 +467,68 @@ test("sorting into topics needs some topics to sort into", async () => {
   });
 
   assert.equal(response.statusCode, 400);
+});
+
+const suggestionAnswer = {
+  status: 200,
+  body: {
+    choices: [{ message: { content: JSON.stringify({ starterTopicNames: ["Food"], newTopicName: "Knife skills" }) } }],
+    usage: { prompt_tokens: 300, completion_tokens: 12, prompt_tokens_details: { cached_tokens: 0 } },
+  },
+};
+
+test("signed out, onboarding has topics suggested on its trial, and its one overview is still there to make", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer), { logger });
+  const device = await makeTrialDevice(testApp);
+
+  const response = await device.suggestTopics();
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { starter: ["Food"], newTopic: "Knife skills" });
+  assert.equal(saying(lines, "small pass on our key").at(0)?.pass, "topicSuggestions");
+  assert.equal(await new TrialsRepository(testApp.sql).used(device.token), 0);
+  await testApp.close();
+});
+
+test("topic suggestions need a trial the server issued, or an account", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer));
+  const ask = (headers: Record<string, string>) =>
+    testApp.app.inject({
+      method: "POST",
+      url: "/api/generations/topic-suggestions",
+      headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), ...headers },
+      payload: { title: "T", kind: "article", text: "" },
+    });
+
+  assert.equal((await ask({})).statusCode, 401);
+  const unknown = await ask({ [TRIAL_TOKEN_HEADER]: "never-issued" });
+  assert.equal(unknown.statusCode, 401);
+  assert.equal(unknown.json().error.details.trial, "unknown");
+  const account = await makeAccount(testApp);
+  const signedIn = await account.inject({
+    method: "POST",
+    url: "/api/generations/topic-suggestions",
+    body: { title: "T", kind: "article", text: "" },
+  });
+  assert.equal(signedIn.statusCode, 200);
+  await testApp.close();
+});
+
+test("a trial has a few topic suggestions a day, and an address a few more across its tokens", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer));
+  const first = await makeTrialDevice(testApp);
+  const answered = [];
+  for (let n = 0; n < 6; n += 1) answered.push((await first.suggestTopics()).statusCode);
+  assert.deepEqual(answered, [200, 200, 200, 200, 200, 429]);
+
+  for (let n = 0; n < 3; n += 1) {
+    const another = await makeTrialDevice(testApp);
+    for (let m = 0; m < 5; m += 1) assert.equal((await another.suggestTopics()).statusCode, 200);
+  }
+  const privateWindow = await makeTrialDevice(testApp);
+  assert.equal((await privateWindow.suggestTopics()).statusCode, 429);
+  const elsewhere = await makeTrialDevice(testApp, "198.51.100.4");
+  assert.equal((await elsewhere.suggestTopics()).statusCode, 200);
+  await testApp.close();
 });

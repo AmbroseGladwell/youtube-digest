@@ -489,7 +489,7 @@ test("topics suggested from a page's title and text come first, and picking one 
   await onboarding.confirmVideo();
 
   await onboarding.verifyOnScreen("topics");
-  await onboarding.verifySuggests("For this article · suggested from its title and text", "Fitness", "Health");
+  await onboarding.verifySuggests("For this article · suggested from what it's about", "Fitness", "Health");
   await onboarding.pickSuggestion("Health");
   await onboarding.verifyTopicPressed("Health", true);
   await onboarding.verifyTopicPressed("Fitness", false);
@@ -498,7 +498,46 @@ test("topics suggested from a page's title and text come first, and picking one 
   await onboarding.verifyOnScreen("library");
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
-    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1 });
+    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1, suggestedBy: "code" });
+});
+
+test("the model's suggestions, asked on the trial as soon as the video is found, can name one new topic, made with no description", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.suggestsTopics({ starter: ["Food"], newTopic: "Knife skills" });
+  const home = await launcher.launch(signedOut);
+
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.allowAnalytics();
+  await onboarding.confirmVideo();
+
+  await onboarding.verifyOnScreen("topics");
+  await onboarding.verifySuggests("For this video · suggested from what it's about", "Food", "Knife skillsNew");
+  await onboarding.verifySuggestionIsNew("Knife skills");
+  await onboarding.pickSuggestion("Knife skills");
+  await onboarding.continueFromTopics();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("voice");
+
+  const [asked] = backendSimulator.ourKey.topicSuggestionsAsked();
+  expect(asked?.input).toEqual({
+    title: VIDEO_TITLE,
+    kind: "video",
+    text: expect.stringContaining("Hello and welcome to the simulated video."),
+  });
+  expect(asked?.trialToken).toMatch(/^simulated-trial-/);
+  await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(1);
+  expect(backendSimulator.ourKey.generations()[0]?.input.existingTopics.map(({ name, description }) => ({ name, description }))).toEqual([
+    { name: "Knife skills", description: null },
+  ]);
+  await expect
+    .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
+    .toEqual({ picked: 0, typed: 1, suggested: 2, pickedSuggested: 1, suggestedBy: "model" });
 });
 
 test("a recipe page is confirmed as a recipe, with the page's own times", async ({ launcher, backendSimulator }) => {
