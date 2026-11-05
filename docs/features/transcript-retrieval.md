@@ -345,3 +345,11 @@ answer, or no rung answered: each rung tried, its outcome, and its `TranscriptFe
 when it named one (`docs/architecture/errors-and-logs.md`, "Client warnings"). Kinds and
 counts only, never a video id or a provider's message, so a queue failure can be traced
 without the server's logs.
+
+## And however it ends, how long each rung took
+
+Every rung asked is timed on the device, with its outcome, beside the store's read, the
+model call and the save, and sent as the capture's `captureTimed` timing for the server
+to log — for captures that succeed as well as ones that fail
+(`docs/architecture/errors-and-logs.md`, "Client timings"). So "the service answered,
+but ninety seconds in" is readable without asking anyone to reproduce it.

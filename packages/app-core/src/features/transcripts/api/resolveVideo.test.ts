@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { VideoId, type ClientWarningReport, type TranscriptStore, type VideoSource } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
+import { CaptureStopwatch } from "../../newOverview/api/CaptureStopwatch.js";
 import type { TranscriptSource, TranscriptTier } from "../types/TranscriptSource.js";
 import { resolveVideo } from "./resolveVideo.js";
 
@@ -23,10 +24,10 @@ const emptyStore: TranscriptStore = {
   deleteTranscript: async () => undefined,
 };
 
-const rung = (tier: TranscriptTier, answer: "answers" | "no-answer" | "throws" | "daily-cap"): TranscriptSource => ({
+const rung = (tier: TranscriptTier, answer: "answers" | "no-answer" | "throws" | "daily-cap" | "not-ready"): TranscriptSource => ({
   tier,
   cost: "free",
-  isReady: async () => true,
+  isReady: async () => answer !== "not-ready",
   resolve: async () => {
     if (answer === "throws") throw new Error("Simulated: the rung failed");
     if (answer === "daily-cap") throw new TranscriptFetchError("Simulated: the cap", { failure: "daily-cap", sourceId: tier });
@@ -91,5 +92,39 @@ describe("resolveVideo's warnings", () => {
         answeredBy: null,
       },
     ]);
+  });
+});
+
+describe("resolveVideo's timing", () => {
+  it("times the store's read and each rung asked, as it found them, and nothing it never reached", async () => {
+    let clock = 0;
+    const stopwatch = new CaptureStopwatch(() => clock);
+    const slow = (source: TranscriptSource, ms: number): TranscriptSource => ({
+      ...source,
+      resolve: (...args) => {
+        clock += ms;
+        return source.resolve(...args);
+      },
+    });
+
+    await resolveVideo(URL, {
+      sources: [rung("shared-cache", "not-ready"), slow(rung("extension", "throws"), 1_200), slow(rung("service", "answers"), 2_900)],
+      transcriptStore: emptyStore,
+      stopwatch,
+    });
+
+    expect(stopwatch.report("finished", 0).steps).toEqual([
+      { step: "stored", outcome: "no-answer", ms: 0 },
+      { step: "shared-cache", outcome: "unavailable", ms: 0 },
+      { step: "extension", outcome: "failed", ms: 1_200 },
+      { step: "service", outcome: "answered", ms: 2_900 },
+    ]);
+  });
+
+  it("asks the rungs the same way with no stopwatch, as the background prefetch does", async () => {
+    const { outcome, warnings } = await resolvingWith([rung("shared-cache", "not-ready"), rung("extension", "answers")]);
+
+    expect(outcome).toBe("resolved");
+    expect(warnings).toEqual([]);
   });
 });

@@ -21,6 +21,11 @@ An event is never how the app finds something out, and a log line is never what 
 is drawn from. When the server already logs something, as it logs every decision on an
 assistant's request, the event is the reader's side of it and the log line is the system's.
 
+The client can write a log line of its own kind, through the server: a **client timing**,
+how a capture's time split step by step, is neither an event nor a failure, and goes
+beside its errors and warnings to be logged and nothing more (`errors-and-logs.md`,
+"Client timings").
+
 ### Actions, not logs
 
 **An analytics event is something the reader did in the app**: a click, a choice, a thing
@@ -31,6 +36,7 @@ they made or opened. Everything else is a log line, however countable it looks:
 | Events the app dropped | the app's own bookkeeping | `dropped` on the batch, logged as `client events dropped` |
 | An assistant calling a tool over `/mcp` | the reader asked their assistant, but did nothing in the app | `mcp tool called`, with the tool, the assistant, the overview count, whether it failed and how long it took (`mcp-connector.md`, "Logging") |
 | Audio rendered, a transcript cached, a share page viewed | the system or someone else acting | their existing log lines |
+| How long each step of a capture took | the system working, measured on the device | `capture timed`, sent beside the client's errors (`errors-and-logs.md`, "Client timings") |
 
 So PostHog holds reader actions and nothing to filter out, and the logs hold the whole
 story, actions included, for anyone tracing what happened. The logs are shipped to

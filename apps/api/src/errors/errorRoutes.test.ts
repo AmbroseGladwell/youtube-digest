@@ -124,6 +124,110 @@ test("an address sending more than thirty batches a minute is throttled", async 
   await testApp.close();
 });
 
+test("a capture's timing is logged at info under the reader's session, by step, and never passed on to error tracking", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+  const session = await makeSession(testApp.sql, { now: testApp.clock.now });
+
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/errors",
+    headers: session.headers,
+    payload: {
+      context: { surface: "extension", layout: "panel", appVersion: "0.4.1", platform: "macos" },
+      errors: [],
+      timings: [
+        {
+          name: "captureTimed",
+          outcome: "finished",
+          steps: [
+            { step: "stored", outcome: "no-answer", ms: 4 },
+            { step: "shared-cache", outcome: "no-answer", ms: 310 },
+            { step: "service", outcome: "answered", ms: 2900 },
+            { step: "model", outcome: "answered", ms: 81000 },
+            { step: "save", outcome: "answered", ms: 12 },
+          ],
+          totalMs: 90100,
+          transcriptCharacters: 18400,
+          at: "2026-11-05T09:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  assert.equal(response.statusCode, 204);
+  const [timed] = lines.filter(({ logCode }) => logCode === "api.client.captureTimed");
+  assert.equal(timed!.level, LOG_LEVELS.info);
+  assert.deepEqual(timed!.clientTiming, {
+    outcome: "finished",
+    totalMs: 90100,
+    transcriptCharacters: 18400,
+    steps: {
+      stored: { outcome: "no-answer", ms: 4 },
+      "shared-cache": { outcome: "no-answer", ms: 310 },
+      service: { outcome: "answered", ms: 2900 },
+      model: { outcome: "answered", ms: 81000 },
+      save: { outcome: "answered", ms: 12 },
+    },
+  });
+  assert.equal(timed!.accountId, session.accountId);
+  assert.equal(timed!.surface, "extension");
+  assert.deepEqual(testApp.errorSink.captured, []);
+  await testApp.close();
+});
+
+test("a timing's step can't smuggle a video, a link or a word of the transcript into the logs", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+
+  const response = await anonymously(testApp, {
+    context,
+    errors: [],
+    timings: [
+      {
+        name: "captureTimed",
+        outcome: "finished",
+        steps: [
+          { step: "dQw4w9WgXcQ", outcome: "answered", ms: 5 },
+          { step: "model", outcome: "https://youtu.be/dQw4w9WgXcQ", ms: 5 },
+          { step: "model", outcome: "answered", ms: 41000 },
+        ],
+        totalMs: 41010,
+        transcriptCharacters: 100,
+        at: "2026-11-05T09:00:00.000Z",
+      },
+    ],
+  });
+  const named = await anonymously(testApp, {
+    context,
+    errors: [],
+    timings: [
+      {
+        name: "captureTimed",
+        outcome: "finished",
+        steps: [],
+        totalMs: 10,
+        transcriptCharacters: 100,
+        title: "Three cuts cover most of a week",
+        at: "2026-11-05T09:00:00.000Z",
+      },
+    ],
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(named.statusCode, 400);
+  const [timed] = lines.filter(({ logCode }) => logCode === "api.client.captureTimed");
+  assert.deepEqual(timed!.clientTiming, {
+    outcome: "finished",
+    totalMs: 41010,
+    transcriptCharacters: 100,
+    steps: { model: { outcome: "answered", ms: 41000 } },
+  });
+  assert.ok(!JSON.stringify(lines).includes("dQw4w9WgXcQ"));
+  assert.ok(!JSON.stringify(lines).includes("Three cuts"));
+  await testApp.close();
+});
+
 test("a warning is logged at warn under the reader's session and never passed on to error tracking", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MAX_CLIENT_ERROR_BATCH, type ClientWarning, type SentClientError } from "@overview/domain";
+import { MAX_CLIENT_ERROR_BATCH, type ClientTiming, type ClientWarning, type SentClientError } from "@overview/domain";
 import { ErrorQueue, type ErrorQueueOptions, type QueuedErrorBatch } from "./ErrorQueue.js";
 
 const error = (message: string): SentClientError => ({
@@ -101,5 +101,29 @@ describe("ErrorQueue", () => {
       expect.objectContaining({ errors: [expect.objectContaining({ message: "one" })], dropped: 1 }),
     ]);
     expect(sent[1]).not.toHaveProperty("warnings");
+  });
+
+  it("sends a timing alone or beside the rest, against the same budget, so a capture loop can't flood the logs", async () => {
+    const { queue, sent } = makeQueue({ maxPerMinute: 2 });
+    const timing: ClientTiming = {
+      name: "captureTimed",
+      outcome: "finished",
+      steps: [{ step: "model", outcome: "answered", ms: 41_000 }],
+      totalMs: 41_300,
+      transcriptCharacters: 18_400,
+      at: "2026-11-05T09:00:00.000Z",
+    };
+
+    queue.recordTiming(timing);
+    await queue.flush();
+    queue.record(error("one"));
+    queue.recordTiming(timing);
+    await queue.flush();
+
+    expect(sent).toEqual([
+      expect.objectContaining({ errors: [], timings: [timing] }),
+      expect.objectContaining({ errors: [expect.objectContaining({ message: "one" })], dropped: 1 }),
+    ]);
+    expect(sent[1]).not.toHaveProperty("timings");
   });
 });

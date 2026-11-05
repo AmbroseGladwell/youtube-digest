@@ -48,6 +48,36 @@ test("making an overview is counted from asking to reading it, with where it was
     ]);
 });
 
+test("how the capture's time split is reported beside its events, step by step, and agrees with the event's duration", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  await launcher.launch({ ...SIGNED_IN, surface: "extension" });
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect.poll(() => backendSimulator.errors.timings()).toHaveLength(1);
+  const [timing] = backendSimulator.errors.timings();
+  const finished = captureEvents(backendSimulator).find(({ name }) => name === "capture.newOverview.finished");
+  expect(timing).toEqual({
+    name: "captureTimed",
+    outcome: "finished",
+    steps: [
+      { step: "stored", outcome: "no-answer", ms: expect.any(Number) },
+      { step: "shared-cache", outcome: "no-answer", ms: expect.any(Number) },
+      { step: "service", outcome: "answered", ms: expect.any(Number) },
+      { step: "model", outcome: "answered", ms: expect.any(Number) },
+      { step: "save", outcome: "answered", ms: expect.any(Number) },
+    ],
+    totalMs: finished!.props.durationMs,
+    transcriptCharacters: expect.any(Number),
+    at: expect.any(String),
+  });
+  expect(backendSimulator.errors.batches().find(({ timings }) => timings)!.context).toMatchObject({ surface: "extension" });
+});
+
 test("a run that fails is counted by what went wrong, never by its message", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.ANTHROPIC_MESSAGES);
   await launcher.launch(SIGNED_IN);
