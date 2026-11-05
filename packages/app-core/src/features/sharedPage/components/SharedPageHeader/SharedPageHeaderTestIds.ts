@@ -3,4 +3,5 @@ export const sharedPageHeaderTestIds = {
   home: "SharedPageHeader.home",
   signInButton: "SharedPageHeader.signInButton",
   makeButton: "SharedPageHeader.makeButton",
+  libraryButton: "SharedPageHeader.libraryButton",
 };
