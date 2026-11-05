@@ -31,6 +31,7 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
   const errors = useErrorReporter();
   const queryClient = useQueryClient();
   const [move, setMove] = useState<LibraryMove | null>(null);
+  const [answersIn, setAnswersIn] = useState<string | null>(null);
   const tried = useRef(new Set<string>());
   const pulled = sync.connected && sync.status.lastSyncedAt !== null;
 
@@ -41,6 +42,7 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
       const left = await openLibrary(null, { shown: false });
       try {
         await moveAnswersInto(left.stores, stores);
+        setAnswersIn(accountId);
         void queryClient.invalidateQueries({ queryKey: topicKeys.all });
         void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
         const result = await moveLibraryInto(left.stores, stores);
@@ -57,13 +59,18 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
       } finally {
         left.close();
       }
-    })().catch((error: unknown) => errors.report(error, "libraryMove", { handled: true }));
+    })()
+      .catch((error: unknown) => errors.report(error, "libraryMove", { handled: true }))
+      .finally(() => setAnswersIn(accountId));
   }, [accountId, openLibrary, pulled, stores, queryClient, analytics, errors]);
 
   useEffect(() => {
-    if (accountId === null) setMove(null);
+    if (accountId === null) {
+      setMove(null);
+      setAnswersIn(null);
+    }
   }, [accountId]);
 
-  const value = useMemo(() => ({ move, dismiss: () => setMove(null) }), [move]);
+  const value = useMemo(() => ({ move, dismiss: () => setMove(null), answersIn }), [move, answersIn]);
   return <LibraryMoveProvider value={value}>{children}</LibraryMoveProvider>;
 }

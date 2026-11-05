@@ -4,6 +4,7 @@ import { onboardingAboutYouTestIds } from "../../src/features/onboarding/compone
 import { onboardingAccountTestIds } from "../../src/features/onboarding/components/OnboardingAccount/OnboardingAccountTestIds.js";
 import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
 import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
+import { onboardingPreviewTestIds } from "../../src/features/onboarding/components/OnboardingPreview/OnboardingPreviewTestIds.js";
 import { onboardingProgressBarTestIds } from "../../src/features/onboarding/components/OnboardingProgressBar/OnboardingProgressBarTestIds.js";
 import { onboardingReadFailureTestIds } from "../../src/features/onboarding/components/OnboardingReadFailure/OnboardingReadFailureTestIds.js";
 import { onboardingSourceCardTestIds } from "../../src/features/onboarding/components/OnboardingSourceCard/OnboardingSourceCardTestIds.js";
@@ -69,6 +70,19 @@ export class OnboardingPageObject extends PageObject {
   back = () => this.step("back", () => this.click(onboardingPageTestIds.back));
 
   allowAnalytics = () => this.step("allowAnalytics", () => this.click(onboardingAnalyticsTestIds.allow));
+
+  // A sample has no overview being made, so there's no See your overview: the way to the account
+  // is through the screens, answering analytics if it's asked and skipping the rest.
+  skipToAccount = () =>
+    this.step("skipToAccount", async () => {
+      await expect(this.get(onboardingAnalyticsTestIds.root).or(this.get(onboardingTopicsTestIds.root))).toBeVisible();
+      if (await this.get(onboardingAnalyticsTestIds.root).isVisible()) await this.declineAnalytics();
+      for (const step of ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"] as const) {
+        await this.verifyOnScreen(step);
+        await this.skip();
+      }
+      await this.verifyOnScreen("account");
+    });
 
   declineAnalytics = () => this.step("declineAnalytics", () => this.click(onboardingAnalyticsTestIds.noThanks));
 
@@ -186,6 +200,26 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.get(onboardingTeaserTestIds.title)).toHaveText(title);
       await expect(this.get(onboardingTeaserTestIds.first)).toHaveText(premise);
     });
+
+  verifyTeaserSaysSample = () =>
+    this.step("verifyTeaserSaysSample", () =>
+      expect(this.get(onboardingTeaserTestIds.root).filter({ visible: true }).first()).toContainText("Your sample overview is ready"),
+    );
+
+  // A sample is already made, so the overview's progress isn't shown anywhere (155f).
+  verifyHasNoOverviewProgress = () =>
+    this.step("verifyHasNoOverviewProgress", async () => {
+      await expect(this.get(onboardingProgressBarTestIds.root)).toHaveCount(0);
+      await expect(this.get(onboardingProgressBarTestIds.seeOverview)).toHaveCount(0);
+    });
+
+  verifyPreviewSaysWrittenForAnyone = () =>
+    this.step("verifyPreviewSaysWrittenForAnyone", () =>
+      expect(this.get(onboardingPreviewTestIds.forAnyone)).toHaveText("Written for anyone. The overviews you make are written for you."),
+    );
+
+  verifyPlanCountsRead = (text: string) =>
+    this.step(`verifyPlanCountsRead ${text}`, () => expect(this.get(onboardingPlanTestIds.counts)).toHaveText(text));
 
   verifyTeaserReads = ({ byline, locked }: { byline: string; locked: string }) =>
     this.step(`verifyTeaserReads ${byline}`, async () => {

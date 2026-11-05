@@ -242,13 +242,64 @@ us. A few live shares are far below an account's limit of 50.
 **Back from the first screen goes to Start**, not to a shared page: the progress marks the copy
 as a sample (`share.sample`).
 
-**With no samples, none are shown**: a server with none listed, one that doesn't answer, or a
-shell with no server leaves Start with its field alone. A sample whose copy can't be fetched
-says so under the list, and Start stays as it was.
+**The designs** are "OV-155 1–13" (155a–155l), with 155l, the sample deck, the interactive one.
 
-Slice 1 draws them plainly: a labelled group of buttons, each named by its title and by the
-teaser's byline ("The Harbour Post · Article · 14 min read"). The Claude Design round draws the
-cards and decides whether the reveal says it was a sample.
+**On the web, Start's samples are a deck** (`SampleDeck`, 155l), in the Example overview card's
+place, which goes. One full card with two blank ones behind: the image, "Source · Kind ·
+length", the title, then the Premise (a recipe's Summary), the next sections drawn as blurred bars
+marked Written, and Open this sample. Never the verdict or anything past the Premise, since a
+sample is unlocked by making an account like any first overview.
+
+- **It cycles every 6 seconds**: the front card slides away and fades, the next comes forward
+  (480ms). Hovering over it or focusing inside it holds it. Pause stops it for the visit, and the
+  arrows step by hand and restart the clock. "Sample N of M" is announced only after a manual step.
+  With reduced motion it doesn't cycle until Play, and changes don't move.
+- **The headline's verb follows the front card**: Watch Less for a video, Learn More for an article,
+  Cook More for a recipe (`StartVerb`), rolling up out of a clipped line. "with The Overview"
+  never moves.
+- **See all N samples** lays the deck out as rows in deck order, front card first, the front card
+  folding down as the others slide out from under it. Show one at a time folds it back.
+- **On a phone** the cards are narrower so the two behind fit, and a swipe either way past 70px
+  throws the front card off that way and brings the next.
+- Only the front card is in the tab order while the deck is stacked.
+
+Fewer than three samples aren't a deck: they're rows, as in the panel. With none, the group hides
+and Start keeps the Example overview card: a server with none listed, one that doesn't answer, or
+a shell with no server.
+
+**In the panel, samples are rows** (`OnboardingSamples`, 155d), after Make my overview and before
+"Already have an account? Sign in", three at a time: the image beside the title, "Source · Kind"
+above it and the length below. More samples opens the rest in place and moves focus to the first of
+them; nothing scrolls sideways. On a tab with nothing to read the lead points to both ways in.
+
+**Opening one (155f).** The choice is counted as it's pressed, so a failed open still records it.
+Nothing changes for 300ms; then the card says "Opening…" with aria-busy (in place of Open this
+sample on the deck, or of the length on a row), and the deck stops cycling. If the copy can't be
+fetched, "That sample couldn't be opened. Try another, or paste a link." shows above the samples,
+focus returns to the card, and the deck stays paused with it in front.
+
+**Through onboarding (155g–155k).** A sample is already made, so the overview's progress line
+doesn't show and there is no See your overview: the way to the account is through the screens. On a
+wide screen the preview shows it with every section Written and the line "Written for anyone. The
+overviews you make are written for you." The teaser says "Your sample overview is ready", and the
+plan "Your sample overview is ready." and "This sample doesn't count towards your month. The first
+overview you make will." The reveal carries no sample label; under How to apply it says "Written
+for anyone, like every sample. The overviews you make are written for you.", and the Written for
+you / For anyone flip doesn't show, so nothing is written for anyone either. The first of its
+next steps is **Now try your own**, with its own field, which starts the next overview as the
+library's own field does, and hides when there's no way to make one. The next steps record that
+it was a sample (`overview.nextSteps.v1`'s `sample`).
+
+**A sample is sorted into the reader's topics where it fits any** (owner, 5 Nov 2026). As it's
+saved into the account, `POST /api/generations/topics` matches its note against the account's
+topics on us: a small pass like For anyone, with no transcript, that never adds a topic and doesn't
+count against the plan. It waits for the topics picked in onboarding to reach the account. With no
+topics, or if the pass fails, it's saved unsorted. A copy saved from a shared page still isn't
+sorted, and the preview still says Unsorted until the sample is in the account.
+
+**A sample isn't the reader's first overview** (owner, 5 Nov 2026). It's saved with `fromSample`,
+one of the fields a share never carries, and the library's first-overview milestone (46m) counts
+only overviews without it, so it waits for the first one they make.
 
 ## Every Create account
 
@@ -259,6 +310,11 @@ saved-locally note, and the extension's injected button and article menu. In the
 account, home leads with signing back in (46q), so the redirect asks home for Start instead.
 The create-account form itself is onboarding's account screen (46j). A shell with no server
 keeps design 9b's page (`sign-in.md`, "Creating an account").
+
+Start says why it isn't a form (155e). On the web a stone note above the hero reads "New accounts
+start with your first overview". In the panel the lead says "New accounts start with your first
+overview. Make one of this video, or try a sample.", and on a device that has had an account a
+Back button returns to signing in.
 
 ## In the extension panel
 
@@ -310,4 +366,4 @@ as `capture.newOverview.started` with `from: "onboarding"`.
 ## Not built yet
 
 - "Vote for what's next", the unsorted reveal prompt.
-- Samples drawn as cards, and whether the reveal says it was a sample: OV-155's Claude Design round.
+- Open from 155: the deck's cycle time (6 seconds, the design's default) and a random first card.

@@ -1,13 +1,15 @@
 import { z } from "zod";
 import { OverviewId } from "@overview/domain";
 
-export const NextStep = z.enum(["extension", "ai"]);
+export const NextStep = z.enum(["own", "extension", "ai"]);
 export type NextStep = z.infer<typeof NextStep>;
 
 export const NextSteps = z.object({
   overviewId: OverviewId,
   dismissed: z.array(NextStep).catch([]),
   forAnyone: z.union([z.array(z.string()), z.literal("failed")]).nullable().catch(null),
+  // Onboarding ended on a sample: written for anyone, and followed by Now try your own (155j, 155k).
+  sample: z.boolean().catch(false),
 });
 export type NextSteps = z.infer<typeof NextSteps>;
 
@@ -33,3 +35,9 @@ export function writeNextSteps(nextSteps: NextSteps, storage: Storage = globalTh
     return;
   }
 }
+
+// The overview onboarding ended on was a sample.
+export const isRevealedSample = (overviewId: string | null): boolean => {
+  const held = readNextSteps();
+  return overviewId !== null && held !== null && held.overviewId === overviewId && held.sample;
+};

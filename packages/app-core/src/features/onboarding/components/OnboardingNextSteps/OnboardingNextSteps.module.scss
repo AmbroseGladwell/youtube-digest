@@ -6,6 +6,16 @@
   flex-direction: column;
   gap: 0.75rem;
   margin-top: 1.5rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &:empty {
+    display: none;
+  }
 
   @media (min-width: 64rem) {
     flex-direction: row;
@@ -70,4 +80,50 @@
   @media (min-width: 64rem) {
     min-height: 0;
   }
+}
+
+.own {
+  padding-bottom: 1.125rem;
+}
+
+.ownForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.ownInput {
+  @include controls.field-pill;
+  flex: 1 1 14rem;
+  min-height: 3rem;
+  box-sizing: border-box;
+  padding: 0 1.125rem;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.ownSubmit {
+  @include onboarding.primary;
+  flex: none;
+
+  @media (max-width: 47.9375rem) {
+    flex: 1 1 100%;
+  }
+}
+
+.ownError {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--alert);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

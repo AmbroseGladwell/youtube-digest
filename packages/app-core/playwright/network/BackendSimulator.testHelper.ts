@@ -39,13 +39,14 @@ import {
   type ShareRequest,
   type StoredTranscript,
   type Topic,
+  type TopicMatchInput,
   type UnreadableRecord,
   type VideoId,
   youTubeSource,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
-import { makeArticleOverview, makeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import {
   makeAnthropicMessageResponse,
   makeGeneratedOutputFixture,
@@ -72,8 +73,8 @@ export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
-// Start offers one sample unless a test offers others, as it will once the house account's
-// shares are configured (docs/features/onboarding.md, "Try a sample").
+// Start offers a video, an article and a recipe unless a test offers others, as the house
+// account's shares do (docs/features/onboarding.md, "Try a sample"). The video is in front.
 export const SIMULATED_SAMPLE_TITLE = "A Sample To Start From";
 
 // Where a simulated assistant is sent back to once the reader has answered.
@@ -170,6 +171,8 @@ export class BackendSimulator {
   #profilePasses: ProfilePassInput[] = [];
   #ourKeyHowToApply: string[] | null = null;
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
+  #topicMatches: string[] = [];
+  #topicPasses: TopicMatchInput[] = [];
   #articleReads: string[] = [];
   #articleReadTrialTokens: Array<string | null> = [];
   #articleReadsSpent: "trial-reads" | "trial-reads-address" | null = null;
@@ -200,7 +203,11 @@ export class BackendSimulator {
 
   constructor(page: Page) {
     this.#page = page;
-    this.startSamples.offer(makeOverview({ source: { ...makeOverview().source, title: SIMULATED_SAMPLE_TITLE } }));
+    this.startSamples.offer(
+      makeOverview({ source: { ...makeOverview().source, title: SIMULATED_SAMPLE_TITLE, durationMs: 754_000 } }),
+      makeArticleOverview(),
+      makeRecipeOverview(),
+    );
   }
 
   simulateEndpointDefault = (endpoint: EndpointKey): void => {
@@ -789,6 +796,17 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/generations/topics", (route) =>
+      this.#respond(route, EndpointKey.TOPIC_MATCH, {
+        onDefault: () => {
+          const input = route.request().postDataJSON() as TopicMatchInput;
+          this.#topicPasses.push(input);
+          return { status: 200, body: { names: this.#topicMatches.filter((name) => input.topics.some((topic) => topic.name === name)) } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/trials", (route) =>
       this.#respond(route, EndpointKey.TRIAL_START, {
         onDefault: () => {
@@ -1200,6 +1218,11 @@ export class BackendSimulator {
       this.#profilePassItems = items;
     },
     profilePasses: (): ProfilePassInput[] => [...this.#profilePasses],
+    // Which of the reader's topics a sample is sorted into, of those it's asked about.
+    sortsSampleInto: (names: string[]): void => {
+      this.#topicMatches = names;
+    },
+    topicPasses: (): TopicMatchInput[] => [...this.#topicPasses],
     // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,

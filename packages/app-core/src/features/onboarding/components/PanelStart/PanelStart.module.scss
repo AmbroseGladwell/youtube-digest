@@ -52,6 +52,25 @@
   color: var(--alert);
 }
 
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.backToSignIn {
+  @include onboarding.quiet;
+  align-self: flex-start;
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  margin: -1rem 0 -0.25rem -0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .foot {
   margin-top: auto;
   padding-top: 0.5rem;

@@ -7,6 +7,8 @@ import { onboardingPlanTestIds } from "./OnboardingPlanTestIds.js";
 export interface OnboardingPlanProps {
   // The overview is in the account's library, so the reveal has it to show.
   inAccount: boolean;
+  // A sample isn't counted, so the plan says the first overview they make will be (155i).
+  sample: boolean;
   onFree: () => void;
 }
 
@@ -14,12 +16,12 @@ export interface OnboardingPlanProps {
 // Plus can't be bought until there is billing, so its button says so and Free goes on to the
 // reveal. The first overview counts as one of the plan's on us
 // (docs/architecture/tiers.md, "Counting"; docs/features/onboarding.md, "The plan").
-export function OnboardingPlan({ inAccount, onFree }: OnboardingPlanProps) {
+export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProps) {
   return (
     <div className={styles.root} data-testid={onboardingPlanTestIds.root}>
       <div className={styles.intro}>
         <OnboardingHeading>Choose your plan</OnboardingHeading>
-        <p className={styles.lead}>Your overview is ready. Pick how you'd like to keep going.</p>
+        <p className={styles.lead}>{sample ? "Your sample overview is ready." : "Your overview is ready."} Pick how you'd like to keep going.</p>
       </div>
       <p className={styles.includes}>Every plan includes your library, topics and AI connection.</p>
 
@@ -44,7 +46,11 @@ export function OnboardingPlan({ inAccount, onFree }: OnboardingPlanProps) {
 
       <div className={styles.under}>
         <p className={styles.byo}>Have your own AI key? Plus for £4.99 a month is coming soon too.</p>
-        <p className={styles.counts}>This overview counts as your first of the month.</p>
+        <p className={styles.counts} data-testid={onboardingPlanTestIds.counts}>
+          {sample
+            ? "This sample doesn't count towards your month. The first overview you make will."
+            : "This overview counts as your first of the month."}
+        </p>
         {!inAccount && (
           <p className={styles.bringingIn} role="status" data-testid={onboardingPlanTestIds.bringingIn}>
             Bringing your overview into your account…

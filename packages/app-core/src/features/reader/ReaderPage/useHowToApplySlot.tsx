@@ -6,15 +6,29 @@ import { HowToApplyFlip, type FlipSide } from "../components/HowToApplyFlip/HowT
 import styles from "../components/HowToApplyFlip/HowToApplySteps.module.scss";
 import { howToApplyFlipTestIds } from "../components/HowToApplyFlip/HowToApplyFlipTestIds.js";
 import type { NoteSectionSlot } from "../components/ReadAlongNote/ReadAlongNote.js";
+import { isRevealedSample } from "../../onboarding/nextStepsStorage.js";
 import { useForAnyoneSteps } from "./useForAnyoneSteps.js";
 
 // Design 141o: the reveal's flip, worn by How to apply. Written for you stays the note's own
-// lines; For anyone stands in for them without moving what the voice reads.
+// lines; For anyone stands in for them without moving what the voice reads. A sample has no
+// version written for the reader, so it says so instead and offers no flip (155j).
 export function useHowToApplySlot(overview: Overview | null): NoteSectionSlot | null {
   const steps = useForAnyoneSteps(overview);
   const aboutYou = useSettingsQuery().data?.aboutYou ?? EMPTY_ABOUT_YOU;
   const analytics = useAnalytics();
   const [side, setSide] = useState<FlipSide>("you");
+  if (isRevealedSample(overview?.id ?? null) && (overview?.howToApply?.items.length ?? 0) > 0) {
+    return {
+      section: HOW_TO_APPLY_SECTION,
+      beside: null,
+      under: (
+        <p className={styles.line} data-testid={howToApplyFlipTestIds.sampleLine}>
+          Written for anyone, like every sample. The overviews you make are written for you.
+        </p>
+      ),
+      replacement: null,
+    };
+  }
   if (steps.status === "hidden") return null;
 
   const anyone = side === "anyone" && steps.status === "ready";

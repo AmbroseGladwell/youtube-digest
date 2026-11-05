@@ -7,6 +7,8 @@ import type {
   OverviewUsage,
   ProfilePassInput,
   ProfilePassResult,
+  TopicMatchInput,
+  TopicMatchResult,
   TrialToken,
 } from "@overview/domain";
 
@@ -19,6 +21,7 @@ export interface GenerationApi {
   // Never counted against the plan (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput): Promise<ProfilePassResult>;
   forAnyone(input: ForAnyoneInput): Promise<ForAnyoneResult>;
+  topics(input: TopicMatchInput): Promise<TopicMatchResult>;
   // A slot on the own-key month before the device generates, or a saved share let in.
   reserve(overviewId: string, shareToken?: string): Promise<OverviewUsage>;
   release(overviewId: string): Promise<void>;

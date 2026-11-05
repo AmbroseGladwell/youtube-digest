@@ -28,6 +28,12 @@ import { onboardingSourceOf } from "../../onboarding/onboardingSources.js";
 import { REFUSED_LINK } from "../../onboarding/util/refusedLink.js";
 import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
 import { OnboardingSamples } from "../../onboarding/components/OnboardingSamples/OnboardingSamples.js";
+import { SampleDeck } from "../../onboarding/components/SampleDeck/SampleDeck.js";
+import { StartVerb } from "../../onboarding/components/StartVerb/StartVerb.js";
+import { useSamplesQuery } from "../../onboarding/queries/samplesQuery.js";
+import { DEFAULT_START_VERB, sampleFacts } from "../../onboarding/util/sampleFacts.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import type { Sample } from "@overview/domain";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
 import { isStartAsked } from "../../onboarding/startAsked.js";
@@ -204,12 +210,20 @@ function FirstRunHero() {
   );
 }
 
+// Fewer than this and there's no deck to cycle, so the samples are plain rows (155l).
+const DECK_LEAST = 3;
+
 // Design 46a: signed out, the same hero is onboarding's Start. A link we can read goes
 // straight on to the questions while its overview is made, or a sample starts them around one
 // already made. Nothing else is offered: no overview is made or seen without an account
 // (docs/features/onboarding.md).
 function StartHero() {
   const startOnboarding = useStartOnboarding();
+  const location = useLocation();
+  const phone = useIsPhone();
+  const samples = useSamplesQuery().data ?? [];
+  const [front, setFront] = useState<Sample | null>(null);
+  const shownFirst = front ?? samples[0] ?? null;
   const analytics = useAnalytics();
   const urlFieldId = useId();
   const [url, setUrl] = useState("");
@@ -224,7 +238,28 @@ function StartHero() {
   };
 
   return (
-    <Hero standfirst="Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to.">
+    <Hero
+      standfirst="Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to."
+      verb={<StartVerb verb={shownFirst === null || samples.length < DECK_LEAST ? DEFAULT_START_VERB : sampleFacts(shownFirst.note).verb} />}
+      note={
+        isStartAsked(location.state) ? (
+          <p className={styles.fromCreate} data-testid={homePageTestIds.fromCreateNote}>
+            <StrokeIcon name="user" size={14} />
+            New accounts start with your first overview
+          </p>
+        ) : null
+      }
+      alignTop={samples.length > 0}
+      aside={
+        samples.length >= DECK_LEAST ? (
+          <SampleDeck samples={samples} phone={phone} onFront={setFront} />
+        ) : samples.length > 0 ? (
+          <OnboardingSamples samples={samples} />
+        ) : (
+          <ExampleOverview />
+        )
+      }
+    >
       <form className={styles.heroForm} onSubmit={start}>
         <span className={styles.heroFormIcon}>
           <StrokeIcon name="link" size={18} />
@@ -258,18 +293,28 @@ function StartHero() {
           {REFUSED_LINK}
         </p>
       )}
-      <OnboardingSamples />
     </Hero>
   );
 }
 
-function Hero({ standfirst, children }: { standfirst: string; children: ReactNode }) {
+interface HeroProps {
+  standfirst: string;
+  children: ReactNode;
+  verb?: ReactNode;
+  note?: ReactNode;
+  aside?: ReactNode;
+  // Start's deck grows when it's laid out as a list, so the text stays at the top (155b).
+  alignTop?: boolean;
+}
+
+function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside = <ExampleOverview />, alignTop = false }: HeroProps) {
   const surface = useSurface();
   return (
-    <div className={styles.hero} data-testid={homePageTestIds.hero}>
+    <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
       <div className={styles.heroText}>
-        <h2 className={styles.heroTitle}>
-          Watch Less,
+        {note}
+        <h2 className={styles.heroTitle} data-testid={homePageTestIds.heroTitle}>
+          {verb}
           <br />
           <span className={styles.nowrap}>with The Overview</span>
         </h2>
@@ -309,7 +354,7 @@ function Hero({ standfirst, children }: { standfirst: string; children: ReactNod
         )}
       </div>
 
-      <ExampleOverview />
+      {aside}
     </div>
   );
 }

@@ -424,3 +424,47 @@ test("How to apply for anyone answers on our key without counting against the pl
   assert.deepEqual(response.json(), { items: ["Practise on one onion."] });
   assert.equal((await usageOf(account)).ours.used, 0);
 });
+
+test("a sample is sorted into the reader's own topics on our key, without counting against the plan", async () => {
+  const answer = {
+    status: 200,
+    body: {
+      choices: [{ message: { content: JSON.stringify({ matchedTopicNames: ["Health"] }) } }],
+      usage: { prompt_tokens: 100, completion_tokens: 10, prompt_tokens_details: { cached_tokens: 0 } },
+    },
+  };
+  const testApp = await ourKeyApp(makeFakeOpenAi(answer));
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/generations/topics",
+    body: {
+      title: "T",
+      source: "S",
+      inOneLine: "L",
+      keyPoints: ["K"],
+      topics: [
+        { name: "Health", description: "Sleep and the body." },
+        { name: "Food", description: null },
+      ],
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), { names: ["Health"] });
+  assert.equal((await usageOf(account)).ours.used, 0);
+});
+
+test("sorting into topics needs some topics to sort into", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi({ status: 200, body: {} }));
+  const account = await makeAccount(testApp);
+
+  const response = await account.inject({
+    method: "POST",
+    url: "/api/generations/topics",
+    body: { title: "T", source: "S", inOneLine: "L", keyPoints: [], topics: [] },
+  });
+
+  assert.equal(response.statusCode, 400);
+});

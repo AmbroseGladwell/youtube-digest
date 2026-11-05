@@ -13,6 +13,16 @@ export class HomePageObject extends PageObject {
 
   // Signed out, the hero is onboarding's Start: it makes the first overview, and offers
   // nothing that needs keys (design 46a).
+  verifyShowsExampleOverview = (shown: boolean) =>
+    this.step(`verifyShowsExampleOverview ${shown}`, () =>
+      shown ? this.expectToBeVisible(homePageTestIds.exampleOverview) : this.expectToHaveCount(homePageTestIds.exampleOverview, 0),
+    );
+
+  verifySaysNewAccountsStartWithAnOverview = () =>
+    this.step("verifySaysNewAccountsStartWithAnOverview", () =>
+      expect(this.get(homePageTestIds.fromCreateNote)).toHaveText("New accounts start with your first overview"),
+    );
+
   verifyShowsStart = (): Promise<HomePageObject> =>
     this.step("verifyShowsStart", async () => {
       await this.expectToBeVisible(homePageTestIds.hero);

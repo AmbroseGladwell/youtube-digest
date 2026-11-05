@@ -18,7 +18,7 @@ const HIDDEN: ForAnyoneSteps = { status: "hidden" };
 const remembered = (overview: Overview | null): ForAnyoneSteps | null => {
   const held = readNextSteps();
   if (overview === null || held === null || held.overviewId !== overview.id) return HIDDEN;
-  if (held.forAnyone === "failed") return HIDDEN;
+  if (held.forAnyone === "failed" || held.sample) return HIDDEN;
   return held.forAnyone === null ? null : { status: "ready", items: held.forAnyone };
 };
 

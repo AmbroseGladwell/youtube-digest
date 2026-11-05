@@ -35,6 +35,8 @@ import { OpeningLibraryPageObject } from "../pageObjects/OpeningLibraryPageObjec
 import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.testHelper.js";
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
 import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
+import { SampleDeckPageObject } from "../pageObjects/SampleDeckPageObject.testHelper.js";
+import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
 import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
 import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
@@ -309,6 +311,13 @@ export class Launcher {
 
   get panelStart(): PanelStartPageObject {
     return new PanelStartPageObject(this.testContext);
+  }
+
+  // From Start through a sample to onboarding's account screen, where the create-account form is.
+  createAccountThroughSample = (): Promise<SignInPageObject> => createAccountThroughSample(this.testContext);
+
+  get sampleDeck(): SampleDeckPageObject {
+    return new SampleDeckPageObject(this.testContext);
   }
 
   get onboardingSamples(): OnboardingSamplesPageObject {

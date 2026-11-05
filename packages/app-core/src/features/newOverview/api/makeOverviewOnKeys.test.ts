@@ -62,6 +62,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     status: async () => ({ available: true }),
     profilePass: async () => ({ items: [] }),
     forAnyone: async () => ({ items: [] }),
+    topics: async () => ({ names: [] }),
     usage: async () => {
       throw new Error("not asked");
     },

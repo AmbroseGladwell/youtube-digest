@@ -64,6 +64,7 @@ export * from "./shareLink.js";
 export * from "./sharePreview.js";
 export * from "./Share.js";
 export * from "./Sample.js";
+export * from "./TopicMatch.js";
 export * from "./noveltyLabel.js";
 export * from "./dubiousBasisLabel.js";
 export * from "./sellingLabel.js";

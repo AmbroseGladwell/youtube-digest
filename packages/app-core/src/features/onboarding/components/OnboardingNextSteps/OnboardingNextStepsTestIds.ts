@@ -3,4 +3,5 @@ export const onboardingNextStepsTestIds = {
   card: (step: string) => `onboarding-next-steps-${step}`,
   action: (step: string) => `onboarding-next-steps-${step}-action`,
   dismiss: (step: string) => `onboarding-next-steps-${step}-dismiss`,
+  ownField: "onboarding-next-steps-own-field",
 };

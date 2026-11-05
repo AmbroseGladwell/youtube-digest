@@ -8,6 +8,7 @@ import {
   type Plan,
   type ProfilePassInput,
   type ProfilePassItem,
+  type TopicMatchInput,
 } from "@overview/domain";
 import {
   costInDollars,
@@ -16,6 +17,7 @@ import {
   generateForAnyoneSteps,
   generateOverviewOf,
   generateProfileItems,
+  generateTopicMatches,
   meteredFetch,
   priceOf,
   ProviderKeyRefusedError,
@@ -207,7 +209,11 @@ export class OurKeyGenerator {
     return this.#smallPass("forAnyone", (client) => generateForAnyoneSteps(client, input), log);
   }
 
-  async #smallPass<Result>(pass: "profile" | "forAnyone", run: (client: GenerationClient) => Promise<Result>, log: FastifyBaseLogger): Promise<Result> {
+  topics(input: TopicMatchInput, log: FastifyBaseLogger): Promise<string[]> {
+    return this.#smallPass("topics", (client) => generateTopicMatches(client, input), log);
+  }
+
+  async #smallPass<Result>(pass: "profile" | "forAnyone" | "topics", run: (client: GenerationClient) => Promise<Result>, log: FastifyBaseLogger): Promise<Result> {
     const { apiKey, http, clock } = this.#options;
     const startedAt = clock().getTime();
     const metered = meteredFetch(ourKeyModel.provider, http);

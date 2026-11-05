@@ -16,6 +16,14 @@ export class PanelStartPageObject extends PageObject {
       expect(this.page.getByRole("heading", { level: 1, name: heading })).toBeFocused(),
     );
 
+  verifyLeadReads = (lead: string) =>
+    this.step(`verifyLeadReads ${lead}`, () => expect(this.get(panelStartTestIds.root).locator("p").first()).toHaveText(lead));
+
+  verifyOffersBackToSignIn = () =>
+    this.step("verifyOffersBackToSignIn", () => this.expectToBeVisible(panelStartTestIds.backToSignIn));
+
+  backToSignIn = () => this.step("backToSignIn", () => this.click(panelStartTestIds.backToSignIn));
+
   verifyCantMakeWithoutAVideo = () =>
     this.step("verifyCantMakeWithoutAVideo", () => expect(this.get(panelStartTestIds.makeOverview)).toBeDisabled());
 
