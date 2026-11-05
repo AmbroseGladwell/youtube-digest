@@ -5,31 +5,27 @@ import { cookingIngredientsSheetTestIds } from "./CookingIngredientsSheetTestIds
 
 export interface CookingIngredientsSheetProps {
   open: boolean;
-  // On the wide web a drawer on the right, so the step stays readable beside it (150aj).
-  drawer: boolean;
   onClose: () => void;
   children: ReactNode;
 }
 
-// Designs 150ah–150aj: the note's own list over the step, as written or as the reader adjusted
-// it. Opening it pauses nothing; servings and units belong to the note, before cooking.
-export function CookingIngredientsSheet({ open, drawer, onClose, children }: CookingIngredientsSheetProps) {
+// Designs 150ah, 150ai: on a phone and in the panel, the note's own list as a sheet over the
+// step, as written or as the reader adjusted it. Opening it pauses nothing; servings and units
+// belong to the note, before cooking. The wide web gets CookingIngredientsDrawer instead.
+export function CookingIngredientsSheet({ open, onClose, children }: CookingIngredientsSheetProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
     const element = dialog.current;
     if (element === null) return;
-    if (open && !element.open) {
-      if (drawer) element.show();
-      else element.showModal();
-    }
+    if (open && !element.open) element.showModal();
     if (!open && element.open) element.close();
-  }, [open, drawer]);
+  }, [open]);
 
   return (
     <dialog
       ref={dialog}
-      className={`${styles.dialog} ${drawer ? styles.drawer : ""}`}
+      className={styles.dialog}
       aria-label="Ingredients"
       onCancel={(event) => {
         event.preventDefault();

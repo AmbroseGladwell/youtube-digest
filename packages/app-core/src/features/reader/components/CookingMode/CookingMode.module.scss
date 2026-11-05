@@ -44,25 +44,71 @@
   --next-radius: 1.5rem;
   --control-height: 5.5rem;
   --control-radius: 1.5rem;
-}
+  --drawer-track: 24rem;
+  --side: 2.5rem;
 
-.screen {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  margin: 0 auto;
-  padding: 1rem 1rem 1.125rem;
-
-  .web & {
-    max-width: 51.25rem;
-    padding: 1.5rem 1.5rem 1.75rem;
+  @media (max-width: 58.9375rem) {
+    --drawer-track: 20rem;
+    --side: 2rem;
   }
 }
 
-// The step stays readable beside the ingredients drawer (150aj).
-.besideDrawer {
-  margin-right: min(24rem, calc(100vw - 2.5rem));
+// On the web the action's scale follows the column it sits in as well as its length: one
+// step down under 720px, the phone's sizes under 480px, with the controls stacked as on a
+// phone (designs 190g, 190k). The class comes from useCookingColumnScale.
+.narrow,
+.compact {
+  --next-height: 5.5rem;
+  --control-height: 4rem;
+  --control-radius: 1.375rem;
+}
+
+.narrow {
+  --action-max: 2.75rem;
+  --action-min: 1.75rem;
+}
+
+.compact {
+  --action-max: 2.125rem;
+  --action-min: 1.4375rem;
+}
+
+// The cooking screen and, on the web, the ingredients drawer beside it, in one row: opening
+// the drawer narrows the screen rather than covering it (190a). The gauge is laid out at the
+// width the screen will settle at, so its scale can be read before the drawer has moved.
+.layout {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+}
+
+.gauge {
+  position: absolute;
+  top: 0;
+  left: var(--side);
+  right: var(--side);
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.withDrawer .gauge {
+  right: calc(var(--side) + var(--drawer-track));
+}
+
+.screen {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 1.125rem;
+
+  .web & {
+    max-width: calc(51.25rem + 2 * var(--side));
+    margin: 0 auto;
+    padding: 1.75rem var(--side);
+  }
 }
 
 .top {
@@ -88,6 +134,11 @@
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  .narrow &,
+  .compact & {
+    visibility: hidden;
+  }
 }
 
 .pill {
@@ -429,7 +480,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.625rem;
 
-  .web & {
+  .web.full & {
     display: flex;
   }
 }
@@ -437,7 +488,7 @@
 .controlsQuiet .control {
   grid-column: 1 / -1;
 
-  .web & {
+  .web.full & {
     grid-column: auto;
   }
 }
@@ -460,7 +511,7 @@
   font-size: var(--next-size);
   gap: 0.625rem;
 
-  .web & {
+  .web.full & {
     flex: 1;
   }
 }
