@@ -338,6 +338,33 @@ and finished on sign-in. That skipped every question and the plan, so it was tak
 A saved copy becomes the new reader's own overview with `captureReason: null` and no
 topics: the sharer's reason and filing were never theirs to inherit.
 
+## A reader who is signed in
+
+OV-189. The page is built for people without an account, and a reader who is already signed
+in used to get exactly that page: their theme applied, so the app plainly knew them, but the
+head still said Sign in, the aside still sold them an account, and Save to my overviews
+walked them through onboarding's questions before the copy reached their library.
+
+Signed in means what it means to onboarding before it saves a shared copy: a connection to
+a server, with the account's own library the one open (`useSharedPageReader`). Then:
+
+- **The head offers Your overviews**, in place of both Sign in and Make an overview. Both
+  of those led to the same place for a signed-in reader, and neither named it.
+- **The aside is not drawn**, and the note takes the column on its own. Its link field
+  started onboarding, which is not how a signed-in reader makes an overview, and its Plus
+  list and Sign in link were for someone else.
+- **Save to my overviews saves at once** through the same `useSaveFromShare` onboarding
+  uses, so the share's token still goes to the server first and the push is let in
+  uncounted, and the reader lands on their copy. No questions: the answers they would have
+  given are already in the account.
+- **An overview the account already holds is opened, not saved again.** The action reads
+  Open in my overviews, which is what the sharer sees opening their own link, and what any
+  reader sees coming back to a link they saved from. The page asks the library through the
+  reader's own query, so the two cannot disagree.
+
+Signed out, nothing changes, and the stopped-link page is the same for everyone: its one
+action goes to Start, which for a signed-in reader is their library.
+
 ## Not built
 
 A manual check of how the link previews in Messages, Slack and WhatsApp, which wants a

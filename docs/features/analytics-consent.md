@@ -26,6 +26,7 @@ out sees no library, so a reader without an account meets the question in onboar
 | PostHog: the anonymous id as the distinct id, no person made | `apps/api/src/events/postHogEventSink.ts` |
 | Settings › Privacy: the switch, what its line says, and what turning it writes (62d–62h) | `features/analyticsConsent/components/PrivacySection/`, `useShareUsage.ts`, `util/shareUsageStatus.ts` |
 | The policy and terms links, in Privacy and About (62i) | `features/settings/components/PolicyLinks/`, `analyticsConsent/util/policyPageUrl.ts` |
+| The pages those links open | `features/legal/` (`docs/features/legal-pages.md`) |
 | A signed-in reader's opt-out, on the account | `packages/domain/src/Settings.ts` (`analyticsOptOut`, `analyticsOptOutChangedAt`); `apps/api/src/events/eventRoutes.ts` drops the account's events |
 | A no, counted with no id | `features/analyticsConsent/useAnalyticsDecline.ts`; `POST /api/events/declined` in `eventRoutes.ts` |
 | The line on the create-account page (62j) | `features/auth/components/AccountTermsLine/`, placed by `EmailLinkForm`'s `aboveSubmit` |
@@ -201,6 +202,5 @@ Changing the account's opt-out logs `analytics opt-out set`.
 
 ## Not built yet
 
-- **Deleting anonymous data never linked after 30 days.** PostHog keeps events for a year.
-- **The privacy policy and terms pages** are OV-79. Until they exist, the links have nowhere
-  to go.
+- **Deleting anonymous data never linked after 30 days.** PostHog keeps events for a year,
+  and the privacy policy says so until the sweep exists (`docs/features/legal-pages.md`).

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   NOVELTY_LABEL,
   SUMMARY_SECTION,
@@ -43,6 +44,10 @@ import { SharedOverviewGone } from "../components/SharedOverviewGone/SharedOverv
 import { SharedPageHeader } from "../components/SharedPageHeader/SharedPageHeader.js";
 import { SharedPlayerRuntime } from "../SharedPlayerRuntime.js";
 import { startOnboardingFromShare } from "../../onboarding/useOnboardingProgress.js";
+import { overviewWithStateQueryOptions } from "../../overviews/queries/overviewWithStateQuery.js";
+import { useStores } from "../../../stores/StoresContext.js";
+import { useSaveFromShare } from "../useSaveFromShare.js";
+import { useSharedPageReader } from "../useSharedPageReader.js";
 import { sharedMetaParts } from "../util/sharedMetaParts.js";
 import styles from "./SharedOverviewPage.module.scss";
 import { sharedOverviewPageTestIds } from "./SharedOverviewPageTestIds.js";
@@ -110,6 +115,45 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const player = usePlayer();
   const navigate = useNavigate();
   const analytics = useAnalytics();
+  const { signedIn } = useSharedPageReader();
+  const { overviewStore } = useStores();
+  const held = useQuery({ ...overviewWithStateQueryOptions(overviewStore, note.id), enabled: signedIn });
+  const saveFromShare = useSaveFromShare();
+  const [saving, setSaving] = useState(false);
+  const saveIntoAccount = async () => {
+    setSaving(true);
+    try {
+      const saved = await saveFromShare(payload.token, payload.snapshot);
+      await navigate(Routes.overview(saved.id));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const saveAction =
+    !signedIn
+      ? {
+          label: "Save to my overviews",
+          onChoose: () => {
+            analytics.sharedPage.actions.saveChosen();
+            startOnboardingFromShare(payload.token, payload.snapshot);
+            void navigate(Routes.onboarding());
+          },
+        }
+      : held.data != null
+        ? {
+            label: "Open in my overviews",
+            onChoose: () => {
+              analytics.sharedPage.actions.openChosen();
+              void navigate(Routes.overview(note.id));
+            },
+          }
+        : {
+            label: saving ? "Saving…" : "Save to my overviews",
+            onChoose: () => {
+              analytics.sharedPage.actions.saveChosen();
+              void saveIntoAccount();
+            },
+          };
   const cooking = useCookingMode({
     overviewId: note.id,
     title: note.source.title,
@@ -171,7 +215,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
       <SharedPageHeader ref={mastheadHeight.measured} />
 
-      <div className={styles.body}>
+      <div className={`${styles.body} ${signedIn ? styles.bodyAlone : ""}`}>
         <main className={styles.main}>
           <div className={styles.head}>
             <div className={styles.chips}>
@@ -203,14 +247,11 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             <button
               type="button"
               className={styles.surfaceAction}
-              onClick={() => {
-                analytics.sharedPage.actions.saveChosen();
-                startOnboardingFromShare(payload.token, payload.snapshot);
-                void navigate(Routes.onboarding());
-              }}
+              disabled={saving || (signedIn && held.isPending)}
+              onClick={saveAction.onChoose}
               data-testid={sharedOverviewPageTestIds.saveButton}
             >
-              Save to my overviews
+              {saveAction.label}
               <StrokeIcon name="bookmark" size={16} />
             </button>
             <a
@@ -322,7 +363,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
 
         </main>
 
-        <MakeYourOwnAside />
+        {!signedIn && <MakeYourOwnAside />}
       </div>
 
       {cookable && recipeAsWritten !== null && (

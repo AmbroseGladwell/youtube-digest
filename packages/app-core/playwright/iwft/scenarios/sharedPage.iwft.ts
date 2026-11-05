@@ -2,7 +2,7 @@ import { ShareToken, shareSnapshot, type Overview, type SharePayload } from "@ov
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
-import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -30,6 +30,14 @@ const shared = (): Overview =>
       publishedAt: "2026-09-04T00:00:00.000Z",
     },
   });
+
+const signedIn = () => ({
+  apiUrl: SERVER,
+  token: null,
+  accountId: SIMULATED_ACCOUNT_ID,
+  email: SIMULATED_EMAIL,
+  firstName: "Ada",
+});
 
 const sharedPayload = (overview = shared()): SharePayload => ({
   state: "shared",
@@ -197,6 +205,67 @@ test("a link pasted beside the copy starts onboarding with it, and one it can't 
   await page.pasteLinkAndMakeOverview(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.verifyOnScreen("video", "Is this the right video?");
+});
+
+// A reader who is already signed in has a library behind them, so the page offers the way
+// back to it rather than the way to an account (docs/features/sharing.md, "A reader who is
+// signed in").
+test("a reader who is signed in is recognised: the head leads to their overviews, and nothing offers them an account", async ({
+  launcher,
+}) => {
+  await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
+  await launcher.inlineSharePayload(sharedPayload());
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+
+  await page.verifyRecognisesTheReader();
+  await page.clickYourOverviewsInHeader();
+
+  await launcher.homePage.verifyIsShown();
+});
+
+test("signed in, saving puts the copy among their overviews at once, with no questions asked", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = shared();
+  await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
+  await launcher.inlineSharePayload(sharedPayload(overview));
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+  await page.verifySaveActionReads("Save to my overviews");
+
+  await page.clickSave();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(TITLE);
+  await reader.verifyHasNoReason();
+  expect(backendSimulator.ourKey.generations()).toEqual([]);
+  expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
+  await expect
+    .poll(() => backendSimulator.analytics.sharedPage.events().map(({ name }) => name))
+    .toEqual(["sharedPage.page.opened", "sharedPage.actions.saveChosen"]);
+});
+
+test("a shared overview the account already holds opens from the page rather than being saved again", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = shared();
+  await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
+  await launcher.inlineSharePayload(sharedPayload(overview));
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await (await launcher.sharedOverviewPage.verifyIsShown()).clickSave();
+  await launcher.readerPage.verifyIsShown();
+
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  const page = await launcher.sharedOverviewPage.verifyIsShown();
+  await page.verifySaveActionReads("Open in my overviews");
+  await page.clickSave();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(TITLE);
+  expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
 });
 
 test("making an overview from the page's head goes to Start", async ({ launcher }) => {

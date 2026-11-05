@@ -19,6 +19,10 @@ export const Routes = {
   onboarding: () => "/start",
   connectExtension: () => "/connect-extension",
   connect: (requestId: string) => consentPath(requestId),
+  // The two public pages every policy link points at, served to anyone, signed in or not
+  // (docs/features/legal-pages.md).
+  privacy: () => "/privacy",
+  terms: () => "/terms",
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,
   // The address the API writes into every shared link, so the two cannot drift
   // (docs/features/sharing.md).

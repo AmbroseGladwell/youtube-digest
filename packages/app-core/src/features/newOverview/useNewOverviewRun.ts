@@ -1,5 +1,13 @@
 import { useCallback, useRef, useState } from "react";
-import { heldOverviewOf, OverviewId, type ArticleRead, type CaptureEntry, type CaptureTranscriptSource, type Overview } from "@overview/domain";
+import {
+  heldOverviewOf,
+  OverviewId,
+  type ArticleRead,
+  type CaptureEntry,
+  type CaptureTranscriptSource,
+  type ClientTimingReport,
+  type Overview,
+} from "@overview/domain";
 import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -107,6 +115,10 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
       let tagging = { reused: 0, added: 0 };
+      // A video capture's duration is the timing's own, so the two agree; an article's is
+      // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
+      let timing: ClientTimingReport | null = null;
+      const durationMs = () => timing?.totalMs ?? Date.now() - startedAt;
       analytics.capture.newOverview.started({ from });
       const updateArticle = (change: Partial<ArticleRun>) => {
         if (isCurrent()) {
@@ -189,6 +201,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onTagged: (counted) => {
             tagging = counted;
           },
+          onTimed: (timed) => {
+            timing = timed;
+          },
         },
         {
           onSuccess: (overview) => {
@@ -200,7 +215,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 overviewId: saved.id,
                 from,
                 transcriptSource: transcriptSource ?? "stored",
-                durationMs: Date.now() - startedAt,
+                durationMs: durationMs(),
                 reasonGiven: saved.captureReason !== null,
                 novelty: saved.verdict?.novelty ?? "none",
                 standsOut: saved.verdict?.standsOut != null,
@@ -224,7 +239,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
               analytics.capture.newOverview.failed({
                 from,
                 failure: captureFailureOf(error, { transcriptResolved: transcriptSource !== null }),
-                durationMs: Date.now() - startedAt,
+                durationMs: durationMs(),
               });
               setRun((current) =>
                 current === null

@@ -26,6 +26,7 @@ import { SignedInWelcome } from "../SignedInWelcome/SignedInWelcome.js";
 import { analyticsConsentSnapshot } from "../../../analyticsConsent/useAnalyticsConsent.js";
 import { consentAllowsSharing } from "../../../analyticsConsent/util/consentAllowsSharing.js";
 import { AccountTermsLine } from "../AccountTermsLine/AccountTermsLine.js";
+import { PolicyLinks } from "../../../settings/components/PolicyLinks/PolicyLinks.js";
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useLibraryMove } from "../../../accountLibraries/LibraryMoveContext.js";
@@ -324,6 +325,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
           if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
         }}
       />
+      {!creating && <PolicyLinks />}
     </AuthScreen>
   );
 }

@@ -7,6 +7,7 @@ import {
   tagUsage,
   type ArticleRead,
   type CaptureTranscriptSource,
+  type ClientTimingReport,
   type ExtractedArticle,
   type Overview,
   type OverviewStore,
@@ -22,6 +23,7 @@ import { resolveVideo, type VideoResolutionDeps } from "../../transcripts/api/re
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
+import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 
 // What the run has produced so far, so the progress list can report a receipt rather than
@@ -39,6 +41,10 @@ const TRANSCRIPT_OPENING_CHARACTERS = 3000;
 export interface GenerationPipelineDeps {
   sources: TranscriptSource[];
   warn?: VideoResolutionDeps["warn"];
+  // Told how a video capture's time split, however it ended, so the server's logs say so
+  // (docs/architecture/errors-and-logs.md, "Client timings").
+  timed?: ((timing: ClientTimingReport) => void) | undefined;
+  now?: (() => number) | undefined;
   // Makes the overview on whichever key can, and says which (makeOverviewOnKeys).
   makeOverview: (input: OverviewInput, meta: { id: OverviewId; savedAt: string }) => Promise<Overview>;
   overviewStore: OverviewStore;
@@ -67,6 +73,8 @@ export interface RunOverviewGenerationOptions {
   // or skipped About you, so the first overview is made from their answers. Topics and
   // Settings are read after it settles (docs/features/onboarding.md, "Writing waits").
   waitToWrite?: (() => Promise<void>) | undefined;
+  // The same measurement the timing is sent from, so the event's duration agrees with it.
+  onTimed?: ((timing: ClientTimingReport) => void) | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -74,17 +82,33 @@ export async function runOverviewGeneration(
   deps: GenerationPipelineDeps,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
-  const { video, transcript, source: transcriptSource } = await resolveVideo(url, deps);
-  const transcriptWords = transcript.reduce((total, segment) => total + countWords(segment.text), 0);
+  const stopwatch = new CaptureStopwatch(deps.now);
+  let transcriptCharacters = 0;
+  const timed = (outcome: Parameters<CaptureStopwatch["report"]>[0]) => {
+    const timing = stopwatch.report(outcome, transcriptCharacters);
+    deps.timed?.(timing);
+    options.onTimed?.(timing);
+  };
 
-  stopIfCancelled(options);
-  const transcriptOpening = transcript
-    .map((segment) => segment.text)
-    .join(" ")
-    .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
-  options.onProgress?.({ video, transcriptWords, transcriptSource, transcriptOpening });
-  await waitToWrite(options);
-  return writeOverview({ video, transcript }, deps, options);
+  try {
+    const { video, transcript, source: transcriptSource } = await resolveVideo(url, { ...deps, stopwatch });
+    const transcriptWords = transcript.reduce((total, segment) => total + countWords(segment.text), 0);
+    transcriptCharacters = transcript.reduce((total, segment) => total + segment.text.length, 0);
+
+    stopIfCancelled(options);
+    const transcriptOpening = transcript
+      .map((segment) => segment.text)
+      .join(" ")
+      .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+    options.onProgress?.({ video, transcriptWords, transcriptSource, transcriptOpening });
+    await waitToWrite(options);
+    const overview = await writeOverview({ video, transcript }, deps, options, stopwatch);
+    timed("finished");
+    return overview;
+  } catch (error) {
+    timed(error instanceof GenerationCancelledError ? "cancelled" : "failed");
+    throw error;
+  }
 }
 
 // An article has no transcript to keep, so what's read is used and let go
@@ -124,6 +148,7 @@ async function writeOverview(
   what: WhatToWrite,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore">,
   options: RunOverviewGenerationOptions,
+  stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> {
   const [existingTopics, pastClaims, library, settings] = await Promise.all([
     deps.overviewStore.listTopics(),
@@ -132,22 +157,24 @@ async function writeOverview(
     deps.settingsStore.get(),
   ]);
   const existingTags = tagUsage(library.map((overview) => overview.tags));
-  const overview = await deps.makeOverview(
-    {
-      ...what,
-      captureReason: null,
-      readerContext: composeReaderContext(settings.aboutYou, settings.learned),
-      sectionsEnabled: settings.sectionsEnabled,
-      existingTopics,
-      pastClaims,
-      existingTags,
-      tagAliases: settings.tagAliases,
-    },
-    {
-      id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
-      savedAt: new Date().toISOString(),
-    },
-  );
+  const make = () =>
+    deps.makeOverview(
+      {
+        ...what,
+        captureReason: null,
+        readerContext: composeReaderContext(settings.aboutYou, settings.learned),
+        sectionsEnabled: settings.sectionsEnabled,
+        existingTopics,
+        pastClaims,
+        existingTags,
+        tagAliases: settings.tagAliases,
+      },
+      {
+        id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
+        savedAt: new Date().toISOString(),
+      },
+    );
+  const overview = await (stopwatch ? stopwatch.time("model", make) : make());
 
   stopIfCancelled(options);
   const known = new Set(existingTags.map(({ tag }) => tag));
@@ -158,7 +185,8 @@ async function writeOverview(
     ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),
     ...(options.fromPlaylist ? { fromPlaylist: options.fromPlaylist } : {}),
   };
-  await deps.overviewStore.saveOverview(saved);
+  const save = () => deps.overviewStore.saveOverview(saved);
+  await (stopwatch ? stopwatch.time("save", save) : save());
 
   return saved;
 }

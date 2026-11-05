@@ -57,6 +57,10 @@ Three habits earned their keep and are worth continuing:
 2. **Never let a model count, measure or time anything.** See `docs/prototype/constraints.md`. This produced the single worst bug of the project.
 3. **Degrade visibly.** Every feature that depends on something optional hides itself when that thing is missing, rather than presenting a control that cannot work.
 
+A fourth, since the policy pages exist:
+
+4. **Check the privacy policy and the terms on every card.** `/privacy` and `/terms` describe what the software actually does, so a change to what is collected, sent, stored, shared or kept makes them wrong. Before opening a PR, run the trigger list in `docs/features/legal-pages.md` ("Does this change the texts?"). If anything matches, change the page, move its `*_UPDATED_ON`, and add a line to that doc's revision log in the same PR. If nothing matches, the PR says so in one line.
+
 ## Code conventions
 
 - `docs/conventions/commenting.md` — near-zero comments. Code, tests, and specific

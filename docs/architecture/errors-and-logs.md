@@ -318,6 +318,62 @@ keeps falling back can't send more than a loop that keeps throwing. The app repo
 with `ErrorReporter.warn()`. `PlayerEngine` and `resolveVideo` take a `warn` callback,
 which the player's runtime and the generation mutation wire to the reporter.
 
+## Client timings
+
+Making an overview is the longest thing the product does, and it runs on the device: the
+transcript ladder, then the model, then the save. Until OV-116 the server saw one number
+for it, `durationMs` on `capture.newOverview.finished`, and a `transcriptFellThrough`
+warning only when a rung had failed. A capture that succeeded slowly had no explanation,
+and a reader saying "it was slow yesterday" could only be asked to reproduce it.
+
+So the app sends how the time split, as `timings` beside `errors` and `warnings` on
+`POST /api/errors`, and the server logs each one at `info` as `api.client.captureTimed`.
+That is all it does with it. It isn't an event, because a step's duration is the system
+working rather than something the reader did (`analytics.md`, "Actions, not logs"), and it
+isn't an error or a warning, because the capture may well have succeeded. It is a log
+line, written for the one process that has no way to write one.
+
+The catalogue is `ClientTiming` in `packages/domain`. A `captureTimed` carries:
+
+| Field | Is |
+|---|---|
+| `outcome` | `finished`, `failed` or `cancelled` |
+| `steps` | each step asked, in order, with its outcome and its `ms`: `stored` (the local store's read), then each rung asked (`shared-cache`, `extension`, `service`), then `model`, then `save`. A step never reached has no entry, not a zero |
+| `totalMs` | the whole, on the same clock. `capture.newOverview.finished` and `failed` take their `durationMs` from this same measurement, so the two agree |
+| `transcriptCharacters` | a count, as `audio requested` logs for narration |
+
+**Measured, never estimated.** Every number is a delta of `performance.now()` on the
+device, taken around the step as it ran (`CaptureStopwatch`). Nothing is inferred, and
+nothing is derived from timestamps that crossed a process boundary
+(`docs/prototype/constraints.md`). A rung's outcome is the ladder's own: `answered`,
+`no-answer`, `unavailable` or `failed`. The `save` is the local write; the sync push that
+follows is its own cycle and is logged by the server as `record written`.
+
+**No URL, video id, title or word of the transcript.** The schema is strict, and the
+server drops a step or an outcome it doesn't know rather than logging it, the way it
+drops a warning's unknown `apiErrorCode`, so a step can't be named after a video either.
+
+The server logs the steps **keyed by name**, so a slow one can be filtered on:
+`clientTiming.steps.model.ms` over 60000 is every capture whose model call took more than
+a minute. The gap between the steps' sum and `totalMs` is time spent between them —
+onboarding waiting for About you before it writes, for instance.
+
+**What is timed:** a video capture, wherever it started — the dialog, the extension's
+panel, the capture queue and onboarding all run through `runOverviewGeneration`. A capture
+answered from the local store is timed too: its transcript cost nothing, but the model was
+still asked. Every capture is sent, fast ones included, at a few dozen lines a day, so a
+slow one has a baseline to read against. **Not timed:** an article capture, whose read can
+include waiting on the reader's permission click; the background prefetch; playback; sync
+cycles; startup.
+
+Timings share the error queue's budget of 10 a minute, and its batch, so a capture loop
+can't send more of them than it can errors. The app reports one with
+`ErrorReporter.time()`, which `useRunOverviewGeneration` wires to the pipeline's `timed`.
+
+A capture is also several API calls — a `shared-cache` read, a `service` fetch, the sync
+write — each under its own request id with nothing joining them. Joining them, and this
+line, under one trace id is OV-115's, and the timing's shape leaves room for it.
+
 ## Before the app mounts
 
 A shell that can't open its local database renders `StartupFailure` instead of `App`. With

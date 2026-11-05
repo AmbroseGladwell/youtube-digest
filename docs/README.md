@@ -41,7 +41,8 @@ Five folders, five different questions.
   and the TTS service's reported beside them, the failing call's request id, the reporter
   both shells mount (what it catches, the trail of recent actions, its own queue sent before
   events), a database that won't open before the app mounts, the extension's service worker
-  and the session copy it reads, shipping the server's logs over OTLP to PostHog (or
+  and the session copy it reads, how a capture's time split step by step sent from the
+  device as a client timing, shipping the server's logs over OTLP to PostHog (or
   anywhere the `OTEL_*` variables name), the Slack alerts for new, reopened and spiking
   issues, what a log line may carry, and how to find a failure's server lines by request id.
 - `server-side-transcripts.md` — the ladder's last rung, our own server fetching captions:
@@ -209,6 +210,11 @@ Five folders, five different questions.
   tiers, onboarding's screen as the only place it's asked, the consent record and the
   anonymous id kept only after a yes and dropped at sign-in, what happens when what is
   counted grows, and what of OV-62 is not built yet.
+- `legal-pages.md` — `/privacy` and `/terms`: the one layout both share, why they sit inside
+  the shell with a date that is not the build stamp, which doc or code backs each claim the
+  policy makes, the two places it says what is true rather than what was decided, and the
+  identity, law and age decisions the review has to confirm, the trigger list every card is
+  checked against, and the revision log of both texts.
 - `sign-in.md` — magic-link sign-in: why the link is spent by a POST from the page and
   carries its token in the fragment, the cookie the web app gets and the code the
   extension exchanges for its bearer, why the tab that opened an extension link stays

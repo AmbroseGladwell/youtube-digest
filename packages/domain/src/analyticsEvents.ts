@@ -890,12 +890,14 @@ export const analyticsEvents = {
     },
     actions: {
       saveChosen: event("Someone reading a shared overview chooses to save it to their own overviews"),
+      openChosen: event("A signed-in reader whose account already holds a shared overview opens it in their own overviews"),
       watchOnYouTubeChosen: event("Someone reading a shared overview opens the video on YouTube"),
     },
     header: {
       homeChosen: event("Someone on a shared overview follows the wordmark to the app's home"),
       signInChosen: event("Someone on a shared overview chooses Sign in from the header"),
       makeChosen: event("Someone on a shared overview chooses Make an overview from the header"),
+      libraryChosen: event("A signed-in reader on a shared overview chooses Your overviews from the header"),
     },
     makeYourOwn: {
       linkEntered: event("Someone on a shared overview types or pastes a video link to make their own; never the link", {

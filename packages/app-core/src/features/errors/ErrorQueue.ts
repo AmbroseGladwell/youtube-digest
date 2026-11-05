@@ -1,9 +1,17 @@
-import { MAX_CLIENT_ERROR_BATCH, MAX_CLIENT_WARNING_BATCH, type ClientWarning, type SentClientError } from "@overview/domain";
+import {
+  MAX_CLIENT_ERROR_BATCH,
+  MAX_CLIENT_TIMING_BATCH,
+  MAX_CLIENT_WARNING_BATCH,
+  type ClientTiming,
+  type ClientWarning,
+  type SentClientError,
+} from "@overview/domain";
 import type { SendOptions } from "../analytics/AnalyticsQueue.js";
 
 export interface QueuedErrorBatch {
   errors: SentClientError[];
   warnings?: ClientWarning[];
+  timings?: ClientTiming[];
   dropped?: number;
 }
 
@@ -29,6 +37,7 @@ export class ErrorQueue {
   readonly #maxPerMinute: number;
   #held: SentClientError[] = [];
   #heldWarnings: ClientWarning[] = [];
+  #heldTimings: ClientTiming[] = [];
   #dropped = 0;
   #minuteStartedAt = Number.NEGATIVE_INFINITY;
   #inMinute = 0;
@@ -52,6 +61,11 @@ export class ErrorQueue {
     if (this.#admit(this.#heldWarnings.length >= MAX_CLIENT_WARNING_BATCH)) this.#heldWarnings.push(warning);
   }
 
+  // As do timings: a capture loop can't send more of them than it can errors.
+  recordTiming(timing: ClientTiming): void {
+    if (this.#admit(this.#heldTimings.length >= MAX_CLIENT_TIMING_BATCH)) this.#heldTimings.push(timing);
+  }
+
   #admit(full: boolean): boolean {
     const now = this.#now().getTime();
     if (now - this.#minuteStartedAt >= MINUTE_MS) {
@@ -72,21 +86,28 @@ export class ErrorQueue {
       clearTimeout(this.#timer);
       this.#timer = null;
     }
-    if (this.#held.length === 0 && this.#heldWarnings.length === 0) return;
+    if (this.#held.length === 0 && this.#heldWarnings.length === 0 && this.#heldTimings.length === 0) return;
     const errors = this.#held;
     const warnings = this.#heldWarnings;
+    const timings = this.#heldTimings;
     const dropped = this.#dropped;
     this.#held = [];
     this.#heldWarnings = [];
+    this.#heldTimings = [];
     this.#dropped = 0;
-    const lost = dropped + errors.length + warnings.length;
+    const lost = dropped + errors.length + warnings.length + timings.length;
     if (!this.#canSend()) {
       this.#dropped += lost;
       return;
     }
     try {
       await this.#send(
-        { errors, ...(warnings.length === 0 ? {} : { warnings }), ...(dropped === 0 ? {} : { dropped }) },
+        {
+          errors,
+          ...(warnings.length === 0 ? {} : { warnings }),
+          ...(timings.length === 0 ? {} : { timings }),
+          ...(dropped === 0 ? {} : { dropped }),
+        },
         { keepalive },
       );
     } catch {
@@ -99,5 +120,6 @@ export class ErrorQueue {
     this.#timer = null;
     this.#held = [];
     this.#heldWarnings = [];
+    this.#heldTimings = [];
   }
 }

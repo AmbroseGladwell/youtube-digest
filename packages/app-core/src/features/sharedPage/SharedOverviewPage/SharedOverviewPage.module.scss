@@ -21,6 +21,11 @@
   padding: 0.875rem 2.5rem 1.5rem;
 }
 
+// Signed in there is no way in to offer, so the note has the column to itself.
+.bodyAlone {
+  grid-template-columns: minmax(0, var(--measure));
+}
+
 .main {
   display: flex;
   flex-direction: column;

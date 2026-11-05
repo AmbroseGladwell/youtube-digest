@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { apiLogLines, ClientErrorBatch, readClientError, readClientWarning } from "@overview/domain";
+import { apiLogLines, ClientErrorBatch, readClientError, readClientTiming, readClientWarning } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -19,7 +19,7 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
       preHandler: rateLimitHook(rateLimits.errorsPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply) => {
-      const { context, errors: sent, warnings = [], dropped } = parseOrThrow(ClientErrorBatch, request.body, "The errors");
+      const { context, errors: sent, warnings = [], timings = [], dropped } = parseOrThrow(ClientErrorBatch, request.body, "The errors");
       const errors = sent.map(readClientError);
 
       for (const { source, type, message, handled, frames, requestId, apiErrorCode, status, trail } of errors) {
@@ -41,6 +41,17 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
           apiLogLines.errors.clientWarning({
             clientWarning: logged,
             failedRequestId: requestId,
+            signedIn: request.session !== null,
+            ...context,
+          }),
+        );
+      }
+      // The steps are keyed by name so a slow one can be filtered on, as in
+      // `clientTiming.steps.model.ms` (docs/architecture/errors-and-logs.md, "Client timings").
+      for (const { at: _at, name, steps, ...timing } of timings.map(readClientTiming)) {
+        request.log.info(
+          apiLogLines.client[name]({
+            clientTiming: { ...timing, steps: Object.fromEntries(steps.map(({ step, ...took }) => [step, took])) },
             signedIn: request.session !== null,
             ...context,
           }),
