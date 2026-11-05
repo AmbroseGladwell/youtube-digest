@@ -280,10 +280,22 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
 - **Progress and jumping (150k–150m).** A dot per step up to 20 steps, a 3px line by action past
   that. The step being cooked fills a little with each of its actions and is full on its last, so
   moving through a step shows (OV-162, owner 4 Nov 2026). The count opens the steps, each by its first action; choosing one reads it.
-- **Ingredients (150ah–150aj).** In the top bar on every screen, opening the note's list as it is
-  shown, adjusted amounts and their line included, as a sheet, or a drawer on the right on the web
-  with the step beside it. The voice carries on. While servings or units are adjusted, every action
-  carries "Amounts as written, for 4 servings".
+- **Ingredients (150ah–150aj, OV-190 190a–190k).** In the top bar on every screen, opening the
+  note's list as it is shown, adjusted amounts and their line included. On a phone and in the panel
+  it is a modal sheet. On the web it is a second column on the right, 24rem wide, and the step
+  narrows to make room rather than going under it: nothing dims, no key stops working, and it stays
+  open across Next and Back, because a reader who opened it is reading ahead (owner's question,
+  answered in 190k). It opens in 280ms and shuts in 200ms on the app's ease, the list sitting at
+  its left edge and uncovered as it widens; under reduced motion it just appears. Focus moves into
+  it on open and back to the Ingredients button on close; it is a plain `aside`, so Tab runs on
+  through it and Esc shuts it before it leaves the mode. The cooking column is measured, not the
+  window: under 720px the action takes a scale one step down (44 to 28px), the controls stack as
+  on a phone, the title in the bar hides and an action over 30 words drops its "Then" preview as
+  the panel does; under 480px it takes the phone's sizes. Between 768 and 943px the drawer is 20rem
+  and the side margins 2rem, so the step keeps a phone's width beside a full list (190l–190o). The
+  size changes once each way, at the start of opening and the end of closing, never mid-slide
+  (190i). The voice carries on. While servings or units are adjusted, every action carries
+  "Amounts as written, for 4 servings".
 - **Labels, conditions and checks (150p–150au).** See "A step's actions". A label is a small
   heading over each of its step's actions; a condition is in Bold 700 in the label colour, the
   action at 400. Checks read as actions.
