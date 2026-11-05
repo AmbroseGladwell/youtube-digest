@@ -159,6 +159,18 @@ export class BackendSimulator {
   #linkCodeServers: string[] = [];
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
+  #accountEmail: string = SIMULATED_EMAIL;
+  // Whether a change of email needs a code to the current address first: a session older
+  // than fifteen minutes does, a fresh one does not (docs/features/account-changes.md).
+  #verificationRequired = true;
+  #newAddressTaken = false;
+  #revertRefusal: { reason: "expired" | "spent" | "taken"; email?: string } | null = null;
+  #namesSaved: Array<string | null> = [];
+  #verificationAsks = 0;
+  #verificationCodes: string[] = [];
+  #emailChangeAsks: string[] = [];
+  #emailChangeCodes: string[] = [];
+  #revertTokens: string[] = [];
   #sessionHasEnded = false;
   #accountPlan: Plan = "free";
   // Off unless a test turns it on, so a reader with no key of their own still meets the key
@@ -430,6 +442,96 @@ export class BackendSimulator {
       }),
     );
 
+    const sessionInfo = () => ({
+      accountId: SIMULATED_ACCOUNT_ID,
+      email: this.#accountEmail,
+      firstName: this.#accountFirstName,
+      expiresAt,
+      plan: this.#accountPlan,
+    });
+    const limited = () => ({
+      status: 429,
+      body: { error: { code: "too_many_requests", message: "Simulated: too many", details: { retryAfterSeconds: 4080 } } },
+    });
+    const codeMatches = (code: string) => code.toUpperCase().replace(/[^A-Z2-9]/g, "") === SIMULATED_LINK_CODE.replace("-", "");
+    const codeExpiry = () => new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    await this.#page.route("**/api/session/account", (route) =>
+      this.#respond(route, EndpointKey.SESSION_ACCOUNT, {
+        onDefault: () => {
+          const { firstName } = route.request().postDataJSON() as { firstName: string | null };
+          this.#namesSaved.push(firstName);
+          this.#accountFirstName = firstName;
+          return { status: 200, body: sessionInfo() };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } }),
+      }),
+    );
+
+    await this.#page.route("**/api/session/verification", (route) =>
+      this.#respond(route, EndpointKey.SESSION_VERIFICATION, {
+        onDefault: () => {
+          this.#verificationAsks += 1;
+          return this.#verificationRequired
+            ? { status: 200, body: { required: true, email: this.#accountEmail, expiresAt: codeExpiry() } }
+            : { status: 200, body: { required: false } };
+        },
+        onError: limited,
+      }),
+    );
+
+    await this.#page.route("**/api/session/verification/confirm", (route) =>
+      this.#respond(route, EndpointKey.SESSION_VERIFICATION_CONFIRM, {
+        onDefault: () => {
+          const { code } = route.request().postDataJSON() as { code: string };
+          this.#verificationCodes.push(code);
+          return codeMatches(code) ? { status: 204, body: undefined } : spent();
+        },
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/session/email-change", (route) =>
+      this.#respond(route, EndpointKey.SESSION_EMAIL_CHANGE, {
+        onDefault: () => {
+          const { email } = route.request().postDataJSON() as { email: string };
+          this.#emailChangeAsks.push(email);
+          return { status: 202, body: { accepted: true, expiresAt: codeExpiry() } };
+        },
+        onError: limited,
+      }),
+    );
+
+    await this.#page.route("**/api/session/email-change/confirm", (route) =>
+      this.#respond(route, EndpointKey.SESSION_EMAIL_CHANGE_CONFIRM, {
+        onDefault: () => {
+          const { code } = route.request().postDataJSON() as { code: string };
+          this.#emailChangeCodes.push(code);
+          if (!codeMatches(code)) return spent();
+          if (this.#newAddressTaken) {
+            return { status: 409, body: { error: { code: "already_exists", message: "Simulated: taken" } } };
+          }
+          this.#accountEmail = this.#emailChangeAsks.at(-1) ?? this.#accountEmail;
+          return { status: 200, body: sessionInfo() };
+        },
+        onError: spent,
+      }),
+    );
+
+    await this.#page.route("**/api/auth/email-change/revert", (route) =>
+      this.#respond(route, EndpointKey.AUTH_EMAIL_CHANGE_REVERT, {
+        onDefault: () => {
+          const { token } = route.request().postDataJSON() as { token: string };
+          this.#revertTokens.push(token);
+          const refusal = this.#revertRefusal;
+          return refusal === null
+            ? { status: 200, body: { email: SIMULATED_EMAIL } }
+            : { status: 410, body: { error: { code: "link_invalid", message: "Simulated: refused", details: refusal } } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/session", (route) =>
       route.request().method() === "DELETE"
         ? this.#respond(route, EndpointKey.SESSION_DELETE, {
@@ -440,16 +542,7 @@ export class BackendSimulator {
             onDefault: () =>
               this.#sessionLapsed
                 ? unauthenticated()
-                : {
-                    status: 200,
-                    body: {
-                      accountId: SIMULATED_ACCOUNT_ID,
-                      email: SIMULATED_EMAIL,
-                      firstName: this.#accountFirstName,
-                      expiresAt,
-                      plan: this.#accountPlan,
-                    },
-                  },
+                : { status: 200, body: sessionInfo() },
             onError: () => ({
               status: 503,
               body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
@@ -1186,6 +1279,26 @@ export class BackendSimulator {
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
     },
+    // The account's email as the server holds it, which another device may have changed.
+    accountEmailIs: (email: string): void => {
+      this.#accountEmail = email;
+    },
+    // A session made in the last fifteen minutes: no code to the current address first.
+    sessionIsFresh: (): void => {
+      this.#verificationRequired = false;
+    },
+    newAddressIsTaken: (): void => {
+      this.#newAddressTaken = true;
+    },
+    revertIsRefused: (refusal: { reason: "expired" | "spent" | "taken"; email?: string }): void => {
+      this.#revertRefusal = refusal;
+    },
+    namesSaved: (): Array<string | null> => [...this.#namesSaved],
+    verificationAsks: (): number => this.#verificationAsks,
+    verificationCodes: (): string[] => [...this.#verificationCodes],
+    emailChangeAsks: (): string[] => [...this.#emailChangeAsks],
+    emailChangeCodes: (): string[] => [...this.#emailChangeCodes],
+    revertTokens: (): string[] => [...this.#revertTokens],
     // The server no longer knows the session this device still holds.
     sessionHasLapsed: (): void => {
       this.#sessionLapsed = true;

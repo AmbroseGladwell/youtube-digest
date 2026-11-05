@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
@@ -9,6 +10,7 @@ import styles from "./SyncPanel.module.scss";
 import { syncPanelTestIds } from "./SyncPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
+import { AccountTile } from "../../../auth/components/AccountTile/AccountTile.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
 const EXTENSION_NOTE =
@@ -17,13 +19,15 @@ const EXTENSION_NOTE =
 // Hidden entirely when the shell cannot sync: a control that cannot work is worse than no
 // control (CLAUDE.md). Signed in, it is design 51a's two tiles, who and whether in step;
 // signed out, it points at the sign-in and create-account pages rather than being a second
-// place to ask for a link.
+// place to ask for a link. While an account row is open its Save is the only orange on the
+// screen, so Sync now steps down until it closes (design 14a).
 export function SyncPanel() {
   const analytics = useAnalytics();
   const sync = useSync();
   const signOut = useSignOut();
   const surface = useSurface();
   const { connection } = useSyncConnection();
+  const [editingAccount, setEditingAccount] = useState(false);
 
   if (!sync.available) {
     return null;
@@ -35,18 +39,7 @@ export function SyncPanel() {
     return (
       <div className={styles.root} data-testid={syncPanelTestIds.root}>
         {connection.email !== null && (
-          <section className={styles.tile}>
-            <p className={styles.heading}>Signed in as</p>
-            <p className={styles.who} data-testid={syncPanelTestIds.signedInAs}>
-              {connection.firstName === null ? (
-                connection.email
-              ) : (
-                <>
-                  {connection.firstName} <span className={styles.email}>({connection.email})</span>
-                </>
-              )}
-            </p>
-          </section>
+          <AccountTile email={connection.email} firstName={connection.firstName} onEditingChange={setEditingAccount} />
         )}
         <section className={styles.tile}>
           <p className={styles.heading}>Sync</p>
@@ -74,7 +67,7 @@ export function SyncPanel() {
             ) : (
               <button
                 type="button"
-                className={styles.primaryButton}
+                className={editingAccount ? styles.secondaryButton : styles.primaryButton}
                 onClick={() => {
                   analytics.settings.sync.syncNowChosen();
                   sync.syncNow();

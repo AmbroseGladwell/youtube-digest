@@ -4,9 +4,11 @@ export interface TransactionalEmailSlots {
   greeting: string | null;
   heading: string;
   body: string;
-  action: { label: string; link: string };
-  // A code to type instead of following the link, said under the link with what it is for.
-  code: { lead: string; value: string } | null;
+  // Null for a mail whose whole content is a code to type.
+  action: { label: string; link: string } | null;
+  // A code to type instead of following the link, said under the link with what it is for;
+  // with no lead, the code stands alone under the body.
+  code: { lead: string | null; value: string } | null;
   notes: string[];
   reason: string;
   siteUrl: string;
@@ -73,11 +75,9 @@ const styles = `
 // Design OV-88: one shell every transactional mail fills, so a later mail (an email change,
 // a receipt) brings only its words (docs/features/sign-in.md, "The mail").
 export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
-  const link = escapeHtml(slots.action.link);
   const site = escapeHtml(slots.siteUrl);
   const siteLabel = escapeHtml(new URL(slots.siteUrl).host);
-  const label = escapeHtml(slots.action.label);
-  const vmlWidth = slots.action.label.length * 10 + 64;
+  const action = slots.action === null ? "" : actionBlock(slots.action);
 
   const greeting =
     slots.greeting === null
@@ -87,8 +87,7 @@ export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
   const code =
     slots.code === null
       ? ""
-      : `<p class="ov-ink" style="margin: 24px 0 8px; font-family: ${sans}; font-size: 15px; line-height: 22px; color: ${light.ink};">${escapeHtml(slots.code.lead)}</p>
-<p class="ov-ink" style="margin: 0; font-family: ${sans}; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0.12em; color: ${light.ink};">${escapeHtml(slots.code.value)}</p>`;
+      : `${slots.code.lead === null ? "" : `<p class="ov-ink" style="margin: 24px 0 8px; font-family: ${sans}; font-size: 15px; line-height: 22px; color: ${light.ink};">${escapeHtml(slots.code.lead)}</p>\n`}<p class="ov-ink" style="margin: 0; font-family: ${sans}; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0.12em; color: ${light.ink};">${escapeHtml(slots.code.value)}</p>`;
 
   const notes = slots.notes
     .map(
@@ -136,17 +135,7 @@ export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
 ${greeting}
 <h1 class="ov-heading ov-ink" style="margin: 0 0 12px; font-family: ${serif}; font-weight: 400; font-size: 32px; line-height: 37px; color: ${light.ink};">${escapeHtml(slots.heading)}</h1>
 <p class="ov-ink" style="margin: 0 0 28px; font-family: ${sans}; font-size: 16px; line-height: 25px; color: ${light.ink};">${escapeHtml(slots.body)}</p>
-<table role="presentation" class="ov-button-table" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px;">
-<tr>
-<td align="center" bgcolor="${button}" style="border-radius: 999px; background-color: ${button};">
-<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${link}" style="height:50px;v-text-anchor:middle;width:${vmlWidth}px;" arcsize="50%" stroke="f" fillcolor="${button}"><w:anchorlock/><center style="color:#FFFFFF;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center></v:roundrect><![endif]-->
-<!--[if !mso]><!--><a class="ov-button" href="${link}" style="display: inline-block; background-color: ${button}; color: #FFFFFF; font-family: ${sans}; font-size: 16px; font-weight: 600; line-height: 20px; text-decoration: none; text-align: center; padding: 15px 32px; border-radius: 999px;">${label}</a><!--<![endif]-->
-</td>
-</tr>
-</table>
-<p class="ov-muted" style="margin: 0 0 4px; font-family: ${sans}; font-size: 13.5px; line-height: 20px; color: ${light.muted};">Button not working? Paste this link into your browser:</p>
-<p style="margin: 0; font-family: ${sans}; font-size: 13.5px; line-height: 20px; word-break: break-all;"><a class="ov-link" href="${link}" style="color: ${light.link}; text-decoration: underline;">${link}</a></p>
-${code}
+${action}${code}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 20px;">
 <tr><td class="ov-rule" height="1" style="height: 1px; line-height: 1px; font-size: 1px; background-color: ${light.rule};">&nbsp;</td></tr>
 </table>
@@ -169,5 +158,22 @@ ${notes}
 </table>
 </body>
 </html>
+`;
+}
+
+function actionBlock({ label: rawLabel, link: rawLink }: { label: string; link: string }): string {
+  const link = escapeHtml(rawLink);
+  const label = escapeHtml(rawLabel);
+  const vmlWidth = rawLabel.length * 10 + 64;
+  return `<table role="presentation" class="ov-button-table" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px;">
+<tr>
+<td align="center" bgcolor="${button}" style="border-radius: 999px; background-color: ${button};">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${link}" style="height:50px;v-text-anchor:middle;width:${vmlWidth}px;" arcsize="50%" stroke="f" fillcolor="${button}"><w:anchorlock/><center style="color:#FFFFFF;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center></v:roundrect><![endif]-->
+<!--[if !mso]><!--><a class="ov-button" href="${link}" style="display: inline-block; background-color: ${button}; color: #FFFFFF; font-family: ${sans}; font-size: 16px; font-weight: 600; line-height: 20px; text-decoration: none; text-align: center; padding: 15px 32px; border-radius: 999px;">${label}</a><!--<![endif]-->
+</td>
+</tr>
+</table>
+<p class="ov-muted" style="margin: 0 0 4px; font-family: ${sans}; font-size: 13.5px; line-height: 20px; color: ${light.muted};">Button not working? Paste this link into your browser:</p>
+<p style="margin: 0; font-family: ${sans}; font-size: 13.5px; line-height: 20px; word-break: break-all;"><a class="ov-link" href="${link}" style="color: ${light.link}; text-decoration: underline;">${link}</a></p>
 `;
 }

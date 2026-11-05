@@ -70,7 +70,7 @@ const transcriptService =
 const app = await buildApp({
   config,
   sql,
-  mailer: createMailer(config.mail),
+  mailer: createMailer(config.mail, config.appUrl),
   audio,
   transcriptService,
   ourKey: config.ourKey === null ? null : { ...config.ourKey, http: globalThis.fetch.bind(globalThis) },

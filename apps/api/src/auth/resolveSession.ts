@@ -13,6 +13,7 @@ interface SessionRow {
   first_name: string | null;
   expires_at: string | Date;
   last_seen_at: string | Date;
+  created_at: string | Date;
 }
 
 export interface ResolvedSession {
@@ -32,7 +33,7 @@ export async function resolveSession(
 ): Promise<ResolvedSession | null> {
   const tokenHash = hashToken(token);
   const rows = await sql.query<SessionRow>(
-    `select s.id, s.account_id, a.email, a.first_name, s.expires_at, s.last_seen_at
+    `select s.id, s.account_id, a.email, a.first_name, s.expires_at, s.last_seen_at, s.created_at
        from sessions s join accounts a on a.id = s.account_id
       where s.token_hash = $1 and s.expires_at > $2::timestamptz`,
     [tokenHash, now.toISOString()],
@@ -52,7 +53,7 @@ export async function resolveSession(
     );
   }
   return {
-    session: { id: row.id, accountId: AccountId.parse(row.account_id), email: row.email, firstName: row.first_name, expiresAt, tokenHash, transport },
+    session: { id: row.id, accountId: AccountId.parse(row.account_id), email: row.email, firstName: row.first_name, expiresAt, createdAt: iso(row.created_at), tokenHash, transport },
     slid,
   };
 }

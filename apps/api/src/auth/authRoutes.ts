@@ -3,6 +3,7 @@ import {
   apiLogLines,
   EmailCodeRequest,
   LinkCodeRequest,
+  type EmailChangeReverted,
   MagicLinkRequest,
   signInLink,
   SignInRequest,
@@ -19,6 +20,7 @@ import { rateLimits } from "../rateLimit/rateLimits.js";
 import { accountExists } from "./accountExists.js";
 import { consumeLinkCode } from "./consumeLinkCode.js";
 import { consumeMagicLink, consumeMagicLinkCode, type ConsumedMagicLink } from "./consumeMagicLink.js";
+import { revertEmailChange } from "./emailChange.js";
 import { createSessionForAccount } from "./createSession.js";
 import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { issueLinkCode } from "./issueLinkCode.js";
@@ -185,4 +187,25 @@ export function authRoutes(
     };
     return linked;
   });
+
+  // The button in the old address's mail: public, because every session is about to end,
+  // and the token is the whole proof (docs/features/account-changes.md, "Moving it back").
+  app.post(
+    "/auth/email-change/revert",
+    { ...PUBLIC, preHandler: perAddress(rateLimits.emailChangeRevertPerAddress) },
+    async (request) => {
+      const { token } = parseOrThrow(SignInRequest, request.body, "The revert link");
+      const result = await revertEmailChange(sql, token, clock());
+      if (result.outcome === "refused") {
+        request.log.warn(apiLogLines.auth.emailChangeRevertRefused({ reason: result.reason }));
+        throw new ApiError("link_invalid", "This link can’t move the account back", {
+          reason: result.reason,
+          ...(result.reason === "taken" ? { email: result.email } : {}),
+        });
+      }
+      request.log.info(apiLogLines.auth.emailChangeReverted({ accountId: result.accountId }));
+      const reverted: EmailChangeReverted = { email: result.email };
+      return reverted;
+    },
+  );
 }

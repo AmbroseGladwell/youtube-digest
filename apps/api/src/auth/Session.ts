@@ -8,6 +8,7 @@ export interface Session {
   email: string;
   firstName: string | null;
   expiresAt: string;
+  createdAt: string;
   tokenHash: string;
   transport: SessionTransport;
 }

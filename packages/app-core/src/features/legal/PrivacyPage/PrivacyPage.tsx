@@ -61,10 +61,18 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          An account is an email address, the first name you gave when you created it, and the date it was made.
-          Signing in sends a one-time link to that address, through Brevo, our email provider. The link, and the
-          code in the same email, work once and expire after fifteen minutes. We store only a hash of each, never
-          the link itself. The extension signs in by typing a code from that link, which lasts ten minutes.
+          An account is an email address, a first name if you gave one, and the date it was made. You can change
+          or remove the name, and move the account to a new address, from Settings. Signing in sends a one-time
+          link to that address, through Brevo, our email provider. The link, and the code in the same email, work
+          once and expire after fifteen minutes. We store only a hash of each, never the link itself. The extension
+          signs in by typing a code from that link, which lasts ten minutes.
+        </p>
+        <p>
+          Changing your email sends a code to your current address first, unless you signed in within the last
+          fifteen minutes, then a code to the new address; each works once, for fifteen minutes, and only hashes
+          are stored. When the account moves, the old address is told, with a link that moves it back for seven
+          days; using that link also signs out every device. We keep a record of each change, as the two addresses
+          and the times, so that link can work.
         </p>
         <p>
           Each device you sign in on gets a session, which lasts thirty days from the last time it was used. On the
@@ -396,6 +404,7 @@ const sections: readonly LegalSection[] = [
           ["Your account: email, first name", "until you delete the account"],
           ["Sessions", "30 days from last use, or until you sign out; gone with the account"],
           ["Sign-in links and codes", "15 and 10 minutes, as hashes"],
+          ["Codes for changing your email, and the record of each change", "the codes 15 minutes, as hashes; the change itself with the account"],
           ["Your library and settings", "until you delete the overview or the account"],
           ["Narration audio", "while an overview uses it; a file two readers share stays while either does"],
           ["Shared links", "until you stop them; the copy goes with the account"],

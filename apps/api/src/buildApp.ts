@@ -77,6 +77,8 @@ export interface AppConfig {
   // The header a trusted proxy puts the caller's address in, or null to use the socket's.
   clientIpHeader: string | null;
   sampleShareTokens: readonly ShareToken[];
+  // Where a reader writes when a mail's own way out cannot help (docs/features/account-changes.md).
+  supportEmail: string;
 }
 
 export interface AudioSetup {
@@ -199,7 +201,7 @@ export async function buildApp({
 
       healthRoutes(api, sql);
       handshakeRoutes(api, config.minSupportedClientVersion);
-      sessionRoutes(api, { sql, clock, sessionCookieSecure });
+      sessionRoutes(api, { sql, clock, mailer, appUrl: config.appUrl, supportEmail: config.supportEmail, sessionCookieSecure });
       authRoutes(api, {
         sql,
         clock,

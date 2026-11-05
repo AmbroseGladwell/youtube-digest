@@ -17,6 +17,7 @@ test("a magic link is one POST to Brevo, from the configured sender, with the ke
   const mailer = createBrevoMailer({
     apiKey: "xkeysib-key",
     from: "The Overview <signin@overview.example>",
+    siteUrl: "https://overview.example",
     fetch: async (url, init) => {
       sent.push({ url: String(url), init: init! });
       return new Response(JSON.stringify({ messageId: "1" }), { status: 201 });
@@ -39,6 +40,7 @@ test("a refusal from Brevo is an error, not a link the reader never gets", async
   const mailer = createBrevoMailer({
     apiKey: "xkeysib-key",
     from: "signin@overview.example",
+    siteUrl: "https://overview.example",
     fetch: async () => new Response("{}", { status: 401 }),
   });
 

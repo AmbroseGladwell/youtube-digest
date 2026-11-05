@@ -15,6 +15,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Postgres behind one small interface, `pg` in production and PGlite in tests | `src/db/SqlClient.ts`, `createPgSqlClient.ts`, `createPgliteSqlClient.ts` |
 | SQL migrations in Flyway's naming, applied by an in-repo runner | `migrations/V*.sql`, `src/db/runMigrations.ts` |
 | Accounts and sessions; bearer tokens, hashed | `migrations/V0001__accounts_and_sessions.sql`, `src/auth/` |
+| Changing the name and the email on an account, with a code to the current address first, a code to the new one, and a notice to the old one with a way back | `migrations/V0026__account_changes.sql`, `src/auth/sessionVerification.ts`, `emailChange.ts`, `sessionRoutes.ts`, `src/mail/accountEmails.ts`; `docs/features/account-changes.md` |
 | Magic-link sign-in, the cookie transport, and the extension's link code | `migrations/V0003__magic_links_and_link_codes.sql`, `V0005__account_first_names_and_link_intents.sql`, `V0011__magic_link_anonymous_ids.sql`, `src/auth/authRoutes.ts`, `src/auth/sessionCookie.ts`, `src/mail/`; `docs/features/sign-in.md` |
 | Deny-by-default session plugin; routes opt out with `config: { public: true }` | `src/auth/sessionPlugin.ts` |
 | One client version on the wire, and the table that turns it into schema versions | `packages/domain`: `clientVersion.ts`, `clientSchemaVersions.ts` |
@@ -125,7 +126,12 @@ cookie when the cookie was the transport, and answers a second call with the sam
 `401`, which is right: the effect is idempotent, the status is not; `POST
 /api/session/link-code` mints a link code for the session's own account, so a signed-in
 web app can hand the extension beside it a way in with no second email
-(`docs/features/sign-in.md`).
+(`docs/features/sign-in.md`). Five more are the account's own changes: `PUT
+/api/session/account` for the name; `POST /api/session/verification` and its `/confirm`
+for the code to the current address; `POST /api/session/email-change` and its `/confirm`
+for the code to a new one. A sixth, `POST /api/auth/email-change/revert`, is public: it is
+the button in the old address's mail, and acts on its token alone
+(`docs/features/account-changes.md`).
 
 ## Origins
 
@@ -246,6 +252,7 @@ sends:
 | `invalid_request` | 400 | body, header or query fails validation; malformed JSON; a body written at a version other than the client's own |
 | `unauthenticated` | 401 | no, unknown or expired bearer |
 | `client_unsupported` | 403 | a write from below `minSupportedClientVersion`; `details` carry both numbers |
+| `verification_required` | 403 | a change that needs the session to have proved its inbox first: `POST /api/session/verification` sends the code (`docs/features/account-changes.md`) |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
 | `video_already_held` | 409 | a second overview of a video the account holds; `details.overviewId` names the first (`docs/features/one-overview-per-video.md`) |
@@ -298,6 +305,9 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `emailCodeAddress` | 30 | hour, per address | `POST /api/auth/email-code` |
 | `emailCodeEmail` | 10 | hour, per normalised email | `POST /api/auth/email-code` |
 | `linkCodeAddress` | 30 | hour, per address | `POST /api/auth/link-code` |
+| `verificationAccount` | 5 | hour, per account | `POST /api/session/verification`, the code to the account's own address (`docs/features/account-changes.md`) |
+| `emailChangeAccount` | 5 | hour, per account | `POST /api/session/email-change`, the code to a new address |
+| `emailChangeRevertAddress` | 30 | hour, per address | `POST /api/auth/email-change/revert`, a public route that acts on a token |
 | `oauthRegisterAddress` | 20 | hour, per address | `POST /oauth/register` |
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
@@ -410,6 +420,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
 | `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with; a secret. Unset, `/api/playlists` answers `unavailable` and says so at startup (`docs/features/playlists.md`) |
+| `SUPPORT_EMAIL` | `hello@theoverviewapp.com` | the address the account mails tell a reader to write to when a mail's own way out cannot help (`docs/features/account-changes.md`) |
 | `SAMPLE_SHARE_TOKENS` | unset | comma-separated share tokens, in order, of the house account's live shares that Start offers as samples. Not a secret, since each is a public link. Unset, `/api/samples` lists none and Start offers only its field (`docs/features/onboarding.md`, "Try a sample") |
 | `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`; the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |

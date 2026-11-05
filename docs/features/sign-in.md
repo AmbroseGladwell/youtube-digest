@@ -379,9 +379,9 @@ no-account one (`docs/features/account-libraries.md`).
 
 ## Not built
 
-Changing the name on an account, or giving one to an account made by signing in;
-a sweep of spent links and codes, which
-is the same later cron as the session sweep; changing the email on an account. Serving the SPA from the API is built since
+A sweep of spent links and codes, which
+is the same later cron as the session sweep. Changing the name or the email on an account is
+built since (`docs/features/account-changes.md`). Serving the SPA from the API is built since
 (`docs/architecture/deploy.md`), so `/sign-in` in production is on the API's own origin,
 which `APP_URL` names. So is the web app minting a code for the extension beside it
 ("Connecting the extension from the web app", above).

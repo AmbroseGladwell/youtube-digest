@@ -2,6 +2,7 @@ export const API_ERROR_CODES = {
   invalid_request: 400,
   unauthenticated: 401,
   client_unsupported: 403,
+  verification_required: 403,
   not_found: 404,
   already_exists: 409,
   video_already_held: 409,

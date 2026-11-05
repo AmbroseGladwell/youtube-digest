@@ -21,6 +21,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     ourKey: null,
     youTubeApiKey: null,
     sampleShareTokens: [],
+    supportEmail: "hello@theoverviewapp.com",
     analytics: { environment: "development", postHog: null },
     logs: null,
   });
