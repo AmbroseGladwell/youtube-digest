@@ -36,7 +36,8 @@ out sees no library, so a reader without an account meets the question in onboar
 
 1. **No account, no yes:** nothing is sent and nothing about analytics is stored. Errors
    are still reported, with no id (`docs/architecture/errors-and-logs.md`). Errors are not
-   part of the choice, so the question doesn't mention them. Before any answer, events wait
+   part of the choice; the question says they're reported either way, so a no never
+   leaves something broken unnoticed (OV-174). Before any answer, events wait
    in memory (below); after a no, they are never collected.
 2. **No account, a yes:** a random id (`crypto.randomUUID()`, never derived from the device)
    is kept beside the answer and sent on every batch as `anonymousId`. The server takes the
@@ -113,6 +114,15 @@ size and weight, nothing is preselected, and neither is orange. What is counted 
 the screen, "which features are used, never what you read or watch", with the privacy policy
 linked beside it: the Chrome Web Store asks for disclosure inside the product, not only in a
 policy. In the extension the link opens the web app's `/privacy` in a tab of its own.
+
+**A reason that's the reader's (OV-174, design 175l).** "Help shape what we build next?": a
+small team, so how the reader uses the app shows what to build and fix next, and The Overview
+gets better for them. The reason is about the product as a whole and holds whatever they
+answer: nothing is unlocked by Allow or held back by No thanks, which would make consent a
+trade. A "What's shared" box carries the disclosure: which features are used, never what you
+read, watch or type; errors reported either way; Settings › Privacy and the policy. The panel's
+lead is shorter to fit 400 px. This is wording only: what's counted and why are unchanged, so
+the purposes version stays and nobody is asked again.
 
 No thanks is the skip. What happened since Start is held in memory, as above, and sent on
 Allow, whose `analyticsConsent.prompt.accepted` says `asked: "onboarding"`. A device that

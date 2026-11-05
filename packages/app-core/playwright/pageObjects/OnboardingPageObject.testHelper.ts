@@ -132,9 +132,10 @@ export class OnboardingPageObject extends PageObject {
 
   verifyAnalyticsDisclosure = () =>
     this.step("verifyAnalyticsDisclosure", async () => {
-      await expect(this.get(onboardingAnalyticsTestIds.root)).toContainText(
-        "We count which features are used, never what you read or watch.",
+      await expect(this.get(onboardingAnalyticsTestIds.shared)).toContainText(
+        "Which features you use, never what you read, watch or type. Errors are reported either way",
       );
+      await expect(this.get(onboardingAnalyticsTestIds.shared)).toContainText("Change it any time in Settings › Privacy.");
       await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("href", /\/privacy$/);
       await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("target", "_blank");
     });
