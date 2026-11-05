@@ -200,6 +200,20 @@ export class OnboardingPageObject extends PageObject {
       for (const name of names) await this.click(onboardingTopicsTestIds.chip(name));
     });
 
+  verifySuggests = (heading: string, ...names: string[]) =>
+    this.step(`verifySuggests ${names.join(", ")}`, async () => {
+      await expect(this.page.getByRole("group", { name: heading })).toBeVisible();
+      await expect(this.get(onboardingTopicsTestIds.suggested).getByRole("button")).toHaveText(names);
+    });
+
+  verifySuggestsNothing = () =>
+    this.step("verifySuggestsNothing", async () => {
+      await this.expectToBeVisible(onboardingTopicsTestIds.root);
+      await expect(this.get(onboardingTopicsTestIds.suggested)).toHaveCount(0);
+    });
+
+  pickSuggestion = (name: string) => this.step(`pickSuggestion ${name}`, () => this.click(onboardingTopicsTestIds.suggestion(name)));
+
   typeTopic = (name: string) =>
     this.step(`typeTopic ${name}`, async () => {
       await this.get(onboardingTopicsTestIds.typeField).fill(name);

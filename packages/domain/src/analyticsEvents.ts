@@ -461,10 +461,15 @@ export const analyticsEvents = {
       differentVideoChosen: event("The reader starts a playlist's first overview from another of its videos"),
     },
     topics: {
-      continued: event("The reader leaves the topics screen: how many starter topics they picked and how many they typed", {
-        picked: z.number().int().nonnegative(),
-        typed: z.number().int().nonnegative(),
-      }),
+      continued: event(
+        "The reader leaves the topics screen: how many starter topics they picked and how many they typed, how many were suggested from the source, and how many of those they picked",
+        {
+          picked: z.number().int().nonnegative(),
+          typed: z.number().int().nonnegative(),
+          suggested: z.number().int().nonnegative(),
+          pickedSuggested: z.number().int().nonnegative(),
+        },
+      ),
     },
     writtenForYou: {
       shown: event("The reveal's Written for you / For anyone flip is ready", {}),

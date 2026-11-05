@@ -48,6 +48,23 @@ hint under the name in the topic picker (46r), so a reader can see why something
 where it did. A topic typed in by the reader, or made in the rail, has none and shows
 none.
 
+## Suggested topics
+
+OV-176, design 175b. Above the full list, "For this video" (or article, or recipe) offers up
+to three starter topics the source looks like it belongs under, "suggested from its title and
+description" (a page's: "title and text"). They're offered, never picked for the reader, and
+pressing one presses the same chip in "All topics" below. With nothing to suggest the group
+isn't there and the screen is as before.
+
+**Matched in code, not asked of a model** (`suggestStarterTopics`, `packages/domain`): each
+starter topic has a few `keywords`, and they're matched as whole words against the title
+(counting double) and a video's description or a page's opening 3,000 characters. A topic
+needs a word in the title, or two in the text, to be offered. It's free and instant, so it
+costs no call on us before an account and adds no wait. A model call was weighed and left
+for now. The design allowed one new topic outside the starter list; matching in code can't
+name one well, so none is offered. `onboarding.topics.continued` counts how many were
+suggested and how many of those were picked.
+
 ## Signed out sees no overviews
 
 Where there are accounts, every page that would show an overview shows `SignedOutGate`

@@ -13,6 +13,7 @@ import {
   sourceKey,
   SourceKey,
   STARTER_TOPICS,
+  suggestStarterTopics,
   type AboutYou,
   type AuthIntent,
   type OnboardingStep,
@@ -145,6 +146,15 @@ function Onboarding({ progress, update }: OnboardingProps) {
   });
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const found = run.found ?? (overview === null ? null : foundIn(overview));
+  const suggestions = useMemo(() => {
+    if (found === null || kind === null) return null;
+    const noun = kind.noun("video", found);
+    return {
+      noun,
+      from: noun === "video" ? "its title and description" : "its title and text",
+      names: suggestStarterTopics(found.source.title, found.about),
+    };
+  }, [found, kind]);
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
@@ -262,9 +272,12 @@ function Onboarding({ progress, update }: OnboardingProps) {
     } finally {
       setSavingTopics(false);
     }
+    const suggested = suggestions?.names ?? [];
     analytics.onboarding.topics.continued({
       picked: chosen.filter((name) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
+      suggested: suggested.length,
+      pickedSuggested: chosen.filter((name) => suggested.some((offered) => sameTopicName(offered, name))).length,
     });
     update({ topics: chosen });
     setPicking(null);
@@ -360,6 +373,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingTopics
             chosen={progress.topics}
+            suggestions={suggestions}
             saving={savingTopics}
             onChange={setPicking}
             onContinue={(chosen) => void saveTopics(chosen)}

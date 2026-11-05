@@ -5,8 +5,16 @@ import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingTopics.module.scss";
 import { onboardingTopicsTestIds } from "./OnboardingTopicsTestIds.js";
 
+// Starter topics suggested from the source (OV-176, 175b), with what they're for and from.
+export interface OnboardingTopicSuggestions {
+  noun: string;
+  from: string;
+  names: readonly string[];
+}
+
 export interface OnboardingTopicsProps {
   chosen: readonly string[];
+  suggestions: OnboardingTopicSuggestions | null;
   saving: boolean;
   // Each press, so the preview shows picks as they land (175b); nothing is made until Continue.
   onChange: (chosen: string[]) => void;
@@ -18,7 +26,7 @@ const isStarter = (name: string) => STARTER_TOPICS.some((topic) => sameTopicName
 // Design 46d: the brief's 27 topics as chips, names only, with anything else typed in first.
 // Nothing is made until Continue, so pressing a chip off again leaves nothing behind
 // (docs/features/onboarding.md, "Starter topics").
-export function OnboardingTopics({ chosen: initiallyChosen, saving, onChange, onContinue }: OnboardingTopicsProps) {
+export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving, onChange, onContinue }: OnboardingTopicsProps) {
   const [chosen, setChosenHere] = useState<string[]>([...initiallyChosen]);
   const setChosen = (change: (current: string[]) => string[]) => {
     const next = change(chosen);
@@ -27,6 +35,8 @@ export function OnboardingTopics({ chosen: initiallyChosen, saving, onChange, on
   };
   const [typing, setTyping] = useState("");
   const fieldId = useId();
+  const suggestedId = useId();
+  const suggested = suggestions?.names ?? [];
   const typed = chosen.filter((name) => !isStarter(name));
   const has = (name: string) => chosen.some((held) => sameTopicName(held, name));
   const toggle = (name: string) =>
@@ -50,6 +60,30 @@ export function OnboardingTopics({ chosen: initiallyChosen, saving, onChange, on
         </p>
       </div>
 
+      {suggestions !== null && suggested.length > 0 && (
+        <div className={styles.group} role="group" aria-labelledby={suggestedId} data-testid={onboardingTopicsTestIds.suggested}>
+          <p id={suggestedId} className={styles.groupLabel}>
+            For this {suggestions.noun}
+            <span className={styles.from}> · suggested from {suggestions.from}</span>
+          </p>
+          <div className={styles.chips}>
+            {suggested.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={styles.chip}
+                aria-pressed={has(name)}
+                onClick={() => toggle(name)}
+                data-testid={onboardingTopicsTestIds.suggestion(name)}
+              >
+                {has(name) && <StrokeIcon name="check" size={14} />}
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form className={styles.typed} onSubmit={pick}>
         <label htmlFor={fieldId} className={styles.label}>
           Something else? Type it
@@ -70,20 +104,27 @@ export function OnboardingTopics({ chosen: initiallyChosen, saving, onChange, on
         </span>
       </form>
 
-      <div className={styles.chips} role="group" aria-label="Topics">
-        {[...typed, ...STARTER_TOPICS.map((topic) => topic.name)].map((name) => (
-          <button
-            key={name}
-            type="button"
-            className={styles.chip}
-            aria-pressed={has(name)}
-            onClick={() => toggle(name)}
-            data-testid={onboardingTopicsTestIds.chip(name)}
-          >
-            {has(name) && <StrokeIcon name="check" size={14} />}
-            {name}
-          </button>
-        ))}
+      <div className={styles.group}>
+        {suggested.length > 0 && (
+          <p className={styles.groupLabel} aria-hidden="true">
+            All topics
+          </p>
+        )}
+        <div className={styles.chips} role="group" aria-label="All topics">
+          {[...typed, ...STARTER_TOPICS.map((topic) => topic.name)].map((name) => (
+            <button
+              key={name}
+              type="button"
+              className={styles.chip}
+              aria-pressed={has(name)}
+              onClick={() => toggle(name)}
+              data-testid={onboardingTopicsTestIds.chip(name)}
+            >
+              {has(name) && <StrokeIcon name="check" size={14} />}
+              {name}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.foot}>

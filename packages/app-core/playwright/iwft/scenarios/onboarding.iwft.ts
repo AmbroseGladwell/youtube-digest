@@ -39,6 +39,7 @@ test("a new reader answers the questions while the overview is made, creates an 
   await onboarding.verifyOnScreen("topics", "What are you curious about?");
   await onboarding.verifyPreviewMarksNow("topics");
   await onboarding.verifyPreviewStepReads("topics", "Pick as many as you like");
+  await onboarding.verifySuggestsNothing();
   await onboarding.typeTopic("chess");
   await onboarding.pickTopics("Food", "Health");
   await onboarding.verifyTopicCountReads("3 picked");
@@ -465,6 +466,39 @@ test("an article link is read on the device's trial, confirmed as an article, an
   expect(made?.input).toHaveProperty("article.url", ARTICLE_URL);
   expect(backendSimulator.articles.reads()).toEqual([ARTICLE_URL]);
   expect(backendSimulator.articles.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+});
+
+test("topics suggested from a page's title and text come first, and picking one presses it in the full list too", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({
+    status: "read",
+    article: {
+      ...ARTICLE,
+      title: "Why your workout matters less than your sleep",
+      sections: [{ heading: null, anchor: null, text: "Muscle is built in recovery, not in the gym. Training hard on poor sleep undoes it." }],
+    },
+  });
+  const home = await launcher.launch(signedOut);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.allowAnalytics();
+  await onboarding.confirmVideo();
+
+  await onboarding.verifyOnScreen("topics");
+  await onboarding.verifySuggests("For this article · suggested from its title and text", "Fitness", "Health");
+  await onboarding.pickSuggestion("Health");
+  await onboarding.verifyTopicPressed("Health", true);
+  await onboarding.verifyTopicPressed("Fitness", false);
+  await onboarding.verifyPreviewStepReads("topics", "Health");
+  await onboarding.continueFromTopics();
+  await onboarding.verifyOnScreen("library");
+  await expect
+    .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
+    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1 });
 });
 
 test("a recipe page is confirmed as a recipe, with the page's own times", async ({ launcher, backendSimulator }) => {
