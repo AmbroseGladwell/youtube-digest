@@ -58,9 +58,11 @@ test("how the capture's time split is reported beside its events, step by step, 
   await dialog.clickReadOverview();
   await launcher.readerPage.verifyIsShown();
 
+  const finishedEvent = () => captureEvents(backendSimulator).find(({ name }) => name === "capture.newOverview.finished");
   await expect.poll(() => backendSimulator.errors.timings()).toHaveLength(1);
+  await expect.poll(() => finishedEvent()).toBeDefined();
   const [timing] = backendSimulator.errors.timings();
-  const finished = captureEvents(backendSimulator).find(({ name }) => name === "capture.newOverview.finished");
+  const finished = finishedEvent();
   expect(timing).toEqual({
     name: "captureTimed",
     outcome: "finished",
