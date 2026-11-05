@@ -1265,23 +1265,6 @@ export class ReaderPageObject extends PageObject {
     });
 
 
-  scrollToTheFoot = () =>
-    this.step("scrollToTheFoot", () =>
-      expect(async () => {
-        await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-        const atTheFoot = await this.page.evaluate(
-          () => window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1,
-        );
-        expect(atTheFoot).toBe(true);
-      }).toPass({ timeout: 2_000 }),
-    );
-
-  scrollToTheTop = () =>
-    this.step("scrollToTheTop", async () => {
-      await this.page.evaluate(() => window.scrollTo(0, 0));
-      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0);
-    });
-
   verifyHeadBackLinkIsUnderTheBar = () =>
     this.step("verifyHeadBackLinkIsUnderTheBar", () =>
       expect(async () => {
