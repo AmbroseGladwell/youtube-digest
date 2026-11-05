@@ -407,6 +407,12 @@ across every token, counted whether or not the page could be read. Past the toke
 as `trial read address cap spent`, never the address. A token it never issued is `401` with
 `details.trial: "unknown"`, as for a generation.
 
+**And suggests onboarding's topics** (OV-176), on `POST /api/generations/topic-suggestions`:
+a small pass on our key, a few hundred tokens, never counted as the trial's overview. Its
+caps are rate limits rather than counts kept in the database, since each costs a fraction of a
+cent: 5 a day a token and 20 a day an address (`api.md`, "Rate limits"). A token it never issued
+is `401` with `details.trial: "unknown"`. An account may ask too, under `smallPassAccount`.
+
 ## Reserving on the reader's own key
 
 `POST /api/overview-reservations` with `{ overviewId }` (OV-102) takes a slot on the

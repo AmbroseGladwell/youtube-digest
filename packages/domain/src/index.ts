@@ -161,3 +161,5 @@ export * from "./withTagAlias.js";
 export * from "./retagged.js";
 export * from "./tagUsage.js";
 export * from "./resolveTags.js";
+export * from "./suggestStarterTopics.js";
+export * from "./TopicSuggestion.js";

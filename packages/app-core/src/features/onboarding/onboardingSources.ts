@@ -9,6 +9,7 @@ import {
   webSource,
   youTubeSource,
   type ArticleRead,
+  type ExtractedArticle,
   type Overview,
   type Recipe,
   type RecipeFigure,
@@ -27,6 +28,8 @@ export type RecipeTimes = Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMin
 export interface OnboardingFound {
   source: Source;
   recipe: RecipeTimes | null;
+  // What topics are suggested from besides the title: a video's description, a page's opening.
+  about: string;
 }
 
 // The pipelines a run can call; the shell's hooks supply them, the kind chooses between them.
@@ -82,6 +85,14 @@ export interface OnboardingSource {
   teaser: (overview: Overview) => OnboardingTeaser;
 }
 
+const PAGE_OPENING_CHARACTERS = 3000;
+
+const pageOpening = (article: ExtractedArticle): string =>
+  article.sections
+    .map(({ heading, text }) => (heading === null ? text : `${heading} ${text}`))
+    .join(" ")
+    .slice(0, PAGE_OPENING_CHARACTERS);
+
 const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
 const WRITTEN_SECTIONS: readonly OnboardingSection[] = ["Premise", "Key points", "How to apply", "Verdict", "Chapters"].map((name) => ({
@@ -126,7 +137,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       makers.video(target, {
         isCancelled,
         waitToWrite,
-        onProgress: ({ video }) => onFound({ source: youTubeSource(video), recipe: null }),
+        onProgress: ({ video, transcriptOpening }) =>
+          onFound({
+            source: youTubeSource(video),
+            recipe: null,
+            about: [video.description ?? "", transcriptOpening].filter((part) => part !== "").join("\n\n"),
+          }),
       }),
     noun: (linkKind) => (linkKind === "playlist" ? "playlist" : "video"),
     lead: () => OVERVIEW_LEAD,
@@ -152,7 +168,9 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         isCancelled,
         waitToWrite,
         onArticleRead: (article) =>
-          void articleSourceId(article.url).then((id) => onFound({ source: webSource(article, id), recipe: article.recipe })),
+          void articleSourceId(article.url).then((id) =>
+            onFound({ source: webSource(article, id), recipe: article.recipe, about: pageOpening(article) }),
+          ),
       }),
     noun: (_linkKind, found) => (found === null ? "page" : found.recipe !== null ? "recipe" : "article"),
     lead: (found) => (found?.recipe ? "We'll turn it into a recipe you can read, cook from and come back to." : OVERVIEW_LEAD),
@@ -202,4 +220,8 @@ export function onboardingSourceOf(link: string): { source: OnboardingSource; li
   return null;
 }
 
-export const foundIn = (overview: Overview): OnboardingFound => ({ source: overview.source, recipe: overview.recipe ?? null });
+export const foundIn = (overview: Overview): OnboardingFound => ({
+  source: overview.source,
+  recipe: overview.recipe ?? null,
+  about: overview.source.kind === "youtube" ? (overview.source.description ?? "") : "",
+});

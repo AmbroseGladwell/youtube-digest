@@ -13,6 +13,7 @@ import {
   sourceKey,
   SourceKey,
   STARTER_TOPICS,
+  suggestStarterTopics,
   type AboutYou,
   type AuthIntent,
   type OnboardingStep,
@@ -49,7 +50,8 @@ import { OnboardingPreview } from "../components/OnboardingPreview/OnboardingPre
 import { OnboardingProgressBar } from "../components/OnboardingProgressBar/OnboardingProgressBar.js";
 import { OnboardingSlide } from "../components/OnboardingSlide/OnboardingSlide.js";
 import { OnboardingStepsForYou } from "../components/OnboardingStepsForYou/OnboardingStepsForYou.js";
-import { OnboardingTopics } from "../components/OnboardingTopics/OnboardingTopics.js";
+import { OnboardingTopics, type OnboardingTopicSuggestions } from "../components/OnboardingTopics/OnboardingTopics.js";
+import { useTopicSuggestions } from "../useTopicSuggestions.js";
 import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
 import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
 import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingProgressStorage.js";
@@ -145,6 +147,20 @@ function Onboarding({ progress, update }: OnboardingProps) {
   });
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const found = run.found ?? (overview === null ? null : foundIn(overview));
+  const asked = useTopicSuggestions(found, kind, share === null && !signedIn);
+  const offered = useMemo((): OnboardingTopicSuggestions | null => {
+    if (found === null || kind === null) return null;
+    const noun = kind.noun("video", found);
+    return asked === null
+      ? { noun, names: suggestStarterTopics(found.source.title, found.about), newTopic: null, by: "code" }
+      : { noun, names: asked.starter, newTopic: asked.newTopic, by: "model" };
+  }, [found, kind, asked]);
+  // Held once the topics screen shows them, so a late answer never moves chips under the reader.
+  const [held, setHeld] = useState<OnboardingTopicSuggestions | null>(null);
+  useEffect(() => {
+    setHeld((current) => (step !== "topics" ? null : (current ?? offered)));
+  }, [step, offered]);
+  const suggestions = step === "topics" ? (held ?? offered) : offered;
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
   const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
@@ -262,9 +278,13 @@ function Onboarding({ progress, update }: OnboardingProps) {
     } finally {
       setSavingTopics(false);
     }
+    const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
     analytics.onboarding.topics.continued({
+      suggestedBy: suggested.length === 0 ? "none" : (suggestions?.by ?? "none"),
       picked: chosen.filter((name) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
+      suggested: suggested.length,
+      pickedSuggested: chosen.filter((name) => suggested.some((offered) => sameTopicName(offered, name))).length,
     });
     update({ topics: chosen });
     setPicking(null);
@@ -360,6 +380,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
         return (
           <OnboardingTopics
             chosen={progress.topics}
+            suggestions={suggestions}
             saving={savingTopics}
             onChange={setPicking}
             onContinue={(chosen) => void saveTopics(chosen)}

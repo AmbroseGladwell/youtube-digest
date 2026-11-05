@@ -5,37 +5,40 @@ export interface StarterTopic {
   // and example is the "Your own" field's hint for that group.
   suggestions: readonly string[];
   example: string;
+  // Words that suggest a source belongs under it, matched against its title and text when
+  // onboarding suggests topics for this video (docs/features/onboarding.md, "Suggested topics").
+  keywords: readonly string[];
 }
 
 // The topics onboarding offers, in the order it shows them (docs/features/onboarding.md). A
 // description says what a topic includes, never what it leaves out: a reader picks only some
 // of them, and an overview can sit under several.
 export const STARTER_TOPICS: readonly StarterTopic[] = [
-  { name: "AI", description: "Artificial intelligence, including automation.", suggestions: ["using AI at work", "building with AI"], example: "an AI assistant" },
-  { name: "Tech", description: "Computers, gadgets, software and the internet.", suggestions: ["tech products", "coding"], example: "an app" },
-  { name: "Productivity", description: "Getting things done, including habits, focus and planning.", suggestions: ["better habits", "staying focused"], example: "an early morning routine" },
-  { name: "Career", description: "Jobs and working life, including leadership.", suggestions: ["a career change", "a promotion"], example: "my first management job" },
-  { name: "Business", description: "Building and running a business, including marketing.", suggestions: ["starting a business", "a side project"], example: "a café" },
-  { name: "Finance", description: "Personal money and markets, including investing and crypto.", suggestions: ["money", "investing"], example: "paying off debt" },
-  { name: "Health", description: "Your body's wellbeing, including nutrition, sleep and medicine.", suggestions: ["sleep", "eating better"], example: "lower blood pressure" },
-  { name: "Fitness", description: "Exercise and training.", suggestions: ["getting stronger", "running further"], example: "a half marathon" },
-  { name: "Psychology", description: "How people think and feel, including mindfulness and relationships.", suggestions: ["managing stress", "my relationships"], example: "being more patient" },
-  { name: "Philosophy", description: "Big questions about how to live and what is true.", suggestions: ["how to live well", "thinking clearly"], example: "reading the Stoics" },
-  { name: "Education", description: "Learning and teaching, including languages.", suggestions: ["languages", "exams"], example: "learning Spanish" },
-  { name: "Science", description: "How the world works, including climate.", suggestions: ["understanding climate", "how things work"], example: "astronomy" },
-  { name: "Nature", description: "Animals, plants and the outdoors.", suggestions: ["getting outdoors", "wildlife"], example: "birdwatching" },
-  { name: "History", description: "The past and how it shaped today.", suggestions: ["understanding the past", "family history"], example: "the Romans" },
-  { name: "Politics", description: "Government and public life, including economics.", suggestions: ["following the news", "understanding economics"], example: "local elections" },
-  { name: "Food", description: "Cooking, recipes and eating well.", suggestions: ["new recipes", "family meals"], example: "baking" },
-  { name: "Home", description: "Your home, including gardening and DIY.", suggestions: ["a home project", "the garden"], example: "a loft conversion" },
-  { name: "Parenting", description: "Raising children.", suggestions: ["raising kids", "a new baby"], example: "the teenage years" },
-  { name: "Fashion", description: "Clothes, style and grooming.", suggestions: ["finding my style", "dressing better"], example: "a capsule wardrobe" },
-  { name: "Design", description: "Visual craft, including art, drawing and photography.", suggestions: ["drawing", "photography"], example: "watercolours" },
-  { name: "Writing", description: "Writing well, from stories to emails.", suggestions: ["writing better", "finishing a book"], example: "a newsletter" },
-  { name: "Music", description: "Listening to, playing and making music.", suggestions: ["learning an instrument", "making music"], example: "the guitar" },
-  { name: "Books", description: "Books, reading and authors.", suggestions: ["reading more", "a book club"], example: "the classics" },
-  { name: "Film", description: "Films, including TV.", suggestions: ["making films", "watching better films"], example: "screenwriting" },
-  { name: "Gaming", description: "Video games and board games.", suggestions: ["getting better at a game", "making a game"], example: "chess" },
-  { name: "Sport", description: "Playing and watching sport.", suggestions: ["a sport I play", "coaching a team"], example: "my tennis serve" },
-  { name: "Travel", description: "Places to go and how to get there.", suggestions: ["planning a trip", "travelling cheaply"], example: "a year abroad" },
+  { name: "AI", description: "Artificial intelligence, including automation.", suggestions: ["using AI at work", "building with AI"], example: "an AI assistant", keywords: ["artificial intelligence", "machine learning", "chatgpt", "claude", "llm", "gpt", "neural network", "automation", "openai"] },
+  { name: "Tech", description: "Computers, gadgets, software and the internet.", suggestions: ["tech products", "coding"], example: "an app", keywords: ["technology", "computer", "software", "gadget", "iphone", "android", "internet", "app", "coding", "programming", "developer", "laptop"] },
+  { name: "Productivity", description: "Getting things done, including habits, focus and planning.", suggestions: ["better habits", "staying focused"], example: "an early morning routine", keywords: ["productivity", "habit", "procrastination", "routine", "planning", "time management", "to-do", "notion", "deep work"] },
+  { name: "Career", description: "Jobs and working life, including leadership.", suggestions: ["a career change", "a promotion"], example: "my first management job", keywords: ["career", "job", "interview", "promotion", "manager", "leadership", "salary", "resume", "cv", "hiring"] },
+  { name: "Business", description: "Building and running a business, including marketing.", suggestions: ["starting a business", "a side project"], example: "a café", keywords: ["business", "startup", "founder", "entrepreneur", "marketing", "sales", "company", "customers", "revenue", "brand"] },
+  { name: "Finance", description: "Personal money and markets, including investing and crypto.", suggestions: ["money", "investing"], example: "paying off debt", keywords: ["money", "finance", "investing", "invest", "stock", "stocks", "crypto", "bitcoin", "savings", "budget", "debt", "mortgage", "pension", "compound interest", "interest rate"] },
+  { name: "Health", description: "Your body's wellbeing, including nutrition, sleep and medicine.", suggestions: ["sleep", "eating better"], example: "lower blood pressure", keywords: ["health", "nutrition", "sleep", "diet", "medicine", "doctor", "disease", "brain", "heart", "blood", "vitamin", "gut", "longevity"] },
+  { name: "Fitness", description: "Exercise and training.", suggestions: ["getting stronger", "running further"], example: "a half marathon", keywords: ["fitness", "workout", "exercise", "training", "gym", "running", "strength", "muscle", "cardio", "marathon", "yoga"] },
+  { name: "Psychology", description: "How people think and feel, including mindfulness and relationships.", suggestions: ["managing stress", "my relationships"], example: "being more patient", keywords: ["psychology", "mindfulness", "stress", "anxiety", "emotion", "relationship", "therapy", "happiness", "motivation", "behaviour", "behavior"] },
+  { name: "Philosophy", description: "Big questions about how to live and what is true.", suggestions: ["how to live well", "thinking clearly"], example: "reading the Stoics", keywords: ["philosophy", "stoic", "stoicism", "ethics", "truth", "morality", "existential"] },
+  { name: "Education", description: "Learning and teaching, including languages.", suggestions: ["languages", "exams"], example: "learning Spanish", keywords: ["education", "learning", "teaching", "school", "university", "student", "exam", "language", "spanish", "french"] },
+  { name: "Science", description: "How the world works, including climate.", suggestions: ["understanding climate", "how things work"], example: "astronomy", keywords: ["science", "scientist", "physics", "chemistry", "biology", "climate", "astronomy", "research", "experiment", "evolution", "quantum"] },
+  { name: "Nature", description: "Animals, plants and the outdoors.", suggestions: ["getting outdoors", "wildlife"], example: "birdwatching", keywords: ["nature", "animal", "animals", "wildlife", "plant", "plants", "forest", "ocean", "bird", "outdoors"] },
+  { name: "History", description: "The past and how it shaped today.", suggestions: ["understanding the past", "family history"], example: "the Romans", keywords: ["history", "historical", "ancient", "war", "empire", "century", "roman", "medieval"] },
+  { name: "Politics", description: "Government and public life, including economics.", suggestions: ["following the news", "understanding economics"], example: "local elections", keywords: ["politics", "political", "government", "election", "economy", "economics", "policy", "parliament", "president", "minister", "news"] },
+  { name: "Food", description: "Cooking, recipes and eating well.", suggestions: ["new recipes", "family meals"], example: "baking", keywords: ["food", "cooking", "cook", "recipe", "recipes", "chef", "kitchen", "baking", "bake", "meal", "dinner", "knife", "chicken", "pasta", "ingredients"] },
+  { name: "Home", description: "Your home, including gardening and DIY.", suggestions: ["a home project", "the garden"], example: "a loft conversion", keywords: ["home", "house", "diy", "garden", "gardening", "renovation", "interior", "cleaning", "kitchen", "furniture"] },
+  { name: "Parenting", description: "Raising children.", suggestions: ["raising kids", "a new baby"], example: "the teenage years", keywords: ["parenting", "parent", "parents", "children", "kids", "child", "baby", "toddler", "teenager"] },
+  { name: "Fashion", description: "Clothes, style and grooming.", suggestions: ["finding my style", "dressing better"], example: "a capsule wardrobe", keywords: ["fashion", "style", "clothes", "outfit", "wardrobe", "grooming", "skincare"] },
+  { name: "Design", description: "Visual craft, including art, drawing and photography.", suggestions: ["drawing", "photography"], example: "watercolours", keywords: ["design", "designer", "art", "drawing", "painting", "photography", "illustration", "typography"] },
+  { name: "Writing", description: "Writing well, from stories to emails.", suggestions: ["writing better", "finishing a book"], example: "a newsletter", keywords: ["writing", "writer", "novel", "storytelling", "essay", "copywriting", "newsletter"] },
+  { name: "Music", description: "Listening to, playing and making music.", suggestions: ["learning an instrument", "making music"], example: "the guitar", keywords: ["music", "song", "guitar", "piano", "album", "musician", "band", "singing"] },
+  { name: "Books", description: "Books, reading and authors.", suggestions: ["reading more", "a book club"], example: "the classics", keywords: ["book", "books", "reading", "author", "novel", "library"] },
+  { name: "Film", description: "Films, including TV.", suggestions: ["making films", "watching better films"], example: "screenwriting", keywords: ["film", "movie", "cinema", "tv", "series", "director", "netflix", "screenwriting"] },
+  { name: "Gaming", description: "Video games and board games.", suggestions: ["getting better at a game", "making a game"], example: "chess", keywords: ["game", "games", "gaming", "video game", "chess", "board game", "nintendo", "playstation", "xbox"] },
+  { name: "Sport", description: "Playing and watching sport.", suggestions: ["a sport I play", "coaching a team"], example: "my tennis serve", keywords: ["sport", "football", "soccer", "tennis", "basketball", "cricket", "rugby", "golf", "olympics", "athlete"] },
+  { name: "Travel", description: "Places to go and how to get there.", suggestions: ["planning a trip", "travelling cheaply"], example: "a year abroad", keywords: ["travel", "trip", "holiday", "flight", "hotel", "city", "cities", "country", "abroad", "tourism"] },
 ];

@@ -40,6 +40,8 @@ import {
   type StoredTranscript,
   type Topic,
   type TopicMatchInput,
+  type TopicSuggestionInput,
+  type TopicSuggestionResult,
   type UnreadableRecord,
   type VideoId,
   youTubeSource,
@@ -173,6 +175,9 @@ export class BackendSimulator {
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #topicMatches: string[] = [];
   #topicPasses: TopicMatchInput[] = [];
+  // Null answers as a failed pass, so onboarding falls back to matching in code.
+  #topicSuggestion: TopicSuggestionResult | null = null;
+  #topicSuggestionsAsked: Array<{ input: TopicSuggestionInput; trialToken: string | null }> = [];
   #articleReads: string[] = [];
   #articleReadTrialTokens: Array<string | null> = [];
   #articleReadsSpent: "trial-reads" | "trial-reads-address" | null = null;
@@ -807,6 +812,21 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/generations/topic-suggestions", (route) =>
+      this.#respond(route, EndpointKey.TOPIC_SUGGESTIONS, {
+        onDefault: () => {
+          this.#topicSuggestionsAsked.push({
+            input: route.request().postDataJSON() as TopicSuggestionInput,
+            trialToken: route.request().headers()[TRIAL_TOKEN_HEADER] ?? null,
+          });
+          return this.#topicSuggestion === null
+            ? { status: 503, body: { error: { code: "unavailable", message: "Simulated: no suggestions" } } }
+            : { status: 200, body: this.#topicSuggestion };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/trials", (route) =>
       this.#respond(route, EndpointKey.TRIAL_START, {
         onDefault: () => {
@@ -1223,6 +1243,11 @@ export class BackendSimulator {
       this.#topicMatches = names;
     },
     topicPasses: (): TopicMatchInput[] => [...this.#topicPasses],
+    // What the model suggests for onboarding's topics screen; left unset, the pass fails.
+    suggestsTopics: (result: TopicSuggestionResult): void => {
+      this.#topicSuggestion = result;
+    },
+    topicSuggestionsAsked: () => [...this.#topicSuggestionsAsked],
     // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,

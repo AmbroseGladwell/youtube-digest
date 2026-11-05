@@ -30,7 +30,11 @@ export interface GenerationProgress {
   video: VideoSource;
   transcriptWords: number;
   transcriptSource: CaptureTranscriptSource;
+  // What onboarding suggests topics from before writing (docs/features/onboarding.md).
+  transcriptOpening: string;
 }
+
+const TRANSCRIPT_OPENING_CHARACTERS = 3000;
 
 export interface GenerationPipelineDeps {
   sources: TranscriptSource[];
@@ -74,7 +78,11 @@ export async function runOverviewGeneration(
   const transcriptWords = transcript.reduce((total, segment) => total + countWords(segment.text), 0);
 
   stopIfCancelled(options);
-  options.onProgress?.({ video, transcriptWords, transcriptSource });
+  const transcriptOpening = transcript
+    .map((segment) => segment.text)
+    .join(" ")
+    .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+  options.onProgress?.({ video, transcriptWords, transcriptSource, transcriptOpening });
   await waitToWrite(options);
   return writeOverview({ video, transcript }, deps, options);
 }

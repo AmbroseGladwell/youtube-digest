@@ -48,6 +48,34 @@ hint under the name in the topic picker (46r), so a reader can see why something
 where it did. A topic typed in by the reader, or made in the rail, has none and shows
 none.
 
+## Suggested topics
+
+OV-176, design 175b. Above the full list, "For this video" (or article, or recipe), "suggested
+from what it's about", offers up to three topics: starter ones, and at most one new one marked
+New. They're offered, never picked for the reader, and pressing a starter one presses the same
+chip in "All topics" below. A new one picked is made with no description, like a typed one.
+With nothing to suggest the group isn't there and the screen is as before.
+
+**Asked of a model as soon as the source is found** (`useTopicSuggestions`), not when the
+screen opens. The fetch lands before or during the confirm screen, so the answer is usually back
+before the reader reaches topics, and there's no wait. It's a small pass on our key on the
+device's trial (`generateTopicSuggestions`, `POST /api/generations/topic-suggestions`), sent the
+title and a video's description and transcript opening, or a page's opening: never counted as
+the trial's overview, and capped on its own (`docs/architecture/tiers.md`). The starter topics
+are deliberately broad, so the new one is **a more specific interest the source is clearly
+about, and may sit inside a starter topic** (decided 5 Nov 2026): "Knife skills" within Food,
+"Chess" within Gaming. That's where readers' real interests are. It's an interest a reader
+would want a shelf for, not a tag ("Knife skills", not "Dicing onions"), and never the title,
+a person or a brand. Code drops one that repeats a starter topic or runs past four words, and
+a kept one takes the third place ahead of a third starter topic.
+
+**Matched in code until the answer is in, and if it never is** (`suggestStarterTopics`,
+`packages/domain`): each starter topic has a few `keywords`, matched as whole words against the
+title (counting double) and the same text. A topic needs a word in the title, or two in the
+text. Once the topics screen shows suggestions they're held, so an answer arriving late never
+moves chips under the reader. `onboarding.topics.continued` counts how many were suggested, by
+the model or in code, and how many of those were picked.
+
 ## Signed out sees no overviews
 
 Where there are accounts, every page that would show an overview shows `SignedOutGate`
