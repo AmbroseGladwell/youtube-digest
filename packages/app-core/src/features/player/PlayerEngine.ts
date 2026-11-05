@@ -3,6 +3,7 @@ import {
   MAX_FIRST_SOUND_WAIT_MS,
   spokenLines,
   type ClientWarningReport,
+  type ListenEnd,
   type NarrationRender,
   type NarrationVoice,
   type OverviewId,
@@ -51,6 +52,21 @@ export interface FirstSoundReport {
   prepared: boolean;
 }
 
+export interface ListenStartedReport {
+  overviewId: OverviewId;
+  source: PlaybackSource;
+}
+
+// How far a listen got: the stretches actually played, as a share of the whole in whole
+// tens, and why it ended (docs/features/audio-player.md, "How far a listen got").
+export interface ListenEndedReport {
+  overviewId: OverviewId;
+  source: PlaybackSource;
+  percentHeard: number;
+  reason: ListenEnd;
+  withOpening: boolean;
+}
+
 export interface PlayerEngineOptions {
   api: NarrationApi | null;
   createMedia: () => PlayerMedia;
@@ -59,6 +75,8 @@ export interface PlayerEngineOptions {
   // logs say so (docs/architecture/errors-and-logs.md, "Client warnings").
   warn?: (warning: ClientWarningReport) => void;
   onFirstSound?: (report: FirstSoundReport) => void;
+  onListenStarted?: (report: ListenStartedReport) => void;
+  onListenEnded?: (report: ListenEndedReport) => void;
   now?: () => number;
 }
 
@@ -66,6 +84,13 @@ interface Press {
   at: number;
   from: PlaybackFrom;
   prepared: boolean;
+}
+
+type Stretch = [start: number, end: number];
+
+interface Listen {
+  heard: Stretch[];
+  run: Stretch | null;
 }
 
 const IDLE: PlayerSnapshot = {
@@ -126,8 +151,11 @@ export class PlayerEngine {
   #watchChecks = 0;
   #warn: (warning: ClientWarningReport) => void;
   #onFirstSound: (report: FirstSoundReport) => void;
+  #onListenStarted: (report: ListenStartedReport) => void;
+  #onListenEnded: (report: ListenEndedReport) => void;
   #clock: () => number;
   #press: Press | null = null;
+  #listen: Listen | null = null;
   #listeners = new Set<() => void>();
   #timeListeners = new Set<() => void>();
 
@@ -137,11 +165,15 @@ export class PlayerEngine {
     voice = DEFAULT_NARRATION_VOICE,
     warn = () => undefined,
     onFirstSound = () => undefined,
+    onListenStarted = () => undefined,
+    onListenEnded = () => undefined,
     now = () => performance.now(),
   }: PlayerEngineOptions) {
     this.#api = api;
     this.#warn = warn;
     this.#onFirstSound = onFirstSound;
+    this.#onListenStarted = onListenStarted;
+    this.#onListenEnded = onListenEnded;
     this.#clock = now;
     this.#createMedia = createMedia;
     this.#snapshot = { ...IDLE, voice };
@@ -205,11 +237,13 @@ export class PlayerEngine {
 
   load(track: PlayerTrack, startLine = 0): void {
     if (sameTrack(this.#snapshot.track, track)) return;
+    this.#endListen("switchedNote");
     this.#teardown();
     this.#begin(track, startLine);
   }
 
   stop(): void {
+    this.#endListen("stopped");
     this.#teardown();
     this.#time = 0;
     this.#set({ ...IDLE, rate: this.#snapshot.rate, voice: this.#snapshot.voice });
@@ -288,6 +322,7 @@ export class PlayerEngine {
   seek(seconds: number): void {
     const { track, timings, status } = this.#snapshot;
     if (track === null) return;
+    this.#cutRun();
     this.#time = Math.min(Math.max(seconds, 0), timings.durationSeconds);
     if (this.#mediaIsCurrent()) this.#media!.currentTime = this.#time;
     if (status === "ended") this.#set({ status: "paused" });
@@ -331,9 +366,19 @@ export class PlayerEngine {
     this.#api?.request(scriptOf(track), this.#snapshot.voice, "background").catch(() => undefined);
   }
 
+  // Out of sight, a listen still playing carries on, as on a locked phone; one paused is left.
+  pageHidden(): void {
+    if (this.#snapshot.status === "paused") this.#endListen("left");
+  }
+
+  pageLeft(): void {
+    this.#endListen("left");
+  }
+
   #begin(track: PlayerTrack, startLine: number): void {
     const timings = estimatedLineStarts(track.lines);
     this.#render = null;
+    this.#cutRun();
     this.#time = timings.lineStarts[startLine] ?? 0;
     const signedIn = this.#api !== null;
     this.#set({
@@ -544,8 +589,8 @@ export class PlayerEngine {
     if (lineStarts === null) return false;
     this.#render = render;
     const timings: LineTimings = { lineStarts, durationSeconds: render.durationSeconds };
+    this.#retime(timings);
     this.#time = line <= 0 ? 0 : (timings.lineStarts[line] ?? 0);
-    this.#set({ timings });
     this.#emitTime();
     return true;
   }
@@ -553,9 +598,22 @@ export class PlayerEngine {
   #usePacerTimings(line: number): void {
     const timings = estimatedLineStarts(this.#snapshot.track!.lines);
     this.#media?.pause();
+    this.#retime(timings);
     this.#time = timings.lineStarts[line] ?? 0;
-    this.#set({ timings });
     this.#emitTime();
+  }
+
+  // The stretches heard so far were measured on the old clock; on the new one they keep
+  // their share of the whole.
+  #retime(timings: LineTimings): void {
+    this.#cutRun();
+    const listen = this.#listen;
+    const from = this.#snapshot.timings.durationSeconds;
+    if (listen !== null && from > 0 && timings.durationSeconds !== from) {
+      const scale = timings.durationSeconds / from;
+      listen.heard = listen.heard.map(([start, end]) => [start * scale, end * scale]);
+    }
+    this.#set({ timings });
   }
 
   #fallBackToPacer(reason: PacerReason, start: boolean): void {
@@ -626,8 +684,10 @@ export class PlayerEngine {
     this.#set({ status: "playing" });
     this.#armStop();
     this.#pacerTimer = setInterval(() => {
-      this.#reportFirstSound("pacer");
-      this.#time = Math.min(this.#time + (PACER_TICK_MS / 1000) * this.#snapshot.rate, durationSeconds);
+      this.#sounded("pacer");
+      const before = this.#time;
+      this.#time = Math.min(before + (PACER_TICK_MS / 1000) * this.#snapshot.rate, durationSeconds);
+      this.#heard(before, this.#time);
       if (this.#pastStop()) {
         this.#reachStop();
         return;
@@ -635,6 +695,7 @@ export class PlayerEngine {
       if (this.#time >= durationSeconds) {
         this.#stopPacer();
         this.#set({ status: "ended" });
+        this.#endListen("finished");
       }
       this.#emitTime();
     }, PACER_TICK_MS);
@@ -662,7 +723,9 @@ export class PlayerEngine {
       media.addEventListener("error", () => this.#fromMedia("failed"));
       media.addEventListener("timeupdate", () => {
         if (!this.#mediaIsCurrent()) return;
+        const before = this.#time;
         this.#time = media.currentTime;
+        this.#heard(before, this.#time);
         if (this.#pastStop()) {
           this.#reachStop();
           return;
@@ -720,11 +783,71 @@ export class PlayerEngine {
 
   #fromMedia(status: PlayerStatus): void {
     if (!this.#mediaIsCurrent()) return;
-    if (status === "ended") this.#time = this.#snapshot.timings.durationSeconds;
+    if (status === "ended") {
+      const { durationSeconds } = this.#snapshot.timings;
+      this.#heard(this.#time, durationSeconds);
+      this.#time = durationSeconds;
+    }
     this.#set({ status });
-    if (status === "playing") this.#reportFirstSound("audio");
+    if (status === "playing") this.#sounded("audio");
+    if (status === "ended") this.#endListen("finished");
     this.#armStop();
     this.#emitTime();
+  }
+
+  #sounded(source: PlayerSource): void {
+    this.#reportFirstSound(source);
+    const { track } = this.#snapshot;
+    if (this.#listen !== null || track === null) return;
+    this.#listen = { heard: [], run: null };
+    this.#onListenStarted({ overviewId: track.overviewId, source });
+  }
+
+  #heard(from: number, to: number): void {
+    const listen = this.#listen;
+    if (listen === null || to < from) return;
+    if (listen.run === null) listen.run = [from, to];
+    else listen.run[1] = Math.max(listen.run[1], to);
+  }
+
+  #cutRun(): void {
+    const listen = this.#listen;
+    if (listen === null || listen.run === null) return;
+    listen.heard.push(listen.run);
+    listen.run = null;
+  }
+
+  #percentHeard(listen: Listen): number {
+    const { durationSeconds } = this.#snapshot.timings;
+    if (durationSeconds <= 0) return 0;
+    const stretches = [...listen.heard, ...(listen.run === null ? [] : [listen.run])].sort((a, b) => a[0] - b[0]);
+    let heard = 0;
+    let reached = Number.NEGATIVE_INFINITY;
+    for (const [start, end] of stretches) {
+      heard += Math.max(0, end - Math.max(start, reached));
+      reached = Math.max(reached, end);
+    }
+    return Math.min(100, Math.round((heard / durationSeconds) * 10) * 10);
+  }
+
+  #endListen(reason: ListenEnd): void {
+    const listen = this.#listen;
+    const { track, source } = this.#snapshot;
+    if (listen === null || track === null) return;
+    this.#listen = null;
+    this.#onListenEnded({
+      overviewId: track.overviewId,
+      source,
+      percentHeard: this.#percentHeard(listen),
+      reason,
+      withOpening: this.#withOpening(),
+    });
+  }
+
+  #withOpening(): boolean {
+    const { track, source } = this.#snapshot;
+    const render = this.#render;
+    return source === "audio" && render !== null && track !== null && render.lineStartsSeconds.length === track.lines.length + 1;
   }
 
   #reportFirstSound(source: PlayerSource): void {

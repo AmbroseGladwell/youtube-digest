@@ -1266,10 +1266,14 @@ export class BackendSimulator {
   // Narration as the server holds it: rendered already, still being made, given up on,
   // or refused because the account has too much waiting (docs/features/audio-player.md).
   narration = {
-    seedReady: (overview: Overview, voice: NarrationVoice = DEFAULT_NARRATION_VOICE): void => {
+    seedReady: (
+      overview: Overview,
+      voice: NarrationVoice = DEFAULT_NARRATION_VOICE,
+      secondsPerLine = SIMULATED_SECONDS_PER_LINE,
+    ): void => {
       const lines = spokenScript(overview);
       const key = keyFor(lines, voice);
-      this.#renders.set(key, { render: readyRender(key, lines.length), lineCount: lines.length });
+      this.#renders.set(key, { render: readyRender(key, lines.length, secondsPerLine), lineCount: lines.length });
     },
     isStored: (overview: Overview, voice: NarrationVoice): boolean =>
       this.#renders.get(keyFor(spokenScript(overview), voice))?.render.status === "ready",

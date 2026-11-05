@@ -50,7 +50,10 @@ estimated, and a failure is named by kind (`captureFailureOf`), never by its mes
 `player.playback.firstSound` is the same shape for a listen: `playerBar.mainPressed` is the
 press, and the first sound is what the reader then got, with the wait measured by
 `PlayerEngine` from the press to the element's `playing` event or the pacer's first tick
-(`docs/features/audio-player.md`, "Time to first sound").
+(`docs/features/audio-player.md`, "Time to first sound"). `player.playback.started` and
+`ended` bracket the listen itself, with how much of the note was actually played, in whole
+tens, measured by the engine from the positions playback reached, and why it ended
+("How far a listen got").
 
 ## Where events go
 

@@ -12,6 +12,8 @@ import {
   WATCH_GIVES_UP_AFTER_MS,
   WATCH_INTERVAL_MS,
   type FirstSoundReport,
+  type ListenEndedReport,
+  type ListenStartedReport,
   type PlayerEngineOptions,
   type PlayerMedia,
 } from "./PlayerEngine.js";
@@ -78,6 +80,11 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   reachTime = (seconds: number) => {
     this.currentTime = seconds;
     this.dispatchEvent(new Event("timeupdate"));
+  };
+
+  end = (): void => {
+    this.paused = true;
+    this.dispatchEvent(new Event("ended"));
   };
 }
 
@@ -891,6 +898,225 @@ describe("PlayerEngine", () => {
       await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 2);
 
       expect(heard).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ waitMs: MAX_FIRST_SOUND_WAIT_MS, prepared: true }));
+    });
+  });
+
+  describe("how far a listen got", () => {
+    const OPENING = "The Quiet Return of Nuclear Baseload, from Practical Engineering.";
+    const OPENED: PlayerTrack = { ...TRACK, opening: OPENING };
+    const READY_WITH_OPENING: NarrationRender = { ...READY, lineStartsSeconds: [0, 3.5, 4.5, 8.3, 9.6], durationSeconds: 12.9 };
+    const OTHER_TRACK: PlayerTrack = { ...TRACK, overviewId: OverviewId.parse("5d1e7c3a-2b4f-4c6d-8e9f-0a1b2c3d4e5f") };
+
+    const counted = (api: NarrationApi | null) => {
+      const started = vi.fn<(report: ListenStartedReport) => void>();
+      const ended = vi.fn<(report: ListenEndedReport) => void>();
+      const engine = engineWith(api, "af_heart", { onListenStarted: started, onListenEnded: ended });
+      return { engine, started, ended };
+    };
+
+    const ready = (render: NarrationRender) => scriptedApi({ peek: vi.fn(async () => inHeart(render)) });
+
+    it("a listen played to its end is finished with all of it heard, and says the narration had its opening", async () => {
+      const { engine, started, ended } = counted(ready(READY_WITH_OPENING));
+      engine.load(OPENED);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(3);
+      media.reachTime(8);
+      media.reachTime(12.7);
+      media.end();
+
+      expect(started).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, source: "audio" });
+      expect(ended).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        source: "audio",
+        percentHeard: 100,
+        reason: "finished",
+        withOpening: true,
+      });
+      expect(engine.getSnapshot().status).toBe("ended");
+    });
+
+    it("narration made before the opening existed is counted without one", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(OPENED);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(9);
+      media.end();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ reason: "finished", withOpening: false }));
+    });
+
+    it("stopping part way counts what was heard, in whole tens", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(1);
+      media.reachTime(2.8);
+      engine.stop();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        source: "audio",
+        percentHeard: 30,
+        reason: "stopped",
+        withOpening: false,
+      });
+    });
+
+    it("loading another note ends the listen as switched, and the other note's listen is its own", async () => {
+      const { engine, started, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(4.7);
+      engine.load(OTHER_TRACK);
+      await settle();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ overviewId: TRACK.overviewId, percentHeard: 50, reason: "switchedNote" }),
+      );
+
+      engine.play("libraryRow");
+      expect(started).toHaveBeenCalledTimes(2);
+      expect(started).toHaveBeenLastCalledWith({ overviewId: OTHER_TRACK.overviewId, source: "audio" });
+    });
+
+    it("a stretch skipped over is not counted as heard, even when the end is reached", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(1);
+      engine.seek(6);
+      media.reachTime(6);
+      media.reachTime(7);
+      media.reachTime(9.3);
+      media.end();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ percentHeard: 50, reason: "finished" }));
+    });
+
+    it("a stretch heard twice is counted once", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(4);
+      engine.seek(0);
+      media.reachTime(0);
+      media.reachTime(4);
+      engine.stop();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ percentHeard: 40 }));
+    });
+
+    it("a play carried on from paused is the same listen, not another", async () => {
+      const { engine, started, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(2);
+      engine.pause();
+      engine.play("playerBar");
+      media.reachTime(4);
+      engine.stop();
+
+      expect(started).toHaveBeenCalledTimes(1);
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ percentHeard: 40, reason: "stopped" }));
+    });
+
+    it("the pacer's listen is counted too, on its own clock and with no opening", async () => {
+      const { engine, started, ended } = counted(null);
+      engine.load(TRACK);
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(120_000);
+
+      expect(started).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, source: "pacer" });
+      expect(ended).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        source: "pacer",
+        percentHeard: 100,
+        reason: "finished",
+        withOpening: false,
+      });
+    });
+
+    it("reading along meanwhile and the audio landing is one listen, begun on the pacer and ended on the audio", async () => {
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
+      const { engine, started, ended } = counted(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(PREPARING_LONG_AFTER_MS);
+      engine.readAlong();
+      await vi.advanceTimersByTimeAsync(PACER_TICK_MS * 4);
+      status.mockResolvedValue(READY);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+      media.reachTime(9);
+      media.end();
+
+      expect(started).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, source: "pacer" });
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ source: "audio", reason: "finished", withOpening: false }));
+      const { percentHeard } = ended.mock.calls[0]![0];
+      expect(percentHeard % 10).toBe(0);
+      expect(percentHeard).toBeGreaterThan(0);
+    });
+
+    it("the page going out of sight leaves a listen still playing alone, and ends a paused one as left", async () => {
+      const { engine, started, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(2);
+      engine.pageHidden();
+      expect(ended).not.toHaveBeenCalled();
+
+      engine.pause();
+      engine.pageHidden();
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ percentHeard: 20, reason: "left" }));
+
+      engine.play("playerBar");
+      expect(started).toHaveBeenCalledTimes(2);
+    });
+
+    it("the page closing ends a listen still playing as left", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(3);
+      engine.pageLeft();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ percentHeard: 30, reason: "left" }));
+    });
+
+    it("a press that made no sound is no listen, so nothing is ended", async () => {
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
+      const { engine, started, ended } = counted(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await settle();
+      engine.cancel();
+      engine.stop();
+
+      expect(started).not.toHaveBeenCalled();
+      expect(ended).not.toHaveBeenCalled();
     });
   });
 });

@@ -470,3 +470,63 @@ test("Listen in the library counts its first sound as from the row, and pausing 
     .toBe(2);
   expect(firstSounds(backendSimulator)).toHaveLength(1);
 });
+
+const listens = (backendSimulator: BackendSimulator) =>
+  backendSimulator.analytics
+    .events()
+    .filter(({ name }) => name === "player.playback.started" || name === "player.playback.ended")
+    .map(({ name, props }) => ({ name, props }));
+
+// Short enough that a listen reaches its end within the test, long enough for the bar to be seen playing.
+const QUICK_SECONDS_PER_LINE = 0.5;
+
+test("a listen played to its end is counted as finished with all of the note heard, and the opening it had", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE, undefined, QUICK_SECONDS_PER_LINE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+  await reader.verifyBarSays(/^Finished/);
+
+  await expect.poll(() => listens(backendSimulator)).toEqual([
+    { name: "player.playback.started", props: { overviewId: NOTE.id, source: "audio" } },
+    {
+      name: "player.playback.ended",
+      props: { overviewId: NOTE.id, source: "audio", percentHeard: 100, reason: "finished", withOpening: true },
+    },
+  ]);
+});
+
+test("stopping from the mini-player ends the listen as stopped, with what was heard in whole tens", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+
+  await library.nthCard(0).clickListen();
+  await launcher.miniPlayer.verifyPlayButtonReads("Pause");
+  await expect.poll(() => listens(backendSimulator)).toHaveLength(1);
+  await launcher.miniPlayer.clickClose();
+
+  await expect
+    .poll(() => listens(backendSimulator).map(({ name }) => name))
+    .toEqual(["player.playback.started", "player.playback.ended"]);
+  const { props } = listens(backendSimulator)[1]!;
+  expect(props).toEqual({
+    overviewId: NOTE.id,
+    source: "audio",
+    percentHeard: expect.any(Number),
+    reason: "stopped",
+    withOpening: true,
+  });
+  const percentHeard = Number(props.percentHeard);
+  expect(percentHeard % 10).toBe(0);
+  expect(percentHeard).toBeLessThan(100);
+});
