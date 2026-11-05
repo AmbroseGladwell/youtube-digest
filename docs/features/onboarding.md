@@ -262,7 +262,9 @@ reveal opens on its own when it arrives. Under the lead, what the overview is do
 then "Bringing your overview into your account…", or "Something went wrong making your
 overview." with Try again. A reader who reaches the end first waits here rather than going
 to an empty library, since the reveal is the overview's own page and its next steps hang off
-it. There's no Back once signed in.
+it. On a phone the overview taking shape, the card a wide window shows beside the screens, sits
+under the status, without the bar the top already carries (owner, 5 Nov 2026); it's left out
+while the run has failed, since the status carries Try again. There's no Back once signed in.
 
 ## The run lives in one tab
 

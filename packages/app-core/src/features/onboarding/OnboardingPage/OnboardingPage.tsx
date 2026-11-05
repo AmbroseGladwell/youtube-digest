@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -365,6 +365,31 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       ? null
       : overview.topicIds.flatMap((topicId) => topics.find((topic) => topic.id === topicId)?.name ?? []);
 
+  // The overview taking shape: beside the screens on a wide window, and on a phone inside
+  // Nearly there, where the bar at the top already shows its progress.
+  const previewOf = (bar: ReactNode | null) => (
+    <OnboardingPreview
+      progress={bar}
+      phase={phase}
+      kind={kind}
+      found={found}
+      failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
+      answers={{
+        current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
+        topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
+        topicsAnswered: indexOf(step) > indexOf("topics"),
+        personal,
+        soon,
+        voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
+      }}
+      sortedInto={phase === "ready" ? sortedInto : null}
+      forAnyone={sample}
+      onTryAgain={() => tryAgain("preview")}
+      teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
+    />
+  );
+  const nearlyThereCard = wide || failed || sample ? null : previewOf(null);
+
   const screen = (() => {
     switch (step) {
       case "analytics":
@@ -453,7 +478,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "account":
-        if (signedIn) return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="signIn" onTryAgain={() => tryAgain("account")} />;
+        if (signedIn) {
+          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="signIn" card={nearlyThereCard} onTryAgain={() => tryAgain("account")} />;
+        }
         return (
           <OnboardingAccount
             overview={overview}
@@ -470,7 +497,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
         );
       case "plan":
         if (progress.plan !== null) {
-          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="plan" onTryAgain={() => tryAgain("plan")} />;
+          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="plan" card={nearlyThereCard} onTryAgain={() => tryAgain("plan")} />;
         }
         return (
           <OnboardingPlan
@@ -560,27 +587,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           )}
         </main>
 
-        <div className={styles.wide}>
-          <OnboardingPreview
-            progress={progressBar}
-            phase={phase}
-            kind={kind}
-            found={found}
-            failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
-            answers={{
-              current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
-              topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
-              topicsAnswered: indexOf(step) > indexOf("topics"),
-              personal,
-              soon,
-              voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
-            }}
-            sortedInto={phase === "ready" ? sortedInto : null}
-            forAnyone={sample}
-            onTryAgain={() => tryAgain("preview")}
-            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
-          />
-        </div>
+        <div className={styles.wide}>{previewOf(progressBar)}</div>
       </div>
     </div>
   );
