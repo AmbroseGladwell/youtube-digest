@@ -48,6 +48,10 @@ test("a new reader answers the questions while the overview is made, creates an 
 
   await onboarding.verifyOnScreen("library", "A library that sorts itself");
   await onboarding.verifyPreviewMarksNow(null);
+  await onboarding.verifyLibrarySlide({
+    lead: "As each overview is written, we check it against your topics and add it to the ones it fits best, if any.",
+    scene: [VIDEO_TITLE, "Your overview · not written yet", "chess", "Food", "Health"],
+  });
   await onboarding.next();
 
   await onboarding.verifyOnScreen("aboutYou", "About you");
@@ -128,6 +132,10 @@ test("every question can be skipped, and writing starts once the slide after Abo
   await onboarding.confirmVideo();
   await onboarding.verifyTopicCountReads("No topics yet? That's fine. New overviews will wait in Unsorted until you sort them.");
   await onboarding.skip();
+  await onboarding.verifyLibrarySlide({
+    lead: "Overviews wait in Unsorted until you add topics. Add one any time, and we'll check new overviews against it as they're written.",
+    scene: ["No topics yet, so it waits in", "Unsorted"],
+  });
   await onboarding.skip();
   await onboarding.verifyOnScreen("aboutYou");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
@@ -145,6 +153,22 @@ test("every question can be skipped, and writing starts once the slide after Abo
   const [made] = backendSimulator.ourKey.generations();
   expect(made?.input.readerContext).toBeNull();
   expect(made?.input.existingTopics).toEqual([]);
+});
+
+test("the library slide shows the first five of the reader's own topics and says how many more", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.pickTopics("AI", "Tech", "Career", "Health", "Food", "Home", "Books");
+  await onboarding.continueFromTopics();
+
+  await onboarding.verifyOnScreen("library");
+  await onboarding.verifyLibrarySlide({
+    lead: "As each overview is written, we check it against your topics and add it to the ones it fits best, if any.",
+    scene: ["AI", "Tech", "Career", "Health", "Food", "and 2 more"],
+  });
 });
 
 test("See your overview leaves the questions for the account as soon as the overview is ready", async ({

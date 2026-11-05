@@ -219,6 +219,13 @@ export class OnboardingPageObject extends PageObject {
 
   pickSuggestion = (name: string) => this.step(`pickSuggestion ${name}`, () => this.click(onboardingTopicsTestIds.suggestion(name)));
 
+  verifyLibrarySlide = ({ lead, scene }: { lead: string; scene: string[] }) =>
+    this.step("verifyLibrarySlide", async () => {
+      await expect(this.get(onboardingSlideTestIds.lead)).toHaveText(lead);
+      for (const text of scene) await expect(this.get(onboardingSlideTestIds.scene)).toContainText(text);
+      await expect(this.get(onboardingSlideTestIds.scene)).not.toContainText("arriving");
+    });
+
   typeTopic = (name: string) =>
     this.step(`typeTopic ${name}`, async () => {
       await this.get(onboardingTopicsTestIds.typeField).fill(name);

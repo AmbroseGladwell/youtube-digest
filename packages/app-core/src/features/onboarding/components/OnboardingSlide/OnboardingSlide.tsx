@@ -1,4 +1,8 @@
+import type { Source } from "@overview/domain";
+import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
+import { shownTopics } from "../../util/shownTopics.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./OnboardingSlide.module.scss";
 import { onboardingSlideTestIds } from "./OnboardingSlideTestIds.js";
 
@@ -7,7 +11,7 @@ export type OnboardingSlideName = "library" | "askYourAi" | "moreSources";
 const SLIDES: Record<OnboardingSlideName, { title: string; body: string }> = {
   library: {
     title: "A library that sorts itself",
-    body: "Every overview lands under your topics, ready whenever you need it.",
+    body: "As each overview is written, we check it against your topics and add it to the ones it fits best, if any.",
   },
   askYourAi: {
     title: "Ask your AI about anything you've saved",
@@ -22,22 +26,33 @@ const SLIDES: Record<OnboardingSlideName, { title: string; body: string }> = {
 export interface OnboardingSlideProps {
   slide: OnboardingSlideName;
   topics: readonly string[];
+  // The reader's own source, for the library slide's scene; null until it's found.
+  source: Source | null;
+  // Already written (a sample or a shared copy), so it waits to be sorted rather than written.
+  written: boolean;
   onNext: () => void;
 }
+
+const LIBRARY_WITH_NO_TOPICS =
+  "Overviews wait in Unsorted until you add topics. Add one any time, and we'll check new overviews against it as they're written.";
+const TOPICS_SHOWN = 5;
 
 // Designs 46e, 46h and 46i: the benefit each question pays off, after it. A slide moves only
 // on Next or Skip, never by itself, and its scene is built from the app's own parts and hidden
 // from screen readers.
-export function OnboardingSlide({ slide, topics, onNext }: OnboardingSlideProps) {
-  const { title, body } = SLIDES[slide];
+export function OnboardingSlide({ slide, topics, source, written, onNext }: OnboardingSlideProps) {
+  const { title } = SLIDES[slide];
+  const body = slide === "library" && topics.length === 0 ? LIBRARY_WITH_NO_TOPICS : SLIDES[slide].body;
   return (
     <div className={styles.root} data-testid={onboardingSlideTestIds.root}>
-      <div className={styles.scene} aria-hidden="true">
-        <Scene slide={slide} topics={topics} />
+      <div className={styles.scene} aria-hidden="true" data-testid={onboardingSlideTestIds.scene}>
+        <Scene slide={slide} topics={topics} source={source} written={written} />
       </div>
       <div className={styles.intro}>
         <OnboardingHeading>{title}</OnboardingHeading>
-        <p className={styles.lead}>{body}</p>
+        <p className={styles.lead} data-testid={onboardingSlideTestIds.lead}>
+          {body}
+        </p>
       </div>
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onNext} data-testid={onboardingSlideTestIds.next}>
@@ -48,19 +63,51 @@ export function OnboardingSlide({ slide, topics, onNext }: OnboardingSlideProps)
   );
 }
 
-function Scene({ slide, topics }: { slide: OnboardingSlideName; topics: readonly string[] }) {
+// 175c: the reader's own source and topics, with no result claimed, since nothing is filed
+// until it's written (docs/features/onboarding.md, "The library slide").
+function Scene({
+  slide,
+  topics,
+  source,
+  written,
+}: {
+  slide: OnboardingSlideName;
+  topics: readonly string[];
+  source: Source | null;
+  written: boolean;
+}) {
   if (slide === "library") {
-    const shown = topics.length > 0 ? topics.slice(0, 5) : ["Science", "Health", "Food"];
+    const { shown, more } = shownTopics(topics, TOPICS_SHOWN);
     return (
-      <div className={styles.card}>
-        <span className={styles.cardLabel}>Your topics</span>
-        {shown.map((name, index) => (
-          <span key={name} className={`${styles.topicRow} ${index === shown.length - 1 ? styles.topicRowArriving : ""}`}>
-            <span>{name}</span>
-            {index === shown.length - 1 && <span className={styles.arriving}>+1 arriving</span>}
+      <>
+        {source !== null && (
+          <span className={styles.sourceCard}>
+            <OverviewThumbnail video={source} className={styles.sourceThumb} />
+            <span className={styles.sourceText}>
+              <span className={styles.sourceTitle}>{source.title}</span>
+              <span className={styles.sourceState}>Your overview · {written ? "not sorted yet" : "not written yet"}</span>
+            </span>
           </span>
-        ))}
-      </div>
+        )}
+        <span className={styles.checked}>
+          <StrokeIcon name="chevronDown" size={14} />
+          {topics.length > 0 ? "Overviews are checked against these once they're written" : "No topics yet, so it waits in"}
+        </span>
+        <span className={styles.topicPills}>
+          {topics.length > 0 ? (
+            <>
+              {shown.map((name) => (
+                <span key={name} className={styles.topicPill}>
+                  {name}
+                </span>
+              ))}
+              {more > 0 && <span className={styles.morePill}>and {more} more</span>}
+            </>
+          ) : (
+            <span className={styles.unsortedPill}>Unsorted</span>
+          )}
+        </span>
+      </>
     );
   }
   if (slide === "askYourAi") {
