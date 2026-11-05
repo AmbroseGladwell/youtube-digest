@@ -11,6 +11,8 @@ import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
 import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js";
 import { SharedOverviewRoute } from "../features/sharedPage/SharedOverviewRoute.js";
 import { OnboardingPage } from "../features/onboarding/OnboardingPage/OnboardingPage.js";
+import { PrivacyPage } from "../features/legal/PrivacyPage/PrivacyPage.js";
+import { TermsPage } from "../features/legal/TermsPage/TermsPage.js";
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 import { RouterErrorBoundary } from "./RouterErrorBoundary.js";
 import { RouteParams, Routes } from "./Routes.js";
@@ -48,6 +50,8 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },
         { path: Routes.connect(`:${RouteParams.requestId}`), element: <ConsentPage /> },
+        { path: Routes.privacy(), element: <PrivacyPage /> },
+        { path: Routes.terms(), element: <TermsPage /> },
         { path: "*", element: <ErrorState screen="notFound" title="There's nothing at this address" back /> },
       ],
     },
