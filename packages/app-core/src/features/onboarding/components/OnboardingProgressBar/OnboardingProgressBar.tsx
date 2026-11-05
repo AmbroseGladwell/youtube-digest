@@ -1,32 +1,25 @@
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { OnboardingRunPhase } from "../../useOnboardingRun.js";
+import { writingStarts } from "../../util/writingStarts.js";
 import styles from "./OnboardingProgressBar.module.scss";
 import { onboardingProgressBarTestIds } from "./OnboardingProgressBarTestIds.js";
-
-const PHASE_LINE: Record<Exclude<OnboardingRunPhase, "ready" | "failed" | "fetching">, string> = {
-  waiting: "Writing starts once you've told us about you",
-  writing: "Writing it for you",
-};
-
-// How far along each stage is drawn, not a measurement of anything: the stages are what is
-// known (docs/prototype/constraints.md).
-const PHASE_FILL: Record<Exclude<OnboardingRunPhase, "ready" | "failed">, number> = {
-  fetching: 12,
-  waiting: 25,
-  writing: 60,
-};
 
 export interface OnboardingProgressBarProps {
   phase: OnboardingRunPhase;
   // What fetching is called for this kind of source; null when the link wasn't recognised.
   fetching: string | null;
+  // What's in hand once fetched ("Transcript ready"); null when the link wasn't recognised.
+  ready: string | null;
+  // The next Continue lets writing go.
+  soon: boolean;
   personal: boolean;
   onSeeOverview: () => void;
 }
 
-// The overview's own progress, above the screens (design 46b's first layer): what the run is
-// doing, then See your overview once it's ready, which never waits on the questions.
-export function OnboardingProgressBar({ phase, fetching, personal, onSeeOverview }: OnboardingProgressBarProps) {
+// The overview's own progress (175j, 175k). Until writing starts it's a calm line, never a bar
+// that could look stalled; the bar shows only once there is writing to show, then becomes
+// See your overview, which never waits on the questions.
+export function OnboardingProgressBar({ phase, fetching, ready, soon, personal, onSeeOverview }: OnboardingProgressBarProps) {
   if (phase === "failed") {
     return (
       <p className={styles.failed} role="alert" data-testid={onboardingProgressBarTestIds.failed}>
@@ -53,17 +46,41 @@ export function OnboardingProgressBar({ phase, fetching, personal, onSeeOverview
       </div>
     );
   }
+  if (phase === "fetching" || phase === "waiting") {
+    return (
+      <p className={styles.status} role="status" aria-live="polite" data-testid={onboardingProgressBarTestIds.status}>
+        {phase === "fetching" ? (
+          <>
+            <span className={styles.spinner}>
+              <StrokeIcon name="loader" size={14} />
+            </span>
+            <span className={styles.lead}>{fetching ?? "Fetching it"}…</span>
+          </>
+        ) : (
+          <>
+            <span className={styles.tick}>
+              <StrokeIcon name="check" size={14} />
+            </span>
+            <span>
+              <span className={styles.lead}>{ready ?? "Ready"}</span>
+              <span className={styles.phase}> · {writingStarts(soon)}</span>
+            </span>
+          </>
+        )}
+      </p>
+    );
+  }
   return (
     <div className={styles.root} role="group" aria-label="Your overview" data-testid={onboardingProgressBarTestIds.root}>
-      <p className={styles.line}>
+      <p className={styles.line} aria-live="polite">
         <span className={styles.lead}>Making your overview</span>
         <span className={styles.phase} data-testid={onboardingProgressBarTestIds.phase}>
           {" "}
-          · {phase === "fetching" ? (fetching ?? "Fetching it") : phase === "writing" && !personal ? "Writing it" : PHASE_LINE[phase]}
+          · {personal ? "Writing it for you" : "Writing it"}
         </span>
       </p>
       <span className={styles.track} aria-hidden="true">
-        <span className={styles.fill} style={{ width: `${PHASE_FILL[phase]}%` }} />
+        <span className={styles.fill} />
       </span>
     </div>
   );

@@ -17,8 +17,10 @@ const { analyticsConsent: _neverAsked, ...signedOutPanelAnswered } = signedOutPa
 test("a new reader makes their first overview of the video the panel is beside, lands on it signed in, and is offered their AI", async ({
   launcher,
   backendSimulator,
+  page,
 }) => {
   backendSimulator.ourKey.isAvailable();
+  await page.setViewportSize({ width: 400, height: 600 });
   await launcher.launchPanel(signedOutPanel);
 
   const start = await launcher.panelStart.verifyIsShown();
@@ -30,10 +32,13 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await onboarding.allowAnalytics();
   await onboarding.verifyOnScreen("video");
   await onboarding.verifyVideoTitle(VIDEO_TITLE);
+  await onboarding.verifyReadyLineReads("Transcript ready · Writing starts in a few taps");
   await onboarding.confirmVideo();
   await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();
   await onboarding.next();
+  await onboarding.verifyReadyLineReads("Transcript ready · Writing starts when you continue");
+  await onboarding.verifyHasNoProgressBar();
   await onboarding.sentence.openSection("time");
   await onboarding.sentence.pick("healthcare");
   await onboarding.sentence.backToSentence();

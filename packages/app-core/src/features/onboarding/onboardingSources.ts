@@ -75,6 +75,8 @@ export interface OnboardingSource {
   finding: string;
   notFound: string;
   fetching: string;
+  // What the preview says once the source is in hand and writing waits on the questions.
+  ready: (found: OnboardingFound | null) => string;
   card: (found: OnboardingFound) => OnboardingCard;
   sections: (found: OnboardingFound | null) => readonly OnboardingSection[];
   teaser: (overview: Overview) => OnboardingTeaser;
@@ -82,7 +84,7 @@ export interface OnboardingSource {
 
 const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
-const WRITTEN_SECTIONS: readonly OnboardingSection[] = ["Premise", "Key points", "How to apply", "Verdict"].map((name) => ({
+const WRITTEN_SECTIONS: readonly OnboardingSection[] = ["Premise", "Key points", "How to apply", "Verdict", "Chapters"].map((name) => ({
   name,
   fromPage: false,
 }));
@@ -132,6 +134,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     finding: "Finding the video…",
     notFound: "We couldn't find that video.",
     fetching: "Fetching the video",
+    ready: () => "Transcript ready",
     card: ({ source }) => ({ kicker: null, facts: { line: videoFacts(source) } }),
     sections: () => WRITTEN_SECTIONS,
     teaser: (overview) => ({
@@ -157,6 +160,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     finding: "Reading the page…",
     notFound: "We couldn't read that page.",
     fetching: "Reading the page",
+    ready: (found) => (found?.recipe ? "Recipe read" : "Page read"),
     card: ({ source, recipe }) =>
       recipe !== null
         ? { kicker: `${sourceName(source)} · Recipe`, facts: { figures: recipeFigures(recipe) } }

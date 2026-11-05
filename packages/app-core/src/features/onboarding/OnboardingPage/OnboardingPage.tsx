@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   aboutYouIsEmpty,
   aboutYouPatch,
+  DEFAULT_NARRATION_VOICE,
   EMPTY_ABOUT_YOU,
+  narrationVoiceName,
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
@@ -96,11 +98,13 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const { overviewStore } = useStores();
   const createTopic = useCreateTopicMutation();
   const updateSettings = useUpdateSettingsMutation();
-  const aboutYou = useSettingsQuery().data?.aboutYou ?? EMPTY_ABOUT_YOU;
+  const settings = useSettingsQuery().data;
+  const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
   const [attempt, setAttempt] = useState(0);
   const [asking, setAsking] = useState<AuthIntent | null>(null);
   const [savingTopics, setSavingTopics] = useState(false);
+  const [picking, setPicking] = useState<readonly string[] | null>(null);
   const step = progress.step;
   const share = progress.share;
   const sample = share?.sample ?? false;
@@ -263,6 +267,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
     });
     update({ topics: chosen });
+    setPicking(null);
     next();
   };
 
@@ -277,12 +282,22 @@ function Onboarding({ progress, update }: OnboardingProps) {
     update({ step: "stepsForYou", mayWrite: !aboutYouIsEmpty(answer) });
   };
 
+  const personal = !aboutYouIsEmpty(aboutYou);
+  // The Continue that lets writing go: About you, or the slide after it when the sentence is empty.
+  const soon = step === "aboutYou" || (step === "stepsForYou" && !progress.mayWrite);
+  const tryAgain = () => {
+    analytics.onboarding.overview.retried();
+    setAttempt((current) => current + 1);
+  };
+
   // A sample is already made, so there is no overview's progress to show (155f).
   const progressBar = sample ? null : (
     <OnboardingProgressBar
       phase={phase}
       fetching={kind?.fetching ?? null}
-      personal={!aboutYouIsEmpty(aboutYou)}
+      ready={kind?.ready(found) ?? null}
+      soon={soon}
+      personal={personal}
       onSeeOverview={() => {
         analytics.onboarding.overview.seenEarly({ step });
         go("account");
@@ -317,10 +332,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             <OnboardingReadFailure
               copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
               link={progress.link}
-              onTryAgain={() => {
-                analytics.onboarding.overview.retried();
-                setAttempt((current) => current + 1);
-              }}
+              onTryAgain={tryAgain}
               onAnotherLink={anotherLink}
             />
           );
@@ -345,7 +357,14 @@ function Onboarding({ progress, update }: OnboardingProps) {
           />
         );
       case "topics":
-        return <OnboardingTopics chosen={progress.topics} saving={savingTopics} onContinue={(chosen) => void saveTopics(chosen)} />;
+        return (
+          <OnboardingTopics
+            chosen={progress.topics}
+            saving={savingTopics}
+            onChange={setPicking}
+            onContinue={(chosen) => void saveTopics(chosen)}
+          />
+        );
       case "aboutYou":
         return (
           <OnboardingAboutYou
@@ -376,10 +395,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             teaserBeside={wide}
             sample={sample}
             failed={failed}
-            onTryAgain={() => {
-              analytics.onboarding.overview.retried();
-              setAttempt((current) => current + 1);
-            }}
+            onTryAgain={tryAgain}
             onChoose={(way) => {
               analytics.onboarding.account.chosen({ way });
               update({ way });
@@ -480,11 +496,19 @@ function Onboarding({ progress, update }: OnboardingProps) {
             progress={progressBar}
             phase={phase}
             kind={kind}
-            link={progress.link}
             found={found}
-            unusable={readFailure !== null}
+            failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
+            answers={{
+              current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
+              topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
+              topicsAnswered: indexOf(step) > indexOf("topics"),
+              personal,
+              soon,
+              voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
+            }}
             sortedInto={phase === "ready" ? sortedInto : null}
             forAnyone={sample}
+            onTryAgain={tryAgain}
             teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
           />
         </div>

@@ -146,14 +146,32 @@ around you (141j), the voice (46g), Ask your AI (46h), More sources on the way (
 goes a screen back, and from the first screen back to Start. "Use a different link" goes back
 to Start and forgets the progress. Every screen's heading takes focus as it arrives.
 
-**Two layers at the top.** The overview's own progress says what the run is doing: fetching,
-waiting for About you, writing, then See your overview, which goes straight to the account
-from whatever screen the reader is on. A failure says so on that screen, and the account
-screen offers Try again. The bar is filled by stage, not measured. Below it, fourteen
-segments say where the reader is in the story, Start and the reveal included. On a wide
-screen the progress sits in a preview beside the screens, with the video and its sections
-marked Waiting, Writing or Written, and the topics it was sorted into: never the overview's
-text.
+**Two layers at the top.** The overview's own progress says what the run is doing, and
+**shows no bar until writing starts** (OV-175, designs 175a–175l), so it never looks stalled.
+While fetching it's a spinner and "Fetching the video…" or "Reading the page…". Once the
+source is in hand it's a calm line: "Transcript ready" (or "Page read", "Recipe read") and
+"Writing starts in a few taps", which becomes "…when you continue" on the screen whose
+Continue lets writing go. That line says what's done and nothing about the reader, and names
+no screen (it replaced OV-164's "Writing starts once you've told us about you"). The bar
+appears when writing starts, then becomes See your overview, which goes straight to the
+account from whatever screen the reader is on. A failure says so on that screen, and the
+account screen offers Try again. The bar is drawn by stage, not measured: writing is one
+stage. Below it, fourteen segments say where the reader is in the story, Start and the
+reveal included.
+
+**The preview on a wide screen.** From 64rem the screens and the preview are one centred
+pair with a fixed 40px gap, the preview level with the screen's heading, so the halves don't
+drift apart on a wide window. Before writing, the preview lists what writing waits on: the
+source, Topics, Written for you, then Writing ("Starts after these"). The row the current
+screen feeds is marked Now (confirm, topics, About you; never a slide), and answers land in
+their rows as they're given: picked topics as they're pressed, up to four and "+N", and
+"Personalised" once the sentence has something in it, never the sentence itself. Topics
+say what happens to them, never where this overview will be filed. On the confirm screen the
+source card isn't repeated in the preview; it arrives there on Looks right. When writing
+starts the rows fold into pills (topics, Personalised or Written for anyone, the voice) and
+the bar appears over the kind's sections, Chapters included, then "Topic" shows where it was
+sorted once written. A failure before the source is in hand leaves "Nothing to make yet"; one
+while writing says so in the preview, with Try again. Never the overview's text.
 
 **About you** is a sentence to finish (`personalisation.md`), with What this changes showing a
 fixed before-and-after under it. Continue saves it before writing is let go. The screen says it

@@ -1,7 +1,7 @@
 @use "../../../theme/controls.scss" as controls;
 
-// Phone first (390); from 64rem the flow sits on the left and the overview taking shape on
-// the right (designs 46b–46k, web 1200).
+// Phone first (390); from 64rem the flow and the overview taking shape sit as one centred pair
+// with a fixed gap, so they never drift apart on a wide window (175a).
 .root {
   min-height: 100vh;
   min-height: 100dvh;
@@ -46,10 +46,11 @@
 
   @media (min-width: 64rem) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 30rem;
-    gap: 3.5rem;
+    grid-template-columns: minmax(0, 32.5rem) 25rem;
+    justify-content: center;
+    gap: 2.5rem;
     align-items: start;
-    padding: 0.5rem 2.5rem 2.5rem 4.5rem;
+    padding: 0.5rem 2.5rem 3rem;
   }
 }
 
@@ -62,7 +63,6 @@
   gap: 1rem;
 
   @media (min-width: 64rem) {
-    max-width: 32.5rem;
     padding: 0.25rem 0 0;
     gap: 1.375rem;
   }
@@ -77,10 +77,12 @@
 .wide {
   display: none;
 
+  // Level with the screen's heading, under the nav row, so the halves share a top line.
   @media (min-width: 64rem) {
     display: block;
     position: sticky;
     top: 1.5rem;
+    margin-top: 4.125rem;
   }
 }
 

@@ -8,6 +8,8 @@ import { onboardingTopicsTestIds } from "./OnboardingTopicsTestIds.js";
 export interface OnboardingTopicsProps {
   chosen: readonly string[];
   saving: boolean;
+  // Each press, so the preview shows picks as they land (175b); nothing is made until Continue.
+  onChange: (chosen: string[]) => void;
   onContinue: (chosen: string[]) => void;
 }
 
@@ -16,8 +18,13 @@ const isStarter = (name: string) => STARTER_TOPICS.some((topic) => sameTopicName
 // Design 46d: the brief's 27 topics as chips, names only, with anything else typed in first.
 // Nothing is made until Continue, so pressing a chip off again leaves nothing behind
 // (docs/features/onboarding.md, "Starter topics").
-export function OnboardingTopics({ chosen: initiallyChosen, saving, onContinue }: OnboardingTopicsProps) {
-  const [chosen, setChosen] = useState<string[]>([...initiallyChosen]);
+export function OnboardingTopics({ chosen: initiallyChosen, saving, onChange, onContinue }: OnboardingTopicsProps) {
+  const [chosen, setChosenHere] = useState<string[]>([...initiallyChosen]);
+  const setChosen = (change: (current: string[]) => string[]) => {
+    const next = change(chosen);
+    setChosenHere(next);
+    onChange(next);
+  };
   const [typing, setTyping] = useState("");
   const fieldId = useId();
   const typed = chosen.filter((name) => !isStarter(name));

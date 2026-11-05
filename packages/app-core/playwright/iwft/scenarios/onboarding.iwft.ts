@@ -30,19 +30,30 @@ test("a new reader answers the questions while the overview is made, creates an 
 
   await onboarding.verifyOnScreen("video", "Is this the right video?");
   await onboarding.verifyVideoTitle(VIDEO_TITLE);
+  await onboarding.verifyPreviewSays("Transcript ready. Writing starts in a few taps.");
+  await onboarding.verifyPreviewMarksNow("source");
+  await onboarding.verifyPreviewStepReads("source", "Transcript ready. Is it the right one?");
+  await onboarding.verifyHasNoProgressBar();
   await onboarding.confirmVideo();
 
   await onboarding.verifyOnScreen("topics", "What are you curious about?");
+  await onboarding.verifyPreviewMarksNow("topics");
+  await onboarding.verifyPreviewStepReads("topics", "Pick as many as you like");
   await onboarding.typeTopic("chess");
   await onboarding.pickTopics("Food", "Health");
   await onboarding.verifyTopicCountReads("3 picked");
+  await onboarding.verifyPreviewStepReads("topics", "chessFoodHealth");
   await onboarding.continueFromTopics();
 
   await onboarding.verifyOnScreen("library", "A library that sorts itself");
+  await onboarding.verifyPreviewMarksNow(null);
   await onboarding.next();
 
   await onboarding.verifyOnScreen("aboutYou", "About you");
-  await onboarding.verifyProgressReads("Writing starts once you've told us about you");
+  await onboarding.verifyPreviewSays("Transcript ready. Writing starts when you continue.");
+  await onboarding.verifyPreviewMarksNow("you");
+  await onboarding.verifyPreviewStepReads("you", "Fill in as much as you like. Personalises your overviews.");
+  await onboarding.verifyHasNoProgressBar();
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
   await onboarding.sentence.verifySentenceReads("I'm a few things at once, I spend my time on all sorts, and right now I'm focusing on getting better at something.");
   await onboarding.sentence.verifySectionName("who", "Who you are: empty. Fill in.");
@@ -62,6 +73,7 @@ test("a new reader answers the questions while the overview is made, creates an 
   await onboarding.continueFromAboutYou();
 
   await onboarding.verifyOnScreen("stepsForYou", "Steps that fit around you");
+  await onboarding.verifyPreviewMadeWith("3 topics", "Personalised", "Heart voice");
   await onboarding.verifySentenceQuoted("I'm a dad and a husband, and right now I'm focusing on new recipes and a half marathon.");
   await onboarding.nextFromStepsForYou();
 
@@ -121,7 +133,9 @@ test("every question can be skipped, and writing starts once the slide after Abo
   await onboarding.skip();
 
   await onboarding.verifyOnScreen("stepsForYou", "Let's make your overviews personal and actionable");
-  await onboarding.verifyProgressReads("Writing starts once you've told us about you");
+  await onboarding.verifyPreviewSays("Transcript ready. Writing starts when you continue.");
+  await onboarding.verifyPreviewStepReads("topics", "None picked");
+  await onboarding.verifyHasNoProgressBar();
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
   await onboarding.skip();
 
@@ -207,6 +221,7 @@ test("an overview that can't be made says so on the screen the reader is on, and
 
   await onboarding.verifyOnScreen("voice");
   await onboarding.verifySaysItFailed();
+  await onboarding.verifyPreviewOffersTryAgain();
   await onboarding.continueFromVoice();
   await onboarding.skip();
   await onboarding.skip();
