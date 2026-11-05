@@ -77,6 +77,10 @@ export const PlaybackSource = z.enum(["audio", "pacer"]);
 export type PlaybackSource = z.infer<typeof PlaybackSource>;
 // A wait longer than this is a render that was given up on, not a wait anyone sat through.
 export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
+// Why a listen ended: the note's end, the mini-player's ×, another note loaded over it, or
+// the page closed, or hidden while the listen was paused.
+export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"]);
+export type ListenEnd = z.infer<typeof ListenEnd>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
@@ -390,6 +394,10 @@ export const analyticsEvents = {
       stopped: event("The reader stops and closes the mini-player", { overviewId: OverviewId }),
     },
     playback: {
+      started: event(
+        "The reader's listen makes its first sound, audio or the pacer: once per listen, so a play carried on from paused is not another",
+        { overviewId: OverviewId, source: PlaybackSource },
+      ),
       firstSound: event(
         "The reader hears the narration, or sees the pacer move, after starting a listen: how long they waited in milliseconds, where they pressed play, whether it was audio or the pacer, and whether the press waited on the audio being made. A resume from paused sends nothing",
         {
@@ -398,6 +406,16 @@ export const analyticsEvents = {
           from: PlaybackFrom,
           source: PlaybackSource,
           prepared: z.boolean(),
+        },
+      ),
+      ended: event(
+        "The reader's listen ends: how much of the note was actually played as a share of its length in whole tens, with a skipped stretch not counted and a stretch heard twice counted once; why it ended; and whether the narration opened by naming the video, which tells OV-69's narration from renders made before it",
+        {
+          overviewId: OverviewId,
+          source: PlaybackSource,
+          percentHeard: z.number().int().min(0).max(100).multipleOf(10),
+          reason: ListenEnd,
+          withOpening: z.boolean(),
         },
       ),
     },

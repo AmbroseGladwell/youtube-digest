@@ -36,8 +36,29 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
         createMedia: () => new Audio(),
         warn: (warning) => reporter.warn(warning),
         onFirstSound: (report) => latestAnalytics.current.player.playback.firstSound(report),
+        onListenStarted: (report) => latestAnalytics.current.player.playback.started(report),
+        onListenEnded: (report) => latestAnalytics.current.player.playback.ended(report),
       }),
   );
+
+  useEffect(() => {
+    const flush = () => void latestAnalytics.current.flush({ keepalive: true });
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "hidden") return;
+      engine.pageHidden();
+      flush();
+    };
+    const onPageHide = () => {
+      engine.pageLeft();
+      flush();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    globalThis.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      globalThis.removeEventListener("pagehide", onPageHide);
+    };
+  }, [engine]);
 
   useEffect(() => engine.setApi(api), [engine, api]);
   useEffect(() => engine.setVoice(voice), [engine, voice]);

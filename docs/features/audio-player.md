@@ -276,6 +276,47 @@ averaged into one meaningless number.
 
 The clock is injected (`now`), so the unit tests measure an exact number on fake timers.
 
+## How far a listen got
+
+`player.playback.started` and `player.playback.ended` (OV-73) bracket a **listen**: from the
+first sound after a note is loaded, or played again after its end or a stop, to whichever
+comes first of the note's end (`finished`), the mini-player's × (`stopped`), another note
+loaded over it (`switchedNote`) or the page going away (`left`). Pausing is not an end, and
+a play carried on from paused is the same listen; so one `started` and one `ended` per
+listen, and `firstSound` between them when the listen was begun by a press. All three
+carry the overview's id and `source`, which `ended` reports as it was at the end: a listen
+begun on the pacer meanwhile and finished on the audio that landed is `pacer` at the start
+and `audio` at the end.
+
+`ended` says how much of the note was heard and whether it was the new narration:
+
+- **`percentHeard`** is the stretches actually played, as a share of the note's length, in
+  whole tens. The engine records a run from each position playback reaches to the next
+  (the element's `timeupdate`, or the pacer's tick), cuts the run on every jump it makes
+  itself (a seek, a line tapped, a stop after a line, a render landing), and at the end sums
+  the union. A stretch skipped over is not heard and a stretch heard twice counts once, so a
+  seek to the end gives `finished` with a small number rather than 100. This is one step
+  past the card's "furthest position reached", which a seek forward would have inflated.
+  When the clock changes under a listen, as it does when audio lands over the pacer, the
+  stretches keep their share of the whole rather than their seconds. Rounded to the nearest
+  ten, so a listen that reached the end but began a second in is 100, not 90.
+- **`withOpening`** is whether the narration opened by naming the video: the render has one
+  more timing than the note has lines (`lineStartsOf`). A render made before OV-69 has
+  one per line and reports `false`, and so does the pacer, which never reads the opening.
+  This is what lets the new narration be compared with the old without a date.
+
+**Leaving.** `PlayerRuntime` tells the engine when the page is hidden and when it is left.
+On hiding, a listen still playing is left alone, because a locked phone hides the page
+while the audio plays on; only a paused one is ended as `left`, and a play after that is a
+new listen. On `pagehide` any listen is `left`. Both flush the analytics queue with
+`keepalive`, after the engine has reported, so the event goes before the page does. A tab
+the browser kills without `pagehide`, as iOS can, loses the `ended`: a `started` with no
+`ended` is that, not a listen still going.
+
+Nothing here is estimated: the positions are the element's own time or the pacer's clock,
+and the share is arithmetic on them (`docs/prototype/constraints.md`). The shared page's
+player reports none of it, as with `firstSound`.
+
 ## Testing
 
 - **Unit:** `lineAtTime.test.ts` (time to line, and the drag's snap), `playerBarView.test.ts`
@@ -288,7 +329,10 @@ The clock is injected (`now`), so the unit tests measure an exact number on fake
   seek, which the first run of these scenarios showed. `narration.finishRenders()`,
   `failRenders()` and `accountIsBusy()` move a render between states from the test. The
   first-sound scenarios read `backendSimulator.analytics` and check the wait is a whole
-  number, not what it is: the number is Chromium's to give.
+  number, not what it is: the number is Chromium's to give. The listen scenarios seed a
+  render at half a second a line (`seedReady`'s third argument) so a listen reaches its
+  end inside the test, and check a finished listen heard 100 with its opening, and a stop
+  from the mini-player a multiple of ten short of it.
   `followTheVoice.iwft.ts` holds the three states above: the open that must not scroll,
   the open while playing that must, and the read ahead that hands the scroll back. The
   first watches for a scroll rather than taking one reading afterwards, because the scroll
