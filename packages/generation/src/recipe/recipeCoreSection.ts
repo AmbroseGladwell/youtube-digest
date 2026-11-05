@@ -27,14 +27,12 @@ Never repeat a step, an amount, a time or a temperature: the recipe sits
 right below this paragraph exactly as the page gives it. Never add advice
 of your own or anything the page doesn't say.
 
-If the page says almost nothing around the recipe, set thin to true and
-make the summary only what the page itself says, quoted, in one or two
-sentences. Never pad it.
+If the page says almost nothing around the recipe, make the summary only
+what the page itself says, quoted, in one or two sentences. Never pad it.
 Good, for a page with one line: "The page gives the recipe and one line
 around it: “for tacos, salads, anything that needs a sharp edge”."`,
   schemaShape: () => ({
     inOneLine: CoreFields.shape.inOneLine,
-    thin: z.boolean(),
     summary: z
       .string()
       .min(1)
