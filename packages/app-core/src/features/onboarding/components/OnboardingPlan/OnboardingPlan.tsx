@@ -1,27 +1,36 @@
 import type { ReactNode } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { OnboardingArriving, type OnboardingArrivingPhase } from "../OnboardingArriving/OnboardingArriving.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingPlan.module.scss";
 import { onboardingPlanTestIds } from "./OnboardingPlanTestIds.js";
 
 export interface OnboardingPlanProps {
-  // The overview is in the account's library, so the reveal has it to show.
-  inAccount: boolean;
+  // What the overview is doing until it's in the account's library; null once it is there,
+  // which is when the reveal has it to show.
+  arriving: OnboardingArrivingPhase | null;
   // A sample isn't counted, so the plan says the first overview they make will be (155i).
   sample: boolean;
+  onTryAgain: () => void;
   onFree: () => void;
 }
 
 // Design 46k: Free and Plus as the same card with the same button, volume the only difference.
 // Plus can't be bought until there is billing, so its button says so and Free goes on to the
-// reveal. The first overview counts as one of the plan's on us
+// reveal, once the overview is in the account: a reader who got here first is told what it's
+// doing meanwhile. The first overview counts as one of the plan's on us
 // (docs/architecture/tiers.md, "Counting"; docs/features/onboarding.md, "The plan").
-export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProps) {
+export function OnboardingPlan({ arriving, sample, onTryAgain, onFree }: OnboardingPlanProps) {
+  const inAccount = arriving === null;
+  const made = arriving !== "writing" && arriving !== "failed";
   return (
     <div className={styles.root} data-testid={onboardingPlanTestIds.root}>
       <div className={styles.intro}>
         <OnboardingHeading>Choose your plan</OnboardingHeading>
-        <p className={styles.lead}>{sample ? "Your sample overview is ready." : "Your overview is ready."} Pick how you'd like to keep going.</p>
+        <p className={styles.lead}>
+          {sample ? "Your sample overview is ready." : made ? "Your overview is ready." : "Your overview is on its way."} Pick how you'd
+          like to keep going.
+        </p>
       </div>
       <p className={styles.includes}>Every plan includes your library, topics and AI connection.</p>
 
@@ -51,11 +60,7 @@ export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProp
             ? "This sample doesn't count towards your month. The first overview you make will."
             : "This overview counts as your first of the month."}
         </p>
-        {!inAccount && (
-          <p className={styles.bringingIn} role="status" data-testid={onboardingPlanTestIds.bringingIn}>
-            Bringing your overview into your account…
-          </p>
-        )}
+        {arriving !== null && <OnboardingArriving phase={arriving} onTryAgain={onTryAgain} />}
       </div>
     </div>
   );

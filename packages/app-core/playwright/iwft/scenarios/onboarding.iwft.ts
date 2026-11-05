@@ -5,6 +5,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { PSYCHOLOGY_URL, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { Routes } from "../../../src/app/Routes.js";
+import type { Launcher } from "../../support/Launcher.testHelper.js";
 import type { ExtractedArticle } from "@overview/domain";
 
 // Onboarding inside the first overview (docs/features/onboarding.md, designs 46a–46k).
@@ -685,4 +686,203 @@ test("a network out of trial reads for the day says to try a page tomorrow", asy
   const onboarding = await launcher.onboardingPage.verifyIsShown();
 
   await onboarding.verifyReadFailure({ title: "We've read a lot of pages from your network today", link: PASTED });
+});
+
+// A reader who answers quickly reaches the account screen before the overview is written, and
+// isn't held up there (docs/features/onboarding.md, "The account" and "Into the account").
+const quickReaderToAccount = async (launcher: Launcher) => {
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("voice");
+  await onboarding.verifyWritingHasStarted();
+  await onboarding.continueFromVoice();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("account", "Create your free account");
+  await onboarding.verifyNotReadyReads("Your overview is still being written. It'll be ready in your account.");
+  return onboarding;
+};
+
+test("the account can be made before the overview is written, and the overview then arrives in it, counted once", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
+  const home = await launcher.launch(signedOut);
+  await home.submitHeroUrl(VIDEO_URL);
+  await launcher.onboardingPage.allowAnalytics();
+  const onboarding = await quickReaderToAccount(launcher);
+
+  const createAccount = await onboarding.continueWithEmail();
+  await createAccount.typeFirstName("Ada");
+  await createAccount.requestLink(SIMULATED_EMAIL);
+  await createAccount.chooseCodeFromEmail();
+  await createAccount.enterCode("ABCD-EFGH");
+
+  await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.verifyArriving("writing");
+  await onboarding.verifyCantContinueWithFree();
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
+  await onboarding.verifyCanContinueWithFree();
+  await onboarding.continueWithFree();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.generations()).toHaveLength(1);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+  expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
+  expect(await backendSimulator.sync.overviewsHeldIn(SIMULATED_ACCOUNT_ID)).toBe(1);
+  await expect
+    .poll(() =>
+      backendSimulator.analytics
+        .events()
+        .filter(({ name }) => name === "onboarding.account.landed" || name === "onboarding.overview.arrived")
+        .map(({ name, props }) => ({ name, ...props })),
+    )
+    .toEqual([
+      { name: "onboarding.account.landed", way: "createAccount", overview: "writing" },
+      { name: "onboarding.overview.arrived", seconds: expect.any(Number), step: "plan" },
+    ]);
+});
+
+test("a reader with an account who signs in before the overview is written waits on one screen, then lands on it", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await quickReaderToAccount(launcher);
+
+  const signIn = await onboarding.signIn();
+  await signIn.requestLink(SIMULATED_EMAIL);
+  await signIn.chooseCodeFromEmail();
+  await signIn.enterCode("ABCD-EFGH");
+
+  await onboarding.verifyNearlyThere();
+  await onboarding.verifyArriving("writing");
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+  expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
+});
+
+test("an overview that fails after the account exists says so on the plan, and Try again makes it on the account", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
+  const home = await launcher.launch(signedOut);
+  await home.submitHeroUrl(VIDEO_URL);
+  await launcher.onboardingPage.allowAnalytics();
+  const onboarding = await quickReaderToAccount(launcher);
+
+  const createAccount = await onboarding.continueWithEmail();
+  await createAccount.typeFirstName("Ada");
+  await createAccount.requestLink(SIMULATED_EMAIL);
+  await createAccount.chooseCodeFromEmail();
+  await createAccount.enterCode("ABCD-EFGH");
+  await onboarding.verifyOnScreen("plan", "Choose your plan");
+
+  backendSimulator.ourKey.refuses(503, "unavailable", {});
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
+  await onboarding.verifyArriving("failed");
+  await onboarding.verifyCantContinueWithFree();
+
+  backendSimulator.ourKey.refusesNoMore();
+  await onboarding.tryAgainAfterAccount();
+  await onboarding.verifyCanContinueWithFree();
+  await onboarding.continueWithFree();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([null]);
+  expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
+  await expect
+    .poll(() =>
+      backendSimulator.analytics
+        .events()
+        .filter(({ name }) => name === "onboarding.overview.failed" || name === "onboarding.overview.retried")
+        .map(({ name, props }) => ({ name, ...props })),
+    )
+    .toEqual([
+      { name: "onboarding.overview.failed", step: "plan", afterAccount: true },
+      { name: "onboarding.overview.retried", from: "plan" },
+    ]);
+});
+
+test("the sign-in link finishing in another tab leaves the run where it is, and the overview still arrives", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await quickReaderToAccount(launcher);
+  const createAccount = await onboarding.continueWithEmail();
+  await createAccount.typeFirstName("Ada");
+  await createAccount.requestLink(SIMULATED_EMAIL);
+
+  await launcher.signInFromAnotherTab();
+
+  await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.verifyArriving("writing");
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
+  await onboarding.verifyCanContinueWithFree();
+  await onboarding.continueWithFree();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.generations()).toHaveLength(1);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+  expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
+});
+
+test("a tab that isn't running the overview mirrors the tab that is, and takes the run over once that tab has gone", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch(signedOutAnswered);
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+
+  await launcher.anotherTabHoldsOnboardingRun(VIDEO_URL, "writing");
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyWritingHasStarted();
+  await onboarding.continueFromVoice();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("account", "Create your free account");
+  const createAccount = await onboarding.continueWithEmail();
+  await createAccount.typeFirstName("Ada");
+  await createAccount.requestLink(SIMULATED_EMAIL);
+  await createAccount.chooseCodeFromEmail();
+  await createAccount.enterCode("ABCD-EFGH");
+  await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.verifyArriving("writing");
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+
+  await launcher.anotherTabCloses();
+
+  await onboarding.verifyCanContinueWithFree();
+  await onboarding.continueWithFree();
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.generations()).toHaveLength(1);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([null]);
 });

@@ -16,6 +16,8 @@ import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.j
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
 import type { InMemorySyncStorage } from "./InMemorySyncStorage.testHelper.js";
 import type { Library, OpenLibrary } from "../../src/stores/Library.js";
+import type { SyncConnection } from "../../src/features/sync/types/SyncConnection.js";
+import type { OnboardingRunPhase } from "../../src/features/onboarding/useOnboardingRun.js";
 
 declare global {
   interface Window {
@@ -33,6 +35,12 @@ declare global {
     __iwftLibraries__: Map<string | null, Window["__iwftStores__"]>;
     __iwftLibrary__: Library;
     __iwftOpenLibrary__: OpenLibrary;
+    // Another tab of this browser: signing in, or holding onboarding's run, as this tab sees it.
+    __iwftAnotherTab__: {
+      signsIn: (connection: SyncConnection) => void;
+      holdsOnboardingRun: (link: string, phase: OnboardingRunPhase) => void;
+      closes: () => void;
+    };
     __iwftRouter__: AppRouter;
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;

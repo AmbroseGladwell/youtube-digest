@@ -13,7 +13,8 @@ export interface OnboardingProgressBarProps {
   // The next Continue lets writing go.
   soon: boolean;
   personal: boolean;
-  onSeeOverview: () => void;
+  // Null on the account and plan screens, where there's nowhere for See your overview to go.
+  onSeeOverview: (() => void) | null;
 }
 
 // The overview's own progress (175j, 175k). Until writing starts it's a calm line, never a bar
@@ -34,15 +35,17 @@ export function OnboardingProgressBar({ phase, fetching, ready, soon, personal, 
         <p className={styles.announce} role="status">
           Your overview is ready
         </p>
-        <button
-          type="button"
-          className={styles.see}
-          onClick={onSeeOverview}
-          data-testid={onboardingProgressBarTestIds.seeOverview}
-        >
-          See your overview
-          <StrokeIcon name="chevronRight" size={16} />
-        </button>
+        {onSeeOverview !== null && (
+          <button
+            type="button"
+            className={styles.see}
+            onClick={onSeeOverview}
+            data-testid={onboardingProgressBarTestIds.seeOverview}
+          >
+            See your overview
+            <StrokeIcon name="chevronRight" size={16} />
+          </button>
+        )}
       </div>
     );
   }

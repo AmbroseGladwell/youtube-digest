@@ -234,20 +234,65 @@ nothing behind. A starter topic is made with its description; a typed one with n
 
 **The account screen** shows the overview's title and Premise and nothing else of it: the
 rest is drawn bars under a fade, not its text, so none of it is in the page before an account.
-It can't be passed without one. Its ways in wait until the overview is made, so the overview
-is in the no-account library before the account exists. Email only for now; Google and Apple
-are a later card. "Continue with email" and "Already have an account? Sign in" open the
-existing email flow in place.
+It can't be passed without one. **Its ways in work the moment the reader gets there** (OV-163,
+owner, 4 Nov 2026), whether or not the overview is written: holding a quick reader at the step
+they're most likely to give up on was a mistake. Until then the teaser's place says "Your
+overview is still being written. It'll be ready in your account.", and the overview's own
+progress stays at the top. Email only for now; Google and Apple are a later card. "Continue
+with email" and "Already have an account? Sign in" open the existing email flow in place.
 
 **The magic link may open in another tab.** The progress is kept on the device
 (`overview.onboarding.v1`), and home sends a reader with progress back to `/start`, signed out,
-or signed in with an overview made. A sign-in link can only return to a consent screen, so it
-lands on home and home sends it on.
+or signed in from the account screen, with the overview made or still on its way. A sign-in
+link can only return to a consent screen, so it lands on home and home sends it on.
 
 **The plan** (46k) follows a new account; signing in to one already held skips it. Free and
 Plus are the same card; Plus says Coming soon until there is billing, and BYO Plus is a line
-under them. Continue with Free waits until the move has brought the overview into the account,
-then goes to it. "This overview counts as your first of the month."
+under them. Continue with Free waits until the overview is in the account, and says what it's
+waiting on so it never looks stuck (`OnboardingArriving`): "Still writing your overview…" with
+the bar still going at the top, then "Bringing your overview into your account…", or
+"Something went wrong making your overview." with Try again. While it's still being written the
+lead says "Your overview is on its way." Then it goes to it. "This overview counts as your first
+of the month." A reader who reaches the end first waits here rather than going to an empty
+library, since the reveal is the overview's own page and its next steps hang off it (decided
+with OV-163).
+
+**A sign-in to an account already held** that lands before the overview is in it waits on
+"Nearly there" (`OnboardingNearlyThere`): "You're signed in. Your overview opens as soon as it's
+ready.", with the same three states under it. There's no Back once signed in.
+
+## The run lives in one tab
+
+OV-163. The run is made above the router (`OnboardingRunRuntime`, in `App`), so the page coming
+and going never starts the overview over: the web's sign-in lands on home and comes straight
+back, and going home mid-run comes back too. Before this the page owned the run, and either
+would have cancelled a generation in flight and started another, which the trial's one overview
+would then refuse.
+
+**One tab has it.** The tab that started onboarding writes its own id into the progress
+(`runner`, from `overview.onboarding.tab.v1` in session storage, so a reload is the same tab).
+Another tab with the same progress, the sign-in link's for instance, runs nothing: it asks
+over a `BroadcastChannel` whether that tab still has the run, every three seconds, and mirrors
+the phase it answers with (`useOnboardingRunOwner`). When nothing answers within a second and a
+half, that tab has gone, and the asking tab takes the run over by writing its own id, which
+the first tab, if it's merely slow, sees and yields to. Try again from a mirroring tab takes
+the run over the same way, so the retry runs where it was pressed. Progress from before this
+names no runner, and the first tab to ask and hear nothing takes it.
+
+**Where a run writes.** A run started signed out opens the no-account library beside whatever
+the app is showing and writes there, so a sign-in mid-run, which swaps the app's library and
+closes the old handle, doesn't lose it; when it lands, it asks the move to run again
+(`LibraryMoveRuntime.moveAgain`, `account-libraries.md`, "The move on sign-in"), and the
+overview arrives in the account the same way as one made before the account. A run started
+signed in, a retry after the account exists or a take-over by the signed-in tab, writes
+straight into the account's library on the account's key, with nothing to move. The trial
+counts the first run against its token whenever its generation went out signed out; the server
+sees a session only on a request sent after sign-in, so nothing is counted twice.
+
+**Known gap.** A run whose transcript is still being fetched when the account's first pull
+completes reads topics and About you from the no-account library after the move has copied
+and cleared them, and so is written for anyone. It needs the sign-in to finish before a
+transcript fetch does, which is seconds against an email round trip.
 
 **The reveal is the overview's own page.** Onboarding forgets its progress and dismisses the
 move notice as it goes there. Under the Verdict of that overview, and no other, the next
@@ -410,7 +455,9 @@ that it happened). Every other page that would show an overview shows the same.
 Topics, About you, the voice and the overview are written into the no-account library while
 signed out. On sign-in, `moveAnswersInto` brings every topic in with its description, and
 About you and the voice where the account has none (the account's own win), before
-`moveLibraryInto` brings the overview (`account-libraries.md`, "The move on sign-in"). The
+`moveLibraryInto` brings the overview (`account-libraries.md`, "The move on sign-in"). An
+overview that lands after the sign-in is brought in by the move running once more, after
+the first has finished; the move is the same either way, and never moves one twice. The
 analytics answer carries in as it always has.
 
 ## Analytics
@@ -420,11 +467,17 @@ isn't known until it's read), or refused; the sample chosen, by where it sat in 
 kind, never its title or link; each screen shown, skipped or gone back
 from; the video being the wrong one or another of a playlist's chosen; how many topics were
 picked and typed; how many entries each section of About you holds and how many were typed,
-never what they say; See your overview before the end; the overview failing, and on which screen, and
-being tried again; the way to an account; the plan; the reveal, and whether its overview was made from a link or saved from a sample or a
-shared page; and a next step followed or
-dismissed. The run itself is counted
-as `capture.newOverview.started` with `from: "onboarding"`.
+never what they say; See your overview before the end; the overview failing, on which screen,
+and whether the account already existed (`afterAccount`), and being tried again, from the
+preview, the account screen, the plan or a page that couldn't be read; the way to an account;
+the sign-in landing (`account.landed`), by which way and whether the overview was ready, still
+being written, or had failed, which is how often the account comes first; the overview
+arriving in the account after that (`overview.arrived`), with how many seconds the reader
+waited and on which screen; the plan; the reveal, and whether its overview was made from a
+link or saved from a sample or a shared page; and a next step followed or dismissed. The
+landing and the arrival are recorded in the progress (`landed`) so a page that comes back
+counts each once. The run itself is counted as `capture.newOverview.started` with
+`from: "onboarding"`.
 
 ## Not built yet
 

@@ -25,7 +25,9 @@ const progress: OnboardingProgress = {
   topics: ["Food", "chess"],
   mayWrite: false,
   overviewId: OverviewId.parse(crypto.randomUUID()),
+  runner: "tab-1",
   way: null,
+  landed: null,
   share: null,
 };
 
@@ -48,6 +50,13 @@ describe("onboardingProgressStorage", () => {
     const { share: _share, ...older } = progress;
     storage.setItem("overview.onboarding.v1", JSON.stringify(older));
     expect(readOnboardingProgress(storage)).toEqual(progress);
+  });
+
+  it("reads progress from before a run had a tab of its own as run by nobody yet", () => {
+    const storage = memoryStorage();
+    const { runner: _runner, landed: _landed, ...older } = progress;
+    storage.setItem("overview.onboarding.v1", JSON.stringify(older));
+    expect(readOnboardingProgress(storage)).toEqual({ ...progress, runner: null, landed: null });
   });
 
   it("reads a share started before samples could start one as a share, not a sample", () => {

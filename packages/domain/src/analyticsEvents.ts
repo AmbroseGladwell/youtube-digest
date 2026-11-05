@@ -489,15 +489,24 @@ export const analyticsEvents = {
     },
     overview: {
       seenEarly: event("The reader follows See your overview before the questions are done", { step: OnboardingStep }),
-      failed: event("Onboarding's overview couldn't be made, and the screen the reader was on when it failed", {
+      failed: event("Onboarding's overview couldn't be made, the screen the reader was on when it failed, and whether their account already existed", {
         step: OnboardingStep,
+        afterAccount: z.boolean(),
       }),
+      arrived: event(
+        "Onboarding's overview reached the account after the account was made: how long the reader had waited for it, in seconds, and on which screen",
+        { seconds: z.number().int().nonnegative(), step: OnboardingStep },
+      ),
       retried: event("The reader tries onboarding's overview again after it failed, and where they pressed Try again", {
-        from: z.enum(["preview", "account", "readFailure"]),
+        from: z.enum(["preview", "account", "plan", "readFailure"]),
       }),
     },
     account: {
       chosen: event("The reader picks how to get to the overview: a new account, or one they have", { way: AuthIntent }),
+      landed: event(
+        "The reader's sign-in from the account screen lands, by which way, and whether their overview was ready, still being written, or had failed",
+        { way: AuthIntent, overview: z.enum(["ready", "writing", "failed"]) },
+      ),
     },
     plan: {
       chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),

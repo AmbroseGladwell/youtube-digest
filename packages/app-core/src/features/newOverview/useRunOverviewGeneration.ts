@@ -4,7 +4,7 @@ import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, typ
 import type { OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
-import { useStores } from "../../stores/StoresContext.js";
+import { useStores, type Stores } from "../../stores/StoresContext.js";
 import type { ApiKeys } from "../apiKeys/ApiKeys.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
@@ -29,15 +29,19 @@ import { generationKeys } from "./generationKeys.js";
 export const missingKeyMessage = (provider: keyof typeof PROVIDER_SHORT_LABEL): string =>
   `Add your ${PROVIDER_SHORT_LABEL[provider]} API key first.`;
 
+type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore">;
+
 // One generation with everything this shell has to make it: the transcript rungs it can
 // ask, the reader's own key and model for the provider they chose, our key, in the order
 // the plan sets, and the library to save into. Signed out where there are accounts it is
 // onboarding's one overview, on us through the device's trial and never on the reader's key
 // (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
-// capture queue (docs/features/capture-queue.md).
+// capture queue (docs/features/capture-queue.md). The library is the one shown, unless the
+// run brings its own: onboarding's keeps writing where it started once the reader signs in
+// (docs/features/onboarding.md, "Into the account").
 export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
-  const { overviewStore, settingsStore, transcriptStore } = useStores();
+  const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -45,7 +49,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const signedIn = libraryAccountIdOf(connection) !== null;
 
   return useCallback(
-    async (url: string, options: RunOverviewGenerationOptions): Promise<Overview> =>
+    async (url: string, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
       runOverviewGeneration(
         url,
         {
@@ -58,29 +62,33 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
                 : { apiUrl: knownApiUrl, token: connection.token, trialToken: signedIn ? null : currentSignedOutTrial().token },
           }),
           makeOverview: makeWith(),
-          overviewStore,
-          settingsStore,
-          transcriptStore,
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          transcriptStore: stores.transcriptStore,
           warn: (warning) => reporter.warn(warning),
         },
         options,
       )
-        .then(learnFrom)
+        .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, signedIn, knownApiUrl, youTubeFetch, connection.token, overviewStore, settingsStore, transcriptStore, reporter],
+    [makeWith, learnFrom, settled, signedIn, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
   );
 }
 
 export function useRunArticleGeneration(apiKeys: ApiKeys) {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
-  const { overviewStore, settingsStore } = useStores();
+  const shown = useStores();
 
   return useCallback(
-    async (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions): Promise<Overview> =>
-      runArticleOverviewGeneration(read, { makeOverview: makeWith(), overviewStore, settingsStore }, options)
-        .then(learnFrom)
+    async (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
+      runArticleOverviewGeneration(
+        read,
+        { makeOverview: makeWith(), overviewStore: stores.overviewStore, settingsStore: stores.settingsStore },
+        options,
+      )
+        .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, overviewStore, settingsStore],
+    [makeWith, learnFrom, settled, shown],
   );
 }
 
@@ -97,7 +105,6 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   const signedIn = libraryAccountIdOf(connection) !== null;
   const queryClient = useQueryClient();
 
-  const { overviewStore, settingsStore } = useStores();
   const analytics = useAnalytics();
 
   const keysNow = useCallback(() => {
@@ -119,7 +126,7 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   }, [keysNow]);
 
   const learnFrom = useCallback(
-    (overview: Overview): Overview => {
+    (overview: Overview, { overviewStore, settingsStore }: Pick<Stores, "overviewStore" | "settingsStore">): Overview => {
       const keys = keysNow();
       void runProfilePassIfDue({
         madeOn: overview.madeOn?.key ?? null,
@@ -133,7 +140,7 @@ function useOverviewMaker(apiKeys: ApiKeys) {
       });
       return overview;
     },
-    [keysNow, overviewStore, settingsStore, analytics, queryClient],
+    [keysNow, analytics, queryClient],
   );
 
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);

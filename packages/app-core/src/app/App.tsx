@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { LibraryMoveRuntime } from "../features/accountLibraries/LibraryMoveRuntime.js";
+import { OnboardingRunRuntime } from "../features/onboarding/OnboardingRunRuntime.js";
 import { AnalyticsRuntime } from "../features/analytics/AnalyticsRuntime.js";
 import { AppearanceRuntime } from "../features/appearance/AppearanceRuntime.js";
 import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.js";
@@ -90,11 +91,13 @@ export function App({
                               <ErrorReportingRuntime>
                                 <AnalyticsRuntime>
                                   <LibraryMoveRuntime>
-                                    <PlayerRuntime>
-                                      <ShareRuntime>
-                                        <RouterProvider router={router} />
-                                      </ShareRuntime>
-                                    </PlayerRuntime>
+                                    <OnboardingRunRuntime>
+                                      <PlayerRuntime>
+                                        <ShareRuntime>
+                                          <RouterProvider router={router} />
+                                        </ShareRuntime>
+                                      </PlayerRuntime>
+                                    </OnboardingRunRuntime>
                                   </LibraryMoveRuntime>
                                 </AnalyticsRuntime>
                               </ErrorReportingRuntime>

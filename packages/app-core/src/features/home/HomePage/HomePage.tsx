@@ -49,9 +49,10 @@ export function HomePage() {
   const accountNeeded = useAccountNeeded();
   const location = useLocation();
   // Onboarding under way on this device carries on where it was, signed out or just signed
-  // in by its link (docs/features/onboarding.md, "Leaving and coming back").
+  // in from its account screen, with the overview made or still on its way
+  // (docs/features/onboarding.md, "The account").
   const onboarding = readOnboardingProgress();
-  if (onboarding !== null && (accountNeeded || onboarding.overviewId !== null)) {
+  if (onboarding !== null && (accountNeeded || onboarding.overviewId !== null || onboarding.way !== null)) {
     return <Navigate to={Routes.onboarding()} replace />;
   }
   if (isPanel) {

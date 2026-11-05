@@ -1,4 +1,5 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 
@@ -160,4 +161,45 @@ test("on a tab with nothing to read, the panel's Start asks for a link", async (
   const start = await launcher.panelStart.verifyIsShown();
 
   await start.verifyHeading("Paste a link to start");
+});
+
+test("in the panel, the account can be made with its code before the overview is written, and the overview arrives in it", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
+  await page.setViewportSize({ width: 400, height: 600 });
+  await launcher.launchPanel(signedOutPanelAnswered);
+  await (await launcher.panelStart.verifyIsShown()).makeOverview();
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.confirmVideo();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyWritingHasStarted();
+  await onboarding.continueFromVoice();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("account", "Create your free account");
+
+  const createAccount = await onboarding.continueWithEmail();
+  await createAccount.typeFirstName("Ada");
+  await createAccount.requestLink(SIMULATED_EMAIL);
+  await createAccount.enterCode(SIMULATED_LINK_CODE);
+
+  await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.verifyArriving("writing");
+  await onboarding.verifyCantContinueWithFree();
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
+  await onboarding.verifyCanContinueWithFree();
+  await onboarding.continueWithFree();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(VIDEO_TITLE);
+  expect(backendSimulator.ourKey.generations()).toHaveLength(1);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+  expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
 });
