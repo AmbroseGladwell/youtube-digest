@@ -180,6 +180,9 @@ export const apiLogLines = coded("api", {
     clientErrorsNotForwarded: line("warn", "client errors not forwarded", "Error tracking was slow or down."),
     serverErrorNotForwarded: line("warn", "server error not forwarded", "One of our own errors could not be passed on to error tracking."),
   },
+  client: {
+    captureTimed: line("info", "capture timed", "How a capture's time split on the device: each step asked, its outcome and its milliseconds. Measured by the app, never estimated; logged, never an event."),
+  },
   settings: {
     analyticsOptOutSet: line("info", "analytics opt-out set", "A reader turned sharing on or off in Settings."),
     narrationVoiceChosen: line("info", "narration voice chosen", "A reader picked a different narration voice."),

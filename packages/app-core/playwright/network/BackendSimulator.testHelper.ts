@@ -1338,6 +1338,7 @@ export class BackendSimulator {
   errors = {
     batches: (): ClientErrorBatch[] => [...this.#errorBatches],
     reported: (): ClientErrorBatch["errors"] => this.#errorBatches.flatMap(({ errors }) => errors),
+    timings: (): NonNullable<ClientErrorBatch["timings"]> => this.#errorBatches.flatMap(({ timings }) => timings ?? []),
   };
 
   transcripts = {

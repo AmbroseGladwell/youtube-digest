@@ -10,21 +10,26 @@ import {
   type Topic,
   type TranscriptStore,
   type AboutYou,
+  type ClientTimingReport,
   type LearnedItems,
 } from "@overview/domain";
 import type { GenerationInput } from "@overview/generation";
 import { makeArticleOverview, makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
+import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
+import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import { runArticleOverviewGeneration, runOverviewGeneration, type GenerationPipelineDeps } from "./generationPipeline.js";
 
 const VIDEO = makeOverview().source;
 
-const makeDeps = () => {
+const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
   const topics: Topic[] = [];
   let settings: Settings = DEFAULT_SETTINGS;
   const inputs: GenerationInput[] = [];
+  const timings: ClientTimingReport[] = [];
+  let clock = 0;
   const stored: StoredTranscript = {
     videoId: VIDEO.id!,
     segments: [{ startMs: 0, endMs: 4_000, text: "Three cuts cover most of a week." }],
@@ -35,7 +40,7 @@ const makeDeps = () => {
   const deps: GenerationPipelineDeps = {
     sources: [],
     transcriptStore: {
-      getTranscript: async () => stored,
+      getTranscript: async () => (held ? stored : null),
       saveTranscript: async () => {},
       deleteTranscript: async () => {},
     } satisfies TranscriptStore,
@@ -48,12 +53,28 @@ const makeDeps = () => {
     settingsStore: { get: async () => settings },
     makeOverview: async (input, { id }) => {
       inputs.push(input as GenerationInput);
+      clock += 41_000;
       return makeOverview({ id });
     },
+    timed: (timing) => timings.push(timing),
+    now: () => clock,
   };
+  const rung = (tier: TranscriptSource["tier"], answer: "answers" | "no-answer" | "throws", ms: number): TranscriptSource => ({
+    tier,
+    cost: "free",
+    isReady: async () => true,
+    resolve: async () => {
+      clock += ms;
+      if (answer === "throws") throw new Error("Simulated: the rung failed");
+      return answer === "no-answer" ? null : { video: VIDEO, transcript: stored.segments, generated: false };
+    },
+  });
   return {
     deps,
     inputs,
+    timings,
+    rung,
+    tick: (ms: number) => (clock += ms),
     addTopic: (topic: Topic) => topics.push(topic),
     setAboutYou: (aboutYou: AboutYou) => (settings = { ...settings, aboutYou }),
     setLearned: (learned: LearnedItems) => (settings = { ...settings, learned }),
@@ -84,6 +105,77 @@ describe("runOverviewGeneration", () => {
     expect(inputs).toHaveLength(1);
     expect(inputs[0]!.existingTopics).toEqual([food]);
     expect(inputs[0]!.readerContext).toBe("I'm a nurse, and right now I'm focusing on new recipes.");
+  });
+
+  it("times each rung asked, the model and the save on its own clock, and reports the whole however it was answered", async () => {
+    const { deps, timings, rung } = makeDeps({ held: false });
+    const reported: ClientTimingReport[] = [];
+
+    await runOverviewGeneration(
+      VIDEO.url,
+      { ...deps, sources: [rung("shared-cache", "no-answer", 310), rung("extension", "throws", 1_200), rung("service", "answers", 2_900)] },
+      { onTimed: (timing) => reported.push(timing) },
+    );
+
+    expect(timings).toEqual([
+      {
+        name: "captureTimed",
+        outcome: "finished",
+        steps: [
+          { step: "stored", outcome: "no-answer", ms: 0 },
+          { step: "shared-cache", outcome: "no-answer", ms: 310 },
+          { step: "extension", outcome: "failed", ms: 1_200 },
+          { step: "service", outcome: "answered", ms: 2_900 },
+          { step: "model", outcome: "answered", ms: 41_000 },
+          { step: "save", outcome: "answered", ms: 0 },
+        ],
+        totalMs: 45_410,
+        transcriptCharacters: "Three cuts cover most of a week.".length,
+      },
+    ]);
+    expect(reported).toEqual(timings);
+  });
+
+  it("times a capture answered from the store too, since the model is still asked, with no entry for a rung never reached", async () => {
+    const { deps, timings, rung } = makeDeps();
+
+    await runOverviewGeneration(VIDEO.url, { ...deps, sources: [rung("shared-cache", "answers", 310)] });
+
+    expect(timings[0]!.steps.map(({ step }) => step)).toEqual(["stored", "model", "save"]);
+  });
+
+  it("reports a cancelled capture as such, with the steps it got through", async () => {
+    const { deps, timings, inputs } = makeDeps();
+    let cancelled = false;
+
+    const run = runOverviewGeneration(VIDEO.url, deps, {
+      isCancelled: () => cancelled,
+      waitToWrite: async () => {
+        cancelled = true;
+      },
+    });
+
+    await expect(run).rejects.toBeInstanceOf(GenerationCancelledError);
+    expect(inputs).toEqual([]);
+    expect(timings).toEqual([expect.objectContaining({ outcome: "cancelled", steps: [{ step: "stored", outcome: "answered", ms: 0 }] })]);
+  });
+
+  it("reports a failed capture with the step that failed, and no characters when no transcript came", async () => {
+    const { deps, timings, rung } = makeDeps({ held: false });
+
+    const run = runOverviewGeneration(VIDEO.url, { ...deps, sources: [rung("service", "throws", 2_900)] });
+
+    await expect(run).rejects.toThrow();
+    expect(timings).toEqual([
+      expect.objectContaining({
+        outcome: "failed",
+        transcriptCharacters: 0,
+        steps: [
+          { step: "stored", outcome: "no-answer", ms: 0 },
+          { step: "service", outcome: "failed", ms: 2_900 },
+        ],
+      }),
+    ]);
   });
 
   it("writes for what was learned as well as the sentence, and leaves a removed item out", async () => {

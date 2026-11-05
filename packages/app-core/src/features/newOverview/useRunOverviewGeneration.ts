@@ -66,6 +66,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
           warn: (warning) => reporter.warn(warning),
+          timed: (timing) => reporter.time(timing),
         },
         options,
       )

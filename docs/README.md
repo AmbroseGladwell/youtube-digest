@@ -41,7 +41,8 @@ Five folders, five different questions.
   and the TTS service's reported beside them, the failing call's request id, the reporter
   both shells mount (what it catches, the trail of recent actions, its own queue sent before
   events), a database that won't open before the app mounts, the extension's service worker
-  and the session copy it reads, shipping the server's logs over OTLP to PostHog (or
+  and the session copy it reads, how a capture's time split step by step sent from the
+  device as a client timing, shipping the server's logs over OTLP to PostHog (or
   anywhere the `OTEL_*` variables name), the Slack alerts for new, reopened and spiking
   issues, what a log line may carry, and how to find a failure's server lines by request id.
 - `server-side-transcripts.md` — the ladder's last rung, our own server fetching captions:

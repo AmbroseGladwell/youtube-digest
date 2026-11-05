@@ -1,11 +1,13 @@
 import { TranscriptFetchError, isWorthAnotherSource } from "@overview/transcripts";
 import {
   VideoId,
+  type CaptureStepOutcome,
   type CaptureTranscriptSource,
   type ClientWarningReport,
   type StoredTranscript,
   type TranscriptStore,
 } from "@overview/domain";
+import type { CaptureStopwatch } from "../../newOverview/api/CaptureStopwatch.js";
 import { canonicalYouTubeUrl, extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js";
 import type { ResolvedVideo, TranscriptSource, TranscriptSourceContext } from "../types/TranscriptSource.js";
 import { transcriptFailureMessage } from "../util/transcriptFailureMessage.js";
@@ -18,6 +20,9 @@ export interface VideoResolutionDeps {
   // rung with no answer is the ladder working, and alone is not worth a warning
   // (docs/architecture/errors-and-logs.md, "Client warnings").
   warn?: ((warning: ClientWarningReport) => void) | undefined;
+  // Times the store's read and each rung asked, for the capture's timing. The background
+  // prefetch brings none, and is not timed.
+  stopwatch?: CaptureStopwatch | undefined;
 }
 
 const warnIfDegraded = (
@@ -40,6 +45,11 @@ const warnIfDegraded = (
 
 export type { ResolvedVideo };
 
+const UNAVAILABLE = Symbol("unavailable");
+const answeredOrNot = (answer: unknown): CaptureStepOutcome => (answer === null ? "no-answer" : "answered");
+const rungOutcomeOf = (answer: ResolvedVideo | null | typeof UNAVAILABLE): CaptureStepOutcome =>
+  answer === UNAVAILABLE ? "unavailable" : answeredOrNot(answer);
+
 export interface ResolvedVideoWithSource extends ResolvedVideo {
   source: CaptureTranscriptSource;
 }
@@ -51,7 +61,10 @@ export async function resolveVideo(
   deps: VideoResolutionDeps,
 ): Promise<ResolvedVideoWithSource> {
   const url = canonicalYouTubeUrl(pastedUrl) ?? pastedUrl;
-  const cached = await readCachedVideo(url, deps.transcriptStore);
+  const { stopwatch } = deps;
+  const cached = await (stopwatch
+    ? stopwatch.time("stored", () => readCachedVideo(url, deps.transcriptStore), answeredOrNot)
+    : readCachedVideo(url, deps.transcriptStore));
   if (cached) return { ...cached, source: "stored" };
 
   const context: TranscriptSourceContext = {
@@ -60,13 +73,13 @@ export async function resolveVideo(
   const failures: TranscriptSourceFailure[] = [];
 
   for (const source of deps.sources) {
-    if (!(await source.isReady())) {
-      failures.push({ tier: source.tier, outcome: "unavailable" });
-      continue;
-    }
-
+    const ask = async () => ((await source.isReady()) ? source.resolve(url, context) : UNAVAILABLE);
     try {
-      const resolved = await source.resolve(url, context);
+      const resolved = await (stopwatch ? stopwatch.time(source.tier, ask, rungOutcomeOf) : ask());
+      if (resolved === UNAVAILABLE) {
+        failures.push({ tier: source.tier, outcome: "unavailable" });
+        continue;
+      }
       if (resolved === null) {
         failures.push({ tier: source.tier, outcome: "no-answer" });
         continue;

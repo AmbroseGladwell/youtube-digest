@@ -154,6 +154,7 @@ export * from "./logLines.js";
 export * from "./redactErrorMessage.js";
 export * from "./ClientErrorBatch.js";
 export * from "./ClientWarning.js";
+export * from "./ClientTiming.js";
 export * from "./analyticsPlatform.js";
 export * from "./normaliseTag.js";
 export * from "./TagAliases.js";
