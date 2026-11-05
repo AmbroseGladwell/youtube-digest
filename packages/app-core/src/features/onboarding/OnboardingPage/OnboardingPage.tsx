@@ -151,9 +151,14 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const offered = useMemo((): OnboardingTopicSuggestions | null => {
     if (found === null || kind === null) return null;
     const noun = kind.noun("video", found);
-    return asked === null
-      ? { noun, names: suggestStarterTopics(found.source.title, found.about), newTopic: null, by: "code" }
-      : { noun, names: asked.starter, newTopic: asked.newTopic, by: "model" };
+    return asked.status === "answered"
+      ? { noun, names: asked.result.starter, newTopic: asked.result.newTopic, by: "model" }
+      : {
+          noun,
+          names: suggestStarterTopics(found.source.title, found.about),
+          newTopic: null,
+          by: asked.status === "failed" ? "code-failed" : asked.status === "pending" ? "code-pending" : "code-only",
+        };
   }, [found, kind, asked]);
   // Held once the topics screen shows them, so a late answer never moves chips under the reader.
   const [held, setHeld] = useState<OnboardingTopicSuggestions | null>(null);
@@ -305,8 +310,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const personal = !aboutYouIsEmpty(aboutYou);
   // The Continue that lets writing go: About you, or the slide after it when the sentence is empty.
   const soon = step === "aboutYou" || (step === "stepsForYou" && !progress.mayWrite);
-  const tryAgain = () => {
-    analytics.onboarding.overview.retried();
+  const tryAgain = (from: "preview" | "account" | "readFailure") => {
+    analytics.onboarding.overview.retried({ from });
     setAttempt((current) => current + 1);
   };
 
@@ -352,7 +357,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             <OnboardingReadFailure
               copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
               link={progress.link}
-              onTryAgain={tryAgain}
+              onTryAgain={() => tryAgain("readFailure")}
               onAnotherLink={anotherLink}
             />
           );
@@ -424,7 +429,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             teaserBeside={wide}
             sample={sample}
             failed={failed}
-            onTryAgain={tryAgain}
+            onTryAgain={() => tryAgain("account")}
             onChoose={(way) => {
               analytics.onboarding.account.chosen({ way });
               update({ way });
@@ -537,7 +542,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
             }}
             sortedInto={phase === "ready" ? sortedInto : null}
             forAnyone={sample}
-            onTryAgain={tryAgain}
+            onTryAgain={() => tryAgain("preview")}
             teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
           />
         </div>

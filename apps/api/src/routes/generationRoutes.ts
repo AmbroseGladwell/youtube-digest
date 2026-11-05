@@ -128,6 +128,7 @@ export function generationRoutes(
           throw new ApiError("unauthenticated", "Sign in, or start a trial, to have topics suggested");
         }
         if ((await trials.used(trialToken)) === null) {
+          request.log.warn(apiLogLines.trials.topicSuggestionsUnknownTrial());
           throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
         }
       }

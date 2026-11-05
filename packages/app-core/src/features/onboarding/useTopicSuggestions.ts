@@ -6,12 +6,18 @@ import type { OnboardingFound, OnboardingSource } from "./onboardingSources.js";
 
 const TEXT_CHARACTERS = 4000;
 
+export type AskedTopicSuggestions =
+  | { status: "answered"; result: TopicSuggestionResult }
+  | { status: "pending" }
+  | { status: "failed" }
+  | { status: "notAsked" };
+
 // Asked of the model on the device's trial as soon as the source is found, so the answer is
-// usually back before the reader reaches the topics screen; null until it is, and for good if it
-// fails or there's no server to ask (docs/features/onboarding.md, "Suggested topics").
-export function useTopicSuggestions(found: OnboardingFound | null, kind: OnboardingSource | null, ask: boolean): TopicSuggestionResult | null {
+// usually back before the reader reaches the topics screen. Not asked for a sample or a shared copy,
+// or with no server to ask (docs/features/onboarding.md, "Suggested topics").
+export function useTopicSuggestions(found: OnboardingFound | null, kind: OnboardingSource | null, ask: boolean): AskedTopicSuggestions {
   const apiUrl = useKnownApiUrl();
-  const [answer, setAnswer] = useState<{ key: string; result: TopicSuggestionResult } | null>(null);
+  const [answer, setAnswer] = useState<{ key: string; asked: AskedTopicSuggestions } | null>(null);
   const key = found === null ? null : sourceKey(found.source);
   const latest = useRef({ found, kind });
   latest.current = { found, kind };
@@ -28,13 +34,16 @@ export function useTopicSuggestions(found: OnboardingFound | null, kind: Onboard
         text: found.about.slice(0, TEXT_CHARACTERS),
       })
       .then((result) => {
-        if (!cancelled) setAnswer({ key, result });
+        if (!cancelled) setAnswer({ key, asked: { status: "answered", result } });
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setAnswer({ key, asked: { status: "failed" } });
+      });
     return () => {
       cancelled = true;
     };
   }, [ask, apiUrl, key]);
 
-  return answer !== null && answer.key === key ? answer.result : null;
+  if (!ask || apiUrl === null) return { status: "notAsked" };
+  return answer !== null && answer.key === key ? answer.asked : { status: "pending" };
 }

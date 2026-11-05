@@ -303,6 +303,8 @@ export class OnboardingPageObject extends PageObject {
 
   tryAgain = () => this.step("tryAgain", () => this.click(onboardingAccountTestIds.tryAgain));
 
+  tryAgainFromPreview = () => this.step("tryAgainFromPreview", () => this.click(onboardingPreviewTestIds.tryAgain));
+
   tryReadingAgain = () => this.step("tryReadingAgain", () => this.click(onboardingReadFailureTestIds.tryAgain));
 
   continueWithEmail = (): Promise<SignInPageObject> =>

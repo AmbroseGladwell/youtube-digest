@@ -492,7 +492,8 @@ test("signed out, onboarding has topics suggested on its trial, and its one over
 });
 
 test("topic suggestions need a trial the server issued, or an account", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer));
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer), { logger });
   const ask = (headers: Record<string, string>) =>
     testApp.app.inject({
       method: "POST",
@@ -505,6 +506,8 @@ test("topic suggestions need a trial the server issued, or an account", async ()
   const unknown = await ask({ [TRIAL_TOKEN_HEADER]: "never-issued" });
   assert.equal(unknown.statusCode, 401);
   assert.equal(unknown.json().error.details.trial, "unknown");
+  assert.equal(saying(lines, "topic suggestions refused for an unknown trial").length, 1);
+  assert.doesNotMatch(JSON.stringify(saying(lines, "topic suggestions refused for an unknown trial")), /never-issued/);
   const account = await makeAccount(testApp);
   const signedIn = await account.inject({
     method: "POST",

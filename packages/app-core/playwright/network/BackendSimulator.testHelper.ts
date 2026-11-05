@@ -177,6 +177,7 @@ export class BackendSimulator {
   #topicPasses: TopicMatchInput[] = [];
   // Null answers as a failed pass, so onboarding falls back to matching in code.
   #topicSuggestion: TopicSuggestionResult | null = null;
+  #topicSuggestionsHeld = false;
   #topicSuggestionsAsked: Array<{ input: TopicSuggestionInput; trialToken: string | null }> = [];
   #articleReads: string[] = [];
   #articleReadTrialTokens: Array<string | null> = [];
@@ -813,7 +814,7 @@ export class BackendSimulator {
     );
 
     await this.#page.route("**/api/generations/topic-suggestions", (route) =>
-      this.#respond(route, EndpointKey.TOPIC_SUGGESTIONS, {
+      this.#topicSuggestionsHeld ? undefined : this.#respond(route, EndpointKey.TOPIC_SUGGESTIONS, {
         onDefault: () => {
           this.#topicSuggestionsAsked.push({
             input: route.request().postDataJSON() as TopicSuggestionInput,
@@ -1248,6 +1249,10 @@ export class BackendSimulator {
       this.#topicSuggestion = result;
     },
     topicSuggestionsAsked: () => [...this.#topicSuggestionsAsked],
+    // The model's answer never arrives, so onboarding goes on with what it matched in code.
+    holdsTopicSuggestions: (): void => {
+      this.#topicSuggestionsHeld = true;
+    },
     // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,
