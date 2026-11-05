@@ -29,6 +29,7 @@ import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js"
 import { Routes } from "../../src/app/Routes.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
+import { LegalPagePageObject } from "../pageObjects/LegalPagePageObject.testHelper.js";
 import { makeAnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import { LibraryMoveNoticePageObject } from "../pageObjects/LibraryMoveNoticePageObject.testHelper.js";
@@ -301,6 +302,10 @@ export class Launcher {
 
   get accountTermsLine(): AccountTermsLinePageObject {
     return new AccountTermsLinePageObject(this.testContext);
+  }
+
+  get legalPage(): LegalPagePageObject {
+    return new LegalPagePageObject(this.testContext);
   }
 
   get libraryMoveNotice(): LibraryMoveNoticePageObject {

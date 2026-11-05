@@ -288,7 +288,6 @@ Until then, events are logged on the server and go nowhere else.
 
 - **The 30-day deletion** of anonymous data never linked to an account
   (`docs/features/analytics-consent.md`, "Not built yet").
-- **The privacy policy page** is OV-79.
 - **The events other cards named:** time from play to first sound is OV-63, and the link
   shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,
   which OV-63 also named, are counted (`library.sortPill.orderChosen`, `settings.voice.*`).

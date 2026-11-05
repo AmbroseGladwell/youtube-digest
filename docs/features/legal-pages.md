@@ -1,0 +1,154 @@
+# The privacy policy and the terms
+
+OV-79. Two public pages, `/privacy` and `/terms`, served to anyone, signed in or not, and
+linked from everywhere a policy link already pointed: the create-account line (62j), Settings ›
+Privacy and About (62i), onboarding's analytics screen (46b), every transactional email's
+footer, and now the sign-in page. The Chrome Web Store listing (OV-2) names `/privacy` as its
+privacy policy URL.
+
+**What is built, and where:**
+
+| The decision | Where it lives |
+|---|---|
+| The two paths | `Routes.privacy()`, `Routes.terms()` in `packages/app-core/src/app/Routes.ts`; the entries in `createAppRouter.tsx`, inside the shell |
+| One long-form layout for both | `features/legal/LegalPage/`: heading, date, contents, sections |
+| A table that scrolls on a phone | `features/legal/LegalTable/` |
+| The texts | `features/legal/PrivacyPage/PrivacyPage.tsx`, `features/legal/TermsPage/TermsPage.tsx`, each with its own `*_UPDATED_ON` |
+| Who stands behind them | `features/legal/legalIdentity.ts` |
+| The sign-in page's links | `PolicyLinks` under the form in `RequestLinkFlow`, only when signing in; creating an account has the terms line instead |
+| The screens | `playwright/iwft/scenarios/policyPages.iwft.ts`, `pageObjects/LegalPagePageObject.testHelper.ts` |
+
+## The pages
+
+**Inside the shell, not beside it.** The shared page brings its own head because a visitor
+has no library behind them (`sharing.md`). A policy's reader usually does: they came from
+Settings, the create-account page or an email footer, and the masthead is their way back. So
+both pages are children of `AppShell`, which also means the extension could render them, though
+it never does: every link from the extension opens the web app's page in a tab of its own
+(`policyPageUrl`), because the pages are the web app's.
+
+**Nothing on the server.** `webAppPlugin` already serves `index.html` for any `GET` outside
+`/api` and `/assets/` with no session check (`docs/architecture/deploy.md`), so the two paths
+work in production the moment the router knows them.
+
+**The layout.** One `h1` for the page, which takes focus on arrival as every auth screen's
+heading does; "Last updated" with the date in a `<time>`; a contents `nav` listing every
+section; then the sections, each an `h2` with an id the contents link to, and
+`scroll-margin-top` clearing the masthead. The foot links to the other page and home. The
+masthead already carries the app's `h1`, so like Settings, the queue and the library, a policy
+page has two `h1`s on the document, and the test counts the one inside the article. The text
+measure is `--measure` (46rem); a table is wrapped in its own `overflow-x: auto` container,
+and the phone scenario asserts the document never scrolls sideways at 320px.
+
+**The date is a constant, not the build stamp.** `BuildLine` shows the version and commit,
+which move on every deploy; a policy's date should move only when its words do. Each page
+exports its own `*_UPDATED_ON`, and changing the text means changing it.
+
+**The document title** is set to "Privacy policy · The Overview" while the page is mounted and
+put back on unmount, because these are the pages most likely to be opened in a tab of their own.
+
+## What the privacy policy says, and where each claim comes from
+
+Every sentence was checked against the docs and code below on 5 November 2026. When one of
+these changes, the policy changes with it.
+
+| Section | Backed by |
+|---|---|
+| Account and sign-in: email, first name, hashed links and codes, 15 and 10 minutes, 30-day sliding sessions, the one cookie, Brevo | `sign-in.md`, `V0001`, `V0003`, `V0005`, `fly.toml` (`SESSION_TTL_DAYS`, `MAIL_FROM`) |
+| The library and settings synced to Neon in London | `sync-api.md`, `settings.md`, `personalisation.md`, `appearance.md`, `time-saved.md`, `tag-reuse.md`, `playlists.md`, `deploy.md` |
+| Transcripts: the shared cache, two accounts agreeing, contributions kept a year and outliving the account; watched captions never sent; the cache lookup on Create; articles' text never kept, links never logged | `shared-transcript-cache.md`, `transcript-storage.md`, `watching-detection.md`, `pasted-article-links.md`, `article-notes.md`, `server-side-transcripts.md` (Decodo) |
+| Whose key: own keys device-local and direct; our key through the server to OpenAI (`gpt-6.1-sol`); "Only ever use my key"; onboarding's overview and topic suggestions; trial token and hashed address for 7 days | `byo-providers.md`, `tiers.md`, `onboarding.md`, `ourKeyModel.ts`, `TrialsRepository.ts` (`ADDRESS_RETENTION_DAYS`), `hashedAddress.ts` |
+| Narration: rendered on Fly, stored on R2, content-addressed and public by key, shared between readers, counted per day | `tts-pre-rendered-speech.md`, `audio-player.md`, `deploy.md` |
+| Shared links: what the copy holds and leaves out, `noindex`, a count and nothing else, stopped stays stopped | `sharing.md` |
+| Analytics: the three tiers, events held in memory before an answer, the random id and its renewal at sign-out, linking at sign-up, the catalogue, the server-side path to PostHog EU, the address cut to a network then discarded, postcode and coordinates removed, a year's retention | `analytics.md`, `analytics-consent.md` |
+| Errors: always sent, what a report carries, redaction, no id when signed out | `errors-and-logs.md` |
+| Logs: 14 days at PostHog, route and ids only, never an address or email; rate limits in memory for at most a day; the two daily caps keeping a hashed address 7 days | `errors-and-logs.md`, `api.md` ("Rate limits"), `server-side-transcripts.md` (`CALLER_RETENTION_DAYS`) |
+| Assistants: tokens not sessions, the read tools and `mark_overviews`, every call logged | `mcp-connector.md` |
+| Processors | `deploy.md`, `analytics.md`, `sign-in.md`, `server-side-transcripts.md`, `playlists.md` |
+| On the device | `analytics-consent.md` ("The record"), `reading-position.md`, `playlists.md`, `tiers.md` (the trial token) |
+
+**Two places where the policy says what is true rather than what was decided.** OV-62 decided
+(3 Oct 2026) that anonymous analytics never linked to an account is deleted after 30 days, and
+that the policy says so. The sweep isn't built, and PostHog keeps events for a year, so the
+policy says a year and that 30 days is the intent. And OV-184 is account deletion; until it
+ships, the policy says deletion is done by hand on request, within thirty days.
+
+**Holding events before an answer is disclosed, not dropped.** OV-46's question on the card
+(28 Oct 2026) was whether holding events in memory before consent counts as collecting them.
+The policy describes the hold plainly: held in the browser's memory, never stored or sent until
+Allow, gone on No thanks or on leaving. Whether that is enough is for the legal review.
+
+## What the terms say
+
+What the service is and that it is provided as is; that overviews are written by a model and
+can be wrong; the account rules (minimum age, one per person, deletion by email, suspension);
+own keys under the provider's terms and at the reader's cost; allowances on our key as
+allowances, with paid plans a placeholder until OV-18; acceptable use, including the shared
+cache's reason for refusing a false transcript; the reader's content and the permission the
+service needs to sync, render, serve assistants and shared links; sharing; assistants; YouTube
+and other third parties; changes to the service; liability; changes to the terms, with
+fourteen days' notice by email for a change that matters; governing law; contact.
+
+## Decisions taken here, for the review to confirm
+
+The card left two questions open and the texts needed answers to be written at all. Each is
+one line in `legalIdentity.ts` or one sentence in a page:
+
+- **The operator** is named as the person behind the service, in the United Kingdom, with
+  `hello@theoverviewapp.com` (the `MAIL_FROM` address) as the contact.
+- **Governing law** is England and Wales: the machine is in London, prices are in pounds, and
+  the card already asks about the ICO fee.
+- **Minimum age** is 13, the UK's age of digital consent.
+- **Transfers** rest on the UK adequacy regulations for EU processors and standard data
+  protection clauses with the UK addendum for the US ones. The card's "sign PostHog's DPA and
+  confirm the transfer mechanism for each" is still to do, and is not something code can do.
+
+## Does this change the texts?
+
+Every card is checked against this list before its PR opens (`CLAUDE.md`, "Working style",
+habit 4). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
+goes in the log below. No match means the PR says "No change to /privacy or /terms".
+
+A change touches the **privacy policy** when it:
+
+- collects, sends or stores anything new about a reader or a device, or stops doing so
+  (a field on a record, a header, an id, a cookie, anything in `localStorage`)
+- sends anything to a new third party, or stops using one (a provider, an API, a proxy, a
+  CDN, a mail or analytics service), or moves one to another region
+- changes what a reader's own key, or our key, sends to a model, or which provider our key uses
+- changes how long anything is kept, or what a deletion leaves behind
+- changes what a log line, an event or an error report may carry
+- changes the analytics tiers, what is counted, or when a reader is asked
+- changes what a shared link, a shared cache copy or an assistant can see
+- changes what is stored on the device, or which of it is strictly necessary
+- builds something the policy currently says is done by hand or not yet built (account
+  deletion, the 30-day sweep of unlinked anonymous analytics)
+
+A change touches the **terms** when it:
+
+- adds a paid plan, a price, a trial, or any charge
+- changes an allowance or a cap readers can see, or who can use a feature
+- adds a way a reader's content leaves the service (a new export, share or integration)
+- changes account rules: age, one per person, deletion, suspension
+- adds a third party whose terms the reader is bound by through us
+- changes how changes are announced
+
+Either text also changes when `legalIdentity.ts` does: the operator, the contact address, the
+governing law or the minimum age.
+
+## Revision log
+
+One line per change to either page, newest first, with the card that caused it. The dates
+match the pages' `*_UPDATED_ON`.
+
+| Date | Page | Card | What changed |
+|---|---|---|---|
+| 2026-11-05 | both | OV-79 | First texts, written from what was built on this date. |
+
+## Not built
+
+- **Legal review** of both texts, which the card's definition of done requires and the first
+  release to hand-picked testers may not.
+- **The 30-day deletion** of unlinked anonymous analytics, and **account deletion** (OV-184).
+  Each changes a sentence here when it lands.
+- **Checking the ICO data protection fee**, from the card.

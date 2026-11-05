@@ -434,8 +434,9 @@ names the pool, the account and the bucket, which is what turns narration on.
   wanted; the job already runs under that environment so the switch is in the repository
   settings, not in the workflow.
 - **List the extension.** The mechanics above end at a zip and an id. The listing itself
-  needs a privacy policy the web app does not yet serve, a justification for each
-  permission the manifest asks for, screenshots and the store copy. The draft upload that
+  needs a justification for each permission the manifest asks for, screenshots and the
+  store copy; the privacy policy it links to is served at `/privacy`
+  (`docs/features/legal-pages.md`). The draft upload that
   fixes the id has been made, so `CORS_ALLOWED_ORIGINS` in `fly.toml` names the store's
   origin and production vouches for a build carrying the key — the keyed zip on each
   release, or any local `task run:extension`. Nothing is installable from the store until

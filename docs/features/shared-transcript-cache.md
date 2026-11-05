@@ -145,8 +145,8 @@ goes wrong. Two rules keep it from becoming a history of what people watched:
   (not built yet) will leave its contributions until the year is up. Once the account row
   is gone, the id leads to no email. The contributions still count, because the fetches
   happened, and a copy that account vouched for can still be removed along with
-  everything else it vouched for. The privacy policy the store listing needs should say
-  so.
+  everything else it vouched for. The privacy policy says so
+  (`docs/features/legal-pages.md`).
 
 **The migration keeps what each account had and shares none of it.** Existing rows become
 copies keyed `legacy:<md5 of the body>`, each linked to the account that stored it, with
