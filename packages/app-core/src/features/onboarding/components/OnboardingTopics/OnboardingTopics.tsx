@@ -10,7 +10,9 @@ export interface OnboardingTopicSuggestions {
   noun: string;
   names: readonly string[];
   newTopic: string | null;
-  by: "model" | "code";
+  // Matched in code while the model's answer was still on its way, because it failed, or because
+  // the model wasn't asked (a sample, a shared copy, no server).
+  by: "model" | "code-pending" | "code-failed" | "code-only";
 }
 
 export interface OnboardingTopicsProps {

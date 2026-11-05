@@ -235,9 +235,10 @@ test("an overview that can't be made says so on the screen the reader is on, and
 }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.simulateEndpointError(EndpointKey.OUR_KEY_GENERATE);
-  const home = await launcher.launch(signedOutAnswered);
+  const home = await launcher.launch(signedOut);
   await home.submitHeroUrl(VIDEO_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.allowAnalytics();
   await onboarding.confirmVideo();
   await onboarding.skip();
   await onboarding.skip();
@@ -247,6 +248,8 @@ test("an overview that can't be made says so on the screen the reader is on, and
   await onboarding.verifyOnScreen("voice");
   await onboarding.verifySaysItFailed();
   await onboarding.verifyPreviewOffersTryAgain();
+  await onboarding.tryAgainFromPreview();
+  await onboarding.verifySaysItFailed();
   await onboarding.continueFromVoice();
   await onboarding.skip();
   await onboarding.skip();
@@ -256,6 +259,14 @@ test("an overview that can't be made says so on the screen the reader is on, and
   await onboarding.tryAgain();
 
   await onboarding.verifyTeaser({ title: VIDEO_TITLE, premise: "Made on our key." });
+  await expect
+    .poll(() =>
+      backendSimulator.analytics
+        .events()
+        .filter(({ name }) => name === "onboarding.overview.retried")
+        .map(({ props }) => props),
+    )
+    .toEqual([{ from: "preview" }, { from: "account" }]);
 });
 
 test("a reader with an account signs in from the account screen and lands on the overview, with no plan to pick", async ({
@@ -522,7 +533,32 @@ test("topics suggested from a page's title and text come first, and picking one 
   await onboarding.verifyOnScreen("library");
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
-    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1, suggestedBy: "code" });
+    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1, suggestedBy: "code-failed" });
+});
+
+test("suggestions matched in code while the model's answer is still on its way are counted as such", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.holdsTopicSuggestions();
+  backendSimulator.articles.answerWith({
+    status: "read",
+    article: { ...ARTICLE, title: "Why your workout matters less than your sleep" },
+  });
+  const home = await launcher.launch(signedOut);
+
+  await home.submitHeroUrl(ARTICLE_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.allowAnalytics();
+  await onboarding.confirmVideo();
+  await onboarding.verifySuggests("For this article · suggested from what it's about", "Health", "Fitness");
+  await onboarding.continueFromTopics();
+
+  await onboarding.verifyOnScreen("library");
+  await expect
+    .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
+    .toEqual({ picked: 0, typed: 0, suggested: 2, pickedSuggested: 0, suggestedBy: "code-pending" });
 });
 
 test("the model's suggestions, asked on the trial as soon as the video is found, can name one new topic, made with no description", async ({

@@ -73,8 +73,12 @@ a kept one takes the third place ahead of a third starter topic.
 `packages/domain`): each starter topic has a few `keywords`, matched as whole words against the
 title (counting double) and the same text. A topic needs a word in the title, or two in the
 text. Once the topics screen shows suggestions they're held, so an answer arriving late never
-moves chips under the reader. `onboarding.topics.continued` counts how many were suggested, by
-the model or in code, and how many of those were picked.
+moves chips under the reader. `onboarding.topics.continued` counts how many were suggested and
+how many of those were picked, and says by what (`suggestedBy`): the model; code, while its
+answer was still on its way (`code-pending`) or because it failed (`code-failed`); code alone,
+for a sample or shared copy, which doesn't ask (`code-only`); or nothing. `code-pending` is the
+one to watch, since the design assumes the answer is usually back in time. A call refused for
+a trial the server doesn't know is logged as `topic suggestions refused for an unknown trial`.
 
 ## The library slide
 
@@ -210,7 +214,9 @@ source card isn't repeated in the preview; it arrives there on Looks right. When
 starts the rows fold into pills (topics, Personalised or Written for anyone, the voice) and
 the bar appears over the kind's sections, Chapters included, then "Topic" shows where it was
 sorted once written. A failure before the source is in hand leaves "Nothing to make yet"; one
-while writing says so in the preview, with Try again. Never the overview's text.
+while writing says so in the preview, with Try again. `onboarding.overview.retried` says
+which Try again was pressed: the preview's, the account screen's, or a page that couldn't be
+read. Never the overview's text.
 
 **About you** is a sentence to finish (`personalisation.md`), with What this changes showing a
 fixed before-and-after under it. Continue saves it before writing is let go. The screen says it

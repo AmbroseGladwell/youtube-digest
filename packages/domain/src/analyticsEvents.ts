@@ -468,7 +468,9 @@ export const analyticsEvents = {
           typed: z.number().int().nonnegative(),
           suggested: z.number().int().nonnegative(),
           pickedSuggested: z.number().int().nonnegative(),
-          suggestedBy: z.enum(["model", "code", "none"]),
+          // Matched in code while the model's answer was still on its way, because it failed, or
+          // because the model wasn't asked (a sample, a shared copy, no server).
+          suggestedBy: z.enum(["model", "code-pending", "code-failed", "code-only", "none"]),
         },
       ),
     },
@@ -490,7 +492,9 @@ export const analyticsEvents = {
       failed: event("Onboarding's overview couldn't be made, and the screen the reader was on when it failed", {
         step: OnboardingStep,
       }),
-      retried: event("The reader tries onboarding's overview again after it failed"),
+      retried: event("The reader tries onboarding's overview again after it failed, and where they pressed Try again", {
+        from: z.enum(["preview", "account", "readFailure"]),
+      }),
     },
     account: {
       chosen: event("The reader picks how to get to the overview: a new account, or one they have", { way: AuthIntent }),

@@ -148,6 +148,7 @@ export const apiLogLines = coded("api", {
   },
   trials: {
     issued: line("info", "trial token issued", "A signed-out device was given a trial token before its onboarding overview on our key."),
+    topicSuggestionsUnknownTrial: line("warn", "topic suggestions refused for an unknown trial", "Onboarding asked for topic suggestions with a trial token this server never issued, so the device will ask for a new one. Never the token or the address."),
   },
   reservations: {
     reserved: line("info", "own-key overview reserved", "A device reserved a slot on the reader's own key before generating: plan, the month's count and limit."),
