@@ -5,18 +5,22 @@ import { onboardingNearlyThereTestIds } from "./OnboardingNearlyThereTestIds.js"
 
 export interface OnboardingNearlyThereProps {
   phase: OnboardingArrivingPhase;
+  // A new account has just picked its plan; a sign-in to one already held has no plan to pick.
+  after: "plan" | "signIn";
   onTryAgain: () => void;
 }
 
-// A reader who signed in to an account they already had before the overview landed: there's
-// no plan to pick, so this holds the place until the overview is in the account and opens
-// (docs/features/onboarding.md, "The account").
-export function OnboardingNearlyThere({ phase, onTryAgain }: OnboardingNearlyThereProps) {
+// The account exists and the overview isn't in it yet: this holds the place, after the plan or
+// after a sign-in, until the overview is in the account and opens on its own
+// (docs/features/onboarding.md, "The plan").
+export function OnboardingNearlyThere({ phase, after, onTryAgain }: OnboardingNearlyThereProps) {
   return (
     <div className={styles.root} data-testid={onboardingNearlyThereTestIds.root}>
       <div className={styles.intro}>
         <OnboardingHeading>Nearly there</OnboardingHeading>
-        <p className={styles.lead}>You're signed in. Your overview opens as soon as it's ready.</p>
+        <p className={styles.lead}>
+          {after === "plan" ? "Your plan is set. Your overview opens as soon as it's ready." : "You're signed in. Your overview opens as soon as it's ready."}
+        </p>
       </div>
       <OnboardingArriving phase={phase} onTryAgain={onTryAgain} />
     </div>

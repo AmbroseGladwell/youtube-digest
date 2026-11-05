@@ -248,18 +248,21 @@ link can only return to a consent screen, so it lands on home and home sends it 
 
 **The plan** (46k) follows a new account; signing in to one already held skips it. Free and
 Plus are the same card; Plus says Coming soon until there is billing, and BYO Plus is a line
-under them. Continue with Free waits until the overview is in the account, and says what it's
-waiting on so it never looks stuck (`OnboardingArriving`): "Still writing your overview…" with
-the bar still going at the top, then "Bringing your overview into your account…", or
-"Something went wrong making your overview." with Try again. While it's still being written the
-lead says "Your overview is on its way." Then it goes to it. "This overview counts as your first
-of the month." A reader who reaches the end first waits here rather than going to an empty
-library, since the reveal is the overview's own page and its next steps hang off it (decided
-with OV-163).
+under them. **The plan never waits on the overview** (owner, 5 Nov 2026): Continue with Free
+goes straight to the overview when it's in the account, and otherwise records the choice
+(`plan` in the progress) and waits on Nearly there, below. While it's still being written the
+lead says "Your overview is on its way."; the bar at the top is what says it's being made.
+"This overview counts as your first of the month."
 
-**A sign-in to an account already held** that lands before the overview is in it waits on
-"Nearly there" (`OnboardingNearlyThere`): "You're signed in. Your overview opens as soon as it's
-ready.", with the same three states under it. There's no Back once signed in.
+**Nearly there** (`OnboardingNearlyThere`) holds the place once the account exists and the
+overview isn't in it yet, after the plan ("Your plan is set. Your overview opens as soon as
+it's ready.") or after a sign-in to an account already held ("You're signed in. …"), and the
+reveal opens on its own when it arrives. Under the lead, what the overview is doing
+(`OnboardingArriving`): "Still writing your overview…" with the bar still going at the top,
+then "Bringing your overview into your account…", or "Something went wrong making your
+overview." with Try again. A reader who reaches the end first waits here rather than going
+to an empty library, since the reveal is the overview's own page and its next steps hang off
+it. There's no Back once signed in.
 
 ## The run lives in one tab
 

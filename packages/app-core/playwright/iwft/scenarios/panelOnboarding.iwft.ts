@@ -191,11 +191,10 @@ test("in the panel, the account can be made with its code before the overview is
   await createAccount.enterCode(SIMULATED_LINK_CODE);
 
   await onboarding.verifyOnScreen("plan", "Choose your plan");
-  await onboarding.verifyArriving("writing");
-  await onboarding.verifyCantContinueWithFree();
-  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
-  await onboarding.verifyCanContinueWithFree();
   await onboarding.continueWithFree();
+  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
+  await onboarding.verifyArriving("writing");
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);

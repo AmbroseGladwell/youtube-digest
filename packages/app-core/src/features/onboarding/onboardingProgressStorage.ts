@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
+import { AuthIntent, OnboardingStep, OverviewId, Plan, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
 import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 
 // Progress from before any kind of link was taken held the video's address instead of its key.
@@ -26,6 +26,8 @@ const OnboardingProgressShape = z.object({
   // it gone and takes the run over. Null when nothing is run, as for a share.
   runner: z.string().nullable().catch(null),
   way: AuthIntent.nullable(),
+  // The plan picked, so the reveal opens on its own once the overview is in the account.
+  plan: Plan.nullable().catch(null),
   // The sign-in from the account screen has landed: when, what the overview was doing then, and
   // whether its arrival in the account has been counted since (docs/features/onboarding.md, "Analytics").
   landed: z

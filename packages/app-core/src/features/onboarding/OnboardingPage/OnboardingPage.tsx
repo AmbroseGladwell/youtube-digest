@@ -271,9 +271,11 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     update({ landed: { ...progress.landed, arrived: true } });
   }, [inAccount, progress.landed, step, analytics, update]);
 
+  // The reveal opens on its own once the overview is in the account: at once for a sign-in to
+  // an account already held, and after the plan is picked for a new one.
   const revealed = useRef(false);
   useEffect(() => {
-    if (!inAccount || progress.way === "createAccount" || progress.overviewId === null || revealed.current) return;
+    if (!inAccount || (progress.way === "createAccount" && progress.plan === null) || progress.overviewId === null || revealed.current) return;
     revealed.current = true;
     finish(progress.overviewId);
   });
@@ -451,7 +453,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "account":
-        if (signedIn) return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} onTryAgain={() => tryAgain("account")} />;
+        if (signedIn) return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="signIn" onTryAgain={() => tryAgain("account")} />;
         return (
           <OnboardingAccount
             overview={overview}
@@ -467,14 +469,17 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "plan":
+        if (progress.plan !== null) {
+          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="plan" onTryAgain={() => tryAgain("plan")} />;
+        }
         return (
           <OnboardingPlan
-            arriving={arriving}
+            made={share !== null || progress.overviewId !== null}
             sample={sample}
-            onTryAgain={() => tryAgain("plan")}
             onFree={() => {
               analytics.onboarding.plan.chosen({ plan: "free" });
-              if (progress.overviewId !== null) finish(progress.overviewId);
+              if (inAccount && progress.overviewId !== null) finish(progress.overviewId);
+              else update({ plan: "free" });
             }}
           />
         );

@@ -725,11 +725,10 @@ test("the account can be made before the overview is written, and the overview t
   await createAccount.enterCode("ABCD-EFGH");
 
   await onboarding.verifyOnScreen("plan", "Choose your plan");
-  await onboarding.verifyArriving("writing");
-  await onboarding.verifyCantContinueWithFree();
-  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
-  await onboarding.verifyCanContinueWithFree();
   await onboarding.continueWithFree();
+  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
+  await onboarding.verifyArriving("writing");
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
@@ -765,7 +764,7 @@ test("a reader with an account who signs in before the overview is written waits
   await signIn.chooseCodeFromEmail();
   await signIn.enterCode("ABCD-EFGH");
 
-  await onboarding.verifyNearlyThere();
+  await onboarding.verifyNearlyThere("You're signed in. Your overview opens as soon as it's ready.");
   await onboarding.verifyArriving("writing");
   await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
 
@@ -775,7 +774,7 @@ test("a reader with an account who signs in before the overview is written waits
   expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
 });
 
-test("an overview that fails after the account exists says so on the plan, and Try again makes it on the account", async ({
+test("an overview that fails after the plan is picked says so where the reader waits, and Try again makes it on the account", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -792,16 +791,15 @@ test("an overview that fails after the account exists says so on the plan, and T
   await createAccount.chooseCodeFromEmail();
   await createAccount.enterCode("ABCD-EFGH");
   await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.continueWithFree();
+  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
 
   backendSimulator.ourKey.refuses(503, "unavailable", {});
   await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
   await onboarding.verifyArriving("failed");
-  await onboarding.verifyCantContinueWithFree();
 
   backendSimulator.ourKey.refusesNoMore();
   await onboarding.tryAgainAfterAccount();
-  await onboarding.verifyCanContinueWithFree();
-  await onboarding.continueWithFree();
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
@@ -836,10 +834,10 @@ test("the sign-in link finishing in another tab leaves the run where it is, and 
   await launcher.signInFromAnotherTab();
 
   await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.continueWithFree();
+  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
   await onboarding.verifyArriving("writing");
   await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
-  await onboarding.verifyCanContinueWithFree();
-  await onboarding.continueWithFree();
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
@@ -874,13 +872,13 @@ test("a tab that isn't running the overview mirrors the tab that is, and takes t
   await createAccount.chooseCodeFromEmail();
   await createAccount.enterCode("ABCD-EFGH");
   await onboarding.verifyOnScreen("plan", "Choose your plan");
+  await onboarding.continueWithFree();
+  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
   await onboarding.verifyArriving("writing");
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 
   await launcher.anotherTabCloses();
 
-  await onboarding.verifyCanContinueWithFree();
-  await onboarding.continueWithFree();
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(VIDEO_TITLE);
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);

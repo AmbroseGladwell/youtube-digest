@@ -54,6 +54,7 @@ export function startOnboarding(link: string, key: SourceKey | null, tabId: numb
     overviewId: null,
     runner: onboardingTabId(),
     way: null,
+    plan: null,
     landed: null,
     share: null,
   });
@@ -72,6 +73,7 @@ export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOver
     overviewId: snapshot.note.id,
     runner: null,
     way: null,
+    plan: null,
     landed: null,
     share: { token, snapshot, sample },
   });

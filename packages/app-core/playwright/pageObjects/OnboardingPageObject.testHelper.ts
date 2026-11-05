@@ -316,17 +316,13 @@ export class OnboardingPageObject extends PageObject {
 
   tryAgainAfterAccount = () => this.step("tryAgainAfterAccount", () => this.click(onboardingArrivingTestIds.tryAgain));
 
-  verifyNearlyThere = () =>
+  verifyNearlyThere = (lead: string) =>
     this.step("verifyNearlyThere", async () => {
       await this.expectToBeVisible(onboardingNearlyThereTestIds.root);
       await expect(this.page.getByRole("heading", { level: 1, name: "Nearly there" })).toBeFocused();
+      await expect(this.get(onboardingNearlyThereTestIds.root)).toContainText(lead);
     });
 
-  verifyCantContinueWithFree = () =>
-    this.step("verifyCantContinueWithFree", () => expect(this.get(onboardingPlanTestIds.continueWithFree)).toBeDisabled());
-
-  verifyCanContinueWithFree = () =>
-    this.step("verifyCanContinueWithFree", () => expect(this.get(onboardingPlanTestIds.continueWithFree)).toBeEnabled({ timeout: 10_000 }));
 
   tryAgainFromPreview = () => this.step("tryAgainFromPreview", () => this.click(onboardingPreviewTestIds.tryAgain));
 
