@@ -65,6 +65,17 @@ for now. The design allowed one new topic outside the starter list; matching in 
 name one well, so none is offered. `onboarding.topics.continued` counts how many were
 suggested and how many of those were picked.
 
+## The library slide
+
+OV-177, design 175c. "A library that sorts itself" says how sorting works: "As each overview
+is written, we check it against your topics and add it to the ones it fits best, if any"
+(`filingSection.ts`). Its scene is the reader's own: their video or page, "not written yet",
+and their topics, the first five then "and N more". It claims no result, since nothing is filed
+until it's written, so there's no "+1 arriving"; the real filing shows in the preview once
+written. With no topics it says overviews wait in Unsorted until they add one. A sample or a
+shared copy is already written, so its card says "not sorted yet". The scene stays hidden from
+screen readers; the sentence carries the meaning.
+
 ## Signed out sees no overviews
 
 Where there are accounts, every page that would show an overview shows `SignedOutGate`

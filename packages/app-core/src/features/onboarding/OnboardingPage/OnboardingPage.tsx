@@ -401,7 +401,15 @@ function Onboarding({ progress, update }: OnboardingProps) {
       case "library":
       case "askYourAi":
       case "moreSources":
-        return <OnboardingSlide slide={step} topics={progress.topics} onNext={next} />;
+        return (
+          <OnboardingSlide
+            slide={step}
+            topics={progress.topics}
+            source={found?.source ?? null}
+            written={share !== null}
+            onNext={next}
+          />
+        );
       case "account":
         return (
           <OnboardingAccount
