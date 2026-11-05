@@ -5,6 +5,7 @@ import { sharedPageHeaderTestIds } from "../../src/features/sharedPage/component
 import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRangeTag/LineRangeTagTestIds.js";
 import { sharedOverviewPageTestIds } from "../../src/features/sharedPage/SharedOverviewPage/SharedOverviewPageTestIds.js";
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
+import { HeadImagePageObject } from "./HeadImagePageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 
@@ -12,6 +13,25 @@ export class SharedOverviewPageObject extends PageObject {
   get relatedByTag(): RelatedByTagPageObject {
     return new RelatedByTagPageObject(this.testContext);
   }
+
+  get headImage(): HeadImagePageObject {
+    return new HeadImagePageObject(
+      this.testContext,
+      this.get(sharedOverviewPageTestIds.root),
+      this.get(sharedOverviewPageTestIds.title),
+    );
+  }
+
+  verifyHeadImageLeadsWithChannel = () => this.headImage.verifyLeadsWith(this.get(sharedOverviewPageTestIds.channel));
+
+  verifyHeadImageAboveChannel = () => this.headImage.verifyAbove(this.get(sharedOverviewPageTestIds.channel));
+
+  verifyChannelAboveTitle = () =>
+    this.step("verifyChannelAboveTitle", async () => {
+      const channel = (await this.get(sharedOverviewPageTestIds.channel).boundingBox())!;
+      const title = (await this.get(sharedOverviewPageTestIds.title).boundingBox())!;
+      expect(channel.y + channel.height).toBeLessThanOrEqual(title.y);
+    });
 
   verifyIsShown = (): Promise<SharedOverviewPageObject> =>
     this.step("verifyIsShown", async () => {

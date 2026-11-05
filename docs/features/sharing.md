@@ -310,6 +310,23 @@ the person holding the link can do nothing about either.
 `held` transcript, which is the copy that travelled with the share. Absent, they behave
 exactly as before.
 
+### The image
+
+OV-191. The copy always carried the video's thumbnail link, and the page never drew it. Now
+the head leads with the reader's own `HeadImage`: the tile at the library row's size with the
+channel and chips beside it and the title below, and a click or tap makes it the column's
+width with the chips back under it, as OV-147 and OV-151 draw it on the reader's page
+(`stone-theme.md`, "The head's image" and "Full width"). The grow is `useHeadImageMotion`,
+the same as the reader's.
+
+**Small on every visit, and the choice is the visit's own.** The reader's page reads
+`Settings.headImageSize`; a visitor has no settings, and a reader who is signed in is a
+visitor here, so the page keeps the size in its own state and writes nothing to anyone's
+account. The press is counted as `sharedPage.headImage.resized`, the shared page's
+counterpart of the reader's event, so `headImage` moved into the events both pages share.
+
+No image, or one that fails to load, leaves the head exactly as it was.
+
 ### Audio without an account
 
 `sharedNarrationApi` presents the copy's own render *as* the narration API the player

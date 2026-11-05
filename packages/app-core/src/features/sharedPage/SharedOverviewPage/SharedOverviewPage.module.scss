@@ -46,6 +46,42 @@
   gap: 0.625rem;
 }
 
+// The reader's head (OV-147, OV-151): the tile leads with who it's from beside it, or at full
+// width the picture takes the column and the chips go back under it. Without an image the
+// lead is the head's own rows (docs/features/sharing.md, "The image").
+.lead {
+  display: contents;
+}
+
+.image {
+  display: block;
+}
+
+.leadFull .image {
+  width: 100%;
+}
+
+.lead:not(.leadFull):has(> .image) {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  column-gap: 1.125rem;
+  align-items: center;
+}
+
+.lead:not(.leadFull):has(> .image) .chips {
+  min-width: 0;
+}
+
+.lead:not(.leadFull):has(> .image) .channel {
+  flex: 0 0 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink);
+}
+
 .chips {
   display: flex;
   align-items: center;
@@ -102,5 +138,12 @@
 
   .title {
     font-size: 2rem;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .lead:not(.leadFull):has(> .image) {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: 0.875rem;
   }
 }

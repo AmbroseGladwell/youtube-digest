@@ -37,6 +37,14 @@ export abstract class PageObject {
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
   protected expectToHaveCount = (testId: string, count: number) => expect(this.get(testId)).toHaveCount(count);
 
+  verifyPageDoesNotScrollSideways = () =>
+    this.step("verifyPageDoesNotScrollSideways", async () => {
+      const overflow = await this.page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+
   verifyFieldFontSizes = (check: (sizesInPx: number[]) => void) =>
     this.step("verifyFieldFontSizes", async () => {
       const sizes = await this.locatorOrPage()
