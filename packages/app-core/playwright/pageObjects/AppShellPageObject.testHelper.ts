@@ -12,6 +12,7 @@ import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
 import { CaptureQueueStripPageObject } from "./CaptureQueueStripPageObject.testHelper.js";
 import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
 import { QueuePageObject } from "./QueuePageObject.testHelper.js";
+import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 
 export class AppShellPageObject extends PageObject {
   get accountMenu(): AccountMenuPageObject {
@@ -77,6 +78,69 @@ export class AppShellPageObject extends PageObject {
     });
 
   clickBrand = () => this.step("clickBrand", () => this.click(appShellTestIds.brand));
+
+  // Design OV-167: one slot, two links, and only the one shown reaches the keyboard or a
+  // screen reader. Both are named "All overviews", so the count of reachable links with
+  // that name is what says whose turn it is (docs/features/back-within-reach.md).
+  verifyBarHoldsTheBrand = () =>
+    this.step("verifyBarHoldsTheBrand", async () => {
+      await expect(this.get(appShellTestIds.brand)).not.toHaveAttribute("inert");
+      await expect(this.get(appShellTestIds.backLink)).toHaveAttribute("inert", "");
+      await expect(this.page.getByRole("link", { name: "All overviews" })).toHaveCount(1);
+    });
+
+  verifyBarHoldsTheWayBack = () =>
+    this.step("verifyBarHoldsTheWayBack", async () => {
+      await expect(this.get(appShellTestIds.backLink)).not.toHaveAttribute("inert");
+      await expect(this.get(appShellTestIds.brand)).toHaveAttribute("inert", "");
+      await expect(this.page.getByRole("link", { name: "All overviews" })).toHaveCount(2);
+    });
+
+  verifyBarKeepsHoldingTheWayBack = (forMs: number) =>
+    this.step(`verifyBarKeepsHoldingTheWayBack ${forMs}`, async () => {
+      const swaps = await this.page.evaluate(
+        ([testId, ms]) =>
+          new Promise<number>((resolve) => {
+            const link = document.querySelector(`[data-testid="${testId}"]`)!;
+            let count = 0;
+            const observer = new MutationObserver(() => {
+              count += 1;
+            });
+            observer.observe(link, { attributes: true, attributeFilter: ["inert"] });
+            setTimeout(() => {
+              observer.disconnect();
+              resolve(count);
+            }, ms);
+          }),
+        [appShellTestIds.backLink, forMs] as const,
+      );
+      expect(swaps).toBe(0);
+    });
+
+  verifyBarNeverOffersTheWayBack = () =>
+    this.step("verifyBarNeverOffersTheWayBack", async () => {
+      await this.expectToHaveCount(appShellTestIds.backLink, 0);
+      await expect(this.get(appShellTestIds.brand)).not.toHaveAttribute("inert");
+    });
+
+  // Tapped where it is: a locator click would first scroll the stuck bar "into view", which
+  // is the top of the page, and the head's own link coming back would hand the slot back.
+  clickBackInBar = (): Promise<LibraryPageObject> =>
+    this.step("clickBackInBar", async () => {
+      await expect
+        .poll(() =>
+          this.page.evaluate(() =>
+            document.getAnimations().some((animation) => {
+              const effect = animation.effect;
+              return effect instanceof KeyframeEffect && (effect.pseudoElement ?? "").startsWith("::view-transition");
+            }),
+          ),
+        )
+        .toBe(false);
+      const box = (await this.get(appShellTestIds.backLink).boundingBox())!;
+      await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      return new LibraryPageObject(this.testContext).verifyIsShown();
+    });
 
   clickNewOverview = () =>
     this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));

@@ -88,6 +88,7 @@ export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"])
 export type ListenEnd = z.infer<typeof ListenEnd>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
+const BackSource = z.enum(["head", "bar"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
@@ -290,7 +291,9 @@ export const analyticsEvents = {
       neighbourFollowed: event("The reader steps to the previous or next overview from the reader's foot", {
         direction: Direction,
       }),
-      backFollowed: event("The reader goes back to all overviews from the reader's head"),
+      backFollowed: event("The reader goes back to all overviews, from the reader's head or from the bar's slot once the head has scrolled under it", {
+        from: BackSource,
+      }),
       lineStepped: event("The reader steps a line of the note with the [ and ] keys", { direction: Direction }),
     },
     overview: {
