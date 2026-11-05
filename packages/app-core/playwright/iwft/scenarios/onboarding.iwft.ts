@@ -24,7 +24,7 @@ test("a new reader answers the questions while the overview is made, creates an 
 
   await home.submitHeroUrl(VIDEO_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyOnScreen("analytics", "Help us improve The Overview?");
+  await onboarding.verifyOnScreen("analytics", "Help shape what we build next?");
   await onboarding.verifyAnalyticsDisclosure();
   await onboarding.allowAnalytics();
 

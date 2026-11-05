@@ -15,12 +15,29 @@
   @include onboarding.lead;
 }
 
-.counted {
-  margin: 0;
+.shared {
+  border-radius: 1.125rem;
+  background: var(--surface);
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
   font-size: 0.84375rem;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--ink);
   text-wrap: pretty;
+
+  @media (min-width: 30rem) {
+    padding: 0.875rem 1rem;
+  }
+}
+
+.sharedTitle {
+  font-weight: 600;
+}
+
+.change {
+  color: var(--muted);
 
   a {
     color: var(--ink);
