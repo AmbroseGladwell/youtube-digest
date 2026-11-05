@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,7 +10,6 @@ import {
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
-  sourceKey,
   SourceKey,
   STARTER_TOPICS,
   suggestStarterTopics,
@@ -44,7 +43,9 @@ import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { OnboardingAboutYou } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
 import { OnboardingAccount } from "../components/OnboardingAccount/OnboardingAccount.js";
 import { OnboardingAnalytics } from "../components/OnboardingAnalytics/OnboardingAnalytics.js";
+import type { OnboardingArrivingPhase } from "../components/OnboardingArriving/OnboardingArriving.js";
 import { ONBOARDING_HEADING_ID } from "../components/OnboardingHeading/OnboardingHeading.js";
+import { OnboardingNearlyThere } from "../components/OnboardingNearlyThere/OnboardingNearlyThere.js";
 import { OnboardingPlan } from "../components/OnboardingPlan/OnboardingPlan.js";
 import { OnboardingPreview } from "../components/OnboardingPreview/OnboardingPreview.js";
 import { OnboardingProgressBar } from "../components/OnboardingProgressBar/OnboardingProgressBar.js";
@@ -54,10 +55,10 @@ import { OnboardingTopics, type OnboardingTopicSuggestions } from "../components
 import { useTopicSuggestions } from "../useTopicSuggestions.js";
 import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
 import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
-import { writeOnboardingProgress, type OnboardingProgress } from "../onboardingProgressStorage.js";
+import type { OnboardingProgress } from "../onboardingProgressStorage.js";
 import { writeNextSteps } from "../nextStepsStorage.js";
-import { useOnboardingProgress } from "../useOnboardingProgress.js";
-import { useOnboardingRun } from "../useOnboardingRun.js";
+import { useOnboardingProgress, writeProgress } from "../useOnboardingProgress.js";
+import { useOnboardingRunState } from "../OnboardingRunContext.js";
 import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
 import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
 import { OnboardingReadFailure } from "../components/OnboardingReadFailure/OnboardingReadFailure.js";
@@ -74,20 +75,32 @@ const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video");
 
 // Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
 // or skips what shapes it, then makes an account, picks a plan and lands on it. Where they are
-// is kept on the device, so a reload or the sign-in link in another tab carries on
+// is kept on the device, so a reload or the sign-in link in another tab carries on. The run
+// itself lives above the router (OnboardingRunRuntime), so neither unmounts it
 // (docs/features/onboarding.md).
 export function OnboardingPage() {
   const [progress, update] = useOnboardingProgress();
-  if (progress === null) return <Navigate to={Routes.home()} replace />;
-  return <Onboarding progress={progress} update={update} />;
+  // Leaving forgets the progress and goes somewhere of its own; arriving with none goes home.
+  const leaving = useRef(false);
+  if (progress === null) return leaving.current ? null : <Navigate to={Routes.home()} replace />;
+  return (
+    <Onboarding
+      progress={progress}
+      update={update}
+      onLeave={() => {
+        leaving.current = true;
+      }}
+    />
+  );
 }
 
 interface OnboardingProps {
   progress: OnboardingProgress;
   update: (patch: Partial<OnboardingProgress> | null) => void;
+  onLeave: () => void;
 }
 
-function Onboarding({ progress, update }: OnboardingProps) {
+function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const { connection } = useSyncConnection();
@@ -103,7 +116,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
-  const [attempt, setAttempt] = useState(0);
+  const { run, attempt, retry } = useOnboardingRunState();
   const [asking, setAsking] = useState<AuthIntent | null>(null);
   const [savingTopics, setSavingTopics] = useState(false);
   const [picking, setPicking] = useState<readonly string[] | null>(null);
@@ -128,17 +141,6 @@ function Onboarding({ progress, update }: OnboardingProps) {
     if (progress.sourceKey === null && firstVideo !== null) update({ sourceKey: SourceKey.parse(firstVideo.videoId) });
   }, [progress.sourceKey, firstVideo, update]);
 
-  const run = useOnboardingRun({
-    source: kind,
-    target: signedIn || progress.overviewId !== null || kind === null ? null : kind.target(progress),
-    tabId: progress.tabId,
-    mayWrite: progress.mayWrite,
-    attempt,
-    onFound: (found) => {
-      if (progress.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
-    },
-    onMade: (overview) => update({ overviewId: overview.id }),
-  });
   const stored = useQuery({
     queryKey: ["onboarding", "overview", accountId, progress.overviewId],
     queryFn: async () => (progress.overviewId === null ? null : await overviewStore.getOverview(progress.overviewId)),
@@ -187,7 +189,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
     }
     analytics.onboarding.start.linkSubmitted({ kind: another.linkKind });
     update({ link: link.trim(), sourceKey: another.source.keyFromLink(link), tabId: null, overviewId: null });
-    setAttempt((current) => current + 1);
+    retry();
     return true;
   };
 
@@ -198,6 +200,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
   // the copy is read from the document the server writes (docs/features/sharing.md). A sample
   // came from Start, so it goes back there.
   const startAgain = () => {
+    onLeave();
     update(null);
     if (share === null || share.sample) void navigate(Routes.home(), { replace: true });
     else globalThis.location.assign(Routes.sharedOverview(share.token));
@@ -210,8 +213,9 @@ function Onboarding({ progress, update }: OnboardingProps) {
     });
     libraryMove.dismiss();
     writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null, sample });
+    onLeave();
     void navigate(Routes.overview(overviewId), { replace: true });
-    writeOnboardingProgress(null);
+    writeProgress(null);
   };
 
   const afterAnalytics = steps[indexOf("analytics") + 1] ?? "account";
@@ -239,19 +243,39 @@ function Onboarding({ progress, update }: OnboardingProps) {
     });
   }, [share, signedIn, openLibraryAccountId, accountId, inAccount, answersIn, overviewStore, saveFromShare, refetchStored]);
 
+  // Signed in from the account screen, the overview may still be on its way: the plan, or the
+  // wait for a sign-in, holds the place until it's in the account. Signed in some other way
+  // with nothing made, there's nothing here to carry on with.
   useEffect(() => {
     if (!signedIn) return;
-    if (progress.overviewId === null) {
+    if (progress.overviewId === null && (progress.way === null || kind === null)) {
+      onLeave();
       update(null);
       void navigate(Routes.home(), { replace: true });
     } else if (progress.way === "createAccount" && step !== "plan") {
       update({ step: "plan", mayWrite: true });
     }
-  }, [signedIn, progress.overviewId, progress.way, step, update, navigate]);
+  }, [signedIn, progress.overviewId, progress.way, kind, step, update, navigate, onLeave]);
 
+  // The account came first, or didn't: counted as the sign-in lands, then how long the overview
+  // took to arrive after it (docs/features/onboarding.md, "Analytics").
+  useEffect(() => {
+    if (!signedIn || progress.way === null || progress.landed !== null) return;
+    const overview = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
+    analytics.onboarding.account.landed({ way: progress.way, overview });
+    update({ landed: { at: Date.now(), overview, arrived: false } });
+  }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
+  useEffect(() => {
+    if (!inAccount || progress.landed === null || progress.landed.arrived) return;
+    analytics.onboarding.overview.arrived({ seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
+    update({ landed: { ...progress.landed, arrived: true } });
+  }, [inAccount, progress.landed, step, analytics, update]);
+
+  // The reveal opens on its own once the overview is in the account: at once for a sign-in to
+  // an account already held, and after the plan is picked for a new one.
   const revealed = useRef(false);
   useEffect(() => {
-    if (!inAccount || progress.way === "createAccount" || progress.overviewId === null || revealed.current) return;
+    if (!inAccount || (progress.way === "createAccount" && progress.plan === null) || progress.overviewId === null || revealed.current) return;
     revealed.current = true;
     finish(progress.overviewId);
   });
@@ -267,8 +291,8 @@ function Onboarding({ progress, update }: OnboardingProps) {
   useEffect(() => {
     if (phase !== "failed" || heardFailure.current === attempt) return;
     heardFailure.current = attempt;
-    analytics.onboarding.overview.failed({ step });
-  }, [phase, attempt, step, analytics]);
+    analytics.onboarding.overview.failed({ step, afterAccount: signedIn });
+  }, [phase, attempt, step, signedIn, analytics]);
 
   const saveTopics = async (chosen: string[]) => {
     setSavingTopics(true);
@@ -310,10 +334,12 @@ function Onboarding({ progress, update }: OnboardingProps) {
   const personal = !aboutYouIsEmpty(aboutYou);
   // The Continue that lets writing go: About you, or the slide after it when the sentence is empty.
   const soon = step === "aboutYou" || (step === "stepsForYou" && !progress.mayWrite);
-  const tryAgain = (from: "preview" | "account" | "readFailure") => {
+  const tryAgain = (from: "preview" | "account" | "plan" | "readFailure") => {
     analytics.onboarding.overview.retried({ from });
-    setAttempt((current) => current + 1);
+    retry();
   };
+  // Once the account exists: what the overview is doing until it's in the account's library.
+  const arriving: OnboardingArrivingPhase | null = inAccount ? null : failed ? "failed" : progress.overviewId !== null ? "bringingIn" : "writing";
 
   // A sample is already made, so there is no overview's progress to show (155f).
   const progressBar = sample ? null : (
@@ -323,10 +349,14 @@ function Onboarding({ progress, update }: OnboardingProps) {
       ready={kind?.ready(found) ?? null}
       soon={soon}
       personal={personal}
-      onSeeOverview={() => {
-        analytics.onboarding.overview.seenEarly({ step });
-        go("account");
-      }}
+      onSeeOverview={
+        step === "account" || step === "plan"
+          ? null
+          : () => {
+              analytics.onboarding.overview.seenEarly({ step });
+              go("account");
+            }
+      }
     />
   );
 
@@ -334,6 +364,31 @@ function Onboarding({ progress, update }: OnboardingProps) {
     overview === null
       ? null
       : overview.topicIds.flatMap((topicId) => topics.find((topic) => topic.id === topicId)?.name ?? []);
+
+  // The overview taking shape: beside the screens on a wide window, and on a phone inside
+  // Nearly there, where the bar at the top already shows its progress.
+  const previewOf = (bar: ReactNode | null) => (
+    <OnboardingPreview
+      progress={bar}
+      phase={phase}
+      kind={kind}
+      found={found}
+      failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
+      answers={{
+        current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
+        topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
+        topicsAnswered: indexOf(step) > indexOf("topics"),
+        personal,
+        soon,
+        voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
+      }}
+      sortedInto={phase === "ready" ? sortedInto : null}
+      forAnyone={sample}
+      onTryAgain={() => tryAgain("preview")}
+      teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
+    />
+  );
+  const nearlyThereCard = wide || failed || sample ? null : previewOf(null);
 
   const screen = (() => {
     switch (step) {
@@ -423,6 +478,9 @@ function Onboarding({ progress, update }: OnboardingProps) {
           />
         );
       case "account":
+        if (signedIn) {
+          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="signIn" card={nearlyThereCard} onTryAgain={() => tryAgain("account")} />;
+        }
         return (
           <OnboardingAccount
             overview={overview}
@@ -438,13 +496,17 @@ function Onboarding({ progress, update }: OnboardingProps) {
           />
         );
       case "plan":
+        if (progress.plan !== null) {
+          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="plan" card={nearlyThereCard} onTryAgain={() => tryAgain("plan")} />;
+        }
         return (
           <OnboardingPlan
-            inAccount={inAccount}
+            made={share !== null || progress.overviewId !== null}
             sample={sample}
             onFree={() => {
               analytics.onboarding.plan.chosen({ plan: "free" });
-              if (progress.overviewId !== null) finish(progress.overviewId);
+              if (inAccount && progress.overviewId !== null) finish(progress.overviewId);
+              else update({ plan: "free" });
             }}
           />
         );
@@ -474,7 +536,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
           {asking === null || signedIn ? (
             <>
               <div className={styles.nav}>
-                {step !== "plan" && (
+                {step !== "plan" && !signedIn && (
                   <button
                     type="button"
                     className={styles.back}
@@ -525,27 +587,7 @@ function Onboarding({ progress, update }: OnboardingProps) {
           )}
         </main>
 
-        <div className={styles.wide}>
-          <OnboardingPreview
-            progress={progressBar}
-            phase={phase}
-            kind={kind}
-            found={found}
-            failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
-            answers={{
-              current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
-              topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
-              topicsAnswered: indexOf(step) > indexOf("topics"),
-              personal,
-              soon,
-              voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
-            }}
-            sortedInto={phase === "ready" ? sortedInto : null}
-            forAnyone={sample}
-            onTryAgain={() => tryAgain("preview")}
-            teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
-          />
-        </div>
+        <div className={styles.wide}>{previewOf(progressBar)}</div>
       </div>
     </div>
   );

@@ -1,7 +1,13 @@
 import { beforeMount } from "@playwright/experimental-ct-react/hooks";
 import "../src/theme/global.scss";
 import { writeApiKeys } from "../src/features/apiKeys/apiKeyStorage.js";
-import { writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
+import { SYNC_CONNECTION_STORAGE_KEY, writeSyncConnection } from "../src/features/sync/syncConnectionStorage.js";
+import {
+  ONBOARDING_PROGRESS_STORAGE_KEY,
+  readOnboardingProgress,
+  writeOnboardingProgress,
+} from "../src/features/onboarding/onboardingProgressStorage.js";
+import { ONBOARDING_RUN_CHANNEL, type OnboardingRunMessage } from "../src/features/onboarding/useOnboardingRunOwner.js";
 import { writePendingSignIn } from "../src/features/auth/pendingSignInStorage.js";
 import { writeSignedOutTrial } from "../src/features/signedOutTrial/signedOutTrialStorage.js";
 import { NO_TRIAL } from "../src/features/signedOutTrial/types/SignedOutTrial.js";
@@ -71,6 +77,34 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
     libraries.set(accountId, stores);
     if (shown) window.__iwftStores__ = stores;
     return { accountId, stores, close: () => undefined };
+  };
+  // Another tab of the same browser, as this one sees it: what it writes arrives as a storage
+  // event, and a run it holds answers on the channel (docs/features/onboarding.md).
+  let heldRun: BroadcastChannel | null = null;
+  const otherTabWrote = (key: string) => window.dispatchEvent(new StorageEvent("storage", { key, storageArea: localStorage }));
+  window.__iwftAnotherTab__ = {
+    signsIn: (signedIn) => {
+      writeSyncConnection(SyncConnection.parse(signedIn));
+      otherTabWrote(SYNC_CONNECTION_STORAGE_KEY);
+    },
+    holdsOnboardingRun: (link, phase) => {
+      heldRun?.close();
+      heldRun = new BroadcastChannel(ONBOARDING_RUN_CHANNEL);
+      heldRun.onmessage = (event: MessageEvent<OnboardingRunMessage>) => {
+        if (event.data.type === "ask" && event.data.link === link) {
+          heldRun?.postMessage({ type: "held", link, phase } satisfies OnboardingRunMessage);
+        }
+      };
+      const progress = readOnboardingProgress();
+      if (progress !== null) {
+        writeOnboardingProgress({ ...progress, runner: "another-tab" });
+        otherTabWrote(ONBOARDING_PROGRESS_STORAGE_KEY);
+      }
+    },
+    closes: () => {
+      heldRun?.close();
+      heldRun = null;
+    },
   };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";
   window.__iwftLayout__ = hooksConfig?.layout ?? "full";

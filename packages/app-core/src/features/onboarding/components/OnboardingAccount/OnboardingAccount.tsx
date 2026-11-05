@@ -17,8 +17,9 @@ export interface OnboardingAccountProps {
 
 // Design 46j: what's ready, then the way to it. The teaser carries the title and the Premise
 // and nothing more: the rest is drawn, not the overview's text, so none of it can be read
-// before there is an account. There's no way past without one. Email only for now
-// (docs/features/onboarding.md, "The account").
+// before there is an account. There's no way past without one, and no waiting for the
+// overview either: a reader who gets here first makes the account now, and it arrives there.
+// Email only for now (docs/features/onboarding.md, "The account").
 export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTryAgain, onChoose }: OnboardingAccountProps) {
   return (
     <div className={styles.root} data-testid={onboardingAccountTestIds.root}>
@@ -35,7 +36,7 @@ export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTr
         </div>
       ) : overview === null ? (
         <p className={styles.notReady} data-testid={onboardingAccountTestIds.notReady}>
-          Your overview is still being made. You can create your account as soon as it's ready.
+          Your overview is still being written. It'll be ready in your account.
         </p>
       ) : teaserBeside ? null : (
         <OnboardingTeaser overview={overview} sample={sample} />
@@ -53,7 +54,6 @@ export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTr
         <button
           type="button"
           className={styles.way}
-          disabled={overview === null}
           onClick={() => onChoose("createAccount")}
           data-testid={onboardingAccountTestIds.continueWithEmail}
         >
@@ -64,7 +64,6 @@ export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTr
       <button
         type="button"
         className={styles.quiet}
-        disabled={overview === null}
         onClick={() => onChoose("signIn")}
         data-testid={onboardingAccountTestIds.signIn}
       >

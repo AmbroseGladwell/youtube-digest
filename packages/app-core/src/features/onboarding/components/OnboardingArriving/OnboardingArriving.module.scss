@@ -1,0 +1,55 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.status {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.spinner {
+  display: inline-flex;
+  flex: none;
+  color: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.failed {
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.failedIcon {
+  color: var(--alert);
+  display: inline-flex;
+  flex: none;
+}
+
+.failedText {
+  flex: 1;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
+.tryAgain {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  flex: none;
+  background: var(--card);
+}

@@ -1221,6 +1221,9 @@ export class BackendSimulator {
     refuses: (status: number, code: string, details: Record<string, unknown>): void => {
       this.#ourKeyRefusal = { status, code, details };
     },
+    refusesNoMore: (): void => {
+      this.#ourKeyRefusal = null;
+    },
     ownMonthIsSpent: (): void => {
       this.#ownMonthSpent = true;
     },

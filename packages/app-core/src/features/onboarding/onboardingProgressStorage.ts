@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
+import { AuthIntent, OnboardingStep, OverviewId, Plan, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
 import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 
 // Progress from before any kind of link was taken held the video's address instead of its key.
@@ -22,7 +22,18 @@ const OnboardingProgressShape = z.object({
   // Writing waits until About you is answered or skipped, or the reader leaves the questions.
   mayWrite: z.boolean(),
   overviewId: OverviewId.nullable(),
+  // The tab whose run makes the overview: the one that started onboarding, until another tab finds
+  // it gone and takes the run over. Null when nothing is run, as for a share.
+  runner: z.string().nullable().catch(null),
   way: AuthIntent.nullable(),
+  // The plan picked, so the reveal opens on its own once the overview is in the account.
+  plan: Plan.nullable().catch(null),
+  // The sign-in from the account screen has landed: when, what the overview was doing then, and
+  // whether its arrival in the account has been counted since (docs/features/onboarding.md, "Analytics").
+  landed: z
+    .object({ at: z.number(), overview: z.enum(["ready", "writing", "failed"]), arrived: z.boolean() })
+    .nullable()
+    .catch(null),
   // A copy saved from a shared page, or a sample chosen at Start, is the first overview, so
   // nothing is made: it goes into the account once there is one, let in uncounted through its
   // link (docs/features/onboarding.md, "From a shared page" and "Try a sample").
@@ -34,7 +45,8 @@ const OnboardingProgressShape = z.object({
 export const OnboardingProgress = z.preprocess(keyedBySource, OnboardingProgressShape);
 export type OnboardingProgress = z.infer<typeof OnboardingProgressShape>;
 
-const STORAGE_KEY = "overview.onboarding.v1";
+export const ONBOARDING_PROGRESS_STORAGE_KEY = "overview.onboarding.v1";
+const STORAGE_KEY = ONBOARDING_PROGRESS_STORAGE_KEY;
 
 // Where this device is in onboarding, so a reload or the sign-in link opened in another tab
 // picks up at the same screen. The device's own, before there is an account to keep it on

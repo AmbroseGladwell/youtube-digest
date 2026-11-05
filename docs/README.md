@@ -174,7 +174,8 @@ Five folders, five different questions.
   is hidden, the value each row shows, two panes on a wide screen and a list then a page on
   a phone or in the panel, and where new sections go.
 - `onboarding.md` — OV-46: onboarding inside the first overview, the starter topics and their
-  descriptions, and what each of its stacked PRs settled.
+  descriptions, what each of its stacked PRs settled, and since OV-163 the account made before
+  the overview is written: the run living in one tab above the router, and the move running again.
 - `personalisation.md` — what an overview is made for: the reader context and section
   switches sent with every run, why reader context has no field yet, Settings ›
   Personalisation, and why a section switched off is left out of the prompt rather than

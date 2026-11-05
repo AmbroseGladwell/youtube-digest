@@ -3,6 +3,8 @@ import type { OnboardingStep } from "@overview/domain";
 import { onboardingAboutYouTestIds } from "../../src/features/onboarding/components/OnboardingAboutYou/OnboardingAboutYouTestIds.js";
 import { onboardingAccountTestIds } from "../../src/features/onboarding/components/OnboardingAccount/OnboardingAccountTestIds.js";
 import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
+import { onboardingArrivingTestIds } from "../../src/features/onboarding/components/OnboardingArriving/OnboardingArrivingTestIds.js";
+import { onboardingNearlyThereTestIds } from "../../src/features/onboarding/components/OnboardingNearlyThere/OnboardingNearlyThereTestIds.js";
 import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
 import { onboardingPreviewTestIds } from "../../src/features/onboarding/components/OnboardingPreview/OnboardingPreviewTestIds.js";
 import { onboardingPreviewStepsTestIds } from "../../src/features/onboarding/components/OnboardingPreviewSteps/OnboardingPreviewStepsTestIds.js";
@@ -302,6 +304,25 @@ export class OnboardingPageObject extends PageObject {
     this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));
 
   tryAgain = () => this.step("tryAgain", () => this.click(onboardingAccountTestIds.tryAgain));
+
+  verifyNotReadyReads = (text: string) =>
+    this.step(`verifyNotReadyReads ${text}`, () => expect(this.get(onboardingAccountTestIds.notReady)).toHaveText(text));
+
+  // Once the account exists: what the overview is doing until it's in the account, under the
+  // plan or on the screen a sign-in waits on. Taking the run over from a tab that has gone
+  // waits for its answer to stop coming, which is longer than a screen takes to change.
+  verifyArriving = (phase: "writing" | "bringingIn" | "failed") =>
+    this.step(`verifyArriving ${phase}`, () => expect(this.get(onboardingArrivingTestIds[phase])).toBeVisible({ timeout: 10_000 }));
+
+  tryAgainAfterAccount = () => this.step("tryAgainAfterAccount", () => this.click(onboardingArrivingTestIds.tryAgain));
+
+  verifyNearlyThere = (lead: string) =>
+    this.step("verifyNearlyThere", async () => {
+      await this.expectToBeVisible(onboardingNearlyThereTestIds.root);
+      await expect(this.page.getByRole("heading", { level: 1, name: "Nearly there" })).toBeFocused();
+      await expect(this.get(onboardingNearlyThereTestIds.root)).toContainText(lead);
+    });
+
 
   tryAgainFromPreview = () => this.step("tryAgainFromPreview", () => this.click(onboardingPreviewTestIds.tryAgain));
 

@@ -5,8 +5,8 @@ import styles from "./OnboardingPlan.module.scss";
 import { onboardingPlanTestIds } from "./OnboardingPlanTestIds.js";
 
 export interface OnboardingPlanProps {
-  // The overview is in the account's library, so the reveal has it to show.
-  inAccount: boolean;
+  // The overview is written; still being written, the lead says it's on its way.
+  made: boolean;
   // A sample isn't counted, so the plan says the first overview they make will be (155i).
   sample: boolean;
   onFree: () => void;
@@ -14,14 +14,18 @@ export interface OnboardingPlanProps {
 
 // Design 46k: Free and Plus as the same card with the same button, volume the only difference.
 // Plus can't be bought until there is billing, so its button says so and Free goes on to the
-// reveal. The first overview counts as one of the plan's on us
+// reveal, or to Nearly there until the overview is in the account; the plan never waits on
+// it. The first overview counts as one of the plan's on us
 // (docs/architecture/tiers.md, "Counting"; docs/features/onboarding.md, "The plan").
-export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProps) {
+export function OnboardingPlan({ made, sample, onFree }: OnboardingPlanProps) {
   return (
     <div className={styles.root} data-testid={onboardingPlanTestIds.root}>
       <div className={styles.intro}>
         <OnboardingHeading>Choose your plan</OnboardingHeading>
-        <p className={styles.lead}>{sample ? "Your sample overview is ready." : "Your overview is ready."} Pick how you'd like to keep going.</p>
+        <p className={styles.lead}>
+          {sample ? "Your sample overview is ready." : made ? "Your overview is ready." : "Your overview is on its way."} Pick how you'd
+          like to keep going.
+        </p>
       </div>
       <p className={styles.includes}>Every plan includes your library, topics and AI connection.</p>
 
@@ -30,7 +34,6 @@ export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProp
           <button
             type="button"
             className={styles.choose}
-            disabled={!inAccount}
             onClick={onFree}
             data-testid={onboardingPlanTestIds.continueWithFree}
           >
@@ -51,11 +54,6 @@ export function OnboardingPlan({ inAccount, sample, onFree }: OnboardingPlanProp
             ? "This sample doesn't count towards your month. The first overview you make will."
             : "This overview counts as your first of the month."}
         </p>
-        {!inAccount && (
-          <p className={styles.bringingIn} role="status" data-testid={onboardingPlanTestIds.bringingIn}>
-            Bringing your overview into your account…
-          </p>
-        )}
       </div>
     </div>
   );
