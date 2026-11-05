@@ -212,7 +212,8 @@ Five folders, five different questions.
 - `legal-pages.md` — `/privacy` and `/terms`: the one layout both share, why they sit inside
   the shell with a date that is not the build stamp, which doc or code backs each claim the
   policy makes, the two places it says what is true rather than what was decided, and the
-  identity, law and age decisions the review has to confirm.
+  identity, law and age decisions the review has to confirm, the trigger list every card is
+  checked against, and the revision log of both texts.
 - `sign-in.md` — magic-link sign-in: why the link is spent by a POST from the page and
   carries its token in the fragment, the cookie the web app gets and the code the
   extension exchanges for its bearer, why the tab that opened an extension link stays

@@ -103,6 +103,48 @@ one line in `legalIdentity.ts` or one sentence in a page:
   protection clauses with the UK addendum for the US ones. The card's "sign PostHog's DPA and
   confirm the transfer mechanism for each" is still to do, and is not something code can do.
 
+## Does this change the texts?
+
+Every card is checked against this list before its PR opens (`CLAUDE.md`, "Working style",
+habit 4). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
+goes in the log below. No match means the PR says "No change to /privacy or /terms".
+
+A change touches the **privacy policy** when it:
+
+- collects, sends or stores anything new about a reader or a device, or stops doing so
+  (a field on a record, a header, an id, a cookie, anything in `localStorage`)
+- sends anything to a new third party, or stops using one (a provider, an API, a proxy, a
+  CDN, a mail or analytics service), or moves one to another region
+- changes what a reader's own key, or our key, sends to a model, or which provider our key uses
+- changes how long anything is kept, or what a deletion leaves behind
+- changes what a log line, an event or an error report may carry
+- changes the analytics tiers, what is counted, or when a reader is asked
+- changes what a shared link, a shared cache copy or an assistant can see
+- changes what is stored on the device, or which of it is strictly necessary
+- builds something the policy currently says is done by hand or not yet built (account
+  deletion, the 30-day sweep of unlinked anonymous analytics)
+
+A change touches the **terms** when it:
+
+- adds a paid plan, a price, a trial, or any charge
+- changes an allowance or a cap readers can see, or who can use a feature
+- adds a way a reader's content leaves the service (a new export, share or integration)
+- changes account rules: age, one per person, deletion, suspension
+- adds a third party whose terms the reader is bound by through us
+- changes how changes are announced
+
+Either text also changes when `legalIdentity.ts` does: the operator, the contact address, the
+governing law or the minimum age.
+
+## Revision log
+
+One line per change to either page, newest first, with the card that caused it. The dates
+match the pages' `*_UPDATED_ON`.
+
+| Date | Page | Card | What changed |
+|---|---|---|---|
+| 2026-11-05 | both | OV-79 | First texts, written from what was built on this date. |
+
 ## Not built
 
 - **Legal review** of both texts, which the card's definition of done requires and the first
