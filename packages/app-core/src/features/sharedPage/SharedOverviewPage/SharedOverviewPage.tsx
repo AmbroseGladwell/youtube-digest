@@ -1,7 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  DEFAULT_HEAD_IMAGE_SIZE,
+  type HeadImageSize,
   NOVELTY_LABEL,
   SUMMARY_SECTION,
   overviewNoteCaptions,
@@ -16,6 +18,8 @@ import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js"
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { CookingMode } from "../../reader/components/CookingMode/CookingMode.js";
 import { ChaptersPanel } from "../../reader/components/ChaptersPanel/ChaptersPanel.js";
+import { HeadImage } from "../../reader/components/HeadImage/HeadImage.js";
+import { useHeadImageMotion } from "../../reader/components/ReaderMasthead/useHeadImageMotion.js";
 import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
@@ -186,6 +190,25 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     [mastheadHeight.host, tabsHeight.host],
   );
 
+  const [headImageSize, setHeadImageSize] = useState<HeadImageSize>(DEFAULT_HEAD_IMAGE_SIZE);
+  const headImageFull = headImageSize === "full";
+  const head = useRef<HTMLDivElement | null>(null);
+  const image = useRef<HTMLButtonElement | null>(null);
+  const title = useRef<HTMLHeadingElement | null>(null);
+  const chips = useRef<HTMLDivElement | null>(null);
+  const captureBeforeResize = useHeadImageMotion(headImageFull, {
+    header: head,
+    image,
+    title,
+    who: () => (chips.current === null ? [] : [chips.current]),
+  });
+  const toggleHeadImage = () => {
+    const size: HeadImageSize = headImageFull ? "small" : "full";
+    captureBeforeResize();
+    analytics.sharedPage.headImage.resized({ size });
+    setHeadImageSize(size);
+  };
+
   const changeTab = (next: ReaderTab) => {
     setTranscriptOpenAtMs(null);
     setTab(next);
@@ -217,25 +240,35 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
 
       <div className={`${styles.body} ${signedIn ? styles.bodyAlone : ""}`}>
         <main className={styles.main}>
-          <div className={styles.head}>
-            <div className={styles.chips}>
-              <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
-                {note.source.kind === "youtube"
-                  ? sourceName(note.source)
-                  : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
-              </span>
-              {note.verdict !== null && (
-                <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
-                  {NOVELTY_LABEL[note.verdict.novelty]}
+          <div className={styles.head} ref={head}>
+            <div className={`${styles.lead} ${headImageFull ? styles.leadFull : ""}`}>
+              <HeadImage
+                key={note.id}
+                ref={image}
+                source={note.source}
+                full={headImageFull}
+                className={styles.image}
+                onToggle={toggleHeadImage}
+              />
+              <div className={styles.chips} ref={chips}>
+                <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
+                  {note.source.kind === "youtube"
+                    ? sourceName(note.source)
+                    : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
                 </span>
-              )}
-              {note.selling !== null && note.selling.type !== "none" && (
-                <span className={styles.chip} data-testid={sharedOverviewPageTestIds.sellingChip}>
-                  Sponsored segment
-                </span>
-              )}
+                {note.verdict !== null && (
+                  <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
+                    {NOVELTY_LABEL[note.verdict.novelty]}
+                  </span>
+                )}
+                {note.selling !== null && note.selling.type !== "none" && (
+                  <span className={styles.chip} data-testid={sharedOverviewPageTestIds.sellingChip}>
+                    Sponsored segment
+                  </span>
+                )}
+              </div>
             </div>
-            <h1 className={styles.title} data-testid={sharedOverviewPageTestIds.title}>
+            <h1 className={styles.title} ref={title} data-testid={sharedOverviewPageTestIds.title}>
               {note.source.title}
             </h1>
             <p className={styles.meta} data-testid={sharedOverviewPageTestIds.meta}>

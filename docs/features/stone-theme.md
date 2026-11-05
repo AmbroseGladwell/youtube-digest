@@ -168,7 +168,7 @@ tile's picture until it arrives and when it doesn't (YouTube's grey 120px placeh
 counts as not arriving). The choice is the synced `Settings.headImageSize`, default
 Small, written on press, and also in Settings › Appearance as "Image at the top of a
 note". On a phone at full width the title and Listen stay on the first screen, and the
-tabs may drop below it with a long title. The panel has neither image nor button.
+tabs may drop below it with a long title. The panel has neither image nor button. The shared page draws the same button from its own state, small on every visit (OV-191, `sharing.md`, "The image").
 
 **One head, three arrangements.** `ReaderMasthead` lays its four parts — the back link,
 the actions, the ⋯ menu and the title block — out by grid area, so the desktop's top bar

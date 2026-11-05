@@ -191,6 +191,11 @@ export const overviewPageEvents = {
   tabs: {
     switched: event("The reader switches between the overview, transcript and chapters tabs", { tab: ReaderTabChoice }),
   },
+  headImage: {
+    resized: event("The reader clicks or taps the image at the top of the note to show it full width or small, to the size chosen", {
+      size: HeadImageSize,
+    }),
+  },
   readAlong: {
     lineChosen: event("The reader picks a line of the note to listen from"),
     followResumed: event("The reader asks the note to go back to the line being read aloud"),
@@ -280,11 +285,6 @@ export const analyticsEvents = {
         from: OverviewControl,
       }),
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
-    },
-    headImage: {
-      resized: event("The reader clicks or taps the image at the top of the note to show it full width or small, to the size chosen", {
-        size: HeadImageSize,
-      }),
     },
     dubiousReasons: {
       opened: event("The reader opens why the overview is marked dubious, with how many reasons it saved; none means it was made before reasons were", {
