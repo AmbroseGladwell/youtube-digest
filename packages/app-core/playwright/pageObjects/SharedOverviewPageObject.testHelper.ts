@@ -40,6 +40,26 @@ export class SharedOverviewPageObject extends PageObject {
       await this.expectToBeVisible(makeYourOwnAsideTestIds.root);
     });
 
+  // Signed in, nothing on the page offers an account: the head leads back to their own
+  // overviews, and the aside that sells one is not drawn.
+  verifyRecognisesTheReader = () =>
+    this.step("verifyRecognisesTheReader", async () => {
+      await this.expectToBeVisible(sharedPageHeaderTestIds.libraryButton);
+      await expect(this.get(sharedPageHeaderTestIds.signInButton)).toHaveCount(0);
+      await expect(this.get(sharedPageHeaderTestIds.makeButton)).toHaveCount(0);
+      await expect(this.get(makeYourOwnAsideTestIds.root)).toHaveCount(0);
+    });
+
+  clickYourOverviewsInHeader = () =>
+    this.step("clickYourOverviewsInHeader", () => this.click(sharedPageHeaderTestIds.libraryButton));
+
+  verifySaveActionReads = (label: string) =>
+    this.step(`verifySaveActionReads ${label}`, async () => {
+      const button = this.get(sharedOverviewPageTestIds.saveButton);
+      await expect(button).toHaveText(label);
+      await expect(button).toBeEnabled();
+    });
+
   // The strip belongs to the text it switches, so its left edge is the note's left edge.
   verifyTabsAlignWithTheNote = () =>
     this.step("verifyTabsAlignWithTheNote", async () => {
