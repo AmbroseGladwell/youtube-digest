@@ -93,7 +93,7 @@ export function useRecipeVoice(
         engine.load(track, stretch.first);
         engine.seekLine(stretch.first);
         setStopAfter(stretch.last);
-        engine.play();
+        engine.play("readAloud");
       },
       onSelect: (index) => {
         analytics.readAlong.lineChosen();
@@ -122,7 +122,7 @@ export function useRecipeVoice(
       engine.load(track, line);
       engine.seekLine(line);
       setStopAfter(line);
-      engine.play();
+      engine.play("readAloud");
     },
     holdAt: (action) => {
       if (method === null) return;

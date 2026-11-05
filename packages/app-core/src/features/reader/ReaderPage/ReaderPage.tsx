@@ -275,7 +275,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       return;
     }
     setPlayerDocked(true);
-    if (!notePlayer.playing) notePlayer.play();
+    if (!notePlayer.playing) notePlayer.play("masthead");
   };
 
   // Design 2: [ and ] step a line, now that the transport's arrows move fifteen seconds.
@@ -436,7 +436,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           onTogglePlaying={() => {
             reader.overview.listenPressed({ listening: !notePlayer.playing });
             recipeVoice?.release();
-            notePlayer.main();
+            notePlayer.main("masthead");
           }}
           onListen={listen}
           onEditingTopicsChange={setEditingTopics}
@@ -728,7 +728,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             canSignIn={sync.available}
             onMain={() => {
               recipeVoice?.release();
-              notePlayer.main();
+              notePlayer.main("playerBar");
             }}
             onSkip={(delta) => player.skip(delta)}
             onSeek={(seconds) => player.seek(seconds)}
@@ -739,7 +739,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 reader.overview.readSwitched({ read: true, from: "playerBar" });
                 setOverviewState.mutate({ overviewId, patch: { read: true } });
               } else if (action === "tryAgain") {
-                notePlayer.play();
+                notePlayer.play("playerBar");
               } else {
                 player.readAlong();
               }

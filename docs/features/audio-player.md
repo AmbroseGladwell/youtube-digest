@@ -252,6 +252,30 @@ make (`docs/architecture/tiers.md`, `plus-upsell.md`), and `PLUS_FEATURES` is go
 - `[` and `]` are ignored while focus is in a field.
 - Reduced motion stops the sweep where the design draws it, and stops the spinners.
 
+## Time to first sound
+
+`player.playback.firstSound` (OV-63) is how long a listen took to make a sound: whole
+milliseconds from the press that started it, in `PlayerEngine.play` or `toggle`, to the
+element's `playing` event, or to the pacer's first tick when the pacer is what played. It
+carries the overview's id, `from` (where play was pressed: the bar, the masthead, the
+mini-player, a library row, the lock screen, cooking mode or a recipe's Read aloud), `source`
+(`audio` or `pacer`) and `prepared`, whether the press was told the narration was queued or
+rendering and waited on it. Narration that exists is not prepared, even when play was pressed
+before the peek had found it, as a library row's Listen is. The prepared waits are seconds
+to minutes and the ready ones are milliseconds, so the flag is what keeps the two from being
+averaged into one meaningless number.
+
+- **Only a listen begun is timed.** A play from `paused` carries one on and sends nothing.
+- **A press that makes no sound sends nothing:** cancelled, paused first, told the account
+  is busy, a render that failed, a play the browser refused, or another note loaded
+  meanwhile. Reading along while the audio is still being made ends the wait at the pacer's
+  first tick, as `pacer` and `prepared`; the audio landing afterwards is not a second one.
+- **Capped at ten minutes** (`MAX_FIRST_SOUND_WAIT_MS`), so one render nobody should have
+  sat through does not skew the rest.
+- The shared page's player sends nothing: its route only takes `sharedPage.*` events.
+
+The clock is injected (`now`), so the unit tests measure an exact number on fake timers.
+
 ## Testing
 
 - **Unit:** `lineAtTime.test.ts` (time to line, and the drag's snap), `playerBarView.test.ts`
@@ -262,7 +286,9 @@ make (`docs/architecture/tiers.md`, `plus-upsell.md`), and `PLUS_FEATURES` is go
   Chromium cannot decode the M4A the service makes, so the simulated file is silent 8-bit
   WAV of the render's length, served with byte ranges. Without ranges the element cannot
   seek, which the first run of these scenarios showed. `narration.finishRenders()`,
-  `failRenders()` and `accountIsBusy()` move a render between states from the test.
+  `failRenders()` and `accountIsBusy()` move a render between states from the test. The
+  first-sound scenarios read `backendSimulator.analytics` and check the wait is a whole
+  number, not what it is: the number is Chromium's to give.
   `followTheVoice.iwft.ts` holds the three states above: the open that must not scroll,
   the open while playing that must, and the read ahead that hands the scroll back. The
   first watches for a scroll rather than taking one reading afterwards, because the scroll

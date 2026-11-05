@@ -56,7 +56,7 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
   };
 
   const handlers: Array<[MediaSessionAction, MediaSessionActionHandler | null]> = [
-    ["play", () => (currentMediaSessionOverride()?.onPlay ?? (() => engine.play()))()],
+    ["play", () => (currentMediaSessionOverride()?.onPlay ?? (() => engine.play("mediaSession")))()],
     ["pause", () => (currentMediaSessionOverride()?.onPause ?? (() => engine.pause()))()],
     ["stop", () => engine.stop()],
     ["seekbackward", (details) => engine.skip(-(details.seekOffset ?? SKIP_SECONDS))],

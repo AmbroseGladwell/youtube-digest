@@ -126,12 +126,15 @@ sign-up (`docs/features/onboarding.md`). Elsewhere signed out, the picker and it
 section hide themselves (`CLAUDE.md`, "degrade visibly"). If the samples fail to
 load, the play buttons go, the voices stay choosable, and "Try again" asks again (43d).
 
-## Logging
+## Counting and logging
 
-The app's analytics (`docs/architecture/analytics.md`) don't count voices yet. The API logs `narration voice chosen` with the voice whenever
+The picker counts what the reader does with it (`docs/architecture/analytics.md`):
+`settings.voice.samplePlayed({ voice })` and `sampleStopped({ voice })` for each sample,
+`chosen({ voice })` once a voice is saved, and `samplesRetried` for "Try again". Each play
+or stop is one click, so sampling needs no debounce; the queue's per-minute cap is the
+backstop. Beside them the API logs `narration voice chosen` with the voice whenever
 settings are written with one, and every sample play is a request for a file whose key
-`voice_samples` maps back to its voice. Between them they say which voices get sampled and
-which get chosen.
+`voice_samples` maps back to its voice.
 
 ## Where the build departs from the design
 

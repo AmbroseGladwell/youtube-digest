@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_NARRATION_VOICE } from "@overview/domain";
 import { createFetchNarrationApi } from "@overview/sync";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
@@ -10,6 +10,7 @@ import { PlayerProvider } from "./PlayerContext.js";
 import { bindMediaSession } from "./util/bindMediaSession.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
 
 // Owns the one player for this tab, above the router so a note keeps playing across
 // navigation, and inside the sync runtime because narration needs the account's session
@@ -24,8 +25,18 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
   );
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
   const reporter = useErrorReporter();
+  const analytics = useAnalytics();
+  const latestAnalytics = useRef(analytics);
+  latestAnalytics.current = analytics;
   const [engine] = useState(
-    () => new PlayerEngine({ api, voice, createMedia: () => new Audio(), warn: (warning) => reporter.warn(warning) }),
+    () =>
+      new PlayerEngine({
+        api,
+        voice,
+        createMedia: () => new Audio(),
+        warn: (warning) => reporter.warn(warning),
+        onFirstSound: (report) => latestAnalytics.current.player.playback.firstSound(report),
+      }),
   );
 
   useEffect(() => engine.setApi(api), [engine, api]);

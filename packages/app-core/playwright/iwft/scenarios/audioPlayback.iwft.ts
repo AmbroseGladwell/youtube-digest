@@ -1,6 +1,11 @@
 import { expect, test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL, SIMULATED_SECONDS_PER_LINE } from "../../network/BackendSimulator.testHelper.js";
+import {
+  SIMULATED_ACCOUNT_ID,
+  SIMULATED_EMAIL,
+  SIMULATED_SECONDS_PER_LINE,
+  type BackendSimulator,
+} from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
@@ -398,4 +403,70 @@ test("a press says which state the player was in, so a listen begun is told from
       { button: "pause", state: "playing", overviewId: NOTE.id },
       { button: "play", state: "paused", overviewId: NOTE.id },
     ]);
+});
+
+const firstSounds = (backendSimulator: BackendSimulator) =>
+  backendSimulator.analytics
+    .events()
+    .filter(({ name }) => name === "player.playback.firstSound")
+    .map(({ props }) => props);
+
+test("the wait from pressing play to the first sound is counted, with narration that was ready marked as not prepared", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+
+  await expect
+    .poll(() => firstSounds(backendSimulator))
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+  const { waitMs } = firstSounds(backendSimulator)[0]!;
+  expect(Number.isInteger(waitMs)).toBe(true);
+  expect(waitMs).toBeGreaterThanOrEqual(0);
+});
+
+test("narration made on the press counts its wait as prepared", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.clickPlayPause();
+  await reader.verifyBarSays("Preparing audio · Queued");
+  backendSimulator.narration.finishRenders();
+  await reader.verifyBarSays(/^Now playing · /);
+
+  await expect
+    .poll(() => firstSounds(backendSimulator))
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: true, waitMs: expect.any(Number) }]);
+});
+
+test("Listen in the library counts its first sound as from the row, and pausing then playing again does not count twice", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const card = library.nthCard(0);
+
+  await card.clickListen();
+  await expect
+    .poll(() => firstSounds(backendSimulator))
+    .toEqual([{ overviewId: NOTE.id, from: "libraryRow", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+
+  await launcher.miniPlayer.clickPlayPause();
+  await launcher.miniPlayer.verifyPlayButtonReads("Play");
+  await launcher.miniPlayer.clickPlayPause();
+  await launcher.miniPlayer.verifyPlayButtonReads("Pause");
+
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "player.miniPlayer.playToggled").length)
+    .toBe(2);
+  expect(firstSounds(backendSimulator)).toHaveLength(1);
 });

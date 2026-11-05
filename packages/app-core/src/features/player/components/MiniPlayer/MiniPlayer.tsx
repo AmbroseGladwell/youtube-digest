@@ -108,7 +108,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
           className={styles.play}
           onClick={() => {
             analytics.player.miniPlayer.playToggled({ overviewId: track.overviewId, playing: !playing && !preparing });
-            engine.toggle();
+            engine.toggle("miniPlayer");
           }}
           aria-label={preparing ? "Cancel preparing audio" : playing ? "Pause" : "Play"}
           data-testid={miniPlayerTestIds.playButton}

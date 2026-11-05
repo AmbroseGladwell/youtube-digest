@@ -160,7 +160,7 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
         const current = mediaRef.current;
         if (current.paused) {
           setPaused(false);
-          engine.play();
+          engine.play("cooking");
         } else if (current.voice !== "reading") {
           current.next();
         }
@@ -206,7 +206,7 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       setOpen(false);
       setFinished(false);
     },
-    tryAgain: () => engine.play(),
+    tryAgain: () => engine.play("cooking"),
     dismissHint: () => {
       setHint(false);
       writeCookingHints(COOKING_HINT_ENTRIES);

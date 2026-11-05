@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { PlaybackFrom } from "@overview/domain";
 import { usePlayer, usePlayerLine, usePlayerSnapshot, usePlayerTime } from "../../player/PlayerContext.js";
 import type { PlayerSnapshot } from "../../player/types/PlayerSnapshot.js";
 import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
@@ -14,9 +15,9 @@ export interface NotePlayer {
   selectLine: (index: number) => void;
   selectSection: (section: string) => void;
   stepLine: (delta: number) => void;
-  // The bar's main button, the masthead's Listen and a lock-screen play all come here.
-  main: () => void;
-  play: () => void;
+  // The bar's main button and the masthead's Listen come here, saying which they were.
+  main: (from: PlaybackFrom) => void;
+  play: (from: PlaybackFrom) => void;
   pause: () => void;
 }
 
@@ -77,13 +78,13 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
       if (index !== -1) selectLine(index);
     },
     stepLine: (delta) => selectLine(activeIndex + delta),
-    main: () => {
+    main: (from) => {
       takeOver();
-      engine.toggle();
+      engine.toggle(from);
     },
-    play: () => {
+    play: (from) => {
       takeOver();
-      engine.play();
+      engine.play(from);
     },
     pause: () => {
       if (current) engine.pause();

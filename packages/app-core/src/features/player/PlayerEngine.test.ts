@@ -1,14 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OverviewId, type ClientWarningReport, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
+import { MAX_FIRST_SOUND_WAIT_MS } from "@overview/domain";
 import {
   OPENING_LINE,
+  PACER_TICK_MS,
   PREPARING_LONG_AFTER_MS,
   POLL_INTERVAL_MS,
   PlayerEngine,
   STOP_AHEAD_SECONDS,
   WATCH_GIVES_UP_AFTER_MS,
   WATCH_INTERVAL_MS,
+  type FirstSoundReport,
+  type PlayerEngineOptions,
   type PlayerMedia,
 } from "./PlayerEngine.js";
 import type { PlayerTrack } from "./types/PlayerTrack.js";
@@ -51,12 +55,19 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   paused = true;
   preload: "" | "none" | "metadata" | "auto" = "";
   blockPlay = false;
+  // A real element plays some time after play() resolves; a test that measures that gap
+  // holds the sound and lets it out itself.
+  holdSound = false;
 
   play = (): Promise<void> => {
     if (this.blockPlay) return Promise.reject(new Error("NotAllowedError"));
     this.paused = false;
-    this.dispatchEvent(new Event("playing"));
+    if (!this.holdSound) this.sound();
     return Promise.resolve();
+  };
+
+  sound = (): void => {
+    this.dispatchEvent(new Event("playing"));
   };
 
   pause = (): void => {
@@ -96,8 +107,8 @@ const settle = () => vi.advanceTimersByTimeAsync(0);
 
 describe("PlayerEngine", () => {
   let media: FakeMedia;
-  const engineWith = (api: NarrationApi | null, voice: NarrationVoice = "af_heart") =>
-    new PlayerEngine({ api, voice, createMedia: () => (media = new FakeMedia()) });
+  const engineWith = (api: NarrationApi | null, voice: NarrationVoice = "af_heart", options: Partial<PlayerEngineOptions> = {}) =>
+    new PlayerEngine({ api, voice, createMedia: () => (media = new FakeMedia()), ...options });
 
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
@@ -108,7 +119,7 @@ describe("PlayerEngine", () => {
 
     expect(engine.getSnapshot()).toMatchObject({ source: "pacer", pacerReason: "signedOut", status: "ready" });
 
-    engine.play();
+    engine.play("playerBar");
     await vi.advanceTimersByTimeAsync(1000);
 
     expect(engine.getSnapshot().status).toBe("playing");
@@ -123,7 +134,7 @@ describe("PlayerEngine", () => {
     expect(engine.getSnapshot()).toMatchObject({ availability: "ready", source: "audio" });
     expect(engine.getSnapshot().timings.durationSeconds).toBe(9.4);
 
-    engine.play();
+    engine.play("playerBar");
     expect(media.src).toBe(`https://api.test/api/audio/${KEY}/file`);
     expect(engine.getSnapshot().status).toBe("playing");
 
@@ -136,7 +147,7 @@ describe("PlayerEngine", () => {
     engine.load(TRACK);
     await settle();
     engine.stopAfterLine(0);
-    engine.play();
+    engine.play("playerBar");
 
     media.reachTime(0.5);
     await vi.advanceTimersByTimeAsync(400);
@@ -155,7 +166,7 @@ describe("PlayerEngine", () => {
     engine.load(TRACK);
     await settle();
     engine.stopAfterLine(0);
-    engine.play();
+    engine.play("playerBar");
 
     media.reachTime(1.2);
     expect(engine.getSnapshot().status).toBe("paused");
@@ -167,7 +178,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(null);
     engine.load(TRACK);
     engine.stopAfterLine(0);
-    engine.play();
+    engine.play("playerBar");
 
     await vi.advanceTimersByTimeAsync(10_000);
     expect(engine.getSnapshot().status).toBe("paused");
@@ -179,7 +190,7 @@ describe("PlayerEngine", () => {
     engine.load(TRACK);
     await settle();
     engine.stopAfterLine(0);
-    engine.play();
+    engine.play("playerBar");
 
     media.currentTime = 0.6;
     await vi.advanceTimersByTimeAsync(1000);
@@ -197,7 +208,7 @@ describe("PlayerEngine", () => {
     engine.load(opened);
     await settle();
 
-    engine.play();
+    engine.play("playerBar");
     expect(engine.getTime()).toBe(0);
     expect(engine.getLine()).toBe(OPENING_LINE);
 
@@ -239,7 +250,7 @@ describe("PlayerEngine", () => {
     await settle();
     expect(engine.getSnapshot().availability).toBe("onFirstPlay");
 
-    engine.play();
+    engine.play("playerBar");
     await settle();
     expect(engine.getSnapshot()).toMatchObject({ status: "preparing", preparing: { step: "queued" } });
 
@@ -255,7 +266,7 @@ describe("PlayerEngine", () => {
     const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
     const engine = engineWith(scriptedApi({ status }));
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await vi.advanceTimersByTimeAsync(PREPARING_LONG_AFTER_MS);
     expect(engine.getSnapshot().preparing?.long).toBe(true);
 
@@ -278,11 +289,11 @@ describe("PlayerEngine", () => {
       .mockResolvedValue({ key: KEY, status: "queued" });
     const engine = engineWith(scriptedApi({ request }));
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await settle();
     expect(engine.getSnapshot().status).toBe("busy");
 
-    engine.play();
+    engine.play("playerBar");
     await settle();
     expect(engine.getSnapshot().status).toBe("preparing");
   });
@@ -295,7 +306,7 @@ describe("PlayerEngine", () => {
       );
     const engine = engineWith(scriptedApi({ request }));
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
     expect(engine.getSnapshot()).toMatchObject({ source: "pacer", pacerReason: "dailyCap", status: "playing" });
@@ -306,7 +317,7 @@ describe("PlayerEngine", () => {
       scriptedApi({ request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })) }),
     );
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await settle();
     expect(engine.getSnapshot().status).toBe("failed");
 
@@ -318,7 +329,7 @@ describe("PlayerEngine", () => {
     for (const error of [new SyncRequestError("unavailable", 503, "No TTS"), new SyncTransportError("Offline")]) {
       const engine = engineWith(scriptedApi({ request: vi.fn(async () => Promise.reject(error)) }));
       engine.load(TRACK);
-      engine.play();
+      engine.play("playerBar");
       await settle();
 
       expect(engine.getSnapshot()).toMatchObject({ source: "pacer", pacerReason: "unavailable", status: "playing" });
@@ -334,7 +345,7 @@ describe("PlayerEngine", () => {
     ]) {
       const engine = new PlayerEngine({ api, createMedia: () => new FakeMedia(), warn: (warning) => warnings.push(warning) });
       engine.load(TRACK);
-      engine.play();
+      engine.play("playerBar");
       await settle();
     }
 
@@ -357,7 +368,7 @@ describe("PlayerEngine", () => {
       warn: (warning) => warnings.push(warning),
     });
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
     expect(warnings).toEqual([]);
@@ -376,10 +387,10 @@ describe("PlayerEngine", () => {
   it("cancelling while preparing goes back to ready, and the render that lands later is ignored", async () => {
     const engine = engineWith(scriptedApi());
     engine.load(TRACK);
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
-    engine.toggle();
+    engine.toggle("playerBar");
     expect(engine.getSnapshot()).toMatchObject({ status: "ready", preparing: null });
 
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 3);
@@ -390,7 +401,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
 
     engine.skip(15);
     expect(engine.getTime()).toBe(9.4);
@@ -403,7 +414,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
     engine.cycleRate();
 
     expect(media.playbackRate).toBe(1.25);
@@ -415,11 +426,11 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
     media.dispatchEvent(new Event("ended"));
     expect(engine.getSnapshot().status).toBe("ended");
 
-    engine.play();
+    engine.play("playerBar");
     expect(engine.getSnapshot().status).toBe("playing");
     expect(media.currentTime).toBe(0);
   });
@@ -429,10 +440,10 @@ describe("PlayerEngine", () => {
     engine.load(TRACK);
     await settle();
     engine.seekLine(1);
-    engine.play();
+    engine.play("playerBar");
     media.blockPlay = true;
     engine.pause();
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
     expect(engine.getSnapshot().status).toBe("paused");
@@ -521,7 +532,7 @@ describe("PlayerEngine", () => {
     engine.load(TRACK);
     await settle();
 
-    engine.play();
+    engine.play("playerBar");
     await settle();
     expect(api.request).toHaveBeenCalledWith(expect.any(Array), "af_heart", "interactive");
     expect(engine.getSnapshot()).toMatchObject({ status: "preparing", preparing: { step: "rendering" } });
@@ -573,7 +584,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
     engine.cancel();
@@ -590,7 +601,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
     await settle();
 
     engine.cancel();
@@ -630,7 +641,7 @@ describe("PlayerEngine", () => {
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)), request }));
     engine.load(TRACK);
     await settle();
-    engine.play();
+    engine.play("playerBar");
     const playing = engine.getSnapshot();
 
     engine.prepare({ ...TRACK, lines: TRACK.lines.slice(0, 2) });
@@ -651,7 +662,7 @@ describe("PlayerEngine", () => {
         voice: "bm_george",
         narratedVoice: "af_heart",
       });
-      engine.play();
+      engine.play("playerBar");
       expect(media.src).toBe(`https://api.test/api/audio/${KEY}/file`);
     });
 
@@ -663,7 +674,7 @@ describe("PlayerEngine", () => {
       const engine = engineWith(api, "bm_george");
       engine.load(TRACK);
       await settle();
-      engine.play();
+      engine.play("playerBar");
       media.reachTime(5);
       engine.pause();
 
@@ -726,13 +737,160 @@ describe("PlayerEngine", () => {
       const engine = engineWith(api, "af_heart");
       engine.load(TRACK);
       await settle();
-      engine.play();
+      engine.play("playerBar");
 
       engine.setVoice("bf_emma");
       await settle();
 
       expect(api.peek).toHaveBeenCalledTimes(1);
       expect(engine.getSnapshot()).toMatchObject({ status: "playing", voice: "bf_emma", narratedVoice: "af_heart" });
+    });
+  });
+  describe("time to first sound", () => {
+    const timed = (api: NarrationApi | null, { holdSound = false } = {}) => {
+      const heard = vi.fn<(report: FirstSoundReport) => void>();
+      const createMedia = () => {
+        media = new FakeMedia();
+        media.holdSound = holdSound;
+        return media;
+      };
+      const engine = engineWith(api, "af_heart", { onFirstSound: heard, now: () => Date.now(), createMedia });
+      return { engine, heard };
+    };
+
+    it("narration that was ready is timed from the press to the element's first sound, as not prepared", async () => {
+      const { engine, heard } = timed(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }), { holdSound: true });
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(320);
+      expect(heard).not.toHaveBeenCalled();
+      media.sound();
+
+      expect(heard).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        waitMs: 320,
+        from: "playerBar",
+        source: "audio",
+        prepared: false,
+      });
+    });
+
+    it("narration made on the press is timed through the polls that found it, as prepared", async () => {
+      const status = vi
+        .fn<NarrationApi["status"]>()
+        .mockResolvedValueOnce({ key: KEY, status: "rendering" })
+        .mockResolvedValueOnce(READY);
+      const { engine, heard } = timed(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("masthead");
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 2);
+
+      expect(engine.getSnapshot().status).toBe("playing");
+      expect(heard).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        waitMs: POLL_INTERVAL_MS * 2,
+        from: "masthead",
+        source: "audio",
+        prepared: true,
+      });
+    });
+
+    it("the pacer's first tick is its first sound", async () => {
+      const { engine, heard } = timed(null);
+      engine.load(TRACK);
+
+      engine.play("libraryRow");
+      await vi.advanceTimersByTimeAsync(PACER_TICK_MS * 3);
+
+      expect(heard).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        waitMs: PACER_TICK_MS,
+        from: "libraryRow",
+        source: "pacer",
+        prepared: false,
+      });
+    });
+
+    it("reading along meanwhile ends the wait at the pacer, and the audio landing later is not a second one", async () => {
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
+      const { engine, heard } = timed(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(PREPARING_LONG_AFTER_MS);
+      engine.readAlong();
+      await vi.advanceTimersByTimeAsync(PACER_TICK_MS);
+      status.mockResolvedValue(READY);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      expect(engine.getSnapshot()).toMatchObject({ source: "audio", status: "playing" });
+      expect(heard).toHaveBeenCalledExactlyOnceWith({
+        overviewId: TRACK.overviewId,
+        waitMs: PREPARING_LONG_AFTER_MS + PACER_TICK_MS,
+        from: "playerBar",
+        source: "pacer",
+        prepared: true,
+      });
+    });
+
+    it("a press paused before any sound sends nothing, even once the sound comes", async () => {
+      const { engine, heard } = timed(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }), { holdSound: true });
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(100);
+      engine.pause();
+      media.sound();
+
+      expect(heard).not.toHaveBeenCalled();
+    });
+
+    it("a press cancelled while preparing sends nothing, even when the render lands", async () => {
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
+      const { engine, heard } = timed(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await settle();
+      expect(engine.getSnapshot().status).toBe("preparing");
+      engine.cancel();
+      status.mockResolvedValue(READY);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 2);
+
+      expect(heard).not.toHaveBeenCalled();
+    });
+
+    it("a listen carried on from paused is not timed again", async () => {
+      const { engine, heard } = timed(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      engine.pause();
+      engine.play("playerBar");
+
+      expect(heard).toHaveBeenCalledTimes(1);
+    });
+
+    it("a wait is capped, so one render nobody should have sat through does not skew the rest", async () => {
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValue({ key: KEY, status: "rendering" });
+      const { engine, heard } = timed(scriptedApi({ status }));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(MAX_FIRST_SOUND_WAIT_MS + POLL_INTERVAL_MS);
+      status.mockResolvedValue(READY);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 2);
+
+      expect(heard).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ waitMs: MAX_FIRST_SOUND_WAIT_MS, prepared: true }));
     });
   });
 });
