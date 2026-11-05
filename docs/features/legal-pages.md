@@ -55,6 +55,7 @@ these changes, the policy changes with it.
 | Section | Backed by |
 |---|---|
 | Account and sign-in: email, first name, hashed links and codes, 15 and 10 minutes, 30-day sliding sessions, the one cookie, Brevo | `sign-in.md`, `V0001`, `V0003`, `V0005`, `fly.toml` (`SESSION_TTL_DAYS`, `MAIL_FROM`) |
+| Changing the name or email: the code to the current address and the fresh-session skip, the code to the new address, the notice to the old one with its seven-day link that ends every session, the change rows kept | `account-changes.md`, `V0026` |
 | The library and settings synced to Neon in London | `sync-api.md`, `settings.md`, `personalisation.md`, `appearance.md`, `time-saved.md`, `tag-reuse.md`, `playlists.md`, `deploy.md` |
 | Transcripts: the shared cache, two accounts agreeing, contributions kept a year and outliving the account; watched captions never sent; the cache lookup on Create; articles' text never kept, links never logged | `shared-transcript-cache.md`, `transcript-storage.md`, `watching-detection.md`, `pasted-article-links.md`, `article-notes.md`, `server-side-transcripts.md` (Decodo) |
 | Whose key: own keys device-local and direct; our key through the server to OpenAI (`gpt-6.1-sol`); "Only ever use my key"; onboarding's overview and topic suggestions; trial token and hashed address for 7 days | `byo-providers.md`, `tiers.md`, `onboarding.md`, `ourKeyModel.ts`, `TrialsRepository.ts` (`ADDRESS_RETENTION_DAYS`), `hashedAddress.ts` |
@@ -143,6 +144,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-05 | privacy | OV-14 | The account section says the name can be changed and the email moved; the step-up code, the new-address code, the old address's notice and revert link, and the change record kept; a retention row for the codes and the record. |
 | 2026-11-05 | both | OV-79 | First texts, written from what was built on this date. |
 
 ## Not built

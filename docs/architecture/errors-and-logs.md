@@ -685,6 +685,15 @@ spoken line.
 | `session created` | `info` | `accountId`, `sessionId`, `surface` |
 | `signed out` | `info` | `transport`, under the ending session's `accountId` and `sessionId` (`docs/features/account-libraries.md`) |
 | `link code issued` | `info` | `transport` |
+| `name changed` | `info` | `cleared` (`docs/features/account-changes.md`) |
+| `verification asked` | `info` | `fresh`: true when the session was young enough to skip the code |
+| `verification held back` | `warn` | `reason: "cooldown"` |
+| `verification confirmed` | `info` | under the session that proved its inbox |
+| `email change asked` | `info` | nothing: never which mail went, nor to where |
+| `email change held back` | `warn` | `reason: "cooldown"` |
+| `email change confirmed` | `info` | under the account that moved |
+| `email change reverted` | `info` | `accountId`, from the public route, so it is said rather than bound |
+| `email change revert refused` | `warn` | `reason`: `expired`, `spent` or `taken` |
 
 Mail that can't be sent fails the request, so it's an `unhandled error` with the
 provider's answer (`Brevo answered 503`). It's reported to error tracking like any other

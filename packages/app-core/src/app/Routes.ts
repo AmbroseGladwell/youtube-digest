@@ -1,4 +1,4 @@
-import { consentPath, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
+import { consentPath, REVERT_EMAIL_PATH, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
@@ -18,6 +18,9 @@ export const Routes = {
   // Onboarding's screens after Start, which is the home page's own field (docs/features/onboarding.md).
   onboarding: () => "/start",
   connectExtension: () => "/connect-extension",
+  // The path the server writes into the old address's mail after an email change, so the
+  // two cannot drift (docs/features/account-changes.md, "Moving it back").
+  revertEmail: () => REVERT_EMAIL_PATH,
   connect: (requestId: string) => consentPath(requestId),
   // The two public pages every policy link points at, served to anyone, signed in or not
   // (docs/features/legal-pages.md).

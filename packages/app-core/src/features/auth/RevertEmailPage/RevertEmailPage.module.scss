@@ -1,0 +1,54 @@
+@use "../auth" as auth;
+
+.progress {
+  width: 17.5rem;
+  max-width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.progressFill {
+  width: 38%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand);
+  animation: travel 1.4s var(--motion-ease) infinite;
+}
+
+@keyframes travel {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(270%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill {
+    animation: none;
+    margin-left: 22%;
+  }
+}
+
+.note {
+  @include auth.note;
+  max-width: 48ch;
+}
+
+.help {
+  @include auth.note;
+  max-width: 48ch;
+  color: var(--ink);
+}
+
+.helpLink {
+  @include auth.inline-link;
+}
+
+.primary {
+  @include auth.primary;
+  align-self: flex-start;
+}

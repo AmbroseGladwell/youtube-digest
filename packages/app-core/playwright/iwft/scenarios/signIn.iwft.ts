@@ -200,7 +200,8 @@ test.describe("signing in on the web", () => {
     const menu = await launcher.appShell.accountMenu.open();
     await menu.verifySignedInAs("Ada", SIMULATED_EMAIL);
     const settings = await menu.chooseSettings();
-    await settings.syncPanel.verifySignedInAs(`Ada (${SIMULATED_EMAIL})`);
+    await settings.accountTile.verifyNameReads("Ada");
+    await settings.accountTile.verifyEmailReads(SIMULATED_EMAIL);
     await settings.syncPanel.verifyStatusReads(/Synced|Connected/);
     test.expect(backendSimulator.auth.signInAttempts()).toEqual(["the-token-from-the-email"]);
   });

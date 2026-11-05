@@ -26,6 +26,7 @@ import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js"
 import { SettingsPageObject } from "../pageObjects/SettingsPageObject.testHelper.js";
 import { SharedOverviewPageObject } from "../pageObjects/SharedOverviewPageObject.testHelper.js";
 import { SignInPageObject } from "../pageObjects/SignInPageObject.testHelper.js";
+import { RevertEmailPageObject } from "../pageObjects/RevertEmailPageObject.testHelper.js";
 import { Routes } from "../../src/app/Routes.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { AccountTermsLinePageObject } from "../pageObjects/AccountTermsLinePageObject.testHelper.js";
@@ -298,6 +299,10 @@ export class Launcher {
 
   get signInPage(): SignInPageObject {
     return new SignInPageObject(this.testContext);
+  }
+
+  get revertEmailPage(): RevertEmailPageObject {
+    return new RevertEmailPageObject(this.testContext);
   }
 
   get accountTermsLine(): AccountTermsLinePageObject {

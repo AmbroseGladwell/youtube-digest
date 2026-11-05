@@ -3,7 +3,6 @@ export const syncPanelTestIds = {
   hint: "SyncPanel.hint",
   signInLink: "SyncPanel.signInLink",
   createAccountLink: "SyncPanel.createAccountLink",
-  signedInAs: "SyncPanel.signedInAs",
   statusLine: "SyncPanel.statusLine",
   syncNowButton: "SyncPanel.syncNowButton",
   signOutButton: "SyncPanel.signOutButton",

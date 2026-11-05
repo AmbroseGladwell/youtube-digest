@@ -16,6 +16,8 @@ import { ApiKeysPanelPageObject } from "./ApiKeysPanelPageObject.testHelper.js";
 import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { SharedLinksPanelPageObject } from "./SharedLinksPanelPageObject.testHelper.js";
 import { SyncPanelPageObject } from "./SyncPanelPageObject.testHelper.js";
+import { AccountTilePageObject } from "./AccountTilePageObject.testHelper.js";
+import { syncPanelTestIds } from "../../src/features/sync/components/SyncPanel/SyncPanelTestIds.js";
 import { MilestonesSectionPageObject } from "./MilestonesSectionPageObject.testHelper.js";
 import { PersonalisationSectionPageObject } from "./PersonalisationSectionPageObject.testHelper.js";
 
@@ -42,6 +44,10 @@ export class SettingsPageObject extends PageObject {
 
   get syncPanel(): SyncPanelPageObject {
     return new SyncPanelPageObject(this.testContext);
+  }
+
+  get accountTile(): AccountTilePageObject {
+    return new AccountTilePageObject(this.testContext, this.page.getByTestId(syncPanelTestIds.root));
   }
 
   get voicePicker(): NarrationVoicePickerPageObject {

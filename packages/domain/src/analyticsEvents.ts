@@ -5,6 +5,7 @@ import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { Plan } from "./Plan.js";
 import { Provider } from "./Provider.js";
 import { AuthIntent } from "./AuthIntent.js";
+import { EmailChangeRevertRefusal } from "./EmailChangeReverted.js";
 import { NarrationVoice } from "./NarrationVoice.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
@@ -26,6 +27,10 @@ export interface AnalyticsEventDefinition<P extends AnalyticsProps = AnalyticsPr
 }
 
 export type AnalyticsCatalogueShape = Record<string, Record<string, Record<string, AnalyticsEventDefinition>>>;
+
+// Why a typed code or a change was turned away, as the page said it.
+const CodeRefusal = z.enum(["wrong", "expired", "limited"]);
+const EmailChangeRefusal = z.enum(["sameAddress", "wrong", "expired", "taken", "limited"]);
 
 function event(description: string): AnalyticsEventDefinition<{}>;
 function event<P extends AnalyticsProps>(description: string, props: P): AnalyticsEventDefinition<P>;
@@ -150,6 +155,7 @@ export const ErrorScreen = z.enum([
   "writeFloor",
   "consentExpired",
   "consentLoad",
+  "revertEmailFailed",
 ]);
 export type ErrorScreen = z.infer<typeof ErrorScreen>;
 export const AccountMenuItem = z.enum([
@@ -430,6 +436,10 @@ export const analyticsEvents = {
     },
   },
   account: {
+    revertPage: {
+      used: event("The old address moved an account back to itself from the mail's link, which ended every session"),
+      refused: event("A revert link could not move the account back", { reason: EmailChangeRevertRefusal }),
+    },
     signIn: {
       linkRequested: event("The reader asks for a sign-in link; never the address", {
         intent: AuthIntent,
@@ -651,6 +661,16 @@ export const analyticsEvents = {
       connectExtensionChosen: event("The reader follows Connect the extension from Settings"),
       signInChosen: event("The reader follows Sign in from Settings"),
       createAccountChosen: event("The reader follows Create account from Settings"),
+      nameSaved: event("The reader saves their first name from Settings › Account, or clears it", { cleared: z.boolean() }),
+      verificationAsked: event(
+        "The reader presses Change on their email and a code goes to their current address first, or the session was fresh enough to skip it",
+        { required: z.boolean() },
+      ),
+      verificationConfirmed: event("The reader's code from their current address is accepted"),
+      verificationRefused: event("The reader's code from their current address is refused", { reason: CodeRefusal }),
+      emailChangeAsked: event("The reader asks to move their account to a new address, and a code goes to it"),
+      emailChangeConfirmed: event("The reader's code from the new address is accepted and the account moves"),
+      emailChangeRefused: event("The reader's email change is refused", { reason: EmailChangeRefusal }),
     },
   },
   capture: {

@@ -15,6 +15,17 @@ export interface MagicLinkMail {
   expiresAt: string;
 }
 
+// The four mails an account's own changes send: a code to the current address before a
+// sensitive change, a code to a new address, the mail a new address gets instead when it
+// already has an account, and the notice the old address gets after a change, with its way
+// back (docs/features/account-changes.md).
+export type AccountMail =
+  | { kind: "verificationCode"; to: string; code: string; expiresAt: string; supportEmail: string }
+  | { kind: "emailChangeCode"; to: string; code: string; expiresAt: string }
+  | { kind: "emailTaken"; to: string }
+  | { kind: "emailChanged"; to: string; newEmail: string; changedAt: string; revertLink: string; supportEmail: string };
+
 export interface Mailer {
   sendMagicLink(mail: MagicLinkMail): Promise<void>;
+  sendAccountMail(mail: AccountMail): Promise<void>;
 }

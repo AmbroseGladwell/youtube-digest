@@ -42,17 +42,17 @@ export class SyncPanelPageObject extends PageObject {
       return new SignInPageObject(this.testContext);
     });
 
-  verifySignedInAs = (who: string) =>
-    this.step(`verifySignedInAs ${who}`, () =>
-      expect(this.get(syncPanelTestIds.signedInAs)).toHaveText(who),
-    );
-
   verifyStatusReads = (pattern: RegExp) =>
     this.step(`verifyStatusReads ${pattern.source}`, () =>
       expect(this.get(syncPanelTestIds.statusLine)).toHaveText(pattern),
     );
 
   clickSyncNow = () => this.step("clickSyncNow", () => this.click(syncPanelTestIds.syncNowButton));
+
+  verifySyncNowIsPrimary = (primary: boolean) =>
+    this.step(`verifySyncNowIsPrimary ${primary}`, () =>
+      expect(this.get(syncPanelTestIds.syncNowButton)).toHaveClass(primary ? /primaryButton/ : /secondaryButton/),
+    );
 
   clickSignOut = () => this.step("clickSignOut", () => this.click(syncPanelTestIds.signOutButton));
 }

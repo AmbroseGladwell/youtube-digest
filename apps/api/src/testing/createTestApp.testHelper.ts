@@ -58,6 +58,7 @@ export interface TestAppOptions {
 }
 
 export const TEST_APP_URL = "https://overview.test";
+export const TEST_SUPPORT_EMAIL = "help@overview.test";
 
 // The whole API against a real Postgres in process, with a clock the test owns
 // (docs/conventions/backend-testing-guide.md).
@@ -79,7 +80,7 @@ export async function createTestApp(
   const eventSink = makeRecordingEventSink();
   const errorSink = makeRecordingErrorSink();
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, sampleShareTokens: [], ...config },
+    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, sampleShareTokens: [], supportEmail: TEST_SUPPORT_EMAIL, ...config },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,

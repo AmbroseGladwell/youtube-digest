@@ -159,3 +159,50 @@ test("a requester told its surface sends it on every call, and one not told send
   assert.equal(told.sent[0]!.headers[CLIENT_SURFACE_HEADER], "extension");
   assert.equal(CLIENT_SURFACE_HEADER in untold.sent[0]!.headers, false);
 });
+
+test("the account's own changes go under the session: the name by PUT, the two codes and their confirms by POST", async () => {
+  const { sent, fetch } = answering(200, { required: true, email: "reader@example.com", expiresAt: "2026-11-05T14:47:00.000Z" });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example", token: "bearer-1", fetch, newRequestId: () => SENT_REQUEST_ID });
+
+  assert.deepEqual(await api.requestVerification(), { required: true, email: "reader@example.com", expiresAt: "2026-11-05T14:47:00.000Z" });
+  assert.equal(sent[0]!.url, "https://overview.example/api/session/verification");
+  assert.equal(sent[0]!.headers.authorization, "Bearer bearer-1");
+
+  const session = { accountId: "account-a", email: "new@example.org", firstName: "Ada", expiresAt: "2026-12-05T09:00:00.000Z", plan: "free" };
+  const named = answering(200, session);
+  const namedApi = createFetchAuthApi({ baseUrl: "https://overview.example", fetch: named.fetch });
+  assert.deepEqual(await namedApi.updateAccount({ firstName: "Ada" }), session);
+  assert.deepEqual([named.sent[0]!.method, named.sent[0]!.url, named.sent[0]!.body], ["PUT", "https://overview.example/api/session/account", { firstName: "Ada" }]);
+
+  const confirmed = answering(204, undefined);
+  await createFetchAuthApi({ baseUrl: "https://overview.example", fetch: confirmed.fetch }).confirmVerification("ABCD-EFGH");
+  assert.deepEqual([confirmed.sent[0]!.url, confirmed.sent[0]!.body], ["https://overview.example/api/session/verification/confirm", { code: "ABCD-EFGH" }]);
+
+  const asked = answering(202, { accepted: true, expiresAt: "2026-11-05T14:47:00.000Z" });
+  assert.deepEqual(await createFetchAuthApi({ baseUrl: "https://overview.example", fetch: asked.fetch }).requestEmailChange("new@example.org"), {
+    accepted: true,
+    expiresAt: "2026-11-05T14:47:00.000Z",
+  });
+  assert.deepEqual([asked.sent[0]!.url, asked.sent[0]!.body], ["https://overview.example/api/session/email-change", { email: "new@example.org" }]);
+
+  const moved = answering(200, session);
+  assert.deepEqual(await createFetchAuthApi({ baseUrl: "https://overview.example", fetch: moved.fetch }).confirmEmailChange("ABCD-EFGH"), session);
+  assert.equal(moved.sent[0]!.url, "https://overview.example/api/session/email-change/confirm");
+});
+
+test("moving an account back is public, posts the token, and a refusal carries its reason", async () => {
+  const done = answering(200, { email: "reader@example.com" });
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example", fetch: done.fetch });
+  assert.deepEqual(await api.revertEmailChange("t"), { email: "reader@example.com" });
+  assert.deepEqual([done.sent[0]!.url, done.sent[0]!.body, done.sent[0]!.headers.authorization], [
+    "https://overview.example/api/auth/email-change/revert",
+    { token: "t" },
+    undefined,
+  ]);
+
+  const refused = answering(410, { error: { code: "link_invalid", message: "no", details: { reason: "expired" } } });
+  await assert.rejects(
+    createFetchAuthApi({ baseUrl: "https://overview.example", fetch: refused.fetch }).revertEmailChange("t"),
+    (error: unknown) => isSyncRequestError(error) && error.code === "link_invalid" && error.details?.reason === "expired",
+  );
+});

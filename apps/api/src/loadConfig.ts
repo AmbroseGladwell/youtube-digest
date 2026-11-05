@@ -44,6 +44,7 @@ const ConfigEnv = z
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
     YOUTUBE_API_KEY: z.string().min(1).optional(),
+    SUPPORT_EMAIL: z.email().default("hello@theoverviewapp.com"),
     SAMPLE_SHARE_TOKENS: z
       .string()
       .default("")
@@ -137,6 +138,8 @@ export interface Config {
   // The house account's live shares Start offers as samples, in order, or none to offer none
   // (docs/features/onboarding.md, "Try a sample").
   sampleShareTokens: ShareToken[];
+  // Where a reader writes when a mail's own way out cannot help (docs/features/account-changes.md).
+  supportEmail: string;
   analytics: AnalyticsConfig;
   // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
@@ -202,6 +205,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
           },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
     sampleShareTokens: data.SAMPLE_SHARE_TOKENS,
+    supportEmail: data.SUPPORT_EMAIL,
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
       postHog,

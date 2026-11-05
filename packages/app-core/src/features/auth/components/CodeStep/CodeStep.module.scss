@@ -1,0 +1,145 @@
+@use "../../auth" as auth;
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  padding: 0.875rem 1rem 1rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  color: var(--ink);
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.lead {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ink);
+  text-wrap: pretty;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.note {
+  @include auth.note;
+  font-size: 0.8125rem;
+  max-width: none;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.labelText {
+  @include auth.field-label;
+}
+
+.code {
+  @include controls.field-solo;
+  height: 3.25rem;
+  padding-inline: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px var(--divider);
+
+  &::placeholder {
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+}
+
+.codeInvalid,
+.codeInvalid:focus {
+  @include auth.field-invalid;
+}
+
+.error {
+  @include auth.field-error;
+  align-items: flex-start;
+  font-weight: 500;
+  color: var(--ink);
+
+  svg {
+    flex: none;
+    margin-top: 0.1875rem;
+    color: var(--alert);
+  }
+}
+
+.status {
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ink);
+
+  svg {
+    flex: none;
+    margin-top: 0.125rem;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.ghost {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+}
+
+.secondaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+// Already above iOS's zoom threshold, so it keeps its size past global.scss's touch rule.
+@media (pointer: coarse) {
+  .code {
+    font-size: 1.25rem !important;
+  }
+}

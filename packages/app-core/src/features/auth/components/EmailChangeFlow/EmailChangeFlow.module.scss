@@ -1,0 +1,113 @@
+@use "../../auth" as auth;
+@use "../../../../theme/controls.scss" as controls;
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  padding: 0.875rem 1rem 1rem;
+}
+
+.sending {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.spinner {
+  display: inline-flex;
+  color: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: spin 0.9s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.labelText {
+  @include auth.field-label;
+}
+
+.field {
+  @include auth.field;
+  background: var(--card);
+}
+
+.fieldInvalid,
+.fieldInvalid:focus-within {
+  @include auth.field-invalid;
+}
+
+.input {
+  @include auth.field-input;
+}
+
+.hint {
+  @include auth.note;
+  font-size: 0.8125rem;
+  max-width: none;
+}
+
+.error {
+  @include auth.field-error;
+  align-items: flex-start;
+  font-weight: 500;
+  color: var(--ink);
+
+  svg {
+    flex: none;
+    margin-top: 0.1875rem;
+    color: var(--alert);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.secondary {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.ghost {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  color: var(--ink);
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}

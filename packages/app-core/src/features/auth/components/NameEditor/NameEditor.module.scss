@@ -1,0 +1,67 @@
+@use "../../auth" as auth;
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  padding: 0.875rem 1rem 1rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.labelText {
+  @include auth.field-label;
+}
+
+.field {
+  @include auth.field;
+  background: var(--card);
+}
+
+.fieldInvalid,
+.fieldInvalid:focus-within {
+  @include auth.field-invalid;
+}
+
+.input {
+  @include auth.field-input;
+}
+
+.hint {
+  @include auth.note;
+  font-size: 0.8125rem;
+  max-width: none;
+}
+
+.error {
+  @include auth.field-error;
+  font-weight: 500;
+  color: var(--ink);
+
+  svg {
+    color: var(--alert);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.ghost {
+  @include controls.ghost-pill;
+  @include controls.pill-md;
+}

@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { LinkCode, LinkedSession, SessionInfo, SignedIn } from "@overview/domain";
+import {
+  EmailChangeAsked,
+  EmailChangeReverted,
+  LinkCode,
+  LinkedSession,
+  SessionInfo,
+  SignedIn,
+  VerificationAsked,
+} from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { AuthApi } from "./AuthApi.js";
 
@@ -23,5 +31,16 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
     signOut: async () => {
       await request("DELETE", "/session", z.never());
     },
+    updateAccount: (update) => answered(request("PUT", "/session/account", SessionInfo, { body: update })),
+    requestVerification: () => answered(request("POST", "/session/verification", VerificationAsked)),
+    confirmVerification: async (code) => {
+      await request("POST", "/session/verification/confirm", z.never(), { body: { code } });
+    },
+    requestEmailChange: (email) =>
+      answered(request("POST", "/session/email-change", EmailChangeAsked, { body: { email } })),
+    confirmEmailChange: (code) =>
+      answered(request("POST", "/session/email-change/confirm", SessionInfo, { body: { code } })),
+    revertEmailChange: (token) =>
+      answered(request("POST", "/auth/email-change/revert", EmailChangeReverted, { body: { token } })),
   };
 }

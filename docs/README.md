@@ -200,6 +200,9 @@ Five folders, five different questions.
   write and why it carries the change rather than the record, enrolment, one cycle's order,
   which refusals stop it and which park one write, pending writes rebased over a pull, and
   the three screens.
+- `account-changes.md` — changing the name and the email on an account: a code to the
+  current address first, a code to the new one, the old address's notice with a seven-day
+  link that moves the account back and ends every session
 - `account-libraries.md` — each account's library on the device: a database per account
   beside the no-account one, why the app swaps libraries in place and never syncs the one
   being left, sign-out that syncs first, never blocks and says what it couldn't send, what

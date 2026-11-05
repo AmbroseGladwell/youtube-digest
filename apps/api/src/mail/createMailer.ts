@@ -3,11 +3,11 @@ import { createLogMailer } from "./logMailer.js";
 import type { Mailer } from "./Mailer.js";
 import { createBrevoMailer } from "./brevoMailer.js";
 
-export function createMailer(config: MailConfig): Mailer {
+export function createMailer(config: MailConfig, siteUrl: string): Mailer {
   switch (config.transport) {
     case "log":
       return createLogMailer();
     case "brevo":
-      return createBrevoMailer({ apiKey: config.brevoApiKey, from: config.from });
+      return createBrevoMailer({ apiKey: config.brevoApiKey, from: config.from, siteUrl });
   }
 }
