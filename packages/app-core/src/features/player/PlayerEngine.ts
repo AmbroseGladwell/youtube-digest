@@ -1,15 +1,20 @@
 import {
   DEFAULT_NARRATION_VOICE,
+  MAX_FIRST_SOUND_WAIT_MS,
   spokenLines,
   type ClientWarningReport,
   type NarrationRender,
   type NarrationVoice,
+  type OverviewId,
+  type PlaybackFrom,
+  type PlaybackSource,
   type ReadyNarration,
 } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import type {
   PacerReason,
   PlayerSnapshot,
+  PlayerSource,
   PlayerStatus,
 } from "./types/PlayerSnapshot.js";
 import type { PlayerTrack } from "./types/PlayerTrack.js";
@@ -35,6 +40,17 @@ export type PlayerMedia = Pick<
   "src" | "currentTime" | "playbackRate" | "paused" | "play" | "pause" | "addEventListener" | "preload"
 >;
 
+// How long a listen took to make a sound, measured from the press that started it to the
+// media's first `playing` event or the pacer's first tick (docs/features/audio-player.md,
+// "Time to first sound").
+export interface FirstSoundReport {
+  overviewId: OverviewId;
+  waitMs: number;
+  from: PlaybackFrom;
+  source: PlaybackSource;
+  prepared: boolean;
+}
+
 export interface PlayerEngineOptions {
   api: NarrationApi | null;
   createMedia: () => PlayerMedia;
@@ -42,6 +58,14 @@ export interface PlayerEngineOptions {
   // Told when narration that should have played falls back to the pacer, so the server's
   // logs say so (docs/architecture/errors-and-logs.md, "Client warnings").
   warn?: (warning: ClientWarningReport) => void;
+  onFirstSound?: (report: FirstSoundReport) => void;
+  now?: () => number;
+}
+
+interface Press {
+  at: number;
+  from: PlaybackFrom;
+  prepared: boolean;
 }
 
 const IDLE: PlayerSnapshot = {
@@ -101,12 +125,24 @@ export class PlayerEngine {
   #pollFailures = 0;
   #watchChecks = 0;
   #warn: (warning: ClientWarningReport) => void;
+  #onFirstSound: (report: FirstSoundReport) => void;
+  #clock: () => number;
+  #press: Press | null = null;
   #listeners = new Set<() => void>();
   #timeListeners = new Set<() => void>();
 
-  constructor({ api, createMedia, voice = DEFAULT_NARRATION_VOICE, warn = () => undefined }: PlayerEngineOptions) {
+  constructor({
+    api,
+    createMedia,
+    voice = DEFAULT_NARRATION_VOICE,
+    warn = () => undefined,
+    onFirstSound = () => undefined,
+    now = () => performance.now(),
+  }: PlayerEngineOptions) {
     this.#api = api;
     this.#warn = warn;
+    this.#onFirstSound = onFirstSound;
+    this.#clock = now;
     this.#createMedia = createMedia;
     this.#snapshot = { ...IDLE, voice };
   }
@@ -180,17 +216,19 @@ export class PlayerEngine {
     this.#emitTime();
   }
 
-  toggle(): void {
+  toggle(from: PlaybackFrom): void {
     const { status } = this.#snapshot;
     if (status === "playing" || status === "buffering") this.pause();
     else if (status === "preparing") this.cancel();
-    else this.play();
+    else this.play(from);
   }
 
-  play(): void {
+  // A listen begun is timed to its first sound; one carried on from paused is not.
+  play(from: PlaybackFrom): void {
     const { track, status, source } = this.#snapshot;
     if (track === null || status === "playing" || status === "preparing") return;
     if (status === "ended") this.#time = 0;
+    this.#press = status === "paused" ? null : { at: this.#clock(), from, prepared: false };
     if (status === "failed" || status === "busy") {
       this.#requestRender();
       return;
@@ -219,6 +257,7 @@ export class PlayerEngine {
   // what the server has, which is usually that it is still on its way.
   cancel(): void {
     if (this.#snapshot.status !== "preparing") return;
+    this.#press = null;
     this.#generation += 1;
     this.#replacing = null;
     this.#clearPreparing();
@@ -429,6 +468,7 @@ export class PlayerEngine {
     if (generation !== this.#generation) return;
     this.#pollFailures = 0;
     if (render.status === "queued" || render.status === "rendering") {
+      if (this.#press !== null) this.#press.prepared = true;
       const { preparing } = this.#snapshot;
       this.#set({ preparing: { step: render.status, long: preparing?.long ?? false } });
       this.#pollTimer = setTimeout(() => this.#poll(render.key, generation, voice), POLL_INTERVAL_MS);
@@ -586,6 +626,7 @@ export class PlayerEngine {
     this.#set({ status: "playing" });
     this.#armStop();
     this.#pacerTimer = setInterval(() => {
+      this.#reportFirstSound("pacer");
       this.#time = Math.min(this.#time + (PACER_TICK_MS / 1000) * this.#snapshot.rate, durationSeconds);
       if (this.#pastStop()) {
         this.#reachStop();
@@ -681,8 +722,18 @@ export class PlayerEngine {
     if (!this.#mediaIsCurrent()) return;
     if (status === "ended") this.#time = this.#snapshot.timings.durationSeconds;
     this.#set({ status });
+    if (status === "playing") this.#reportFirstSound("audio");
     this.#armStop();
     this.#emitTime();
+  }
+
+  #reportFirstSound(source: PlayerSource): void {
+    const press = this.#press;
+    const { track } = this.#snapshot;
+    if (press === null || track === null) return;
+    this.#press = null;
+    const waitMs = Math.min(Math.max(Math.round(this.#clock() - press.at), 0), MAX_FIRST_SOUND_WAIT_MS);
+    this.#onFirstSound({ overviewId: track.overviewId, waitMs, from: press.from, source, prepared: press.prepared });
   }
 
   #clearPreparing(): void {
@@ -693,6 +744,7 @@ export class PlayerEngine {
   }
 
   #teardown(): void {
+    this.#press = null;
     this.#stopLine = null;
     this.#armStop();
     this.#generation += 1;
@@ -706,7 +758,10 @@ export class PlayerEngine {
     return scriptOf(this.#snapshot.track!);
   }
 
+  // A press that comes to rest before any sound is a press that made none.
   #set(patch: Partial<PlayerSnapshot>): void {
+    const { status } = patch;
+    if (status === "paused" || status === "ended" || status === "failed" || status === "busy") this.#press = null;
     this.#snapshot = { ...this.#snapshot, ...patch };
     for (const listener of this.#listeners) listener();
   }

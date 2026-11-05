@@ -52,4 +52,6 @@ The options are `menuitemradio` with `aria-checked`, and the current one also sh
 check. On opening, focus goes to the checked option. Arrow keys wrap, Home and End jump,
 Escape and choosing an option return focus to the pill, and Tab closes the menu.
 `librarySort.iwft.ts` covers the orders, the unreadable records, the filters, Back, and
-the keyboard.
+the keyboard. Opening the menu and the order picked are counted, as
+`library.sortPill.opened` and `library.sortPill.orderChosen({ sort })`
+(`docs/architecture/analytics.md`).

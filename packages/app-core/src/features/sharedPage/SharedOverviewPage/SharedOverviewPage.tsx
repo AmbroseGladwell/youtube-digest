@@ -404,7 +404,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         canSignIn={false}
         onMain={() => {
           recipeVoice?.release();
-          notePlayer.main();
+          notePlayer.main("playerBar");
         }}
         onSkip={(delta) => player.skip(delta)}
         onSeek={(seconds) => player.seek(seconds)}
@@ -413,7 +413,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           if (action === "readAlong" || action === "readAlongInstead" || action === "readAlongMeanwhile") {
             player.readAlong();
           }
-          if (action === "tryAgain") notePlayer.play();
+          if (action === "tryAgain") notePlayer.play("playerBar");
         }}
         onReRecord={() => undefined}
       />

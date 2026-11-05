@@ -69,6 +69,14 @@ const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay
 // PlayerStatus, which playerBarView.test.ts keeps this in step with.
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;
+// Where a listen was started from, for the wait that press led to.
+export const PlaybackFrom = z.enum(["playerBar", "masthead", "miniPlayer", "libraryRow", "mediaSession", "cooking", "readAloud"]);
+export type PlaybackFrom = z.infer<typeof PlaybackFrom>;
+// app-core's PlayerSource, which PlayerEngine keeps this in step with.
+export const PlaybackSource = z.enum(["audio", "pacer"]);
+export type PlaybackSource = z.infer<typeof PlaybackSource>;
+// A wait longer than this is a render that was given up on, not a wait anyone sat through.
+export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
@@ -380,6 +388,18 @@ export const analyticsEvents = {
         playing: z.boolean(),
       }),
       stopped: event("The reader stops and closes the mini-player", { overviewId: OverviewId }),
+    },
+    playback: {
+      firstSound: event(
+        "The reader hears the narration, or sees the pacer move, after starting a listen: how long they waited in milliseconds, where they pressed play, whether it was audio or the pacer, and whether the press waited on the audio being made. A resume from paused sends nothing",
+        {
+          overviewId: OverviewId,
+          waitMs: z.number().int().min(0).max(MAX_FIRST_SOUND_WAIT_MS),
+          from: PlaybackFrom,
+          source: PlaybackSource,
+          prepared: z.boolean(),
+        },
+      ),
     },
   },
   plus: {

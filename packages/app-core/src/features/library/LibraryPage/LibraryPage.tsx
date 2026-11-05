@@ -96,11 +96,11 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const listen = (overview: Overview) => {
     analytics.library.overviewCard.listenPressed({ overviewId: overview.id, listening: !isPlaying(overview.id) });
     if (playerSnapshot.track?.overviewId === overview.id) {
-      player.toggle();
+      player.toggle("libraryRow");
       return;
     }
     player.load(playerTrackFor(overview));
-    player.play();
+    player.play("libraryRow");
   };
   const createTopic = useCreateTopicMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);

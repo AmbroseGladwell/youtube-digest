@@ -47,6 +47,10 @@ where a funnel can't be drawn without it. `capture.newOverview.started` is the c
 `finished` and `failed` are what the reader then saw, so "asked for an overview → got one →
 read it" is one funnel. Their durations are measured by the app between the two, never
 estimated, and a failure is named by kind (`captureFailureOf`), never by its message.
+`player.playback.firstSound` is the same shape for a listen: `playerBar.mainPressed` is the
+press, and the first sound is what the reader then got, with the wait measured by
+`PlayerEngine` from the press to the element's `playing` event or the pacer's first tick
+(`docs/features/audio-player.md`, "Time to first sound").
 
 ## Where events go
 
@@ -288,9 +292,9 @@ Until then, events are logged on the server and go nowhere else.
 
 - **The 30-day deletion** of anonymous data never linked to an account
   (`docs/features/analytics-consent.md`, "Not built yet").
-- **The events other cards named:** time from play to first sound is OV-63, and the link
-  shapes the parser refuses are OV-29. The sort order and the voices sampled and chosen,
-  which OV-63 also named, are counted (`library.sortPill.orderChosen`, `settings.voice.*`).
+- **The link shapes the parser refuses** are OV-29. The three events OV-63 named are all
+  counted now: the sort order (`library.sortPill.orderChosen`), the voices sampled and chosen
+  (`settings.voice.*`) and time to first sound (`player.playback.firstSound`).
 - **Anything from the YouTube page itself.** The content script sends nothing: a press on
   the injected button is counted in the panel, where it arrives
   (`extension.injectedButton.pressed`, with what it did), and the panel's opening as it
