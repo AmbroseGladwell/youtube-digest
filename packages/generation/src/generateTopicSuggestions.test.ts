@@ -34,13 +34,31 @@ test("a starter topic that isn't on offer fails its schema", async () => {
   );
 });
 
-test("a new topic that repeats a starter one, runs long, or would make four is dropped", async () => {
+test("it asks for a specific interest that may sit inside a broad topic, not a tag", async () => {
+  let system = "";
+  await generateTopicSuggestions(async ({ systemPrompt }) => {
+    system = systemPrompt;
+    return { starterTopicNames: [], newTopicName: null };
+  }, INPUT);
+  assert.match(system, /"Knife skills" within Food/);
+  assert.match(system, /It may sit inside a topic on offer\./);
+  assert.match(system, /an interest, not a tag/);
+});
+
+test("a new topic that repeats a starter one or runs long is dropped, and a tidy one is kept", async () => {
   const suggest = (starterTopicNames: string[], newTopicName: string) =>
     generateTopicSuggestions(async () => ({ starterTopicNames, newTopicName }), INPUT);
   assert.equal((await suggest(["Health"], "food")).newTopic, null);
-  assert.equal((await suggest(["Food"], "The art of slicing onions quickly")).newTopic, null);
-  assert.equal((await suggest(["Food", "Home", "Health"], "Knife skills")).newTopic, null);
+  assert.equal((await suggest(["Food"], "The art of slicing onions very quickly")).newTopic, null);
   assert.equal((await suggest(["Food"], "  Knife skills  ")).newTopic, "Knife skills");
+  assert.equal((await suggest(["Fitness"], "Marathon training")).newTopic, "Marathon training");
+});
+
+test("a specific interest keeps its place, so three starter topics make room for it", async () => {
+  assert.deepEqual(
+    await generateTopicSuggestions(async () => ({ starterTopicNames: ["Food", "Home", "Health"], newTopicName: "Knife skills" }), INPUT),
+    { starter: ["Food", "Home"], newTopic: "Knife skills" },
+  );
 });
 
 test("a starter topic named twice is offered once, and never more than three", async () => {
