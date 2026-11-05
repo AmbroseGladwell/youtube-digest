@@ -7,6 +7,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
+import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
@@ -272,6 +273,30 @@ export class LibraryPageObject extends PageObject {
 
   nthCard = (index: number): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).nth(index));
+
+  // A card already wholly on screen, so opening it moves the page nowhere and the
+  // position read before the click is the one to come back to.
+  openReaderFromACardOnScreen = (): Promise<ReaderPageObject> =>
+    this.step("openReaderFromACardOnScreen", async () => {
+      const cards = this.get(libraryOverviewCardTestIds.root);
+      const viewport = this.page.viewportSize()!;
+      const count = await cards.count();
+      for (let index = 0; index < count; index += 1) {
+        const box = await cards.nth(index).boundingBox();
+        if (box !== null && box.y >= 0 && box.y + box.height <= viewport.height) {
+          return this.nthCard(index).openReader();
+        }
+      }
+      throw new Error("No library card is wholly on screen");
+    });
+
+  readScrollPosition = (): Promise<number> =>
+    this.step("readScrollPosition", () => this.page.evaluate(() => window.scrollY));
+
+  verifyScrollPosition = (expected: number) =>
+    this.step(`verifyScrollPosition ${expected}`, () =>
+      expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(expected),
+    );
 
   get unreadableCard(): LibraryUnreadableCardPageObject {
     return new LibraryUnreadableCardPageObject(this.testContext);

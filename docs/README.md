@@ -138,6 +138,9 @@ Five folders, five different questions.
 - `error-state.md` — design turn 19's one dead-end screen: the six cases it serves, why the
   way out is the caller's to name rather than a fixed pair, and where the build departs from
   the design file.
+- `back-within-reach.md` — on a phone the bar's brand slot becomes `← All overviews` once
+  the head has scrolled under it, how the hand-off moves, and why both links go back in
+  history when the library is behind them.
 - `extension-panel.md` — why the side panel is one video rather than a small library:
   the layout seam, its three screens, what it drops, and what `Open in web app` waits for.
 - `following-playback.md` — how the transcript follows the video, what now touches the

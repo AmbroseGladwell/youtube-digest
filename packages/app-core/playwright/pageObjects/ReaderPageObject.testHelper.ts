@@ -1265,6 +1265,32 @@ export class ReaderPageObject extends PageObject {
     });
 
 
+  scrollToTheFoot = () =>
+    this.step("scrollToTheFoot", () =>
+      expect(async () => {
+        await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        const atTheFoot = await this.page.evaluate(
+          () => window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1,
+        );
+        expect(atTheFoot).toBe(true);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  scrollToTheTop = () =>
+    this.step("scrollToTheTop", async () => {
+      await this.page.evaluate(() => window.scrollTo(0, 0));
+      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0);
+    });
+
+  verifyHeadBackLinkIsUnderTheBar = () =>
+    this.step("verifyHeadBackLinkIsUnderTheBar", () =>
+      expect(async () => {
+        const band = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
+        const link = (await this.get(readerMastheadTestIds.backLink).boundingBox())!;
+        expect(link.y + link.height).toBeLessThanOrEqual(band.y + band.height);
+      }).toPass({ timeout: 2_000 }),
+    );
+
   clickBackToLibrary = (): Promise<LibraryPageObject> =>
     this.step("clickBackToLibrary", async () => {
       await this.click(readerMastheadTestIds.backLink);
