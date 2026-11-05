@@ -1,0 +1,54 @@
+import { z } from "zod";
+import {
+  sameTopicName,
+  STARTER_TOPICS,
+  TOPIC_SUGGESTION_NEW_NAME_CHARACTERS,
+  type TopicSuggestionInput,
+  type TopicSuggestionResult,
+} from "@overview/domain";
+import type { GenerationClient } from "./generateOverview.js";
+import { GenerationError } from "./GenerationError.js";
+
+const SUGGESTED_AT_MOST = 3;
+
+// The starter topics a source about to be written belongs under, and at most one new topic where
+// none of them is a good home, offered on onboarding's topics screen before there's an account
+// (docs/features/onboarding.md, "Suggested topics"). Offered, never chosen: the reader picks.
+export async function generateTopicSuggestions(client: GenerationClient, input: TopicSuggestionInput): Promise<TopicSuggestionResult> {
+  const names = STARTER_TOPICS.map((topic) => topic.name) as [string, ...string[]];
+  const Output = z.object({
+    starterTopicNames: z.array(z.enum(names)),
+    newTopicName: z.string().nullable(),
+  });
+  const raw = await client({
+    systemPrompt: `A new reader is choosing the topics their library will be sorted into. Suggest a few
+for the ${input.kind} they're about to have summarised.
+
+The topics on offer:
+${STARTER_TOPICS.map((topic) => `- "${topic.name}": ${topic.description}`).join("\n")}
+
+Name up to ${SUGGESTED_AT_MOST} of them that this ${input.kind} would clearly be filed under, the best fit
+first. Fewer is fine, and none is an honest answer.
+
+You may also name one new topic, in newTopicName, but only when the ${input.kind}'s subject is a
+clear interest none of the topics on offer covers well. A new topic is a home for many future
+overviews, not a description of this one: one to three words, in the same style as the list
+("Knife skills", "Chess", "Gardening"), never a synonym or a narrower duplicate of a topic on
+offer, never the ${input.kind}'s own title, a person, a brand or a channel. Otherwise null.`,
+    userMessage: [`Title: ${input.title}`, ...(input.text.trim() === "" ? [] : ["", input.text])].join("\n"),
+    schema: Output,
+  });
+  const parsed = Output.safeParse(raw);
+  if (!parsed.success) {
+    throw new GenerationError(`topic suggestions failed their schema: ${parsed.error.message}`);
+  }
+  const starter = [...new Set(parsed.data.starterTopicNames)].slice(0, SUGGESTED_AT_MOST);
+  const named = parsed.data.newTopicName?.trim() ?? "";
+  const usable =
+    named !== "" &&
+    named.length <= TOPIC_SUGGESTION_NEW_NAME_CHARACTERS &&
+    named.split(/\s+/).length <= 3 &&
+    !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, named)) &&
+    starter.length < SUGGESTED_AT_MOST;
+  return { starter, newTopic: usable ? named : null };
+}

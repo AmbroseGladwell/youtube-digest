@@ -5,11 +5,12 @@ import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingTopics.module.scss";
 import { onboardingTopicsTestIds } from "./OnboardingTopicsTestIds.js";
 
-// Starter topics suggested from the source (OV-176, 175b), with what they're for and from.
+// Topics suggested from the source (OV-176, 175b): starter ones, and at most one new one.
 export interface OnboardingTopicSuggestions {
   noun: string;
-  from: string;
   names: readonly string[];
+  newTopic: string | null;
+  by: "model" | "code";
 }
 
 export interface OnboardingTopicsProps {
@@ -36,7 +37,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const [typing, setTyping] = useState("");
   const fieldId = useId();
   const suggestedId = useId();
-  const suggested = suggestions?.names ?? [];
+  const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
   const typed = chosen.filter((name) => !isStarter(name));
   const has = (name: string) => chosen.some((held) => sameTopicName(held, name));
   const toggle = (name: string) =>
@@ -64,22 +65,31 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
         <div className={styles.group} role="group" aria-labelledby={suggestedId} data-testid={onboardingTopicsTestIds.suggested}>
           <p id={suggestedId} className={styles.groupLabel}>
             For this {suggestions.noun}
-            <span className={styles.from}> · suggested from {suggestions.from}</span>
+            <span className={styles.from}> · suggested from what it's about</span>
           </p>
           <div className={styles.chips}>
-            {suggested.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className={styles.chip}
-                aria-pressed={has(name)}
-                onClick={() => toggle(name)}
-                data-testid={onboardingTopicsTestIds.suggestion(name)}
-              >
-                {has(name) && <StrokeIcon name="check" size={14} />}
-                {name}
-              </button>
-            ))}
+            {suggested.map((name) => {
+              const isNew = name === suggestions.newTopic;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  className={styles.chip}
+                  aria-pressed={has(name)}
+                  aria-label={isNew ? `${name}, new topic` : undefined}
+                  onClick={() => toggle(name)}
+                  data-testid={onboardingTopicsTestIds.suggestion(name)}
+                >
+                  {has(name) && <StrokeIcon name="check" size={14} />}
+                  {name}
+                  {isNew && (
+                    <span className={styles.newTag} aria-hidden="true">
+                      New
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

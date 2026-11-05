@@ -137,7 +137,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       makers.video(target, {
         isCancelled,
         waitToWrite,
-        onProgress: ({ video }) => onFound({ source: youTubeSource(video), recipe: null, about: video.description ?? "" }),
+        onProgress: ({ video, transcriptOpening }) =>
+          onFound({
+            source: youTubeSource(video),
+            recipe: null,
+            about: [video.description ?? "", transcriptOpening].filter((part) => part !== "").join("\n\n"),
+          }),
       }),
     noun: (linkKind) => (linkKind === "playlist" ? "playlist" : "video"),
     lead: () => OVERVIEW_LEAD,

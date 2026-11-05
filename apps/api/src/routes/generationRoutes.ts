@@ -6,9 +6,11 @@ import {
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
   TopicMatchInput,
+  TopicSuggestionInput,
   TrialToken,
   type ForAnyoneResult,
   type TopicMatchResult,
+  type TopicSuggestionResult,
   type OurKeyGenerationStatus,
   type ProfilePassResult,
 } from "@overview/domain";
@@ -98,6 +100,41 @@ export function generationRoutes(
     const result: TopicMatchResult = { names: await smallPass((passes) => passes.topics(input, request.log)) };
     return result;
   });
+
+  // Signed out, onboarding's topics screen asks before there's an account, on the device's trial
+  // and capped apart from its one overview (docs/features/onboarding.md, "Suggested topics").
+  const trialTokenOf = (request: { headers: Record<string, unknown> }): string | null => {
+    const token = request.headers[TRIAL_TOKEN_HEADER];
+    return typeof token === "string" ? token : null;
+  };
+  const suggestionPerTrial = rateLimitHook(
+    rateLimits.topicSuggestionPerTrial,
+    (request) => (request.session === null ? trialTokenOf(request) : null),
+    clock,
+  );
+  const suggestionPerAddress = rateLimitHook(
+    rateLimits.topicSuggestionPerAddress,
+    (request) => (request.session === null ? request.clientAddress : null),
+    clock,
+  );
+  app.post(
+    "/generations/topic-suggestions",
+    { config: { optionalSession: true }, preHandler: [smallPassLimit, suggestionPerTrial, suggestionPerAddress] },
+    async (request) => {
+      const input = parseOrThrow(TopicSuggestionInput, request.body, "The topic suggestions");
+      if (request.session === null) {
+        const trialToken = trialTokenOf(request);
+        if (trialToken === null) {
+          throw new ApiError("unauthenticated", "Sign in, or start a trial, to have topics suggested");
+        }
+        if ((await trials.used(trialToken)) === null) {
+          throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
+        }
+      }
+      const result: TopicSuggestionResult = await smallPass((passes) => passes.topicSuggestions(input, request.log));
+      return result;
+    },
+  );
 
   app.post("/generations", { bodyLimit: GENERATION_BODY_LIMIT_BYTES, config: { optionalSession: true } }, async (request, reply) => {
     const body = parseOrThrow(OurKeyGenerationRequest, request.body, "The generation request");

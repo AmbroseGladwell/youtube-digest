@@ -50,20 +50,28 @@ none.
 
 ## Suggested topics
 
-OV-176, design 175b. Above the full list, "For this video" (or article, or recipe) offers up
-to three starter topics the source looks like it belongs under, "suggested from its title and
-description" (a page's: "title and text"). They're offered, never picked for the reader, and
-pressing one presses the same chip in "All topics" below. With nothing to suggest the group
-isn't there and the screen is as before.
+OV-176, design 175b. Above the full list, "For this video" (or article, or recipe), "suggested
+from what it's about", offers up to three topics: starter ones, and at most one new one marked
+New. They're offered, never picked for the reader, and pressing a starter one presses the same
+chip in "All topics" below. A new one picked is made with no description, like a typed one.
+With nothing to suggest the group isn't there and the screen is as before.
 
-**Matched in code, not asked of a model** (`suggestStarterTopics`, `packages/domain`): each
-starter topic has a few `keywords`, and they're matched as whole words against the title
-(counting double) and a video's description or a page's opening 3,000 characters. A topic
-needs a word in the title, or two in the text, to be offered. It's free and instant, so it
-costs no call on us before an account and adds no wait. A model call was weighed and left
-for now. The design allowed one new topic outside the starter list; matching in code can't
-name one well, so none is offered. `onboarding.topics.continued` counts how many were
-suggested and how many of those were picked.
+**Asked of a model as soon as the source is found** (`useTopicSuggestions`), not when the
+screen opens. The fetch lands before or during the confirm screen, so the answer is usually back
+before the reader reaches topics, and there's no wait. It's a small pass on our key on the
+device's trial (`generateTopicSuggestions`, `POST /api/generations/topic-suggestions`), sent the
+title and a video's description and transcript opening, or a page's opening: never counted as
+the trial's overview, and capped on its own (`docs/architecture/tiers.md`). The model names a
+new topic only when no starter topic is a good home for the subject, as a broad interest in the
+list's own style ("Knife skills"), never the title, a person or a brand; one that repeats a
+starter topic, runs past three words, or would make a fourth suggestion is dropped.
+
+**Matched in code until the answer is in, and if it never is** (`suggestStarterTopics`,
+`packages/domain`): each starter topic has a few `keywords`, matched as whole words against the
+title (counting double) and the same text. A topic needs a word in the title, or two in the
+text. Once the topics screen shows suggestions they're held, so an answer arriving late never
+moves chips under the reader. `onboarding.topics.continued` counts how many were suggested, by
+the model or in code, and how many of those were picked.
 
 ## The library slide
 

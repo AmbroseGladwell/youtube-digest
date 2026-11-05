@@ -462,12 +462,13 @@ export const analyticsEvents = {
     },
     topics: {
       continued: event(
-        "The reader leaves the topics screen: how many starter topics they picked and how many they typed, how many were suggested from the source, and how many of those they picked",
+        "The reader leaves the topics screen: how many starter topics they picked and how many they typed, how many were suggested from the source and by what, and how many of those they picked",
         {
           picked: z.number().int().nonnegative(),
           typed: z.number().int().nonnegative(),
           suggested: z.number().int().nonnegative(),
           pickedSuggested: z.number().int().nonnegative(),
+          suggestedBy: z.enum(["model", "code", "none"]),
         },
       ),
     },

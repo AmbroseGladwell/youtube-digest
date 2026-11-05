@@ -212,6 +212,11 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.get(onboardingTopicsTestIds.suggested)).toHaveCount(0);
     });
 
+  verifySuggestionIsNew = (name: string) =>
+    this.step(`verifySuggestionIsNew ${name}`, () =>
+      expect(this.get(onboardingTopicsTestIds.suggestion(name))).toHaveAccessibleName(`${name}, new topic`),
+    );
+
   pickSuggestion = (name: string) => this.step(`pickSuggestion ${name}`, () => this.click(onboardingTopicsTestIds.suggestion(name)));
 
   verifyLibrarySlide = ({ lead, scene }: { lead: string; scene: string[] }) =>
