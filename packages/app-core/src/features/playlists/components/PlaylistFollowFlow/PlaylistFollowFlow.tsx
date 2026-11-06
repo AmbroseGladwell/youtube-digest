@@ -1,6 +1,6 @@
 import { sourceKey } from "@overview/domain";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistPace } from "@overview/domain";
+import { DEFAULT_PLAYLIST_ORDER, DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useCaptureQueueQuery } from "../../../captureQueue/queries/captureQueueQuery.js";
@@ -52,9 +52,13 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
   const follow = useFollowPlaylistMutation();
-  const defaultPace = useSettingsQuery().data?.defaultPlaylistPace ?? DEFAULT_PLAYLIST_PACE;
+  const settings = useSettingsQuery().data;
+  const defaultPace = settings?.defaultPlaylistPace ?? DEFAULT_PLAYLIST_PACE;
+  const defaultOrder = settings?.defaultPlaylistOrder ?? DEFAULT_PLAYLIST_ORDER;
   const [chosenPace, setChosenPace] = useState<PlaylistPace | null>(null);
+  const [chosenOrder, setChosenOrder] = useState<PlaylistOrder | null>(null);
   const pace = chosenPace ?? defaultPace;
+  const order = chosenOrder ?? defaultOrder;
 
   const held = useMemo(
     () =>
@@ -80,12 +84,21 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
 
   const followLookup = (backfill: boolean) => {
     if (lookup.data === undefined) return;
-    const preview = playlistPreview(lookup.data, held);
+    const preview = playlistPreview(lookup.data, held, order);
     follow.mutate(
-      { lookup: lookup.data, backfill, pace },
+      { lookup: lookup.data, backfill, pace, order },
       {
         onSuccess: ({ queued }) => {
-          analytics.playlists.preview.followed({ from, backfill, videos: preview.total, queued, pace, paceIsDefault: pace === defaultPace });
+          analytics.playlists.preview.followed({
+            from,
+            backfill,
+            videos: preview.total,
+            queued,
+            pace,
+            paceIsDefault: pace === defaultPace,
+            order,
+            orderIsDefault: order === defaultOrder,
+          });
           onDone();
         },
       },
@@ -129,13 +142,16 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
     return (
       <PlaylistPreview
         lookup={lookup.data}
-        preview={playlistPreview(lookup.data, held)}
+        preview={playlistPreview(lookup.data, held, order)}
         alreadyFollowing={alreadyFollowing}
         stacked={stacked}
         busy={follow.isPending}
         pace={alreadyFollowing || lookup.data.entries.length <= 1 ? null : pace}
         defaultPace={defaultPace}
+        order={alreadyFollowing || lookup.data.entries.length <= 1 ? null : order}
+        defaultOrder={defaultOrder}
         onPaceChange={setChosenPace}
+        onOrderChange={setChosenOrder}
         onFollow={followLookup}
         onCancel={() => {
           analytics.playlists.preview.cancelled({ from });

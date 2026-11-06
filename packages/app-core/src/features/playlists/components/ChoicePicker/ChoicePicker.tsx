@@ -1,34 +1,54 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { PLAYLIST_PACES, type PlaylistPace } from "@overview/domain";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
-import { PACE_LABEL } from "../../util/paceCopy.js";
-import styles from "./PacePicker.module.scss";
-import { pacePickerTestIds } from "./PacePickerTestIds.js";
+import styles from "./ChoicePicker.module.scss";
+import { choicePickerTestIds } from "./ChoicePickerTestIds.js";
 
-export interface PacePickerProps {
-  pace: PlaylistPace;
-  // What the control is the pace of, for its label: "Pace for Psychology".
+export interface ChoicePickerProps<Choice extends string> {
+  choice: Choice;
+  choices: readonly Choice[];
+  labelOf: (choice: Choice) => string;
+  // What is being chosen, for the test ids and the radio group's name: "pace", "order".
+  name: string;
+  // The two halves of the control's label: "Pace" for "Psychology".
+  title: string;
   subject: string;
+  icon: StrokeIconName;
   // What each option would do, written out under it. Absent, the options are names alone.
-  optionDetail?: (pace: PlaylistPace) => string;
+  optionDetail?: (choice: Choice) => string;
   // On a phone the choice is a sheet of radios rather than a menu (95z).
   asSheet: boolean;
   sheetLine?: string;
+  sheetFoot: string;
   stacked: boolean;
-  onChange: (pace: PlaylistPace) => void;
+  onChange: (choice: Choice) => void;
 }
 
-// Design 95x–95z: a pill naming the pace, which opens the paces with what each would do.
-// Choosing saves straight away; there is nothing to confirm.
-export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, stacked, onChange }: PacePickerProps) {
+// Design 95x–95z: a pill naming the choice, which opens the options with what each would do.
+// Choosing saves straight away; there is nothing to confirm. Built for a playlist's pace, and
+// used for its order too (docs/features/playlists.md, "An order for each playlist").
+export function ChoicePicker<Choice extends string>({
+  choice,
+  choices,
+  labelOf,
+  name,
+  title,
+  subject,
+  icon,
+  optionDetail,
+  asSheet,
+  sheetLine,
+  sheetFoot,
+  stacked,
+  onChange,
+}: ChoicePickerProps<Choice>) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const options = useRef<(HTMLButtonElement | null)[]>([]);
   const sheet = useRef<HTMLDialogElement | null>(null);
   const sheetHeading = useId();
-  const label = `Pace for ${subject}`;
+  const label = `${title} for ${subject}`;
 
   const close = () => {
     setOpen(false);
@@ -37,8 +57,8 @@ export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, st
   useDismissOnOutside(open && !asSheet, close, root);
 
   useEffect(() => {
-    if (open && !asSheet) options.current[PLAYLIST_PACES.indexOf(pace)]?.focus();
-  }, [open, asSheet, pace]);
+    if (open && !asSheet) options.current[choices.indexOf(choice)]?.focus();
+  }, [open, asSheet, choice, choices]);
 
   useEffect(() => {
     const element = sheet.current;
@@ -47,13 +67,13 @@ export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, st
     if (!open && element.open) element.close();
   }, [open, asSheet]);
 
-  const choose = (next: PlaylistPace) => {
-    if (next !== pace) onChange(next);
+  const choose = (next: Choice) => {
+    if (next !== choice) onChange(next);
   };
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = options.current.indexOf(document.activeElement as HTMLButtonElement);
-    const last = PLAYLIST_PACES.length - 1;
+    const last = choices.length - 1;
     const target = {
       ArrowDown: current === last ? 0 : current + 1,
       ArrowUp: current <= 0 ? last : current - 1,
@@ -75,24 +95,24 @@ export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, st
         ref={trigger}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ""} ${stacked ? styles.triggerStacked : ""}`}
         onClick={() => setOpen(!open)}
-        aria-label={`${label}: ${PACE_LABEL[pace]}`}
+        aria-label={`${label}: ${labelOf(choice)}`}
         aria-haspopup={asSheet ? "dialog" : "menu"}
         aria-expanded={open}
-        data-testid={pacePickerTestIds.trigger}
+        data-testid={choicePickerTestIds.trigger(name)}
       >
-        <StrokeIcon name="gauge" size={14} />
-        {PACE_LABEL[pace]}
+        <StrokeIcon name={icon} size={14} />
+        {labelOf(choice)}
         <StrokeIcon name="chevronDown" size={14} />
       </button>
 
       {open && !asSheet && (
-        <div className={styles.menu} role="menu" aria-label={label} onKeyDown={moveFocus} data-testid={pacePickerTestIds.menu}>
-          {PLAYLIST_PACES.map((option, index) => (
+        <div className={styles.menu} role="menu" aria-label={label} onKeyDown={moveFocus} data-testid={choicePickerTestIds.menu(name)}>
+          {choices.map((option, index) => (
             <button
               key={option}
               type="button"
               role="menuitemradio"
-              aria-checked={option === pace}
+              aria-checked={option === choice}
               tabIndex={-1}
               ref={(element) => {
                 options.current[index] = element;
@@ -102,13 +122,13 @@ export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, st
                 close();
                 choose(option);
               }}
-              data-testid={pacePickerTestIds.option(option)}
+              data-testid={choicePickerTestIds.option(name, option)}
             >
               <span className={styles.check} aria-hidden="true">
-                {option === pace && <StrokeIcon name="check" size={16} />}
+                {option === choice && <StrokeIcon name="check" size={16} />}
               </span>
               <span className={styles.itemText}>
-                <span className={styles.itemName}>{PACE_LABEL[option]}</span>
+                <span className={styles.itemName}>{labelOf(option)}</span>
                 {optionDetail !== undefined && <span className={styles.itemDetail}>{optionDetail(option)}</span>}
               </span>
             </button>
@@ -128,36 +148,36 @@ export function PacePicker({ pace, subject, optionDetail, asSheet, sheetLine, st
           onClick={(event) => {
             if (event.target === sheet.current) close();
           }}
-          data-testid={pacePickerTestIds.sheet}
+          data-testid={choicePickerTestIds.sheet(name)}
         >
           <div className={styles.sheetPanel}>
             <span className={styles.handle} aria-hidden="true" />
             <div className={styles.sheetHead}>
               <h2 className={styles.sheetTitle} id={sheetHeading}>
-                Pace
+                {title}
               </h2>
               {sheetLine !== undefined && <p className={styles.sheetLine}>{sheetLine}</p>}
             </div>
             <div className={styles.radios} role="radiogroup" aria-label={label}>
-              {PLAYLIST_PACES.map((option) => (
-                <label key={option} className={styles.radioOption} data-testid={pacePickerTestIds.option(option)}>
+              {choices.map((option) => (
+                <label key={option} className={styles.radioOption} data-testid={choicePickerTestIds.option(name, option)}>
                   <input
                     type="radio"
-                    name={`pace-${sheetHeading}`}
+                    name={`${name}-${sheetHeading}`}
                     className={styles.radio}
                     value={option}
-                    checked={option === pace}
+                    checked={option === choice}
                     onChange={() => choose(option)}
                   />
                   <span className={styles.itemText}>
-                    <span className={styles.itemName}>{PACE_LABEL[option]}</span>
+                    <span className={styles.itemName}>{labelOf(option)}</span>
                     {optionDetail !== undefined && <span className={styles.itemDetail}>{optionDetail(option)}</span>}
                   </span>
                 </label>
               ))}
             </div>
-            <p className={styles.sheetFoot}>Saved as soon as you choose. Videos you make by hand never count toward it.</p>
-            <button type="button" className={styles.done} onClick={close} data-testid={pacePickerTestIds.doneButton}>
+            <p className={styles.sheetFoot}>{sheetFoot}</p>
+            <button type="button" className={styles.done} onClick={close} data-testid={choicePickerTestIds.doneButton(name)}>
               Done
             </button>
           </div>

@@ -38,7 +38,7 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
     case "checked":
       return {
         title: `Checked ${pluralise(strip.playlists, "playlist", "playlists")}`,
-        meta: `${pluralise(strip.queued, "new video", "new videos")} queued · starting with the oldest`,
+        meta: `${pluralise(strip.queued, "new video", "new videos")} queued · in each playlist’s order`,
       };
     case "noKey":
       return compact

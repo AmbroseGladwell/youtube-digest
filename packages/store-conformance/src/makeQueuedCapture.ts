@@ -12,6 +12,8 @@ export const makeQueuedCapture = (overrides: Partial<QueuedCapture> = {}): Queue
     status: "waiting",
     problem: null,
     chosenAt: null,
+    addedAt: null,
+    playlistIndex: null,
     ...overrides,
   };
 };

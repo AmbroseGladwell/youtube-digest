@@ -15,6 +15,7 @@ export const makeFollowedPlaylist = (overrides: Partial<FollowedPlaylist> = {}):
   followedAt: "2026-10-05T09:00:00.000Z",
   unavailable: null,
   pace: "asTheyCome",
+  order: "oldestFirst",
   ...overrides,
 });
 
@@ -49,6 +50,8 @@ export const makeQueuedCapture = (overrides: Partial<QueuedCapture> = {}): Queue
     status: "waiting",
     problem: null,
     chosenAt: null,
+    addedAt: null,
+    playlistIndex: null,
     ...overrides,
   };
 };

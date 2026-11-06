@@ -1,0 +1,149 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  padding-top: 0.75rem;
+  box-shadow: inset 0 1px 0 var(--surface);
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.icon {
+  color: var(--label);
+  padding-top: 2px;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 0.875rem;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.default {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.result {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.change {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+}
+
+.changeStacked {
+  min-height: 2.75rem;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.choiceLabel {
+  @include controls.section-label;
+  margin-bottom: 0.25rem;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface);
+  }
+
+  &:has(:checked) {
+    background: var(--stone-tint);
+    box-shadow: inset 0 0 0 1.5px var(--label);
+    color: var(--on-stone-tint);
+  }
+
+  &:has(:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.optionStacked {
+  min-height: 2.75rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.radio {
+  flex: none;
+  appearance: none;
+  margin: 1px 0 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-badge);
+  box-shadow: inset 0 0 0 2px var(--muted);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+
+  &:checked {
+    box-shadow: inset 0 0 0 2px var(--label);
+  }
+
+  &:checked::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-badge);
+    background: var(--label);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.optionText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionName {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.optionResult {
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.option:has(:checked) .optionResult,
+.option:has(:checked) .default {
+  color: var(--on-stone-tint);
+}

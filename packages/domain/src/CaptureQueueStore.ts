@@ -2,7 +2,8 @@ import type { PlaylistId, VideoId } from "./Brands.js";
 import type { QueuedCapture } from "./QueuedCapture.js";
 
 export interface CaptureQueueStore {
-  // Oldest queued first, which is the order they are made in (docs/features/capture-queue.md).
+  // Oldest queued first. Each playlist's waiting videos are put in the order the reader
+  // chose for it as the queue reads them (docs/features/capture-queue.md).
   listQueue(): Promise<QueuedCapture[]>;
   // A video already in the queue keeps its place rather than being queued twice.
   enqueue(captures: QueuedCapture[]): Promise<void>;

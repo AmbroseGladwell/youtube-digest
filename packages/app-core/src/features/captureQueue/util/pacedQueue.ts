@@ -2,7 +2,7 @@ import { paceDailyLimit, type PlaylistPace, type QueuedCapture } from "@overview
 
 export interface PacedQueue {
   // What the queue can make now: the videos the reader chose first, then each playlist's
-  // oldest up to what its pace has left today.
+  // first, in its own order, up to what its pace has left today.
   ready: QueuedCapture[];
   // Past its playlist's pace for today.
   tomorrow: QueuedCapture[];

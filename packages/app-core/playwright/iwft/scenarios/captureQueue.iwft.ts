@@ -22,6 +22,7 @@ const followed = (overrides: Partial<FollowedPlaylist> = {}): FollowedPlaylist =
   followedAt: "2026-09-01T00:00:00.000Z",
   unavailable: null,
   pace: "asTheyCome",
+  order: "oldestFirst",
   ...overrides,
 });
 
@@ -35,6 +36,8 @@ const queued = (videoId: string, title: string, overrides: Partial<QueuedCapture
   status: "waiting",
   problem: null,
   chosenAt: null,
+  addedAt: null,
+  playlistIndex: null,
   ...overrides,
 });
 

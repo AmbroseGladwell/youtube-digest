@@ -1,10 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { PLAYLIST_PACES, type PlaylistLookup, type PlaylistPace } from "@overview/domain";
+import { useEffect, useRef } from "react";
+import {
+  PLAYLIST_ORDERS,
+  PLAYLIST_PACES,
+  type PlaylistLookup,
+  type PlaylistOrder,
+  type PlaylistPace,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { ORDER_LABEL, orderInASentence, orderMeaning } from "../../util/orderCopy.js";
 import { allowanceLine, PACE_LABEL, paceConsequence } from "../../util/paceCopy.js";
 import { useLeftThisMonth } from "../../../newOverview/useNextQuota.js";
 import type { PlaylistPreview as PlaylistPreviewCounts } from "../../util/playlistPreview.js";
 import { formatCount, TOKENS_PER_OVERVIEW, tokensText } from "../../util/tokenEstimate.js";
+import { PreviewChoiceLine } from "../PreviewChoiceLine/PreviewChoiceLine.js";
 import styles from "./PlaylistPreview.module.scss";
 import { playlistPreviewTestIds } from "./PlaylistPreviewTestIds.js";
 
@@ -14,11 +22,14 @@ export interface PlaylistPreviewProps {
   alreadyFollowing: boolean;
   stacked: boolean;
   busy: boolean;
-  // The pace both follow actions follow at, preselected to the reader's default. Null hides
-  // it: a playlist already followed keeps its own, and a single video needs none.
+  // The pace and order both follow actions follow at, preselected to the reader's defaults.
+  // Null hides them: a playlist already followed keeps its own, and a single video needs none.
   pace: PlaylistPace | null;
   defaultPace: PlaylistPace;
+  order: PlaylistOrder | null;
+  defaultOrder: PlaylistOrder;
   onPaceChange: (pace: PlaylistPace) => void;
+  onOrderChange: (order: PlaylistOrder) => void;
   onFollow: (backfill: boolean) => void;
   onCancel: () => void;
 }
@@ -27,8 +38,8 @@ const Figure = ({ value }: { value: number }) => <span className={styles.figure}
 
 // Design 27c–27f: title, owner and how it's shared, then the numbers as sentences and the
 // token estimate labelled as one, every figure counted in code. Both main actions follow;
-// Cancel follows nothing. Focus moves to the actions when it opens. The pace sits behind one
-// line with Change, because the default needs no attention (95t–95v).
+// Cancel follows nothing. Focus moves to the actions when it opens. The pace and the order sit
+// behind one line each with Change, because the defaults need no attention (95t–95v).
 export function PlaylistPreview({
   lookup,
   preview,
@@ -37,22 +48,20 @@ export function PlaylistPreview({
   busy,
   pace,
   defaultPace,
+  order,
+  defaultOrder,
   onPaceChange,
+  onOrderChange,
   onFollow,
   onCancel,
 }: PlaylistPreviewProps) {
   const firstAction = useRef<HTMLButtonElement>(null);
-  const chosenOption = useRef<HTMLInputElement>(null);
-  const [choosingPace, setChoosingPace] = useState(false);
   const toMake = preview.toMake.length;
   const month = useLeftThisMonth();
   const allowance =
     month === null || month.resetsOn === null ? null : allowanceLine(pace, toMake, month.left, month.resetsOn);
 
   useEffect(() => firstAction.current?.focus(), []);
-  useEffect(() => {
-    if (choosingPace) chosenOption.current?.focus();
-  }, [choosingPace]);
 
   const facts = [
     <>
@@ -75,7 +84,7 @@ export function PlaylistPreview({
     ),
     toMake > 0 && (
       <>
-        <Figure value={toMake} /> to make, oldest first
+        <Figure value={toMake} /> to make, {orderInASentence(order ?? defaultOrder)}
       </>
     ),
   ].filter(Boolean);
@@ -86,63 +95,8 @@ export function PlaylistPreview({
     : pace === null
       ? "Following means videos added to it later are made as they arrive. If it grows, give it a pace in Settings › YouTube playlists."
       : toMake === 0
-        ? "Following means videos added to it later are queued each time you open The Overview. Change the pace any time in Settings."
-        : `Both follow ${lookup.title}, at this pace. Change it any time in Settings › YouTube playlists.`;
-
-  const paceBlock =
-    pace === null ? null : choosingPace ? (
-      <div className={styles.paceChoice} role="radiogroup" aria-labelledby="playlist-pace-label" data-testid={playlistPreviewTestIds.paceChoice}>
-        <p className={styles.paceChoiceLabel} id="playlist-pace-label">
-          Pace for {lookup.title}
-        </p>
-        {PLAYLIST_PACES.map((option) => (
-          <label key={option} className={`${styles.paceOption} ${stacked ? styles.paceOptionStacked : ""}`} data-testid={playlistPreviewTestIds.paceOption(option)}>
-            <input
-              ref={option === pace ? chosenOption : undefined}
-              type="radio"
-              name="playlist-pace"
-              className={styles.paceRadio}
-              value={option}
-              checked={option === pace}
-              onChange={() => onPaceChange(option)}
-            />
-            <span className={styles.paceOptionText}>
-              <span className={styles.paceOptionName}>
-                {PACE_LABEL[option]}
-                {option === defaultPace && <span className={styles.paceDefault}> · your default</span>}
-              </span>
-              <span className={styles.paceOptionResult}>{paceConsequence(option, toMake, toMake > 0)}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-    ) : (
-      <div className={styles.paceLine} data-testid={playlistPreviewTestIds.paceLine}>
-        <span className={styles.paceIcon} aria-hidden="true">
-          <StrokeIcon name="gauge" size={16} />
-        </span>
-        <span className={styles.paceText}>
-          <span className={styles.paceName} data-testid={playlistPreviewTestIds.paceName}>
-            <strong>Pace:</strong> {PACE_LABEL[pace]}
-            {pace === defaultPace && <span className={styles.paceDefault}> · your default</span>}
-          </span>
-          <span className={styles.paceResult} id="playlist-pace-result" data-testid={playlistPreviewTestIds.paceResult}>
-            {paceConsequence(pace, toMake, toMake > 0)}
-          </span>
-        </span>
-        <button
-          type="button"
-          className={`${styles.paceChange} ${stacked ? styles.paceChangeStacked : ""}`}
-          aria-label={`Change pace for ${lookup.title}`}
-          aria-expanded={false}
-          aria-describedby="playlist-pace-result"
-          onClick={() => setChoosingPace(true)}
-          data-testid={playlistPreviewTestIds.paceChangeButton}
-        >
-          Change
-        </button>
-      </div>
-    );
+        ? "Following means videos added to it later are queued each time you open The Overview. Change the pace and the order any time in Settings."
+        : `Both follow ${lookup.title}, at this pace and in this order. Change them any time in Settings › YouTube playlists.`;
 
   return (
     <div className={styles.root} data-testid={playlistPreviewTestIds.root}>
@@ -175,7 +129,36 @@ export function PlaylistPreview({
             </p>
           </div>
         )}
-        {paceBlock !== null && <div className={styles.pace}>{paceBlock}</div>}
+        {pace !== null && (
+          <PreviewChoiceLine
+            choice={pace}
+            choices={PLAYLIST_PACES}
+            theDefault={defaultPace}
+            labelOf={(option) => PACE_LABEL[option]}
+            resultOf={(option) => paceConsequence(option, toMake, toMake > 0)}
+            name="pace"
+            title="Pace"
+            subject={lookup.title}
+            icon="gauge"
+            stacked={stacked}
+            onChange={onPaceChange}
+          />
+        )}
+        {order !== null && (
+          <PreviewChoiceLine
+            choice={order}
+            choices={PLAYLIST_ORDERS}
+            theDefault={defaultOrder}
+            labelOf={(option) => ORDER_LABEL[option]}
+            resultOf={(option) => orderMeaning(option)}
+            name="order"
+            title="Order"
+            subject={lookup.title}
+            icon="sort"
+            stacked={stacked}
+            onChange={onOrderChange}
+          />
+        )}
         {allowance !== null && (
           <p className={styles.allowance} data-testid={playlistPreviewTestIds.allowance}>
             {allowance}

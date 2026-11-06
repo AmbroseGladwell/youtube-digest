@@ -66,10 +66,6 @@ export function paceChangedLine(pace: PlaylistPace, waiting: number, madeToday: 
     : `${now} ${formatCount(tomorrow)} of the ${formatCount(waiting)} wait for tomorrow.`;
 }
 
-export function paceFacts(pace: PlaylistPace, waiting: number): string {
-  return `${PACE_LABEL[pace]} · ${waiting === 0 ? "nothing waiting" : `${formatCount(waiting)} waiting`}`;
-}
-
 export function paceInASentence(pace: PlaylistPace): string {
   return PACE_IN_A_SENTENCE[pace];
 }

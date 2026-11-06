@@ -33,7 +33,7 @@ export function LibraryQueueGroup() {
           <h2 className={styles.heading} id={`${GROUP_ID}-heading`} data-testid={libraryQueueGroupTestIds.heading}>
             Queue <span className={styles.count}>· {waitingCount.toLocaleString("en-GB")} waiting</span>
           </h2>
-          {!phone && <span className={styles.sub}>Made oldest first while The Overview is open</span>}
+          {!phone && <span className={styles.sub}>Made in each playlist’s order while The Overview is open</span>}
         </span>
         <span className={styles.headActions}>
           <PageLink

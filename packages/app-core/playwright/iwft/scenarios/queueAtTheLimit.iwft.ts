@@ -34,6 +34,8 @@ const queued = (index: number): QueuedCapture => ({
   status: "waiting",
   problem: null,
   chosenAt: null,
+  addedAt: null,
+  playlistIndex: index,
 });
 
 const followingAt = (backendSimulator: BackendSimulator, pace: PlaylistPace, captures: QueuedCapture[]) => {
@@ -44,6 +46,7 @@ const followingAt = (backendSimulator: BackendSimulator, pace: PlaylistPace, cap
     followedAt: "2026-09-01T00:00:00.000Z",
     unavailable: null,
     pace,
+    order: "oldestFirst",
   };
   backendSimulator.playlists.seed(psychologyPlaylist());
   backendSimulator.playlists.seedFollowed(followed);

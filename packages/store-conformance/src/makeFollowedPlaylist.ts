@@ -8,5 +8,6 @@ export const makeFollowedPlaylist = (overrides: Partial<FollowedPlaylist> = {}):
   followedAt: "2026-10-05T09:00:00.000Z",
   unavailable: null,
   pace: "asTheyCome",
+  order: "oldestFirst",
   ...overrides,
 });

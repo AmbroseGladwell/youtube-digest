@@ -15,7 +15,7 @@ describe("captureQueueStripCopy", () => {
     });
     expect(captureQueueStripCopy({ kind: "checked", playlists: 2, queued: 3 }, false)).toEqual({
       title: "Checked 2 playlists",
-      meta: "3 new videos queued · starting with the oldest",
+      meta: "3 new videos queued · in each playlist’s order",
     });
     expect(captureQueueStripCopy({ kind: "noKey", waiting: 10 }, false)).toEqual({
       title: "10 videos are waiting for an API key",
@@ -94,7 +94,7 @@ describe("captureQueueStripCopy", () => {
   it("one of something is singular", () => {
     expect(captureQueueStripCopy({ kind: "checked", playlists: 1, queued: 1 }, false)).toEqual({
       title: "Checked 1 playlist",
-      meta: "1 new video queued · starting with the oldest",
+      meta: "1 new video queued · in each playlist’s order",
     });
   });
 });

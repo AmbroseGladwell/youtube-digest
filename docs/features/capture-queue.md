@@ -6,7 +6,8 @@ Design: "OV-27 2 Queue" (27i–27o); "OV-95 3 Waiting on a Pace", "OV-95 4 Make 
 Generation is the reader's own key, on the reader's own device, so nothing makes an
 overview while the app is closed (`docs/architecture/v1-architecture-decisions.md`,
 "Headless queue draining"). The queue is the list of videos waiting for the app to be
-open: it makes them one at a time, oldest first, while it is.
+open: it makes them one at a time, each playlist in the order the reader chose for it, while
+it is.
 
 ## On this device, for now
 
@@ -19,14 +20,21 @@ Paused, folded into the strip, waiting at a limit, and which videos the reader c
 today are this device's too, kept per account in `localStorage`
 (`captureQueuePreferencesStorage`).
 
-## One at a time, oldest first
+## One at a time, in the playlist's order
 
 `useCaptureQueue`, owned by the `AppShell` like the reader's own run, makes the first
 waiting video its playlist's pace allows ("Waiting on a pace", below) whenever nothing else
 is being made, the queue isn't paused, it isn't waiting at a limit, the followed playlists
-have loaded, and the shell can generate. A run the reader starts goes first; the queue resumes after it. Oldest
-first is the order videos were added to their playlist, then the order they were queued
-in (`oldestFirst`, `capturesFor`).
+have loaded, and the shell can generate. A run the reader starts goes first; the queue resumes
+after it.
+
+Which video is first is the playlist's own answer: each followed playlist is made oldest
+first, newest first, or in the order it sits in on YouTube (`playlists.md`, "An order for each
+playlist"). The queue puts each playlist's waiting videos in that order as it reads them
+(`inQueueOrder`), rather than at the moment they were queued, so a change in Settings reaches
+what is already waiting. A playlist keeps the places in the queue it already holds, so
+reordering one never moves another's videos. A playlist the device doesn't follow, or no
+longer does, reads as *Oldest first*.
 
 Each video goes through the same pipeline as a run the reader starts
 (`useRunOverviewGeneration`), with the playlist it came from written onto the overview.
@@ -65,7 +73,7 @@ The generation strip's slot and shape (3c), one state at a time (`captureQueueSt
 | at the month's limit | *Queue waiting · 9 videos* · *This month's 5 are made. Resumes 1 November, or when you add a key.* | Add a key or See plans where either would help, Queue |
 | paused | *Queue paused* · *10 waiting · nothing is made until you resume* | Resume, Queue |
 | held | *Waiting for our server* · *9 waiting · these continue after 01:00, or now with the extension* | Queue |
-| checked | *Checked 2 playlists* · *3 new videos queued · starting with the oldest*, for 8 seconds | Queue |
+| checked | *Checked 2 playlists* · *3 new videos queued · in each playlist’s order*, for 8 seconds | Queue |
 | attention | *Queue done · 2 need attention* · *1 failed, 1 skipped*, until dismissed | See queue, × |
 | done for today | *Done for today* · *214 waiting for tomorrow, at each playlist’s pace* | Queue |
 | waiting for you | *Queue done · 12 waiting for you* · *From Saved for later, made when you choose them* | Queue |
@@ -95,7 +103,7 @@ A video the queue can't make stays, with a reason, until the reader dismisses it
 | Failed | no captions, YouTube won't show it here, or something else went wrong making it | Try again, Dismiss |
 
 The reason is named by kind from the ladder's last answer (`queueProblemOf`), never in a
-provider's own words. *Try again* keeps the video's place in the oldest-first order, so it
+provider's own words. *Try again* keeps the video's place in its playlist's order, so it
 runs next rather than behind everything already waiting (decided 7 Oct 2026, OV-107). Each
 failure is reported as the `queuedCaptureFailed` client warning.
 
@@ -183,7 +191,7 @@ Design 95aa–95ae, 95aj. A pace (`playlists.md`, "A pace for each playlist") ho
 own playlist's videos: the queue keeps making everything else in its place. So it is a wait
 on each video, not on the queue, and nothing about it is a failure. `pacedQueue` sorts what
 waits, in order, into what can be made now (the reader's chosen videos first, then each
-playlist's oldest up to what its pace has left today), what continues tomorrow, and what
+playlist's first up to what its pace has left today), what continues tomorrow, and what
 waits for the reader. A playlist the device doesn't follow, or no longer does, reads as *As
 they come*. At local midnight the counts start again by themselves.
 
@@ -215,7 +223,8 @@ It still counts against the month.
 
 *Choose* turns the paced groups into labelled checkboxes (*Choose “…”*), with *Choose all
 N* per playlist; *Cancel* or Escape leaves. A selection bar, a region with a live count,
-says *3 chosen · Made next, oldest first. Psychology stays at up to 5 a day.* and offers
+says *3 chosen · Made next, oldest first. Psychology stays at up to 5 a day.* (the order is
+the playlist's own, and reads *in each playlist’s order* where several are chosen from) and offers
 Remove and *Make 3 now* (`chooseCopy`). It works in the panel too, which holds its own
 queue until OV-11. *Make now* and *Make N now* aren't offered without a key, or while the
 queue waits at a limit, because they couldn't work; Remove always
@@ -223,7 +232,7 @@ is.
 
 **More chosen than the month has left** (95ah): the bar says *You have 4 left this month,
 so 4 are made now and the other 3 wait for 1 November.*, the button reads *Make 4 now*, and
-the oldest 4 are made; the rest keep waiting. What's left counts every key the next overviews
+the first 4 in that order are made; the rest keep waiting. What's left counts every key the next overviews
 could use (`leftThisMonthOf`).
 
 ## No API key

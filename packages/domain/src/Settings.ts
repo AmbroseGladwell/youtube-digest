@@ -15,6 +15,7 @@ import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
 import { TagAliases } from "./TagAliases.js";
 import { LearnedItems } from "./LearnedItem.js";
+import { DEFAULT_PLAYLIST_ORDER, PlaylistOrder } from "./PlaylistOrder.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
 
 export const SectionsEnabled = z.object({
@@ -72,6 +73,9 @@ export const Settings = z.object({
   // The pace a newly followed playlist starts at. Playlists already followed keep their own
   // (docs/features/playlists.md, "A pace for each playlist").
   defaultPlaylistPace: PlaylistPace.catch(DEFAULT_PLAYLIST_PACE),
+  // The order a newly followed playlist is made in. Playlists already followed keep their own
+  // (docs/features/playlists.md, "An order for each playlist").
+  defaultPlaylistOrder: PlaylistOrder.catch(DEFAULT_PLAYLIST_ORDER),
   // On the account, so the app looks the same on every device (docs/features/appearance.md).
   theme: ThemeMode.catch(DEFAULT_THEME_MODE),
   accentColour: AccentColour.catch(DEFAULT_ACCENT_COLOUR),
@@ -98,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tagAliases: {},
   onlyMyKey: false,
   defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,
+  defaultPlaylistOrder: DEFAULT_PLAYLIST_ORDER,
   theme: DEFAULT_THEME_MODE,
   accentColour: DEFAULT_ACCENT_COLOUR,
   headImageSize: DEFAULT_HEAD_IMAGE_SIZE,

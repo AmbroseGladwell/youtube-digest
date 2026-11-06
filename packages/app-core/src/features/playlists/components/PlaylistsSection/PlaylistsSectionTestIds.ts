@@ -1,7 +1,7 @@
 export const playlistsSectionTestIds = {
   root: "PlaylistsSection.root",
   intro: "PlaylistsSection.intro",
-  defaultPace: "PlaylistsSection.defaultPace",
+  defaults: "PlaylistsSection.defaults",
   followedLabel: "PlaylistsSection.followedLabel",
   followedList: "PlaylistsSection.followedList",
   empty: "PlaylistsSection.empty",

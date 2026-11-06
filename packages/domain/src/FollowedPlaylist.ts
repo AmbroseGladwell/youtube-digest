@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PlaylistId } from "./Brands.js";
+import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 
 export const PlaylistPrivacy = z.enum(["public", "unlisted"]);
@@ -20,5 +21,6 @@ export const FollowedPlaylist = z.object({
   followedAt: z.iso.datetime(),
   unavailable: PlaylistUnavailable.nullable(),
   pace: PlaylistPace,
+  order: PlaylistOrder,
 });
 export type FollowedPlaylist = z.infer<typeof FollowedPlaylist>;

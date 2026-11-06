@@ -40,25 +40,30 @@ export class PlaylistsSectionPageObject extends PageObject {
       await this.click(followedPlaylistRowTestIds.confirmUnfollowButton);
     });
 
-  verifyPaceFacts = (index: number, facts: string) =>
-    this.step(`verifyPaceFacts ${index} ${facts}`, () =>
-      expect(this.get(followedPlaylistRowTestIds.paceFacts).nth(index)).toHaveText(facts),
-    );
+  verifyFacts = (index: number, facts: string) =>
+    this.step(`verifyFacts ${index} ${facts}`, () => expect(this.get(followedPlaylistRowTestIds.facts).nth(index)).toHaveText(facts));
 
   // Opens the playlist's pace menu, checks what an option says it would do, and chooses it.
-  choosePace = (title: string, pace: string, detail?: string) =>
-    this.step(`choosePace ${title} ${pace}`, async () => {
-      await this.page.getByRole("button", { name: new RegExp(`^Pace for ${title}: `) }).click();
-      const option = this.page.getByRole("menuitemradio", { name: new RegExp(`^${pace}`) });
-      if (detail !== undefined) await expect(option).toContainText(detail);
-      await option.click();
+  choosePace = (title: string, pace: string, detail?: string) => this.choose("Pace", title, pace, detail);
+
+  chooseOrder = (title: string, order: string, detail?: string) => this.choose("Order", title, order, detail);
+
+  private choose = (title: string, subject: string, option: string, detail?: string) =>
+    this.step(`choose ${title} ${subject} ${option}`, async () => {
+      await this.page.getByRole("button", { name: new RegExp(`^${title} for ${subject}: `) }).click();
+      const chosen = this.page
+        .getByRole("menu", { name: `${title} for ${subject}` })
+        .getByRole("menuitemradio", { name: new RegExp(`^${option}`) });
+      if (detail !== undefined) await expect(chosen).toContainText(detail);
+      await chosen.click();
     });
 
-  verifyPaceSaid = (text: string) =>
-    this.step(`verifyPaceSaid ${text}`, () => expect(this.get(followedPlaylistRowTestIds.paceSaid).filter({ hasText: text })).toHaveCount(1));
+  verifySaid = (text: string) =>
+    this.step(`verifySaid ${text}`, () => expect(this.get(followedPlaylistRowTestIds.said).filter({ hasText: text })).toHaveCount(1));
 
-  verifyNoPaceFor = (title: string) =>
-    this.step(`verifyNoPaceFor ${title}`, () =>
-      expect(this.page.getByRole("button", { name: new RegExp(`^Pace for ${title}: `) })).toHaveCount(0),
-    );
+  verifyNoChoicesFor = (title: string) =>
+    this.step(`verifyNoChoicesFor ${title}`, async () => {
+      await expect(this.page.getByRole("button", { name: new RegExp(`^Pace for ${title}: `) })).toHaveCount(0);
+      await expect(this.page.getByRole("button", { name: new RegExp(`^Order for ${title}: `) })).toHaveCount(0);
+    });
 }

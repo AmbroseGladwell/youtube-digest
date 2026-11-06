@@ -1,7 +1,8 @@
 import type { FollowedPlaylist, PlaylistCheck, PlaylistEntry, PlaylistLookup, VideoId } from "@overview/domain";
+import { placedEntries, type PlacedPlaylistEntry } from "./inPlaylistOrder.js";
 
 export interface NewPlaylistEntries {
-  fresh: PlaylistEntry[];
+  fresh: PlacedPlaylistEntry[];
   seen: VideoId[];
 }
 
@@ -19,7 +20,7 @@ export function newPlaylistEntries(
   const isNew = (entry: PlaylistEntry) =>
     check === null ? entry.addedAt !== null && entry.addedAt > playlist.followedAt : !seenBefore.has(entry.videoId);
   return {
-    fresh: lookup.entries.filter((entry) => isNew(entry) && !known.has(entry.videoId)),
+    fresh: placedEntries(lookup.entries).filter((entry) => isNew(entry) && !known.has(entry.videoId)),
     seen: lookup.entries.map((entry) => entry.videoId),
   };
 }
