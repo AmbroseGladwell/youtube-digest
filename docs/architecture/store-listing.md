@@ -175,6 +175,16 @@ One justification per entry in the manifest, each naming the code that needs it.
 reads these; a permission in the manifest that nothing uses is a rejection, so this table and
 `apps/extension/manifest.json` move together.
 
+**A justification is about this package, and stops there.** It explains why the extension
+needs the permission in front of it. The transcript ladder's server rung
+(`docs/architecture/server-side-transcripts.md`) is not a permission, is not in the package,
+and does not belong in one of these fields: the reviewer is reading the manifest, not the
+backend. That is a matter of answering the question asked rather than of concealing anything,
+because what leaves the device is disclosed twice over, in the data-usage form and in
+`/privacy`, which the listing links to and which cites that document as one of its sources.
+The one justification that reaches past the package is `unlimitedStorage`, which says the
+library also syncs: without it the sentence implies the device holds the only copy.
+
 **Say what the code does, not what sounds tidy.** Three of these said more than was true in
 their first draft, and the manifest or the source contradicts each: the panel is not the only
 surface, because `options_ui` registers `app.html`; `tabs` does look at tabs the reader has
