@@ -15,7 +15,9 @@ export function useArticleMenuRequest({ startArticle }: Pick<NewOverviewRunContr
   const readiness = useGenerationReadiness();
 
   useEffect(() => {
-    if (pages === null) return;
+    // As the injected button: the menu opens the panel, so the request is waiting before
+    // readiness has answers (useGenerationReadiness, `settled`).
+    if (pages === null || !readiness.settled) return;
     const take = () => {
       const page = pages.takeMenuRequest();
       if (page === null) return;

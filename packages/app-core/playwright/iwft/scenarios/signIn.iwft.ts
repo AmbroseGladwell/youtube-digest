@@ -472,6 +472,16 @@ test.describe("signing in from the extension", () => {
     await signIn.verifyAsksForServer(true);
   });
 
+  // The field earns its place in a build loaded unpacked against a local API, and nowhere
+  // else: a reader who installed from the Web Store has no other server to name, and no way
+  // to know what the question means (docs/architecture/deploy.md, "The extension").
+  test("installed from the store, the extension offers no other server", async ({ launcher }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER, serverSwitchable: false });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+
+    await signIn.verifyOffersNoOtherServer();
+  });
+
   test("an extension built for a server can still be pointed at another", async ({ launcher }) => {
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();

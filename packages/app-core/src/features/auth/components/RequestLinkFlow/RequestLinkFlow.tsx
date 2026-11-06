@@ -8,6 +8,7 @@ import { ErrorState } from "../../../../components/shared/ErrorState/ErrorState.
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useSync } from "../../../sync/SyncContext.js";
+import { useServerSwitchable } from "../../../../app/ServerSwitchableContext.js";
 import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { useExchangeLinkCodeMutation } from "../../mutations/useExchangeLinkCodeMutation.js";
@@ -58,6 +59,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const navigate = useNavigate();
   const sync = useSync();
   const knownServer = useKnownApiUrl();
+  const serverSwitchable = useServerSwitchable();
   const { setConnection } = useSyncConnection();
   const { pending, setPending } = usePendingSignIn();
   const [sentHere, setSentHere] = useState<PendingSignIn | null>(null);
@@ -76,6 +78,10 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const libraryMove = useLibraryMove();
 
   const inExtension = surface === "extension";
+  // A build with no server of its own must always be able to name one. One built for a
+  // server offers to change it only where that is of any use: loaded unpacked against a
+  // local API, never in a build installed from the Web Store.
+  const askForServer = !inExtension ? "never" : knownServer === null ? "always" : serverSwitchable ? "onRequest" : "never";
   const sent = inExtension ? pending : sentHere;
   const setSent = inExtension ? setPending : setSentHere;
 
@@ -272,7 +278,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         intent={intent}
         submitLabel={expired ? "Email me a new link" : creating ? "Create account" : "Email me a link"}
         initialEmail={lastEmail}
-        askForServer={inExtension ? (knownServer === null ? "always" : "onRequest") : "never"}
+        askForServer={askForServer}
         initialServerUrl={knownServer}
         note={expired ? null : savedOverviewsNote(overviewCount, intent, place)}
         {...(creating && !expired ? { aboveSubmit: <AccountTermsLine /> } : {})}

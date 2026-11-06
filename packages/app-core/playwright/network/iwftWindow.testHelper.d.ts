@@ -47,6 +47,7 @@ declare global {
     __iwftSurface__: Surface;
     __iwftLayout__: AppLayout;
     __iwftDefaultApiUrl__: string | null;
+    __iwftServerSwitchable__: boolean;
     __iwftBuild__: AppBuild | null;
     __iwftActiveVideo__: IwftActiveVideoSource | null;
     __iwftArticlePages__: IwftArticlePages | null;

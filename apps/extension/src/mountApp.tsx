@@ -43,6 +43,12 @@ const openExtensionsPage: AppUpdate = {
   apply: () => void chrome.tabs.create({ url: "chrome://extensions" }),
 };
 
+// Chrome writes update_url into the manifest it hands back for an extension installed from
+// the Web Store, and leaves it out for one loaded unpacked. It is the only signal for this
+// that costs no permission, which matters: a permission added for a cosmetic question is a
+// permission to justify at review (docs/architecture/store-listing.md).
+const loadedUnpacked = (): boolean => chrome.runtime.getManifest().update_url === undefined;
+
 // A hash router, not a browser one: an extension document is a packaged file, so a pushed
 // path like /overviews/<id> resolves to nothing and the panel 404s on reload.
 export async function mountApp({
@@ -109,6 +115,7 @@ export async function mountApp({
         youTubeFetch={youTubeFetch}
         providerPermissions={chromeProviderPermissions}
         defaultApiUrl={PRODUCTION_API_URL}
+        serverSwitchable={loadedUnpacked()}
         errorDestinationMirror={writeErrorDestination}
         accentMirror={writeAccentColour}
         build={appBuild}

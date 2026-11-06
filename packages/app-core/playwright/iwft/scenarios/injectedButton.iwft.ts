@@ -45,6 +45,31 @@ test("a run started from the page is reported back to it, from running through t
   expect(reports.at(-1)).toBeNull();
 });
 
+// The press opens the panel, so it arrives before the queries behind readiness have
+// answered. Deciding then sent a reader with an allowance to Settings for a key they do not
+// need, and the 5 minute staleTime hid it whenever the panel was already open.
+test("a press that arrives before our key has answered waits, rather than asking for a key", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_STATUS);
+  const capture = await launcher.launchPanel({
+    activeVideoUrl: WATCHED_URL,
+    runBridge: true,
+    youTubeFetch: true,
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+  });
+
+  await launcher.pressInjectedButton(WATCHED_URL);
+  await capture.verifyIsShown();
+
+  await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_STATUS);
+
+  await capture.waitForReader();
+});
+
 // Design 17d: the press cannot spend anything without the keys that would pay for it,
 // so it lands on the page that fixes that instead of failing.
 test("without keys the press goes to Settings rather than starting a run that cannot work", async ({

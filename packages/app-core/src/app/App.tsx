@@ -15,6 +15,7 @@ import { AccentMirrorProvider, type AccentMirror } from "./AccentMirrorContext.j
 import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
 import { AppUpdateProvider, type AppUpdate } from "./AppUpdateContext.js";
 import { DefaultApiUrlProvider } from "./DefaultApiUrlContext.js";
+import { ServerSwitchableProvider } from "./ServerSwitchableContext.js";
 import { ErrorDestinationMirrorProvider, type ErrorDestinationMirror } from "./ErrorDestinationMirrorContext.js";
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
@@ -48,6 +49,9 @@ export interface AppProps {
   providerPermissions?: ProviderPermissions | null;
   appUpdate?: AppUpdate | null;
   defaultApiUrl?: string | null;
+  // False in a build installed from the Web Store, where the sign-in page has no business
+  // offering another server (ServerSwitchableContext).
+  serverSwitchable?: boolean;
   build?: AppBuild | null;
   errorDestinationMirror?: ErrorDestinationMirror | null;
   accentMirror?: AccentMirror | null;
@@ -68,6 +72,7 @@ export function App({
   providerPermissions = null,
   appUpdate = null,
   defaultApiUrl = null,
+  serverSwitchable = true,
   build = null,
   errorDestinationMirror = null,
   accentMirror = null,
@@ -83,6 +88,7 @@ export function App({
               <SurfaceProvider value={surface}>
                 <AppUpdateProvider value={appUpdate}>
                   <DefaultApiUrlProvider value={defaultApiUrl}>
+                    <ServerSwitchableProvider value={serverSwitchable}>
                     <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
                       <AccentMirrorProvider value={accentMirror}>
                       <AppBuildProvider value={build}>
@@ -110,6 +116,7 @@ export function App({
                       </AppBuildProvider>
                       </AccentMirrorProvider>
                     </ErrorDestinationMirrorProvider>
+                    </ServerSwitchableProvider>
                   </DefaultApiUrlProvider>
                 </AppUpdateProvider>
               </SurfaceProvider>

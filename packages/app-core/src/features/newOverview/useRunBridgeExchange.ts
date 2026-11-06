@@ -37,7 +37,11 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
   currentRun.current = run;
 
   useEffect(() => {
-    if (bridge === null) {
+    // Nothing is taken from the bridge until readiness has answers. The press opens the
+    // panel, so it arrives before the queries behind `ready` have returned, and acting then
+    // sends a reader with an allowance to Settings for a key they do not need. The effect
+    // runs again when readiness settles, and the request is still waiting.
+    if (bridge === null || !readiness.settled) {
       return;
     }
 

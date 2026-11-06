@@ -59,6 +59,7 @@ export interface IwftHooksConfig {
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.
   defaultApiUrl?: string;
+  serverSwitchable?: boolean;
   // What this shell's build knows about itself; absent is a shell that was told nothing.
   build?: AppBuild;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
