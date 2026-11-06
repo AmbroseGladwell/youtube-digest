@@ -104,8 +104,8 @@ export function AppShell() {
   });
   const [queueDetailsOpen, setQueueDetailsOpen] = useState(false);
 
-  // Design OV-167 (167a–167c): once the note's own back link has scrolled under the band,
-  // the brand slot holds "← All overviews" instead (docs/features/back-within-reach.md).
+  // Design OV-167 (167a–167c): once the page's own back link has scrolled under the band,
+  // the brand slot holds that link instead (docs/features/back-within-reach.md).
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
   const handoff = useMemo(() => ({ register: setHeadBackLink }), []);
   const headScrollsAway = useMediaQuery(HEAD_SCROLLS_AWAY_QUERY);
@@ -191,7 +191,7 @@ export function AppShell() {
                       <Link
                         ref={barBackLink}
                         className={styles.backLink}
-                        to={Routes.home()}
+                        to={headBackLink.to}
                         viewTransition={animateNavigation}
                         onClick={headBackLink.follow}
                         inert={!backInBar}
@@ -201,7 +201,7 @@ export function AppShell() {
                         <span className={styles.arrow}>
                           <StrokeIcon name="arrowLeft" size={17} />
                         </span>
-                        <span className={styles.backLabel}>All overviews</span>
+                        <span className={styles.backLabel}>{headBackLink.label}</span>
                       </Link>
                     )}
                   </div>

@@ -37,6 +37,23 @@ export abstract class PageObject {
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
   protected expectToHaveCount = (testId: string, count: number) => expect(this.get(testId)).toHaveCount(count);
 
+  scrollToTheFoot = () =>
+    this.step("scrollToTheFoot", () =>
+      expect(async () => {
+        await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        const atTheFoot = await this.page.evaluate(
+          () => window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1,
+        );
+        expect(atTheFoot).toBe(true);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  scrollToTheTop = () =>
+    this.step("scrollToTheTop", async () => {
+      await this.page.evaluate(() => window.scrollTo(0, 0));
+      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0);
+    });
+
   verifyPageDoesNotScrollSideways = () =>
     this.step("verifyPageDoesNotScrollSideways", async () => {
       const overflow = await this.page.evaluate(

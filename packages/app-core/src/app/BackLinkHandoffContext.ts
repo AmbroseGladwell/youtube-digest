@@ -1,9 +1,11 @@
 import { createContext, useContext, type MouseEvent } from "react";
 
-// The note's own back link, lent to the shell so the bar's brand slot can take over once
+// A page's own back link, lent to the shell so the bar's brand slot can take over once
 // the link has scrolled under the bar (docs/features/back-within-reach.md).
 export interface HeadBackLink {
   element: HTMLElement;
+  to: string;
+  label: string;
   follow: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 

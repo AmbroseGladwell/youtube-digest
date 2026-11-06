@@ -34,17 +34,6 @@
   align-items: start;
 }
 
-// Design 43h, reused for every section: the way back stays under the masthead while the
-// section scrolls beneath it.
-.back {
-  position: sticky;
-  top: var(--masthead-height);
-  z-index: 1;
-  margin: 0 -1.25rem -0.5rem;
-  padding: 0.25rem 1.25rem;
-  background: var(--ground);
-}
-
 // Pulled back by its own padding so the label sits on the gutter the title uses.
 .backLink {
   @include controls.ghost-pill;

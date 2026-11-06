@@ -51,17 +51,27 @@ callback ref, because the router's `Link` merges refs into a new function on eve
 and a callback ref would be detached and re-attached, and the shell's state set, on each
 one.
 
+## Every page with a way back
+
+OV-193 generalised the slot. A page lends its back link with `useLentBackLink`, giving
+the destination and the label along with the element, and the bar's link takes both. The
+overview lends `← All overviews`; the settings page lends `← All overviews` (`← Back` in
+the panel, where the slot never swaps anyway); a section page lends `← Settings`. The
+settings links used to stick under the masthead (43h) and now scroll away like the
+overview's, which is what lets the slot take over (`settings.md`, "Ways back").
+
 ## Back in history, or home
 
 The design's definition of done is that the library comes back where the reader left it.
 A push to `/` never does that: the router's `ScrollRestoration` scrolls a new location to
 the top and restores a position only on a pop. So both links go **back in history when
-the library is the entry behind this one**, which is also what makes a tap and the
+the destination is the entry behind this one**, which is also what makes a tap and the
 edge-swipe gesture land in the same place; otherwise, after stepping to a neighbouring
 note, or on a cold load or a shared link, the link is a plain link home. The router only
 says where you are and how you got there, so `useHistoryTrail` keeps the session's
 entries by location key (`historyTrail.ts`, unit-tested) and `useBackToLibrary` reads the
-entry behind. A modified click (a new tab) is always the plain link.
+entry behind (`useBackTo`, which the settings links use too). A modified click (a new tab)
+is always the plain link.
 
 ## Analytics
 

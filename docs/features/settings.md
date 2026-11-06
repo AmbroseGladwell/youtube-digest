@@ -51,8 +51,9 @@ playlists in `playlists.md`, Milestones in `time-saved.md`, Shared links in `sha
   `aria-current="page"`. `/settings` shows the first section. Tabs were considered and
   rejected: they lose each row's value and wrap at eight sections.
 - **Phone and the side panel (51d–51g):** the list is the page. Each row opens its section
-  on a page of its own, with "Settings" kept under the masthead as the way back (43h's header,
-  reused for every section). Below 768px the layout switches, using `PHONE_QUERY`, the same
+  on a page of its own, with "Settings" at the top as the way back (43h's header, reused for
+  every section). It scrolls away with the section, and the app bar's slot takes it over
+  (`back-within-reach.md`). Below 768px the layout switches, using `PHONE_QUERY`, the same
   breakpoint the rest of the app uses. The panel always uses this layout.
 
 Every section heads itself with an `h2`, and arriving on a section by its route moves focus
@@ -80,8 +81,13 @@ tile that points at the sign-in and create-account pages.
 
 The main Settings page, which is the list (and on a wide screen the list with a section
 beside it), leads back to the library: "All overviews", or "Back" in the panel. A section on
-its own page, on a phone or in the panel, leads back to the list: "Settings", kept under the
-masthead.
+its own page, on a phone or in the panel, leads back to the list: "Settings".
+
+Neither link sticks. 43h kept "Settings" under the masthead while the section scrolled;
+since OV-193 both links scroll away and the app bar's brand slot becomes the way back once
+they have passed under it, exactly as on an overview, and both go back in history when the
+page behind is the one they lead to (`back-within-reach.md`). The bar's link is counted
+under the same events with `from: bar`.
 
 Going from the list into a section uses the forward transition, and going back to the list
 uses the back one. Switching between two sections, which on a wide screen swaps only the

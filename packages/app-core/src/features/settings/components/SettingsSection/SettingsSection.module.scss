@@ -12,7 +12,7 @@
   font-weight: 400;
   font-size: 1.75rem;
   line-height: 1.1;
-  scroll-margin-top: calc(var(--masthead-height) + 3rem);
+  scroll-margin-top: calc(var(--masthead-height) + 1rem);
 
   // Focused on arrival for screen readers (docs/features/settings.md); not a control.
   &:focus {
