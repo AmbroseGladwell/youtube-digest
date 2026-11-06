@@ -13,6 +13,7 @@ import type { StoredTranscript, VideoSource, TranscriptBlock } from "@overview/d
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
+import { chapterBlockRun, type ChapterBlockRun } from "../../../transcripts/util/chapterBlockRun.js";
 import { blockParts } from "../../../transcripts/util/blockParts.js";
 import { transcriptFileName } from "../../../transcripts/util/transcriptFileName.js";
 import { ClearFieldButton } from "../../../../components/shared/ClearFieldButton/ClearFieldButton.js";
@@ -33,6 +34,8 @@ const NOTHING_STORED = "No transcript was stored for this note. Generating it ag
 export interface OpenedFromChapter {
   number: number;
   title: string;
+  startMs: number;
+  endMs: number;
 }
 
 export interface TranscriptPanelProps {
@@ -44,8 +47,8 @@ export interface TranscriptPanelProps {
   // Where a chapter asked the transcript to open, or null when the reader chose the tab
   // themselves (docs/features/chapters.md).
   openAtMs: number | null;
-  // The chapter that asked, named on the block it opened at and offered a way back
-  // (design 2c).
+  // The chapter that asked: its whole stretch of the transcript is marked, named at the
+  // top of the run, and offered a way back (design 2c).
   openedFrom: OpenedFromChapter | null;
   onBackToChapters: () => void;
 }
@@ -64,7 +67,19 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
   // and those have to run again once it is there.
   const [head, setHead] = useState<HTMLDivElement | null>(null);
   const search = useTranscriptSearch(blocks);
-  const targetBlockIndex = openAtMs === null ? -1 : blockAtPosition(blocks, openAtMs);
+  // A chapter marks its whole stretch; anything else that opens the transcript at a
+  // point — a key point's range, a remembered place — marks the one block it landed on.
+  const targetRun = useMemo((): ChapterBlockRun | null => {
+    if (openedFrom !== null) {
+      return chapterBlockRun(blocks, openedFrom);
+    }
+    if (openAtMs === null) {
+      return null;
+    }
+    const at = blockAtPosition(blocks, openAtMs);
+    return at === -1 ? null : { from: at, to: at };
+  }, [blocks, openedFrom, openAtMs]);
+  const targetBlockIndex = targetRun?.from ?? -1;
   const position = useReadingPosition(video.id, blocks, { ignored: openAtMs !== null, head });
   const follow = useFollowPlayback(video.id, blocks, {
     held: position.restoredBlockIndex !== -1,
@@ -215,7 +230,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
           follow={follow}
           position={position}
           seek={seek}
-          targetBlockIndex={targetBlockIndex}
+          targetRun={targetRun}
           openedFrom={openedFrom}
           head={head}
         />
@@ -290,7 +305,7 @@ interface TranscriptRowsProps {
   follow: FollowPlayback;
   position: ReadingPosition;
   seek: ((positionMs: number) => void) | null;
-  targetBlockIndex: number;
+  targetRun: ChapterBlockRun | null;
   openedFrom: OpenedFromChapter | null;
   head: HTMLElement | null;
 }
@@ -303,7 +318,7 @@ function TranscriptRows({
   follow,
   position,
   seek,
-  targetBlockIndex,
+  targetRun,
   openedFrom,
   head,
 }: TranscriptRowsProps) {
@@ -331,14 +346,16 @@ function TranscriptRows({
     <div className={styles.rows} ref={position.rows}>
       {blocks.map((block, index) => {
         const current = index === follow.currentBlockIndex;
-        const target = index === targetBlockIndex;
+        const target = targetRun !== null && index >= targetRun.from && index <= targetRun.to;
+        const opensRun = targetRun !== null && index === targetRun.from;
+        const closesRun = targetRun !== null && index === targetRun.to;
         const restored = index === position.restoredBlockIndex;
         return (
           <div
             key={`${index}-${block.startMs}`}
-            className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${past(index) ? styles.rowPast : ""}`}
+            className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${opensRun ? styles.rowTargetOpens : ""} ${closesRun ? styles.rowTargetCloses : ""} ${past(index) ? styles.rowPast : ""}`}
             ref={
-              target
+              opensRun
                 ? setTargetRow
                 : restored
                   ? position.restoredRow
@@ -376,7 +393,7 @@ function TranscriptRows({
                   Playing on YouTube
                 </span>
               )}
-              {target && openedFrom !== null && (
+              {opensRun && openedFrom !== null && (
                 <span className={styles.chapterChip} data-testid={transcriptPanelTestIds.chapterChip}>
                   Chapter {chapterNumber(openedFrom.number)} · {openedFrom.title}
                 </span>

@@ -16,6 +16,7 @@ transcript at that point.
 | Segment indices resolved to the transcript's own times | `assembleOverview.ts`, `resolveChapters` |
 | The tab, and the three things a range can be | `ChaptersPanel` |
 | The transcript opening at a point rather than at the top | `TranscriptPanel`'s `openAtMs`, wired in `ReaderPage` |
+| The whole stretch of the chapter marked, not just its first block | `chapterBlockRun`, `TranscriptPanel`'s `targetRun` |
 | The behaviour, end to end | `chapters.iwft.ts` |
 
 ## Structural, not a toggle
@@ -120,6 +121,25 @@ failure `docs/features/following-playback.md` designed against. The reader gets
 The mark is the current block's wash without its edge. It says *here is where you asked
 for*, where the edge says *here is where the video is*, and the two can be different rows
 at once in the panel.
+
+**A chapter marks its whole stretch, not the block it starts in** (OV-197, 6 Nov 2026).
+Marking one block said where a chapter began and never where it ended, which is half of
+what the reader came to the transcript to see. `chapterBlockRun` resolves the run — the
+block the chapter's first words fall in, through the last one that begins before the
+chapter ends — and every block in it shares one band, rounded only at the run's two ends
+and named once, by the chip, at the top. Anything else that opens the transcript at a
+point, a key point's range or a remembered place, still marks the single block it landed
+on, and a chapter held inside one block is that same single tile.
+
+Chapters are contiguous, so a block the boundary runs through holds the tail of one
+chapter and the head of the next and belongs to both runs. Nothing is done about that:
+only the chapter the reader opened is ever marked, so the two are never drawn together.
+
+The band is deliberately flat where the single mark is raised. A raised card reads as one
+highlighted thing, which is wrong over a stretch that can run to a third of the tab. The
+block the video is inside keeps its own card and shadow inside the band, so it stays
+findable against a surface of the same colour. How the band should be drawn over a long
+run — a wash, a rule, a bracket — is still Claude Design's to settle.
 
 The target belongs to the route that set it. `ReaderPage` clears it on every other change
 of tab, so choosing Transcript yourself after coming back from a chapter opens it at the

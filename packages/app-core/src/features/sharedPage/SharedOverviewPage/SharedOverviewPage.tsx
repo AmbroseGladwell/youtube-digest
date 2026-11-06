@@ -227,7 +227,12 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const openedFrom =
     openedFromChapter === undefined
       ? null
-      : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
+      : {
+          number: openedFromChapterIndex + 1,
+          title: openedFromChapter.title,
+          startMs: openedFromChapter.startMs,
+          endMs: openedFromChapter.endMs,
+        };
 
   const noteBarView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: false });
   const barView =

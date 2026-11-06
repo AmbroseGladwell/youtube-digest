@@ -1121,20 +1121,38 @@ export class ReaderPageObject extends PageObject {
   private currentTranscriptBlock = (): Locator =>
     this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'));
 
+  // Where the mark begins. A chapter marks its whole stretch, so this is the first block
+  // of the run and the one scrolled to; verifyTargetedTranscriptBlocksRead takes the rest.
   verifyTargetTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyTargetTranscriptBlockReads ${String(text)}`, async () => {
       await expect(
-        this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText),
+        this.targetTranscriptBlock().first().getByTestId(transcriptPanelTestIds.rowText),
       ).toHaveText(text);
-      await expect(this.targetTranscriptBlock()).toBeInViewport();
+      await expect(this.targetTranscriptBlock().first()).toBeInViewport();
       const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
-      const row = (await this.targetTranscriptBlock().boundingBox())!;
+      const row = (await this.targetTranscriptBlock().first().boundingBox())!;
       expect(row.y).toBeGreaterThanOrEqual(head.y + head.height);
     });
 
   verifyNoTranscriptBlockIsTargeted = () =>
     this.step("verifyNoTranscriptBlockIsTargeted", () =>
       expect(this.targetTranscriptBlock()).toHaveCount(0),
+    );
+
+  // The whole stretch a chapter marks, in order, so the run's first and last blocks are
+  // both named rather than only its start (docs/features/chapters.md).
+  verifyTargetedTranscriptBlocksRead = (texts: RegExp[]) =>
+    this.step(`verifyTargetedTranscriptBlocksRead ${texts.length}`, () =>
+      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(
+        texts,
+      ),
+    );
+
+  verifyTargetedBlocksNameTheChapterOnce = () =>
+    this.step("verifyTargetedBlocksNameTheChapterOnce", () =>
+      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.chapterChip)).toHaveCount(
+        1,
+      ),
     );
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 
