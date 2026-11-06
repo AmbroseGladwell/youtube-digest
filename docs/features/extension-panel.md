@@ -61,24 +61,25 @@ dialog's foot already carried on this surface — closing the panel stops the ru
 stated as the page's own last line rather than as a caveat on a background option that
 does not exist here.
 
-**Ready (15c/15d).** The finished run navigates to the reader, and the panel's reader is
-the wide one with everything it has nothing to point at removed: no breadcrumb, no
-`↑ Previous` / `Next ↓`, no thumbnail, no rail. What is left is title, channel, topics,
-the meta line, `Listen`, `Mark read`, `⋯`, the three tabs and the tags at the foot.
+**Ready (15c/15d, then 205b).** The finished run navigates to the reader, and the panel's
+reader is **the phone's**. OV-205 settled that: at 400px the panel is a phone-width column,
+and giving it an arrangement of its own only meant two readers to keep in step. So it is
+the phone's head — the way back and `⋯` on one row, then the note's own thumbnail beside
+the channel and the verdict, the title, the topics, the meta line with its dates, then
+`Listen` full width with `Favourite` beside it — and the phone's foot, where `Mark read`
+sits with `Favourite` and the "Saved you N min" pill comes in. What the panel still drops
+is what it has nothing to point at: no `↑ Previous` / `Next ↓`, no rail.
 
-**And in the panel that head holds still.** The wide reader sticks its app bar and its
-tab strip and lets the note's own masthead scroll away, which is right there — it
-carries a thumbnail, a trail and a stepper, and holding it would cost the note most of
-the window. Pared back to 15c it is four short lines, and at 400px the question of which
-video you are reading is worth never having to scroll back for. So in the panel the
-stack is the app's bar, the note's head, the tabs, and — on the Transcript tab — its
-tools, which keeps search, copy and export reachable part-way down a long transcript.
+**And that head scrolls away.** It used to stick, on the argument that at 400px the
+question of which video you are reading was worth never scrolling back for. 205b reverses
+it: the head is now the phone's full head rather than four short lines, and holding it
+would cost the note most of the window — the measured stack at 400 × 720 leaves 346px for
+the note with the head held against the bar, against 508px without it. So the panel's
+sticky stack is the app's bar, the tabs, and — on the Transcript tab — its tools.
 
-None of that is a second set of offsets. `--reader-masthead-height` is `0px` in the
-tokens and published only by a layout that sticks the masthead, so the one formula each
-of the tab strip and the transcript's tools already had gains a term that is zero
-everywhere else. `readAlong.iwft.ts` is what holds the wide reader to the old
-arrangement, and would fail if this leaked into it.
+With nothing left sticking a masthead, `--reader-masthead-height` had no publisher and was
+removed along with the term it contributed to the tab strip's and the transcript's tools'
+offsets. `readAlong.iwft.ts` still holds the wide reader to its own arrangement.
 
 Chapters is the one tab where little of this can be observed: a chapter list is short
 enough to fit, and it does not scroll to follow the video by design
@@ -87,10 +88,72 @@ it is the same chrome by construction rather than by assertion — `panelChrome.
 covers the mechanism on the two tabs that can actually move.
 
 There is no fourth screen, and in particular there is no list. The way back out of the
-reader is the mark in the masthead, which is a link home in every layout already.
+reader is the one every other place has: see "One slot, one way out" below.
 
 The panel is not the only way in. The button injected into YouTube's action row opens it
 already running, which is design 17d — `docs/features/injected-button.md`.
+
+## One slot, one way out
+
+OV-205, designs 205a–205h and 205w. The panel's places are home — the tab in front of it —
+and everywhere a reader can go from there: a note, settings, a section of settings, a legal
+page. Before this, only settings and a section said how to leave, each in its own words, and
+the note said nothing at all: the mark in the bar went home but nothing told anyone so.
+
+**The way back is named after home, and home is the tab.** `useHomeName` answers
+`This video`, `This page` or `Home` from `useActiveVideoUrl` and `useActivePage`, reusing
+the same `isOfferedPage` rule the capture page draws its own offer from. It follows what the
+tab holds **now**, not what it held when the reader left home, so a reader who has moved the
+browser on is told by the label itself. A section of settings keeps its own destination,
+`Settings`, being two steps deep.
+
+**It lives in the bar's brand slot, exactly as on a phone** (`back-within-reach.md`). The
+only reason the panel was excluded was the width query, and `handoffLive` now reads
+`headBackLink !== null && (isPanel || headScrollsAway)`. The hand-off's own stylesheet moved
+out of `@media (max-width: 61.9375rem)` and is keyed off `.brandSlotLive` instead, which is
+the same condition stated once by the component that already decides it — and which is what
+makes 205w work, a panel dragged wider staying a panel.
+
+**A page that has no head to scroll away lends its link without drawing one.**
+`HeadBackLink.element` is nullable and `useLentBackLink` takes `inPage`, so settings and its
+sections lend to the bar and draw nothing of their own in the panel; `useBackInBar` reads a
+null element as "the slot has it from the first frame". The note keeps its own link and
+hands over on scroll, as the phone does.
+
+**`+ New` joins the panel's bar** (205c-2). Pasting a link no longer means going home first.
+The dialog is mounted in the panel only while it is open, because left mounted it would put
+a second copy of a run's progress in the document — the panel's own page is where a run is
+watched. Starting one from the dialog closes it and returns the panel to home, which is
+where creating from the offer would have left it anyway.
+
+**The wordmark is "The Overview" in the panel too.** The stone reskin had shortened it to
+"Overview" while this doc recorded the opposite as a deliberate departure; 205c settled it
+the doc's way and the code now matches. Only its size is the panel's.
+
+## The line under the bar
+
+Design 205e. With a note open and the tab moved on to something else the panel could take,
+one 36px line sits in the measured band under the bar, where the web's status strip sits and
+where nothing else renders in the panel.
+
+It shows **on a note only**: settings and the queue are not about a video, so there is
+nothing for the tab to have moved away from, and home is already the offer. What counts as
+"moved on" is matched on the video's own id rather than the URL, the same rule "Already in
+the library" above gives.
+
+Its copy is generic — "Another video on this tab", "Another page on this tab" — and never
+names what is there. The reader can see the tab beside the panel, so naming it would only
+cost the line its one line, and at 400px there is one line. The offer is `Read overview`
+where the library already holds it and `Make an overview` where it does not; making starts
+the run and lands on home, which is the run's own page in the panel.
+
+`×` hides it until the tab moves again, not for the session: a dismissal is about this
+video, so moving on asks afresh. It survives a trip to settings and back, the tab not
+having moved. With `StaleClientBanner` showing, both stack and the reload notice comes
+first, since that one is about the app itself.
+
+`capture.onThisTab` counts it: `shown`, `followed` and `dismissed`, each with
+`offer: make | read`. No title, address or channel, in line with every other capture event.
 
 ## The run still belongs to the shell
 
@@ -145,16 +208,14 @@ A shell that cannot sync at all has no web app to open, so the item is not there
 
 ## Where this departs from the file
 
-- **The panel's head keeps the judgement and drops the dates.** The wide reader runs
-  channel, published, saved and novelty across one byline, with the thin and
-  dubious-claim marks beside them. At 400px that is a paragraph about when things
-  happened wrapped around the two words that say what the note is. So the channel moves
-  under the title where 15c draws it, published and saved go, and the verdict and the
-  warnings move onto the topics' own line — filing and judgement read together rather
-  than as two bands of small caps. The fixture the panel's tests seed carries every one
-  of these, so both what is kept and what is dropped are asserted rather than passing on
-  an empty note. That the three share a line is measured as overlapping rows rather than
-  a shared top edge: a topic chip has a border and padding that plain text beside it
+- **The panel's head keeps the judgement, and now the dates with it.** It used to drop
+  published and saved, on the argument that at 400px they were a paragraph about when
+  things happened wrapped around the two words that say what the note is. 205b gives the
+  panel the phone's head outright, dates included, rather than keep a third arrangement in
+  step. The verdict and the warnings still share the channel's line, and the fixture the
+  panel's tests seed carries every one of these so what is kept is asserted rather than
+  passing on an empty note. That they share a line is measured as overlapping rows rather
+  than a shared top edge: a topic chip has a border and padding that plain text beside it
   does not.
 - **The ⋯ menu ends the panel's action row**, after `Listen` and `Mark read`, and hangs
   from its trailing edge as it does on the wide reader. 15c puts it straight after
@@ -162,21 +223,21 @@ A shell that cannot sync at all has no web app to open, so the item is not there
   way would leave the window. Sticking the panel's head also gave it a stacking context,
   which the menu cannot escape however high its own z-index goes, so the head outranks
   the tab strip rather than the menu trying to.
-- **`Mark read` sits beside `Listen` in the panel's head.** 15c drew `Listen` and `⋯` and
-  nothing else, and the panel left read state out. *OV-34 3 Phone and Panel* (34v) puts it
-  back, because reading the note in front of the video is the one time saved the panel can
-  see. 34v draws the pair at the foot of a reader without tabs or ⋯. The built panel keeps
-  its head, its tabs and the docked player at the foot, so the button joins `Listen` where
-  `Listen` already is. The ⋯ menu still leaves read state out, since the button says it.
-- **The keys block shows only when a key is missing.** 15a draws it on both of its
-  screens, but both of those are first-run states; once the keys are in, the block is a
-  paragraph about a solved problem. This follows the empty-library hero, which already
-  made that call.
-- **The masthead's wordmark is "The Overview", not "Overview".** The design's panel
-  shortens it; the app has one wordmark and shortening it only in the panel would read as
-  two products.
-- **Settings' back link reads `← Back` in the panel**, where it reads `← All overviews`
-  everywhere else. There are no overviews to go back to — there is the one video.
+- **`Mark read` left the panel's head again.** 34v had put it beside `Listen`, because
+  reading the note in front of the video is the one time saved the panel can see. 205b
+  moves it where the phone keeps it: in the `⋯` menu, and with `Favourite` at the note's
+  end, which is where the "Saved you N min" pill comes in. `Listen` keeps the row, now with
+  `Favourite` beside it, and keeps its panel job of docking the player at the foot of the
+  window rather than reading the note where it stands.
+- **The keys block has gone from home entirely.** It used to show when a key was missing.
+  205f-3 removes it: a reader without a key of their own still makes overviews on ours, so
+  it was a paragraph about a problem they do not have.
+- **The design names `--motion-state` for the hand-off's "about 320ms".** The token is
+  120ms. OV-167 already made that call for the phone and the panel reuses its stylesheet,
+  so the base duration is `--motion-arrive` (300ms), unchanged.
+- **Settings draws no back link at all in the panel.** It used to read `← Back` there,
+  against `← All overviews` everywhere else. 205d-2 has it lend to the bar instead, named
+  after the tab, so the panel has one way out rather than one per page.
 
 ## What the panel cannot have
 

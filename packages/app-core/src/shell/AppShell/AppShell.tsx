@@ -45,6 +45,8 @@ import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
 import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 import { PageLink } from "../../components/shared/PageLink/PageLink.js";
+import { OnThisTabLine } from "../../features/capture/components/OnThisTabLine/OnThisTabLine.js";
+import { useOnThisTab } from "../../features/capture/useOnThisTab.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 // Where the note's head uses the phone arrangement and scrolls away (ReaderMasthead.module.scss).
@@ -82,6 +84,8 @@ export function AppShell() {
     if (signedIn) markAccountSeen();
   }, [signedIn]);
   const libraryMoved = useLibraryMove().move !== null;
+  // With a note open and the tab moved on under it, the band says so (design 205e).
+  const onThisTab = useOnThisTab();
 
   // paneTransitions.scss keys the way in and the way back off this, and it has to be on
   // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
@@ -113,7 +117,10 @@ export function AppShell() {
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
   const handoff = useMemo(() => ({ register: setHeadBackLink }), []);
   const headScrollsAway = useMediaQuery(HEAD_SCROLLS_AWAY_QUERY);
-  const handoffLive = headBackLink !== null && headScrollsAway && !isPanel;
+  // The panel gets the phone's hand-off: the slot takes the page's own link once that
+  // link passes under the band (205h). Not by width — Chrome lets the reader drag the
+  // panel wider and it stays the panel, keeping its own arrangement (205w).
+  const handoffLive = headBackLink !== null && (isPanel || headScrollsAway);
   const backInBar = useBackInBar(band, headBackLink, handoffLive);
   const brandLink = useRef<HTMLAnchorElement>(null);
   const barBackLink = useRef<HTMLAnchorElement>(null);
@@ -122,6 +129,16 @@ export function AppShell() {
     const arriving = backInBar ? barBackLink.current : brandLink.current;
     if (leaving !== null && document.activeElement === leaving) arriving?.focus({ preventScroll: true });
   }, [backInBar]);
+
+  // Design 205c-2: in the panel + New is a way to paste a link, not a place to watch a
+  // run. Home is the run's own page there, so starting one closes the dialog and hands
+  // the panel back to home, which is where creating from the offer would have left it.
+  const panelRunStarted = newOverview.run !== null && newOverview.dialogOpen && isPanel;
+  useEffect(() => {
+    if (!panelRunStarted) return;
+    newOverview.close();
+    void navigate(Routes.home(), { replace: true });
+  }, [panelRunStarted, newOverview, navigate]);
 
   const panelOpened = useRef(false);
   useEffect(() => {
@@ -190,7 +207,7 @@ export function AppShell() {
                         <OverviewMark />
                       </span>
                       <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
-                        {isPanel ? "Overview" : "The Overview"}
+                        The Overview
                       </h1>
                     </PageLink>
                     {handoffLive && (
@@ -213,6 +230,22 @@ export function AppShell() {
 
                   {isPanel ? (
                     <span className={styles.panelActions}>
+                      {!accountNeeded && (
+                        <button
+                          type="button"
+                          className={styles.newOverviewButton}
+                          onClick={() => {
+                            analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                            newOverview.open();
+                          }}
+                          aria-haspopup="dialog"
+                          aria-expanded={newOverview.dialogOpen}
+                          data-testid={appShellTestIds.newOverviewButton}
+                        >
+                          <StrokeIcon name="plus" />
+                          New
+                        </button>
+                      )}
                       <AccountMenu />
                     </span>
                   ) : (
@@ -266,6 +299,13 @@ export function AppShell() {
 
                 <StaleClientBanner />
 
+                {onThisTab !== null && (
+                  <OnThisTabLine
+                    tab={onThisTab}
+                    onStartVideo={(url) => newOverview.start(url, { from: "panel" })}
+                  />
+                )}
+
                 {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
                   <GenerationStatusStrip
                     run={newOverview.run}
@@ -308,7 +348,10 @@ export function AppShell() {
 
               <ScrollRestoration />
 
-              {!isPanel && !accountNeeded && (
+              {/* In the panel the dialog is only ever open: left mounted it would put a
+                  second copy of the run's progress in the page, which is the panel's own
+                  (design 205c-2). */}
+              {!accountNeeded && (!isPanel || newOverview.dialogOpen) && (
                 <NewOverviewDialog
                   open={newOverview.dialogOpen}
                   prefill={newOverview.prefill}

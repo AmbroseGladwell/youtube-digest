@@ -2,6 +2,7 @@ import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useBackTo } from "../../../app/useBackTo.js";
 import { useLentBackLink } from "../../../app/useLentBackLink.js";
+import { useHomeName } from "../../../app/useHomeName.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import {
@@ -102,6 +103,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
   const analytics = useAnalytics();
   const sections = useSettingsSections();
   const isPanel = useIsPanel();
+  const homeName = useHomeName();
   const isPhone = useIsPhone();
   const stacked = isPanel || isPhone;
   const requested = sections.find((summary) => summary.id === section);
@@ -111,7 +113,10 @@ export function SettingsPage({ section }: SettingsPageProps) {
   const backToOverviews = useBackTo(Routes.home());
   const backLink = useLentBackLink({
     to: sectionPage ? Routes.settings() : Routes.home(),
-    label: sectionPage ? "Settings" : isPanel ? "Back" : "All overviews",
+    label: sectionPage ? "Settings" : isPanel ? homeName : "All overviews",
+    // In the panel the page draws no link of its own, so the bar holds it throughout
+    // (design 205d-2).
+    inPage: !isPanel,
     follow: (event) => {
       if (sectionPage) {
         analytics.settings.page.backToSettingsChosen({ from: "bar" });
@@ -138,18 +143,20 @@ export function SettingsPage({ section }: SettingsPageProps) {
   if (sectionPage) {
     return (
       <div className={`${styles.root} ${styles.rootStacked}`} data-testid={settingsPageTestIds.root}>
-        <PageLink
-          ref={backLink}
-          className={styles.backLink}
-          to={Routes.settings()}
-          onClick={(event) => {
-            analytics.settings.page.backToSettingsChosen({ from: "head" });
-            backToSettings(event);
-          }}
-          data-testid={settingsPageTestIds.settingsLink}
-        >
-          <StrokeIcon name="arrowLeft" /> Settings
-        </PageLink>
+        {!isPanel && (
+          <PageLink
+            ref={backLink}
+            className={styles.backLink}
+            to={Routes.settings()}
+            onClick={(event) => {
+              analytics.settings.page.backToSettingsChosen({ from: "head" });
+              backToSettings(event);
+            }}
+            data-testid={settingsPageTestIds.settingsLink}
+          >
+            <StrokeIcon name="arrowLeft" /> Settings
+          </PageLink>
+        )}
         {renderSection(current)}
       </div>
     );
@@ -157,18 +164,20 @@ export function SettingsPage({ section }: SettingsPageProps) {
 
   return (
     <div className={`${styles.root} ${stacked ? styles.rootStacked : ""}`} data-testid={settingsPageTestIds.root}>
-      <PageLink
-        ref={backLink}
-        className={styles.backLink}
-        to={Routes.home()}
-        onClick={(event) => {
-          analytics.settings.page.overviewsChosen({ from: "head" });
-          backToOverviews(event);
-        }}
-        data-testid={settingsPageTestIds.overviewsLink}
-      >
-        <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
-      </PageLink>
+      {!isPanel && (
+        <PageLink
+          ref={backLink}
+          className={styles.backLink}
+          to={Routes.home()}
+          onClick={(event) => {
+            analytics.settings.page.overviewsChosen({ from: "head" });
+            backToOverviews(event);
+          }}
+          data-testid={settingsPageTestIds.overviewsLink}
+        >
+          <StrokeIcon name="arrowLeft" /> All overviews
+        </PageLink>
+      )}
       <h1 className={styles.title}>Settings</h1>
       {stacked ? (
         <SettingsSectionList sections={sections} current={null} stacked />

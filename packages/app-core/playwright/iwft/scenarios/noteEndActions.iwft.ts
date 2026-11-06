@@ -134,7 +134,6 @@ test("the panel's note ends with them too", async ({ launcher, backendSimulator 
 
   await reader.clickNoteEndMarkRead();
 
-  await reader.verifyPanelReadButtonReads("Read");
   await reader.verifyNoteEndReadButtonReads("Read");
   await reader.verifySavedChipIsCentredBelowNoteEndButtons();
 });

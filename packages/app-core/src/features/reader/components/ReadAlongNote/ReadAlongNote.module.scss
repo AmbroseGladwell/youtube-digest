@@ -10,7 +10,7 @@
 // clear; the 33vh is design 1a's top third, and the larger of the two wins.
 .line {
   scroll-margin-top: max(
-    calc(var(--masthead-height) + var(--reader-masthead-height) + var(--reader-tabs-height) + 1rem),
+    calc(var(--masthead-height) + var(--reader-tabs-height) + 1rem),
     33vh
   );
   scroll-margin-bottom: 6rem;

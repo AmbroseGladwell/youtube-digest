@@ -86,7 +86,6 @@ import { readerPageTestIds } from "./ReaderPageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
-const READER_MASTHEAD_HEIGHT_PROPERTY = "--reader-masthead-height";
 
 const madeOn = (savedAt: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
@@ -123,21 +122,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [printingRecipe, setPrintingRecipe] = useState(false);
   const [recipeCopied, setRecipeCopied] = useState(false);
   const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
-  const readerMastheadHeight = useMeasuredHeight<HTMLElement, HTMLElement>(
-    READER_MASTHEAD_HEIGHT_PROPERTY,
-  );
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
 
-  // Two measurements, one element to publish them on. The setters are stable, so this
-  // is too — a fresh arrow would tear both observers down on every render.
-  const publishHeightsOn = useCallback(
-    (element: HTMLElement | null) => {
-      tabsHeight.host(element);
-      readerMastheadHeight.host(element);
-    },
-    [tabsHeight.host, readerMastheadHeight.host],
-  );
   const [playerDocked, setPlayerDocked] = useState(false);
   const location = useLocation();
   const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
@@ -420,7 +407,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     <OverviewAnalyticsProvider value={overviewAnalytics}>
       <article
         className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
-        ref={publishHeightsOn}
+        ref={tabsHeight.host}
         data-testid={readerPageTestIds.root}
       >
         <ReaderMasthead
@@ -434,9 +421,6 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           compact={isPanel}
           webApp={webApp}
           listening={playerDocked}
-          // Measured only where it sticks: published on the wide reader it would push the
-          // tab strip down by the height of a masthead that scrolls away.
-          ref={isPanel ? readerMastheadHeight.measured : undefined}
           onToggleRead={toggleRead}
           onToggleFavourite={() => toggleFavourite("masthead")}
           onTogglePlaying={() => {

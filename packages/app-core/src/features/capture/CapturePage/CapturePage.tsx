@@ -4,12 +4,13 @@ import { useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
-import { useActivePage, useArticlePages, type ActivePage } from "../../../app/ArticlePagesContext.js";
+import { useActivePage, useArticlePages } from "../../../app/ArticlePagesContext.js";
+import { isOfferedPage } from "../../../app/isOfferedPage.js";
 import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
+import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
-import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
@@ -32,16 +33,12 @@ import { overviewForPageUrl, overviewForVideoUrl } from "../../overviews/util/ov
 import { useCaptureQueueController } from "../../captureQueue/CaptureQueueContext.js";
 import { CaptureQueueStripView } from "../../captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import { ArticleFailureNotice } from "../components/ArticleFailureNotice/ArticleFailureNotice.js";
-import { ArticleOffer } from "../components/ArticleOffer/ArticleOffer.js";
+import { SourceOffer } from "../components/SourceOffer/SourceOffer.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { shouldAnimateNavigation } from "../../../util/viewTransitions.js";
-
-// A site's front page is a list of other stories. We can't look before Create, so its address
-// is what tells us; anything subtler is found out by reading (design 77ak).
-const isOfferedPage = (page: ActivePage | null): page is ActivePage => page !== null && new URL(page.url).pathname !== "/";
 
 function usePageAccess(url: string | null): boolean | null {
   const pages = useArticlePages();
@@ -162,7 +159,7 @@ export function CapturePage() {
     return (
       <div className={styles.root} data-testid={capturePageTestIds.root}>
         <div className={styles.opening}>
-          <ArticleOffer site={run.article.site} title={run.article.title} words={null} />
+          <SourceOffer source={run.article.site} title={run.article.title} words={null} />
           <button type="button" className={styles.primary} disabled data-testid={capturePageTestIds.createButton}>
             Create overview
           </button>
@@ -201,6 +198,9 @@ export function CapturePage() {
       : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
   const nothingToTake = activeVideoUrl === null && offeredPage === null;
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
+  // Known before Create because noticing the video fetches its captions anyway
+  // (docs/features/watching-detection.md); with no free rung there is no card to draw.
+  const watchedVideo = activeVideoUrl === null ? null : (watchedTranscript.data ?? null);
 
   return (
     <div
@@ -222,7 +222,9 @@ export function CapturePage() {
       ) : null}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         {offeredPage !== null ? (
-          <ArticleOffer site={domainOf(offeredPage.url)} title={offeredPage.title} words={null} />
+          <SourceOffer source={domainOf(offeredPage.url)} title={offeredPage.title} />
+        ) : watchedVideo !== null ? (
+          <SourceOffer source={watchedVideo.channel} title={watchedVideo.title} video />
         ) : (
           <div>
             <h2 className={styles.title}>
@@ -230,16 +232,9 @@ export function CapturePage() {
               <br />
               with <em className={styles.em}>The Overview</em>
             </h2>
-            {nothingToTake ? (
-              <p className={styles.standfirst} data-testid={capturePageTestIds.noVideoNote}>
-                Open a YouTube video or an article, and you can make an overview of it here.
-              </p>
-            ) : (
-              <p className={styles.standfirst}>
-                Get a succinct overview, with the main premise, key points, actionable steps and a
-                verdict on if it's worth your time.
-              </p>
-            )}
+            <p className={styles.standfirst} data-testid={capturePageTestIds.noVideoNote}>
+              Open a YouTube video or an article, and you can make an overview of it here.
+            </p>
           </div>
         )}
 
@@ -254,7 +249,7 @@ export function CapturePage() {
               Read overview
             </button>
             <p className={styles.note} data-testid={capturePageTestIds.alreadyInLibraryNote}>
-              This {offeredPage === null ? "video" : "article"} is already in your library.
+              Already in your library
             </p>
           </>
         ) : limit !== null ? (
@@ -294,6 +289,17 @@ export function CapturePage() {
 
         {nothingToTake && <RecentOverviews entries={overviewsQuery.data ?? []} />}
 
+        {/* 205f-3 would have this gone, on the grounds that a reader without a key of
+            their own still makes overviews on ours. That holds only where there is a
+            server to make them on: with neither, Create is dead and nothing would say
+            why, which is the one thing CLAUDE.md's degrade-visibly rule will not have.
+            So it stays, and shows exactly when generation is impossible. */}
+        {!keysReady && limit === null && (
+          <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>
+            <KeyPromptNote testIds={capturePageTestIds.keyPrompt} readiness={readiness} detail={BYO_KEY_NOTE} from="panel" />
+          </div>
+        )}
+
         <div className={styles.milestones}>
           <MilestoneStack
             milestones={milestones.visible}
@@ -304,11 +310,6 @@ export function CapturePage() {
           />
         </div>
 
-        {!keysReady && limit === null && (
-          <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>
-            <KeyPromptNote testIds={capturePageTestIds.keyPrompt} readiness={readiness} detail={BYO_KEY_NOTE} from="panel" />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -334,7 +335,7 @@ function RunInProgress({
   return (
     <div className={styles.working} data-testid={capturePageTestIds.working}>
       {run.article !== null ? (
-        <ArticleOffer site={run.article.site} title={run.article.title} words={run.article.words} recipe={run.article.recipe} />
+        <SourceOffer source={run.article.site} title={run.article.title} words={run.article.words} recipe={run.article.recipe} />
       ) : (
         <>
           <div>

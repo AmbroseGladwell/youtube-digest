@@ -1,6 +1,7 @@
 import { AppearanceSectionPageObject } from "./AppearanceSectionPageObject.testHelper.js";
 import { PrivacySectionPageObject } from "./PrivacySectionPageObject.testHelper.js";
 import { expect } from "@playwright/experimental-ct-react";
+import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
 import { planUsageTestIds } from "../../src/features/plus/components/PlanUsage/PlanUsageTestIds.js";
@@ -127,7 +128,11 @@ export class SettingsPageObject extends PageObject {
 
   clickBackToSettings = (): Promise<SettingsPageObject> =>
     this.step("clickBackToSettings", async () => {
-      await this.click(settingsPageTestIds.settingsLink);
+      const inPage = this.page.getByTestId(settingsPageTestIds.settingsLink);
+      // In the panel the page draws no link of its own and the bar holds it throughout
+      // (design 205d-2).
+      if ((await inPage.count()) > 0) await inPage.click();
+      else await this.page.getByTestId(appShellTestIds.backLink).click();
       await this.verifyListIsShown(true);
       return this;
     });

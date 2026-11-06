@@ -68,10 +68,10 @@ const seedNote = (backendSimulator: {
   );
 };
 
-// Only the panel's head sticks. The wide reader's carries a thumbnail, a trail and a
-// stepper, and holding that would cost the note most of the window — readAlong.iwft.ts
-// is what holds the tabs to the bar alone there, and would fail if this leaked.
-test("the panel keeps the note's head and its tabs against the bar while the note scrolls", async ({
+// Design 205b: the panel's reader is the phone's, so the head goes by with the note and
+// only the tabs hold against the bar. That is what leaves the note its room once the line
+// under the bar is there too (205e-5).
+test("the panel holds its tabs against the bar and lets the head scroll away", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -79,11 +79,12 @@ test("the panel keeps the note's head and its tabs against the bar while the not
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyPanelChromeStacks(false);
-  // Asserts the page actually moved, so the check below cannot pass by nothing having
+  await reader.verifyTabsAreBelowTheHead();
+  // Asserts the page actually moved, so the checks below cannot pass by nothing having
   // scrolled at all.
   await reader.scrollTheNote();
   await reader.verifyPanelChromeStacks(false);
+  await reader.verifyHeadBackLinkIsUnderTheBar();
 });
 
 test("on the transcript the tools stay up there with them", async ({
@@ -95,7 +96,7 @@ test("on the transcript the tools stay up there with them", async ({
   const reader = await capture.openStoredOverview();
   await reader.clickTab("Transcript");
 
-  await reader.verifyPanelChromeStacks(true);
+  await reader.verifyTabsAreBelowTheHead();
   await reader.scrollTheNote();
   await reader.verifyPanelChromeStacks(true);
 });
@@ -116,9 +117,10 @@ test("Listen docks the player at the foot of the window rather than the end of t
   await reader.verifyPlayerHoldsTheWindowFoot();
 });
 
-// The note this is seeded from carries all of these, so both what the panel keeps and
-// what it drops are asserted rather than passing on an empty fixture.
-test("the panel keeps the judgement beside the topics and drops the dates", async ({
+// The note this is seeded from carries all of these, so what the panel keeps is asserted
+// rather than passing on an empty fixture. Design 205b gives it the phone's head, dates
+// included, where the panel used to drop them for want of width.
+test("the panel keeps the judgement beside the topics, and the dates with it", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -131,8 +133,8 @@ test("the panel keeps the judgement beside the topics and drops the dates", asyn
   await reader.verifyMastheadMentions(/Thin/);
   await reader.verifyMastheadMentions(/Dubious claim/);
 
-  await reader.verifyShowsNoPublished();
-  await reader.verifyMastheadOmits(/saved/i);
+  await reader.verifyPublishedReads("· published 1 Sept 2026");
+  await reader.verifyMastheadMentions(/saved 16 Sep/);
 });
 
 test("the verdict and the warnings sit on the channel's line", async ({

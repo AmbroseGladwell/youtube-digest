@@ -42,8 +42,8 @@ So every band that can come to sit over content carries `data-sticky-fade`, and 
 ```
 
 A band gives the fade up to any band that follows it, whether that band is its own next
-sibling (the panel's note head handing over to the tab strip) or sits inside one (the tab
-strip handing over to the transcript's tools, which are in the tab panel below it). Nothing
+sibling (a band handing over to the one after it) or sits inside one (the tab strip handing
+over to the transcript's tools, which are in the tab panel below it). Nothing
 measures anything and no component tells another what it is doing: the document order is
 the answer, and it is already correct. Which band is lowest changes with the tab, the
 layout and the surface, and none of that needs saying twice.
@@ -109,10 +109,10 @@ scroll the app never makes.
 
 ## Departures from the design
 
-- **No frame was drawn for a note whose head is the lowest band**, which is a panel note
-  with only one tab. It falls out of the same rule, and `fadeUnderTheBar.iwft.ts` pins the
-  bands each layout has rather than that case's fixture, which would need a source with no
-  transcript.
+- **No frame was drawn for a note whose head is the lowest band.** That was a panel note
+  with only one tab, and OV-205's 205b has since stopped the panel sticking its head at
+  all, so the case no longer arises. `fadeUnderTheBar.iwft.ts` pins the bands each layout
+  has.
 
 ## What the tests hold
 
@@ -122,5 +122,5 @@ nothing until it has scrolled and the full fade after, that an overview hands th
 the tab strip to the transcript's tools when that tab opens, that the panel's three-deep
 stack still ends on the right band, that a shared page behaves as the reader does, and that
 settings fades under the bar alone with its headings clear of it. It also pins which
-elements are bands at all, which is what holds the wide reader's own head — it scrolls away
-with the note — out of the stack.
+elements are bands at all, which is what holds a note's own head — it scrolls away with the
+note in every layout — out of the stack.

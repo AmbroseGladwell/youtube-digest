@@ -8,7 +8,5 @@ export const readerMastheadTestIds = {
   meta: "ReaderMasthead.meta",
   favouriteButton: "ReaderMasthead.favouriteButton",
   readAloudButton: "ReaderMasthead.readAloudButton",
-  listenButton: "ReaderMasthead.listenButton",
-  readButton: "ReaderMasthead.readButton",
   dubiousFlag: "ReaderMasthead.dubiousFlag",
 };

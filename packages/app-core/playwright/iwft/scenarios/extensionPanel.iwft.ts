@@ -149,7 +149,7 @@ test("the panel's reader drops the trail, the stepper and the rail it has nothin
   const capture = await launcher.launchPanel(panel);
 
   const reader = await capture.openStoredOverview();
-  await reader.verifyMastheadIsPanelSized();
+  await reader.verifyMastheadIsThePhones();
 });
 
 // The panel is a browser that fetches its own captions, so a transcript key is not one of

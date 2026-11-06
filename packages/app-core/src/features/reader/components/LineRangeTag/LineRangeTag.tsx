@@ -30,7 +30,7 @@ export interface LineRangeTagProps {
 type Reach = "skip" | "youtube" | "transcript";
 
 const ROOM_FOR_THE_PLAYER_BAR = 128;
-const STICKY_CHROME = ["--masthead-height", "--reader-masthead-height", "--reader-tabs-height"];
+const STICKY_CHROME = ["--masthead-height", "--reader-tabs-height"];
 
 const stickyChromeHeight = (element: HTMLElement) => {
   const style = getComputedStyle(element);

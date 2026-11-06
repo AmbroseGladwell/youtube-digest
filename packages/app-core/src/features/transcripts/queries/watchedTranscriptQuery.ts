@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { TranscriptStore, VideoId } from "@overview/domain";
+import type { TranscriptStore, VideoSource } from "@overview/domain";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { useYouTubeFetch } from "../../../app/YouTubeFetchContext.js";
@@ -20,10 +20,12 @@ export const watchedTranscriptQueryOptions = (
     // resolve it was made for (docs/features/transcript-retrieval.md). Never the shared
     // cache: asking it would tell our server every video merely watched
     // (docs/features/shared-transcript-cache.md).
-    queryFn: (): Promise<VideoId | null> => {
+    // The whole video, not just its id: the panel's home names what it is beside before
+    // Create, and this is the one place that already knows (design 205a).
+    queryFn: (): Promise<VideoSource | null> => {
       const sources = freeTranscriptSources(createTranscriptSources({ ...sourceOptions, sharedCacheApiUrl: null, service: null }));
       if (url === null || sources.length === 0) return Promise.resolve(null);
-      return resolveVideo(url, { sources, transcriptStore }).then((resolved) => resolved.video.id);
+      return resolveVideo(url, { sources, transcriptStore }).then((resolved) => resolved.video);
     },
     // Noticing the video and grabbing its captions costs nothing, so it needs no key —
     // but with no free rung there is nothing to do here at all

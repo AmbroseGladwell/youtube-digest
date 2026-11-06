@@ -1,0 +1,55 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 205e: one 36px pill in the band under the bar, inset from the panel's edges so it
+// reads as a notice about the tab rather than another band of chrome. It sits inside the
+// measured masthead, so every pixel it takes comes off the note.
+.root {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  box-sizing: border-box;
+  margin: 0 0.75rem 0.375rem;
+  padding: 0 0.25rem 0 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  opacity: 0.8;
+}
+
+// Wider than 400 the line stretches and the copy stays put, so there is nothing
+// width-dependent to say (design 205w).
+.message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer {
+  @include controls.quiet-control;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.dismiss {
+  @include controls.ghost-pill;
+  @include controls.circle(1.75rem);
+
+  flex: none;
+  color: inherit;
+}
