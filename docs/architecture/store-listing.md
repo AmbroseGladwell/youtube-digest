@@ -175,15 +175,22 @@ One justification per entry in the manifest, each naming the code that needs it.
 reads these; a permission in the manifest that nothing uses is a rejection, so this table and
 `apps/extension/manifest.json` move together.
 
+**Say what the code does, not what sounds tidy.** Three of these said more than was true in
+their first draft, and the manifest or the source contradicts each: the panel is not the only
+surface, because `options_ui` registers `app.html`; `tabs` does look at tabs the reader has
+not asked about, because the worker queries every YouTube watch tab by URL; and "nothing is
+kept on a server unless the reader signs in" is vacuous now that an account is needed to make
+an overview at all. A reviewer reads the manifest beside the justification.
+
 | Permission | What to paste |
 |---|---|
 | `activeTab` | Pressing the toolbar button or the context-menu entry is what grants access to the tab the reader is on, which is how the extension reads the page it is being asked about without standing access to every site. |
 | `contextMenus` | Adds one right-click entry, "The Overview", which opens the side panel on the page or link the reader right-clicked. |
-| `sidePanel` | The extension's entire interface is a Chrome side panel; there is no other surface. |
-| `tabs` | To find the YouTube tab the reader is watching and read its address and title, so that the note is about the right video and the panel can follow them from one video to the next. |
-| `scripting` | To inject two small scripts into the tab the reader is on: one that reads an article's text so it can be summarised, and one that reads the YouTube player's current position so the note can be followed along with the video. |
+| `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read, listened to and searched. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. |
+| `tabs` | To tell which video is in front of the reader, so the overview is about the right one and the panel follows them from video to video. The extension reads the active tab, and queries YouTube watch tabs by URL for the same purpose. This permission is used for addresses and titles only. Reading the contents of a page needs `scripting`, and happens only when the reader asks for an overview of that page. |
+| `scripting` | To inject two small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other reads the YouTube player's current position, so the transcript and the read along can follow the video while the overview is open. Neither runs on a page the reader has not opened the panel against. |
 | `storage` | Settings, the chosen provider, and the reader's own API key, all kept on the device. |
-| `unlimitedStorage` | The library of notes and their transcripts and narration is kept on the device in IndexedDB, and a few hundred notes exceed the default quota. Nothing is kept on a server unless the reader signs in. |
+| `unlimitedStorage` | The library of overviews, with their transcripts and narration audio, is held on the device in IndexedDB, and a few hundred of them exceed the default quota. Narration audio is the largest part. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
 | `declarativeNetRequestWithHostAccess` | One rule, which removes the `Origin` header from this extension's own requests to youtube.com. YouTube answers 403 to a transcript request that carries a `chrome-extension://` origin, and `Origin` is a forbidden header that `fetch` cannot drop. The rule is scoped to requests this extension makes, to youtube.com, of type XHR, so it can never touch a call carrying the reader's API key. |
 
 **Host permissions**, `https://www.youtube.com/*` and `https://m.youtube.com/*`: to read the
