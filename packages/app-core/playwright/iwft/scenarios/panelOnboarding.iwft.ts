@@ -2,8 +2,14 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import {
+  makeArticleOverview,
+  makeOverview,
+  makeRecipeOverview,
+} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-// Onboarding in the extension's side panel (docs/features/onboarding.md, designs 46n–46q).
+// Onboarding in the extension's side panel (docs/features/onboarding.md, designs 46n–46q and
+// 205g–205g-4, where Start became the web's own).
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const VIDEO_TITLE = "The Simulated Video";
 const signedOutPanel = {
@@ -24,7 +30,7 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await page.setViewportSize({ width: 400, height: 600 });
   await launcher.launchPanel(signedOutPanel);
 
-  const start = await launcher.panelStart.verifyIsShown();
+  const start = await launcher.homePage.verifyShowsStart();
   await start.makeOverview();
 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
@@ -71,7 +77,7 @@ test("a new reader makes their first overview of the video the panel is beside, 
 test("the sheet takes the panel over, and every suggestion is offered", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel(signedOutPanelAnswered);
-  await (await launcher.panelStart.verifyIsShown()).makeOverview();
+  await (await launcher.homePage.verifyShowsStart()).makeOverview();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
   await onboarding.skip();
@@ -93,12 +99,12 @@ test("with no video beside it, Start takes a pasted link instead, and refuses on
 }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel({ ...signedOutPanel, activeVideoUrl: null });
-  const start = await launcher.panelStart.verifyIsShown();
-  await start.verifyCantMakeWithoutAVideo();
+  const start = await launcher.homePage.verifyShowsStart();
+  await start.verifyOffersNothingFromTheTab();
 
-  await start.pasteLink("https://www.youtube.com/playlist?list=WL");
-  await start.verifyRefused();
-  await start.pasteLink(VIDEO_URL);
+  await start.submitHeroUrl("https://www.youtube.com/playlist?list=WL");
+  await start.verifyHeroValidationError("That doesn't look like a link we can read. Try the address of a video or a web page.");
+  await start.submitHeroUrl(VIDEO_URL);
 
   await launcher.onboardingPage.verifyOnScreen("analytics");
 });
@@ -110,7 +116,82 @@ test("signed out on a device that has had an account, the panel offers signing b
 
   await launcher.signedOutGate.verifyIsShown();
   await launcher.signedOutGate.verifyTitle("Sign in to see your overviews");
-  await launcher.panelStart.verifyIsAbsent();
+  await launcher.homePage.verifyStartIsAbsent();
+});
+
+
+// Designs 205g and 205g-4: signed out, the panel is the web's Start, Sign in stands under
+// Make my overview as a peer, and nothing anywhere offers to create an account instead.
+test("beside a video, Start offers it with the tab's own verb, and Sign in as a peer", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  await launcher.launchPanel(signedOutPanelAnswered);
+
+  const start = await launcher.homePage.verifyShowsStart();
+
+  await start.verifyHeadlineReads("Watch Less,");
+  await start.verifyStandfirstReads("Make this video your first overview. We'll set up your account as we go.");
+  await start.verifyOffers({ site: "IWFT Channel · Video", title: VIDEO_TITLE });
+  await start.verifyOffersSignIn();
+});
+
+test("Sign in from Start says the first overview makes the account, and the bar says where home is", async ({ launcher }) => {
+  await launcher.launchPanel(signedOutPanelAnswered);
+  const start = await launcher.homePage.verifyShowsStart();
+
+  await start.signIn();
+
+  const signIn = await launcher.signInPage.verifyAsksForEmail("Sign in");
+  await signIn.verifySwitchLineSays("New here? Your first overview sets up your account.");
+  await launcher.appShell.verifyBarIsTheOnlyWayBack("This video");
+});
+
+test("with nothing on the tab, the way back from Sign in is named Home", async ({ launcher }) => {
+  await launcher.launchPanel({ ...signedOutPanelAnswered, activeVideoUrl: null });
+  const start = await launcher.homePage.verifyShowsStart();
+
+  await start.signIn();
+
+  await launcher.signInPage.verifyAsksForEmail("Sign in");
+  await launcher.appShell.verifyBarIsTheOnlyWayBack("Home");
+});
+
+test("the gate's Sign in keeps no way back to the gate", async ({ launcher }) => {
+  await launcher.launchPanel({ ...signedOutPanelAnswered, accountSeen: true });
+  await launcher.signedOutGate.verifyIsShown();
+
+  await launcher.signedOutGate.chooseSignIn();
+
+  await launcher.signInPage.verifyAsksForEmail("Sign in");
+  await launcher.appShell.verifyBarNeverOffersTheWayBack();
+});
+
+// Beside something the offer takes the field's place, and the different link brings it back.
+test("beside a video, a different link can still be pasted", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  await launcher.launchPanel(signedOutPanelAnswered);
+  const start = await launcher.homePage.verifyShowsStart();
+
+  await start.pasteADifferentLink();
+
+  await start.verifyOffersNothingFromTheTab();
+  await start.submitHeroUrl("https://theharbourpost.example/2026/11/bridge-bill-twice");
+  await launcher.onboardingPage.verifyOnScreen("video");
+});
+
+// Drawn tall: at 720 the panel scrolls rather than squeezing the deck (205g).
+test("below 720 the panel scrolls", async ({ launcher, backendSimulator, page }) => {
+  backendSimulator.startSamples.offer(
+    makeOverview({ source: { ...makeOverview().source, title: "A Sample" } }),
+    makeArticleOverview(),
+    makeRecipeOverview(),
+  );
+  await page.setViewportSize({ width: 400, height: 720 });
+  await launcher.launchPanel(signedOutPanelAnswered);
+  await launcher.homePage.verifyShowsStart();
+
+  await launcher.homePage.scrollToTheFoot();
+
+  await launcher.sampleDeck.verifyIsShown();
 });
 
 const PAGE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
@@ -145,8 +226,10 @@ test("beside a page, the panel's Start offers it, and the page is read in the br
     },
   });
 
-  const start = await launcher.panelStart.verifyIsShown();
-  await start.verifyHeading("Make an overview of this page");
+  const start = await launcher.homePage.verifyShowsStart();
+  await start.verifyHeadlineReads("Learn More,");
+  await start.verifyStandfirstReads("Make this page your first overview. We'll set up your account as we go.");
+  await start.verifyOffers({ site: "theharbourpost.example · Article", title: PAGE_TITLE });
   await start.makeOverview();
 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
@@ -158,9 +241,13 @@ test("beside a page, the panel's Start offers it, and the page is read in the br
 test("on a tab with nothing to read, the panel's Start asks for a link", async ({ launcher }) => {
   await launcher.launchPanel({ ...signedOutPanelAnswered, activeVideoUrl: null });
 
-  const start = await launcher.panelStart.verifyIsShown();
+  const start = await launcher.homePage.verifyShowsStart();
 
-  await start.verifyHeading("Paste a link to start");
+  await start.verifyOffersNothingFromTheTab();
+  await start.verifyStandfirstReads(
+    "Paste a link, or open a video or page you've been meaning to get to. We'll make it your first overview, to read or listen to, and set up your account as we go.",
+  );
+  await start.verifyHeroFieldEnabled();
 });
 
 test("in the panel, the account can be made with its code before the overview is written, and the overview arrives in it", async ({
@@ -172,7 +259,7 @@ test("in the panel, the account can be made with its code before the overview is
   backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_GENERATE);
   await page.setViewportSize({ width: 400, height: 600 });
   await launcher.launchPanel(signedOutPanelAnswered);
-  await (await launcher.panelStart.verifyIsShown()).makeOverview();
+  await (await launcher.homePage.verifyShowsStart()).makeOverview();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
   await onboarding.skip();

@@ -61,6 +61,14 @@ export class SignInPageObject extends PageObject {
   verifyFieldErrorReads = (text: string) =>
     this.step(`verifyFieldErrorReads ${text}`, () => expect(this.get(emailLinkFormTestIds.fieldError)).toHaveText(text));
 
+  // 205g-4: in the panel the line says the first overview makes the account, in place of a
+  // link to a page that no longer exists there.
+  verifySwitchLineSays = (text: string) =>
+    this.step(`verifySwitchLineSays ${text}`, async () => {
+      await expect(this.get(emailLinkFormTestIds.switchLine)).toContainText(text);
+      await this.expectToHaveCount(requestLinkFlowTestIds.switchLink, 0);
+    });
+
   switchToOtherPage = (): Promise<SignInPageObject> =>
     this.step("switchToOtherPage", async () => {
       await this.click(requestLinkFlowTestIds.switchLink);

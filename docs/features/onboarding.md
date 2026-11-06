@@ -380,10 +380,10 @@ Fewer than three samples aren't a deck: they're rows, as in the panel. With none
 and Start keeps the Example overview card: a server with none listed, one that doesn't answer, or
 a shell with no server.
 
-**In the panel, samples are rows** (`OnboardingSamples`, 155d), after Make my overview and before
-"Already have an account? Sign in", three at a time: the image beside the title, "Source · Kind"
-above it and the length below. More samples opens the rest in place and moves focus to the first of
-them; nothing scrolls sideways. On a tab with nothing to read the lead points to both ways in.
+**In the panel the deck is the same deck** (205g), in the phone's geometry, under Make my
+overview and Sign in. Fewer than three are rows there too (`OnboardingSamples`, 155d): the image
+beside the title, "Source · Kind" above it and the length below, three at a time, with More
+samples opening the rest in place and moving focus to the first of them.
 
 **Opening one (155f).** The choice is counted as it's pressed, so a failed open still records it.
 Nothing changes for 300ms; then the card says "Opening…" with aria-busy (in place of Open this
@@ -425,25 +425,45 @@ The create-account form itself is onboarding's account screen (46j). A shell wit
 keeps design 9b's page (`sign-in.md`, "Creating an account").
 
 Start says why it isn't a form (155e). On the web a stone note above the hero reads "New accounts
-start with your first overview". In the panel the lead says "New accounts start with your first
-overview. Make one of this video, or try a sample.", and on a device that has had an account a
-Back button returns to signing in.
+start with your first overview".
+
+**In the panel there is no Create account at all** (205g-4). Start's own lead says the first
+overview makes the account, so nothing there needs a second route and sign-in's switch line is
+"New here? Your first overview sets up your account." in a link's place. The gate's "Create an
+account" still goes through the redirect, which lands on Start, and 205d-5's lone back chevron
+on Start is retired with it: a reader who wants to sign in presses Sign in, and the bar holds
+the way back from there.
 
 ## In the extension panel
 
-The same screens at 400 × 600 (designs 46n–46q), with the narrow layout throughout.
+The same screens at 400 × 720 (designs 46n–46q and 205g–205g-4), with the narrow layout throughout.
 
-**Start offers the video the panel is beside** (`PanelStart`, 46n): "Make an overview of
-this video", "Make my overview", "Or paste a different link" for a field in place, and
-"Already have an account? Sign in". **Beside a page** (154b) it says "Make an overview of this
-page" and shows what the tab gives, its address and title, since an article can't be told from a
-recipe before it's read. The page is read in the browser, as signed-in capture reads it
-(`article-panel.md`). Chrome is asked inside the press (`pageAccess.ts`), so the read spends no
-trial read and isn't turned away by the site; without access it falls back to our server on the
-trial. **On a tab with nothing to read** it says "Paste a link to start", and the field is the
-way in. The video itself is first shown on the next screen once it has
-resolved, since the panel knows only its address until then. Headings are set smaller, and
-About you's sheet takes the panel over (141g).
+**Start is the web's Start, compressed** (205g, `StartHero` in `HomePage.tsx`), drawn tall so
+the panel scrolls below 720. In order: the headline, the lead, the way to make an overview,
+`Sign in` as a full-width button, then the samples.
+
+- **The headline's verb follows the tab** (`useStartSubject`): "Watch Less," for a video,
+  "Learn More," for a page. With nothing on the tab it follows the deck's front card and cycles
+  with it, as on the web (155l). A page is "Learn More," whatever it turns out to be, because we
+  don't read one until Create, so "Cook More," can only arrive from a recipe in the deck.
+- **The lead says the first overview makes the account**: "Make this video|page your first
+  overview. We'll set up your account as we go." With nothing on the tab it asks for a link and
+  says the same.
+- **Beside something, Start shows the same offer card as signed in** (`SourceOffer`, 205a):
+  source · kind and the title, never a length or a reading time, which a page's isn't until it
+  is read. A video's channel and title come from the captions noticing it fetched anyway; before
+  they land there is no card, and the lead still says what will be made.
+- **"Or paste a different link"** puts the field back in the offer's place. The design doesn't
+  draw it, but without it a reader beside a video has no way to give another link, and `+ New`
+  is hidden signed out.
+- **The page is read in the browser**, as signed-in capture reads it (`article-panel.md`).
+  Chrome is asked inside the press (`pageAccess.ts`), so the read spends no trial read and isn't
+  turned away by the site; without access it falls back to our server on the trial. Only a page
+  with a path is offered (`isOfferedPage`): a site's front page is a list of other stories.
+
+The video itself is first shown on the next screen once it has resolved, since the panel knows
+only its address until then. Headings are set smaller, and About you's sheet takes the panel
+over (141g).
 
 **The account is made with a code**, as the extension always signs in (`sign-in.md`): the
 link opens in the browser, which shows a code to type into the panel. Then the plan, and the
@@ -452,8 +472,11 @@ extension already, so Save in one click has nothing to offer there.
 
 **Signed out once the device has had an account** (46q), the panel's home offers signing
 back in instead of Start: "Sign in to see your overviews", with Sign in first and Create an
-account under it. A device is marked when it is signed in (`overview.accountSeen.v1`, only
-that it happened). Every other page that would show an overview shows the same.
+account under it, which opens home as Start. A device is marked when it is signed in
+(`overview.accountSeen.v1`, only that it happened). Every other page that would show an overview
+shows the same. **Sign in reached from Start** carries `fromStart`, and the bar holds the way
+back named after what home is about (`useHomeName`, 205g-4); reached from the gate it carries
+none, so the gate offers no way back to itself.
 
 ## Into the account
 

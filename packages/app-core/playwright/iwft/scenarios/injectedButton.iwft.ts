@@ -99,7 +99,7 @@ test("signed out, the press goes to the panel's Start, whatever keys the device 
 
   await launcher.pressInjectedButton(WATCHED_URL);
 
-  await launcher.panelStart.verifyIsShown();
+  await launcher.homePage.verifyShowsStart();
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   expect(await launcher.readRunReports()).toEqual([null, null]);
 });

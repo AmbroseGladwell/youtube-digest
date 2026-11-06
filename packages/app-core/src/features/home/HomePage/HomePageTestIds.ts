@@ -20,4 +20,6 @@ export const homePageTestIds = {
   exampleOverview: "HomePage.exampleOverview",
   heroTitle: "HomePage.heroTitle",
   fromCreateNote: "HomePage.fromCreateNote",
+  pasteLink: "HomePage.pasteLink",
+  signIn: "HomePage.signIn",
 };

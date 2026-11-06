@@ -161,7 +161,7 @@ test.describe("signed out", () => {
     backendSimulator.overviews.seed(titled("Made Before This Change"));
     await launcher.launchPanel({ sync: true, apiKeys: API_KEYS });
 
-    await launcher.panelStart.verifyIsShown();
+    await launcher.homePage.verifyShowsStart();
     await launcher.signedOutGate.verifyIsNotShown();
   });
 
