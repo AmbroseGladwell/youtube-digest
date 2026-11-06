@@ -109,6 +109,13 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       folds,
       foldNotice,
       dismissFoldNotice: () => setFoldNotice(null),
+      leaveDeletedAccount: () => {
+        engine.current?.stop();
+        if (readSyncConnection().accountId === connection.accountId) {
+          setSignOutNotice({ pending: 0, stuck: 0, offline: false, deleted: true });
+          setConnection(DEFAULT_SYNC_CONNECTION);
+        }
+      },
       signOut: async ({ beforeEndingSession }: SignOutOptions = {}) => {
         const running = engine.current;
         setSigningOut(true);

@@ -15,3 +15,7 @@ export interface OpenLibraryOptions {
 }
 
 export type OpenLibrary = (accountId: string | null, options?: OpenLibraryOptions) => Promise<Library>;
+
+// Removes an account's library from this device for good; the shell's store knows how
+// (docs/features/account-deletion.md).
+export type DeleteLibrary = (accountId: string) => Promise<void>;

@@ -55,6 +55,7 @@ these changes, the policy changes with it.
 | Section | Backed by |
 |---|---|
 | Account and sign-in: email, first name, hashed links and codes, 15 and 10 minutes, 30-day sliding sessions, the one cookie, Brevo | `sign-in.md`, `V0001`, `V0003`, `V0005`, `fly.toml` (`SESSION_TTL_DAYS`, `MAIL_FROM`) |
+| Deleting the account: the button, the code first, what goes in one step, what is asked of PostHog and when it happens, the deletion record, what stays, what the device does | `account-deletion.md`, `V0027`, `deleteAccount.ts` |
 | Changing the name or email: the code to the current address and the fresh-session skip, the code to the new address, the notice to the old one with its seven-day link that ends every session, the change rows kept | `account-changes.md`, `V0026` |
 | The library and settings synced to Neon in London | `sync-api.md`, `settings.md`, `personalisation.md`, `appearance.md`, `time-saved.md`, `tag-reuse.md`, `playlists.md`, `deploy.md` |
 | Transcripts: the shared cache, two accounts agreeing, contributions kept a year and outliving the account; watched captions never sent; the cache lookup on Create; articles' text never kept, links never logged | `shared-transcript-cache.md`, `transcript-storage.md`, `watching-detection.md`, `pasted-article-links.md`, `article-notes.md`, `server-side-transcripts.md` (Decodo) |
@@ -71,8 +72,8 @@ these changes, the policy changes with it.
 **Two places where the policy says what is true rather than what was decided.** OV-62 decided
 (3 Oct 2026) that anonymous analytics never linked to an account is deleted after 30 days, and
 that the policy says so. The sweep isn't built, and PostHog keeps events for a year, so the
-policy says a year and that 30 days is the intent. And OV-184 is account deletion; until it
-ships, the policy says deletion is done by hand on request, within thirty days.
+policy says a year and that 30 days is the intent. The other was account deletion, by hand on
+request until OV-184 shipped it on 6 November 2026; the policy now describes the button.
 
 **Holding events before an answer is disclosed, not dropped.** OV-46's question on the card
 (28 Oct 2026) was whether holding events in memory before consent counts as collecting them.
@@ -122,8 +123,8 @@ A change touches the **privacy policy** when it:
 - changes the analytics tiers, what is counted, or when a reader is asked
 - changes what a shared link, a shared cache copy or an assistant can see
 - changes what is stored on the device, or which of it is strictly necessary
-- builds something the policy currently says is done by hand or not yet built (account
-  deletion, the 30-day sweep of unlinked anonymous analytics)
+- builds something the policy currently says is done by hand or not yet built (the 30-day
+  sweep of unlinked anonymous analytics, the sweep of deletion records)
 
 A change touches the **terms** when it:
 
@@ -144,6 +145,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-06 | privacy | OV-184 | Deleting your account describes the button, the code first, what goes in one step, the ask to PostHog and its timing, the deletion record and what stays; the account section says the code guards deletion too; the retention table gained the deletion record and reworded narration. |
+| 2026-11-06 | terms | OV-184 | Accounts: deleted from Settings after a code, not by email. |
 | 2026-11-05 | privacy | OV-14 | The account section says the name can be changed and the email moved; the step-up code, the new-address code, the old address's notice and revert link, and the change record kept; a retention row for the codes and the record. |
 | 2026-11-05 | both | OV-79 | First texts, written from what was built on this date. |
 
@@ -151,6 +154,6 @@ match the pages' `*_UPDATED_ON`.
 
 - **Legal review** of both texts, which the card's definition of done requires and the first
   release to hand-picked testers may not.
-- **The 30-day deletion** of unlinked anonymous analytics, and **account deletion** (OV-184).
-  Each changes a sentence here when it lands.
+- **The 30-day deletion** of unlinked anonymous analytics, which changes a sentence here when
+  it lands. Account deletion landed with OV-184.
 - **Checking the ICO data protection fee**, from the card.

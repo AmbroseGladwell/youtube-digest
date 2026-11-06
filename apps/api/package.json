@@ -13,6 +13,7 @@
     "mint-session": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/mintSession.js",
     "set-plan": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/setPlan.js",
     "seed-voice-samples": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/seedVoiceSamples.js",
+    "finish-account-deletions": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/finishAccountDeletions.js",
     "forget-shared-transcript": "npm run build && node --env-file=../../.env --env-file-if-exists=../../.env.local dist/scripts/forgetSharedTranscript.js",
     "proxy-sanity-check": "npm run build && node dist/scripts/proxySanityCheck.js"
   },

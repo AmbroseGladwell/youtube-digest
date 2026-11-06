@@ -206,3 +206,23 @@ test("moving an account back is public, posts the token, and a refusal carries i
     (error: unknown) => isSyncRequestError(error) && error.code === "link_invalid" && error.details?.reason === "expired",
   );
 });
+
+test("asking for the step-up code says what it is for, and deleting the account sends nothing but the session", async () => {
+  const { sent, fetch } = answering(204, undefined);
+  const api = createFetchAuthApi({ baseUrl: "https://overview.example/", token: "bearer-token", fetch, newRequestId: () => SENT_REQUEST_ID });
+
+  await api.deleteAccount();
+  assert.equal(sent[0]?.url, "https://overview.example/api/session/account");
+  assert.equal(sent[0]?.method, "DELETE");
+  assert.equal(sent[0]?.body, undefined);
+  assert.equal(sent[0]?.headers.authorization, "Bearer bearer-token");
+
+  const { sent: asks, fetch: answerAsk } = answering(200, { required: false });
+  const asking = createFetchAuthApi({ baseUrl: "https://overview.example/", fetch: answerAsk, newRequestId: () => SENT_REQUEST_ID });
+  await asking.requestVerification("deleteAccount");
+  await asking.requestVerification();
+  assert.deepEqual(
+    asks.map(({ body }) => body),
+    [{ purpose: "deleteAccount" }, { purpose: "emailChange" }],
+  );
+});

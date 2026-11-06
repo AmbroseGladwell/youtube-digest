@@ -412,6 +412,11 @@ export class Launcher {
         { id: SHARE_PAYLOAD_ELEMENT_ID, json: JSON.stringify(payload) },
       ));
 
+  // Whether this device still holds a library for the account, the no-account one under null
+  // (docs/features/account-deletion.md, "On the device").
+  libraryIsKept = (accountId: string | null): Promise<boolean> =>
+    test.step("Launcher.libraryIsKept", () => this.page.evaluate((id) => window.__iwftLibraries__.has(id), accountId));
+
   launchExpectingLibrary = (options: LaunchOptions = {}): Promise<LibraryPageObject> =>
     test.step("Launcher.launchExpectingLibrary", async () => {
       const home = await this.launch(options);

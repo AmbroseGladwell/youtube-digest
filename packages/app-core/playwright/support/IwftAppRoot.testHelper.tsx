@@ -20,6 +20,7 @@ export function IwftAppRoot() {
     <App
       library={window.__iwftLibrary__}
       openLibrary={window.__iwftOpenLibrary__}
+      deleteLibrary={window.__iwftDeleteLibrary__}
       router={router}
       surface={window.__iwftSurface__}
       layout={window.__iwftLayout__}

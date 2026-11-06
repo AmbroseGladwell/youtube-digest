@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-05";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-06";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -68,8 +68,8 @@ const sections: readonly LegalSection[] = [
           signs in by typing a code from that link, which lasts ten minutes.
         </p>
         <p>
-          Changing your email sends a code to your current address first, unless you signed in within the last
-          fifteen minutes, then a code to the new address; each works once, for fifteen minutes, and only hashes
+          Changing your email, or deleting your account, sends a code to your current address first, unless you
+          signed in within the last fifteen minutes; changing your email then sends a code to the new address; each works once, for fifteen minutes, and only hashes
           are stored. When the account moves, the old address is told, with a link that moves it back for seven
           days; using that link also signs out every device. We keep a record of each change, as the two addresses
           and the times, so that link can work.
@@ -406,12 +406,13 @@ const sections: readonly LegalSection[] = [
           ["Sign-in links and codes", "15 and 10 minutes, as hashes"],
           ["Codes for changing your email, and the record of each change", "the codes 15 minutes, as hashes; the change itself with the account"],
           ["Your library and settings", "until you delete the overview or the account"],
-          ["Narration audio", "while an overview uses it; a file two readers share stays while either does"],
+          ["Narration audio", "while an overview uses it; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it"],
           ["Shared links", "until you stop them; the copy goes with the account"],
           ["Transcripts linked to your account", "while a note of yours uses the video"],
           ["A shared cache copy, with no account on it", "until it is removed as wrong"],
           ["The record that your account fetched a video's captions", "one year, even after the account is deleted"],
           ["Monthly and daily usage counts for an account", "with the account"],
+          ["The record of a deletion: the account's opaque id, the random analytics id joined to it, the narration files asked for, and how each erasure ended", "until every erasure it records is finished, and at most a year"],
           ["Hashed addresses for the daily caps", "7 days"],
           ["Analytics events and error reports", "up to a year, at PostHog"],
           ["Server logs", "14 days"],
@@ -430,14 +431,20 @@ const sections: readonly LegalSection[] = [
           or object to how we use it, and take it elsewhere. Write to {contact} from the address on your account.
         </p>
         <p>
-          <strong>Deleting your account.</strong> There is no button for this yet; email us and we delete it by
-          hand within thirty days. Deleting removes the account, its sessions, its library and settings, its
-          shared links, its narration files unless another reader's overview shares one, and the transcripts linked
-          to it; asks PostHog to erase every event
-          and error report under the account's id and the random id joined to it at sign-up; and leaves what the
-          table above says outlives an account: the record of which captions you fetched, for the rest of its
-          year, and the anonymous copies in the shared cache. Server logs expire on their own within fourteen
-          days. Erasure at PostHog happens after we ask for it, not instantly.
+          <strong>Deleting your account.</strong> Settings › Account & sync has Delete account. After a code to your
+          address confirms it is you, skipped if you signed in within the last fifteen minutes, it deletes straight
+          away and in one step: the account, its email and name, any email change in progress and the record of
+          each change, every session and connected assistant, your library and settings, your shared links, the
+          monthly and daily counts, the sign-in links held for your address, and every narration file your account
+          asked for. Then we ask PostHog to delete the person records under your account's id and the random id
+          joined to it at sign-up, with every event and error report under them; PostHog removes the person within
+          minutes and the events in a later scheduled run, not instantly. If asking fails, we keep a record of the
+          deletion saying so and ask again by hand. What stays is what the table above says outlives an account: the
+          record that your account fetched a video's captions, for the rest of its year; the anonymous copies in the
+          shared cache; and the record of the deletion itself, which holds no address. Server logs expire on their
+          own within fourteen days. The device you deleted from removes its copy of your library; copies on other
+          devices stay on those devices, signed out, until you clear the site's data there. Signing in again with the
+          same address starts a new, empty account.
         </p>
         <p>
           <strong>Without an account.</strong> Turning analytics off in Settings › Privacy deletes the random id

@@ -9,7 +9,10 @@ import {
   type LinkCode,
   type SessionInfo,
   type VerificationAsked,
+  VerificationRequest,
 } from "@overview/domain";
+import type { AudioStore } from "../audio/AudioStore.js";
+import type { PersonEraser } from "../postHog/PersonEraser.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -19,6 +22,7 @@ import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { accountPlan } from "./accountPlan.js";
 import { deleteSession } from "./deleteSession.js";
+import { eraseAccount, finishAccountDeletion } from "./deleteAccount.js";
 import { confirmEmailChange, issueEmailChange } from "./emailChange.js";
 import { issueLinkCode } from "./issueLinkCode.js";
 import { normaliseEmail } from "./normaliseEmail.js";
@@ -33,6 +37,10 @@ export interface SessionRoutesOptions {
   appUrl: string;
   supportEmail: string;
   sessionCookieSecure: boolean;
+  // Where a deleted account's narration files and analytics records are erased from;
+  // null when narration or PostHog erasure is not configured (docs/features/account-deletion.md).
+  narrationStore: AudioStore | null;
+  personEraser: PersonEraser | null;
 }
 
 const CODE_REFUSED = "That code is wrong, has expired, or was already used";
@@ -40,9 +48,10 @@ const CODE_REFUSED = "That code is wrong, has expired, or was already used";
 // The session's own routes: who it is, a code for the extension, signing out, and the
 // account's changes. A name needs only the session; a new email needs the session to have
 // proved its inbox first, then the new inbox to prove itself (docs/features/account-changes.md).
+// Deleting the account needs the same proof (docs/features/account-deletion.md).
 export function sessionRoutes(
   app: FastifyInstance,
-  { sql, clock, mailer, appUrl, supportEmail, sessionCookieSecure }: SessionRoutesOptions,
+  { sql, clock, mailer, appUrl, supportEmail, sessionCookieSecure, narrationStore, personEraser }: SessionRoutesOptions,
 ): void {
   const perAccount = (rateLimit: RateLimit) =>
     rateLimitHook(rateLimit, (request: FastifyRequest) => request.session?.accountId ?? null, clock);
@@ -85,11 +94,35 @@ export function sessionRoutes(
     return sessionInfo(session, session.email, firstName);
   });
 
+  app.delete("/session/account", async (request, reply) => {
+    const session = request.session!;
+    const now = clock();
+    if (!(await isSessionVerified(sql, session, now))) {
+      throw new ApiError("verification_required", "Confirm it’s you before deleting your account");
+    }
+    const erased = await eraseAccount(sql, { accountId: session.accountId, email: session.email, now, narrationStore, personEraser });
+    const finished = await finishAccountDeletion(sql, erased, { narrationStore, personEraser, log: request.log, now: clock });
+    request.log.info(
+      apiLogLines.auth.accountDeleted({
+        deletionId: finished.id,
+        narrationFiles: finished.narrationKeys.length,
+        narration: finished.narration,
+        postHogAccount: finished.postHogAccount,
+        postHogAnonymous: finished.postHogAnonymous,
+      }),
+    );
+    if (session.transport === "cookie") {
+      reply.header("set-cookie", clearedSessionCookie({ secure: sessionCookieSecure }));
+    }
+    return reply.status(204).send();
+  });
+
   app.post("/session/verification", { preHandler: perAccount(rateLimits.verificationPerAccount) }, async (request) => {
+    const { purpose } = parseOrThrow(VerificationRequest, request.body ?? {}, "The verification");
     const session = request.session!;
     const now = clock();
     if (await isSessionVerified(sql, session, now)) {
-      request.log.info(apiLogLines.auth.verificationAsked({ fresh: true }));
+      request.log.info(apiLogLines.auth.verificationAsked({ fresh: true, purpose }));
       const asked: VerificationAsked = { required: false };
       return asked;
     }
@@ -99,8 +132,8 @@ export function sessionRoutes(
       request.log.warn(apiLogLines.auth.verificationHeldBack({ reason: "cooldown" }));
       expiresAt = await latestExpiry(sql, "session_verifications", "session_id", session.id);
     } else {
-      await mailer.sendAccountMail({ kind: "verificationCode", to: session.email, code: issued.code, expiresAt: issued.expiresAt, supportEmail });
-      request.log.info(apiLogLines.auth.verificationAsked({ fresh: false }));
+      await mailer.sendAccountMail({ kind: "verificationCode", to: session.email, code: issued.code, expiresAt: issued.expiresAt, supportEmail, purpose });
+      request.log.info(apiLogLines.auth.verificationAsked({ fresh: false, purpose }));
       expiresAt = issued.expiresAt;
     }
     const asked: VerificationAsked = { required: true, email: session.email, expiresAt };

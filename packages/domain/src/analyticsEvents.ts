@@ -31,6 +31,7 @@ export type AnalyticsCatalogueShape = Record<string, Record<string, Record<strin
 // Why a typed code or a change was turned away, as the page said it.
 const CodeRefusal = z.enum(["wrong", "expired", "limited"]);
 const EmailChangeRefusal = z.enum(["sameAddress", "wrong", "expired", "taken", "limited"]);
+const DeleteAccountRefusal = z.enum(["notVerified", "limited", "failed"]);
 
 function event(description: string): AnalyticsEventDefinition<{}>;
 function event<P extends AnalyticsProps>(description: string, props: P): AnalyticsEventDefinition<P>;
@@ -671,6 +672,13 @@ export const analyticsEvents = {
       emailChangeAsked: event("The reader asks to move their account to a new address, and a code goes to it"),
       emailChangeConfirmed: event("The reader's code from the new address is accepted and the account moves"),
       emailChangeRefused: event("The reader's email change is refused", { reason: EmailChangeRefusal }),
+      deleteAccountStarted: event(
+        "The reader presses Continue on Delete your account, and a code goes to their address unless the session is fresh",
+      ),
+      deleteAccountConfirmed: event(
+        "The reader confirms deleting their account; sent before the request, so it is erased with everything else under the account",
+      ),
+      deleteAccountRefused: event("The reader's deletion did not happen, and why", { reason: DeleteAccountRefusal }),
     },
   },
   capture: {

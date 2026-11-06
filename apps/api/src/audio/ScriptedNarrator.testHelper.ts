@@ -33,12 +33,15 @@ export function makeScriptedNarrator(): ScriptedNarrator {
 
 export interface MemoryAudioStore extends AudioStore {
   files: Map<string, Buffer>;
+  // The next deletes fail the way R2 would while it is unreachable.
+  failingDeletes: boolean;
 }
 
 export function makeMemoryAudioStore(): MemoryAudioStore {
   const files = new Map<string, Buffer>();
-  return {
+  const store: MemoryAudioStore = {
     files,
+    failingDeletes: false,
     async put(key, audio) {
       files.set(key, audio);
     },
@@ -46,7 +49,9 @@ export function makeMemoryAudioStore(): MemoryAudioStore {
       return files.get(key) ?? null;
     },
     async delete(key) {
+      if (store.failingDeletes) throw new Error("Simulated: R2 is unreachable");
       files.delete(key);
     },
   };
+  return store;
 }
