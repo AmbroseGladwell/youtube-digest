@@ -31,6 +31,7 @@ export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TAB
       ref={ref}
       role="tablist"
       aria-label="Note views"
+      data-sticky-fade=""
       data-testid={readerTabsTestIds.root}
     >
       <div className={styles.column}>
