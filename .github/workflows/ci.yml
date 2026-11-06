@@ -254,11 +254,12 @@ jobs:
     concurrency:
       group: publish-extension
       cancel-in-progress: false
+    # A service account, not an installed OAuth client: v2 takes one, and it has no consent
+    # screen to leave in testing, where a refresh token would quietly expire after seven days
+    # (docs/architecture/store-listing.md, "The API credentials").
     env:
       CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
-      CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
-      CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
-      CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+      CHROME_SERVICE_ACCOUNT_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_KEY }}
     steps:
       - uses: actions/checkout@v7
       # Without the store's credentials this says so and stops, rather than failing a main

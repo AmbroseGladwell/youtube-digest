@@ -1,3 +1,4 @@
+import { createSign } from "node:crypto";
 import { appendFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,15 +11,58 @@ const UPLOAD_SCOPE = "https://www.googleapis.com/auth/chromewebstore";
 const UPLOAD_POLL_ATTEMPTS = 40;
 const UPLOAD_POLL_MS = 15_000;
 
-// The four values the store's API needs, all of them GitHub's rather than Bitwarden's,
-// because a runner can only read GitHub's secrets (docs/conventions/secrets.md's
-// exception, as FLY_API_TOKEN already is).
-export const CREDENTIAL_NAMES = [
-  "CHROME_PUBLISHER_ID",
-  "CHROME_CLIENT_ID",
-  "CHROME_CLIENT_SECRET",
-  "CHROME_REFRESH_TOKEN",
-];
+// The two values the store's API needs, both GitHub's rather than Bitwarden's, because a
+// runner can only read GitHub's secrets (docs/conventions/secrets.md's exception, as
+// FLY_API_TOKEN already is). A service account rather than an installed OAuth client: v2
+// takes one, and it has no consent screen to leave in testing, where Google expires a
+// refresh token after seven days (docs/architecture/store-listing.md).
+export const CREDENTIAL_NAMES = ["CHROME_PUBLISHER_ID", "CHROME_SERVICE_ACCOUNT_KEY"];
+
+const TOKEN_LIFETIME_SECONDS = 3600;
+
+// The JSON key Google Cloud issues, which carries far more than is needed here.
+export function serviceAccountFrom(raw) {
+  let key;
+  try {
+    key = JSON.parse(raw);
+  } catch {
+    throw new Error("CHROME_SERVICE_ACCOUNT_KEY is not JSON: it is the whole key file Google Cloud downloads");
+  }
+  const clientEmail = key.client_email;
+  const privateKey = key.private_key;
+  if (typeof clientEmail !== "string" || typeof privateKey !== "string") {
+    throw new Error("CHROME_SERVICE_ACCOUNT_KEY carries no client_email and private_key, so it is not a service account key");
+  }
+  if (!clientEmail.endsWith(".iam.gserviceaccount.com")) {
+    throw new Error(`${clientEmail} is not a service account address: the dashboard's Service account field takes the one Google Cloud generates`);
+  }
+  return { clientEmail, privateKey };
+}
+
+// What the assertion claims: this account, asking for this scope, for an hour.
+export function assertionClaim({ clientEmail, now }) {
+  const issued = Math.floor(now / 1000);
+  return {
+    iss: clientEmail,
+    scope: UPLOAD_SCOPE,
+    aud: TOKEN_URL,
+    iat: issued,
+    exp: issued + TOKEN_LIFETIME_SECONDS,
+  };
+}
+
+const base64url = (value) => Buffer.from(value).toString("base64url");
+
+// A service account proves itself by signing its own claim rather than by holding a token
+// somebody minted for it, which is the whole reason it cannot quietly expire.
+export function signedAssertion({ clientEmail, privateKey, now = Date.now() }) {
+  const body = [
+    base64url(JSON.stringify({ alg: "RS256", typ: "JWT" })),
+    base64url(JSON.stringify(assertionClaim({ clientEmail, now }))),
+  ].join(".");
+  const signature = createSign("RSA-SHA256").update(body).end().sign(privateKey).toString("base64url");
+  return `${body}.${signature}`;
+}
 
 export function missingCredentials(env) {
   return CREDENTIAL_NAMES.filter((name) => (env[name] ?? "") === "");
@@ -133,16 +177,14 @@ export function storeApi({ credentials, fetch: doFetch = fetch }) {
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
-          client_id: credentials.CHROME_CLIENT_ID,
-          client_secret: credentials.CHROME_CLIENT_SECRET,
-          refresh_token: credentials.CHROME_REFRESH_TOKEN,
-          grant_type: "refresh_token",
+          grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+          assertion: signedAssertion(credentials.serviceAccount),
         }),
       }),
-      "the refresh of the access token",
+      "the exchange of the signed assertion for an access token",
     );
     if (typeof answer.access_token !== "string") {
-      throw new Error("the refresh of the access token answered without one");
+      throw new Error("the token exchange answered without an access token");
     }
     if (typeof answer.scope === "string" && !answer.scope.split(" ").includes(UPLOAD_SCOPE)) {
       throw new Error(`the access token does not carry ${UPLOAD_SCOPE}, so it cannot publish`);
@@ -251,10 +293,11 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     if (typeof manifest.key !== "string" || manifest.key === "") {
       throw new Error("manifest.json carries no key, so there is no store item to submit to");
     }
-    const credentials = Object.fromEntries([
-      ...CREDENTIAL_NAMES.map((name) => [name, process.env[name]]),
-      ["itemId", extensionIdFrom(manifest.key)],
-    ]);
+    const credentials = {
+      CHROME_PUBLISHER_ID: process.env.CHROME_PUBLISHER_ID,
+      serviceAccount: serviceAccountFrom(process.env.CHROME_SERVICE_ACCOUNT_KEY),
+      itemId: extensionIdFrom(manifest.key),
+    };
     const zip = readFileSync(path.join(rootDir, "apps/extension/release", storeZipName(version)));
     await publishExtension({ api: storeApi({ credentials }), zip, version });
   } catch (error) {

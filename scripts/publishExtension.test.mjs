@@ -1,9 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createVerify, generateKeyPairSync } from "node:crypto";
 import {
   acceptedProblem,
+  assertionClaim,
   itemPath,
   missingCredentials,
+  serviceAccountFrom,
+  signedAssertion,
   publishExtension,
   publishProblem,
   submissionDecision,
@@ -55,16 +59,58 @@ test("the item is addressed by publisher and item id", () => {
 });
 
 test("every credential the store needs is named as missing when it is unset or empty", () => {
-  assert.deepEqual(missingCredentials({}).length, 4);
+  assert.deepEqual(missingCredentials({}).length, 2);
   assert.deepEqual(
-    missingCredentials({
-      CHROME_PUBLISHER_ID: "12345",
-      CHROME_CLIENT_ID: "id",
-      CHROME_CLIENT_SECRET: "",
-      CHROME_REFRESH_TOKEN: "token",
-    }),
-    ["CHROME_CLIENT_SECRET"],
+    missingCredentials({ CHROME_PUBLISHER_ID: "12345", CHROME_SERVICE_ACCOUNT_KEY: "" }),
+    ["CHROME_SERVICE_ACCOUNT_KEY"],
   );
+});
+
+const KEY_PAIR = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const SERVICE_ACCOUNT_EMAIL = "overview-publisher@a-project.iam.gserviceaccount.com";
+const KEY_FILE = JSON.stringify({
+  type: "service_account",
+  client_email: SERVICE_ACCOUNT_EMAIL,
+  private_key: KEY_PAIR.privateKey.export({ type: "pkcs8", format: "pem" }),
+});
+
+test("the key file is read for the two fields that matter", () => {
+  const account = serviceAccountFrom(KEY_FILE);
+  assert.equal(account.clientEmail, SERVICE_ACCOUNT_EMAIL);
+  assert.match(account.privateKey, /BEGIN PRIVATE KEY/);
+});
+
+test("anything that is not a service account key says which part is wrong", () => {
+  assert.throws(() => serviceAccountFrom("not json"), /is not JSON/);
+  assert.throws(() => serviceAccountFrom("{}"), /no client_email and private_key/);
+  assert.throws(
+    () => serviceAccountFrom(JSON.stringify({ client_email: "me@gmail.com", private_key: "k" })),
+    /not a service account address/,
+  );
+});
+
+test("the assertion claims this account, this scope, and an hour", () => {
+  const now = 1_700_000_000_000;
+  const claim = assertionClaim({ clientEmail: SERVICE_ACCOUNT_EMAIL, now });
+  assert.equal(claim.iss, SERVICE_ACCOUNT_EMAIL);
+  assert.equal(claim.scope, "https://www.googleapis.com/auth/chromewebstore");
+  assert.equal(claim.aud, "https://oauth2.googleapis.com/token");
+  assert.equal(claim.exp - claim.iat, 3600);
+  assert.equal(claim.iat, now / 1000);
+});
+
+test("the assertion really is signed by the key, and Google could check it", () => {
+  const { clientEmail, privateKey } = serviceAccountFrom(KEY_FILE);
+  const jwt = signedAssertion({ clientEmail, privateKey, now: 1_700_000_000_000 });
+  const [header, claim, signature] = jwt.split(".");
+
+  assert.deepEqual(JSON.parse(Buffer.from(header, "base64url").toString()), { alg: "RS256", typ: "JWT" });
+  assert.equal(JSON.parse(Buffer.from(claim, "base64url").toString()).iss, SERVICE_ACCOUNT_EMAIL);
+  const verified = createVerify("RSA-SHA256")
+    .update(`${header}.${claim}`)
+    .end()
+    .verify(KEY_PAIR.publicKey, Buffer.from(signature, "base64url"));
+  assert.equal(verified, true);
 });
 
 test("a version the store already publishes is not submitted again", () => {

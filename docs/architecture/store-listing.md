@@ -290,7 +290,7 @@ an empty slot costs nothing.
 
 ## The API credentials
 
-Four values, and all four are GitHub Actions secrets rather than Bitwarden's, for the reason
+Two values, both GitHub Actions secrets rather than Bitwarden's, for the reason
 `FLY_API_TOKEN` already is: a runner can only read GitHub's secrets
 (`docs/conventions/secrets.md` records the exception). Keep a copy in the `overview-prod`
 Bitwarden project as well, because `task deploy:extension:publish` reads them from there.
@@ -298,25 +298,29 @@ Bitwarden project as well, because `task deploy:extension:publish` reads them fr
 | Secret | What it is |
 |---|---|
 | `CHROME_PUBLISHER_ID` | The publisher ID from Publisher › Settings in the dashboard |
-| `CHROME_CLIENT_ID` | A Google Cloud OAuth client of type "Web application" |
-| `CHROME_CLIENT_SECRET` | That client's secret |
-| `CHROME_REFRESH_TOKEN` | A refresh token for that client, carrying `https://www.googleapis.com/auth/chromewebstore` |
+| `CHROME_SERVICE_ACCOUNT_KEY` | The whole JSON key file of a Google Cloud service account |
 
-Made once, on the machine that holds the dashboard's Google account:
+**A service account, not an installed OAuth client.** The store's own API guide describes a
+client id, secret and refresh token obtained through the OAuth playground, and v2 accepts
+that too. It is the worse option here: the consent screen behind it issues refresh tokens
+that expire after seven days while the screen is left in testing, so the job works, then
+starts failing a week later with `invalid_grant` and no obvious cause. A service account has
+no consent screen, nothing to rotate on Google's schedule, and is one secret rather than
+three. It signs its own assertion with its key and exchanges that for an access token
+(`signedAssertion` in `scripts/publishExtension.mjs`), which is why it cannot quietly expire.
+
+Made once, as the account that owns the dashboard:
 
 1. In Google Cloud, create a project and enable the **Chrome Web Store API** on it.
-2. Configure the OAuth consent screen as External, fill the three required fields, skip the
-   scopes screen, and add the dashboard's own Google account as a test user. An app left in
-   testing issues refresh tokens that expire after seven days, so **publish the consent
-   screen** once it works, or the job starts failing a week later with an
-   `invalid_grant`.
-3. Credentials › Create credentials › OAuth client ID › Web application, with
-   `https://developers.google.com/oauthplayground` as an authorised redirect URI.
-4. In the OAuth Playground, use your own credentials, ask for the
-   `https://www.googleapis.com/auth/chromewebstore` scope, authorise as the dashboard's
-   account, and exchange the code for tokens. The refresh token is the one to keep.
-5. `gh secret set CHROME_PUBLISHER_ID`, and the same for the other three, so none of them is
-   typed into a browser or left in a file.
+2. Create a service account. **It needs no roles and no permissions**: the store's dashboard,
+   not Cloud IAM, is what grants it access. Name it for the publisher rather than for this
+   job — a publisher can register only one.
+3. Create a JSON key for it and download the file.
+4. In the dashboard, under Account, paste the service account's **generated address** —
+   `name@project-id.iam.gserviceaccount.com`, not a Gmail address — into **Service account**.
+5. `gh secret set CHROME_SERVICE_ACCOUNT_KEY < the-key-file.json`, and
+   `gh secret set CHROME_PUBLISHER_ID`, so neither is typed into a browser or left lying about.
+   Delete the downloaded key file afterwards.
 
 The item id is not among them: it is derived from the `key` already in
 `apps/extension/manifest.json`, by the same `extensionIdFrom` that produces the origin
