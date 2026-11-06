@@ -237,6 +237,7 @@ export function ReaderMasthead({
               full={full}
               className={styles.image}
               onToggle={toggleHeadImage}
+              carriesFrom={Routes.overview(overview.id)}
             />
           )}
           <div className={styles.who}>

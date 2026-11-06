@@ -65,23 +65,130 @@ there was no journey to reverse.
 ## The name budget
 
 `frontend-architecture-guide.md` 2.3 budgets under ten `view-transition-name`s for a whole
-app. Four stand: `masthead` and `pane` (`AppShell.module.scss`), `library-filter-sheet` and
-`library-filter-scrim` (`LibraryPage.module.scss`). The library's filter glide adds one per
+app. Five stand: `masthead` and `pane` (`AppShell.module.scss`), `library-filter-sheet` and
+`library-filter-scrim` (`LibraryPage.module.scss`), and `overview-image`
+(`useOverviewImageMorph.ts`). The library's filter glide adds one per
 row for the length of a transition and takes them away again, and drops `pane`'s name while
-it runs so a route transition still sees one pane. `PageLink` adds none: it changes who opens
-a transition, not what is captured.
+it runs so a route transition still sees one pane. `PageLink` adds none of its own: it
+changes who opens a transition, not what is captured.
+
+## The row becomes the head
+
+Built to designs 170a–170h and the motion prototype (`OV-170 1 The Row Becomes the
+Head.dc.html`, `OV-170 2 Phone Panel and the Way Back.dc.html`, `OV-170 3 Motion
+Prototype.dc.html`).
+
+**The thumbnail alone carries.** It is the one thing that looks the same on both pages:
+the same picture, the same 16:9 crop, and at Small the same size. The title is the
+ambitious reading and the design turned it down — it changes size by 2.4×, wraps
+differently, and a view transition moves a *picture* of the text, so it would blur and
+re-break in flight. The title, byline and verdict fade with the pane and are legible again
+within 300ms.
+
+**One name, `overview-image`,** set on the opened row's thumbnail and on the head's image
+and nowhere else, which takes the app to five standing names. `useOverviewImageMorph` owns
+it. The library's filter glide names whole rows, but only while a filter glides, so the two
+never overlap.
+
+**Where it lands.** At Small the head's tile is the row's own size — both are `11rem`,
+which design 147s already keeps in step — so the image only travels. Full width grows it to
+the reading column at the same crop. The radius goes 12 → 12px at Small, 12 → 18px at full
+width, 10 → 14px on a phone; those are each element's own CSS and the stylesheets already
+had them.
+
+**The two ends have to agree.** The leaving page decides whether the image carries, and the
+arriving page follows: React Router renders the tree being left with the transition already
+live and only then captures the old snapshot, so the end that was already mounted is the one
+being left. It names itself only if it is on screen, and marks the decision on the root;
+the end that appears during the transition names itself only if it finds that mark. Without
+the handshake, coming back from a scrolled note would name the row with nothing to pair it
+with, and the pane would hold still for a journey that is really 9c's.
+
+Two things about that mark are easy to get wrong, and both were. "Did I appear during this
+transition?" has to be asked afresh each time rather than remembered from the first render:
+the head arrives during the journey in and is the one being left on the journey back, so a
+ref captured at mount makes it follow a decision nobody made and the way back never morphs.
+And only the end that wrote the mark may clear it — every other row on the library runs the
+same effect as it mounts, and a blanket clear there wipes what the one opened row had just
+written.
+
+**The pane holds still while the image travels** and only crossfades. The 10px slide is
+dropped for this one journey, because two movements in different directions read as a
+stutter. Every other navigation keeps 9c as built — including this one whenever the image
+doesn't carry. The timings, from 170h's table:
+
+| | |
+|---|---|
+| Image, forward | 300ms on `--motion-ease` |
+| Overview in | 300ms crossfade, no slide |
+| Library out | 180ms crossfade |
+| Image, back | 260ms on `--motion-ease` |
+| Library in | 260ms crossfade, no slide |
+| Overview out | 150ms crossfade |
+| No morph | 9c unchanged |
+| Reduced motion | Nothing animates |
+
+**The snapshots are not crossfaded.** The old one is hidden and the new one painted at its
+own radius for the whole flight, with `height: 100%` and `object-fit: cover` holding the
+crop while the box changes. That is what keeps a read row's half-opacity tile from showing
+through, and why the image comes up to full on the way. It also makes a mismatch harmless:
+an unpaired snapshot is either invisible or simply sits still.
+
+**The way back** morphs only when both ends are on screen — the head's image in view when
+Back is pressed, and the row in view once the library's scroll is restored. After a long
+note the head has scrolled away, so the common case is plain 9c.
+
+## Where it doesn't carry
+
+Three cases set no name at all, and the journey is 9c as built. The first two are the
+design's own (170d, 170e, 170f); the third is a limit of the build.
+
+**No image.** A note without a picture, or one whose picture failed, has nothing for the
+row to land on. Both ends read the same `sourceImage`, so they always agree.
+
+**Under 768px — the phone and the panel.** `LibraryOverviewCard` hides its thumbnail below
+768px on purpose, because at that width it cannot tell one video from another and it costs
+the title its column, so there is no source to carry. This falls out of the row's layout
+rather than a viewport gate in `shouldAnimateNavigation()`: the name is set only where the
+row has a thumbnail with a box, and a hidden element measures zero. The panel is under 768px
+and its head has no image either (147g). In practice the morph runs from 768px up.
+
+**A note that isn't loaded yet.** `ReaderPage` shows a pending state while the record is
+read, so on a cold open the transition captures a new page with no head image in it and the
+row's name has nothing to pair with. The snapshot recipe makes that harmless — an unpaired
+old snapshot is hidden and does not animate — but the image does not visibly travel, and the
+pane still crossfades because the row opened the journey. Opening the same note again, with
+the record in hand, morphs as designed. Making the reader start from the library's own copy
+would fix it, but that is a change to how the note loads rather than how it moves, so it is
+left for its own card.
 
 ## How it's tested
 
 `pageTransitions.iwft.ts`. A view transition paints into the browser's top layer, so nothing
-in the page's own tree records that one ran; `AppShellPageObject.verifyNavigationAnimates`
-watches `document.getAnimations()` for a `::view-transition` pseudo-element, starting the
-watch before the navigation because the animation is often over by the time a page object can
-see the new page. `verifyNavigationDoesNotAnimate` is the same watch over a shorter window,
-and covers reduced motion. `verifyNavigationDirection` continues to hold which journey the
-stylesheet was told to play.
+in the page's own tree records that one ran. `AppShellPageObject` watches
+`document.startViewTransition` itself, and keeps two questions apart:
 
-## Still open
+- **Was one asked for at all?** Counted from the calls. That is the whole question for a
+  link that was missing the flag, and it is the one assertion that survives a transition the
+  next navigation skips.
+- **What did it paint?** Read at the transition's `ready`, which settles once the
+  pseudo-element tree exists and its animations are built. `verifyImageCarriesAcross` looks
+  for the `overview-image` group, and `verifyThePaneKeyframesAre` reads which keyframes the
+  pane is playing, which is the only place the dropped slide exists.
 
-The library row morphing into the overview's head is the rest of OV-170, and is waiting on
-a motion pass in Claude Design. The brief is on the card.
+Each assertion waits for any running transition to finish first, because React Router skips
+one that is still going when the next navigation starts, and a skipped transition never
+reaches `ready`.
+
+Sampling `document.getAnimations()` on a `requestAnimationFrame` loop was tried first and is
+the wrong tool: the browser throttles rAF to nothing in a backgrounded window, which is most
+of them when the suite runs in parallel, so a real transition reads as none at all.
+`animationstart` is no use either — it does not fire for view-transition pseudo-elements.
+
+Two of the scenarios need care about what they are really asking:
+
+- The scrolled-note test uses the bar's lent back link (OV-167) rather than the head's own,
+  because Playwright scrolls an element into view before clicking it, which would bring the
+  head's image back on screen and the morph would run after all.
+- The forward-morph test opens the note once before asserting, so that the head is there to
+  land on rather than ReaderPage's pending state.

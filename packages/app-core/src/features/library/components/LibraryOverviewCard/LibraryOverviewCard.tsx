@@ -81,6 +81,7 @@ export function LibraryOverviewCard({
           state={readerState}
           onOpen={() => onOpen("thumbnail")}
           className={styles.thumbnail}
+          carriesIntoHead
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
