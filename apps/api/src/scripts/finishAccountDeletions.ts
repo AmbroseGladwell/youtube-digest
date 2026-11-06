@@ -19,6 +19,18 @@ try {
   process.exit(1);
 }
 
+// Which database, and whether the erasure can run at all: "no unfinished deletions" means
+// nothing unless you know it was production that was looked in, and a row cannot be finished
+// while the key is missing. The host and database name are named; no credential is
+// (docs/features/account-deletion.md, "When a step fails").
+const { hostname, pathname } = new URL(config.databaseUrl);
+console.error(`Looking in ${pathname.replace(/^\//, "")} on ${hostname}.`);
+console.error(
+  config.analytics.erasure === null
+    ? "PostHog erasure is NOT configured here, so those steps will stay unfinished. Import POSTHOG_PERSONAL_API_KEY first."
+    : `PostHog erasure is configured, against project ${config.analytics.erasure.projectId}.`,
+);
+
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
 await runMigrations(sql, { before: migrationSteps() });
 const narrationStore = config.audio === null ? null : createAudioSetup(config.audio, false).store;

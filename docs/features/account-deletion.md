@@ -19,7 +19,7 @@ said in as many words.
 | The audit row | `V0027__account_deletions.sql`, `src/auth/AccountDeletionsRepository.ts` |
 | Erasure at PostHog | `src/postHog/PersonEraser.ts`, `postHogPersonEraser.ts`; `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`, `POSTHOG_APP_HOST` in `loadConfig.ts` |
 | The step-up's mail saying what the code is for | `packages/domain/src/VerificationPurpose.ts`; `purpose` on `POST /api/session/verification`; `src/mail/accountEmails.ts` |
-| Retrying what did not finish | `src/scripts/finishAccountDeletions.ts`, `npm run finish-account-deletions -w apps/api` |
+| Retrying what did not finish, on the machine | `src/scripts/finishAccountDeletions.ts`, `fly ssh console -C "node apps/api/dist/scripts/finishAccountDeletions.js"` |
 | The client's call | `deleteAccount` in `packages/sync/src/AuthApi.ts`; `features/auth/mutations/useDeleteAccountMutation.ts` |
 | The entry and the dialog | `features/sync/components/SyncPanel/`, `features/auth/components/DeleteAccountDialog/`; the code step is `CodeStep` in its dialog variant |
 | Leaving the account on this device | `features/accountLibraries/useDeleteAccount.ts`, `leaveDeletedAccount` in `features/sync/SyncRuntime.tsx`, `forgetAccountOnDevice.ts` |
@@ -96,8 +96,21 @@ privacy policy now says exactly that rather than "unless another reader's overvi
 signed in, and the dialog says so with Try again (184d). **A failure after it** never reaches
 the dialog. The audit row keeps the step's status as `failed` with the redacted error, the
 server logs `account deletion step failed` at `error`, which the Slack alert on new issues
-picks up (`errors-and-logs.md`), and `npm run finish-account-deletions -w apps/api` retries
-every unfinished row by hand. There is no job runner, so it is run when the alert says to.
+picks up (`errors-and-logs.md`), and the retry below finishes every unfinished row by hand.
+There is no job runner, so it is run when the alert says to.
+
+**Run the retry on the machine, not on a laptop.** The npm script reads `DATABASE_URL` from
+the local `.env`, which is development, where it will truthfully report no unfinished
+deletions and leave production's rows exactly where they were. The script ships in the
+production image, so the real route is
+
+```
+fly ssh console -C "node apps/api/dist/scripts/finishAccountDeletions.js"
+```
+
+It says which database it is looking in and whether erasure is configured there before it
+touches anything, then prints every unfinished row and what each step became, so running it
+is also the check.
 
 ### Erasure at PostHog
 
@@ -121,8 +134,10 @@ source-maps key, which has error tracking write and lives in GitHub's secrets
 why the id can ship in `fly.toml` ahead of the secret import rather than refusing the machine
 its startup, the same shape as R2's bucket; a key with no project is still refused, since an
 erasure has to name where it acts. Without the key the step is recorded as `not_configured`,
-the startup line `account erasure` says so, and `npm run finish-account-deletions -w apps/api`
-picks those rows up once the secret lands. The first
+the startup line `account erasure` says so, and the retry above
+picks those rows up once the secret lands. Importing the key is `task deploy:secrets` from a
+machine with a Bitwarden token: the automated deploy ships the image and never imports
+secrets, so a key that is only in Bitwarden is not yet in production. The first
 deletion in production should be checked in PostHog's activity log before the row is trusted:
 the API shape was taken from PostHog's data-deletion docs, not exercised live.
 
