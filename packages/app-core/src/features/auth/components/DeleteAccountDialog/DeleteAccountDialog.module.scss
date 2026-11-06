@@ -100,8 +100,20 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .close {
   @include controls.icon-control;
+  @include controls.circle(2.25rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
+  border: 0;
+  border-radius: var(--radius-btn);
+  background: transparent;
   color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ink);
+  }
 }
 
 .closeFloating {
