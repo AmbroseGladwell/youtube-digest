@@ -54,7 +54,7 @@ const MARK =
   '<rect x="7" y="25" width="18" height="2.5" fill="#E2511E"></rect></svg>';
 
 // Narration is rendered by the TTS pool, which this harness cannot reach, so the bar reads
-// "Read-along · no audio" — true here and false in a real install. Showing a bar that says
+// "Read-along · no audio", true here and false in a real install. Showing a bar that says
 // the product has no sound would be the misleading option.
 const noNarrationSaid = [readerPlayerBarTestIds.root, cookingModeTestIds.voice]
   .map((id) => `[data-testid="${id}"]`)
@@ -101,8 +101,8 @@ interface Caption {
 }
 
 // The panel is 420px and the store's frame is 1280, so the rest of the image is a caption and
-// the browser the panel is docked in. The panel's own pixels are untouched — nothing is
-// scaled, recoloured or drawn over — and the window behind it is deliberately an abstraction:
+// the browser the panel is docked in. The panel's own pixels are untouched: nothing is
+// scaled, recoloured or drawn over, and the window behind it is deliberately an abstraction,
 // a title bar and soft grey blocks, carrying no site's name, mark or layout
 // (docs/architecture/store-listing.md, "The screenshots").
 const composed = (

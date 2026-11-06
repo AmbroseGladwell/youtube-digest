@@ -2,7 +2,7 @@
 
 OV-2. `docs/architecture/deploy.md` ends at a zip and an id: a verified package on a GitHub
 release, and an extension whose id the store assigned and production's CORS already vouches
-for. This is the other half — the listing that zip hangs off, the words and pictures the store
+for. This is the other half: the listing that zip hangs off, the words and pictures the store
 requires, and the job that sends each new release to review without anyone opening a browser.
 
 **What is built, and where:**
@@ -25,7 +25,7 @@ requires, and the job that sends each new release to review without anyone openi
 The first release goes to hand-picked testers (`docs/features/onboarding.md` is written for
 them), so the listing's visibility is **Unlisted**: anyone with the link can install it, and
 nothing surfaces it in search or in the store's categories. That answers OV-2's own open
-question, and it is set on the item's Distribution tab, not by the API — visibility is one of
+question, and it is set on the item's Distribution tab, not by the API. Visibility is one of
 the two things the v2 API deliberately cannot change (the other is creating an item).
 
 Unlisted is not a way round review. An unlisted item is reviewed exactly as a public one is,
@@ -63,7 +63,7 @@ draft still needs before it can be submitted.
 
 **Name.** The Overview
 
-**Short description** — the manifest's `description`, 119 characters of the 132 allowed. It
+**Short description**, the manifest's `description`, 119 characters of the 132 allowed. It
 is the store's short description *and* what Chrome shows in its own extension list, so it
 names the sources and what comes back rather than leading with the verdict:
 
@@ -73,62 +73,90 @@ names the sources and what comes back rather than leading with the verdict:
 **Category.** Productivity › Workflow & Planning. **Language.** English (United Kingdom).
 
 **Detailed description.** Structured the way a store listing is read rather than the way a
-README is: a hook, what a note holds, how it works, what you get, and the two links the store
-requires. The allowances come from `docs/architecture/tiers.md` and move when it does; no paid
-plan is described, because none can be bought yet (`first release scope`, 5 Nov 2026).
+README is: a hook, what an overview holds, how it works, what you get, and the two links the
+store requires. It says what the reader gains, never what their saved list is full of: the
+product is blunt with its reader, the listing is not blunt about them.
 
-> The Overview reads the video so you don't have to. It turns anything you save on YouTube
-> into a blunt, structured note you can read in ninety seconds — and tells you, honestly,
-> whether the video was worth your time.
+The section order of "What every overview holds" is the reader's own
+(`features/reader/ReaderPage`), not the README's. The allowances come from
+`docs/architecture/tiers.md` and move when it does; no paid plan is described, because none
+can be bought yet. Podcasts and PDFs are left out, though the product's own onboarding calls
+them coming: an unshipped capability on a store page is a rejection risk.
+
+**There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
+an account sees no overviews at all, so the copy offers an account from the start and the
+privacy line says what an account actually costs: an email address, no password, no name
+required (`firstName` is optional in `MagicLinkRequest` and nullable in the column).
+
+> Bookmark the videos, articles and recipes you meant to come back to, and get something you
+> can actually use: a short overview, the chapters, the full transcript, and the steps worth
+> acting on. Read it, listen to it on the way to work, or hand it to your AI assistant.
 >
-> Saving a video feels like learning something. It isn't. The list grows, the videos stay
-> unwatched, and the few you do watch turn out to be eight minutes of hook and story wrapped
-> around thirty seconds of substance. The Overview is not another summariser: it is a triage
-> tool that is willing to tell you something was not worth reading, let alone watching.
+> Saving something is easy. Coming back to it is the hard part. The list grows, and the few
+> things you do get to turn out to be eight minutes of hook and story wrapped around thirty
+> seconds of substance. The Overview reads it for you and gives you back the part you wanted,
+> in ninety seconds.
 >
-> ➤ What every note holds
+> ➤ What every overview holds
 >
-> • In one line — what the video is, so you can recognise it later
-> • Core claim — the single assertion. If it asserts nothing, the note says so
-> • Key points — three to five bullets, substance only, hook and call to action removed
-> • Verdict — how novel it actually was, with blunt reasoning
-> • What it sells — a course, a membership, a supplement, their own app, recorded every time
-> • How to apply — one to three concrete things to do this week, or an honest "nothing"
-> • Watch it anyway? — yes or no, and it defaults to no
+> • In one line: what it is, so you can recognise it later
+> • Core claim: the single assertion it makes
+> • Verdict: how novel it actually was, and why
+> • Key points: three to five bullets, substance only, hook and call to action removed
+> • How to apply: one to three concrete things to do this week, or an honest "nothing"
+> • What it sells: a course, a membership, a supplement, their own app, recorded every time
+> • Watch it anyway?: and it is allowed to say no
 >
 > ➤ How it works
 >
-> Open a YouTube video and press The Overview in the player's own action row, or open the
-> side panel from the toolbar. The note is written from the video's captions and arrives in
-> the panel beside what you were watching.
+> Open a video and press The Overview in the player's own action row, or open the side panel
+> from the toolbar and generate an overview for an article too. The overview is written from
+> the captions or page and arrives in the panel, beside what you were watching or reading.
 >
-> • Read it, or have it read aloud with the text following the voice
+> • Read it, or have it read aloud with the text following the audio
+> • Chapters and the full transcript sit beside it; tap any point and the video jumps there
 > • Search your library, and filter by topic or by verdict
-> • Jump from any key point to the moment in the video it came from
-> • Paste a link to an article and get the same note for that
+> • Paste a link to an article and get the same thing for that
+>
+> ➤ A whole playlist, not one video
+>
+> Paste a playlist link and convert what is already there, or follow it so new videos become
+> overviews as they are added. You are told what it will cost before anything starts, and
+> nothing runs faster than the pace you set.
+>
+> ➤ Recipes get a cooking mode
+>
+> Save a recipe and you get one step at a time, read aloud and waiting for you, with the
+> ingredients a tap away, the servings scaled and the oven in your own units.
+>
+> ➤ Ask your assistant what you have saved
+>
+> Connect Claude or another MCP assistant and it can search everything you have kept by topic,
+> tag or verdict, read any overview in full, and cite the second a point was made.
+>
+> ➤ See the hours add up
+>
+> Every overview you read instead of watching the video or reading the article is counted, so
+> the time the habit gives back is a number you can see.
 >
 > ➤ What's included
 >
-> Free, with no account:
->
-> • Everything works on one device, with nothing to sign up for
->
 > Free, with an account:
 >
-> • 5 overviews a month written on our key, or 10 a month on your own
+> • 5 overviews a month written on us, or 10 a month on your own AI API key
 > • Your library synced between Chrome and the web app at theoverviewapp.com
-> • Narration in any of the voices, and your notes available to Claude through MCP
+> • Narration in any of the voices, and your library open to your AI assistant
 >
 > ➤ Bring your own key, and it stays yours
 >
 > Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral and it is stored on your
-> device and sent straight to that provider — never through our servers. There is a setting
+> device and sent straight to that provider, never through our servers. There is a setting
 > that says "only ever use my key", and it is obeyed.
 >
 > ➤ Privacy
 >
-> No account is required, and nothing leaves your device until you ask for a note. Analytics
-> are off until you are asked and say yes. We never sell your data.
+> An account needs only an email address, with no password: you sign in with a link or code
+> we email you. Analytics are off until you are asked and say yes. We never sell your data.
 >
 > Privacy policy: https://theoverviewapp.com/privacy
 >
@@ -158,7 +186,7 @@ reads these; a permission in the manifest that nothing uses is a rejection, so t
 | `unlimitedStorage` | The library of notes and their transcripts and narration is kept on the device in IndexedDB, and a few hundred notes exceed the default quota. Nothing is kept on a server unless the reader signs in. |
 | `declarativeNetRequestWithHostAccess` | One rule, which removes the `Origin` header from this extension's own requests to youtube.com. YouTube answers 403 to a transcript request that carries a `chrome-extension://` origin, and `Origin` is a forbidden header that `fetch` cannot drop. The rule is scoped to requests this extension makes, to youtube.com, of type XHR, so it can never touch a call carrying the reader's API key. |
 
-**Host permissions** — `https://www.youtube.com/*` and `https://m.youtube.com/*`: to read the
+**Host permissions**, `https://www.youtube.com/*` and `https://m.youtube.com/*`: to read the
 watch page the reader is on and fetch that video's captions, which is the text every note is
 written from.
 
@@ -166,10 +194,10 @@ written from.
 them, and never at install:
 
 - The six provider APIs (`api.anthropic.com`, `api.openai.com`,
-  `generativelanguage.googleapis.com`, `api.deepseek.com`, `api.x.ai`, `api.mistral.ai`) —
+  `generativelanguage.googleapis.com`, `api.deepseek.com`, `api.x.ai`, `api.mistral.ai`):
   granted when the reader enters their own key for that provider, so the request goes from
   their browser straight to the provider (`docs/features/byo-providers.md`).
-- `http://*/*` and `https://*/*` — granted when the reader pastes a link to an article they
+- `http://*/*` and `https://*/*`, granted when the reader pastes a link to an article they
   want a note on, for that site (`docs/features/pasted-article-links.md`).
 
 **Remote code.** The answer is no: everything the extension runs is in the package. The
@@ -221,7 +249,7 @@ word.
 
 **Why two are captures and not renders.** Cooking mode's controls sit below the dialog's own
 box (`.content` is `min-height: 100%` plus its padding), so at this canvas's 800px the panel
-cannot show the screen whole at any size — a real side panel is taller. Its narration state,
+cannot show the screen whole at any size, because a real side panel is taller. Its narration state,
 "Waiting for you" and "Say it again", also needs the TTS pool, which the harness cannot
 reach. The playlist preview's numbers are the whole point of that shot, and only a real
 playlist has 205 videos, one skipped and 6.1 million tokens against them. Both are placed in
@@ -242,7 +270,7 @@ Three departures from what a reader would see, recorded here because a store scr
 misleads is a rejection:
 
 - **The player bar is hidden** in the rendered note shots. Narration needs the TTS pool, so
-  the bar reads "Read-along · no audio" — true in the harness and false in a real install.
+  the bar reads "Read-along · no audio", true in the harness and false in a real install.
   Showing a bar that says the product has no sound would be the misleading option.
 - **The page behind the panel is an abstraction**: a title bar and soft grey blocks, carrying
   no site's name, mark or layout. A mocked-up YouTube page would be a picture of YouTube,
@@ -266,7 +294,7 @@ in `panelFrom` covers that one line in the panel's own ground. Nothing else is t
 count, label and control in the shot is the capture's own, so no claim the screenshot makes
 has changed.
 
-Blurring it was tried first and looked worse — a grey smudge under the title reads as a fault,
+Blurring it was tried first and looked worse: a grey smudge under the title reads as a fault,
 and it draws the eye to what was hidden. An organisation's playlist would need no edit at all:
 the right of publicity and the personal-data question both attach to people, not companies.
 
@@ -278,8 +306,8 @@ so neither is a hand-made file that can drift from the brand.
 - **`store-icon-128.png`.** The store asks for 96×96 of artwork inside a 128×128 square, with
   the remaining 16 a side transparent. The extension's own `icon128.png` is not that: its ink
   is 54×67 in the square, which is correct for a browser toolbar and renders small beside other
-  listings in the store. This one scales the mark's own ink — 18 by 22 units of its 32-unit box,
-  not the box — until the taller side meets 96, then centres it. `artworkFit` does the sums and
+  listings in the store. This one scales the mark's own ink (18 by 22 units of its 32-unit box,
+  not the box) until the taller side meets 96, then centres it. `artworkFit` does the sums and
   `scripts/storeAssets.test.mjs` holds them. The extension's icons are untouched.
 - **`promo-tile-440x280.png`.** Shown on the store's category and search cards. The mark and
   wordmark, the listing's own headline, and the short description, on the same ground and grid
@@ -314,10 +342,10 @@ Made once, as the account that owns the dashboard:
 1. In Google Cloud, create a project and enable the **Chrome Web Store API** on it.
 2. Create a service account. **It needs no roles and no permissions**: the store's dashboard,
    not Cloud IAM, is what grants it access. Name it for the publisher rather than for this
-   job — a publisher can register only one.
+   job, because a publisher can register only one.
 3. Create a JSON key for it and download the file.
-4. In the dashboard, under Account, paste the service account's **generated address** —
-   `name@project-id.iam.gserviceaccount.com`, not a Gmail address — into **Service account**.
+4. In the dashboard, under Account, paste the service account's **generated address**,
+   `name@project-id.iam.gserviceaccount.com` rather than a Gmail address, into **Service account**.
 5. `gh secret set CHROME_SERVICE_ACCOUNT_KEY < the-key-file.json`, and
    `gh secret set CHROME_PUBLISHER_ID`, so neither is typed into a browser or left lying about.
    Delete the downloaded key file afterwards.
@@ -330,7 +358,7 @@ therefore cannot drift apart.
 ## What CI does
 
 The `publish (extension)` job runs after `deploy`, on `main`, and only when the deploy job
-reports that it created a tag — which is to say, only when the version number moved
+reports that it created a tag, which is to say, only when the version number moved
 (`docs/conventions/versioning.md`). A merge that ships no bump deploys the web app and sends
 the store nothing, which is the existing rule and the right one.
 
@@ -339,21 +367,21 @@ The job then, in order: downloads the same artifact the release was built from, 
 the store zip, submits it for review, and reads the item's status back. Every one of those is
 a gate:
 
-- **The store already publishes this version** — nothing is uploaded, and the job says so and
+- **The store already publishes this version**: nothing is uploaded, and the job says so and
   passes. Re-running an old workflow therefore cannot resubmit anything.
-- **Another version is already in review**, or is approved and waiting to be released — the
+- **Another version is already in review**, or is approved and waiting to be released: the
   job fails with what to do about it. The store would otherwise replace a submission that is
   halfway through review, and nobody should discover that from CI.
-- **The store read a different version out of the zip than the one being tagged** — the job
+- **The store read a different version out of the zip than the one being tagged**: the job
   fails before submitting. The zip and the tag are the same build or there is no submission.
-- **The store does not say it holds the submission afterwards** — the job fails. A publish
+- **The store does not say it holds the submission afterwards**: the job fails. A publish
   call that answered is not a submission the store has; this repository has been bitten by
   exactly that shape before (`CLAUDE.md`, "Verify before reporting").
 
 Without the four secrets, the first step warns and the rest of the job is skipped, the way the
 TTS job behaves without its token. A release still happens; it simply is not sent anywhere.
 
-Review is wall-clock nobody controls — usually hours, sometimes days, longer for an item
+Review is wall-clock nobody controls: usually hours, sometimes days, longer for an item
 asking for host permissions. The job's success means *submitted*, never *live*. What it
 actually became is on the item's page in the dashboard, and the store emails the publisher
 contact address either way.

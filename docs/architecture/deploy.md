@@ -441,7 +441,7 @@ names the pool, the account and the bucket, which is what turns narration on.
   settings, not in the workflow.
 - **Write the listing.** The mechanics here end at a zip, an id and a submission. The words,
   the pictures, the per-permission justifications and the data disclosures are
-  `docs/architecture/store-listing.md`, and they are kept by hand in the dashboard — the v2
+  `docs/architecture/store-listing.md`, and they are kept by hand in the dashboard, because the v2
   API can neither create an item nor change its visibility.
 - **Sweep expired rows.** Sessions, magic links and codes are ignored when expired rather
   than deleted; the cron that would delete them has nowhere to run yet, and this machine

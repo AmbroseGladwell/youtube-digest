@@ -5,7 +5,7 @@ import sampleNotes from "./sampleNotes.json" with { type: "json" };
 
 export const WATCHED_URL = "https://www.youtube.com/watch?v=storeShotVideo";
 
-// The notes the store's screenshots show are the house account's samples — the same ones Start
+// The notes the store's screenshots show are the house account's samples, the same ones Start
 // offers and the home page shows, so nothing invented is put in front of a real channel's name
 // and nothing shown here is not already public (docs/features/onboarding.md, "Try a sample").
 //

@@ -68,7 +68,7 @@ tasks:
       - node scripts/extensionId.mjs
 
   deploy:extension:publish:
-    desc: 'Submit the release zip in apps/extension/release to the Chrome Web Store for review — the escape hatch for what CI''s publish (extension) job does (docs/architecture/store-listing.md)'
+    desc: 'Submit the release zip in apps/extension/release to the Chrome Web Store for review, the escape hatch for what CI''s publish (extension) job does (docs/architecture/store-listing.md)'
     preconditions:
       - sh: test -n "${BWS_ACCESS_TOKEN:-}"
         msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
