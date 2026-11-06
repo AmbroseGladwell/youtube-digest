@@ -7,4 +7,5 @@ export const syncPanelTestIds = {
   syncNowButton: "SyncPanel.syncNowButton",
   signOutButton: "SyncPanel.signOutButton",
   connectExtensionLink: "SyncPanel.connectExtensionLink",
+  deleteAccountButton: "SyncPanel.deleteAccountButton",
 };

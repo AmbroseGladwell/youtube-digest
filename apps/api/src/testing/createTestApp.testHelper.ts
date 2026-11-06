@@ -18,6 +18,7 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { makeRecordingErrorSink, type RecordingErrorSink } from "../errors/RecordingErrorSink.testHelper.js";
 import { makeRecordingEventSink, type RecordingEventSink } from "../events/RecordingEventSink.testHelper.js";
 import { makeRecordingMailer, type RecordingMailer } from "../mail/RecordingMailer.testHelper.js";
+import { makeRecordingPersonEraser, type RecordingPersonEraser } from "../postHog/RecordingPersonEraser.testHelper.js";
 
 export interface TestClock {
   now: Date;
@@ -34,6 +35,8 @@ export interface TestApp {
   eventSink: RecordingEventSink;
   // Every batch of checked client errors, as PostHog's error tracking would receive them.
   errorSink: RecordingErrorSink;
+  // Every distinct id a deleted account asked PostHog to erase.
+  personEraser: RecordingPersonEraser;
   // The TTS service and the audio store narration goes through, and the queue a test drains
   // itself rather than race a background worker.
   narrator: ScriptedNarrator;
@@ -79,6 +82,7 @@ export async function createTestApp(
   const audioStore = makeMemoryAudioStore();
   const eventSink = makeRecordingEventSink();
   const errorSink = makeRecordingErrorSink();
+  const personEraser = makeRecordingPersonEraser();
   const app = await buildApp({
     config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, sampleShareTokens: [], supportEmail: TEST_SUPPORT_EMAIL, ...config },
     sql,
@@ -90,6 +94,7 @@ export async function createTestApp(
     playlistReader: playlistReader ?? null,
     eventSink,
     errorSink,
+    personEraser,
     clock: () => clock.now,
     ...(logger === undefined ? {} : { logger }),
     ...(slowQueryMs === undefined ? {} : { slowQueryMs }),
@@ -102,6 +107,7 @@ export async function createTestApp(
     mailer,
     eventSink,
     errorSink,
+    personEraser,
     narrator,
     audioStore,
     drainAudio: async () => {

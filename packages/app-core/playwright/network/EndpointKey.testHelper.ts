@@ -30,6 +30,8 @@ export enum EndpointKey {
   // The account's own changes: the name, the code to the current address, the code to a
   // new one, and the old address's way back (docs/features/account-changes.md).
   SESSION_ACCOUNT = "SESSION_ACCOUNT",
+  // Deleting the account, under the verified session (docs/features/account-deletion.md).
+  SESSION_ACCOUNT_DELETE = "SESSION_ACCOUNT_DELETE",
   SESSION_VERIFICATION = "SESSION_VERIFICATION",
   SESSION_VERIFICATION_CONFIRM = "SESSION_VERIFICATION_CONFIRM",
   SESSION_EMAIL_CHANGE = "SESSION_EMAIL_CHANGE",

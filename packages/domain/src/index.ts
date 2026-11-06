@@ -137,6 +137,7 @@ export * from "./AccountUpdate.js";
 export * from "./EmailChangeRequest.js";
 export * from "./CodeRequest.js";
 export * from "./VerificationAsked.js";
+export * from "./VerificationPurpose.js";
 export * from "./EmailChangeAsked.js";
 export * from "./EmailChangeReverted.js";
 export * from "./revertEmailLink.js";

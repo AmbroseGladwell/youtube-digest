@@ -12,7 +12,7 @@ import {
   type Library,
   type OpenLibrary,
 } from "@overview/app-core";
-import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
+import { adoptLibraryIntoAccount, deleteLocalLibrary, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 
 async function main() {
@@ -59,6 +59,7 @@ async function main() {
       <App
         library={library}
         openLibrary={openLibrary}
+        deleteLibrary={(accountId) => deleteLocalLibrary({ accountId })}
         router={createAppRouter(createBrowserRouter)}
         surface="web"
         build={appBuild}

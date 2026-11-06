@@ -1,0 +1,15 @@
+export const deleteAccountDialogTestIds = {
+  root: "DeleteAccountDialog.root",
+  heading: "DeleteAccountDialog.heading",
+  body: "DeleteAccountDialog.body",
+  deletedList: "DeleteAccountDialog.deletedList",
+  keptList: "DeleteAccountDialog.keptList",
+  continueButton: "DeleteAccountDialog.continueButton",
+  cancelButton: "DeleteAccountDialog.cancelButton",
+  closeButton: "DeleteAccountDialog.closeButton",
+  checking: "DeleteAccountDialog.checking",
+  refused: "DeleteAccountDialog.refused",
+  deleting: "DeleteAccountDialog.deleting",
+  failed: "DeleteAccountDialog.failed",
+  tryAgainButton: "DeleteAccountDialog.tryAgainButton",
+};

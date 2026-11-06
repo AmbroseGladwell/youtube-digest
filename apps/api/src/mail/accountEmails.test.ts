@@ -6,7 +6,14 @@ const SITE = "https://overview.example";
 
 test("the step-up and new-address mails carry their code large, no button, and their own notes", () => {
   const stepUp = accountEmail(
-    { kind: "verificationCode", to: "reader@example.com", code: "R4HN-8T2W", expiresAt: "2026-11-05T14:47:00.000Z", supportEmail: "help@overview.example" },
+    {
+      kind: "verificationCode",
+      to: "reader@example.com",
+      code: "R4HN-8T2W",
+      expiresAt: "2026-11-05T14:47:00.000Z",
+      supportEmail: "help@overview.example",
+      purpose: "emailChange",
+    },
     SITE,
   );
   assert.equal(stepUp.subject, "Confirm it’s you");
@@ -25,6 +32,27 @@ test("the step-up and new-address mails carry their code large, no button, and t
   assert.equal(newAddress.subject, "Confirm your new email");
   assert.ok(newAddress.text.includes("\nK7QF-2M9X\n"));
   assert.ok(newAddress.text.includes("only for the account that asked"));
+});
+
+test("the step-up mail for deleting an account says so, and what ignoring the code protects", () => {
+  const { subject, html, text } = accountEmail(
+    {
+      kind: "verificationCode",
+      to: "reader@example.com",
+      code: "R4HN-8T2W",
+      expiresAt: "2026-11-05T14:47:00.000Z",
+      supportEmail: "help@overview.example",
+      purpose: "deleteAccount",
+    },
+    SITE,
+  );
+  assert.equal(subject, "Confirm it’s you");
+  for (const body of [html, text]) {
+    assert.ok(body.includes("Enter this code in Settings to delete your account."));
+    assert.ok(body.includes("without it your account can’t be deleted"));
+    assert.ok(body.includes("asked to delete it"));
+    assert.ok(!body.includes("changing your email"));
+  }
 });
 
 test("the already-taken mail carries no code and says nothing has changed", () => {

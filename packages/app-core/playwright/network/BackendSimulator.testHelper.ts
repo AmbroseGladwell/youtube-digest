@@ -167,7 +167,12 @@ export class BackendSimulator {
   #revertRefusal: { reason: "expired" | "spent" | "taken"; email?: string } | null = null;
   #namesSaved: Array<string | null> = [];
   #verificationAsks = 0;
+  #verificationPurposes: string[] = [];
   #verificationCodes: string[] = [];
+  #accountDeletions = 0;
+  // The delete answers that the session has not proved its inbox, once, as a lapsed
+  // verification would.
+  #deleteNeedsVerification = false;
   #emailChangeAsks: string[] = [];
   #emailChangeCodes: string[] = [];
   #revertTokens: string[] = [];
@@ -457,21 +462,35 @@ export class BackendSimulator {
     const codeExpiry = () => new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
     await this.#page.route("**/api/session/account", (route) =>
-      this.#respond(route, EndpointKey.SESSION_ACCOUNT, {
-        onDefault: () => {
-          const { firstName } = route.request().postDataJSON() as { firstName: string | null };
-          this.#namesSaved.push(firstName);
-          this.#accountFirstName = firstName;
-          return { status: 200, body: sessionInfo() };
-        },
-        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } }),
-      }),
+      route.request().method() === "DELETE"
+        ? this.#respond(route, EndpointKey.SESSION_ACCOUNT_DELETE, {
+            onDefault: () => {
+              if (this.#deleteNeedsVerification) {
+                this.#deleteNeedsVerification = false;
+                return { status: 403, body: { error: { code: "verification_required", message: "Simulated: confirm it’s you first" } } };
+              }
+              this.#accountDeletions += 1;
+              this.#sessionLapsed = true;
+              return { status: 204, body: undefined };
+            },
+            onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } }),
+          })
+        : this.#respond(route, EndpointKey.SESSION_ACCOUNT, {
+            onDefault: () => {
+              const { firstName } = route.request().postDataJSON() as { firstName: string | null };
+              this.#namesSaved.push(firstName);
+              this.#accountFirstName = firstName;
+              return { status: 200, body: sessionInfo() };
+            },
+            onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } }),
+          }),
     );
 
     await this.#page.route("**/api/session/verification", (route) =>
       this.#respond(route, EndpointKey.SESSION_VERIFICATION, {
         onDefault: () => {
           this.#verificationAsks += 1;
+          this.#verificationPurposes.push((route.request().postDataJSON() as { purpose?: string } | null)?.purpose ?? "emailChange");
           return this.#verificationRequired
             ? { status: 200, body: { required: true, email: this.#accountEmail, expiresAt: codeExpiry() } }
             : { status: 200, body: { required: false } };
@@ -1295,7 +1314,12 @@ export class BackendSimulator {
     },
     namesSaved: (): Array<string | null> => [...this.#namesSaved],
     verificationAsks: (): number => this.#verificationAsks,
+    verificationPurposes: (): string[] => [...this.#verificationPurposes],
     verificationCodes: (): string[] => [...this.#verificationCodes],
+    accountDeletions: (): number => this.#accountDeletions,
+    deleteNeedsVerification: (): void => {
+      this.#deleteNeedsVerification = true;
+    },
     emailChangeAsks: (): string[] => [...this.#emailChangeAsks],
     emailChangeCodes: (): string[] => [...this.#emailChangeCodes],
     revertTokens: (): string[] => [...this.#revertTokens],

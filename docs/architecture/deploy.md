@@ -85,8 +85,8 @@ session length.
 ## Secrets
 
 `docs/conventions/secrets.md` anticipated this: "the same shape is one more template and
-one task". `.env.prod.tpl` names the two secrets production needs, `DATABASE_URL` and
-`BREVO_API_KEY`, as placeholders, and `task deploy:secrets` renders it under `bws run`
+one task". `.env.prod.tpl` names the secrets production needs, `DATABASE_URL`,
+`BREVO_API_KEY` and the rest, as placeholders, and `task deploy:secrets` renders it under `bws run`
 against the `overview-prod` project and pipes the lines into `fly secrets import`.
 `renderEnv.mjs` learnt to write to stdout for exactly this, so the rendered values pass
 through a pipe and nowhere else: no file, no terminal, no dashboard. Fly stores them

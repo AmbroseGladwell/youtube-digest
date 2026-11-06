@@ -8,6 +8,7 @@ import { VoiceSamplesRepository } from "./audio/VoiceSamplesRepository.js";
 import { authRoutes } from "./auth/authRoutes.js";
 import { sessionPlugin } from "./auth/sessionPlugin.js";
 import { sessionRoutes } from "./auth/sessionRoutes.js";
+import type { PersonEraser } from "./postHog/PersonEraser.js";
 import type { SqlClient } from "./db/SqlClient.js";
 import { SLOW_QUERY_MS, timedSqlClient } from "./db/timedSqlClient.js";
 import { eventRoutes } from "./events/eventRoutes.js";
@@ -120,6 +121,9 @@ export interface BuildAppOptions {
   eventSink?: EventSink | null;
   // Where checked client errors are passed on to; absent, they are only logged.
   errorSink?: ErrorSink | null;
+  // Who erases a deleted account's records at PostHog; absent, the deletion records that
+  // the step could not run (docs/features/account-deletion.md).
+  personEraser?: PersonEraser | null;
   clock?: () => Date;
   // The server's pino instance (createLogger); absent, nothing is logged, which is what tests want.
   logger?: FastifyBaseLogger | null;
@@ -150,6 +154,7 @@ export async function buildApp({
   playlistReader = null,
   eventSink = null,
   errorSink = null,
+  personEraser = null,
   clock = () => new Date(),
   logger = null,
   slowQueryMs = SLOW_QUERY_MS,
@@ -201,7 +206,16 @@ export async function buildApp({
 
       healthRoutes(api, sql);
       handshakeRoutes(api, config.minSupportedClientVersion);
-      sessionRoutes(api, { sql, clock, mailer, appUrl: config.appUrl, supportEmail: config.supportEmail, sessionCookieSecure });
+      sessionRoutes(api, {
+        sql,
+        clock,
+        mailer,
+        appUrl: config.appUrl,
+        supportEmail: config.supportEmail,
+        sessionCookieSecure,
+        narrationStore: audio?.store ?? null,
+        personEraser,
+      });
       authRoutes(api, {
         sql,
         clock,

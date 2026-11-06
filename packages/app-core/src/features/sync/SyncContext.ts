@@ -15,6 +15,9 @@ export interface SyncState {
   // whether or not it answered (docs/features/account-libraries.md).
   signOut: (options?: SignOutOptions) => Promise<void>;
   signingOut: boolean;
+  // The account is gone from the server: stops the engine with no last cycle, since there
+  // is nothing left to send to, and signs this device out (docs/features/account-deletion.md).
+  leaveDeletedAccount: () => void;
   // What the last sign-out could not send, until the reader dismisses it.
   signOutNotice: SignOutNotice | null;
   dismissSignOutNotice: () => void;
@@ -38,6 +41,7 @@ const SyncContext = createContext<SyncState>({
   syncNow: () => undefined,
   signOut: () => Promise.resolve(),
   signingOut: false,
+  leaveDeletedAccount: () => undefined,
   signOutNotice: null,
   dismissSignOutNotice: () => undefined,
   opening: false,

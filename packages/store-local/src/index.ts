@@ -9,4 +9,5 @@ export * from "./IndexedDbCaptureQueueStore.js";
 export * from "./IndexedDbSyncStorage.js";
 export * from "./localDatabaseName.js";
 export * from "./openLocalLibrary.js";
+export * from "./deleteLocalLibrary.js";
 export * from "./adoptLibraryIntoAccount.js";

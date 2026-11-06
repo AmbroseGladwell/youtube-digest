@@ -87,3 +87,12 @@ export function adoptReadingPositions(accountId: string, storage: Storage = glob
   }
   writeAll([], null, storage);
 }
+
+// A deleted account's places go with its library (docs/features/account-deletion.md).
+export function forgetReadingPositions(accountId: string, storage: Storage = globalThis.localStorage): void {
+  try {
+    storage.removeItem(storageKeyFor(accountId));
+  } catch {
+    // see above
+  }
+}

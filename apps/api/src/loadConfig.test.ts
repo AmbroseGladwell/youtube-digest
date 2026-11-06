@@ -22,7 +22,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     youTubeApiKey: null,
     sampleShareTokens: [],
     supportEmail: "hello@theoverviewapp.com",
-    analytics: { environment: "development", postHog: null },
+    analytics: { environment: "development", postHog: null, erasure: null },
     logs: null,
   });
 });
@@ -69,6 +69,7 @@ test("analytics are forwarded to PostHog's EU host once there is a project key, 
   assert.deepEqual(loadConfig({ DATABASE_URL, POSTHOG_API_KEY: "phc_test", ANALYTICS_ENVIRONMENT: "production" }).analytics, {
     environment: "production",
     postHog: { apiKey: "phc_test", host: "https://eu.i.posthog.com" },
+    erasure: null,
   });
   assert.throws(() => loadConfig({ DATABASE_URL, ANALYTICS_ENVIRONMENT: "staging" }), ConfigError);
 });
@@ -198,4 +199,17 @@ test("overviews are made on our key only once there is a key, under a global dai
     loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: "5" }).ourKey?.signedOutDailyGenerations,
     5,
   );
+});
+
+test("erasing a deleted account's records at PostHog is on with the personal key, which has to name its project", () => {
+  assert.deepEqual(
+    loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test", POSTHOG_PROJECT_ID: "289890" }).analytics.erasure,
+    { personalApiKey: "phx_test", projectId: "289890", host: "https://eu.posthog.com" },
+  );
+  assert.throws(() => loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test" }), ConfigError);
+  assert.throws(() => loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test", POSTHOG_PROJECT_ID: "not-a-number" }), ConfigError);
+});
+
+test("the project id alone is held rather than refused, so it can ship before the secret does", () => {
+  assert.equal(loadConfig({ DATABASE_URL, POSTHOG_PROJECT_ID: "289890" }).analytics.erasure, null);
 });

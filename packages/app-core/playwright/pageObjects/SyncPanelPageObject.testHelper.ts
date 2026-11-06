@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { syncPanelTestIds } from "../../src/features/sync/components/SyncPanel/SyncPanelTestIds.js";
+import { DeleteAccountDialogPageObject } from "./DeleteAccountDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
@@ -55,4 +56,17 @@ export class SyncPanelPageObject extends PageObject {
     );
 
   clickSignOut = () => this.step("clickSignOut", () => this.click(syncPanelTestIds.signOutButton));
+
+  verifyOffersDeletingAccount = (offers: boolean) =>
+    this.step(`verifyOffersDeletingAccount ${offers}`, () =>
+      offers
+        ? this.expectToBeVisible(syncPanelTestIds.deleteAccountButton)
+        : this.expectToHaveCount(syncPanelTestIds.deleteAccountButton, 0),
+    );
+
+  clickDeleteAccount = (): Promise<DeleteAccountDialogPageObject> =>
+    this.step("clickDeleteAccount", async () => {
+      await this.click(syncPanelTestIds.deleteAccountButton);
+      return new DeleteAccountDialogPageObject(this.testContext).verifyExplains();
+    });
 }
