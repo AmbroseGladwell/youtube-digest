@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { overviewMetaParts, sourceName } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
@@ -7,6 +6,7 @@ import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "../../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import styles from "./RecentOverviews.module.scss";
 import { recentOverviewsTestIds } from "./RecentOverviewsTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface RecentOverviewsProps {
   entries: LibraryEntry[];
@@ -25,7 +25,7 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
         Recent
       </h3>
       {recent.map(({ overview }) => (
-        <Link key={overview.id} className={styles.row} to={Routes.overview(overview.id)} data-testid={recentOverviewsTestIds.row}>
+        <PageLink key={overview.id} className={styles.row} to={Routes.overview(overview.id)} data-testid={recentOverviewsTestIds.row}>
           <span className={styles.thumbnail}>
             <OverviewThumbnail video={overview.source} />
           </span>
@@ -34,7 +34,7 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
             <span className={styles.site}>{sourceName(overview.source)}</span>
             <span className={styles.facts}>{overviewMetaParts(overview).join(" · ")}</span>
           </span>
-        </Link>
+        </PageLink>
       ))}
     </section>
   );

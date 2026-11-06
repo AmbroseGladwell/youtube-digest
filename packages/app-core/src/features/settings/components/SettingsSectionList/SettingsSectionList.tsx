@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { SettingsSectionId } from "../../SettingsSectionId.js";
@@ -6,6 +5,7 @@ import type { SettingsSectionSummary } from "../../useSettingsSections.js";
 import styles from "./SettingsSectionList.module.scss";
 import { settingsSectionListTestIds } from "./SettingsSectionListTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface SettingsSectionListProps {
   sections: SettingsSectionSummary[];
@@ -24,7 +24,7 @@ export function SettingsSectionList({ sections, current, stacked }: SettingsSect
       data-testid={settingsSectionListTestIds.root}
     >
       {sections.map((section) => (
-        <Link
+        <PageLink
           key={section.id}
           className={styles.row}
           to={Routes.settingsSection(section.id)}
@@ -43,7 +43,7 @@ export function SettingsSectionList({ sections, current, stacked }: SettingsSect
               <StrokeIcon name="chevronRight" size={18} />
             </span>
           )}
-        </Link>
+        </PageLink>
       ))}
     </nav>
   );

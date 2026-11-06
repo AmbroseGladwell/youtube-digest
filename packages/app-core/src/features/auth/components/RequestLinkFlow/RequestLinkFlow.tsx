@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
@@ -30,6 +30,7 @@ import { PolicyLinks } from "../../../settings/components/PolicyLinks/PolicyLink
 import { requestLinkFlowTestIds } from "./RequestLinkFlowTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useLibraryMove } from "../../../accountLibraries/LibraryMoveContext.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface RequestLinkFlowProps {
   intent: AuthIntent;
@@ -279,26 +280,26 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
           expired ? undefined : creating ? (
             <>
               {shortSwitch ? "Have an account?" : "Already have an account?"}{" "}
-              <Link
+              <PageLink
                 to={Routes.signIn()}
                 replace
                 onClick={() => analytics.account.signIn.switchChosen({ to: "signIn" })}
                 data-testid={requestLinkFlowTestIds.switchLink}
               >
                 Sign in
-              </Link>
+              </PageLink>
             </>
           ) : (
             <>
               New here?{" "}
-              <Link
+              <PageLink
                 to={Routes.createAccount()}
                 replace
                 onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
                 data-testid={requestLinkFlowTestIds.switchLink}
               >
                 Create an account
-              </Link>
+              </PageLink>
               {offersWebAppCode && (
                 <>
                   <br />

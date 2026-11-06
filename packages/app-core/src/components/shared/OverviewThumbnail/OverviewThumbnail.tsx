@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { sourceImage, sourceName, type Source, type VideoSource } from "@overview/domain";
-import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import styles from "./OverviewThumbnail.module.scss";
 import { overviewThumbnailTestIds } from "./OverviewThumbnailTestIds.js";
+import { PageLink } from "../PageLink/PageLink.js";
 
 export interface OverviewThumbnailProps {
   video: VideoSource | Source;
@@ -21,7 +20,6 @@ export interface OverviewThumbnailProps {
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
 export function OverviewThumbnail({ video, className, to, state, onOpen }: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
-  const animateNavigation = useShouldAnimateNavigation();
 
   const isArticle = "kind" in video && video.kind === "web";
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
@@ -33,17 +31,16 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
       </span>
     );
     return to ? (
-      <Link
+      <PageLink
         className={`${styles.thumbnail} ${styles.link} ${styles.tileHost} ${className ?? ""}`}
         to={to}
         state={state}
-        viewTransition={animateNavigation}
         aria-hidden="true"
         tabIndex={-1}
         onClick={onOpen}
       >
         {tile}
-      </Link>
+      </PageLink>
     ) : (
       <span className={`${styles.thumbnail} ${styles.tileHost} ${className ?? ""}`}>{tile}</span>
     );
@@ -72,17 +69,16 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
   // is taken out of the tab order and the accessibility tree rather than repeated as a
   // second, unlabelled link.
   return (
-    <Link
+    <PageLink
       className={`${styles.thumbnail} ${styles.link} ${className ?? ""}`}
       to={to}
       state={state}
-      viewTransition={animateNavigation}
       aria-hidden="true"
       tabIndex={-1}
       onClick={onOpen}
       data-testid={overviewThumbnailTestIds.link}
     >
       {image}
-    </Link>
+    </PageLink>
   );
 }

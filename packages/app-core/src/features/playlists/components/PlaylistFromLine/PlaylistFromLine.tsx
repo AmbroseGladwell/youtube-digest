@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import type { Overview, PlaylistOrigin } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -7,6 +6,7 @@ import { playlistUrl } from "../../../newOverview/util/parseYouTubeUrl.js";
 import { useFollowedPlaylistsQuery } from "../../queries/followedPlaylistsQuery.js";
 import styles from "./PlaylistFromLine.module.scss";
 import { playlistFromLineTestIds } from "./PlaylistFromLineTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 // Design 27t–27u: where the overview came from, on the byline's scale so it reads as
 // provenance rather than verdict. The name opens the playlist on YouTube and Manage opens
@@ -53,7 +53,7 @@ function FromLine({ overview, origin }: { overview: Overview; origin: PlaylistOr
       {following !== null && !gone && (
         <>
           <span aria-hidden="true">·</span>
-          <Link
+          <PageLink
             className={styles.manage}
             to={Routes.settingsSection("playlists")}
             aria-label="Manage followed playlists"
@@ -61,7 +61,7 @@ function FromLine({ overview, origin }: { overview: Overview; origin: PlaylistOr
             data-testid={playlistFromLineTestIds.manageLink}
           >
             Manage
-          </Link>
+          </PageLink>
         </>
       )}
     </p>

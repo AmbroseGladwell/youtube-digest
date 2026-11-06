@@ -7,6 +7,7 @@ import { useStartArticleRun } from "../../../newOverview/useStartArticleRun.js";
 import { useArticleBeside } from "../../useShowOnPage.js";
 import styles from "./UnreadableOverview.module.scss";
 import { unreadableOverviewTestIds } from "./UnreadableOverviewTestIds.js";
+import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 
 export interface UnreadableOverviewProps {
   record: UnreadableRecord;
@@ -34,7 +35,7 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
       return;
     }
     start(videoUrl, { from: "regenerate", overviewId: overviewId.data });
-    void navigate(Routes.home());
+    void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
   };
 
   // Designs 77ax, 77ay: a video can be remade from anywhere, an article needs to be open.
@@ -42,7 +43,7 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
     const makeAgain = () => {
       if (beside === null || !overviewId.success) return;
       startArticleRun(beside, { from: "regenerate", overviewId: overviewId.data, willAsk: true });
-      void navigate(Routes.home());
+      void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
     };
     return (
       <ErrorState

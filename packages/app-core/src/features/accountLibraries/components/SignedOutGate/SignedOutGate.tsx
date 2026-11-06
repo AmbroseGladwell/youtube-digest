@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import styles from "./SignedOutGate.module.scss";
 import { signedOutGateTestIds } from "./SignedOutGateTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 // Signed out where there are accounts, in place of every page that shows overviews: none is
 // seen without an account (docs/architecture/tiers.md, "Signed out"). In the panel it is design
@@ -16,17 +16,17 @@ export function SignedOutGate({ panel = false }: { panel?: boolean }) {
   useEffect(() => heading.current?.focus(), []);
 
   const createAccount = (
-    <Link
+    <PageLink
       className={panel ? styles.signIn : styles.createAccount}
       to={Routes.createAccount()}
       onClick={() => analytics.account.signedOutGate.chosen({ way: "createAccount" })}
       data-testid={signedOutGateTestIds.createAccount}
     >
       Create an account
-    </Link>
+    </PageLink>
   );
   const signIn = (
-    <Link
+    <PageLink
       className={panel ? styles.createAccount : styles.signIn}
       to={Routes.signIn()}
       onClick={() => analytics.account.signedOutGate.chosen({ way: "signIn" })}
@@ -34,7 +34,7 @@ export function SignedOutGate({ panel = false }: { panel?: boolean }) {
     >
       <StrokeIcon name="signIn" size={17} />
       Sign in
-    </Link>
+    </PageLink>
   );
 
   return (

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
 import { learnedItemKey, unnoticedLearnedItems, type LearnedItems } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -8,6 +7,7 @@ import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMuta
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import styles from "./LearnedNotice.module.scss";
 import { learnedNoticeTestIds } from "./LearnedNoticeTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const SHOWN_MS = 10_000;
 const UNDONE_SHOWN_MS = 4_000;
@@ -119,7 +119,7 @@ export function LearnedNotice() {
             Undo
           </button>
         )}
-        <Link
+        <PageLink
           className={styles.action}
           to={Routes.settingsSection("personalisation")}
           aria-label="See what we know about you"
@@ -130,7 +130,7 @@ export function LearnedNotice() {
           data-testid={learnedNoticeTestIds.see}
         >
           See
-        </Link>
+        </PageLink>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { Link, Navigate, useLocation } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useSurface } from "../../../app/SurfaceContext.js";
@@ -38,6 +38,7 @@ import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/S
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
 import { isStartAsked } from "../../onboarding/startAsked.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
@@ -187,13 +188,13 @@ function FirstRunHero() {
         <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
           <StrokeIcon name="check" />
           Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
-          <Link
+          <PageLink
             to={Routes.settingsSection("keys")}
             onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
             data-testid={homePageTestIds.settingsLink}
           >
             Change keys
-          </Link>
+          </PageLink>
         </p>
       ) : (
         <div className={styles.keysNote} data-testid={homePageTestIds.keysNote}>

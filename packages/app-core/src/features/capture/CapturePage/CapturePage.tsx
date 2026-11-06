@@ -37,6 +37,7 @@ import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.j
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { shouldAnimateNavigation } from "../../../util/viewTransitions.js";
 
 // A site's front page is a list of other stories. We can't look before Create, so its address
 // is what tells us; anything subtler is found out by reading (design 77ak).
@@ -121,7 +122,7 @@ export function CapturePage() {
   const analytics = useAnalytics();
   const readOverview = (overview: Overview) => {
     analytics.capture.panel.readChosen({ overviewId: overview.id });
-    void navigate(Routes.overview(overview.id));
+    void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
   };
 
   const createOverview = (again: boolean) => {

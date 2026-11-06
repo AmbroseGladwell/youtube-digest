@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router";
 import type { OverviewUsage } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { PLAN_CARDS } from "../../planCards.js";
 import { CHECKING, leftOf, resetDate } from "../../../newOverview/util/usageLine.js";
 import styles from "./PlanUsage.module.scss";
 import { planUsageTestIds } from "./PlanUsageTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 type Usage = { status: "checking" | "unreachable" } | { status: "known"; data: OverviewUsage };
 
@@ -31,9 +31,9 @@ export function PlanUsage(props: PlanUsageProps) {
     return (
       <div className={styles.root} data-testid={planUsageTestIds.root}>
         <p className={styles.note}>{FREE_ACCOUNT}</p>
-        <Link className={styles.createAccount} to={Routes.createAccount()} data-testid={planUsageTestIds.createAccountLink}>
+        <PageLink className={styles.createAccount} to={Routes.createAccount()} data-testid={planUsageTestIds.createAccountLink}>
           Create account
-        </Link>
+        </PageLink>
       </div>
     );
   }
@@ -48,9 +48,9 @@ export function PlanUsage(props: PlanUsageProps) {
         aside: (
           <>
             Once you add a key ·{" "}
-            <Link className={styles.link} to={Routes.settingsSection("keys")} data-testid={planUsageTestIds.addKeyLink}>
+            <PageLink className={styles.link} to={Routes.settingsSection("keys")} data-testid={planUsageTestIds.addKeyLink}>
               Add a key
-            </Link>
+            </PageLink>
           </>
         ),
       };

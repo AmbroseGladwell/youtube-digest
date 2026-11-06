@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
@@ -9,6 +8,7 @@ import { attentionSummary, pacedSummary, waitingRows } from "../../util/queueRow
 import { QueueRow } from "../QueueRow/QueueRow.js";
 import styles from "./LibraryQueueGroup.module.scss";
 import { libraryQueueGroupTestIds } from "./LibraryQueueGroupTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const GROUP_ID = "library-queue-group";
 const SHOWN_WAITING = 2;
@@ -36,7 +36,7 @@ export function LibraryQueueGroup() {
           {!phone && <span className={styles.sub}>Made oldest first while The Overview is open</span>}
         </span>
         <span className={styles.headActions}>
-          <Link
+          <PageLink
             className={styles.seeQueue}
             to={Routes.queue()}
             onClick={() => analytics.queue.controls.opened({ from: "libraryGroup" })}
@@ -44,7 +44,7 @@ export function LibraryQueueGroup() {
           >
             {phone ? "See all" : "See queue"}
             <StrokeIcon name="chevronRight" size={14} />
-          </Link>
+          </PageLink>
           <button
             type="button"
             className={styles.fold}
@@ -78,7 +78,7 @@ export function LibraryQueueGroup() {
         </ul>
       )}
       {paced.tomorrow !== null && (
-        <Link
+        <PageLink
           className={styles.paced}
           to={Routes.queue()}
           onClick={() => analytics.queue.controls.opened({ from: "libraryGroup" })}
@@ -87,10 +87,10 @@ export function LibraryQueueGroup() {
           <StrokeIcon name="clock" size={15} />
           {queue.tomorrow.length.toLocaleString("en-GB")} continue tomorrow
           {!phone && <span className={styles.attentionDetail}>· {paced.tomorrow}</span>}
-        </Link>
+        </PageLink>
       )}
       {paced.forYou !== null && (
-        <Link
+        <PageLink
           className={styles.paced}
           to={Routes.queue()}
           onClick={() => analytics.queue.controls.opened({ from: "libraryGroup" })}
@@ -99,10 +99,10 @@ export function LibraryQueueGroup() {
           <StrokeIcon name="check" size={15} />
           {queue.forYou.length.toLocaleString("en-GB")} waiting for you
           {!phone && <span className={styles.attentionDetail}>· {paced.forYou}</span>}
-        </Link>
+        </PageLink>
       )}
       {queue.attention.length > 0 && (
-        <Link
+        <PageLink
           className={styles.attention}
           to={Routes.queue()}
           onClick={() => analytics.queue.controls.opened({ from: "attention" })}
@@ -111,7 +111,7 @@ export function LibraryQueueGroup() {
           <StrokeIcon name="alert" size={15} />
           {queue.attention.length} need attention
           {!phone && <span className={styles.attentionDetail}>· {attentionSummary(queue.attention)}</span>}
-        </Link>
+        </PageLink>
       )}
     </section>
   );

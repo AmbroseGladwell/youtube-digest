@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import type { Provider } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
@@ -10,6 +9,7 @@ import { useUpdateSettingsMutation } from "../../../settings/mutations/useUpdate
 import { ADD_A_KEY_IN_SETTINGS, addKeyLabel, keyPrompt, useInsteadLabel } from "../../keyPrompt.js";
 import styles from "./KeyPromptNote.module.scss";
 import type { KeyPromptNoteTestIds } from "./KeyPromptNoteTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface KeyPromptNoteProps {
   readiness: GenerationReadiness;
@@ -52,25 +52,25 @@ export function KeyPromptNote({ readiness, detail, from, testIds, onFollowed }: 
       </p>
 
       {prompt.kind === "no-key" ? (
-        <Link
+        <PageLink
           className={styles.link}
           to={Routes.settingsSection("keys")}
           onClick={followSettings}
           data-testid={testIds.settingsLink}
         >
           {ADD_A_KEY_IN_SETTINGS} <StrokeIcon name="arrowRight" size={15} />
-        </Link>
+        </PageLink>
       ) : (
         <>
           <div className={styles.ways}>
-            <Link
+            <PageLink
               className={styles.addKey}
               to={Routes.settingsSection("keys")}
               onClick={followSettings}
               data-testid={testIds.addKey}
             >
               {addKeyLabel(prompt.provider)}
-            </Link>
+            </PageLink>
             <button
               type="button"
               className={styles.useFallback}

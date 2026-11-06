@@ -14,6 +14,7 @@ import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 import type { AccountMenuItem } from "@overview/domain";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
+import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -56,7 +57,7 @@ export function AccountMenu() {
 
   const go = (path: string) => () => {
     close(false);
-    void navigate(path);
+    void navigate(path, { viewTransition: shouldAnimateNavigation() });
   };
 
   const items = (): HTMLElement[] =>

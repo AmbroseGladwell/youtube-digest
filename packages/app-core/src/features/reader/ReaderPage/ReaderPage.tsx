@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
   KEY_POINTS_SECTION,
   OverviewId,
@@ -83,6 +83,7 @@ import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import { useHowToApplySlot } from "./useHowToApplySlot.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 const READER_MASTHEAD_HEIGHT_PROPERTY = "--reader-masthead-height";
@@ -217,7 +218,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               return;
             }
             startArticleRun(onPage.beside, { from: "regenerate", overviewId, willAsk: true });
-            void navigate(Routes.home());
+            void navigate(Routes.home(), { viewTransition: animateNavigation });
           },
         };
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
@@ -603,17 +604,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         {!isPanel && neighbours.position !== null && (
           <nav className={styles.foot} aria-label="Neighbouring overviews">
             {neighbours.previousId ? (
-              <Link
+              <PageLink
                 className={styles.stepLink}
                 to={Routes.overview(neighbours.previousId)}
                 state={steppingState}
-                viewTransition={animateNavigation}
                 onClick={() => reader.page.neighbourFollowed({ direction: "previous" })}
                 data-testid={readerPageTestIds.previousLink}
               >
                 <StrokeIcon name="arrowLeft" />
                 Previous
-              </Link>
+              </PageLink>
             ) : (
               <span />
             )}
@@ -621,17 +621,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               {neighbours.position} of {neighbours.total}
             </span>
             {neighbours.nextId ? (
-              <Link
+              <PageLink
                 className={styles.stepLink}
                 to={Routes.overview(neighbours.nextId)}
                 state={steppingState}
-                viewTransition={animateNavigation}
                 onClick={() => reader.page.neighbourFollowed({ direction: "next" })}
                 data-testid={readerPageTestIds.nextLink}
               >
                 Next
                 <StrokeIcon name="arrowRight" />
-              </Link>
+              </PageLink>
             ) : (
               <span />
             )}
@@ -759,7 +758,7 @@ function ReaderNotFound() {
       <p className={styles.error} data-testid={readerPageTestIds.notFound}>
         That overview isn't in your library.
       </p>
-      <Link to={Routes.home()}>← All overviews</Link>
+      <PageLink to={Routes.home()}>← All overviews</PageLink>
     </div>
   );
 }

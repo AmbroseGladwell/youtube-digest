@@ -60,6 +60,45 @@ export class AppShellPageObject extends PageObject {
       expect(this.page.locator("html")).toHaveAttribute("data-nav-direction", direction),
     );
 
+  // A view transition paints its snapshots into the browser's top layer, so nothing in the
+  // page's own tree records that one ran; its pseudo-element animations are the only sign
+  // (docs/features/page-transitions.md). The watch starts before the navigation, because by
+  // the time a page object can see the new page the animation is often already over.
+  verifyNavigationAnimates = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyNavigationAnimates", async () => {
+      const watched = this.watchForViewTransition(4_000);
+      const arrived = await go();
+      expect(await watched).toBe(true);
+      return arrived;
+    });
+
+  verifyNavigationDoesNotAnimate = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyNavigationDoesNotAnimate", async () => {
+      const watched = this.watchForViewTransition(1_000);
+      const arrived = await go();
+      expect(await watched).toBe(false);
+      return arrived;
+    });
+
+  private watchForViewTransition = (windowMs: number): Promise<boolean> =>
+    this.page.evaluate(
+      (limit) =>
+        new Promise<boolean>((resolve) => {
+          const start = performance.now();
+          const look = () => {
+            const running = document.getAnimations().some((animation) => {
+              const effect = animation.effect;
+              return effect instanceof KeyframeEffect && (effect.pseudoElement ?? "").startsWith("::view-transition");
+            });
+            if (running) resolve(true);
+            else if (performance.now() - start > limit) resolve(false);
+            else requestAnimationFrame(look);
+          };
+          look();
+        }),
+      windowMs,
+    );
+
   verifyIsParedBackToThePanel = () =>
     this.step("verifyIsParedBackToThePanel", async () => {
       await this.expectToBeVisible(appShellTestIds.brand);

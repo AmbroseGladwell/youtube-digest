@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { domainOf } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useActivePage, useArticlePages } from "../../../../app/ArticlePagesContext.js";
@@ -15,6 +15,8 @@ import { isStartAsked } from "../../startAsked.js";
 import { useStartOnboarding } from "../../useStartOnboarding.js";
 import styles from "./PanelStart.module.scss";
 import { panelStartTestIds } from "./PanelStartTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
+import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 
 // Designs 46n and 154b: in the panel, Start offers what it's beside rather than a field, with
 // any other link a tap away. Beside a page it can't yet tell an article from a recipe, so it
@@ -58,7 +60,7 @@ export function PanelStart() {
           type="button"
           className={styles.backToSignIn}
           aria-label="Back to sign in"
-          onClick={() => void navigate(Routes.signIn())}
+          onClick={() => void navigate(Routes.signIn(), { viewTransition: shouldAnimateNavigation() })}
           data-testid={panelStartTestIds.backToSignIn}
         >
           <StrokeIcon name="chevronLeft" size={18} />
@@ -147,9 +149,9 @@ export function PanelStart() {
       {samples.length > 0 && <OnboardingSamples samples={samples} />}
 
       <div className={styles.foot}>
-        <Link className={styles.quiet} to={Routes.signIn()} data-testid={panelStartTestIds.signIn}>
+        <PageLink className={styles.quiet} to={Routes.signIn()} data-testid={panelStartTestIds.signIn}>
           Already have an account? Sign in
-        </Link>
+        </PageLink>
       </div>
     </div>
   );
