@@ -1,6 +1,7 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { Routes } from "../../../src/app/Routes.js";
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 800 };
@@ -140,4 +141,53 @@ test("on the web the head scrolls away and the bar keeps the brand", async ({ la
 
   await reader.scrollToTheFoot();
   await launcher.appShell.verifyBarNeverOffersTheWayBack();
+});
+
+// OV-193: the settings page and its sections lend their own way back the same way.
+test("on a phone the settings page hands All overviews to the bar once scrolled, and it lands on the library", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.overviews.seed(makeOverview());
+  await page.setViewportSize({ width: 390, height: 480 });
+  await launcher.launchExpectingLibrary(SIGNED_IN);
+  await launcher.openPage(Routes.settings());
+  const settings = await launcher.settingsPage.verifyIsShown();
+  const shell = launcher.appShell;
+
+  await shell.verifyBarHoldsTheBrand();
+  await settings.scrollToTheFoot();
+  await shell.verifyBarHoldsTheWayBack();
+  await shell.clickBackInBar();
+
+  await shell.verifyNavigationDirection("back");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "settings.page.overviewsChosen"))
+    .toMatchObject([{ props: { from: "bar" } }]);
+});
+
+test("on a phone a section hands Settings to the bar once scrolled, and it lands on the list", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.narration.seedSamples();
+  await page.setViewportSize(PHONE);
+  await launcher.launch(SIGNED_IN);
+  await launcher.openPage(Routes.settings());
+  const settings = await launcher.settingsPage.verifyIsShown();
+  await settings.openSection("voice");
+  const shell = launcher.appShell;
+
+  await settings.scrollToTheTop();
+  await shell.verifyBarHoldsTheBrand("Settings");
+  await settings.scrollToTheFoot();
+  await shell.verifyBarHoldsTheWayBack("Settings");
+  await shell.clickBackInBarToSettings();
+
+  await shell.verifyNavigationDirection("back");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "settings.page.backToSettingsChosen"))
+    .toMatchObject([{ props: { from: "bar" } }]);
 });

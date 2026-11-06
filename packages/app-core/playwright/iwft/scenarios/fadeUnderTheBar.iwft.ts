@@ -4,6 +4,7 @@ import { makeStoredTranscript as makeSharedTranscript } from "@overview/store-co
 import { test } from "../../support/fixtures.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
+import { settingsSectionTestIds } from "../../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
 import { appShellTestIds } from "../../../src/shell/AppShell/AppShellTestIds.js";
 import { readerTabsTestIds } from "../../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { readerMastheadTestIds } from "../../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
@@ -88,7 +89,7 @@ test("the library fades under the bar once it has scrolled, and not before", asy
   await library.verifyFadeHangsFrom(appShellTestIds.masthead);
   await library.verifyFadeIsShown(false);
 
-  await library.scrollPastTheFade();
+  await library.scrollToTheFoot();
 
   await library.verifyFadeIsShown(true);
 });
@@ -106,7 +107,7 @@ test("an overview fades under the tab strip, and under the transcript's tools on
   // The wide reader's own head scrolls away with the note, so it is no band at all.
   await reader.verifyStickyBandsAre([appShellTestIds.masthead, readerTabsTestIds.root]);
   await reader.verifyFadeHangsFrom(readerTabsTestIds.root);
-  await reader.scrollPastTheFade();
+  await reader.scrollToTheFoot();
   await reader.verifyFadeIsShown(true);
 
   await reader.clickTab("Transcript");
@@ -131,7 +132,7 @@ test("in the panel the fade still hangs from the foot of the stack, head and all
     readerTabsTestIds.root,
   ]);
   await reader.verifyFadeHangsFrom(readerTabsTestIds.root);
-  await reader.scrollPastTheFade();
+  await reader.scrollToTheFoot();
   await reader.verifyFadeIsShown(true);
 
   await reader.clickTab("Transcript");
@@ -152,8 +153,21 @@ test("a shared page fades under its own chrome", async ({ launcher, backendSimul
   await shared.verifyFadeHangsFrom(readerTabsTestIds.root);
   await shared.verifyFadeIsShown(false);
 
-  await shared.scrollPastTheFade();
+  await shared.scrollToTheFoot();
 
   await shared.verifyFadeIsShown(true);
   await shared.verifyFadeHangsFrom(readerTabsTestIds.root);
+});
+
+// Design 166h: nothing sticks on settings but the bar, and 16px is the most a section's
+// heading leaves clear once it is anchored. That is the constraint that set the fade's
+// height over 24px, so it is the one worth holding.
+test("settings fades under the bar alone, and a section's heading still clears it", async ({ launcher, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await launcher.launchExpectingFirstRun();
+  await launcher.openPage(Routes.settingsSection("appearance"));
+  const settings = await launcher.settingsPage.verifyIsShown();
+
+  await settings.verifyFadeHangsFrom(appShellTestIds.masthead);
+  await settings.verifyAnchorsClearTheFade(settingsSectionTestIds.heading("appearance"));
 });

@@ -69,6 +69,24 @@ export abstract class PageObject {
       expect((await this.stickyFades()).map((band) => band.band)).toEqual(testIds);
     });
 
+  // What the fade's height is capped by: scrolled to its own anchor, a heading comes to rest
+  // its scroll margin below the viewport's top, which has to clear the band and the fade
+  // under it (docs/features/fade-under-the-bar.md).
+  verifyAnchorsClearTheFade = (testId: string) =>
+    this.step(`verifyAnchorsClearTheFade ${testId}`, async () => {
+      const band = await this.page.evaluate(() => {
+        const lowest = document.querySelector("[data-sticky-fade]")!;
+        return {
+          height: lowest.getBoundingClientRect().height,
+          fade: parseFloat(getComputedStyle(lowest, "::after").height),
+        };
+      });
+      const restsAt = await this.get(testId).evaluate((element) =>
+        parseFloat(getComputedStyle(element).scrollMarginTop),
+      );
+      expect(restsAt).toBeGreaterThanOrEqual(band.height + band.fade);
+    });
+
   verifyFadeIsShown = (shown: boolean) =>
     this.step(`verifyFadeIsShown ${shown}`, () =>
       expect
@@ -76,10 +94,21 @@ export abstract class PageObject {
         .toBe(shown ? 1 : 0),
     );
 
-  scrollPastTheFade = () =>
-    this.step("scrollPastTheFade", async () => {
-      await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBeGreaterThan(24);
+  scrollToTheFoot = () =>
+    this.step("scrollToTheFoot", () =>
+      expect(async () => {
+        await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        const atTheFoot = await this.page.evaluate(
+          () => window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1,
+        );
+        expect(atTheFoot).toBe(true);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  scrollToTheTop = () =>
+    this.step("scrollToTheTop", async () => {
+      await this.page.evaluate(() => window.scrollTo(0, 0));
+      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0);
     });
 
   verifyPageDoesNotScrollSideways = () =>

@@ -53,7 +53,6 @@ Where that lands, surface by surface:
 | Surface | The bands, in order | What carries the fade |
 |---|---|---|
 | Library, settings, anything else in the shell | the app's bar | the bar |
-| Settings section, phone and panel | the bar, the sticky `← Settings` row | that row, until PR #218 (below) |
 | Overview, Note tab | the bar, the tab strip | the tab strip |
 | Overview, Transcript tab | the bar, the tab strip, the tools | the tools |
 | Panel | the bar, the note's head, the tab strip, the tools | the lowest of them |
@@ -96,14 +95,20 @@ The sentinel is published on the document root rather than returned, because wha
 is one global rule over bands that sit in trees the hook knows nothing about: the shell's,
 the reader's and the shared page's.
 
+## What capped the height at 16px
+
+Settings is the plain case the design draws: since PR #218 took the stickiness off
+`← Settings`, nothing sticks there but the bar. A section's heading carries
+`scroll-margin-top: calc(var(--masthead-height) + 1rem)`, so scrolled to its own anchor it
+comes to rest 16px below the bar — exactly where the fade ends, which is why the design
+chose 16px over 24px rather than pushing that margin down to make room. Nothing in the app
+scrolls a settings heading today (arriving on a section focuses it with `preventScroll`),
+but the browser does for a fragment or for sequential focus, which is what the margin is
+for. `fadeUnderTheBar.iwft.ts` holds the two numbers to each other rather than simulating a
+scroll the app never makes.
+
 ## Departures from the design
 
-- **The settings back row carries the fade for now.** The design draws settings as the plain
-  case of the bar alone, which is what it becomes after PR #218 takes the stickiness off
-  `← Settings`. Until then that row is genuinely the lowest band, so it carries the
-  attribute and the bar gives way to it; without that the bar's fade would land on the row.
-  PR #218 deletes the element the attribute is on, so the line goes when that merges and
-  the bar takes over by itself.
 - **No frame was drawn for a note whose head is the lowest band**, which is a panel note
   with only one tab. It falls out of the same rule, and `fadeUnderTheBar.iwft.ts` pins the
   bands each layout has rather than that case's fixture, which would need a source with no
@@ -115,6 +120,7 @@ the reader's and the shared page's.
 band carries the attribute and a stylesheet picks between them. It checks the library shows
 nothing until it has scrolled and the full fade after, that an overview hands the fade from
 the tab strip to the transcript's tools when that tab opens, that the panel's three-deep
-stack still ends on the right band, and that a shared page behaves as the reader does. It
-also pins which elements are bands at all, which is what holds the wide reader's own head —
-it scrolls away with the note — out of the stack.
+stack still ends on the right band, that a shared page behaves as the reader does, and that
+settings fades under the bar alone with its headings clear of it. It also pins which
+elements are bands at all, which is what holds the wide reader's own head — it scrolls away
+with the note — out of the stack.

@@ -592,8 +592,12 @@ export const analyticsEvents = {
   settings: {
     page: {
       sectionOpened: event("The reader opens a section of Settings from its list", { section: SettingsSection }),
-      backToSettingsChosen: event("The reader goes back from a section to the list of Settings"),
-      overviewsChosen: event("The reader leaves Settings for their overviews"),
+      backToSettingsChosen: event("The reader goes back from a section to the list of Settings, from the section's own link or from the bar's slot", {
+        from: BackSource,
+      }),
+      overviewsChosen: event("The reader leaves Settings for their overviews, from the page's own link or from the bar's slot", {
+        from: BackSource,
+      }),
     },
     apiKeys: {
       keySaved: event(

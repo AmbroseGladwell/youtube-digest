@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useRef, useState, type Ref } from "react";
 import { Link } from "react-router";
 import { NOVELTY_LABEL, type Overview, sourceName, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
@@ -7,8 +7,8 @@ import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js"
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
-import { useBackLinkHandoff } from "../../../../app/BackLinkHandoffContext.js";
-import { useBackToLibrary } from "../../useBackToLibrary.js";
+import { useBackTo } from "../../../../app/useBackTo.js";
+import { useLentBackLink } from "../../../../app/useLentBackLink.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
@@ -95,17 +95,16 @@ export function ReaderMasthead({
 }: ReaderMastheadProps) {
   const animateNavigation = useShouldAnimateNavigation();
   const analytics = useReaderAnalytics();
-  const handoff = useBackLinkHandoff();
-  const followBack = useBackToLibrary();
-  const latestFollowBack = useRef(followBack);
-  latestFollowBack.current = followBack;
-  const headBackLink = useRef<HTMLAnchorElement>(null);
-  useEffect(() => {
-    const element = headBackLink.current;
-    if (element === null) return;
-    handoff.register({ element, follow: (event) => latestFollowBack.current("bar", event) });
-    return () => handoff.register(null);
-  }, [handoff, compact]);
+  const backToLibrary = useBackTo(Routes.home());
+  const headBackLink = useLentBackLink({
+    to: Routes.home(),
+    label: "All overviews",
+    lent: !compact,
+    follow: (event) => {
+      analytics.page.backFollowed({ from: "bar" });
+      backToLibrary(event);
+    },
+  });
   const dubiousFlag = useRef<HTMLButtonElement | null>(null);
   const [explainingDubious, setExplainingDubious] = useState(false);
   const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
@@ -150,7 +149,10 @@ export function ReaderMasthead({
           className={styles.backLink}
           to={Routes.home()}
           viewTransition={animateNavigation}
-          onClick={(event) => followBack("head", event)}
+          onClick={(event) => {
+            analytics.page.backFollowed({ from: "head" });
+            backToLibrary(event);
+          }}
           data-testid={readerMastheadTestIds.backLink}
         >
           <StrokeIcon name="arrowLeft" size={15} />

@@ -82,18 +82,18 @@ export class AppShellPageObject extends PageObject {
   // Design OV-167: one slot, two links, and only the one shown reaches the keyboard or a
   // screen reader. Both are named "All overviews", so the count of reachable links with
   // that name is what says whose turn it is (docs/features/back-within-reach.md).
-  verifyBarHoldsTheBrand = () =>
-    this.step("verifyBarHoldsTheBrand", async () => {
+  verifyBarHoldsTheBrand = (label = "All overviews") =>
+    this.step(`verifyBarHoldsTheBrand ${label}`, async () => {
       await expect(this.get(appShellTestIds.brand)).not.toHaveAttribute("inert");
       await expect(this.get(appShellTestIds.backLink)).toHaveAttribute("inert", "");
-      await expect(this.page.getByRole("link", { name: "All overviews" })).toHaveCount(1);
+      await expect(this.page.getByRole("link", { name: label, exact: true })).toHaveCount(1);
     });
 
-  verifyBarHoldsTheWayBack = () =>
-    this.step("verifyBarHoldsTheWayBack", async () => {
+  verifyBarHoldsTheWayBack = (label = "All overviews") =>
+    this.step(`verifyBarHoldsTheWayBack ${label}`, async () => {
       await expect(this.get(appShellTestIds.backLink)).not.toHaveAttribute("inert");
       await expect(this.get(appShellTestIds.brand)).toHaveAttribute("inert", "");
-      await expect(this.page.getByRole("link", { name: "All overviews" })).toHaveCount(2);
+      await expect(this.page.getByRole("link", { name: label, exact: true })).toHaveCount(2);
     });
 
   verifyBarKeepsHoldingTheWayBack = (forMs: number) =>
@@ -127,6 +127,19 @@ export class AppShellPageObject extends PageObject {
   // is the top of the page, and the head's own link coming back would hand the slot back.
   clickBackInBar = (): Promise<LibraryPageObject> =>
     this.step("clickBackInBar", async () => {
+      await this.tapBackInBar();
+      return new LibraryPageObject(this.testContext).verifyIsShown();
+    });
+
+  clickBackInBarToSettings = (): Promise<SettingsPageObject> =>
+    this.step("clickBackInBarToSettings", async () => {
+      await this.tapBackInBar();
+      const settings = await new SettingsPageObject(this.testContext).verifyIsShown();
+      await settings.verifyListIsShown(true);
+      return settings;
+    });
+
+  private tapBackInBar = async () => {
       await expect
         .poll(() =>
           this.page.evaluate(() =>
@@ -139,8 +152,7 @@ export class AppShellPageObject extends PageObject {
         .toBe(false);
       const box = (await this.get(appShellTestIds.backLink).boundingBox())!;
       await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-      return new LibraryPageObject(this.testContext).verifyIsShown();
-    });
+  };
 
   clickNewOverview = () =>
     this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
