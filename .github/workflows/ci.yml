@@ -190,6 +190,11 @@ jobs:
     concurrency:
       group: deploy-production
       cancel-in-progress: false
+    # Whether this deploy was the first of its version, which is what makes it something to
+    # send to the Chrome Web Store (docs/architecture/store-listing.md).
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tagged: ${{ steps.release.outputs.tagged }}
     environment:
       name: production
       url: https://theoverviewapp.com
@@ -217,12 +222,15 @@ jobs:
       # A tag marks the first deploy of each version; later deploys under the same number
       # are told apart by the commit Settings shows (docs/architecture/deploy.md).
       - name: tag and release
+        id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
             echo "v$version is already tagged; this deploy of ${{ github.sha }} stays under it"
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
           else
             zips=("apps/extension/release/the-overview-$version.zip")
             keyed="apps/extension/release/the-overview-$version-unpacked.zip"
@@ -231,7 +239,41 @@ jobs:
             fi
             gh release create "v$version" "${zips[@]}" \
               --target "${{ github.sha }}" --title "v$version" --generate-notes
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
           fi
+
+  # A version the deploy job tagged is a release, and a release is what the store is sent. The
+  # zip is the one the build job packed from this same commit and verifyRelease read back, so
+  # the number on the listing, the tag and the bundle are one thing
+  # (docs/architecture/store-listing.md, "What CI does").
+  publish-extension:
+    name: publish (extension)
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: needs.deploy.result == 'success' && needs.deploy.outputs.tagged == 'true'
+    concurrency:
+      group: publish-extension
+      cancel-in-progress: false
+    env:
+      CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+      CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+      CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+      CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      # Without the store's credentials this says so and stops, rather than failing a main
+      # that deployed perfectly well, as the TTS job does without its token.
+      - id: credentials
+        run: node scripts/publishExtension.mjs credentials
+      - if: steps.credentials.outputs.ready == 'true'
+        uses: actions/download-artifact@v7
+        with:
+          name: extension-${{ github.sha }}
+          path: apps/extension/release
+      - if: steps.credentials.outputs.ready == 'true'
+        run: node scripts/verifyRelease.mjs ${{ github.sha }}
+      - if: steps.credentials.outputs.ready == 'true'
+        run: node scripts/publishExtension.mjs submit ${{ needs.deploy.outputs.version }}
 
   # The TTS pool deploys from here too, with its own token, and only when services/tts differs
   # from what its machines say is live: comparing with the previous push would miss a change

@@ -1,0 +1,1026 @@
+[
+  {
+    "id": "e511b5dd-ee36-40bc-9d76-82c2f459d8d4",
+    "tags": [
+      "claude-code",
+      "personal-knowledge-management",
+      "automation",
+      "self-hosting",
+      "ai-agents"
+    ],
+    "thin": false,
+    "source": {
+      "id": "Zs3faMCDYNs",
+      "url": "https://www.youtube.com/watch?v=Zs3faMCDYNs",
+      "kind": "youtube",
+      "title": "Turn Claude Code Into Your AI Operating System (4 Layers)",
+      "channel": "Pav Rusovs | Automation Orbit",
+      "durationMs": 896000,
+      "description": "Get my AI OS dashboard layouts (V1 + V2), package setup help and updates as I publish them: https://www.patreon.com/pavrus/membership ($15/month). The MAPS guide below stays free.\nFree MAPS guide: https://github.com/pavrus117/ai-os-maps-guide\n☕ One-time tip via Ko-fi: https://ko-fi.com/pavrus\n\nThis is my business, every file of it, running on Claude Code: a live dashboard over a map of my whole wo",
+      "publishedAt": "2026-09-22T17:09:18.000Z",
+      "thumbnailUrl": "https://i.ytimg.com/vi/Zs3faMCDYNs/sddefault.jpg"
+    },
+    "savedAt": "2026-10-06T00:47:44.781Z",
+    "selling": {
+      "type": "own_paid_product",
+      "detail": "He advertises his own Automation Orbit AI search visibility audit mid-video, plus a $15 a month Patreon for the dashboard layouts, with a free MAPS guide on GitHub as the lead magnet.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "fresh_angle",
+      "reasoning": "Signpost files, a lean Claude.md, cron-style routines and a read-only dashboard are all familiar patterns in the agent tooling scene, and he credits another creator for the signpost idea. The two machine setup with a locked-down VPS and the before and after measurement give it more substance than the usual tour.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "A measured side-by-side test of the same question with and without the file map, comparing both answer time and token spend.",
+        "range": {
+          "endMs": 838400,
+          "startMs": 755920
+        }
+      },
+      "dubiousClaims": []
+    },
+    "chapters": [
+      {
+        "endMs": 81480,
+        "title": "The live dashboard reveal",
+        "startMs": 0,
+        "summary": "He introduces himself and shows the dashboard running whether or not his laptop is on, with a Claude.md hexagon at the centre surrounded by rings of skills, memory, routines and applications."
+      },
+      {
+        "endMs": 192480,
+        "title": "Touring the six views and panels",
+        "startMs": 81480,
+        "summary": "He walks through rings, circle, areas, links, timeline and 3D orbit views, demonstrates filtering to business files and searching for a skill, then covers the today, 14 day, pulse and needs path panels."
+      },
+      {
+        "endMs": 272520,
+        "title": "The MAPS framework explained",
+        "startMs": 192480,
+        "summary": "He names the four layers, memory, agent, pulse and screen, and poses three diagnostic questions about whether Claude can find a fact in two hops, whether anything runs with the laptop closed, and what the dashboard is for."
+      },
+      {
+        "endMs": 416040,
+        "title": "Building the memory layer",
+        "startMs": 272520,
+        "summary": "He describes three levels of memory maturity, suggests having an LLM interview you for 20 minutes to draft your map, and shows his 40 line Claude.md with its one home per fact and nightly staleness check."
+      },
+      {
+        "endMs": 543400,
+        "title": "The two machine agent setup",
+        "startMs": 416040,
+        "summary": "The same subscription runs on a laptop and a Hostinger virtual private server with folders synced every 5 minutes, demonstrated with a Telegram voice note, plus Tailscale privacy and a settings file that blocks sending or deleting."
+      },
+      {
+        "endMs": 616760,
+        "title": "Sponsor break and terms of service",
+        "startMs": 543400,
+        "summary": "He pitches his own AI search visibility audit, then explains why he abandoned the open-source Hermes agent because Anthropic forbids third-party harnesses on your own subscription."
+      },
+      {
+        "endMs": 693520,
+        "title": "Routines and skills",
+        "startMs": 616760,
+        "summary": "A routines.yaml file lists purpose, schedule and machine, a scheduler checks every 5 minutes, failures are capped, and skills include cleanup, brain build, vault lint and the morning digest."
+      },
+      {
+        "endMs": 755920,
+        "title": "The screen layer rule",
+        "startMs": 693520,
+        "summary": "Every panel reads from files built on whichever machine owns them, so the page stores nothing and is safe to view from a phone abroad, with three levels from pretty graph to fully interactive."
+      },
+      {
+        "endMs": 897920,
+        "title": "Measuring the map and closing",
+        "startMs": 755920,
+        "summary": "He runs the same question with and without the map, comparing time and tokens, then recounts 10 days away with routines still running and advises starting with the map rather than the dashboard."
+      }
+    ],
+    "coreClaim": "A personal AI operating system can be built from four layers the creator calls MAPS, memory, agent, pulse and screen, where plain files you own hold every fact, Claude Code runs on both a laptop and a never-sleeping rented server, scheduled routines run while you are away, and the dashboard only displays data it never stores.",
+    "inOneLine": "A screen-share tour of a personal AI operating system on Claude Code, covering a file map, cloud server, routines and dashboard.",
+    "keyPoints": [
+      {
+        "text": "The memory layer is a short Claude.md file of about 40 lines that holds no facts at all. It only lists areas of work and points to the file for each area, so any document is two hops from the top.",
+        "range": {
+          "endMs": 400560,
+          "startMs": 272520
+        }
+      },
+      {
+        "text": "Two rules keep the map honest. Every fact has exactly one home so nothing is written twice, and a nightly check flags any signpost pointing at a file that has moved.",
+        "range": {
+          "endMs": 418160,
+          "startMs": 398320
+        }
+      },
+      {
+        "text": "The agent layer runs the same Claude Code subscription on a laptop and on a Hostinger virtual private server, with both holding the same folder synced every 5 minutes in each direction. A Telegram voice note to the server transcribes and answers from the same map.",
+        "range": {
+          "endMs": 489040,
+          "startMs": 416040
+        }
+      },
+      {
+        "text": "The server is locked down with Tailscale, which puts laptop, phone and server on a private network with no public address, and a settings file blocks every tool that could send, share or delete. Claude can draft an email but refused to send one when he tried.",
+        "range": {
+          "endMs": 533480,
+          "startMs": 487280
+        }
+      },
+      {
+        "text": "He notes that Anthropic's rules forbid using your Claude subscription through a third-party agent or harness like Hermes, so he runs Claude Code itself on the server signed in with his own account at no extra cost.",
+        "range": {
+          "endMs": 618760,
+          "startMs": 582120
+        }
+      },
+      {
+        "text": "He measured the map's benefit by asking the same question with and without it. The mapped session answered in 30 seconds versus 1 minute 2 seconds, and used 17,000 tokens versus 28,000, roughly 40% less.",
+        "range": {
+          "endMs": 838400,
+          "startMs": 755920
+        }
+      },
+      {
+        "text": "The screen layer follows a show but don't store rule, reading every panel from a file built elsewhere, so if the dashboard died tomorrow nothing would be lost. He advises building the map first and leaving the dashboard until last.",
+        "range": {
+          "endMs": 883240,
+          "startMs": 693520
+        }
+      }
+    ],
+    "howToApply": {
+      "items": [
+        "Cut your Claude.md down to a short pointer file that names your areas of work and links to one file per area instead of holding facts itself.",
+        "Add a nightly check that flags any signpost pointing at a file that has moved, so the map cannot quietly go stale.",
+        "Run the same question in a mapped and unmapped session and compare the time and token counts before deciding the structure is worth the effort."
+      ]
+    },
+    "watchAnyway": {
+      "range": {
+        "endMs": 838400,
+        "startMs": 755920
+      },
+      "answer": "partial",
+      "reason": "The side-by-side measurement of time and token spend is the only part where seeing the numbers on screen adds anything the summary cannot carry. The dashboard tour is visual eye candy with no information behind it."
+    }
+  },
+  {
+    "id": "277aa6b8-d4c3-4c9e-90c5-89816985e021",
+    "tags": [
+      "sleep",
+      "evolution",
+      "neuroscience"
+    ],
+    "thin": false,
+    "source": {
+      "id": "d2c07f9df12741a187f9c610667d5f88",
+      "url": "https://www.quantamagazine.org/sleep-evolved-before-brains-hydras-are-living-proof-20210518/",
+      "kind": "web",
+      "title": "Sleep Evolved Before Brains. Hydras Are Living Proof. | Quanta Magazine",
+      "author": "By \n        \n            Veronique Greenwood\n        \n            \nMay 18, 2021",
+      "imageUrl": "https://www.quantamagazine.org/wp-content/uploads/2021/05/Hydra_520x292.jpg",
+      "language": "en",
+      "siteName": "Quanta Magazine",
+      "wordCount": 1393,
+      "publishedAt": "2021-05-18T15:17:30.000Z"
+    },
+    "article": {
+      "chapters": [
+        {
+          "place": {
+            "quote": "The hydra is a simple creature. Less than",
+            "anchor": null
+          },
+          "title": "The brain-centered account becomes too narrow",
+          "summary": "Greenwood contrasts the longstanding emphasis on memory, learning and neural circuits with evidence that sleep is a broader bodily phenomenon whose original purpose remains uncertain.",
+          "wordCount": 377
+        },
+        {
+          "place": {
+            "quote": "Sleep is not the same as hibernation, or",
+            "anchor": null
+          },
+          "title": "Behavior opens sleep research to insects",
+          "summary": "Greenwood explains how electrode-based research privileged mammals. Tobler recalls colleagues mocking her cockroach research, while fruit flies later offered geneticists a practical route into sleep's molecular mechanisms.",
+          "wordCount": 616
+        },
+        {
+          "place": {
+            "quote": "In January 2000, Sehgal and her colleagues published",
+            "anchor": null
+          },
+          "title": "Simpler animals widen the evolutionary question",
+          "summary": "Independent fruit fly papers appeared in January 2000 and that March; Greenwood reports that more than 50 labs now study fly sleep. Dolphins, birds and other animals also reveal how unlike human sleep it can be.",
+          "wordCount": 400
+        }
+      ],
+      "readAnyway": {
+        "answer": "no",
+        "reason": "The conceptual shift is straightforward, and the supplied excerpt ends before explaining the hydra experiments that would warrant closer examination.",
+        "leftOut": "It leaves out Tobler's recollections of ridicule, the history of brain-wave recording and examples contrasting sleep duration across species.",
+        "chapterIndexes": []
+      },
+      "keyPointChapters": [
+        0,
+        1,
+        0,
+        2,
+        2
+      ]
+    },
+    "savedAt": "2026-11-04T22:04:21.997Z",
+    "selling": {
+      "type": "none",
+      "detail": "The supplied text contains no product pitch, sponsorship or affiliate recommendation.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "fresh_angle",
+      "reasoning": "Behavioral definitions and sleep in invertebrates are established territory for sleep researchers, but the hydra finding adds a concrete extension. The text appropriately treats sleep's evolutionary age and original purpose as implications rather than demonstrated conclusions.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "Brainless hydras meet behavioral criteria for sleep.",
+        "range": null
+      },
+      "dubiousClaims": []
+    },
+    "chapters": null,
+    "coreClaim": "Research showing that brainless hydras meet behavioral criteria for sleep suggests that sleep does not require a brain and may have evolutionary functions beyond learning and memory.",
+    "inOneLine": "A reported science feature on brainless hydras sleeping and how behavioral research challenged the idea that sleep belongs exclusively to brains.",
+    "keyPoints": [
+      {
+        "text": "Hydras sleep despite having no brain. Greenwood cites research by a team in South Korea and Japan, but the supplied text does not describe their experiments.",
+        "range": null
+      },
+      {
+        "text": "Sleep can be identified without recording brain activity. Irene Tobler's behavioral criteria include reduced responsiveness, normal behavior after waking and longer or deeper sleep after deprivation.",
+        "range": null
+      },
+      {
+        "text": "Sleep regulation extends beyond the nervous system. Greenwood cites research showing that molecules from muscles and other tissues can regulate sleep, alongside sleep's widespread effects on metabolism.",
+        "range": null
+      },
+      {
+        "text": "Sleep need not follow a daily schedule. David Raizen and colleagues reported that Caenorhabditis elegans sleeps during development and after adult stress, despite having only 302 neurons.",
+        "range": null
+      },
+      {
+        "text": "The evolutionary conclusion remains an inference. Greenwood says jellyfish sleep suggests that sleep may have evolved more than 1 billion years ago, rather than establishing its original function.",
+        "range": null
+      }
+    ],
+    "howToApply": {
+      "items": []
+    },
+    "watchAnyway": null
+  },
+  {
+    "id": "7fb0cd11-cbc6-4ec8-a397-b56264fadc7c",
+    "tags": [
+      "caribbean-food",
+      "chicken",
+      "rice-and-peas",
+      "plantain"
+    ],
+    "thin": true,
+    "recipe": {
+      "steps": [
+        {
+          "text": "For the chicken, blend the onion in a food processor or blender until smooth. Tip into a shallow dish large enough to hold all the chicken thighs. Add the coriander, cumin, thyme, garlic, parsley, rapeseed oil, chilli, paprika, allspice, soy sauce and nutmeg and stir well. Add the chicken to the dish and brush the marinade all over the chicken. Cover and set aside.",
+          "group": null
+        },
+        {
+          "text": "Put the black-eyed beans in a pan with the thyme, onion, bay leaves, rice and coconut milk. Reduce to a low heat and cover, and cook until all the liquid has evaporated and the rice is cooked through and fluffy.",
+          "group": null
+        },
+        {
+          "text": "Preheat the oven to 190C/170C Fan/Gas 5.",
+          "group": null
+        },
+        {
+          "text": "Roast the chicken for 25–30 minutes turning at least once. Pour over the honey and turn up the heat to 200C/180C Fan/Gas 6 and cook for a further 10 minutes, or until the chicken is browned and completely cooked through.",
+          "group": null
+        },
+        {
+          "text": "Remove the chicken from the oven, carefully pour off the juice into a small pan. Add the rum and reduce by half. Pour in the stock and reduce again until you have a gravy consistency. Keep the chicken warm.",
+          "group": null
+        },
+        {
+          "text": "For the slaw, combine all ingredients and mix thoroughly.",
+          "group": null
+        },
+        {
+          "text": "For the fried plantain, heat the oil in a deep-fat fryer (CAUTION: hot oil can be dangerous. Do not leave unattended.) Either shallow fry the plantain until crisp on the outside, or else carefully lower the plantain into the hot oil and deep-fry. Remove with a slotted spoon and drain on kitchen paper.",
+          "group": null
+        },
+        {
+          "text": "Serve the chicken with the gravy, rice and peas, slaw and fried plantain on the side.",
+          "group": null
+        }
+      ],
+      "yield": "Serves 4",
+      "summary": "Andi Oliver describes a “taste of the Caribbean” with “rum chicken, rice and peas, tropical slaw and fried plantain”.",
+      "stepCount": 8,
+      "cookMinutes": 60,
+      "ingredients": [
+        "½ onion",
+        "½ tsp ground coriander",
+        "1 tsp ground cumin",
+        "4 thyme sprigs, leaves picked",
+        "4 garlic cloves, finely chopped",
+        "2 tbsp finely chopped parsley",
+        "4 tbsp rapeseed oil",
+        "½ Scotch bonnet chilli, finely chopped",
+        "1 tsp ground paprika",
+        "½ tsp allspice",
+        "2 tbsp soy sauce",
+        "pinch freshly grated nutmeg",
+        "4 chicken thighs, skin on, bone in",
+        "75ml/2½fl oz rum",
+        "200ml/7fl oz chicken stock",
+        "4 tbsp honey, to glaze",
+        "150–200g/5½–7oz tinned black-eyed beans, drained",
+        "2 sprigs fresh thyme",
+        "1 onion, peeled, cut in half",
+        "2 bay leaves",
+        "500g/1lb 2oz jasmine or basmati rice",
+        "400ml/14fl oz coconut milk",
+        "1 green papaya or mango, peeled and finely sliced",
+        "150g/5½oz mangetout, finely sliced",
+        "4–6 spring onions, finely chopped",
+        "1 sour green apple, grated",
+        "1–2 limes, juice only",
+        "1 red chilli, finely chopped",
+        "2cm/¾in fresh root ginger, peeled and grated",
+        "2 tbsp finely chopped fresh coriander",
+        "pinch caster sugar",
+        "50g–100g/1¾oz–3½oz peanuts, roughly chopped",
+        "vegetable oil, for frying",
+        "2 black very ripe soft plantains, peeled and chopped"
+      ],
+      "prepMinutes": 60,
+      "totalMinutes": null
+    },
+    "source": {
+      "id": "d3209156cff1f07541de6a14df8a4c28",
+      "url": "https://www.bbc.co.uk/food/recipes/chicken_rice_and_peas_78882",
+      "kind": "web",
+      "title": "Caribbean chicken with rice and peas recipe",
+      "author": "By Andi OliverFrom Saturday Kitchen",
+      "imageUrl": "https://ichef.bbci.co.uk/food/ic/food_16x9_448/recipes/chicken_rice_and_peas_78882_16x9.jpg",
+      "language": "en-GB",
+      "siteName": "BBC Food",
+      "wordCount": 463,
+      "publishedAt": null
+    },
+    "savedAt": "2026-11-04T14:35:26.530Z",
+    "selling": null,
+    "verdict": null,
+    "chapters": null,
+    "coreClaim": "",
+    "inOneLine": "Caribbean rum chicken with coconut rice and peas, tropical slaw and fried plantain.",
+    "keyPoints": [],
+    "howToApply": null,
+    "watchAnyway": null
+  },
+  {
+    "id": "4a22a604-7460-49f7-b4c3-93e4c38aa293",
+    "tags": [
+      "urban-planning",
+      "disaster-recovery",
+      "climate-resilience",
+      "community-engagement"
+    ],
+    "thin": false,
+    "source": {
+      "id": "efb330dcd9f6b6a99072292e0806ffdb",
+      "url": "https://www.nationalgeographic.com/environment/article/cities-rebuilding-after-natural-disasters",
+      "kind": "web",
+      "title": "How smart cities are being reinvented after natural disasters",
+      "author": null,
+      "imageUrl": "https://i.natgeofe.com/n/7830a7cb-f714-4e67-8680-4486016c2ffb/STOCK_MM10460_20110501Ryogae_350dpi_15in_16x9.jpg?w=1200",
+      "language": "en",
+      "siteName": "Environment",
+      "wordCount": 4648,
+      "publishedAt": "2026-01-05T20:49:18.422Z"
+    },
+    "article": {
+      "chapters": [
+        {
+          "place": {
+            "quote": "Three hours before dawn on February 6, 2023,",
+            "anchor": null
+          },
+          "title": "Antakya tries to recover its identity.",
+          "summary": "The reporter follows Imren through a devastated bazaar where his family traded for generations. His attachment to that exact place gives the reconstruction a harder test than simply delivering new buildings.",
+          "wordCount": 1304
+        },
+        {
+          "place": {
+            "quote": "It seems obvious that any successful attempt to",
+            "anchor": null
+          },
+          "title": "Japan rebuilt structures but lost connections.",
+          "summary": "Japan spent $12 billion on seawalls and invested in economic diversification. Martini says consultation excluded working fishermen and young people, undermining local support despite the government largely meeting its construction timetable.",
+          "wordCount": 664
+        },
+        {
+          "place": {
+            "quote": "On a sultry afternoon in late summer, I",
+            "anchor": null
+          },
+          "title": "New York turns protection into parkland.",
+          "summary": "After Hurricane Sandy, a federal competition sought defenses that also improved neighborhood life. The reporter walks through a rebuilt East River Park where flood infrastructure doubles as landscape, with remaining sections slated to open in 2027.",
+          "wordCount": 992
+        },
+        {
+          "place": {
+            "quote": "Antakya and the Dryline represent some of the",
+            "anchor": null
+          },
+          "title": "Paradise wants improvement without reinvention.",
+          "summary": "Architect Barry Long says residents wanted a better version of their old town. Its recovery plan pairs safer evacuation routes and fire-resistant construction with a walkable center and recreational trails.",
+          "wordCount": 640
+        },
+        {
+          "place": {
+            "quote": "Around the world, many other small communities are",
+            "anchor": null
+          },
+          "title": "Smaller places test different recovery strategies.",
+          "summary": "Kentucky is developing higher-ground housing on former mining sites, while Sicily preserved destroyed Gibellina as an artwork. Iceland’s Grindavík faces a harder limit, with rebuilding restrictions and eruptions geologists say could continue for centuries.",
+          "wordCount": 602
+        },
+        {
+          "place": {
+            "quote": "In Antakya, Imren balances carefully as he walks",
+            "anchor": null
+          },
+          "title": "Rebuilding cannot erase the dead.",
+          "summary": "Returning to Antakya, the reporter records Imren’s losses and an architect’s emotional exhaustion. Yılmaz expects the first rebuilt shops to open in February, but describes the wider effort as an experiment in healing.",
+          "wordCount": 446
+        }
+      ],
+      "readAnyway": {
+        "answer": "no",
+        "reason": "The comparison delivers a clear planning lesson, but the personal narratives and additional examples do not require a full reading for your current priorities.",
+        "leftOut": "It leaves out Imren’s escape and bereavement accounts, architectural renderings, the reporter’s park walk and further details of international rebuilding schemes.",
+        "chapterIndexes": []
+      },
+      "keyPointChapters": [
+        0,
+        null,
+        null,
+        null,
+        4,
+        null
+      ]
+    },
+    "savedAt": "2026-11-04T22:24:20.796Z",
+    "selling": {
+      "type": "none",
+      "detail": "The piece contains no product pitch, sponsorship or affiliate promotion.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "original",
+      "reasoning": "Community participation and resilient design are established planning principles. The original contribution is firsthand observation and named interviews that expose the gap between attractive master plans and residents’ actual recovery, although many promised benefits remain untested.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "On-site reporting connects Antakya’s reconstruction plans with a displaced shopkeeper’s uncertain return.",
+        "range": null
+      },
+      "dubiousClaims": []
+    },
+    "chapters": null,
+    "coreClaim": "Reporting from Antakya and New York, alongside international examples, the piece finds that disaster reconstruction can improve safety and everyday life, but physical defenses alone cannot restore communities without meaningful resident involvement.",
+    "inOneLine": "A reported feature on how disaster-struck cities are rebuilding for greater safety while trying to preserve community life.",
+    "keyPoints": [
+      {
+        "text": "Antakya’s reconstruction combines earthquake protection with better public space. The piece describes lower buildings, expanded riverfront greenery and foundations designed for soil liquefaction, under a master plan overseen by Foster + Partners.",
+        "range": null
+      },
+      {
+        "text": "Preserving neighbors matters as much as replacing homes. Planner Cem Yılmaz mapped Antakya’s former residents to keep them close together; geographer Annaclaudia Martini says Japan’s housing lotteries broke social ties after its tsunami.",
+        "range": null
+      },
+      {
+        "text": "New York’s collaborative design process still generated conflict. The piece reports that mayoral revisions nearly doubled the waterfront project’s cost and residents protested inadequate consultation; several imaginative features were dropped, although floodgates and recreational spaces survived.",
+        "range": null
+      },
+      {
+        "text": "Paradise shows what limited public resources constrain. The piece reports that rebuilding largely depended on individual owners and insurance payments; sewer funding remains unresolved, and the town has recovered less than half its pre-fire population.",
+        "range": null
+      },
+      {
+        "text": "Constitución used nature and resident initiative rather than concrete defenses alone. The piece reports that its rebuilding included a riverfront forest to slow floodwaters and half-built houses residents could finish themselves.",
+        "range": null
+      },
+      {
+        "text": "Antakya’s promised recovery remains unproven. Shopkeeper Nuri Imren still lacks confirmation that he will regain his old premises, while Yılmaz hopes the reconstruction will become a model other cities can follow.",
+        "range": null
+      }
+    ],
+    "howToApply": {
+      "items": []
+    },
+    "watchAnyway": null
+  },
+  {
+    "id": "abcf75bf-3894-4721-9845-153f4e16a2b4",
+    "tags": [
+      "compound-interest",
+      "investing",
+      "savings-rate",
+      "sequence-risk",
+      "retirement-planning",
+      "fees-and-tax"
+    ],
+    "thin": false,
+    "source": {
+      "id": "Jab_QOxKEO4",
+      "url": "https://www.youtube.com/watch?v=Jab_QOxKEO4",
+      "kind": "youtube",
+      "title": "We Were Wrong About Compound Interest",
+      "channel": "Josh K. Fay",
+      "durationMs": 1018000,
+      "description": "Most people misunderstand how compound interest actually accelerates wealth. We break down the real timeline for your portfolio.\n\nMany investors view their financial trajectory as a linear line, but the math of investment growth tells a different story. This analysis highlights the specific crossover point, often around year ten, where your market returns begin to outpace your personal contributio",
+      "publishedAt": "2026-09-23T17:00:23.000Z",
+      "thumbnailUrl": "https://i.ytimg.com/vi/Jab_QOxKEO4/sddefault.jpg"
+    },
+    "savedAt": "2026-10-05T19:09:05.387Z",
+    "selling": {
+      "type": "own_free_promotion",
+      "detail": "No product or sponsor is pitched. He closes by directing viewers to another of his videos on reaching retirement or work optional status, and he speaks as a financial adviser describing past client work.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "fresh_angle",
+      "reasoning": "Almost every component here, early contributions dominating returns, sequence of returns risk, fee drag and tax shelters, is standard financial planning material that any adviser already teaches. What lifts it slightly is the decomposition of an interruption into money withdrawn versus growth never earned, and the specific pot size at which the engine takes over.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "A named crossover point, around year ten and roughly £51,000, where annual market growth first exceeds annual contributions.",
+        "range": {
+          "endMs": 525279,
+          "startMs": 476400
+        }
+      },
+      "dubiousClaims": []
+    },
+    "chapters": [
+      {
+        "endMs": 73439,
+        "title": "The Einstein quote and the smooth curve",
+        "startMs": 240,
+        "summary": "Opens on the spreadsheet projection clients always showed him, notes the compound interest quote is not actually Einstein's, and promises three places where the textbook curve falls apart."
+      },
+      {
+        "endMs": 168319,
+        "title": "What the real portfolio data showed",
+        "startMs": 73439,
+        "summary": "Describes reviewing 10 to 15 years of real client portfolio data and finding almost none of their wealth lines resembled the textbook graph, because the maths collides with life."
+      },
+      {
+        "endMs": 328560,
+        "title": "Life interruptions and the lost growth",
+        "startMs": 168319,
+        "summary": "Cites Financial Conduct Authority holding period data and runs a worked example where a house deposit withdrawal and an 18 month contribution pause cost £32,000, most of it forgone growth."
+      },
+      {
+        "endMs": 530320,
+        "title": "Early years: contributions do everything",
+        "startMs": 328560,
+        "summary": "Shows how little growth appears in the first five years and argues chasing a higher return is a rounding error compared with saving more, up to the year ten crossover point."
+      },
+      {
+        "endMs": 735120,
+        "title": "Sequence of returns risk at retirement",
+        "startMs": 530320,
+        "summary": "Explains why average annual return figures mislead, using two investors with identical returns in reversed order who finish nearly £6,000 apart over just three years of withdrawals."
+      },
+      {
+        "endMs": 936480,
+        "title": "The three stage model that worked",
+        "startMs": 735120,
+        "summary": "Replaces the single curve with capital velocity first, then fee and tax optimisation once a year of growth matches a year of contributions, and only then true compounding."
+      },
+      {
+        "endMs": 1018440,
+        "title": "Closing summary and next video",
+        "startMs": 936480,
+        "summary": "Restates compound interest as a multiplier of effort rather than a substitute for it, and points viewers to another video on reaching work optional status."
+      }
+    ],
+    "coreClaim": "Compound interest is a multiplier of effort rather than a passive miracle, because for roughly the first decade contributions dwarf returns, real life interrupts the curve, and sequence of returns risk near retirement can undo the maths, so income and savings rate matter first and fees and tax only later.",
+    "inOneLine": "A UK financial adviser's talking-head breakdown of why textbook compound interest curves fail in real portfolios, with worked numbers and a three-stage alternative model.",
+    "keyPoints": [
+      {
+        "text": "Financial Conduct Authority data shows the average retail investor holds an investment, typically an equity fund, for less than five years, so the forty year untouched curve almost never happens in practice.",
+        "range": {
+          "endMs": 244560,
+          "startMs": 199120
+        }
+      },
+      {
+        "text": "In a worked example of £500 a month at 7%, a £10,000 withdrawal in year seven plus an 18 month contribution pause leaves £126,000 instead of £158,000 after 15 years. Only £19,000 of that £32,000 gap is money removed, the rest is growth that never happened.",
+        "range": {
+          "endMs": 316639,
+          "startMs": 244560
+        }
+      },
+      {
+        "text": "Early compounding is nearly invisible. At £300 a month and 7%, year one produces about £114 of growth, and after five years more than 83% of the balance is simply your own contributions.",
+        "range": {
+          "endMs": 402160,
+          "startMs": 358880
+        }
+      },
+      {
+        "text": "Over five years at £300 a month, chasing 7% instead of 5% leaves you only about £1,000 better off, while doubling contributions to £600 at just 5% leaves you roughly £20,000 better off.",
+        "range": {
+          "endMs": 471599,
+          "startMs": 438479
+        }
+      },
+      {
+        "text": "The crossover where a year of market growth exceeds a year of contributions comes around year ten, once the pot passes roughly £51,000 at £300 a month and 7%, which is when the engine starts pulling its own weight.",
+        "range": {
+          "endMs": 525279,
+          "startMs": 476400
+        }
+      },
+      {
+        "text": "Sequence of returns risk means the order of returns matters enormously once you are withdrawing. Two investors starting with £100,000 and taking £6,000 a year for three years with the same returns in reverse order finish about £6,000 apart, at £93,000 and £88,300.",
+        "range": {
+          "endMs": 714959,
+          "startMs": 530320
+        }
+      },
+      {
+        "text": "He proposes three stages instead of one smooth curve: capital velocity where income and savings rate dominate, then optimisation of fees and tax once you hit critical mass, such as cutting total costs from 1.5% to 0.5%, then genuine compounding.",
+        "range": {
+          "endMs": 950160,
+          "startMs": 771200
+        }
+      }
+    ],
+    "howToApply": {
+      "items": [
+        "Work out the pound value of a 2% better return on your current pot and compare it with saving an extra £200 a month before you spend time switching funds.",
+        "Calculate your own crossover point by checking whether one year of expected market growth yet exceeds one year of your contributions, and treat income growth as the priority until it does.",
+        "Once your pot is substantial, total up your platform and fund charges and move the money into a tax sheltered account such as an ISA to stop the leakage."
+      ]
+    },
+    "watchAnyway": {
+      "range": null,
+      "answer": "no",
+      "reason": "It is a single presenter talking through arithmetic examples, all of which survive being written down. The numbers in this overview are the whole of the evidence."
+    }
+  },
+  {
+    "id": "8d6760f0-7abd-432a-a84f-92a6ff6fe4a6",
+    "tags": [
+      "ai-coding",
+      "ai-agents",
+      "ai-workflows",
+      "burnout",
+      "product-design"
+    ],
+    "thin": false,
+    "source": {
+      "id": "89c8baa8c00d43ec0a1e2adec670d77c",
+      "url": "https://newsletter.pragmaticengineer.com/p/how-software-engineering-is-changing",
+      "kind": "web",
+      "title": "How software engineering is changing: a tale of two eras",
+      "author": "Gergely Orosz, Jessica Salmon, Ivan Klaric",
+      "imageUrl": "https://substackcdn.com/image/fetch/$s_!WYGs!,w_1200,h_675,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F25c874c2-9b02-4a24-9046-879cb1500023_1920x899.png",
+      "language": "en",
+      "siteName": "The Pragmatic Engineer",
+      "wordCount": 5935,
+      "publishedAt": "2026-11-03T16:58:22.000Z"
+    },
+    "article": {
+      "chapters": [
+        {
+          "place": {
+            "quote": "Before we start: I’m in San Francisco this",
+            "anchor": null
+          },
+          "title": "One engineer compares very different workplaces",
+          "summary": "After event notices and the essay competition announcement, Kakkar establishes his career baseline. He acknowledges that pull request counts are gameable and compares work across companies with different sizes, responsibilities and stages.",
+          "wordCount": 927
+        },
+        {
+          "place": {
+            "quote": "At PostHog until late 2024, the extent of",
+            "anchor": null
+          },
+          "title": "Ownership and approval rules change",
+          "summary": "Kakkar argues that straightforward features now suit individual ownership across the whole stack. Human reviews become optional after onboarding, and he reports a lower revert rate partly because Tano fixes problems forward instead of reverting.",
+          "wordCount": 1370
+        },
+        {
+          "place": {
+            "quote": "At Bloomberg, I was shielded from customers and",
+            "anchor": null
+          },
+          "title": "Engineers also decide what to build",
+          "summary": "Tano has no product managers, Kakkar says. Weekly planning combines engineers’ observations with founders’ customer and sales context, while cheaper architectural changes let the team learn more in production instead of future-proofing every decision.",
+          "wordCount": 796
+        },
+        {
+          "place": {
+            "quote": "Of course, not everything is ideal with an",
+            "anchor": null
+          },
+          "title": "Cheap fixes compete with important work",
+          "summary": "Kakkar describes accepting small tasks because they look easy, even when they displace sprint goals. Losing the habit of reading colleagues’ code also removes a channel for learning how the wider product is changing.",
+          "wordCount": 848
+        },
+        {
+          "place": {
+            "quote": "Writing code used to define how my day",
+            "anchor": null
+          },
+          "title": "A stopping point becomes essential",
+          "summary": "Kakkar initially exhausted himself by mid-afternoon. Leaving his laptop at work lets agents finish while he disconnects, and he reframes unused machine capacity as acceptable rather than a reason to keep working.",
+          "wordCount": 716
+        },
+        {
+          "place": {
+            "quote": "Among the first ten hires at PostHog, one",
+            "anchor": null
+          },
+          "title": "The next constraints keep moving",
+          "summary": "Kakkar wants to test agents that monitor production and initiate fixes themselves. He argues that successful adoption requires experimentation across the company, because faster coding exposes constraints in reviews, integration pipelines and source control.",
+          "wordCount": 896
+        },
+        {
+          "place": {
+            "quote": "Gergely, again.",
+            "anchor": null
+          },
+          "title": "The editor qualifies the comparison",
+          "summary": "Orosz says younger companies can change processes more aggressively because they have less established business to protect. He expects older startups to catch up and welcomes Kakkar’s boundaries against agent-driven overwork.",
+          "wordCount": 382
+        }
+      ],
+      "readAnyway": {
+        "answer": "partial",
+        "reason": "The firsthand workflow and failure accounts are worth inspecting before changing your own review process. They show what the extra throughput actually costs, rather than treating it as free productivity.",
+        "leftOut": "It leaves out the detailed project inventory, charts of pull request timing and review ratios, sample generated summaries, review screenshots and migration guardrail examples.",
+        "chapterIndexes": [
+          1,
+          2
+        ]
+      },
+      "keyPointChapters": [
+        1,
+        null,
+        2,
+        null,
+        null,
+        6
+      ]
+    },
+    "savedAt": "2026-11-04T21:58:35.505Z",
+    "selling": {
+      "type": "own_free_promotion",
+      "detail": "The opening promotes registration for the publication’s live events. The text does not state whether attendance costs money.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "original",
+      "reasoning": "The firsthand work history and operational failures provide original evidence, rather than another generic prediction about coding agents. This is an uncontrolled comparison across different jobs and businesses, so it cannot isolate the productivity gain caused by artificial intelligence or establish equivalent software quality.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "Kakkar’s own cross-company pull request history connects agent-driven throughput with changed review practices and personal exhaustion.",
+        "range": null
+      },
+      "dubiousClaims": []
+    },
+    "chapters": null,
+    "coreClaim": "Neil Kakkar reports merging 11x more pull requests at Tano than at pre-AI PostHog, attributing the increase to coding agents and an engineering culture that removes human approval bottlenecks, while accepting more operational risk and mental strain.",
+    "inOneLine": "A data-backed personal essay comparing an engineer’s work before and after adopting coding agents, with an editor’s assessment of the trade-offs.",
+    "keyPoints": [
+      {
+        "text": "Kakkar delegates whole features rather than individual coding tasks. He runs 3-5 workstreams, checks plans, and reviews an agent-generated summary with each pull request; agents can take 1-2 hours to finish.",
+        "range": null
+      },
+      {
+        "text": "Tano usually replaces human review with automated review, Kakkar says. Mistakes have included incorrect currency handling and blocked database writes; the team accepts rapid fixes and adds newly discovered failure modes to its review agent.",
+        "range": null
+      },
+      {
+        "text": "Faster migrations change which architectural risks feel affordable, Kakkar argues. Tano completed migrations in weeks, but missing guardrails caused duplicate creator payments, a cost the company accepted to scale faster.",
+        "range": null
+      },
+      {
+        "text": "Human attention becomes the bottleneck, Kakkar says. Parallel agents encourage reactive bug fixing, increase exhaustion, and leave engineers knowing less about colleagues’ work; he proposes documenting product context in agent instruction files to reduce dependence on individual people.",
+        "range": null
+      },
+      {
+        "text": "Kakkar sees limits beyond coding speed. Tano’s generated design looks generic, and its subscription allowance constrains experiments; his usage would cost $8,000+ per month at application programming interface rates.",
+        "range": null
+      },
+      {
+        "text": "Orosz cautions that shipping volume is not business success. He says iteration speed is pretty meaningless by itself without looking at product-market fit, revenue or healthy unit economics.",
+        "range": null
+      }
+    ],
+    "howToApply": {
+      "items": [
+        "Have your coding agent attach a readable summary of changes, verification results and screenshots to every pull request, then inspect it before merging.",
+        "Set a limit on simultaneous agent workstreams, and check new bug requests against your current priority before starting another session.",
+        "Write product decisions and operational hazards into agent instruction files so another engineer can recover context without relying on your memory."
+      ]
+    },
+    "watchAnyway": null
+  },
+  {
+    "id": "fb277911-5816-46f2-9d52-b95aa8b09f3b",
+    "tags": [
+      "uk-politics",
+      "emergency-preparedness",
+      "household-supplies"
+    ],
+    "thin": false,
+    "source": {
+      "id": "MaIFGhaKF_s",
+      "url": "https://www.youtube.com/watch?v=MaIFGhaKF_s",
+      "kind": "youtube",
+      "title": "Why is the UK telling people to stockpile? | BBC News",
+      "channel": "BBC News",
+      "durationMs": 453000,
+      "description": "Major retailers have reported a big rise in sales of tinned food, bottled water, wind up radios and batteries, after the government launched its 'be ready' campaign.\n\nThe government is urging people to stock up on enough for three days in case of a crisis - like extreme weather or a cyber-attack. \n\nThe security minister's defended the campaign, arguing that our European neighbours seem better prep",
+      "publishedAt": "2026-10-27T20:30:37.000Z",
+      "thumbnailUrl": "https://i.ytimg.com/vi/MaIFGhaKF_s/sddefault.jpg"
+    },
+    "savedAt": "2026-11-04T09:12:27.931Z",
+    "selling": {
+      "type": "none",
+      "detail": "No product, sponsor or paid service is pitched; retailers appear as sources for sales figures.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "common_knowledge",
+      "reasoning": "Keeping a modest emergency reserve is standard preparedness advice. The retailer figures are timely reporting, not a new method or substantive finding about risk, and the European comparisons are asserted rather than demonstrated.",
+      "similarTo": [],
+      "standsOut": null,
+      "dubiousClaims": []
+    },
+    "chapters": [
+      {
+        "endMs": 156852,
+        "title": "Why the government is encouraging preparation",
+        "startMs": 0,
+        "summary": "The report introduces the campaign and explains the government's concerns about extreme weather, power cuts and hostile-state cyberattacks."
+      },
+      {
+        "endMs": 238572,
+        "title": "What households should keep",
+        "startMs": 156852,
+        "summary": "The official 3-day supply recommendation is followed by a prepper's food and water stores, garden and emphasis on practical knowledge."
+      },
+      {
+        "endMs": 385015,
+        "title": "Retail sales and public reactions",
+        "startMs": 238572,
+        "summary": "Retailers report increased demand for emergency supplies. Public responses range from existing preparation to scepticism, affordability concerns and anxiety."
+      },
+      {
+        "endMs": 448895,
+        "title": "No specific threat and European comparisons",
+        "startMs": 385015,
+        "summary": "Dan Jarvis denies that an imminent threat prompted the campaign. The report closes by arguing that Britain trails other European countries in preparedness."
+      }
+    ],
+    "coreClaim": "The UK government wants households to hold 3 days of emergency supplies against power cuts, extreme weather and cyberattacks, while explicitly denying that the campaign responds to a specific or imminent threat.",
+    "inOneLine": "A news report combining correspondents, ministerial statements and public reactions to the UK's 3-day emergency supplies campaign.",
+    "keyPoints": [
+      {
+        "text": "The government's stated concerns are disruption from extreme weather and hostile-state cyberattacks, particularly against electricity infrastructure. Recent storm-related power cuts illustrate the practical risk.",
+        "range": {
+          "endMs": 158932,
+          "startMs": 56360
+        }
+      },
+      {
+        "text": "The Be Ready campaign recommends keeping 3 days of food, water and medication, alongside blankets, cash and a battery-powered radio.",
+        "range": {
+          "endMs": 182332,
+          "startMs": 156852
+        }
+      },
+      {
+        "text": "Prepper Sarah Malloy stresses knowing how to use stored ingredients rather than merely accumulating them. Her supplies include staple foods, stored water and purification tablets.",
+        "range": {
+          "endMs": 239932,
+          "startMs": 180972
+        }
+      },
+      {
+        "text": "Retailers reported sharp sales increases after the announcement. Maplin's torch sales rose 284%, Iceland's tinned products rose 40%, and Robert Dyas's radios rose 160%, although the comparison periods differ.",
+        "range": {
+          "endMs": 280494,
+          "startMs": 238572
+        }
+      },
+      {
+        "text": "Public reactions include concern about affordability and fear that officials anticipate an emergency. Security minister Dan Jarvis explicitly denies any specific or imminent threat and says the campaign aligns Britain with established practice elsewhere.",
+        "range": {
+          "endMs": 419015,
+          "startMs": 329094
+        }
+      }
+    ],
+    "howToApply": {
+      "items": [
+        "Check your household's food, drinking water and medication supplies against the campaign's 3-day recommendation, and buy only what is missing.",
+        "Keep blankets, some cash and a working battery-powered radio together where everyone in the household can find them.",
+        "Practise preparing a meal from your stored ingredients using equipment that would still work during a power cut."
+      ]
+    },
+    "watchAnyway": {
+      "range": null,
+      "answer": "no",
+      "reason": "The useful content is a short supplies checklist and the minister's reassurance about imminent threats. Neither requires the interviews or footage."
+    }
+  },
+  {
+    "id": "3be0656c-610a-48b6-9f8e-3b7fdafd5e2a",
+    "tags": [
+      "lasagne",
+      "chicken",
+      "butternut-squash",
+      "pesto"
+    ],
+    "thin": true,
+    "recipe": {
+      "steps": [
+        {
+          "text": "Heat the oil in a large casserole dish. Add the onions and cook until softened, then add the garlic and cook for a few mins more. Push the onions and garlic to the edge of the pan, add the chicken breasts and cook for a few mins each side to brown. Sprinkle over the flour and stir it into the onion mixture. Tip in the stock and season. Cover and simmer for 10 mins – or until the chicken is cooked through. Using 2 forks, shred the chicken into bite-sized chunks. Add half the mascarpone and the pesto, stirring until the mascarpone has melted into the sauce, bubble for a few mins to thicken a little, then remove from the heat and stir in the basil.",
+          "group": null
+        },
+        {
+          "text": "Meanwhile, place the squash in a large bowl with 2tbsp of water, cover with cling film and microwave on High for 12-15 mins, until really soft. Season the squash with a little of the nutmeg and some salt and pepper, and mash lightly with a fork.",
+          "group": null
+        },
+        {
+          "text": "Heat oven to 180C/160C fan/gas 4. Spoon half the chicken mixture into the bottom of a 20 x 30cm ovenproof dish. Cover with 4 lasagne sheets, then the butternut squash and half the Parmesan. Top with another 4 lasagne sheets, the remaining chicken mixture, then a final layer of lasagne. Mix enough milk into the remaining mascarpone to make a smooth sauce – you need to aim for a consistency similar to white sauce. Season with remaining nutmeg, salt and pepper, then pour over the lasagne. Scatter over the remaining Parmesan and the pine nuts. Bake for 40 mins until piping hot in the centre and crunchy and golden on top. Scatter with a few extra basil leaves before serving.",
+          "group": null
+        }
+      ],
+      "yield": "6",
+      "summary": "The page calls the dish “Chicken, squash & pesto lasagne”.",
+      "stepCount": 3,
+      "cookMinutes": 65,
+      "ingredients": [
+        "2 tbsp olive oil",
+        "2 onions chopped",
+        "2 garlic cloves crushed",
+        "4 skinless chicken breasts",
+        "1 tbsp plain flour",
+        "600ml chicken stock",
+        "500g tub mascarpone",
+        "190g jar pesto",
+        "bunch basil leaves picked and chopped, save a few small whole leaves to serve",
+        "1 butternut squash peeled, deseeded and cut into chunks",
+        "good grating of nutmeg",
+        "12 lasagne sheets",
+        "85g parmesan grated",
+        "splash of milk",
+        "50g pine nut"
+      ],
+      "prepMinutes": 20,
+      "totalMinutes": 85
+    },
+    "source": {
+      "id": "2c173b905966338f69011bd963fa06ae",
+      "url": "https://www.bbcgoodfood.com/recipes/chicken-squash-pesto-lasagne",
+      "kind": "web",
+      "title": "Chicken, squash & pesto lasagne",
+      "author": null,
+      "imageUrl": "https://images.immediate.co.uk/production/volatile/sites/30/2020/08/lasagne-1f862ba.jpg?resize=440%2C230",
+      "language": "en",
+      "siteName": "Good Food",
+      "wordCount": 412,
+      "publishedAt": null
+    },
+    "savedAt": "2026-11-04T13:32:57.360Z",
+    "selling": null,
+    "verdict": null,
+    "chapters": null,
+    "coreClaim": "",
+    "inOneLine": "A chicken and butternut squash lasagne with pesto, mascarpone, Parmesan and pine nuts.",
+    "keyPoints": [],
+    "howToApply": null,
+    "watchAnyway": null
+  }
+]
