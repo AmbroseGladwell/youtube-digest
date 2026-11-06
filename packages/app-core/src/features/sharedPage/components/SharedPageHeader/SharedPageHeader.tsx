@@ -16,7 +16,7 @@ export function SharedPageHeader({ ref }: { ref?: Ref<HTMLElement> }) {
   const { signedIn } = useSharedPageReader();
 
   return (
-    <header className={styles.root} ref={ref} data-testid={sharedPageHeaderTestIds.root}>
+    <header className={styles.root} ref={ref} data-sticky-fade="" data-testid={sharedPageHeaderTestIds.root}>
       <Link
         className={styles.home}
         to={Routes.home()}

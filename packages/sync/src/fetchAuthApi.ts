@@ -32,7 +32,8 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
       await request("DELETE", "/session", z.never());
     },
     updateAccount: (update) => answered(request("PUT", "/session/account", SessionInfo, { body: update })),
-    requestVerification: () => answered(request("POST", "/session/verification", VerificationAsked)),
+    requestVerification: (purpose = "emailChange") =>
+      answered(request("POST", "/session/verification", VerificationAsked, { body: { purpose } })),
     confirmVerification: async (code) => {
       await request("POST", "/session/verification/confirm", z.never(), { body: { code } });
     },
@@ -42,5 +43,8 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
       answered(request("POST", "/session/email-change/confirm", SessionInfo, { body: { code } })),
     revertEmailChange: (token) =>
       answered(request("POST", "/auth/email-change/revert", EmailChangeReverted, { body: { token } })),
+    deleteAccount: async () => {
+      await request("DELETE", "/session/account", z.never());
+    },
   };
 }

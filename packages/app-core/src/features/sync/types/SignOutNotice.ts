@@ -4,4 +4,7 @@ export interface SignOutNotice {
   pending: number;
   stuck: number;
   offline: boolean;
+  // The account was deleted rather than signed out of, so nothing is waiting to sync and
+  // the notice says what happened instead (design 184e).
+  deleted?: boolean;
 }

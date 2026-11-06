@@ -55,6 +55,9 @@ const ConfigEnv = z
     OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(50),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
+    POSTHOG_PERSONAL_API_KEY: z.string().min(1).optional(),
+    POSTHOG_PROJECT_ID: z.string().regex(/^\d+$/, "must be the project's numeric id").optional(),
+    POSTHOG_APP_HOST: z.url().default("https://eu.posthog.com"),
     ANALYTICS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
     OTEL_LOGS_EXPORTER: z.string().optional(),
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: z.string().min(1).optional(),
@@ -88,6 +91,10 @@ const ConfigEnv = z
     path: ["R2_BUCKET"],
     message: "R2 or AUDIO_DIR is required when TTS_URL is set: rendered narration has to be kept somewhere",
   })
+  .refine((env) => env.POSTHOG_PERSONAL_API_KEY === undefined || env.POSTHOG_PROJECT_ID !== undefined, {
+    path: ["POSTHOG_PROJECT_ID"],
+    message: "required when POSTHOG_PERSONAL_API_KEY is set: an erasure has to name the project it acts in",
+  })
   .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.APP_URL.startsWith("https://"), {
     path: ["APP_URL"],
     message: "must be the https address readers will open, when real mail is being sent",
@@ -112,10 +119,14 @@ export type OurKeyConfig = { apiKey: string; dailyGenerations: number; signedOut
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
 // Analytics are forwarded only when there is a PostHog project to forward them to;
-// otherwise /api/events logs them and stops (docs/architecture/analytics.md).
+// otherwise /api/events logs them and stops (docs/architecture/analytics.md). Erasing a
+// deleted account's records there is on exactly when the personal key is set, so the project
+// id can ship in fly.toml ahead of the secret rather than refusing startup, as R2's bucket
+// does (docs/features/account-deletion.md, "Erasure at PostHog").
 export type AnalyticsConfig = {
   environment: "development" | "production";
   postHog: { apiKey: string; host: string } | null;
+  erasure: { personalApiKey: string; projectId: string; host: string } | null;
 };
 
 export interface Config {
@@ -209,6 +220,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     analytics: {
       environment: data.ANALYTICS_ENVIRONMENT,
       postHog,
+      erasure:
+        data.POSTHOG_PERSONAL_API_KEY === undefined
+          ? null
+          : { personalApiKey: data.POSTHOG_PERSONAL_API_KEY, projectId: data.POSTHOG_PROJECT_ID!, host: data.POSTHOG_APP_HOST },
     },
     logs,
   };

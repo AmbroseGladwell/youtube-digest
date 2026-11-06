@@ -141,6 +141,9 @@ Five folders, five different questions.
 - `back-within-reach.md` — on a phone the bar's brand slot becomes `← All overviews` once
   the head has scrolled under it, how the hand-off moves, and why both links go back in
   history when the library is behind them.
+- `fade-under-the-bar.md` — content dissolves over 16px of `--ground` as it passes under the
+  sticky chrome: why only the lowest band in a stack carries it, the one rule that picks
+  that band, and why the fade rides the scroll rather than a timer.
 - `page-transitions.md` — `PageLink` as the one way a navigation asks for design 9c's pane
   transition, the row's thumbnail carrying across into the note's head, why a pop is animated
   by replay rather than a flag, and which navigations were deliberately left plain.
@@ -209,6 +212,10 @@ Five folders, five different questions.
 - `account-changes.md` — changing the name and the email on an account: a code to the
   current address first, a code to the new one, the old address's notice with a seven-day
   link that moves the account back and ends every session
+- `account-deletion.md` — deleting an account from Settings: the same code as the email
+  change first, one transaction and the three steps after it, the audit row that says how
+  each ended and the by-hand retry, why shared links go and narration is re-made, what the
+  shared cache keeps, and what the device drops once the library is closed
 - `account-libraries.md` — each account's library on the device: a database per account
   beside the no-account one, why the app swaps libraries in place and never syncs the one
   being left, sign-out that syncs first, never blocks and says what it couldn't send, what

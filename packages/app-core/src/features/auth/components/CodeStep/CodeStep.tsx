@@ -23,6 +23,10 @@ export interface CodeStepProps {
   onResend: () => void;
   onCancel: () => void;
   onDifferentAddress?: (() => void) | undefined;
+  // Inside a dialog the box has no surface of its own and its heading is the dialog's
+  // (design 184c, docs/features/account-deletion.md).
+  variant?: "box" | "dialog";
+  headingId?: string | undefined;
 }
 
 const secondsLeft = (sentAt: number, now: number): number =>
@@ -47,6 +51,8 @@ export function CodeStep({
   onResend,
   onCancel,
   onDifferentAddress,
+  variant = "box",
+  headingId,
 }: CodeStepProps) {
   const ids = useId();
   const [code, setCode] = useState("");
@@ -89,8 +95,19 @@ export function CodeStep({
   };
 
   return (
-    <form className={styles.root} onSubmit={submit} noValidate data-testid={codeStepTestIds.root}>
-      <h3 className={styles.heading} ref={headingRef} tabIndex={-1} data-testid={codeStepTestIds.heading}>
+    <form
+      className={variant === "dialog" ? styles.rootInDialog : styles.root}
+      onSubmit={submit}
+      noValidate
+      data-testid={codeStepTestIds.root}
+    >
+      <h3
+        className={variant === "dialog" ? styles.headingInDialog : styles.heading}
+        id={headingId}
+        ref={headingRef}
+        tabIndex={-1}
+        data-testid={codeStepTestIds.heading}
+      >
         {heading}
       </h3>
       <p className={styles.lead}>{lead}</p>

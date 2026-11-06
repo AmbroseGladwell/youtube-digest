@@ -13,7 +13,8 @@ export const changedOnLine = (changedAt: string): string => {
 
 // Design 14h. Every mail is the OV-88 shell with its own words; the code mails have no
 // button, and the old address's notice has one, its way back
-// (docs/features/account-changes.md, "The mails").
+// (docs/features/account-changes.md, "The mails"). The step-up's mail says what the code
+// is about to allow (design 14h·2, docs/features/account-deletion.md).
 export function accountEmail(mail: AccountMail, siteUrl: string): EmailContent {
   switch (mail.kind) {
     case "verificationCode":
@@ -22,14 +23,22 @@ export function accountEmail(mail: AccountMail, siteUrl: string): EmailContent {
         subject: "Confirm it’s you",
         preview: "Your code, valid for 15 minutes.",
         heading: "Confirm it’s you",
-        body: "Enter this code in Settings to confirm it’s you before changing your email.",
+        body:
+          mail.purpose === "deleteAccount"
+            ? "Enter this code in Settings to delete your account."
+            : "Enter this code in Settings to confirm it’s you before changing your email.",
         code: mail.code,
         action: null,
         notes: [
           "It works once, for the next fifteen minutes.",
-          `If you didn’t ask for this, someone may be signed in as you. Ignore the code: without it your email can’t be changed. Then sign out of any device you don’t recognise, and write to ${mail.supportEmail}.`,
+          mail.purpose === "deleteAccount"
+            ? `If you didn’t ask for this, someone may be signed in as you. Ignore the code: without it your account can’t be deleted. Then sign out of any device you don’t recognise, and write to ${mail.supportEmail}.`
+            : `If you didn’t ask for this, someone may be signed in as you. Ignore the code: without it your email can’t be changed. Then sign out of any device you don’t recognise, and write to ${mail.supportEmail}.`,
         ],
-        reason: "You’re getting this because someone signed in to your account asked to change its email.",
+        reason:
+          mail.purpose === "deleteAccount"
+            ? "You’re getting this because someone signed in to your account asked to delete it."
+            : "You’re getting this because someone signed in to your account asked to change its email.",
       });
     case "emailChangeCode":
       return compose({

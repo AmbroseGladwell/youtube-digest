@@ -55,7 +55,8 @@ sudo-mode rule: the reader has just proved the same thing. Otherwise a code goes
 account's own address and the row opens on "Confirm it's you". Confirming sets
 `sessions.verified_at`, good for fifteen minutes, and the code is bound to the session it was
 made for: one made for another session is refused. The step is session state rather than
-email-change state so that OV-184 (delete account) can require the same thing. The verified
+email-change state so that OV-184 (delete account) can require the same thing, which it does;
+the ask takes a `purpose` so the mail says which (`account-deletion.md`). The verified
 time is read by the two routes that need it, not by the session lookup every request makes,
 so the path every call takes never depends on this slice's column: `twoDevices.test.ts` runs
 the app against a database held at an earlier migration, and would otherwise sign nothing in.

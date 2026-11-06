@@ -72,6 +72,9 @@
   // the side panel does (docs/features/extension-panel.md).
   --reader-masthead-height: 0px;
   --reader-tabs-height: 2.25rem;
+  // docs/features/fade-under-the-bar.md: one height serves every surface.
+  --sticky-fade-height: 16px;
+  --sticky-fade-arrive: 24px;
   --gap-control: 0.375rem;
   --gap-group: 1rem;
   --radius-badge: 999px;

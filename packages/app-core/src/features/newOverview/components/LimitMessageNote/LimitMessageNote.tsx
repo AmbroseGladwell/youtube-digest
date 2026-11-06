@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router";
 import { DEFAULT_PLAN } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
 import { LIMIT_ACTION_LABEL, LIMIT_FOOT, type LimitAction, type LimitMessage } from "../../util/limitMessage.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import styles from "./LimitMessageNote.module.scss";
 import type { LimitMessageNoteTestIds } from "./LimitMessageNoteTestIds.js";
 
@@ -61,7 +61,7 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
       </div>
       <div className={styles.actions}>
         {message.actions.map((action, index) => (
-          <Link
+          <PageLink
             key={action}
             ref={index === 0 ? firstAction : undefined}
             className={index === 0 ? styles.primary : styles.secondary}
@@ -70,7 +70,7 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
             data-testid={testIds.action(action)}
           >
             {LIMIT_ACTION_LABEL[action]}
-          </Link>
+          </PageLink>
         ))}
       </div>
       <p className={styles.foot} data-testid={testIds.foot}>

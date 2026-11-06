@@ -131,7 +131,9 @@ web app can hand the extension beside it a way in with no second email
 for the code to the current address; `POST /api/session/email-change` and its `/confirm`
 for the code to a new one. A sixth, `POST /api/auth/email-change/revert`, is public: it is
 the button in the old address's mail, and acts on its token alone
-(`docs/features/account-changes.md`).
+(`docs/features/account-changes.md`). A seventh, `DELETE /api/session/account`, deletes the
+account behind the same verified session the email change needs, and the verification ask
+takes a `purpose` so its mail says which (`docs/features/account-deletion.md`).
 
 ## Origins
 
@@ -252,7 +254,7 @@ sends:
 | `invalid_request` | 400 | body, header or query fails validation; malformed JSON; a body written at a version other than the client's own |
 | `unauthenticated` | 401 | no, unknown or expired bearer |
 | `client_unsupported` | 403 | a write from below `minSupportedClientVersion`; `details` carry both numbers |
-| `verification_required` | 403 | a change that needs the session to have proved its inbox first: `POST /api/session/verification` sends the code (`docs/features/account-changes.md`) |
+| `verification_required` | 403 | a change that needs the session to have proved its inbox first, the email change or deleting the account: `POST /api/session/verification` sends the code (`docs/features/account-changes.md`, `account-deletion.md`) |
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
 | `video_already_held` | 409 | a second overview of a video the account holds; `details.overviewId` names the first (`docs/features/one-overview-per-video.md`) |

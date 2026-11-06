@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-05";
+export const TERMS_UPDATED_ON = "2026-11-06";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -63,8 +63,8 @@ const sections: readonly LegalSection[] = [
           Don't share an account, make accounts for other people, or make several accounts to get round a limit.
         </li>
         <li>
-          You can delete your account at any time by emailing {contact}. The privacy policy says what is deleted
-          and what is kept.
+          You can delete your account at any time from Settings › Account & sync, after a code to your address
+          confirms it is you. The privacy policy says what is deleted and what is kept.
         </li>
         <li>
           We may suspend or close an account that breaks these terms, is used to attack the service or other

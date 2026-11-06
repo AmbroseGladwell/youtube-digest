@@ -53,3 +53,11 @@ export function writeCaptureQueuePreferences(
     return;
   }
 }
+
+export function forgetCaptureQueuePreferences(accountId: string, storage: Storage = globalThis.localStorage): void {
+  try {
+    storage.removeItem(storageKey(accountId));
+  } catch {
+    return;
+  }
+}

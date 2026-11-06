@@ -10,6 +10,8 @@ export function createLogMailer(log: (line: string) => void = console.error): Ma
     sendAccountMail: async (mail) => {
       switch (mail.kind) {
         case "verificationCode":
+          log(`${mail.kind} (${mail.purpose}) for ${mail.to}: code ${mail.code}`);
+          return;
         case "emailChangeCode":
           log(`${mail.kind} for ${mail.to}: code ${mail.code}`);
           return;

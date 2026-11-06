@@ -9,7 +9,7 @@ import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
-import type { Library, OpenLibrary } from "../stores/Library.js";
+import type { DeleteLibrary, Library, OpenLibrary } from "../stores/Library.js";
 import { LibraryRuntime } from "../stores/LibraryRuntime.js";
 import { AccentMirrorProvider, type AccentMirror } from "./AccentMirrorContext.js";
 import { AppBuildProvider, type AppBuild } from "./AppBuildContext.js";
@@ -34,6 +34,7 @@ import "../theme/global.scss";
 export interface AppProps {
   library: Library;
   openLibrary: OpenLibrary;
+  deleteLibrary: DeleteLibrary;
   router: AppRouter;
   surface: Surface;
   layout?: AppLayout;
@@ -55,6 +56,7 @@ export interface AppProps {
 export function App({
   library,
   openLibrary,
+  deleteLibrary,
   router,
   surface,
   layout = "full",
@@ -85,7 +87,7 @@ export function App({
                       <AccentMirrorProvider value={accentMirror}>
                       <AppBuildProvider value={build}>
                         <QueryClientProvider client={queryClient}>
-                          <LibraryRuntime library={library} openLibrary={openLibrary}>
+                          <LibraryRuntime library={library} openLibrary={openLibrary} deleteLibrary={deleteLibrary}>
                             <SyncRuntime>
                               <AppearanceRuntime>
                               <ErrorReportingRuntime>

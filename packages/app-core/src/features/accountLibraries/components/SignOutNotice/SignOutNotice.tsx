@@ -24,7 +24,7 @@ export function SignOutNotice() {
       data-testid={signOutNoticeTestIds.root}
     >
       <span className={styles.icon}>
-        <StrokeIcon name={notice.offline ? "wifiOff" : "cloudUpload"} size={17} />
+        <StrokeIcon name={notice.deleted ? "check" : notice.offline ? "wifiOff" : "cloudUpload"} size={17} />
       </span>
       <div className={styles.text}>
         <p className={styles.lead} data-testid={signOutNoticeTestIds.lead}>

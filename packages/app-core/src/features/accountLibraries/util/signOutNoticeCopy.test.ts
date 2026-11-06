@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { signOutNoticeCopy } from "./signOutNoticeCopy.js";
 
 describe("signOutNoticeCopy", () => {
+  it("says the account is deleted and every device signed out, with nothing waiting (184e)", () => {
+    expect(signOutNoticeCopy({ pending: 0, stuck: 0, offline: false, deleted: true }, "web")).toEqual({
+      lead: "Your account is deleted.",
+      then: "This device and your others are signed out.",
+      stuck: null,
+    });
+  });
+
   it("says what will sync on the next sign-in in this browser (47d-2)", () => {
     expect(signOutNoticeCopy({ pending: 3, stuck: 1, offline: false }, "web")).toEqual({
       lead: "Signed out. 3 changes will sync when you sign back in on this browser.",

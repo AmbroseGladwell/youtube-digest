@@ -19,7 +19,7 @@ import {
   reportStartupFailure,
   StartupFailure,
 } from "@overview/app-core";
-import { adoptLibraryIntoAccount, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
+import { adoptLibraryIntoAccount, deleteLocalLibrary, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { writeAccentColour } from "./accentColourStorage.js";
 import { appBuild } from "./appBuild.js";
 import { chromeProviderPermissions } from "./chromeProviderPermissions.js";
@@ -97,6 +97,7 @@ export async function mountApp({
       <App
         library={library}
         openLibrary={openLibrary}
+        deleteLibrary={(accountId) => deleteLocalLibrary({ accountId })}
         appUpdate={openExtensionsPage}
         router={createAppRouter(createHashRouter)}
         surface="extension"

@@ -12,7 +12,10 @@ const changes = (count: number): string => (count === 1 ? "1 change" : `${count}
 
 // Designs 47d-2 and 47d-3: what is waiting leads, the reason first when it is known, and
 // what the server refused is its own line because nothing will send it.
-export function signOutNoticeCopy({ pending, stuck, offline }: SignOutNotice, surface: Surface): SignOutNoticeCopy {
+export function signOutNoticeCopy({ pending, stuck, offline, deleted = false }: SignOutNotice, surface: Surface): SignOutNoticeCopy {
+  if (deleted) {
+    return { lead: "Your account is deleted.", then: "This device and your others are signed out.", stuck: null };
+  }
   const here = signingInHere(surface);
   let lead: string;
   let then: string | null = null;

@@ -45,6 +45,7 @@ import { usePlayer } from "../../player/PlayerContext.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { MakeYourOwnAside } from "../components/MakeYourOwnAside/MakeYourOwnAside.js";
 import { SharedOverviewGone } from "../components/SharedOverviewGone/SharedOverviewGone.js";
+import { PageScrolledSentinel } from "../../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
 import { SharedPageHeader } from "../components/SharedPageHeader/SharedPageHeader.js";
 import { SharedPlayerRuntime } from "../SharedPlayerRuntime.js";
 import { startOnboardingFromShare } from "../../onboarding/useOnboardingProgress.js";
@@ -236,6 +237,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
 
   return (
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
+      <PageScrolledSentinel />
       <SharedPageHeader ref={mastheadHeight.measured} />
 
       <div className={`${styles.body} ${signedIn ? styles.bodyAlone : ""}`}>

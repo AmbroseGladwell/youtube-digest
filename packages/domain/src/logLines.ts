@@ -70,6 +70,7 @@ export const apiLogLines = coded("api", {
     ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
     analytics: line("info", "analytics", "Where events and errors are passed on to, or that they are only logged."),
+    accountErasure: line("info", "account erasure", "Whether a deleted account's events and errors can be erased at PostHog, or why not."),
     webApp: line("info", "web app", "Whether this process serves the web app as well as the API."),
     logShipping: line("info", "log shipping", "Where these logs are shipped, or that they go to stdout only."),
   },
@@ -116,6 +117,9 @@ export const apiLogLines = coded("api", {
     emailChangeConfirmed: line("info", "email change confirmed", "An account moved to a new address, and the old one was told."),
     emailChangeReverted: line("info", "email change reverted", "The old address moved the account back and every session ended."),
     emailChangeRevertRefused: line("warn", "email change revert refused", "A revert link could not act; `reason` says why."),
+    accountDeleted: line("info", "account deleted", "An account and every row under it are gone; `narration`, `postHogAccount` and `postHogAnonymous` say how each later step ended. Never the address."),
+    accountDeletionStepFailed: line("error", "account deletion step failed", "A step after the commit failed; `step` names it, and `task api:finish-deletions` retries it (docs/features/account-deletion.md)."),
+    accountDeletionFinished: line("info", "account deletion finished", "A retry finished the steps a deletion had left unfinished."),
   },
   mcp: {
     connectionRequestDecided: line("info", "connection request decided", "A reader approved or declined an assistant's request to connect."),

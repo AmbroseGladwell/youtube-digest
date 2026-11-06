@@ -72,7 +72,8 @@ to that heading. The list is a `nav` named "Settings sections".
 Signed in, the section is 51a's two tiles: **Signed in as** (since OV-14 two rows, Name and
 Email, each with its own Change; `account-changes.md`) and **Sync** (the status line, with a
 tick when nothing is waiting, then Sync now and, on the web, Connect the extension). Sign out
-sits below the tiles as a quiet button. A session the server has forgotten swaps Sync now for
+sits below the tiles as a quiet button, and since OV-184 Delete account… under it in the same
+style (`account-deletion.md`). A session the server has forgotten swaps Sync now for
 Sign in again. While an account row is open, Sync now steps down to a secondary pill so the
 row's own button is the only orange on the screen (design 14a). Signed out, there is one Sync
 tile that points at the sign-in and create-account pages.

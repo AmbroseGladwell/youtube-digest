@@ -10,6 +10,7 @@ import { syncPanelTestIds } from "./SyncPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { AccountTile } from "../../../auth/components/AccountTile/AccountTile.js";
+import { DeleteAccountDialog } from "../../../auth/components/DeleteAccountDialog/DeleteAccountDialog.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
@@ -28,6 +29,7 @@ export function SyncPanel() {
   const surface = useSurface();
   const { connection } = useSyncConnection();
   const [editingAccount, setEditingAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   if (!sync.available) {
     return null;
@@ -91,29 +93,44 @@ export function SyncPanel() {
           </div>
         </section>
         {!signedOut && (
-          <button
-            type="button"
-            className={styles.signOutButton}
-            onClick={() => {
-              if (sync.signingOut) return;
-              analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
-              void signOut();
-            }}
-            aria-disabled={sync.signingOut}
-            aria-live="polite"
-            data-testid={syncPanelTestIds.signOutButton}
-          >
-            {sync.signingOut ? (
-              <>
-                <span className={styles.spinner}>
-                  <StrokeIcon name="loader" size={16} />
-                </span>
-                Syncing before you sign out…
-              </>
-            ) : (
-              "Sign out"
+          <div className={styles.waysOut}>
+            <button
+              type="button"
+              className={styles.signOutButton}
+              onClick={() => {
+                if (sync.signingOut) return;
+                analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
+                void signOut();
+              }}
+              aria-disabled={sync.signingOut}
+              aria-live="polite"
+              data-testid={syncPanelTestIds.signOutButton}
+            >
+              {sync.signingOut ? (
+                <>
+                  <span className={styles.spinner}>
+                    <StrokeIcon name="loader" size={16} />
+                  </span>
+                  Syncing before you sign out…
+                </>
+              ) : (
+                "Sign out"
+              )}
+            </button>
+            {!sync.signingOut && connection.email !== null && connection.accountId !== null && (
+              <button
+                type="button"
+                className={styles.signOutButton}
+                onClick={() => setDeletingAccount(true)}
+                data-testid={syncPanelTestIds.deleteAccountButton}
+              >
+                Delete account…
+              </button>
             )}
-          </button>
+          </div>
+        )}
+        {deletingAccount && connection.email !== null && connection.accountId !== null && (
+          <DeleteAccountDialog email={connection.email} accountId={connection.accountId} onClose={() => setDeletingAccount(false)} />
         )}
       </div>
     );

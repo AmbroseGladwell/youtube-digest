@@ -9,6 +9,7 @@ import { ConfigError, loadConfig } from "./loadConfig.js";
 import { createPostHogErrorSink } from "./errors/postHogErrorSink.js";
 import { reportProcessErrors } from "./errors/reportProcessErrors.js";
 import { createPostHogEventSink } from "./events/postHogEventSink.js";
+import { createPostHogPersonEraser } from "./postHog/postHogPersonEraser.js";
 import { createLogger } from "./logs/createLogger.js";
 import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
@@ -26,9 +27,10 @@ try {
 }
 
 const audio = config.audio === null ? null : createAudioSetup(config.audio, true);
-const { postHog, environment } = config.analytics;
+const { postHog, environment, erasure } = config.analytics;
 const eventSink = postHog === null ? null : createPostHogEventSink({ ...postHog, environment });
 const errorSink = postHog === null ? null : createPostHogErrorSink({ ...postHog, environment });
+const personEraser = erasure === null ? null : createPostHogPersonEraser(erasure);
 const logExporter =
   config.logs === null
     ? null
@@ -80,6 +82,7 @@ const app = await buildApp({
       : youTubeDataApiPlaylistReader({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
   eventSink,
   errorSink,
+  personEraser,
   logger,
 });
 app.log.info(apiLogLines.startup.migrationsApplied({ applied }));
@@ -117,6 +120,11 @@ app.log.info(apiLogLines.startup.playlists(
   ));
 app.log.info(apiLogLines.startup.analytics(
     postHog === null ? { enabled: false, why: "POSTHOG_API_KEY is not set" } : { enabled: true, host: postHog.host, environment },
+  ));
+app.log.info(apiLogLines.startup.accountErasure(
+    erasure === null
+      ? { enabled: false, why: "POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID are not set" }
+      : { enabled: true, host: erasure.host, projectId: erasure.projectId },
   ));
 app.log.info(apiLogLines.startup.webApp(
     config.staticRoot === null ? { enabled: false, why: "STATIC_ROOT is not set" } : { enabled: true, root: config.staticRoot },

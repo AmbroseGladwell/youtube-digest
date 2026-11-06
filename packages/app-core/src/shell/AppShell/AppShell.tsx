@@ -29,6 +29,7 @@ import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import { useIsPhone } from "../../util/useIsPhone.js";
 import { useMediaQuery } from "../../util/useMediaQuery.js";
 import { useBackInBar } from "./useBackInBar.js";
+import { PageScrolledSentinel } from "../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
 import { useHistoryTrail } from "./useHistoryTrail.js";
 import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueContext.js";
 import { CaptureQueueStripView } from "../../features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
@@ -164,9 +165,11 @@ export function AppShell() {
         <HistoryTrailProvider value={trail}>
           <BackLinkHandoffProvider value={handoff}>
             <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
+              <PageScrolledSentinel />
               <header
                 className={styles.masthead}
                 ref={measureBand}
+                data-sticky-fade=""
                 data-testid={appShellTestIds.masthead}
               >
                 <div className={styles.bar}>

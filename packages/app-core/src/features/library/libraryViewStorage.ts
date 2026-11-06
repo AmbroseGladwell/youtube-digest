@@ -90,3 +90,11 @@ export function writeLibraryView(
     return;
   }
 }
+
+export function forgetLibraryView(accountId: string, storage: Storage = globalThis.localStorage): void {
+  try {
+    storage.removeItem(storageKey(accountId));
+  } catch {
+    return;
+  }
+}

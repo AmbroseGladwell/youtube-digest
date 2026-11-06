@@ -67,6 +67,57 @@ a:hover {
   outline-offset: 2px;
 }
 
+// docs/features/fade-under-the-bar.md (designs 166a-166h).
+[data-sticky-fade] {
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--sticky-fade-height);
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+      var(--ground),
+      color-mix(in srgb, var(--ground) 85%, transparent) 33%,
+      color-mix(in srgb, var(--ground) 45%, transparent) 62%,
+      color-mix(in srgb, var(--ground) 15%, transparent) 84%,
+      transparent
+    );
+  }
+
+  // The fallback, and the reduced-motion path: the blanket rule at the foot of this file
+  // leaves the animation below switched off for this to answer.
+  :root[data-page-scrolled] &::after {
+    opacity: 1;
+  }
+
+  // Guarded because with no scroll timeline this would run on time instead, showing the
+  // fade at the top of the page.
+  @supports (animation-timeline: scroll()) {
+    &::after {
+      animation: sticky-fade-in linear both;
+      animation-timeline: scroll();
+      animation-range: 0 var(--sticky-fade-arrive);
+    }
+  }
+}
+
+// A band gives the fade up to any band after it, so the lowest one keeps it.
+[data-sticky-fade]:has(~ [data-sticky-fade], ~ * [data-sticky-fade])::after {
+  content: none;
+}
+
+@keyframes sticky-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

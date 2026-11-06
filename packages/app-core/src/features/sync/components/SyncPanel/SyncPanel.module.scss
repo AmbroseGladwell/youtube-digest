@@ -59,7 +59,15 @@
   @include controls.pill-md;
 }
 
-// Design 51a: Sign out sits below the tiles, quiet until the pointer arrives.
+// Design 51a: Sign out sits below the tiles, quiet until the pointer arrives; design 184a
+// puts Delete account… under it in the same style, a way out of the account like Sign out.
+.waysOut {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
 .signOutButton {
   @include controls.ghost-pill;
   @include controls.pill-md;

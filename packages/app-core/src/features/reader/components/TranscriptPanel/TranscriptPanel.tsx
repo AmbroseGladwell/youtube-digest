@@ -143,7 +143,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
 
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
-      <div className={styles.head} ref={setHead} data-testid={transcriptPanelTestIds.head}>
+      <div className={styles.head} ref={setHead} data-sticky-fade="" data-testid={transcriptPanelTestIds.head}>
         <div className={styles.headingRow}>
           {/* Design 2a–2c: what the row's left says is the transcript's relationship to
               the video — the way back to the chapter that opened it, or whether it is
