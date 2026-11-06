@@ -695,7 +695,7 @@ spoken line.
 | `email change reverted` | `info` | `accountId`, from the public route, so it is said rather than bound |
 | `email change revert refused` | `warn` | `reason`: `expired`, `spent` or `taken` |
 | `account deleted` | `info` | `deletionId`, `narrationFiles`, and `narration`, `postHogAccount`, `postHogAnonymous`: how each step after the commit ended (`docs/features/account-deletion.md`) |
-| `account deletion step failed` | `error` | `accountId`, `deletionId`, `step`, the redacted `error`; `npm run finish-account-deletions` retries it |
+| `account deletion step failed` | `error` | `accountId`, `deletionId`, `step`, the redacted `error`; the retry in `account-deletion.md` finishes it, run on the machine |
 | `account deletion finished` | `info` | from that retry, under the deletion's id |
 
 Mail that can't be sent fails the request, so it's an `unhandled error` with the
