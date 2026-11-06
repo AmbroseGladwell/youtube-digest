@@ -357,7 +357,9 @@ test.describe("in the panel's overview", () => {
     return { ...overview, source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL } };
   };
 
-  test("Mark read beside Listen brings in what it saved, and the button says it is read", async ({
+  // Design 205b moves the panel's Mark read off the head and into ⋯, where the phone keeps
+  // it; the chip still comes in at the head, because that is where it was pressed.
+  test("Mark as read from ⋯ brings in what it saved, and the note's end says it is read", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -365,12 +367,12 @@ test.describe("in the panel's overview", () => {
     backendSimulator.overviews.seed(overview);
     const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
     const reader = await capture.openStoredOverview();
-    await reader.verifyPanelReadButtonReads("Mark read");
+    await reader.verifyNoteEndReadButtonReads("Mark read");
     await reader.verifyNoSavedChip();
 
-    await reader.clickPanelMarkRead();
+    await reader.clickMarkRead();
 
-    await reader.verifyPanelReadButtonReads("Read");
+    await reader.verifyNoteEndReadButtonReads("Read");
     await reader.verifySavedChipSays("Saved you 10 minutes");
     await expect(async () => {
       const state = await backendSimulator.overviews.getState(overview.id);
@@ -378,16 +380,16 @@ test.describe("in the panel's overview", () => {
     }).toPass();
   });
 
-  test("pressing it again marks the overview unread", async ({ launcher, backendSimulator }) => {
+  test("choosing it again marks the overview unread", async ({ launcher, backendSimulator }) => {
     const overview = watched(11);
     seedRead(backendSimulator, overview);
     const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
     const reader = await capture.openStoredOverview();
-    await reader.verifyPanelReadButtonReads("Read");
+    await reader.verifyNoteEndReadButtonReads("Read");
 
-    await reader.clickPanelMarkRead();
+    await reader.clickMarkRead();
 
-    await reader.verifyPanelReadButtonReads("Mark read");
+    await reader.verifyNoteEndReadButtonReads("Mark read");
     await reader.verifyNoSavedChip();
   });
 });

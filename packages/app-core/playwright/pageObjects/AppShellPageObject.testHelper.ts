@@ -193,11 +193,13 @@ export class AppShellPageObject extends PageObject {
     return { result, seen: taken.seen, opened: taken.opened };
   };
 
+  // Design 205c: the panel's bar is the phone's — the brand slot, + New and the account
+  // menu — and still has no section nav, there being one video rather than a library.
   verifyIsParedBackToThePanel = () =>
     this.step("verifyIsParedBackToThePanel", async () => {
       await this.expectToBeVisible(appShellTestIds.brand);
       await expect(this.page.getByRole("button", { name: "Account" })).toBeVisible();
-      await this.expectNotToBeVisible(appShellTestIds.newOverviewButton);
+      await this.expectToBeVisible(appShellTestIds.newOverviewButton);
       await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(0);
     });
 

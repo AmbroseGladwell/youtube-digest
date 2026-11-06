@@ -21,7 +21,15 @@ box, one going home and one going back, with no telling them apart by touch. Not
 else in the bar moves, because the box is the same in both states. `+ New` stays as it
 is. On a tablet, between 48rem and 62rem, the same happens and the `Overviews` nav
 beside the slot is left alone. Wider than that the head keeps its own arrangement and
-the bar keeps the brand; in the panel there is no back link to hand over.
+the bar keeps the brand.
+
+**The panel hands over too, at any width** (OV-205, 205h and 205w). It was excluded while
+its reader had no back link to lend; 205b gives it the phone's, so the only thing left
+excluding it was the width query. `handoffLive` now reads
+`headBackLink !== null && (isPanel || headScrollsAway)`, and the hand-off's stylesheet moved
+out of `@media (max-width: 61.9375rem)` to be keyed off `.brandSlotLive` — the same
+condition, stated once, by the component that already decides it. That is also what keeps a
+panel dragged wider than 400px behaving as a panel.
 
 **One link, one name.** Both the head's link and the bar's are `All overviews` with the
 same arrow, both go to the library, and only the one showing is reachable: the other is
@@ -54,7 +62,12 @@ one.
 ## Every page with a way back
 
 OV-193 generalised the slot. A page lends its back link with `useLentBackLink`, giving
-the destination and the label along with the element, and the bar's link takes both. The
+the destination and the label along with the element, and the bar's link takes both.
+
+OV-205 added the case of a page with no head to scroll away: `HeadBackLink.element` is
+nullable, `useLentBackLink` takes `inPage`, and `useBackInBar` reads a null element as "the
+slot holds it from the first frame" rather than watching for a crossing that can never
+happen. That is settings and its sections in the panel (205d-2). The
 overview lends `← All overviews`; the settings page lends `← All overviews` (`← Back` in
 the panel, where the slot never swaps anyway); a section page lends `← Settings`. The
 settings links used to stick under the masthead (43h) and now scroll away like the

@@ -90,6 +90,8 @@ export type ListenEnd = z.infer<typeof ListenEnd>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 const BackSource = z.enum(["head", "bar"]);
+// What the panel's "on this tab" line offers for the thing the tab has moved on to.
+const TabOffer = z.enum(["make", "read"]);
 // Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
 // Reset, or the caught-up list's way out.
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
@@ -763,6 +765,13 @@ export const analyticsEvents = {
       readChosen: event("The reader opens the overview the library already holds for this video", {
         overviewId: OverviewId,
       }),
+    },
+    onThisTab: {
+      shown: event("The panel tells a reader with a note open that the tab has moved on to something else", {
+        offer: TabOffer,
+      }),
+      followed: event("The reader takes up what the panel offers for the thing now on the tab", { offer: TabOffer }),
+      dismissed: event("The reader dismisses the line saying the tab has moved on", { offer: TabOffer }),
     },
   },
   playlists: {

@@ -2,7 +2,7 @@
 // behind whichever is chosen (docs/features/stone-theme.md).
 .root {
   position: sticky;
-  top: calc(var(--masthead-height) + var(--reader-masthead-height));
+  top: var(--masthead-height);
   z-index: 2;
   background: var(--ground);
   padding: 0.75rem var(--reader-gutter, 2rem) 0.25rem;

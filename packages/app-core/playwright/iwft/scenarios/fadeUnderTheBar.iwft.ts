@@ -115,8 +115,9 @@ test("an overview fades under the tab strip, and under the transcript's tools on
   await reader.verifyFadeHangsFrom(transcriptPanelTestIds.head);
 });
 
-// Design 166f: the panel's stack is the tallest, and the note's own head is in it.
-test("in the panel the fade still hangs from the foot of the stack, head and all", async ({
+// Design 166f, as 205b leaves it: the panel's head goes by with the note, so its stack is
+// the bar and the tabs and the fade hangs from the tabs.
+test("in the panel the fade hangs from the tabs, the head having scrolled away", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -124,13 +125,7 @@ test("in the panel the fade still hangs from the foot of the stack, head and all
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, activeVideoUrl: VIDEO_URL });
   const reader = await capture.openStoredOverview();
 
-  // Three deep here, because the panel sticks the note's own head as well
-  // (docs/features/extension-panel.md). The strip under it is what carries the fade.
-  await reader.verifyStickyBandsAre([
-    appShellTestIds.masthead,
-    readerMastheadTestIds.root,
-    readerTabsTestIds.root,
-  ]);
+  await reader.verifyStickyBandsAre([appShellTestIds.masthead, readerTabsTestIds.root]);
   await reader.verifyFadeHangsFrom(readerTabsTestIds.root);
   await reader.scrollToTheFoot();
   await reader.verifyFadeIsShown(true);

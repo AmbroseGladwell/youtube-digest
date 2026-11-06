@@ -125,17 +125,15 @@ export function OverviewActionsMenu({
               {regenerate.asksFirst ? "Regenerate…" : "Regenerate"}
             </button>
           )}
-          {!compact && (
-            <button
-              type="button"
-              role="menuitem"
-              className={styles.item}
-              onClick={choose("toggleRead", onToggleRead)}
-              data-testid={overviewActionsMenuTestIds.readItem}
-            >
-              {read ? "Mark as unread" : "Mark as read"}
-            </button>
-          )}
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={choose("toggleRead", onToggleRead)}
+            data-testid={overviewActionsMenuTestIds.readItem}
+          >
+            {read ? "Mark as unread" : "Mark as read"}
+          </button>
           {onShare !== null && (
             <>
               <span className={styles.rule} aria-hidden="true" />

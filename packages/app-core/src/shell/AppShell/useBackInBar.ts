@@ -14,6 +14,13 @@ export function useBackInBar(band: HTMLElement | null, link: HeadBackLink | null
       setBackInBar(false);
       return;
     }
+    // A page that draws no link of its own has nothing to scroll under the band, so the
+    // slot carries it for as long as the page is open (design 205d-2).
+    const element = link.element;
+    if (element === null) {
+      setBackInBar(true);
+      return;
+    }
     let observer: IntersectionObserver | null = null;
     const watch = () => {
       observer?.disconnect();
@@ -21,7 +28,7 @@ export function useBackInBar(band: HTMLElement | null, link: HeadBackLink | null
         rootMargin: `-${band.offsetHeight}px 0px 0px 0px`,
         threshold: 0,
       });
-      observer.observe(link.element);
+      observer.observe(element);
     };
     watch();
     const bandResized = new ResizeObserver(watch);

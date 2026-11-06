@@ -5,7 +5,7 @@ import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimu
 import type { IwftArticlePagesConfig } from "../../network/IwftArticlePages.testHelper.js";
 import { makeArticleOverview, makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { articleFailureNoticeTestIds } from "../../../src/features/capture/components/ArticleFailureNotice/ArticleFailureNoticeTestIds.js";
-import { articleOfferTestIds } from "../../../src/features/capture/components/ArticleOffer/ArticleOfferTestIds.js";
+import { sourceOfferTestIds } from "../../../src/features/capture/components/SourceOffer/SourceOfferTestIds.js";
 import { recentOverviewsTestIds } from "../../../src/features/capture/components/RecentOverviews/RecentOverviewsTestIds.js";
 import { capturePageTestIds } from "../../../src/features/capture/CapturePage/CapturePageTestIds.js";
 import { readerNoticeTestIds } from "../../../src/features/reader/components/ReaderNotice/ReaderNoticeTestIds.js";
@@ -81,9 +81,9 @@ test("first time on a site: the panel warns, Chrome asks, and an allowed article
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ granted: false }) });
 
-  await expect(page.getByTestId(articleOfferTestIds.site)).toHaveText("theharbourpost.example · Article");
-  await expect(page.getByTestId(articleOfferTestIds.title)).toHaveText(OPEN_PAGE.title);
-  await expect(page.getByTestId(articleOfferTestIds.facts), "nothing has been read yet").toHaveCount(0);
+  await expect(page.getByTestId(sourceOfferTestIds.site)).toHaveText("theharbourpost.example · Article");
+  await expect(page.getByTestId(sourceOfferTestIds.title)).toHaveText(OPEN_PAGE.title);
+  await expect(page.getByTestId(sourceOfferTestIds.facts), "nothing has been read yet").toHaveCount(0);
   await expect(page.getByTestId(capturePageTestIds.firstTimeNote)).toContainText("We only read a page when you press Create.");
 
   await page.getByTestId(capturePageTestIds.createButton).click();

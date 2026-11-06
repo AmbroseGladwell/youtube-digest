@@ -106,13 +106,15 @@ test("an image that fails to load leaves the head as it is with none", async ({
   await reader.verifyAboveTitle("channel");
 });
 
-test("the panel's head has no image", async ({ launcher, backendSimulator }) => {
+// Design 205b gives the panel the phone's head, image and all. It is the note's own stored
+// thumbnail, never taken from the tab.
+test("the panel's head carries the note's image, as the phone's does", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(withImage(overview, IMAGE));
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, activeVideoUrl: overview.source.url });
   const reader = await capture.openStoredOverview();
 
-  await reader.verifyHeadHasImage(false);
+  await reader.verifyHeadHasImage(true);
 });
 
 // OV-151: the image is the control that switches it between the tile and the column's width.

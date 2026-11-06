@@ -7,6 +7,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { useBackTo } from "../../../../app/useBackTo.js";
 import { useLentBackLink } from "../../../../app/useLentBackLink.js";
+import { useHomeName } from "../../../../app/useHomeName.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
@@ -30,9 +31,9 @@ export interface ReaderMastheadProps {
   favourite: boolean;
   playing: boolean;
   editingTopics: boolean;
-  // Design 6d and 34v: the side panel's head is the title, the channel, the meta line,
-  // Listen and Mark read — no back link, because there is no list behind it to have come from
-  // (docs/features/extension-panel.md).
+  // The panel. Design 205b makes its reader the phone's, so this no longer changes the
+  // head's arrangement: it names the way back after the tab and keeps the ⋯ menu's own
+  // panel items (docs/features/extension-panel.md).
   compact: boolean;
   webApp: OverviewInWebApp;
   listening: boolean;
@@ -94,10 +95,13 @@ export function ReaderMasthead({
 }: ReaderMastheadProps) {
   const analytics = useReaderAnalytics();
   const backToLibrary = useBackTo(Routes.home());
+  const homeName = useHomeName();
+  // In the panel home is the tab, so the way back is named after what the tab holds now
+  // (design 205c); everywhere else it is the library.
+  const backLabel = compact ? homeName : "All overviews";
   const headBackLink = useLentBackLink({
     to: Routes.home(),
-    label: "All overviews",
-    lent: !compact,
+    label: backLabel,
     follow: (event) => {
       analytics.page.backFollowed({ from: "bar" });
       backToLibrary(event);
@@ -134,77 +138,45 @@ export function ReaderMasthead({
   };
 
   return (
-    <header
-      className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
-      ref={setHeader}
-      // Only the panel sticks this head (docs/features/fade-under-the-bar.md).
-      data-sticky-fade={compact ? "" : undefined}
-      data-testid={readerMastheadTestIds.root}
-    >
-      {!compact && (
-        <PageLink
-          ref={headBackLink}
-          className={styles.backLink}
-          to={Routes.home()}
-          onClick={(event) => {
-            analytics.page.backFollowed({ from: "head" });
-            backToLibrary(event);
-          }}
-          data-testid={readerMastheadTestIds.backLink}
-        >
-          <StrokeIcon name="arrowLeft" size={15} />
-          All overviews
-        </PageLink>
-      )}
+    <header className={styles.root} ref={setHeader} data-testid={readerMastheadTestIds.root}>
+      <PageLink
+        ref={headBackLink}
+        className={styles.backLink}
+        to={Routes.home()}
+        onClick={(event) => {
+          analytics.page.backFollowed({ from: "head" });
+          backToLibrary(event);
+        }}
+        data-testid={readerMastheadTestIds.backLink}
+      >
+        <StrokeIcon name="arrowLeft" size={15} />
+        {backLabel}
+      </PageLink>
 
       <div className={styles.actions}>
-        {compact ? (
-          <>
-            <button
-              type="button"
-              className={`${styles.listen} ${listening ? styles.listenActive : ""}`}
-              onClick={onListen}
-              aria-pressed={listening}
-              data-testid={readerMastheadTestIds.listenButton}
-            >
-              <StrokeIcon name="headphones" />
-              {listening ? "Listening" : "Listen"}
-            </button>
-            <button
-              type="button"
-              className={`${styles.read} ${read ? styles.readActive : ""}`}
-              onClick={() => onToggleRead("masthead")}
-              aria-pressed={read}
-              data-testid={readerMastheadTestIds.readButton}
-            >
-              {read && <StrokeIcon name="check" />}
-              {read ? "Read" : "Mark read"}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className={`${styles.favourite} ${favourite ? styles.favouriteActive : ""}`}
-              onClick={onToggleFavourite}
-              aria-pressed={favourite}
-              aria-label={favourite ? "Favourited" : "Favourite"}
-              data-testid={readerMastheadTestIds.favouriteButton}
-            >
-              <FavouriteIcon filled={favourite} />
-            </button>
-            <button
-              type="button"
-              className={`${styles.listen} ${playing ? styles.listenActive : ""}`}
-              onClick={onTogglePlaying}
-              aria-pressed={playing}
-              data-testid={readerMastheadTestIds.readAloudButton}
-            >
-              <StrokeIcon name="headphones" />
-              {playing ? "Listening" : "Listen"}
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          className={`${styles.favourite} ${favourite ? styles.favouriteActive : ""}`}
+          onClick={onToggleFavourite}
+          aria-pressed={favourite}
+          aria-label={favourite ? "Favourited" : "Favourite"}
+          data-testid={readerMastheadTestIds.favouriteButton}
+        >
+          <FavouriteIcon filled={favourite} />
+        </button>
+        {/* One Listen, two jobs: in the panel it docks the player at the foot of the
+            window, everywhere else it reads the note where it stands
+            (docs/features/audio-player.md). */}
+        <button
+          type="button"
+          className={`${styles.listen} ${(compact ? listening : playing) ? styles.listenActive : ""}`}
+          onClick={compact ? onListen : onTogglePlaying}
+          aria-pressed={compact ? listening : playing}
+          data-testid={readerMastheadTestIds.readAloudButton}
+        >
+          <StrokeIcon name="headphones" />
+          {(compact ? listening : playing) ? "Listening" : "Listen"}
+        </button>
       </div>
 
       <div className={styles.menu}>
@@ -231,17 +203,15 @@ export function ReaderMasthead({
             beside it. Without an image, once it fails, or at full width (151b), the lead
             lays out as the head always did, under the image. */}
         <div className={`${styles.lead} ${full ? styles.leadFull : ""}`}>
-          {!compact && (
-            <HeadImage
-              key={overview.id}
-              ref={image}
-              source={overview.source}
-              full={full}
-              className={styles.image}
-              onToggle={toggleHeadImage}
-              carriesFrom={Routes.overview(overview.id)}
-            />
-          )}
+          <HeadImage
+            key={overview.id}
+            ref={image}
+            source={overview.source}
+            full={full}
+            className={styles.image}
+            onToggle={toggleHeadImage}
+            carriesFrom={Routes.overview(overview.id)}
+          />
           <div className={styles.who}>
             {isArticle && (
               <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
@@ -310,22 +280,19 @@ export function ReaderMasthead({
           onEditingChange={onEditingTopicsChange}
         />
 
-        {/* The panel keeps the judgement and drops the dates: at 400px "published" and
-            "saved" are two facts about when, and what the head is for is what the note
-            says (docs/features/extension-panel.md). */}
         <p className={styles.metaRow}>
           <span data-testid={readerMastheadTestIds.meta}>
             {overview.source.kind === "web"
               ? articleByline(overview.source, savedOn(overview.savedAt), overview.recipe !== null)
               : metaParts.join(" · ")}
           </span>
-          {!isArticle && !compact && Boolean(overview.source.publishedAt) && (
+          {!isArticle && Boolean(overview.source.publishedAt) && (
             <span data-testid={readerMastheadTestIds.published}>
               {" · published "}
               {formatPublishedDate(overview.source.publishedAt!)}
             </span>
           )}
-          {!isArticle && !compact && (
+          {!isArticle && (
             <span>
               {" · saved "}
               {savedOn(overview.savedAt)}

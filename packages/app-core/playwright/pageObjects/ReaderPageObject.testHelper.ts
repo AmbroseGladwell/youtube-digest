@@ -18,6 +18,7 @@ import { lineRangeTagTestIds } from "../../src/features/reader/components/LineRa
 import { savedLocallyNoteTestIds } from "../../src/features/plus/components/SavedLocallyNote/SavedLocallyNoteTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
+import { onThisTabLineTestIds } from "../../src/features/capture/components/OnThisTabLine/OnThisTabLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
@@ -966,19 +967,11 @@ export class ReaderPageObject extends PageObject {
   clickSkipTo = () => this.step("clickSkipTo", () => this.click(lineRangeTagTestIds.skipButton));
 
   clickListen = () =>
-    this.step("clickListen", () => this.click(readerMastheadTestIds.listenButton));
+    this.step("clickListen", () => this.click(readerMastheadTestIds.readAloudButton));
 
   verifyListenReads = (label: string) =>
     this.step(`verifyListenReads ${label}`, () =>
-      expect(this.get(readerMastheadTestIds.listenButton)).toHaveText(label),
-    );
-
-  clickPanelMarkRead = () =>
-    this.step("clickPanelMarkRead", () => this.click(readerMastheadTestIds.readButton));
-
-  verifyPanelReadButtonReads = (label: string) =>
-    this.step(`verifyPanelReadButtonReads ${label}`, () =>
-      expect(this.get(readerMastheadTestIds.readButton)).toHaveText(label),
+      expect(this.get(readerMastheadTestIds.readAloudButton)).toHaveText(label),
     );
 
   verifyPlayerIsDocked = (docked: boolean) =>
@@ -1000,11 +993,13 @@ export class ReaderPageObject extends PageObject {
       this.click(savedLocallyNoteTestIds.dismissButton),
     );
 
-  verifyMastheadIsPanelSized = () =>
-    this.step("verifyMastheadIsPanelSized", async () => {
-      await this.expectNotToBeVisible(readerMastheadTestIds.backLink);
-      await this.expectNotToBeVisible(readerMastheadTestIds.favouriteButton);
-      await this.expectNotToBeVisible(readerMastheadTestIds.readAloudButton);
+  // Design 205b: the panel's reader is the phone's, so the head carries the way back, the
+  // image, Listen and Favourite — and no stepper, which is the wide reader's alone.
+  verifyMastheadIsThePhones = () =>
+    this.step("verifyMastheadIsThePhones", async () => {
+      await this.expectToBeVisible(readerMastheadTestIds.backLink);
+      await this.expectToBeVisible(readerMastheadTestIds.favouriteButton);
+      await this.expectToBeVisible(readerMastheadTestIds.readAloudButton);
     });
 
   verifyShowsNoStoredTranscript = () => this.expectToBeVisible(transcriptPanelTestIds.emptyNote);
@@ -1241,17 +1236,49 @@ export class ReaderPageObject extends PageObject {
       expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0),
     );
 
-  // The panel's whole sticky stack, in the order it has to rest in: the app's bar, the
-  // note's own head, the tabs, and — on the transcript — its tools.
+  // Design 205e: the line in the band under the bar, saying the tab has moved on under
+  // the open note.
+  verifyOnThisTabLineIsShown = (shown: boolean) =>
+    this.step(`verifyOnThisTabLineIsShown ${shown}`, () =>
+      shown
+        ? this.expectToBeVisible(onThisTabLineTestIds.root)
+        : this.expectNotToBeVisible(onThisTabLineTestIds.root),
+    );
+
+  verifyOnThisTabLineSays = (message: string, offer: string) =>
+    this.step(`verifyOnThisTabLineSays ${message} / ${offer}`, async () => {
+      await expect(this.get(onThisTabLineTestIds.message)).toHaveText(message);
+      await expect(this.get(onThisTabLineTestIds.offer)).toHaveText(offer);
+    });
+
+  clickOnThisTabOffer = () =>
+    this.step("clickOnThisTabOffer", () => this.click(onThisTabLineTestIds.offer));
+
+  dismissOnThisTabLine = () =>
+    this.step("dismissOnThisTabLine", () => this.click(onThisTabLineTestIds.dismissButton));
+
+
+  // At rest the head is still in flow above the tabs, so nothing of the note's own is
+  // held against the bar yet (design 205b).
+  verifyTabsAreBelowTheHead = () =>
+    this.step("verifyTabsAreBelowTheHead", () =>
+      expect(async () => {
+        const head = (await this.get(readerMastheadTestIds.root).boundingBox())!;
+        const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
+        expect(Math.round(tabs.y)).toBeGreaterThanOrEqual(Math.round(head.y + head.height));
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  // What the panel holds once the note has scrolled: the app's bar, the tabs, and — on
+  // the transcript — its tools. The head is not in it: it goes by as the phone's does,
+  // which is what leaves the note its room (design 205b, 205e-5).
   verifyPanelChromeStacks = (withTranscriptTools: boolean) =>
     this.step(`verifyPanelChromeStacks ${withTranscriptTools}`, () =>
       expect(async () => {
         const appBar = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
-        const head = (await this.get(readerMastheadTestIds.root).boundingBox())!;
         const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
 
-        expect(Math.round(head.y)).toBe(Math.round(appBar.y + appBar.height));
-        expect(Math.round(tabs.y)).toBe(Math.round(head.y + head.height));
+        expect(Math.round(tabs.y)).toBe(Math.round(appBar.y + appBar.height));
 
         if (withTranscriptTools) {
           const tools = (await this.get(transcriptPanelTestIds.tools).boundingBox())!;
