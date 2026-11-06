@@ -37,6 +37,51 @@ export abstract class PageObject {
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
   protected expectToHaveCount = (testId: string, count: number) => expect(this.get(testId)).toHaveCount(count);
 
+  // Reads the generated box, not the attribute: every band carries the attribute and a
+  // stylesheet picks between them (docs/features/fade-under-the-bar.md).
+  private stickyFades = () =>
+    this.page.evaluate(() =>
+      [...document.querySelectorAll("[data-sticky-fade]")].map((band) => {
+        const fade = getComputedStyle(band, "::after");
+        return {
+          band: (band as HTMLElement).dataset.testid ?? band.tagName.toLowerCase(),
+          drawn: fade.content !== "none",
+          height: fade.height,
+          opacity: Number(fade.opacity),
+          catchesClicks: fade.pointerEvents !== "none",
+          hangsBelow: Math.abs(parseFloat(fade.top) - band.getBoundingClientRect().height),
+        };
+      }),
+    );
+
+  verifyFadeHangsFrom = (testId: string) =>
+    this.step(`verifyFadeHangsFrom ${testId}`, async () => {
+      const bands = await this.stickyFades();
+      expect(bands.filter((band) => band.drawn).map((band) => band.band)).toEqual([testId]);
+      const fade = bands.find((band) => band.drawn)!;
+      expect(fade.height).toBe("16px");
+      expect(fade.catchesClicks).toBe(false);
+      expect(fade.hangsBelow).toBeLessThan(1);
+    });
+
+  verifyStickyBandsAre = (testIds: string[]) =>
+    this.step(`verifyStickyBandsAre ${testIds.join(", ")}`, async () => {
+      expect((await this.stickyFades()).map((band) => band.band)).toEqual(testIds);
+    });
+
+  verifyFadeIsShown = (shown: boolean) =>
+    this.step(`verifyFadeIsShown ${shown}`, () =>
+      expect
+        .poll(async () => (await this.stickyFades()).find((band) => band.drawn)?.opacity, { timeout: 2_000 })
+        .toBe(shown ? 1 : 0),
+    );
+
+  scrollPastTheFade = () =>
+    this.step("scrollPastTheFade", async () => {
+      await this.page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBeGreaterThan(24);
+    });
+
   verifyPageDoesNotScrollSideways = () =>
     this.step("verifyPageDoesNotScrollSideways", async () => {
       const overflow = await this.page.evaluate(

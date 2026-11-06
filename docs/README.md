@@ -141,6 +141,9 @@ Five folders, five different questions.
 - `back-within-reach.md` — on a phone the bar's brand slot becomes `← All overviews` once
   the head has scrolled under it, how the hand-off moves, and why both links go back in
   history when the library is behind them.
+- `fade-under-the-bar.md` — content dissolves over 16px of `--ground` as it passes under the
+  sticky chrome: why only the lowest band in a stack carries it, the one rule that picks
+  that band, and why the fade rides the scroll rather than a timer.
 - `extension-panel.md` — why the side panel is one video rather than a small library:
   the layout seam, its three screens, what it drops, and what `Open in web app` waits for.
 - `following-playback.md` — how the transcript follows the video, what now touches the

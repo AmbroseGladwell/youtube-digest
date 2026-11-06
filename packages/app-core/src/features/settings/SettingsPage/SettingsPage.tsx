@@ -120,7 +120,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
   if (stacked && current !== undefined) {
     return (
       <div className={`${styles.root} ${styles.rootStacked}`} data-testid={settingsPageTestIds.root}>
-        <div className={styles.back}>
+        <div className={styles.back} data-sticky-fade="">
           <Link
             className={styles.backLink}
             to={Routes.settings()}

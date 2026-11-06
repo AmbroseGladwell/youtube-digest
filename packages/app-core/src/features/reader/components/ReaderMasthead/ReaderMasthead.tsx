@@ -140,6 +140,8 @@ export function ReaderMasthead({
     <header
       className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
       ref={setHeader}
+      // Only the panel sticks this head (docs/features/fade-under-the-bar.md).
+      data-sticky-fade={compact ? "" : undefined}
       data-testid={readerMastheadTestIds.root}
     >
       {!compact && (
