@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PlaylistId, VideoId, type PlaylistPace } from "@overview/domain";
+import { PlaylistId, VideoId, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
 import { makeQueuedCapture } from "../../playlists/types/PlaylistFactory.testHelper.js";
 import { chosenBarLine, madeNowNotice, madeNowOf, makeChosenLabel } from "./chooseCopy.js";
 
@@ -9,10 +9,12 @@ const saved = (videoId: string) =>
   makeQueuedCapture({ videoId: VideoId.parse(videoId), fromPlaylist: { id: PlaylistId.parse("PLsaved"), title: "Saved for later" } });
 const paces: Record<string, PlaylistPace> = { PLpsychology: "fiveADay", PLsaved: "whenChosen" };
 const paceOf = (playlistId: string) => paces[playlistId] ?? "asTheyCome";
+const orders: Record<string, PlaylistOrder> = { PLpsychology: "oldestFirst", PLsaved: "newestFirst" };
+const orderOf = (playlistId: string) => orders[playlistId] ?? "oldestFirst";
 
 describe("chooseCopy", () => {
   it("says the playlist's pace stays as it is, as design 95ag does", () => {
-    expect(chosenBarLine([psychology("video000001"), psychology("video000002")], paceOf)).toBe(
+    expect(chosenBarLine([psychology("video000001"), psychology("video000002")], paceOf, orderOf)).toBe(
       "Made next, oldest first. Psychology stays at up to 5 a day.",
     );
   });
@@ -20,20 +22,20 @@ describe("chooseCopy", () => {
   it("with more chosen than the month has left, says how many are made now and when the rest go, as 95ah does", () => {
     const seven = ["01", "02", "03", "04", "05", "06", "07"].map((n) => psychology(`video0000${n}`.padEnd(11, "0")));
     const allowance = { left: 4, resetsOn: "2026-11-01" };
-    expect(chosenBarLine(seven, paceOf, allowance)).toBe(
+    expect(chosenBarLine(seven, paceOf, orderOf, allowance)).toBe(
       "You have 4 left this month, so 4 are made now and the other 3 wait for 1 November. Psychology stays at up to 5 a day.",
     );
     expect(madeNowOf(7, allowance)).toBe(4);
     expect(madeNowOf(3, allowance)).toBe(3);
-    expect(chosenBarLine(seven.slice(0, 3), paceOf, allowance)).toBe("Made next, oldest first. Psychology stays at up to 5 a day.");
+    expect(chosenBarLine(seven.slice(0, 3), paceOf, orderOf, allowance)).toBe("Made next, oldest first. Psychology stays at up to 5 a day.");
   });
 
   it("from several playlists, says every pace stays", () => {
-    expect(chosenBarLine([psychology("video000001"), saved("video000002")], paceOf)).toBe("Made next, oldest first. Paces stay as they are.");
+    expect(chosenBarLine([psychology("video000001"), saved("video000002")], paceOf, orderOf)).toBe("Made next, in each playlist’s order. Paces stay as they are.");
   });
 
   it("from a playlist made only when chosen, says the rest keep waiting for the reader", () => {
-    expect(chosenBarLine([saved("video000001")], paceOf)).toBe("Made next, oldest first. The rest of Saved for later keep waiting for you.");
+    expect(chosenBarLine([saved("video000001")], paceOf, orderOf)).toBe("Made next, newest first. The rest of Saved for later keep waiting for you.");
   });
 
   it("names the one video made next, or counts several", () => {

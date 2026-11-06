@@ -1,4 +1,6 @@
 import type { FollowedPlaylist, PlaylistCheck } from "@overview/domain";
+import { orderInASentence } from "./orderCopy.js";
+import { PACE_LABEL } from "./paceCopy.js";
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -27,6 +29,15 @@ export function followedPlaylistMeta(playlist: FollowedPlaylist, check: Playlist
   ]
     .filter((part): part is string => part !== null)
     .join(" · ");
+}
+
+// Design 95x: a followed playlist's pace, the order it is made in, and what waits on both.
+export function followedPlaylistFacts(playlist: FollowedPlaylist, waiting: number): string {
+  return [
+    PACE_LABEL[playlist.pace],
+    orderInASentence(playlist.order),
+    waiting === 0 ? "nothing waiting" : count(waiting, "waiting", "waiting"),
+  ].join(" · ");
 }
 
 export function unavailableLine(playlist: FollowedPlaylist): string | null {

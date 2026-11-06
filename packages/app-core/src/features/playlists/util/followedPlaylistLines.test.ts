@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { PlaylistId, VideoId } from "@overview/domain";
 import { makeFollowedPlaylist } from "../types/PlaylistFactory.testHelper.js";
-import { checkedAgo, followedPlaylistMeta, followingRowValue, unavailableLine } from "./followedPlaylistLines.js";
+import {
+  checkedAgo,
+  followedPlaylistFacts,
+  followedPlaylistMeta,
+  followingRowValue,
+  unavailableLine,
+} from "./followedPlaylistLines.js";
 
 const check = (videos: number) => ({
   playlistId: PlaylistId.parse("PLpsychology"),
@@ -15,6 +21,14 @@ describe("followedPlaylistLines", () => {
     expect(followedPlaylistMeta(makeFollowedPlaylist({ privacy: "unlisted", owner: null }), check(1), 1)).toBe(
       "Unlisted · 1 video · 1 overview",
     );
+  });
+
+  it("reads the pace, the order it is made in, and what waits on them", () => {
+    expect(followedPlaylistFacts(makeFollowedPlaylist({ pace: "fiveADay" }), 7)).toBe("Up to 5 a day · oldest first · 7 waiting");
+    expect(followedPlaylistFacts(makeFollowedPlaylist({ order: "playlistOrder" }), 0)).toBe(
+      "As they come · in the playlist’s order · nothing waiting",
+    );
+    expect(followedPlaylistFacts(makeFollowedPlaylist({ order: "newestFirst" }), 1)).toBe("As they come · newest first · 1 waiting");
   });
 
   it("leaves the video count out where this device has never checked the playlist", () => {

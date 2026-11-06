@@ -11,7 +11,8 @@ videos already there. Videos added to it later are queued each time the app open
 
 It is for everyone, signed in or not, Free or Plus. Each followed playlist has a pace of
 the reader's choosing, which caps how many of its videos are made in a day ("A pace for
-each playlist", below). Beyond that it is limited by what limits any overview: the
+each playlist", below), and an order, which decides which of them goes first ("An order for
+each playlist"). Beyond that it is limited by what limits any overview: the
 reader's allowance, and behind it our server's daily safety cap on transcript fetches, at
 which the queue waits visibly and carries on by itself (`capture-queue.md`, "Waiting at a
 limit"). A 19-video playlist on a free account with no extension, followed as they come,
@@ -25,8 +26,8 @@ pace (`PlaylistPace`):
 
 | Pace | Made |
 |---|---|
-| *As they come* | everything, oldest first, until the month's allowance runs out |
-| *Up to 5 a day* | the oldest five a day, the rest the next day, and so on |
+| *As they come* | everything, in the playlist's order, until the month's allowance runs out |
+| *Up to 5 a day* | the first five in that order a day, the rest the next day, and so on |
 | *Up to 1 a day* | one a day |
 | *Only when I choose* | nothing by itself: videos queue and wait for the reader, using none of the allowance until chosen |
 
@@ -49,6 +50,47 @@ which is what they were doing (`followedPlaylistMigrations.ts`).
 
 How the queue waits on a pace, and how the reader makes waiting videos now, is
 `capture-queue.md`, "Waiting on a pace".
+
+## An order for each playlist
+
+Decided 6 Nov 2026 (OV-206). Oldest first was the only order there had ever been, which is
+right for clearing a backlog and wrong for the two other habits the feature invites: saving
+to an "Overview" playlist as you browse and wanting what you just saved, and arranging a
+playlist by hand on YouTube. At *Up to 1 a day* a 200-video playlist takes about 7 months,
+so the order is not a detail: it decides what the reader actually gets. So each followed
+playlist has an order (`PlaylistOrder`):
+
+| Order | Made first |
+|---|---|
+| *Oldest first* | the one added longest ago |
+| *Newest first* | the one added most recently |
+| *The playlist's order* | the one at the top of the playlist, however the reader has arranged it |
+
+**The default is *Oldest first***, which is what every playlist was doing. The reader sets
+their own default in Settings, `Settings.defaultPlaylistOrder`, which preselects the preview
+and only affects playlists followed afterwards, exactly as the pace's default does. There is
+no shuffle: nothing asked for one, and a random order is hard to say anything true about in
+the preview.
+
+Newest first is oldest first turned round, so one comparator answers for both, and the
+playlist's own order decides wherever YouTube gives no date or gives two the same
+(`inPlaylistOrder`). The order is on the synced `FollowedPlaylist` record (followed-playlist
+schema 3, `CLIENT_VERSION` 13); playlists followed before there was an order read as *Oldest
+first* (`followedPlaylistMigrations.ts`).
+
+**A change reorders what is already waiting**, straight away, as a pace change does. A change
+that did nothing until the next video arrived would read as broken, and at 1 a day the
+reader has months in which to change their mind. So each queued video carries where it sat in
+its playlist when it was queued, `QueuedCapture.addedAt` and `playlistIndex`, and the queue
+puts each playlist's waiting videos in order as it reads them rather than at the moment they
+were queued (`inQueueOrder`, `capture-queue.md`). A playlist keeps the places in the queue it
+already holds and only what sits in them changes, so reordering one leaves every other
+playlist where it was. A video queued before there was an order to keep has neither field and
+stays where it is.
+
+The index is where the video sat when it was queued, not where it sits now: a playlist
+reordered on YouTube is read again on the next check, and what is already queued keeps the
+place it had. That is accepted — the alternative is rewriting the queue on every check.
 
 ## Public and unlisted only
 
@@ -103,8 +145,8 @@ launch.
 
 Title, owner, public or unlisted, then the numbers as sentences, all counted from the
 lookup in code (`playlistPreview`): how many videos, how many are already in the library
-or already queued, how many are private or deleted, and how many will be made, oldest
-first. The estimate is *About N tokens on your own API key* with its working beneath it,
+or already queued, how many are private or deleted, and how many will be made, in the order
+they will be made in. The estimate is *About N tokens on your own API key* with its working beneath it,
 `TOKENS_PER_OVERVIEW` (30,000) times the count, rounded to millions past a million and
 always labelled as an estimate (`docs/prototype/constraints.md`).
 
@@ -116,6 +158,12 @@ immediate and there is no Done (95u). With nothing to backfill, the sentence spe
 new videos. A one-video playlist hides the pace, and so does a playlist already followed,
 whose pace is changed in Settings. The New dialog scrolls when the open choice makes it
 taller than the window.
+
+A second line beneath it holds the order the same way (`PreviewChoiceLine` serves both):
+*Order: Oldest first · your default*, what it means (*The one you added longest ago is made
+first.*, `orderMeaning`; the count is the facts line's job, not said twice), and *Change*. It appears and disappears with the
+pace: a single video and a playlist already followed have neither. Built to the pace's
+pattern rather than to frames of its own, since none were drawn for it.
 
 *Make overviews for all N* (*Make its overview* for one) follows the playlist and queues
 what is there. *Only new ones from now on* follows it and queues nothing. Cancel follows
@@ -146,7 +194,9 @@ the title, owner and privacy as last read, when it was followed, its pace, and
 `unavailable` (`private` or `gone`) once a check finds it can no longer be read.
 
 Following marks every entry in the playlist as seen on this device, and the backfill, when
-asked for, queues what is there (`useFollowPlaylistMutation`). It refreshes the followed
+asked for, queues what is there in the playlist's own order, each video carrying its place in
+it (`useFollowPlaylistMutation`, `capturesFor`); the order the reader chose is applied as the
+queue reads them. It refreshes the followed
 playlists before the queue, so the queue knows the new playlist's pace before it sees its
 videos; until the followed playlists have loaded at all, the queue makes nothing.
 
@@ -182,17 +232,25 @@ wherever there is a server to read playlists through. Its row reads *Following N
 
 Each followed playlist shows its title, linked to it on YouTube; its owner, privacy, the
 number of videos this device last saw in it, and how many overviews it has given; then,
-in ink, its pace and what waits on it (*Up to 5 a day · 7 waiting*) with when this device
-last checked it. One that went private or was deleted says so in warning ink and words,
-has no pace to set, and can still be unfollowed. *Unfollow* asks once, inline, with the
-numbers.
+in ink, its pace, the order it is made in and what waits on them (*Up to 5 a day · oldest
+first · 7 waiting*, `followedPlaylistFacts`) with when this device last checked it. One that
+went private or was deleted says so in warning ink and words, has neither to set, and can
+still be unfollowed. *Unfollow* asks once, inline, with the numbers.
 
 The pace pill beside Unfollow (95x–95y), labelled *Pace for Psychology: Up to 5 a day*,
 opens the paces, each saying what it would do to what waits (*7 waiting at 1 a day: about
 7 days*, `paceWaitEffect`). A change saves straight away and the row says once, politely,
 what it did: *Now up to 1 a day. 6 of the 7 wait for tomorrow.* (`paceChangedLine`). On a
-phone the pill opens a sheet of radios instead (95z). Above the list, *Pace for new
-playlists* is the reader's default, with the same pill.
+phone the pill opens a sheet of radios instead (95z).
+
+An order pill sits beside it, labelled *Order for Psychology: Oldest first*, built from the
+same control (`ChoicePicker`) and behaving the same way: each option says what it would do to
+what waits (*The 7 waiting are made newest first*, `orderWaitEffect`), and a change says *Now
+newest first. The 7 waiting are back in order.* (`orderChangedLine`). The queue turns them
+round as it says so.
+
+Above the list, *Pace and order for new playlists* holds the reader's two defaults, with the
+same pair of pills.
 
 Empty, the section teaches the habit the feature is built around: an unlisted playlist
 called "Overview", saved to instead of Watch Later.
@@ -225,9 +283,9 @@ Unfollowed, *Manage* goes. Followed and gone from YouTube, the name is plain tex
 ## Analytics
 
 `playlists.link.choiceMade`, `playlists.preview.followed` (with the backfill, the counts,
-the pace and whether it was the reader's default), `.cancelled` and `.refused` (with why),
-`playlists.settings.*` (including `paceChanged`, with how many waited, and
-`defaultPaceChanged`) and `playlists.fromLine.*`. The check on opening is the app acting, not the reader, so it is
+the pace and the order and whether each was the reader's default), `.cancelled` and
+`.refused` (with why), `playlists.settings.*` (including `paceChanged` and `orderChanged`,
+each with how many waited, and `defaultPaceChanged` and `defaultOrderChanged`) and `playlists.fromLine.*`. The check on opening is the app acting, not the reader, so it is
 a log line and a client warning rather than an event (`docs/architecture/analytics.md`).
 
 ## Not built

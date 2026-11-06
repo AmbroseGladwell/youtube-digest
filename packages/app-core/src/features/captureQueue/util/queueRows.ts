@@ -54,7 +54,7 @@ export interface PacedGroup {
 }
 
 // Videos waiting on their playlist's pace, or for the reader, together by playlist in the
-// order their oldest waits (95aa, 95aj).
+// order the first of each waits (95aa, 95aj).
 export function pacedGroups(
   captures: readonly QueuedCapture[],
   queue: Pick<CaptureQueueController, "paceOf" | "madeToday">,

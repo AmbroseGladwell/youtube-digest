@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { PlaylistId, PlaylistPace, QueuedCapture, VideoId } from "@overview/domain";
+import type { PlaylistId, PlaylistOrder, PlaylistPace, QueuedCapture, VideoId } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
@@ -36,6 +36,7 @@ import { useCaptureQueueQuery } from "./queries/captureQueueQuery.js";
 import type { CaptureQueueStrip } from "./types/CaptureQueueStrip.js";
 import type { QueueHold } from "./types/QueueHold.js";
 import { captureQueueStrip, type QueueNotice } from "./util/captureQueueStrip.js";
+import { inQueueOrder } from "./util/inQueueOrder.js";
 import { localDayKey, madeTodayByPlaylist, nextLocalMidnight } from "./util/madeTodayByPlaylist.js";
 import { makingStep } from "./util/makingStep.js";
 import { pacedQueue } from "./util/pacedQueue.js";
@@ -54,14 +55,16 @@ export interface QueueMaking {
 export interface CaptureQueueController {
   // Whether this shell can follow playlists at all; without a server nothing is offered.
   available: boolean;
-  // Every video still waiting, and the same videos sorted by their playlists' paces: what
-  // can be made now, what continues tomorrow, and what waits for the reader to choose it
-  // (docs/features/capture-queue.md, "Waiting on a pace").
+  // Every video still waiting, each playlist's in the order the reader chose for it, and the
+  // same videos sorted by their playlists' paces: what can be made now, what continues
+  // tomorrow, and what waits for the reader to choose it (docs/features/capture-queue.md,
+  // "Waiting on a pace").
   waiting: QueuedCapture[];
   ready: QueuedCapture[];
   tomorrow: QueuedCapture[];
   forYou: QueuedCapture[];
   paceOf: (playlistId: PlaylistId) => PlaylistPace;
+  orderOf: (playlistId: PlaylistId) => PlaylistOrder;
   madeToday: (playlistId: PlaylistId) => number;
   attention: QueuedCapture[];
   making: QueueMaking | null;
@@ -91,9 +94,10 @@ export interface CaptureQueueController {
 }
 
 // The queue on this device: on opening it checks every followed playlist for what is new,
-// then makes what waits one video at a time, oldest first, while the app is open. A run the
-// reader starts goes first (docs/features/capture-queue.md). Owned by the AppShell, like the
-// reader's own run, so it outlives every navigation.
+// then makes what waits one video at a time, each playlist in the order the reader chose for
+// it, while the app is open. A run the reader starts goes first
+// (docs/features/capture-queue.md). Owned by the AppShell, like the reader's own run, so it
+// outlives every navigation.
 export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController {
   const { overviewStore, followedPlaylistStore, captureQueueStore } = useStores();
   const accountId = useLibraryAccountId();
@@ -128,9 +132,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   useEffect(() => setPreferences(readCaptureQueuePreferences(accountId)), [accountId]);
 
   const items = queue.data ?? [];
-  const waiting = items.filter((capture) => capture.status === "waiting");
   const attention = items.filter((capture) => capture.status !== "waiting");
-  waitingCount.current = waiting.length;
   const counted = nextQuota?.kind === "spent" ? nextQuota.resetsOn : null;
   const monthHold = useMemo<QueueHold | null>(
     () => (counted === null ? null : { reason: "monthSpent", resumesAt: monthResetOf(counted, new Date()).getTime() }),
@@ -153,11 +155,21 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     () => new Map<string, PlaylistPace>((followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.pace])),
     [followed.data],
   );
+  const orders = useMemo(
+    () => new Map<string, PlaylistOrder>((followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.order])),
+    [followed.data],
+  );
+  const orderOf = useCallback((playlistId: PlaylistId) => orders.get(playlistId) ?? "oldestFirst", [orders]);
+  const waiting = useMemo(
+    () => inQueueOrder((queue.data ?? []).filter((capture) => capture.status === "waiting"), orderOf),
+    [queue.data, orderOf],
+  );
   const madeTodayCounts = useMemo(
     () => madeTodayByPlaylist(readableEntries(overviews.data ?? []).map(({ overview }) => overview), chosenToday, now),
     [overviews.data, chosenToday, now],
   );
   const paceOf = useCallback((playlistId: PlaylistId) => paces.get(playlistId) ?? "asTheyCome", [paces]);
+  waitingCount.current = waiting.length;
   const madeToday = useCallback((playlistId: PlaylistId) => madeTodayCounts.get(playlistId) ?? 0, [madeTodayCounts]);
   const paced = pacedQueue(
     waiting,
@@ -444,7 +456,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     [making, captureQueueStore, refresh],
   );
 
-  // Its place in the oldest-first order is kept, so a video the reader tries again runs next
+  // Its place in its playlist's order is kept, so a video the reader tries again runs next
   // rather than after everything already waiting (docs/features/capture-queue.md).
   const retry = useCallback(
     (videoId: VideoId) => {
@@ -523,6 +535,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       tomorrow: paced.tomorrow,
       forYou: paced.forYou,
       paceOf,
+      orderOf,
       madeToday,
       attention,
       making,
@@ -554,6 +567,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       paced.tomorrow,
       paced.forYou,
       paceOf,
+      orderOf,
       madeToday,
       attention,
       making,

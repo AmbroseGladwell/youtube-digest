@@ -24,5 +24,11 @@ export const QueuedCapture = z.object({
   // When the reader chose it to be made next, past its playlist's pace. Null for every video
   // the queue makes on its own (docs/features/capture-queue.md, "Making waiting videos now").
   chosenAt: z.iso.datetime().nullable().catch(null),
+  // Where the video sat in its playlist when it was queued: when YouTube says it was added,
+  // and its place in the playlist's own order. Kept so the queue can put a playlist's waiting
+  // videos in the order the reader asks for (docs/features/playlists.md, "An order for each
+  // playlist"). Null on a video queued before there was an order to keep.
+  addedAt: z.iso.datetime().nullable().catch(null),
+  playlistIndex: z.number().int().nonnegative().nullable().catch(null),
 });
 export type QueuedCapture = z.infer<typeof QueuedCapture>;

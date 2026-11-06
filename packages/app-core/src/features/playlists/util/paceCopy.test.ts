@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceLine, paceChangedLine, paceConsequence, paceFacts, paceSpan, paceWaitEffect } from "./paceCopy.js";
+import { allowanceLine, paceChangedLine, paceConsequence, paceSpan, paceWaitEffect } from "./paceCopy.js";
 
 describe("paceSpan", () => {
   it("reads a backfill's length in days, and in months once it passes 60", () => {
@@ -51,13 +51,6 @@ describe("paceChangedLine", () => {
   it("a faster one says what waits carries on", () => {
     expect(paceChangedLine("asTheyCome", 7, 5)).toBe("Now as they come. The 7 waiting carry on now.");
     expect(paceChangedLine("fiveADay", 0, 0)).toBe("Now up to 5 a day.");
-  });
-});
-
-describe("paceFacts", () => {
-  it("reads the pace and what waits on it", () => {
-    expect(paceFacts("fiveADay", 7)).toBe("Up to 5 a day · 7 waiting");
-    expect(paceFacts("asTheyCome", 0)).toBe("As they come · nothing waiting");
   });
 });
 

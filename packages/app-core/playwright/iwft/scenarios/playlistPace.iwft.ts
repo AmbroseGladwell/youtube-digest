@@ -36,6 +36,8 @@ const queued = (index: number, overrides: Partial<QueuedCapture> = {}): QueuedCa
   status: "waiting",
   problem: null,
   chosenAt: null,
+  addedAt: null,
+  playlistIndex: index,
   ...overrides,
 });
 
@@ -49,6 +51,7 @@ const followingAt = (backendSimulator: BackendSimulator, pace: PlaylistPace) => 
     followedAt: "2026-09-01T00:00:00.000Z",
     unavailable: null,
     pace,
+    order: "oldestFirst",
   };
   backendSimulator.playlists.seed(psychologyPlaylist());
   backendSimulator.playlists.seedFollowed(followed);
@@ -182,11 +185,11 @@ test("Settings shows each playlist's pace and changes it, saying what the change
   const settings = await launcher.appShell.openSettings();
   await settings.openSection("playlists");
 
-  await settings.playlists.verifyPaceFacts(0, "As they come · 3 waiting");
+  await settings.playlists.verifyFacts(0, "As they come · oldest first · 3 waiting");
   await settings.playlists.choosePace("Psychology", "Up to 1 a day", "3 waiting at 1 a day: about 3 days");
 
-  await settings.playlists.verifyPaceSaid("Now up to 1 a day. 2 of the 3 wait for tomorrow.");
-  await settings.playlists.verifyPaceFacts(0, "Up to 1 a day · 3 waiting");
+  await settings.playlists.verifySaid("Now up to 1 a day. 2 of the 3 wait for tomorrow.");
+  await settings.playlists.verifyFacts(0, "Up to 1 a day · oldest first · 3 waiting");
   await expect.poll(async () => (await backendSimulator.playlists.listFollowed())[0]?.pace).toBe("oneADay");
 
   await settings.playlists.choosePace("new playlists", "Only when I choose");
@@ -221,7 +224,16 @@ test("the preview follows at the reader's default pace unless they change it, an
     .toEqual([
       {
         name: "playlists.preview.followed",
-        props: { from: "dialog", backfill: true, videos: 2, queued: 2, pace: "whenChosen", paceIsDefault: false },
+        props: {
+          from: "dialog",
+          backfill: true,
+          videos: 2,
+          queued: 2,
+          pace: "whenChosen",
+          paceIsDefault: false,
+          order: "oldestFirst",
+          orderIsDefault: true,
+        },
       },
     ]);
 });

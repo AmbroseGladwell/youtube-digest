@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { FollowedPlaylist, PlaylistLookup, PlaylistPace } from "@overview/domain";
+import type { FollowedPlaylist, PlaylistLookup, PlaylistOrder, PlaylistPace } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { captureQueueKeys } from "../../captureQueue/captureQueueKeys.js";
 import { playlistKeys } from "../playlistKeys.js";
 import { capturesFor } from "../util/capturesFor.js";
+import { placedEntries } from "../util/inPlaylistOrder.js";
 import { knownVideoIds } from "../util/knownVideoIds.js";
 
 export interface FollowPlaylistVariables {
   lookup: PlaylistLookup;
   backfill: boolean;
-  // The pace a playlist is followed at. One already followed keeps its own; that is
-  // changed in Settings (docs/features/playlists.md, "A pace for each playlist").
+  // The pace a playlist is followed at, and the order its videos are made in. One already
+  // followed keeps its own; those are changed in Settings (docs/features/playlists.md).
   pace: PlaylistPace;
+  order: PlaylistOrder;
 }
 
 // Following records the playlist for every device and marks everything in it as seen here,
@@ -23,7 +25,7 @@ export function useFollowPlaylistMutation() {
 
   return useMutation<{ queued: number }, Error, FollowPlaylistVariables>({
     mutationKey: playlistKeys.all,
-    mutationFn: async ({ lookup, backfill, pace }) => {
+    mutationFn: async ({ lookup, backfill, pace, order }) => {
       const now = new Date();
       const existing = (await followedPlaylistStore.listFollowed()).find((playlist) => playlist.id === lookup.id);
       const followed: FollowedPlaylist = {
@@ -34,6 +36,7 @@ export function useFollowPlaylistMutation() {
         followedAt: existing?.followedAt ?? now.toISOString(),
         unavailable: null,
         pace: existing?.pace ?? pace,
+        order: existing?.order ?? order,
       };
       await followedPlaylistStore.saveFollowed(followed);
       await followedPlaylistStore.saveCheck({
@@ -45,7 +48,7 @@ export function useFollowPlaylistMutation() {
 
       const known = await knownVideoIds(overviewStore, captureQueueStore);
       const captures = capturesFor(
-        lookup.entries.filter((entry) => !known.has(entry.videoId)),
+        placedEntries(lookup.entries).filter((entry) => !known.has(entry.videoId)),
         { id: lookup.id, title: lookup.title },
         now,
       );

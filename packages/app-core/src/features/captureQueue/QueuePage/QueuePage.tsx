@@ -143,8 +143,8 @@ export function QueuePage() {
   const intro = isPanel
     ? "Made while this panel or the extension is open. Continues next time."
     : isPhone
-      ? "Made oldest first while The Overview is open on this phone. Continues next time you open it."
-      : "Videos from playlists you follow, made one at a time, oldest first, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
+      ? "Made in each playlist’s order while The Overview is open on this phone. Continues next time you open it."
+      : "Videos from playlists you follow, made one at a time, each playlist in the order you chose for it, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 
   const pauseControl = queue.needsKey || monthHeld ? null : queue.paused ? (
     <button
@@ -384,7 +384,7 @@ export function QueuePage() {
               {chosenCaptures.length.toLocaleString("en-GB")} chosen
             </span>
             <span className={styles.chosenLine} data-testid={queuePageTestIds.chosenLine}>
-              {chosenBarLine(chosenCaptures, queue.paceOf, allowance)}
+              {chosenBarLine(chosenCaptures, queue.paceOf, queue.orderOf, allowance)}
             </span>
           </div>
           <span className={styles.chosenActions}>

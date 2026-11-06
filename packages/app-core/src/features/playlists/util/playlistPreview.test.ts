@@ -4,7 +4,7 @@ import { playlistPreview } from "./playlistPreview.js";
 import { tokensText } from "./tokenEstimate.js";
 
 describe("playlistPreview", () => {
-  it("counts the playlist, what the library already has, and what is left to make, oldest first", () => {
+  it("counts the playlist, what the library already has, and what is left to make, in the order it will be made in", () => {
     const lookup = makePlaylistLookup({
       entries: [
         makePlaylistEntry("newest", { addedAt: "2026-09-03T09:00:00.000Z" }),
@@ -13,10 +13,14 @@ describe("playlistPreview", () => {
       ],
     });
 
-    const preview = playlistPreview(lookup, new Set(["held"]));
+    const preview = playlistPreview(lookup, new Set(["held"]), "oldestFirst");
 
     expect(preview).toMatchObject({ total: 3, inLibrary: 1, unavailable: 0, tokens: 60_000 });
     expect(preview.toMake.map((entry) => entry.videoId)).toEqual(["oldest", "newest"]);
+    expect(playlistPreview(lookup, new Set(["held"]), "newestFirst").toMake.map((entry) => entry.videoId)).toEqual([
+      "newest",
+      "oldest",
+    ]);
   });
 
   it("leaves private and deleted videos out of what will be made, and counts them", () => {
@@ -24,11 +28,11 @@ describe("playlistPreview", () => {
       entries: [makePlaylistEntry("a"), makePlaylistEntry("b", { availability: "private" }), makePlaylistEntry("c", { availability: "deleted" })],
     });
 
-    expect(playlistPreview(lookup, new Set())).toMatchObject({ total: 3, unavailable: 2, tokens: 30_000 });
+    expect(playlistPreview(lookup, new Set(), "oldestFirst")).toMatchObject({ total: 3, unavailable: 2, tokens: 30_000 });
   });
 
   it("an empty playlist has nothing to make and costs nothing", () => {
-    expect(playlistPreview(makePlaylistLookup(), new Set())).toMatchObject({ total: 0, toMake: [], tokens: 0 });
+    expect(playlistPreview(makePlaylistLookup(), new Set(), "oldestFirst")).toMatchObject({ total: 0, toMake: [], tokens: 0 });
   });
 });
 

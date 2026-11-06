@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { playlistFollowFlowTestIds } from "../../src/features/playlists/components/PlaylistFollowFlow/PlaylistFollowFlowTestIds.js";
 import { playlistPreviewTestIds } from "../../src/features/playlists/components/PlaylistPreview/PlaylistPreviewTestIds.js";
 import { playlistRefusalTestIds } from "../../src/features/playlists/components/PlaylistRefusal/PlaylistRefusalTestIds.js";
+import { previewChoiceLineTestIds } from "../../src/features/playlists/components/PreviewChoiceLine/PreviewChoiceLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export interface ExpectedPreview {
@@ -39,10 +40,14 @@ export class PlaylistFollowFlowPageObject extends PageObject {
 
   verifyNoBackfill = () => this.step("verifyNoBackfill", () => this.expectToHaveCount(playlistPreviewTestIds.backfillButton, 0));
 
-  verifyPace = (name: string, result: string) =>
-    this.step(`verifyPace ${name}`, async () => {
-      await expect(this.get(playlistPreviewTestIds.paceName)).toHaveText(name);
-      await expect(this.get(playlistPreviewTestIds.paceResult)).toHaveText(result);
+  verifyPace = (name: string, result: string) => this.verifyChoice("pace", name, result);
+
+  verifyOrder = (name: string, result: string) => this.verifyChoice("order", name, result);
+
+  private verifyChoice = (choice: string, name: string, result: string) =>
+    this.step(`verify ${choice} ${name}`, async () => {
+      await expect(this.get(previewChoiceLineTestIds.name(choice))).toHaveText(name);
+      await expect(this.get(previewChoiceLineTestIds.result(choice))).toHaveText(result);
     });
 
   // What the month's allowance means for the backfill, before anything runs (95s, 95v).
@@ -53,15 +58,23 @@ export class PlaylistFollowFlowPageObject extends PageObject {
         : expect(this.get(playlistPreviewTestIds.allowance)).toHaveText(text),
     );
 
-  verifyNoPace = () => this.step("verifyNoPace", () => this.expectToHaveCount(playlistPreviewTestIds.paceLine, 0));
+  verifyNoPace = () =>
+    this.step("verifyNoPace", async () => {
+      await this.expectToHaveCount(previewChoiceLineTestIds.line("pace"), 0);
+      await this.expectToHaveCount(previewChoiceLineTestIds.line("order"), 0);
+    });
 
-  // Change opens the paces in place, each with what it would do; choosing is immediate.
-  changePace = (pace: string, result: string) =>
-    this.step(`changePace ${pace}`, async () => {
-      await this.click(playlistPreviewTestIds.paceChangeButton);
-      const option = this.page.getByRole("radio", { name: new RegExp(`^${pace}`) });
-      await expect(this.page.getByRole("radiogroup", { name: /^Pace for / })).toContainText(result);
-      await option.check();
+  // Change opens the choices in place, each with what it would do; choosing is immediate.
+  changePace = (pace: string, result: string) => this.changeChoice("pace", "Pace", pace, result);
+
+  changeOrder = (order: string, result: string) => this.changeChoice("order", "Order", order, result);
+
+  private changeChoice = (choice: string, title: string, option: string, result: string) =>
+    this.step(`change ${choice} ${option}`, async () => {
+      await this.click(previewChoiceLineTestIds.changeButton(choice));
+      const group = this.page.getByRole("radiogroup", { name: new RegExp(`^${title} for `) });
+      await expect(group).toContainText(result);
+      await group.getByRole("radio", { name: new RegExp(`^${option}`) }).check();
     });
 
   followWithBackfill = () => this.step("followWithBackfill", () => this.click(playlistPreviewTestIds.backfillButton));

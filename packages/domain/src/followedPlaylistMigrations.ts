@@ -14,6 +14,22 @@ const keepEarlierFollowsAsTheyCome: RecordMigration = {
   },
 };
 
-export const FOLLOWED_PLAYLIST_MIGRATIONS: readonly RecordMigration[] = [keepEarlierFollowsAsTheyCome];
+// Derivable: a playlist followed before there was an order was made oldest first, because
+// that was the only order there was (docs/features/playlists.md, "An order for each
+// playlist").
+const keepEarlierFollowsOldestFirst: RecordMigration = {
+  newSchemaVersion: 3,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return { order: "oldestFirst", ...(record as Record<string, unknown>) };
+  },
+};
+
+export const FOLLOWED_PLAYLIST_MIGRATIONS: readonly RecordMigration[] = [
+  keepEarlierFollowsAsTheyCome,
+  keepEarlierFollowsOldestFirst,
+];
 
 export const CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION = currentSchemaVersion(FOLLOWED_PLAYLIST_MIGRATIONS);

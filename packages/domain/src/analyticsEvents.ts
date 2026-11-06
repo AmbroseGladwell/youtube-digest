@@ -10,6 +10,7 @@ import { NarrationVoice } from "./NarrationVoice.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
+import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
 import { OnboardingStep } from "./OnboardingStep.js";
@@ -781,6 +782,8 @@ export const analyticsEvents = {
           queued: z.number().int().nonnegative(),
           pace: PlaylistPace,
           paceIsDefault: z.boolean(),
+          order: PlaylistOrder,
+          orderIsDefault: z.boolean(),
         },
       ),
       cancelled: event("The reader closes a playlist's preview without following it", { from: PlaylistEntryPoint }),
@@ -801,6 +804,11 @@ export const analyticsEvents = {
         waiting: z.number().int().nonnegative(),
       }),
       defaultPaceChanged: event("The reader changes the pace newly followed playlists start at", { pace: PlaylistPace }),
+      orderChanged: event("The reader changes the order a followed playlist is made in, and how many of its videos were waiting then", {
+        order: PlaylistOrder,
+        waiting: z.number().int().nonnegative(),
+      }),
+      defaultOrderChanged: event("The reader changes the order newly followed playlists are made in", { order: PlaylistOrder }),
     },
     fromLine: {
       playlistOpened: event("The reader opens, on YouTube, the playlist an overview came from", { overviewId: OverviewId }),
