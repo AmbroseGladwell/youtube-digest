@@ -342,7 +342,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const openedFrom =
     openedFromChapter === undefined
       ? null
-      : { number: openedFromChapterIndex + 1, title: openedFromChapter.title };
+      : {
+          number: openedFromChapterIndex + 1,
+          title: openedFromChapter.title,
+          startMs: openedFromChapter.startMs,
+          endMs: openedFromChapter.endMs,
+        };
   const toggleFavourite = (from: "masthead" | "playerBar" | "noteEnd") => {
     reader.overview.favouriteSwitched({ favourite: !state.favourite, from });
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });

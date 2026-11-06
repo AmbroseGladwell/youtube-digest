@@ -218,6 +218,7 @@
 }
 
 .row {
+  position: relative;
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
   gap: 0.75rem;
@@ -229,13 +230,49 @@
   transition: background var(--motion-state) var(--motion-ease);
 }
 
-// The block the player is inside sits on the raised card (design 2a), and the one a
-// chapter opened at does the same (design 2c) — what says which is which is the badge
-// or the chip inside it.
-.rowCurrent,
-.rowTarget {
+// The block the player is inside sits on the raised card (design 2a).
+.rowCurrent {
   background: var(--card);
   box-shadow: var(--shadow-tile);
+}
+
+// A chapter marks its whole stretch (design 2c), so this is a band rather than a tile:
+// every block in the run shares one surface, rounded only where the run begins and ends.
+// It is deliberately flat — the raised card reads as one highlighted thing, which is
+// wrong over a stretch that can run to a third of the transcript.
+.rowTarget {
+  background: var(--card);
+  border-radius: 0;
+}
+
+// The 2px the rows are spaced by would otherwise show the ground through the band.
+.rowTarget:not(.rowTargetCloses)::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 2px;
+  background: var(--card);
+}
+
+.rowTargetOpens {
+  border-start-start-radius: 16px;
+  border-start-end-radius: 16px;
+}
+
+.rowTargetCloses {
+  border-end-start-radius: 16px;
+  border-end-end-radius: 16px;
+}
+
+// A chapter held in a single block is one tile again, as it was before the band.
+.rowTargetOpens.rowTargetCloses {
+  box-shadow: var(--shadow-tile);
+}
+
+// Inside the band the playing block keeps its own card and shadow, so it stays findable
+// against a surface of the same colour.
+.rowTarget.rowCurrent {
+  border-radius: 16px;
 }
 
 .rowPast .text,

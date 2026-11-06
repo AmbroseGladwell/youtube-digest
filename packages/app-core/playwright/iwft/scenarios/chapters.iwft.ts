@@ -166,6 +166,29 @@ test("Transcript opens the transcript at the chapter's start, marked and in view
   await reader.verifyActiveTabIs("Chapters");
 });
 
+// A chapter is a stretch, not a point: marking only the block it starts in says where it
+// begins and never where it ends (docs/features/chapters.md, "Opened from a chapter").
+test("Transcript marks every block of the chapter, named once at the top of the run", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedNote(backendSimulator, {
+    chapters: [
+      { title: "The whole case", summary: "Opening and argument together.", startMs: 0, endMs: 3_661_000 },
+      { title: "The end", summary: "A sign-off and thanks.", startMs: 3_661_000, endMs: 3_667_000 },
+    ],
+  });
+  const library = await launcher.launchExpectingLibrary();
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickTab("Chapters");
+
+  await reader.clickChapterTranscript("The whole case");
+
+  await reader.verifyTargetedTranscriptBlocksRead([/The opening claim/, /where the argument is/]);
+  await reader.verifyTargetedBlocksNameTheChapterOnce();
+  await reader.verifyTargetBlockNamesChapter("Chapter 01 · The whole case");
+});
+
 test("choosing the Transcript tab yourself opens it at the top, with nothing marked", async ({
   launcher,
   backendSimulator,
