@@ -65,6 +65,8 @@ export interface LaunchOptions {
   surface?: Surface;
   layout?: AppLayout;
   defaultApiUrl?: string;
+  // False is a build installed from the Web Store, which offers no other server.
+  serverSwitchable?: boolean;
   build?: AppBuild;
   activeVideoUrl?: string | null;
   articlePages?: IwftArticlePagesConfig;
@@ -182,6 +184,7 @@ export class Launcher {
         surface: options.surface,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
+        serverSwitchable: options.serverSwitchable,
         build: options.build,
         activeVideoUrl: options.activeVideoUrl,
         articlePages: options.articlePages,

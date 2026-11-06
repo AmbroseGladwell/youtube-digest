@@ -10,7 +10,6 @@ export const capturePageTestIds = {
   opening: "CapturePage.opening",
   createButton: "CapturePage.createButton",
   readOverviewButton: "CapturePage.readOverviewButton",
-  createAgainButton: "CapturePage.createAgainButton",
   alreadyInLibraryNote: "CapturePage.alreadyInLibraryNote",
   noVideoNote: "CapturePage.noVideoNote",
   firstTimeNote: "CapturePage.firstTimeNote",

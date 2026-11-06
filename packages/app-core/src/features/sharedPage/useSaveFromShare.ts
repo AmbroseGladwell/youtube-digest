@@ -12,7 +12,7 @@ import { savedFromShare } from "./util/savedFromShare.js";
 // copy is saved, so its push is let in uncounted rather than reserving a slot on the
 // reader's month (docs/architecture/tiers.md, "Reserving on the reader's own key").
 export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview, options?: { sample: boolean }) => Promise<Overview> {
-  const { overviewStore } = useStores();
+  const { overviewStore, transcriptStore } = useStores();
   const queryClient = useQueryClient();
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -26,10 +26,16 @@ export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview
         await api.reserve(overview.id, token).catch(() => undefined);
       }
       await overviewStore.saveOverview(overview);
+      // The share carries the transcript (docs/features/sharing.md, "The transcript is in"),
+      // and a copy saved without it leaves the Transcript tab empty with no way to fill it:
+      // a transcript is keyed by video, so nothing else would ever fetch one for this note.
+      if (snapshot.transcript !== null) {
+        await transcriptStore.saveTranscript(snapshot.transcript);
+      }
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       return overview;
     },
-    [overviewStore, apiUrl, connection.token, queryClient],
+    [overviewStore, transcriptStore, apiUrl, connection.token, queryClient],
   );
 }
 

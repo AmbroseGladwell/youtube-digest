@@ -177,3 +177,21 @@ A shell that cannot sync at all has no web app to open, so the item is not there
   two products.
 - **Settings' back link reads `← Back` in the panel**, where it reads `← All overviews`
   everywhere else. There are no overviews to go back to — there is the one video.
+
+## What the panel cannot have
+
+**Chrome does not autofill in it.** The sign-in form's email field is marked the way a
+browser wants one: a real `<form>`, a `<label>`, `name="email"`, `type="email"`,
+`autoComplete="email"` and `inputMode`. Chrome still offers nothing, because its autofill
+does not run on `chrome-extension://` documents. Nothing in the markup changes that, so the
+markup is correct and the behaviour is the platform's. A password manager with its own
+extension may fill it; Chrome's own will not. Checked 6 November 2026, against a store
+build of 0.4.0.
+
+**The server field is only in an unpacked build.** "Use a different server" is how a build
+loaded unpacked talks to `http://localhost:3000` (`docs/architecture/deploy.md`, "The
+extension"). Installed from the Web Store there is no other server to name, and the question
+is noise on a sign-in page, so `mountApp` passes `serverSwitchable` from whether Chrome put
+an `update_url` in the manifest it hands back: present for a store install, absent for an
+unpacked one. It is the only signal for this that costs no permission, and a permission
+added for a cosmetic question is one more to justify at review.

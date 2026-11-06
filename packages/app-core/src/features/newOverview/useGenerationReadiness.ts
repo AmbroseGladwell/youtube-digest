@@ -33,11 +33,17 @@ export interface GenerationReadiness {
   // there is one, whatever keys it holds (docs/architecture/tiers.md, "Signed out"). A shell
   // with no server has no account to offer, and keeps making overviews on the reader's key.
   accountNeeded: boolean;
+  // Whether the questions above have answers yet. Two of them are network queries, and
+  // until they answer, `ready` is false for want of knowing rather than for want of a key.
+  // Anything that acts on a reader's press has to wait for this, or it decides on a guess
+  // (docs/features/injected-button.md, "Pressed before the answers are in").
+  settled: boolean;
 }
 
 export function useGenerationReadiness(): GenerationReadiness {
   const { apiKeys } = useApiKeys();
-  const settings = useSettingsQuery().data;
+  const settingsQuery = useSettingsQuery();
+  const settings = settingsQuery.data;
   const youTubeFetch = useYouTubeFetch();
   const serviceStatus = useServiceTranscriptStatusQuery();
   const ourKeyStatus = useOurKeyStatusQuery();
@@ -50,6 +56,7 @@ export function useGenerationReadiness(): GenerationReadiness {
   const ourKeyUsable = ourKeyStatus.data?.available === true;
 
   return {
+    settled: !ourKeyStatus.isPending && !serviceStatus.isPending && !settingsQuery.isPending,
     ready: !accountNeeded && (hasChosenKey || ourKeyUsable) && !needsTranscriptSource,
     provider,
     hasChosenKey,

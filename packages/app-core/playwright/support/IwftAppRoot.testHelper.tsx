@@ -30,6 +30,7 @@ export function IwftAppRoot() {
       runBridge={window.__iwftRunBridge__}
       youTubeFetch={window.__iwftYouTubeFetch__}
       defaultApiUrl={window.__iwftDefaultApiUrl__}
+      serverSwitchable={window.__iwftServerSwitchable__}
       build={window.__iwftBuild__}
       errorDestinationMirror={
         window.__iwftErrorDestinations__ === null

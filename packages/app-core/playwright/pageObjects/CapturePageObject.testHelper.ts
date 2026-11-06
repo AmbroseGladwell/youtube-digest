@@ -75,9 +75,6 @@ export class CapturePageObject extends PageObject {
 
   clickCreate = () => this.step("clickCreate", () => this.click(capturePageTestIds.createButton));
 
-  clickWriteANewOne = () =>
-    this.step("clickWriteANewOne", () => this.click(capturePageTestIds.createAgainButton));
-
   openStoredOverview = (): Promise<ReaderPageObject> =>
     this.step("openStoredOverview", async () => {
       await this.click(capturePageTestIds.readOverviewButton);

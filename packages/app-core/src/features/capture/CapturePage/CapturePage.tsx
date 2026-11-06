@@ -125,15 +125,18 @@ export function CapturePage() {
     void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
   };
 
-  const createOverview = (again: boolean) => {
+  // Only ever a first overview. Writing a second over one already held was offered here and
+  // never worked for a video: the run carried no overview id, so the server refused it under
+  // the one-per-video rule and the client folded onto the note already there. Regenerating
+  // belongs with the note being regenerated, not in front of someone who has not read it.
+  const createOverview = () => {
     if (activeVideoUrl !== null) {
-      analytics.capture.panel.createChosen({ again });
+      analytics.capture.panel.createChosen({ again: false });
       controller.start(activeVideoUrl, { from: "panel" });
     }
     if (offeredPage !== null) {
-      analytics.capture.panel.createChosen({ again });
-      const held = again ? overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url) : null;
-      startArticleRun(offeredPage, { from: "panel", overviewId: held?.id, willAsk: pageAccess !== true });
+      analytics.capture.panel.createChosen({ again: false });
+      startArticleRun(offeredPage, { from: "panel", willAsk: pageAccess !== true });
     }
   };
 
@@ -251,16 +254,7 @@ export function CapturePage() {
               Read overview
             </button>
             <p className={styles.note} data-testid={capturePageTestIds.alreadyInLibraryNote}>
-              This {offeredPage === null ? "video" : "article"} is already in your library.{" "}
-              <button
-                type="button"
-                className={styles.quiet}
-                onClick={() => createOverview(true)}
-                disabled={!keysReady || limit !== null}
-                data-testid={capturePageTestIds.createAgainButton}
-              >
-                Write a new one
-              </button>
+              This {offeredPage === null ? "video" : "article"} is already in your library.
             </p>
           </>
         ) : limit !== null ? (
@@ -270,7 +264,7 @@ export function CapturePage() {
             <button
               type="button"
               className={styles.primary}
-              onClick={() => createOverview(false)}
+              onClick={() => createOverview()}
               disabled={!keysReady}
               data-testid={capturePageTestIds.createButton}
             >

@@ -37,6 +37,9 @@ export class SignInPageObject extends PageObject {
         : this.expectToHaveCount(emailLinkFormTestIds.serverInput, 0),
     );
 
+  verifyOffersNoOtherServer = () =>
+    this.step("verifyOffersNoOtherServer", () => this.expectNotToBeVisible(emailLinkFormTestIds.otherServerButton));
+
   chooseOtherServer = (apiUrl: string) =>
     this.step(`chooseOtherServer ${apiUrl}`, async () => {
       await this.click(emailLinkFormTestIds.otherServerButton);
