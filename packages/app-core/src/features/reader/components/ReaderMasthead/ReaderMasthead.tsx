@@ -1,9 +1,7 @@
 import { useRef, useState, type Ref } from "react";
-import { Link } from "react-router";
 import { NOVELTY_LABEL, type Overview, sourceName, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
-import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
@@ -21,6 +19,7 @@ import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine
 import styles from "./ReaderMasthead.module.scss";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface ReaderMastheadProps {
   overview: Overview;
@@ -93,7 +92,6 @@ export function ReaderMasthead({
   onDelete,
   ref,
 }: ReaderMastheadProps) {
-  const animateNavigation = useShouldAnimateNavigation();
   const analytics = useReaderAnalytics();
   const backToLibrary = useBackTo(Routes.home());
   const headBackLink = useLentBackLink({
@@ -144,11 +142,10 @@ export function ReaderMasthead({
       data-testid={readerMastheadTestIds.root}
     >
       {!compact && (
-        <Link
+        <PageLink
           ref={headBackLink}
           className={styles.backLink}
           to={Routes.home()}
-          viewTransition={animateNavigation}
           onClick={(event) => {
             analytics.page.backFollowed({ from: "head" });
             backToLibrary(event);
@@ -157,7 +154,7 @@ export function ReaderMasthead({
         >
           <StrokeIcon name="arrowLeft" size={15} />
           All overviews
-        </Link>
+        </PageLink>
       )}
 
       <div className={styles.actions}>
@@ -242,6 +239,7 @@ export function ReaderMasthead({
               full={full}
               className={styles.image}
               onToggle={toggleHeadImage}
+              carriesFrom={Routes.overview(overview.id)}
             />
           )}
           <div className={styles.who}>

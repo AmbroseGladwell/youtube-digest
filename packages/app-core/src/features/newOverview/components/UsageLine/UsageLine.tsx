@@ -1,11 +1,11 @@
 import { Fragment } from "react";
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
 import { useNextQuota } from "../../useNextQuota.js";
 import { usageLineOf } from "../../util/usageLine.js";
 import styles from "./UsageLine.module.scss";
 import type { UsageLineTestIds } from "./UsageLineTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface UsageLineProps {
   testIds: UsageLineTestIds;
@@ -25,7 +25,7 @@ export function UsageLine({ testIds, narrow = false, onPlanFollowed }: UsageLine
     ...parts,
     ...(link !== null
       ? [
-          <Link
+          <PageLink
             key="plan"
             className={styles.planLink}
             to={Routes.settingsSection("plan")}
@@ -33,7 +33,7 @@ export function UsageLine({ testIds, narrow = false, onPlanFollowed }: UsageLine
             data-testid={testIds.planLink}
           >
             {link}
-          </Link>,
+          </PageLink>,
         ]
       : []),
   ];

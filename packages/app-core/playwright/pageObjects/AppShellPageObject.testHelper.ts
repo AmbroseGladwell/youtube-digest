@@ -14,6 +14,12 @@ import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.tes
 import { QueuePageObject } from "./QueuePageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 
+const OVERVIEW_IMAGE_GROUP = "::view-transition-group(overview-image)";
+
+// Each entry the recorder keeps is "<pseudo-element>|<keyframes name>".
+const pseudoOf = (entry: string) => entry.slice(0, entry.indexOf("|"));
+const keyframesOf = (entry: string) => entry.slice(entry.indexOf("|") + 1);
+
 export class AppShellPageObject extends PageObject {
   get accountMenu(): AccountMenuPageObject {
     return new AccountMenuPageObject(this.testContext, this.get(appShellTestIds.masthead));
@@ -59,6 +65,133 @@ export class AppShellPageObject extends PageObject {
     this.step(`verifyNavigationDirection ${direction}`, () =>
       expect(this.page.locator("html")).toHaveAttribute("data-nav-direction", direction),
     );
+
+  // A view transition paints its snapshots into the browser's top layer, so nothing in the
+  // page's own tree records that one ran; its pseudo-element animations are the only sign
+  // (docs/features/page-transitions.md). The recorder is installed before the navigation and
+  // read after it, rather than polled against a deadline: under the whole suite's load a
+  // round-trip to the page can easily take longer than a 260ms animation, and a watcher that
+  // arrives late cannot tell "it never ran" from "I missed it".
+  verifyNavigationAnimates = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyNavigationAnimates", async () => {
+      const arrived = await this.whileRecordingTransitions(go);
+      expect(arrived.opened).toBeGreaterThan(0);
+      return arrived.result;
+    });
+
+  verifyNavigationDoesNotAnimate = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyNavigationDoesNotAnimate", async () => {
+      const arrived = await this.whileRecordingTransitions(go);
+      expect(arrived.opened).toBe(0);
+      return arrived.result;
+    });
+
+  // Design OV-170: the row's thumbnail and the note's head are one object, which exists only
+  // as an `overview-image` snapshot group for the length of the journey.
+  verifyImageCarriesAcross = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyImageCarriesAcross", async () => {
+      const arrived = await this.whileRecordingTransitions(go);
+      expect(arrived.seen.map(pseudoOf)).toContain(OVERVIEW_IMAGE_GROUP);
+      return arrived.result;
+    });
+
+  // The pane's own transition still runs here, so this asks for the image's group alone
+  // rather than for any transition at all.
+  verifyImageDoesNotCarryAcross = <T>(go: () => Promise<T>): Promise<T> =>
+    this.step("verifyImageDoesNotCarryAcross", async () => {
+      const arrived = await this.whileRecordingTransitions(go);
+      expect(arrived.seen.map(pseudoOf)).not.toContain(OVERVIEW_IMAGE_GROUP);
+      return arrived.result;
+    });
+
+  // Design OV-170 170h, "The pane while it runs": the 10px slide is dropped for this one
+  // journey, so the pane's own snapshot crossfades rather than travelling. Which keyframes
+  // are playing is the only place that difference exists.
+  verifyThePaneKeyframesAre = <T>(wanted: string, go: () => Promise<T>): Promise<T> =>
+    this.step(`verifyThePaneKeyframesAre ${wanted}`, async () => {
+      const arrived = await this.whileRecordingTransitions(go);
+      const paneEntries = arrived.seen.filter((entry) => pseudoOf(entry) === "::view-transition-new(pane)");
+      expect(paneEntries.map(keyframesOf)).toEqual([wanted]);
+      return arrived.result;
+    });
+
+  private verifyNoTransitionIsRunning = () =>
+    expect
+      .poll(
+        () =>
+          this.page.evaluate(() =>
+            document.getAnimations().some((animation) => {
+              const effect = animation.effect;
+              return effect instanceof KeyframeEffect && (effect.pseudoElement ?? "").startsWith("::view-transition");
+            }),
+          ),
+        { timeout: 4_000 },
+      )
+      .toBe(false);
+
+  // The app opens every one of these through document.startViewTransition, so that is what
+  // is listened to. Whether a navigation asked for one at all is counted, which is the whole
+  // question for a link that was missing the flag; what it painted is read at `ready`, which
+  // settles when the pseudo-element tree exists and its animations have been built. The two
+  // are kept apart because `ready` never settles for a transition the next navigation skips,
+  // and that says nothing about whether this one was asked for. Sampling instead — a requestAnimationFrame loop over
+  // document.getAnimations() — records nothing in a backgrounded window, which is most of
+  // them when the suite runs in parallel, and a real transition then reads as none at all.
+  // `animationstart` is no use either: it does not fire for view-transition pseudo-elements.
+  private whileRecordingTransitions = async <T>(
+    go: () => Promise<T>,
+  ): Promise<{ result: T; seen: string[]; opened: number }> => {
+    // React Router skips a transition that is still running when the next navigation starts,
+    // and a skipped one never reaches `ready`. Waiting for quiet first keeps each assertion
+    // about its own journey rather than the tail of the one before it.
+    await this.verifyNoTransitionIsRunning();
+    await this.page.evaluate(() => {
+      const seen: string[] = [];
+      const opened = { count: 0 };
+      const original = document.startViewTransition.bind(document);
+      document.startViewTransition = ((callback: () => void | Promise<void>) => {
+        opened.count += 1;
+        const transition = original(callback);
+        void transition.ready.then(
+          () => {
+            for (const animation of document.getAnimations()) {
+              const effect = animation.effect;
+              if (effect instanceof KeyframeEffect && Boolean(effect.pseudoElement)) {
+                seen.push(`${effect.pseudoElement!}|${(animation as CSSAnimation).animationName}`);
+              }
+            }
+          },
+          () => undefined,
+        );
+        return transition;
+      }) as typeof document.startViewTransition;
+      Object.assign(globalThis, {
+        __transitionsSeen: seen,
+        __transitionsOpened: opened,
+        __transitionsStop: () => {
+          document.startViewTransition = original;
+        },
+      });
+    });
+    const result = await go();
+    const taken = await this.page.evaluate(() => {
+      const held = globalThis as {
+        __transitionsSeen?: string[];
+        __transitionsOpened?: { count: number };
+        __transitionsStop?: () => void;
+      };
+      held.__transitionsStop?.();
+      const recorded = held.__transitionsSeen ?? [];
+      const opened = held.__transitionsOpened?.count ?? 0;
+      Object.assign(globalThis, {
+        __transitionsSeen: undefined,
+        __transitionsOpened: undefined,
+        __transitionsStop: undefined,
+      });
+      return { seen: [...new Set(recorded)].filter((entry) => entry.startsWith("::view-transition")), opened };
+    });
+    return { result, seen: taken.seen, opened: taken.opened };
+  };
 
   verifyIsParedBackToThePanel = () =>
     this.step("verifyIsParedBackToThePanel", async () => {

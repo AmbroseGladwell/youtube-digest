@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -7,6 +6,7 @@ import { captureQueueStripCopy } from "../../util/captureQueueStripCopy.js";
 import { monthHoldWays } from "../../util/monthHoldCopy.js";
 import styles from "./CaptureQueueStripView.module.scss";
 import { captureQueueStripViewTestIds } from "./CaptureQueueStripViewTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface CaptureQueueStripViewProps {
   strip: CaptureQueueStrip;
@@ -41,7 +41,7 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
   const warns = strip.kind === "noKey" || strip.kind === "attention";
 
   const queueLink = (label: string | null) => (
-    <Link
+    <PageLink
       className={label === null ? styles.iconAction : styles.ghostAction}
       to={Routes.queue()}
       aria-label={label === null ? "Open queue" : undefined}
@@ -50,7 +50,7 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
     >
       {label}
       <StrokeIcon name="chevronRight" size={compact ? 18 : 14} />
-    </Link>
+    </PageLink>
   );
 
   const pause = (
@@ -151,14 +151,14 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
         if (way === null) return unfold ?? queueLink(compact ? null : "Queue");
         return (
           <>
-            <Link
+            <PageLink
               className={styles.primaryAction}
               to={way === "addKey" ? Routes.settingsSection("keys") : Routes.settingsSection("plan")}
               onClick={() => analytics.capture.limitMessage.wayChosen({ way, from: "queueStrip" })}
               data-testid={way === "addKey" ? captureQueueStripViewTestIds.addKeyLink : captureQueueStripViewTestIds.seePlansLink}
             >
               {way === "addKey" ? "Add a key" : "See plans"}
-            </Link>
+            </PageLink>
             {!compact && queueLink("Queue")}
           </>
         );
@@ -170,14 +170,14 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
       case "noKey":
         return (
           <>
-            <Link
+            <PageLink
               className={styles.primaryAction}
               to={Routes.settingsSection("keys")}
               onClick={() => analytics.queue.controls.keysLinkFollowed({ from: "strip" })}
               data-testid={captureQueueStripViewTestIds.addKeyLink}
             >
               Add a key
-            </Link>
+            </PageLink>
             {!compact && queueLink("Queue")}
           </>
         );

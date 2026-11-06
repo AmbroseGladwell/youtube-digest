@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Link } from "react-router";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -14,6 +13,7 @@ import { ExampleQuestions } from "../ExampleQuestions/ExampleQuestions.js";
 import styles from "./ConnectionsSection.module.scss";
 import { connectionsSectionTestIds } from "./ConnectionsSectionTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export const CONNECTIONS_INTRO =
   "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, and mark them read or favourite for you.";
@@ -43,22 +43,22 @@ export function ConnectionsSection() {
           from the web app.
         </p>
         <div className={styles.actions}>
-          <Link
+          <PageLink
             to={Routes.signIn()}
             className={styles.primary}
             onClick={() => analytics.mcp.settingsConnections.signInChosen()}
             data-testid={connectionsSectionTestIds.signInLink}
           >
             Sign in
-          </Link>
-          <Link
+          </PageLink>
+          <PageLink
             to={Routes.createAccount()}
             className={styles.secondary}
             onClick={() => analytics.mcp.settingsConnections.createAccountChosen()}
             data-testid={connectionsSectionTestIds.createAccountLink}
           >
             Create account
-          </Link>
+          </PageLink>
         </div>
       </div>
     );

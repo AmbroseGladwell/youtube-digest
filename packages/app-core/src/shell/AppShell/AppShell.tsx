@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
+import { NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { BackLinkHandoffProvider, type HeadBackLink } from "../../app/BackLinkHandoffContext.js";
@@ -44,6 +44,7 @@ import styles from "./AppShell.module.scss";
 import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
 import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
+import { PageLink } from "../../components/shared/PageLink/PageLink.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 // Where the note's head uses the phone arrangement and scrolls away (ReaderMasthead.module.scss).
@@ -63,6 +64,8 @@ export function AppShell() {
     [mastheadHeight.measured],
   );
   const trail = useHistoryTrail();
+  // The app's one NavLink, which PageLink can't stand in for because the active styling is
+  // NavLink's (docs/features/page-transitions.md).
   const animateNavigation = useShouldAnimateNavigation();
   const sync = useSync();
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
@@ -174,7 +177,7 @@ export function AppShell() {
                     className={`${styles.brandSlot} ${handoffLive ? styles.brandSlotLive : ""} ${backInBar ? styles.brandSlotBack : ""}`}
                     data-testid={appShellTestIds.brandSlot}
                   >
-                    <Link
+                    <PageLink
                       ref={brandLink}
                       className={styles.brand}
                       to={Routes.home()}
@@ -189,13 +192,12 @@ export function AppShell() {
                       <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
                         {isPanel ? "Overview" : "The Overview"}
                       </h1>
-                    </Link>
+                    </PageLink>
                     {handoffLive && (
-                      <Link
+                      <PageLink
                         ref={barBackLink}
                         className={styles.backLink}
                         to={headBackLink.to}
-                        viewTransition={animateNavigation}
                         onClick={headBackLink.follow}
                         inert={!backInBar}
                         aria-hidden={!backInBar || undefined}
@@ -205,7 +207,7 @@ export function AppShell() {
                           <StrokeIcon name="arrowLeft" size={17} />
                         </span>
                         <span className={styles.backLabel}>{headBackLink.label}</span>
-                      </Link>
+                      </PageLink>
                     )}
                   </div>
 
@@ -249,15 +251,14 @@ export function AppShell() {
                         <AccountMenu />
                       </span>
                       {onAuthPage && (
-                        <Link
+                        <PageLink
                           className={styles.notNowLink}
                           to={Routes.home()}
-                          viewTransition={animateNavigation}
                           onClick={() => analytics.app.masthead.notNowChosen()}
                           data-testid={appShellTestIds.notNowLink}
                         >
                           Not now
-                        </Link>
+                        </PageLink>
                       )}
                     </>
                   )}

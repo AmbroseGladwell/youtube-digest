@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import type { NoteLine } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
@@ -12,6 +11,7 @@ import { usePlayer } from "../../../player/PlayerContext.js";
 import type { PlayerBarAction, PlayerBarView } from "../../../player/util/playerBarView.js";
 import styles from "./ReaderPlayerBar.module.scss";
 import { readerPlayerBarTestIds } from "./ReaderPlayerBarTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface ReaderPlayerBarProps {
   view: PlayerBarView;
@@ -151,14 +151,14 @@ export function ReaderPlayerBar({
               <span className={styles.rest}>
                 {" · "}
                 {view.label.voiceLink ? (
-                  <Link
+                  <PageLink
                     className={styles.voiceLink}
                     to={Routes.settingsSection("voice")}
                     onClick={() => analytics.playerBar.voiceLinkFollowed()}
                     data-testid={readerPlayerBarTestIds.voiceLink}
                   >
                     {view.label.rest}
-                  </Link>
+                  </PageLink>
                 ) : (
                   view.label.rest
                 )}
@@ -225,7 +225,7 @@ export function ReaderPlayerBar({
           )}
           {actions.map((action) =>
             action === "signIn" ? (
-              <Link
+              <PageLink
                 key={action}
                 className={styles.signIn}
                 to={Routes.signIn()}
@@ -233,7 +233,7 @@ export function ReaderPlayerBar({
                 data-testid={readerPlayerBarTestIds.signInLink}
               >
                 {ACTION_LABELS[action]}
-              </Link>
+              </PageLink>
             ) : (
               <button
                 key={action}

@@ -1,9 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Link } from "react-router";
 import { Routes } from "../../../app/Routes.js";
 import { legalIdentity } from "../legalIdentity.js";
 import styles from "./LegalPage.module.scss";
 import { legalPageTestIds } from "./LegalPageTestIds.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 export interface LegalSection {
   id: string;
@@ -79,10 +79,10 @@ export function LegalPage({ title, updatedOn, intro, sections, otherPage }: Lega
         </section>
       ))}
       <footer className={styles.foot}>
-        <Link to={otherPage.to} data-testid={legalPageTestIds.otherPage}>
+        <PageLink to={otherPage.to} data-testid={legalPageTestIds.otherPage}>
           {otherPage.label}
-        </Link>
-        <Link to={Routes.home()}>Back to {legalIdentity.service}</Link>
+        </PageLink>
+        <PageLink to={Routes.home()}>Back to {legalIdentity.service}</PageLink>
       </footer>
     </article>
   );

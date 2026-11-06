@@ -1,5 +1,4 @@
 import { useId, useState } from "react";
-import { Link } from "react-router";
 import type { OverviewId } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
@@ -10,6 +9,7 @@ import { useStartFromLink } from "../../../newOverview/useStartFromLink.js";
 import { readNextSteps, writeNextSteps, type NextStep } from "../../nextStepsStorage.js";
 import styles from "./OnboardingNextSteps.module.scss";
 import { onboardingNextStepsTestIds } from "./OnboardingNextStepsTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 // Design 46l: under the Verdict of onboarding's overview, the extension and the AI connection,
 // each dismissible, and never a modal. Shown only on the overview onboarding ended on. The panel
@@ -64,14 +64,14 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
             </span>
             <span className={styles.title}>Ask your AI about anything you've saved.</span>
             <span>
-              <Link
+              <PageLink
                 className={styles.action}
                 to={Routes.settingsSection("connections")}
                 onClick={() => analytics.onboarding.nextSteps.chosen({ step: "ai" })}
                 data-testid={onboardingNextStepsTestIds.action("ai")}
               >
                 Connect your AI
-              </Link>
+              </PageLink>
             </span>
           </div>
         )}

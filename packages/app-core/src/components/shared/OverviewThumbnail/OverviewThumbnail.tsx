@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { sourceImage, sourceName, type Source, type VideoSource } from "@overview/domain";
-import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
+import { useOverviewImageMorph } from "../../../util/useOverviewImageMorph.js";
 import styles from "./OverviewThumbnail.module.scss";
 import { overviewThumbnailTestIds } from "./OverviewThumbnailTestIds.js";
+import { PageLink } from "../PageLink/PageLink.js";
 
 export interface OverviewThumbnailProps {
   video: VideoSource | Source;
@@ -11,6 +11,10 @@ export interface OverviewThumbnailProps {
   to?: string | undefined;
   state?: unknown;
   onOpen?: (() => void) | undefined;
+  // Design OV-170: the library's rows are the only thumbnails that become a note's head, so
+  // only they are named. Naming every one of them would break the budget and could put the
+  // same name on two elements at once (docs/features/page-transitions.md).
+  carriesIntoHead?: boolean | undefined;
 }
 
 // Renders nothing at all when there is no usable image, rather than leaving an empty
@@ -19,9 +23,16 @@ export interface OverviewThumbnailProps {
 // model reads whatever was saved), so an overview saved before thumbnailUrl existed has
 // no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
-export function OverviewThumbnail({ video, className, to, state, onOpen }: OverviewThumbnailProps) {
+export function OverviewThumbnail({
+  video,
+  className,
+  to,
+  state,
+  onOpen,
+  carriesIntoHead = false,
+}: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
-  const animateNavigation = useShouldAnimateNavigation();
+  const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
 
   const isArticle = "kind" in video && video.kind === "web";
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
@@ -33,17 +44,16 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
       </span>
     );
     return to ? (
-      <Link
+      <PageLink
         className={`${styles.thumbnail} ${styles.link} ${styles.tileHost} ${className ?? ""}`}
         to={to}
         state={state}
-        viewTransition={animateNavigation}
         aria-hidden="true"
         tabIndex={-1}
         onClick={onOpen}
       >
         {tile}
-      </Link>
+      </PageLink>
     ) : (
       <span className={`${styles.thumbnail} ${styles.tileHost} ${className ?? ""}`}>{tile}</span>
     );
@@ -72,17 +82,17 @@ export function OverviewThumbnail({ video, className, to, state, onOpen }: Overv
   // is taken out of the tab order and the accessibility tree rather than repeated as a
   // second, unlabelled link.
   return (
-    <Link
+    <PageLink
+      ref={morph}
       className={`${styles.thumbnail} ${styles.link} ${className ?? ""}`}
       to={to}
       state={state}
-      viewTransition={animateNavigation}
       aria-hidden="true"
       tabIndex={-1}
       onClick={onOpen}
       data-testid={overviewThumbnailTestIds.link}
     >
       {image}
-    </Link>
+    </PageLink>
   );
 }

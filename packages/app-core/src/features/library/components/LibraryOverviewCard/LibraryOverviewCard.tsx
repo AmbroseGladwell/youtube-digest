@@ -1,6 +1,4 @@
-import { Link } from "react-router";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
@@ -11,6 +9,7 @@ import type { OverviewWithState } from "../../../overviews/types/OverviewWithSta
 import type { LibraryViewState } from "../../util/libraryViewState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface LibraryOverviewCardProps {
   overviewWithState: OverviewWithState;
@@ -53,7 +52,6 @@ export function LibraryOverviewCard({
   onListen,
   readerState,
 }: LibraryOverviewCardProps) {
-  const animateNavigation = useShouldAnimateNavigation();
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
@@ -83,6 +81,7 @@ export function LibraryOverviewCard({
           state={readerState}
           onOpen={() => onOpen("thumbnail")}
           className={styles.thumbnail}
+          carriesIntoHead
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
@@ -108,11 +107,10 @@ export function LibraryOverviewCard({
             {selling && <span className={styles.selling}>{selling}</span>}
           </p>
 
-          <Link
+          <PageLink
             className={styles.titleLink}
             to={readerPath}
             state={readerState}
-            viewTransition={animateNavigation}
             onClick={() => onOpen("title")}
             data-testid={libraryOverviewCardTestIds.titleLink}
           >
@@ -120,7 +118,7 @@ export function LibraryOverviewCard({
             <span className={styles.meta}>
               <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
             </span>
-          </Link>
+          </PageLink>
 
           <div className={styles.foot}>
             <span className={styles.reading}>

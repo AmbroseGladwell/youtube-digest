@@ -1,9 +1,9 @@
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./SavedLocallyNote.module.scss";
 import { savedLocallyNoteTestIds } from "./SavedLocallyNoteTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface SavedLocallyNoteProps {
   onDismiss: () => void;
@@ -18,14 +18,14 @@ export function SavedLocallyNote({ onDismiss }: SavedLocallyNoteProps) {
         your overviews to the web app and your other devices, and reads them aloud.
       </p>
       <div className={styles.actions}>
-        <Link
+        <PageLink
           className={styles.link}
           to={Routes.createAccount()}
           onClick={() => analytics.plus.savedLocallyNote.createAccountChosen()}
           data-testid={savedLocallyNoteTestIds.createAccountLink}
         >
           Create account <StrokeIcon name="arrowRight" size={13} />
-        </Link>
+        </PageLink>
         <button
           type="button"
           className={styles.quiet}

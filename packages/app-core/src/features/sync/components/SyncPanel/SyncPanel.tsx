@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -12,6 +11,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { AccountTile } from "../../../auth/components/AccountTile/AccountTile.js";
 import { DeleteAccountDialog } from "../../../auth/components/DeleteAccountDialog/DeleteAccountDialog.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const WEB_NOTE = "Sign in with your email, and this browser keeps your library in step with every other device you sign in on.";
 const EXTENSION_NOTE =
@@ -81,14 +81,14 @@ export function SyncPanel() {
               </button>
             )}
             {surface === "web" && !signedOut && (
-              <Link
+              <PageLink
                 className={styles.secondaryButton}
                 to={Routes.connectExtension()}
                 onClick={() => analytics.settings.sync.connectExtensionChosen()}
                 data-testid={syncPanelTestIds.connectExtensionLink}
               >
                 Connect the extension
-              </Link>
+              </PageLink>
             )}
           </div>
         </section>
@@ -144,22 +144,22 @@ export function SyncPanel() {
           {surface === "web" ? WEB_NOTE : EXTENSION_NOTE}
         </p>
         <div className={styles.actions}>
-          <Link
+          <PageLink
             className={styles.primaryButton}
             to={Routes.signIn()}
             onClick={() => analytics.settings.sync.signInChosen()}
             data-testid={syncPanelTestIds.signInLink}
           >
             Sign in
-          </Link>
-          <Link
+          </PageLink>
+          <PageLink
             className={styles.secondaryButton}
             to={Routes.createAccount()}
             onClick={() => analytics.settings.sync.createAccountChosen()}
             data-testid={syncPanelTestIds.createAccountLink}
           >
             Create account
-          </Link>
+          </PageLink>
         </div>
       </section>
     </div>

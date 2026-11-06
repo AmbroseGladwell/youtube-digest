@@ -144,6 +144,9 @@ Five folders, five different questions.
 - `fade-under-the-bar.md` — content dissolves over 16px of `--ground` as it passes under the
   sticky chrome: why only the lowest band in a stack carries it, the one rule that picks
   that band, and why the fade rides the scroll rather than a timer.
+- `page-transitions.md` — `PageLink` as the one way a navigation asks for design 9c's pane
+  transition, the row's thumbnail carrying across into the note's head, why a pop is animated
+  by replay rather than a flag, and which navigations were deliberately left plain.
 - `extension-panel.md` — why the side panel is one video rather than a small library:
   the layout seam, its three screens, what it drops, and what `Open in web app` waits for.
 - `following-playback.md` — how the transcript follows the video, what now touches the

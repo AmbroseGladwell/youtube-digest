@@ -1,10 +1,9 @@
 import { formatClock } from "@overview/domain";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { usePlayer, usePlayerSnapshot, usePlayerTime } from "../../PlayerContext.js";
 import { SKIP_SECONDS } from "../../PlayerEngine.js";
 import type { PlayerSnapshot } from "../../types/PlayerSnapshot.js";
@@ -13,6 +12,7 @@ import { sectionHeadingAt } from "../../util/playerBarView.js";
 import styles from "./MiniPlayer.module.scss";
 import { miniPlayerTestIds } from "./MiniPlayerTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const CLEARANCE_PROPERTY = "--mini-player-clearance";
 const CLEARANCE_GAP_PX = 8;
@@ -37,7 +37,6 @@ export function MiniPlayer() {
 function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onStop: () => void }) {
   const engine = usePlayer();
   const time = usePlayerTime();
-  const animateNavigation = useShouldAnimateNavigation();
   const analytics = useAnalytics();
   const root = useRef<HTMLDivElement | null>(null);
   const [artworkFailed, setArtworkFailed] = useState(false);
@@ -77,10 +76,9 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         ) : (
           <span className={styles.artwork} aria-hidden="true" />
         )}
-        <Link
+        <PageLink
           className={styles.title}
           to={Routes.overview(track.overviewId)}
-          viewTransition={animateNavigation}
           onClick={() => analytics.player.miniPlayer.overviewOpened({ overviewId: track.overviewId })}
           data-testid={miniPlayerTestIds.titleLink}
         >
@@ -90,7 +88,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
               ? "Preparing audio"
               : `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`}
           </span>
-        </Link>
+        </PageLink>
         <button
           type="button"
           className={styles.step}

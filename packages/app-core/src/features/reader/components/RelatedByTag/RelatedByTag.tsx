@@ -1,6 +1,5 @@
 import { sourceName } from "@overview/domain";
 import { useId, useState } from "react";
-import { Link } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -8,6 +7,7 @@ import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js"
 import type { RelatedOverview } from "../../util/relatedByTag.js";
 import styles from "./RelatedByTag.module.scss";
 import { relatedByTagTestIds } from "./RelatedByTagTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 const SHOWN_AT_FIRST = 3;
 
@@ -51,10 +51,9 @@ export function RelatedByTag({
         <ul className={styles.related} aria-label="Related by tag" data-testid={relatedByTagTestIds.related}>
           {shown.map(({ overview, state, sharedTags }) => (
             <li key={overview.id}>
-              <Link
+              <PageLink
                 className={styles.row}
                 to={Routes.overview(overview.id)}
-                viewTransition={animateNavigation}
                 onClick={() => onOverviewOpened?.(sharedTags)}
                 data-read={state.read || undefined}
               >
@@ -66,7 +65,7 @@ export function RelatedByTag({
                     {state.read && " · Read"}
                   </span>
                 </span>
-              </Link>
+              </PageLink>
             </li>
           ))}
         </ul>
@@ -97,16 +96,15 @@ function TagList({ tags, link, onFollowed }: { tags: string[]; link: boolean; on
       {tags.map((tag) => (
         <li key={tag}>
           {link ? (
-            <Link
+            <PageLink
               className={styles.tagLink}
               to={Routes.taggedLibrary(tag)}
-              viewTransition={animateNavigation}
               onClick={onFollowed}
               aria-label={`Show overviews tagged ${tag}`}
               data-testid={relatedByTagTestIds.tag(tag)}
             >
               #{tag}
-            </Link>
+            </PageLink>
           ) : (
             <span className={styles.tagWord} data-testid={relatedByTagTestIds.tag(tag)}>
               #{tag}

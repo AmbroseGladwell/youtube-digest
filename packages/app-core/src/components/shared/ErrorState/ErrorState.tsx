@@ -1,5 +1,4 @@
 import { useCallback, type ReactNode } from "react";
-import { Link } from "react-router";
 import type { ErrorScreen } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError } from "@overview/sync";
 import { Routes } from "../../../app/Routes.js";
@@ -9,6 +8,7 @@ import { useReportError } from "../../../features/errors/useReportError.js";
 import { StrokeIcon } from "../StrokeIcon/StrokeIcon.js";
 import styles from "./ErrorState.module.scss";
 import { errorStateTestIds } from "./ErrorStateTestIds.js";
+import { PageLink } from "../PageLink/PageLink.js";
 
 // A recovery action does something here; a departure leaves the app entirely. Both take
 // the pill, because the distinction the screen is built on is between an action and
@@ -85,14 +85,14 @@ export function ErrorState({ screen, title, body, action, back = false, error }:
               </button>
             ))}
           {back && (
-            <Link
+            <PageLink
               to={Routes.home()}
               className={styles.back}
               onClick={() => analytics.app.errorState.backChosen({ screen })}
               data-testid={errorStateTestIds.back}
             >
               <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
-            </Link>
+            </PageLink>
           )}
         </div>
       )}

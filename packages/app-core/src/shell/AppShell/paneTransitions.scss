@@ -31,7 +31,7 @@
 }
 
 ::view-transition-group(masthead) {
-  z-index: 2;
+  z-index: 3;
 }
 
 // The default cross-fade blends the two snapshots additively, which washes out everything
@@ -99,6 +99,71 @@
 
 :root[data-nav-direction="back"]::view-transition-old(pane) {
   animation: paneLeaveBack 160ms ease-in both;
+}
+
+// Design OV-170 170b, 170e, 170g: the row's thumbnail and the note's head image are one
+// object. useOverviewImageMorph names both ends `overview-image`, so only the group's box
+// is animated between them. The two snapshots are not crossfaded: the old one is hidden and
+// the new one painted at its own radius for the whole flight, which is what keeps a read
+// row's half-opacity tile from showing through and why the image comes up to full on the
+// way. `height: 100%` with `object-fit: cover` holds the 16:9 crop while the box changes.
+::view-transition-group(overview-image) {
+  z-index: 2;
+  animation-duration: var(--motion-arrive);
+  animation-timing-function: var(--motion-ease);
+}
+
+:root[data-nav-direction="back"]::view-transition-group(overview-image) {
+  animation-duration: var(--motion-travel);
+}
+
+::view-transition-old(overview-image),
+::view-transition-new(overview-image) {
+  height: 100%;
+  object-fit: cover;
+  animation: none;
+}
+
+::view-transition-old(overview-image) {
+  opacity: 0;
+}
+
+// Design OV-170 170h, "The pane while it runs": with the image carrying the eye the pane
+// holds still and only crossfades. The 10px slide is dropped for this journey alone,
+// because two movements in different directions read as a stutter. Every other navigation
+// keeps 9c as built, including this one when there is no image to carry.
+@keyframes paneFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes paneFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+:root[data-overview-morph]::view-transition-new(pane) {
+  animation-name: paneFade;
+}
+
+:root[data-overview-morph]::view-transition-old(pane) {
+  animation-name: paneFadeOut;
+}
+
+// 170h's timing table: coming back the note leaves in 150ms rather than 9c's 160ms, because
+// the image is already on its way home.
+:root[data-overview-morph][data-nav-direction="back"]::view-transition-old(pane) {
+  animation-duration: 150ms;
 }
 
 // shouldAnimateNavigation() already refuses to start one of these, so this is the belt to

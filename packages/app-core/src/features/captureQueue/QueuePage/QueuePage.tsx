@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { QueuedCapture, VideoId } from "@overview/domain";
-import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -18,6 +17,7 @@ import { chosenBarLine, madeNowNotice, madeNowOf, makeChosenLabel } from "../uti
 import { pacedGroups, waitingRows } from "../util/queueRows.js";
 import styles from "./QueuePage.module.scss";
 import { queuePageTestIds } from "./QueuePageTestIds.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 // Design 27j–27o: what is being made, what waits in order, and what needs the reader, on a
 // page of its own. The queue is this device's until OV-11, so the page says where it runs
@@ -195,9 +195,9 @@ export function QueuePage() {
 
   return (
     <div className={`${styles.root} ${stacked ? styles.stacked : ""}`} data-testid={queuePageTestIds.root}>
-      <Link className={styles.backLink} to={Routes.home()} data-testid={queuePageTestIds.backLink}>
+      <PageLink className={styles.backLink} to={Routes.home()} data-testid={queuePageTestIds.backLink}>
         <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "Overviews"}
-      </Link>
+      </PageLink>
 
       <div className={styles.head}>
         <div className={styles.headText}>
@@ -256,14 +256,14 @@ export function QueuePage() {
             Overviews are made with your own API key, and none is saved {isPanel ? "in the extension" : "here"}. Add one
             and the queue starts straight away.
           </p>
-          <Link
+          <PageLink
             className={styles.primary}
             to={Routes.settingsSection("keys")}
             onClick={() => analytics.queue.controls.keysLinkFollowed({ from: "page" })}
             data-testid={queuePageTestIds.addKeyLink}
           >
             Add a key
-          </Link>
+          </PageLink>
         </div>
       )}
 
@@ -274,7 +274,7 @@ export function QueuePage() {
           </span>
           <p className={styles.heldText}>{monthHoldNote(queue.hold, queue.limit)}</p>
           {monthHoldWays(queue.limit).map((way, index) => (
-            <Link
+            <PageLink
               key={way}
               className={index === 0 ? styles.primary : styles.secondary}
               to={way === "addKey" ? Routes.settingsSection("keys") : Routes.settingsSection("plan")}
@@ -282,7 +282,7 @@ export function QueuePage() {
               data-testid={way === "addKey" ? queuePageTestIds.addKeyLink : queuePageTestIds.seePlansLink}
             >
               {way === "addKey" ? "Add a key" : "See plans"}
-            </Link>
+            </PageLink>
           ))}
         </div>
       )}
@@ -372,7 +372,7 @@ export function QueuePage() {
           <p className={styles.emptyTitle}>Nothing is waiting</p>
           <p className={styles.emptyBody}>
             New videos in the playlists you follow are queued each time you open The Overview.{" "}
-            <Link to={Routes.settingsSection("playlists")}>Your playlists</Link>
+            <PageLink to={Routes.settingsSection("playlists")}>Your playlists</PageLink>
           </p>
         </div>
       )}

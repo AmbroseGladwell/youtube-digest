@@ -1,10 +1,9 @@
-import { Link } from "react-router";
 import type { UnreadableRecord } from "@overview/domain";
-import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { Routes } from "../../../../app/Routes.js";
 import styles from "./LibraryUnreadableCard.module.scss";
 import { libraryUnreadableCardTestIds } from "./LibraryUnreadableCardTestIds.js";
 import type { LibraryViewState } from "../../util/libraryViewState.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface LibraryUnreadableCardProps {
   record: UnreadableRecord;
@@ -18,7 +17,6 @@ export interface LibraryUnreadableCardProps {
 // something that cannot be read is absurd. It links to the reader like any other card, so
 // the path needs no special case (docs/features/record-migrations.md).
 export function LibraryUnreadableCard({ record, entering = false, onOpen, readerState }: LibraryUnreadableCardProps) {
-  const animateNavigation = useShouldAnimateNavigation();
   const heldBack = record.reason === "future-version";
   const readerPath = Routes.overview(record.id);
 
@@ -32,16 +30,15 @@ export function LibraryUnreadableCard({ record, entering = false, onOpen, reader
         {heldBack ? "Needs a newer version" : "Older format"}
       </p>
 
-      <Link
+      <PageLink
         className={styles.titleLink}
         to={readerPath}
         state={readerState}
-        viewTransition={animateNavigation}
         onClick={onOpen}
         data-testid={libraryUnreadableCardTestIds.titleLink}
       >
         <span className={styles.title}>{record.salvaged?.source?.title ?? "An overview you saved"}</span>
-      </Link>
+      </PageLink>
 
       <p className={styles.meta} data-testid={libraryUnreadableCardTestIds.meta}>
         {heldBack

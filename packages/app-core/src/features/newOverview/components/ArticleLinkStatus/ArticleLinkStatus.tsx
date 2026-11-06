@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { articleReadMinutes, domainOf } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { recipeCounts } from "../../util/recipeCounts.js";
@@ -7,6 +6,7 @@ import type { ArticleLink } from "../../useArticleLink.js";
 import { pastedLinkFailureCopy, type ReaderPlace } from "../../util/pastedLinkFailureCopy.js";
 import styles from "./ArticleLinkStatus.module.scss";
 import { articleLinkStatusTestIds } from "./ArticleLinkStatusTestIds.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface ArticleLinkStatusProps {
   link: ArticleLink;
@@ -45,9 +45,9 @@ export function ArticleLinkStatus({ link, url, place, onRetry, onClear, onOpened
             You already have this article.
             {link.savedAt !== null && ` You made an overview of it on ${madeOn(link.savedAt)}.`}
           </span>
-          <Link className={styles.open} to={Routes.overview(link.overviewId)} onClick={onOpened} data-testid={articleLinkStatusTestIds.openHeld}>
+          <PageLink className={styles.open} to={Routes.overview(link.overviewId)} onClick={onOpened} data-testid={articleLinkStatusTestIds.openHeld}>
             Open your overview
-          </Link>
+          </PageLink>
         </div>
       );
     case "unreachable":

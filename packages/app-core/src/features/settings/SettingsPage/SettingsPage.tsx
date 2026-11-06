@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
 import { useBackTo } from "../../../app/useBackTo.js";
@@ -40,6 +39,7 @@ import { PolicyLinks } from "../components/PolicyLinks/PolicyLinks.js";
 import styles from "./SettingsPage.module.scss";
 import { settingsPageTestIds } from "./SettingsPageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 export interface SettingsPageProps {
   section?: SettingsSectionId;
@@ -138,7 +138,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
   if (sectionPage) {
     return (
       <div className={`${styles.root} ${styles.rootStacked}`} data-testid={settingsPageTestIds.root}>
-        <Link
+        <PageLink
           ref={backLink}
           className={styles.backLink}
           to={Routes.settings()}
@@ -149,7 +149,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
           data-testid={settingsPageTestIds.settingsLink}
         >
           <StrokeIcon name="arrowLeft" /> Settings
-        </Link>
+        </PageLink>
         {renderSection(current)}
       </div>
     );
@@ -157,7 +157,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
 
   return (
     <div className={`${styles.root} ${stacked ? styles.rootStacked : ""}`} data-testid={settingsPageTestIds.root}>
-      <Link
+      <PageLink
         ref={backLink}
         className={styles.backLink}
         to={Routes.home()}
@@ -168,7 +168,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
         data-testid={settingsPageTestIds.overviewsLink}
       >
         <StrokeIcon name="arrowLeft" /> {isPanel ? "Back" : "All overviews"}
-      </Link>
+      </PageLink>
       <h1 className={styles.title}>Settings</h1>
       {stacked ? (
         <SettingsSectionList sections={sections} current={null} stacked />
