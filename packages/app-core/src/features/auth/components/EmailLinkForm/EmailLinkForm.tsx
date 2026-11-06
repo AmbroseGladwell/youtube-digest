@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { FirstName, type AuthIntent } from "@overview/domain";
+import { FIRST_NAME_MAX_LENGTH, FirstName, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -58,16 +58,15 @@ export function EmailLinkForm({
   const [firstName, setFirstName] = useState(initialFirstName ?? "");
   const [serverUrl, setServerUrl] = useState(initialServerUrl ?? "");
   const [serverShown, setServerShown] = useState(askForServer === "always");
-  const [problem, setProblem] = useState<{ field: "firstName" | "email" | "server"; message: string } | null>(null);
+  const [problem, setProblem] = useState<{ field: "email" | "server"; message: string } | null>(null);
   const creating = intent === "createAccount";
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    // A name is optional: nullable in the column, optional in MagicLinkRequest, and written
+    // only when given. An empty or blank field is no name rather than a problem, and the
+    // input's maxLength is what keeps a given one inside FirstName.
     const name = FirstName.safeParse(firstName);
-    if (creating && !name.success) {
-      setProblem({ field: "firstName", message: "Tell us what to call you." });
-      return;
-    }
     if (!looksLikeEmail(email)) {
       setProblem({ field: "email", message: "That doesn't look like a full email address." });
       return;
@@ -84,7 +83,7 @@ export function EmailLinkForm({
     });
   };
 
-  const errorFor = (field: "firstName" | "email" | "server") => {
+  const errorFor = (field: "email" | "server") => {
     const message = problem?.field === field ? problem.message : field === "email" ? refused : null;
     return message === null ? null : (
       <span className={styles.error} id={`${ids}-${field}-error`} data-testid={emailLinkFormTestIds.fieldError}>
@@ -94,7 +93,7 @@ export function EmailLinkForm({
     );
   };
 
-  const describedBy = (field: "firstName" | "email" | "server") =>
+  const describedBy = (field: "email" | "server") =>
     errorFor(field) === null ? undefined : `${ids}-${field}-error`;
 
   const button = (
@@ -151,10 +150,10 @@ export function EmailLinkForm({
         {creating && (
           <label className={styles.label}>
             <span className={styles.labelRow}>
-              <span className={styles.labelText}>First name</span>
+              <span className={styles.labelText}>First name (optional)</span>
               {!footed && <span className={styles.labelHint}>So we know what to call you</span>}
             </span>
-            <span className={`${styles.field} ${problem?.field === "firstName" ? styles.fieldInvalid : ""}`}>
+            <span className={styles.field}>
               <StrokeIcon name="user" size={16} />
               <input
                 id={`${ids}-given-name`}
@@ -163,13 +162,11 @@ export function EmailLinkForm({
                 type="text"
                 autoComplete="given-name"
                 value={firstName}
+                maxLength={FIRST_NAME_MAX_LENGTH}
                 onChange={(event) => setFirstName(event.target.value)}
-                aria-invalid={problem?.field === "firstName"}
-                aria-describedby={describedBy("firstName")}
                 data-testid={emailLinkFormTestIds.firstNameInput}
               />
             </span>
-            {errorFor("firstName")}
           </label>
         )}
         <label className={styles.label}>
