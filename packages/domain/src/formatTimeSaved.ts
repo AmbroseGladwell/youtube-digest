@@ -1,4 +1,4 @@
-const plural = (count: number, unit: string) => `${count} ${unit}${count === 1 ? "" : "s"}`;
+import { pluralise } from "./pluralise.js";
 
 // "9h 47m", or "32m" under an hour: the figure as the library prints it.
 export function formatTimeSaved(minutes: number): string {
@@ -12,7 +12,8 @@ export function spokenTimeSaved(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   if (hours === 0) {
-    return plural(rest, "minute");
+    return pluralise(rest, "minute", "minutes");
   }
-  return rest === 0 ? plural(hours, "hour") : `${plural(hours, "hour")} ${plural(rest, "minute")}`;
+  const spokenHours = pluralise(hours, "hour", "hours");
+  return rest === 0 ? spokenHours : `${spokenHours} ${pluralise(rest, "minute", "minutes")}`;
 }

@@ -1,4 +1,4 @@
-import { adjustIngredient, servingsLabel, yieldCount, type AdjustedIngredient, type Recipe, type RecipeUnits } from "@overview/domain";
+import { adjustIngredient, pluralise, servingsLabel, yieldCount, type AdjustedIngredient, type Recipe, type RecipeUnits } from "@overview/domain";
 
 export const RECIPE_MULTIPLIERS = [0.5, 1, 2, 3] as const;
 export type RecipeMultiplier = (typeof RECIPE_MULTIPLIERS)[number];
@@ -33,8 +33,6 @@ export const initialScale = (recipe: Pick<Recipe, "yield">): RecipeScale => {
 
 const factorOf = (scale: RecipeScale): number => (scale.kind === "servings" ? scale.count / scale.base : scale.times);
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
-
 export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, scale: RecipeScale, units: RecipeUnits): RecipeAdjustment {
   const factor = factorOf(scale);
   const lines = recipe.ingredients.map((line) => adjustIngredient(line, factor, units));
@@ -57,7 +55,7 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
       : scale.kind === "servings"
         ? `Adjusted ${sized}${unitsPhrase === "" ? "" : ` in ${unitsPhrase}`}.`
         : `${sized}${unitsPhrase === "" ? "" : `, in ${unitsPhrase}`}.`;
-  const status = `${what}${unread === 0 ? "" : ` ${plural(unread, "line has", "lines have")} no amount to adjust.`}`;
+  const status = `${what}${unread === 0 ? "" : ` ${pluralise(unread, "line has", "lines have")} no amount to adjust.`}`;
   const asWritten = recipe.yield === null ? "the recipe as written" : `the recipe’s ${servingsLabel(recipe.yield, yieldCount(recipe.yield) ?? 0).replace(/^Makes /, "")}`;
   return {
     lines,

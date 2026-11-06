@@ -42,7 +42,13 @@ draws only the phone; the desktop total is drawn as a button in parts 1 and 2 wi
 what it opens, and the breakdown is where the card's "says what it left out" lives, so the
 desktop opens the same panel.
 
-**The moment (34q, 34r).** *Mark read* brings in *Saved you N min* beside the reading line.
+**The moment (34q, 34r).** *Mark read* brings in *Saved you N mins* beside the reading line,
+*1 min* for a single one (OV-196, 6 Nov 2026; `pluralise` in `packages/domain`). The word
+comes off the figure rather than the counting number, so it holds still while the digits
+roll. A screen reader is given the figure in full instead — *Saved you 13 minutes*, from
+`spokenTimeSaved` — because the chip's abbreviation is read out inconsistently. The
+unpluralised *min* elsewhere, in *5 min read* and the player's *~3 min*, stays as it is: a
+compound adjective reads worse with the plural, where this chip is a sentence.
 On a library row it leaves after about three seconds and nothing stays on the row; *Mark
 read* and *Read* share one width so nothing shifts. In an overview it counts up from nought
 and stays until the reader leaves, whichever control marked it read. The panel's overview

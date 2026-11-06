@@ -55,10 +55,27 @@ test.describe("the running total", () => {
     const card = library.nthCard(0);
     await card.clickMarkRead();
 
-    await card.verifySavedChipSays("Saved you 10 min");
+    await card.verifySavedChipFigureReads("10 mins");
+    await card.verifySavedChipSays("Saved you 10 minutes");
     await library.verifyTimeSavedSays("10 minutes");
     await library.verifyTimeSavedShows("10m");
     await card.verifyNoSavedChip();
+  });
+
+  // The chip abbreviates and a screen reader gets the word in full, so the two are
+  // checked apart; "1 mins" was the whole of OV-196.
+  test("a saving of a single minute is said in the singular", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seed(lasting(2));
+    const library = await launcher.launchExpectingLibrary();
+
+    const card = library.nthCard(0);
+    await card.clickMarkRead();
+
+    await card.verifySavedChipFigureReads("1 min");
+    await card.verifySavedChipSays("Saved you 1 minute");
   });
 
   test("marking a row unread takes its saving back off", async ({ launcher, backendSimulator }) => {
@@ -319,7 +336,7 @@ test.describe("in an overview", () => {
 
     await reader.clickMarkRead();
 
-    await reader.verifySavedChipSays("Saved you 10 min");
+    await reader.verifySavedChipSays("Saved you 10 minutes");
   });
 
   test("an overview already read shows nothing on arrival", async ({ launcher, backendSimulator }) => {
@@ -354,7 +371,7 @@ test.describe("in the panel's overview", () => {
     await reader.clickPanelMarkRead();
 
     await reader.verifyPanelReadButtonReads("Read");
-    await reader.verifySavedChipSays("Saved you 10 min");
+    await reader.verifySavedChipSays("Saved you 10 minutes");
     await expect(async () => {
       const state = await backendSimulator.overviews.getState(overview.id);
       expect(state.read).toBe(true);

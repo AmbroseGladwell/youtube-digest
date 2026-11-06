@@ -529,8 +529,15 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(noteEndActionsTestIds.root),
     );
 
+  // What a screen reader is given: the figure in full, where the chip itself abbreviates.
   verifySavedChipSays = (text: string) =>
     this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
+
+  // What the reader sees, which the spoken line above would otherwise cover for.
+  verifySavedChipFigureReads = (text: string) =>
+    this.step(`verifySavedChipFigureReads ${text}`, () =>
+      expect(this.get(savedChipTestIds.figure)).toHaveText(text),
+    );
 
   verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
 
