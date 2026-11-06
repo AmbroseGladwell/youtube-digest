@@ -2,13 +2,16 @@
 
 // The track the cooking screen gives up, --drawer-track, is set by CookingMode on the surface
 // it lays out. Open in 280ms and shut in 200ms (design 190i); the contents sit at the left
-// edge and are uncovered as it widens, so the list never moves under the eye.
+// edge and are uncovered as it widens, so the list never moves under the eye. A list longer
+// than the window scrolls here, on the element the drawer focuses when it opens, so the keys
+// reach the rest of it.
 .drawer {
   flex: none;
   display: flex;
   flex-direction: column;
   width: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   visibility: hidden;
   background: var(--dialog);
   color: var(--ink);
@@ -33,11 +36,9 @@
 }
 
 .body {
-  flex: 1;
-  min-height: 0;
+  flex: none;
   box-sizing: border-box;
   width: var(--drawer-track, 24rem);
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

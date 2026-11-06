@@ -368,3 +368,37 @@ test("under reduced motion the drawer just appears", async ({ page, launcher, ba
   expect(await drawer.evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
   expect((await boxOf(drawer)).width).toBe(384);
 });
+
+const LONG_LIST = Array.from({ length: 30 }, (_, index) => `${index + 1} tbsp of something worth writing on its own line`);
+
+const longListRecipe = () => {
+  const base = makeRecipeOverview();
+  return makeRecipeOverview({ recipe: { ...base.recipe!, ingredients: LONG_LIST } });
+};
+
+test("an ingredients list longer than the window scrolls in the drawer, and the controls stay on screen", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(longListRecipe());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  await page.setViewportSize({ width: 1440, height: 700 });
+  await page.getByTestId("RecipeMethod.cook").click();
+
+  const drawer = page.getByTestId("CookingIngredientsDrawer.root");
+  await page.keyboard.press("i");
+  await expect(drawer).toBeVisible();
+  await expect.poll(async () => (await boxOf(drawer)).width).toBe(384);
+
+  expect((await boxOf(drawer)).height).toBe(700);
+  const forward = await boxOf(page.getByTestId("CookingMode.forward"));
+  expect(forward.y + forward.height).toBeLessThanOrEqual(700);
+  const root = page.getByTestId("CookingMode.root");
+  expect(await root.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+
+  expect(await drawer.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+  await page.keyboard.press("End");
+  await expect.poll(() => drawer.evaluate((element) => element.scrollTop > 0)).toBe(true);
+  await expect(drawer).toContainText("30 tbsp");
+  await expect(page.getByTestId("CookingMode.action")).toHaveText("Heat the oven to 220°C (200°C fan) and roast the leeks for 20 to 25 minutes.");
+});
+
+

@@ -75,11 +75,13 @@
 
 // The cooking screen and, on the web, the ingredients drawer beside it, in one row: opening
 // the drawer narrows the screen rather than covering it (190a). The gauge is laid out at the
-// width the screen will settle at, so its scale can be read before the drawer has moved.
+// width the screen will settle at, so its scale can be read before the drawer has moved. The
+// row is the window's height exactly, so a long ingredients list scrolls inside the drawer
+// instead of pushing the controls below the fold.
 .layout {
   position: relative;
   display: flex;
-  min-height: 100%;
+  height: 100%;
 }
 
 .gauge {

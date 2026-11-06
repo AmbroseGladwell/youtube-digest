@@ -288,14 +288,16 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   answered in 190k). It opens in 280ms and shuts in 200ms on the app's ease, the list sitting at
   its left edge and uncovered as it widens; under reduced motion it just appears. Focus moves into
   it on open and back to the Ingredients button on close; it is a plain `aside`, so Tab runs on
-  through it and Esc shuts it before it leaves the mode. The cooking column is measured, not the
-  window: under 720px the action takes a scale one step down (44 to 28px), the controls stack as
-  on a phone, the title in the bar hides and an action over 30 words drops its "Then" preview as
-  the panel does; under 480px it takes the phone's sizes. Between 768 and 943px the drawer is 20rem
-  and the side margins 2rem, so the step keeps a phone's width beside a full list (190l–190o). The
-  size changes once each way, at the start of opening and the end of closing, never mid-slide
-  (190i). The voice carries on. While servings or units are adjusted, every action carries
-  "Amounts as written, for 4 servings".
+  through it and Esc shuts it before it leaves the mode. The cooking screen is the window's
+  height, so a list longer than it scrolls inside the drawer and the step and its controls never
+  move; the `aside` itself is the scroller, being what focus lands on, so the keys read the rest
+  of the list (OV-200). The cooking column is measured, not the window: under 720px the action
+  takes a scale one step down (44 to 28px), the controls stack as on a phone, the title in the bar
+  hides and an action over 30 words drops its "Then" preview as the panel does; under 480px it
+  takes the phone's sizes. Between 768 and 943px the drawer is 20rem and the side margins 2rem, so
+  the step keeps a phone's width beside a full list (190l–190o). The size changes once each way,
+  at the start of opening and the end of closing, never mid-slide (190i). The voice carries on.
+  While servings or units are adjusted, every action carries "Amounts as written, for 4 servings".
 - **Labels, conditions and checks (150p–150au).** See "A step's actions". A label is a small
   heading over each of its step's actions; a condition is in Bold 700 in the label colour, the
   action at 400. Checks read as actions.
