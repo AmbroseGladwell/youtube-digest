@@ -1,3 +1,4 @@
+import { pluralWord, spokenTimeSaved } from "@overview/domain";
 import { useEffect, useState } from "react";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import styles from "./SavedChip.module.scss";
@@ -43,18 +44,20 @@ export function SavedChip({ minutes, countUp = false, leaving = false }: SavedCh
 
   return (
     <span className={`${styles.root} ${leaving ? styles.leaving : ""}`} role="status" data-testid={savedChipTestIds.root}>
-      <span className={styles.visuallyHidden}>Saved you {minutes} min</span>
+      <span className={styles.visuallyHidden}>Saved you {spokenTimeSaved(minutes)}</span>
       <svg className={styles.check} aria-hidden="true" viewBox="0 0 24 24" width="12" height="12">
         <path pathLength={1} d="M20 6 9 17l-5-5" />
       </svg>
       <span className={styles.text} aria-hidden="true">
         Saved you
       </span>
-      <span className={styles.number} aria-hidden="true">
+      <span className={styles.number} aria-hidden="true" data-testid={savedChipTestIds.figure}>
         <span className={styles.count} style={{ minWidth: `${String(minutes).length}ch` }}>
           {shown}
         </span>{" "}
-        min
+        {/* The word comes off the figure, never off the counting one, so it holds still
+            while the digits roll rather than flicking between min and mins. */}
+        {pluralWord(minutes, "min", "mins")}
       </span>
     </span>
   );

@@ -1,9 +1,8 @@
+import { pluralise } from "@overview/domain";
 import { resumeTimeText } from "../../transcripts/util/resumeTime.js";
 import type { CaptureQueueStrip } from "../types/CaptureQueueStrip.js";
 import { queueHoldStripMeta } from "./queueHoldCopy.js";
 import { monthHoldStripMeta } from "./monthHoldCopy.js";
-
-const plural = (count: number, one: string, many: string) => `${count.toLocaleString("en-GB")} ${count === 1 ? one : many}`;
 
 export interface CaptureQueueStripCopy {
   title: string;
@@ -29,7 +28,7 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
     case "held":
       if (strip.hold.reason === "monthSpent") {
         return {
-          title: compact ? `Queue waiting · ${strip.waiting.toLocaleString("en-GB")}` : `Queue waiting · ${plural(strip.waiting, "video", "videos")}`,
+          title: compact ? `Queue waiting · ${strip.waiting.toLocaleString("en-GB")}` : `Queue waiting · ${pluralise(strip.waiting, "video", "videos")}`,
           meta: monthHoldStripMeta(strip.hold, strip.limit, compact),
         };
       }
@@ -38,14 +37,14 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
         : { title: "Waiting for our server", meta: queueHoldStripMeta(strip.hold, strip.waiting, strip.viaExtension) };
     case "checked":
       return {
-        title: `Checked ${plural(strip.playlists, "playlist", "playlists")}`,
-        meta: `${plural(strip.queued, "new video", "new videos")} queued · starting with the oldest`,
+        title: `Checked ${pluralise(strip.playlists, "playlist", "playlists")}`,
+        meta: `${pluralise(strip.queued, "new video", "new videos")} queued · starting with the oldest`,
       };
     case "noKey":
       return compact
         ? { title: `${strip.waiting.toLocaleString("en-GB")} waiting for an API key`, meta: null }
         : {
-            title: `${plural(strip.waiting, "video is", "videos are")} waiting for an API key`,
+            title: `${pluralise(strip.waiting, "video is", "videos are")} waiting for an API key`,
             meta: "Nothing can be made without one",
           };
     case "attention":
@@ -65,7 +64,7 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
         title: `Queue done · ${strip.waiting.toLocaleString("en-GB")} waiting for you`,
         meta: compact
           ? null
-          : `From ${strip.playlists.length === 1 ? strip.playlists[0] : plural(strip.playlists.length, "playlist", "playlists")}, made when you choose them`,
+          : `From ${strip.playlists.length === 1 ? strip.playlists[0] : pluralise(strip.playlists.length, "playlist", "playlists")}, made when you choose them`,
       };
     case "done":
       return { title: `Queue done · ${strip.made.toLocaleString("en-GB")} made`, meta: null };

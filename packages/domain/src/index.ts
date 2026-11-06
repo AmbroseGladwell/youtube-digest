@@ -98,6 +98,7 @@ export * from "./Milestone.js";
 export * from "./visibleMilestones.js";
 export * from "./timeSavedSummary.js";
 export * from "./formatTimeSaved.js";
+export * from "./pluralise.js";
 export * from "./AboutYou.js";
 export * from "./ForAnyone.js";
 export * from "./LearnedItem.js";

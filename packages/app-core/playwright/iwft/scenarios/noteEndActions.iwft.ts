@@ -91,7 +91,7 @@ test("marking it read here brings the saving in below the buttons, and nothing m
 
   await reader.clickNoteEndMarkRead();
 
-  await reader.verifySavedChipSays("Saved you 10 min");
+  await reader.verifySavedChipSays("Saved you 10 minutes");
   await reader.verifySavedChipIsCentredBelowNoteEndButtons();
   expect(await reader.noteEndButtonPositions()).toEqual(before);
 
@@ -108,7 +108,7 @@ test("marking it read from the head's menu keeps the saving in the head", async 
 
   await reader.clickMarkRead();
 
-  await reader.verifySavedChipSays("Saved you 10 min");
+  await reader.verifySavedChipSays("Saved you 10 minutes");
   await reader.verifySavedChipIsInHead();
 });
 
