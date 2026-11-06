@@ -55,6 +55,11 @@ Five folders, five different questions.
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, the TTS
   pool deployed from CI only when it changed, and how the extension gets its id, its server
   and its store zip.
+- `store-listing.md` — the other half of the extension's release: why the listing is
+  unlisted, the store copy, a justification for every permission the manifest asks for, what
+  the store is told about data and why, the five screenshots rendered from the real
+  components, the four API credentials, and the CI job that submits each tagged release for
+  review and reads the store back before saying it did.
 
 ## `conventions/` — how code gets written here, day to day
 

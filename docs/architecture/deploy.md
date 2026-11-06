@@ -19,6 +19,7 @@ why; this is how they fit together and what a deploy actually does.
 | One version number for every build, from the root `package.json`, shown at the foot of Settings | `version` in `package.json`, `task version:bump`, `scripts/buildStamp.mjs`, `define` and the manifest plugin in each app's `vite.config.ts`, `BuildLine` in `app-core`, `BUILD_COMMIT` in the `Dockerfile` |
 | Two zips, named by that version: the store's with the key stripped, and a keyed one that loads unpacked, both read back | `scripts/packExtension.mjs`, `task deploy:extension`, the `build (extension)` job |
 | The first deploy of each version tagged `v<version>`, with a release holding that commit's zips | the `deploy` job's last two steps, `scripts/verifyRelease.mjs` |
+| That release's store zip sent to the Chrome Web Store for review, and the store read back | the `publish (extension)` job, `scripts/publishExtension.mjs`, `docs/architecture/store-listing.md` |
 
 ## The API serves the web app
 
@@ -240,6 +241,11 @@ intend to upload, and otherwise leave it. Which of patch, minor or major is
 release the deploy makes is skipped as already tagged, and the fix is a second PR with
 the bump alone.
 
+**And it is sent.** A merge that moves the version number tags a release, and the
+`publish (extension)` job then uploads that release's store zip and submits it for review,
+reading the item's status back before it says it did. A merge with no bump sends nothing. The
+credentials, the guards and what review means are `docs/architecture/store-listing.md`.
+
 `task deploy:extension` builds and zips into `apps/extension/release/`, and reads each zip
 back before reporting: the manifest at its root, and that manifest being the one written
 into it — the store's without a key, the keyed one with the store's own. CI runs the same
@@ -433,14 +439,10 @@ names the pool, the account and the bucket, which is what turns narration on.
   `production` environment can require a reviewer with one setting, if that is ever
   wanted; the job already runs under that environment so the switch is in the repository
   settings, not in the workflow.
-- **List the extension.** The mechanics above end at a zip and an id. The listing itself
-  needs a justification for each permission the manifest asks for, screenshots and the
-  store copy; the privacy policy it links to is served at `/privacy`
-  (`docs/features/legal-pages.md`). The draft upload that
-  fixes the id has been made, so `CORS_ALLOWED_ORIGINS` in `fly.toml` names the store's
-  origin and production vouches for a build carrying the key — the keyed zip on each
-  release, or any local `task run:extension`. Nothing is installable from the store until
-  the listing is written.
+- **Write the listing.** The mechanics here end at a zip, an id and a submission. The words,
+  the pictures, the per-permission justifications and the data disclosures are
+  `docs/architecture/store-listing.md`, and they are kept by hand in the dashboard, because the v2
+  API can neither create an item nor change its visibility.
 - **Sweep expired rows.** Sessions, magic links and codes are ignored when expired rather
   than deleted; the cron that would delete them has nowhere to run yet, and this machine
   stopping when idle is not it.

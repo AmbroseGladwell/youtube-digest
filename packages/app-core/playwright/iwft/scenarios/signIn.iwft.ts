@@ -346,14 +346,29 @@ test.describe("creating an account on the web", () => {
     ]);
   });
 
-  test("a missing first name is said in place, and nothing is sent", async ({ launcher, backendSimulator }) => {
+  test("the name can be left out, and the link is asked for without one", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true });
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
 
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyFieldErrorReads("Tell us what to call you.");
-    test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_MAGIC_LINK)).toBe(0);
+    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
+      { email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" },
+    ]);
+  });
+
+  test("a name of nothing but spaces is no name, not a refusal", async ({ launcher, backendSimulator }) => {
+    await launcher.launch({ sync: true });
+    const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
+
+    await createAccount.typeFirstName("   ");
+    await createAccount.requestLink(SIMULATED_EMAIL);
+
+    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
+      { email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" },
+    ]);
   });
 
   test("the code from a create-account email finishes creating the account", async ({ launcher, backendSimulator }) => {

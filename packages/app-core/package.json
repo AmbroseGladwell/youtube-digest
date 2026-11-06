@@ -16,7 +16,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:iwft": "tsc -p playwright/tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:iwft": "playwright test -c playwright-ct.config.ts"
+    "test:iwft": "playwright test -c playwright-ct.config.ts",
+    "shots": "playwright test -c playwright-shots.config.ts"
   },
   "dependencies": {
     "@overview/domain": "*",

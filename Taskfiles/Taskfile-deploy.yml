@@ -66,3 +66,26 @@ tasks:
     desc: Print the extension's origin for CORS_ALLOWED_ORIGINS, derived from the store's key in its manifest
     cmds:
       - node scripts/extensionId.mjs
+
+  deploy:extension:publish:
+    desc: 'Submit the release zip in apps/extension/release to the Chrome Web Store for review, the escape hatch for what CI''s publish (extension) job does (docs/architecture/store-listing.md)'
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh run -- node scripts/publishExtension.mjs submit {{.CLI_ARGS}}
+
+  store:screenshots:
+    desc: Render the listing's screenshots into apps/extension/store/screenshots from the real components (docs/architecture/store-listing.md)
+    cmds:
+      - npm run shots --workspace packages/app-core
+
+  store:samples:
+    desc: Refresh the screenshots' content from the house account's live samples, the same ones Start offers
+    cmds:
+      - node scripts/fetchSampleNotes.mjs
+
+  store:assets:
+    desc: Render the listing's store icon and promo tile from the mark (docs/architecture/store-listing.md)
+    cmds:
+      - node scripts/storeAssets.mjs
