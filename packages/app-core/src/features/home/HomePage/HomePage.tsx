@@ -24,14 +24,16 @@ import { PROVIDER_SHORT_LABEL } from "@overview/domain";
 import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
 import { readOnboardingProgress } from "../../onboarding/onboardingProgressStorage.js";
 import { useStartOnboarding } from "../../onboarding/useStartOnboarding.js";
+import { useStartSubject } from "../../onboarding/useStartSubject.js";
 import { onboardingSourceOf } from "../../onboarding/onboardingSources.js";
 import { REFUSED_LINK } from "../../onboarding/util/refusedLink.js";
-import { PanelStart } from "../../onboarding/components/PanelStart/PanelStart.js";
 import { OnboardingSamples } from "../../onboarding/components/OnboardingSamples/OnboardingSamples.js";
 import { SampleDeck } from "../../onboarding/components/SampleDeck/SampleDeck.js";
 import { StartVerb } from "../../onboarding/components/StartVerb/StartVerb.js";
 import { useSamplesQuery } from "../../onboarding/queries/samplesQuery.js";
 import { DEFAULT_START_VERB, sampleFacts } from "../../onboarding/util/sampleFacts.js";
+import { SourceOffer } from "../../capture/components/SourceOffer/SourceOffer.js";
+import { fromStart } from "../../auth/fromStart.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import type { Sample } from "@overview/domain";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
@@ -42,9 +44,9 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 // Home is the library everywhere but the side panel, where it is the one video the
 // panel is beside (docs/features/extension-panel.md).
-// Signed out where there are accounts, home is onboarding's Start, or in the panel, once this
-// device has had an account, the way back into it, unless Create account asked for Start
-// (docs/features/onboarding.md).
+// Signed out where there are accounts, home is onboarding's Start, in the panel as on the
+// web (205g), or, once this device has had an account, the way back into it unless Create
+// account asked for Start (docs/features/onboarding.md).
 export function HomePage() {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
@@ -58,7 +60,12 @@ export function HomePage() {
   }
   if (isPanel) {
     if (!accountNeeded) return <CapturePage />;
-    return readAccountSeen() && !isStartAsked(location.state) ? <SignedOutGate panel /> : <PanelStart />;
+    if (readAccountSeen() && !isStartAsked(location.state)) return <SignedOutGate panel />;
+    return (
+      <div className={`${styles.root} ${styles.panel}`} data-testid={homePageTestIds.root}>
+        <StartHero />
+      </div>
+    );
   }
   return <LibraryHome accountNeeded={accountNeeded} />;
 }
@@ -219,7 +226,11 @@ const DECK_LEAST = 3;
 // straight on to the questions while its overview is made, or a sample starts them around one
 // already made. Nothing else is offered: no overview is made or seen without an account
 // (docs/features/onboarding.md).
+// In the panel it is the same screen compressed (205g): the tab is the subject, the headline's
+// verb follows it, and Sign in stands under Make my overview as a peer rather than a line.
 function StartHero() {
+  const isPanel = useIsPanel();
+  const subject = useStartSubject();
   const startOnboarding = useStartOnboarding();
   const location = useLocation();
   const phone = useIsPhone();
@@ -230,6 +241,7 @@ function StartHero() {
   const urlFieldId = useId();
   const [url, setUrl] = useState("");
   const [refused, setRefused] = useState(false);
+  const [pasting, setPasting] = useState(false);
   useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({ recognised: onboardingSourceOf(url) !== null, from: "home" }),
   );
@@ -239,12 +251,23 @@ function StartHero() {
     setRefused(!startOnboarding(url));
   };
 
+  // Beside something, the offer takes the field's place; "Or paste a different link" swaps
+  // them back, so there is one way in on screen at a time.
+  const offered = subject !== null && !pasting;
+  const deckVerb = shownFirst === null || samples.length < DECK_LEAST ? DEFAULT_START_VERB : sampleFacts(shownFirst.note).verb;
+
   return (
     <Hero
-      standfirst="Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to."
-      verb={<StartVerb verb={shownFirst === null || samples.length < DECK_LEAST ? DEFAULT_START_VERB : sampleFacts(shownFirst.note).verb} />}
+      standfirst={
+        offered
+          ? `Make this ${subject.noun} your first overview. We'll set up your account as we go.`
+          : isPanel
+            ? "Paste a link, or open a video or page you've been meaning to get to. We'll make it your first overview, to read or listen to, and set up your account as we go."
+            : "Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to."
+      }
+      verb={<StartVerb verb={offered ? subject.verb : deckVerb} />}
       note={
-        isStartAsked(location.state) ? (
+        !isPanel && isStartAsked(location.state) ? (
           <p className={styles.fromCreate} data-testid={homePageTestIds.fromCreateNote}>
             <StrokeIcon name="user" size={14} />
             New accounts start with your first overview
@@ -252,48 +275,71 @@ function StartHero() {
         ) : null
       }
       alignTop={samples.length > 0}
+      panel={isPanel}
       aside={
         samples.length >= DECK_LEAST ? (
           <SampleDeck samples={samples} phone={phone} onFront={setFront} />
         ) : samples.length > 0 ? (
           <OnboardingSamples samples={samples} />
-        ) : (
+        ) : isPanel ? null : (
           <ExampleOverview />
         )
       }
     >
-      <form className={styles.heroForm} onSubmit={start}>
-        <span className={styles.heroFormIcon}>
-          <StrokeIcon name="link" size={18} />
-        </span>
-        <input
-          id={urlFieldId}
-          name="video-url"
-          type="url"
-          autoComplete="off"
-          inputMode="url"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className={styles.heroInput}
-          placeholder="Paste a link to a video or a page"
-          value={url}
-          onChange={(event) => {
-            setUrl(event.target.value);
-            setRefused(false);
-          }}
-          aria-label="Link"
-          aria-describedby={refused ? `${urlFieldId}-error` : undefined}
-          data-testid={homePageTestIds.urlInput}
-        />
-        <button type="submit" className={styles.heroGenerate} data-testid={homePageTestIds.generateButton}>
-          Make my overview
-        </button>
-      </form>
-      {refused && (
-        <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
-          {REFUSED_LINK}
-        </p>
+      {offered ? (
+        <div className={styles.offered}>
+          {subject.offer !== null && (
+            <SourceOffer source={subject.offer.source} title={subject.offer.title} video={subject.offer.video} />
+          )}
+          <button type="button" className={styles.heroMake} onClick={subject.make} data-testid={homePageTestIds.generateButton}>
+            Make my overview
+          </button>
+          <button type="button" className={styles.pasteLink} onClick={() => setPasting(true)} data-testid={homePageTestIds.pasteLink}>
+            Or paste a different link
+          </button>
+        </div>
+      ) : (
+        <>
+          <form className={styles.heroForm} onSubmit={start}>
+            <span className={styles.heroFormIcon}>
+              <StrokeIcon name="link" size={18} />
+            </span>
+            <input
+              id={urlFieldId}
+              name="video-url"
+              type="url"
+              autoComplete="off"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              className={styles.heroInput}
+              placeholder="Paste a link to a video or a page"
+              value={url}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                setRefused(false);
+              }}
+              aria-label="Link"
+              aria-describedby={refused ? `${urlFieldId}-error` : undefined}
+              data-testid={homePageTestIds.urlInput}
+            />
+            <button type="submit" className={styles.heroGenerate} data-testid={homePageTestIds.generateButton}>
+              Make my overview
+            </button>
+          </form>
+          {refused && (
+            <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
+              {REFUSED_LINK}
+            </p>
+          )}
+        </>
+      )}
+
+      {isPanel && (
+        <PageLink className={styles.signIn} to={Routes.signIn()} state={fromStart} data-testid={homePageTestIds.signIn}>
+          Sign in
+        </PageLink>
       )}
     </Hero>
   );
@@ -307,9 +353,12 @@ interface HeroProps {
   aside?: ReactNode;
   // Start's deck grows when it's laid out as a list, so the text stays at the top (155b).
   alignTop?: boolean;
+  // The panel is one narrow column with no room for the extension's own aside, and the
+  // extension is where it already is (205g).
+  panel?: boolean;
 }
 
-function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside = <ExampleOverview />, alignTop = false }: HeroProps) {
+function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside = <ExampleOverview />, alignTop = false, panel = false }: HeroProps) {
   const surface = useSurface();
   return (
     <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
@@ -324,7 +373,7 @@ function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside =
 
         {children}
 
-        {surface === "extension" ? (
+        {panel ? null : surface === "extension" ? (
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
             This is the extension's own library, kept separate from the web app's by the browser
             itself.

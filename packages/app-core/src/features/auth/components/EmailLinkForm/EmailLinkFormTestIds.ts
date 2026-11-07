@@ -7,4 +7,5 @@ export const emailLinkFormTestIds = {
   fieldError: "EmailLinkForm.fieldError",
   submitButton: "EmailLinkForm.submitButton",
   savedOverviewsNote: "EmailLinkForm.savedOverviewsNote",
+  switchLine: "EmailLinkForm.switchLine",
 };

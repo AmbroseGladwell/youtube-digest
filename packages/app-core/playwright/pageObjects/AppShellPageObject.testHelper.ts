@@ -231,6 +231,15 @@ export class AppShellPageObject extends PageObject {
       await expect(this.page.getByRole("link", { name: label, exact: true })).toHaveCount(2);
     });
 
+  // Where the page draws no link of its own, the bar holds the only one there is, named
+  // after what home is about (designs 205d-2 and 205g-4).
+  verifyBarIsTheOnlyWayBack = (label: string) =>
+    this.step(`verifyBarIsTheOnlyWayBack ${label}`, async () => {
+      await expect(this.get(appShellTestIds.backLink)).not.toHaveAttribute("inert");
+      await expect(this.get(appShellTestIds.brand)).toHaveAttribute("inert", "");
+      await expect(this.page.getByRole("link", { name: label, exact: true })).toHaveCount(1);
+    });
+
   verifyBarKeepsHoldingTheWayBack = (forMs: number) =>
     this.step(`verifyBarKeepsHoldingTheWayBack ${forMs}`, async () => {
       const swaps = await this.page.evaluate(

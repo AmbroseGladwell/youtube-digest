@@ -112,7 +112,12 @@ export function EmailLinkForm({
         {note}
       </p>
     );
-  const switchLine = switchLink === undefined ? null : <p className={styles.switch}>{switchLink}</p>;
+  const switchLine =
+    switchLink === undefined ? null : (
+      <p className={styles.switch} data-testid={emailLinkFormTestIds.switchLine}>
+        {switchLink}
+      </p>
+    );
 
   return (
     <form

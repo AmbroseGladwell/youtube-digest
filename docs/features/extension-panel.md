@@ -41,8 +41,9 @@ claim even when the same shell happens to supply both.
 
 ## Three screens, and no fourth
 
-Signed in, that is. Signed out, the panel's home is onboarding's Start, or on a device that
-has had an account the way back into it (`onboarding.md`, "In the extension panel").
+Signed in, that is. Signed out, the panel's home is the web app's Start compressed (205g),
+or on a device that has had an account the way back into it (`onboarding.md`, "In the
+extension panel").
 
 **Opening (15a, then 205a and 205f).** The masthead is the brand slot, `+ New` and the
 account menu — the phone's bar, and still no nav. Below it, what the tab holds: one offer

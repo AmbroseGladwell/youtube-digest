@@ -53,7 +53,7 @@ test.describe("the deck on web Start", () => {
     await home.verifyShowsStart();
     await launcher.sampleDeck.verifyIsShown();
     await launcher.sampleDeck.verifyFront(VIDEO_NAME, "Sample 1 of 3");
-    await launcher.sampleDeck.verifyHeadlineReads("Watch Less,");
+    await launcher.homePage.verifyHeadlineReads("Watch Less,");
     await launcher.sampleDeck.verifyOnlyFrontIsFocusable(3);
     await launcher.homePage.verifyShowsExampleOverview(false);
   });
@@ -63,10 +63,10 @@ test.describe("the deck on web Start", () => {
 
     await launcher.sampleDeck.next();
     await launcher.sampleDeck.verifyFront(ARTICLE_NAME, "Sample 2 of 3");
-    await launcher.sampleDeck.verifyHeadlineReads("Learn More,");
+    await launcher.homePage.verifyHeadlineReads("Learn More,");
     await launcher.sampleDeck.next();
     await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 3 of 3");
-    await launcher.sampleDeck.verifyHeadlineReads("Cook More,");
+    await launcher.homePage.verifyHeadlineReads("Cook More,");
     await launcher.sampleDeck.next();
     await launcher.sampleDeck.verifyFront(VIDEO_NAME, "Sample 1 of 3");
     await launcher.sampleDeck.previous();
@@ -326,31 +326,66 @@ test("Create account with onboarding under way carries on at the same screen", a
 test.describe("in the panel", () => {
   const signedOutPanel = { ...signedOut, defaultApiUrl: "https://sync.test", youTubeFetch: true, activeVideoUrl: VIDEO_URL };
 
-  test("Start offers three samples as rows, and More samples opens the rest in place", async ({ launcher, backendSimulator }) => {
-    backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE, titled("A Fourth Sample"), titled("A Fifth Sample"));
+  // 205g: the panel's samples are the phone's deck, under Make my overview and Sign in,
+  // rather than the rows the panel used to draw.
+  test("Start offers the samples as the deck, and See all lays them out", async ({ launcher, backendSimulator }) => {
+    backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
     await launcher.launchPanel(signedOutPanel);
-    await launcher.panelStart.verifyIsShown();
-    await launcher.onboardingSamples.verifyOffers(VIDEO_NAME, ARTICLE_NAME, RECIPE_NAME);
-    await launcher.onboardingSamples.verifyMoreReads("More samples");
+    await launcher.homePage.verifyShowsStart();
 
-    await launcher.onboardingSamples.toggleMore();
+    await launcher.sampleDeck.verifyIsShown();
+    await launcher.sampleDeck.verifyFront(VIDEO_NAME, "Sample 1 of 3");
+    await launcher.onboardingSamples.verifyOffersNone();
 
-    await launcher.onboardingSamples.verifyOffers(VIDEO_NAME, ARTICLE_NAME, RECIPE_NAME, /^A Fourth Sample/, /^A Fifth Sample/);
-    await launcher.onboardingSamples.verifyFocusOn("A Fourth Sample");
-    await launcher.onboardingSamples.verifyMoreReads("Fewer samples");
+    await launcher.sampleDeck.seeAll();
+
+    await launcher.sampleDeck.verifyLaidOut([VIDEO_NAME, ARTICLE_NAME, RECIPE_NAME]);
   });
 
-  test("a row that can't be opened says so above the rows, and keeps focus", async ({ launcher, backendSimulator }) => {
+  // Beside a video the headline follows the tab and holds, so only the deck cycles (205g-2).
+  test("beside a video the headline follows the tab rather than the deck", async ({ launcher, backendSimulator }) => {
+    backendSimulator.startSamples.offer(ARTICLE, RECIPE, VIDEO);
+    await launcher.launchPanel(signedOutPanel);
+    const start = await launcher.homePage.verifyShowsStart();
+
+    await start.verifyHeadlineReads("Watch Less,");
+    await launcher.sampleDeck.verifyFront(ARTICLE_NAME, "Sample 1 of 3");
+
+    await launcher.sampleDeck.next();
+
+    await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 2 of 3");
+    await start.verifyHeadlineReads("Watch Less,");
+  });
+
+  // With nothing on the tab there is no subject, so the headline goes back to following the
+  // deck, exactly as on the web (155l).
+  test("with nothing on the tab the headline follows the deck's front card", async ({ launcher, backendSimulator }) => {
+    backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    await launcher.launchPanel({ ...signedOutPanel, activeVideoUrl: null });
+    const start = await launcher.homePage.verifyShowsStart();
+
+    await start.verifyHeadlineReads("Watch Less,");
+
+    await launcher.sampleDeck.next();
+    await start.verifyHeadlineReads("Learn More,");
+
+    await launcher.sampleDeck.next();
+    await start.verifyHeadlineReads("Cook More,");
+  });
+
+  test("a card that can't be opened says so, and keeps focus", async ({ launcher, backendSimulator }) => {
+    backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
     backendSimulator.simulateEndpointError(EndpointKey.SAMPLE);
     await launcher.launchPanel(signedOutPanel);
 
-    await launcher.onboardingSamples.choose("The town that pays its bridge bill twice");
+    await launcher.sampleDeck.openFront();
 
-    await launcher.onboardingSamples.verifySaysItCouldntOpen();
-    await launcher.onboardingSamples.verifyFocusOn("The town that pays its bridge bill twice");
+    await launcher.sampleDeck.verifySaysItCouldntOpen();
   });
 
-  test("once the device has had an account, Create account shows Start with Back to sign in, and a sample leads to an account", async ({
+  // 205g-4: the gate's Create an account opens home, which is Start, with no way back to
+  // itself. The lone back chevron 205d-5 drew is retired with it.
+  test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({
     launcher,
   }) => {
     await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
@@ -358,22 +393,12 @@ test.describe("in the panel", () => {
 
     await launcher.signedOutGate.chooseCreateAccount();
 
-    await launcher.panelStart.verifyIsShown();
-    await launcher.panelStart.verifyLeadReads("New accounts start with your first overview. Make one of this video, or try a sample.");
-    await launcher.panelStart.verifyOffersBackToSignIn();
+    const start = await launcher.homePage.verifyShowsStart();
+    await start.verifyStandfirstReads("Make this video your first overview. We'll set up your account as we go.");
     const createAccount = await launcher.createAccountThroughSample();
     await createAccount.typeFirstName("Ada");
     await createAccount.requestLink(SIMULATED_EMAIL);
     await createAccount.enterCode(SIMULATED_LINK_CODE);
     await launcher.onboardingPage.verifyOnScreen("plan");
-  });
-
-  test("Back to sign in returns to signing in", async ({ launcher }) => {
-    await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
-    await launcher.signedOutGate.chooseCreateAccount();
-
-    await launcher.panelStart.backToSignIn();
-
-    await launcher.signInPage.verifyAsksForEmail("Sign in");
   });
 });

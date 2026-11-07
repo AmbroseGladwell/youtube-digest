@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
+import { sourceOfferTestIds } from "../../src/features/capture/components/SourceOffer/SourceOfferTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testHelper.js";
@@ -30,6 +31,44 @@ export class HomePageObject extends PageObject {
       await this.expectNotToBeVisible(homePageTestIds.keysNote);
       return this;
     });
+
+  // Design 155l: the headline's verb follows the deck's front card, or in the panel what the
+  // tab holds (205g-2, 205g-3). "with The Overview" never moves.
+  verifyHeadlineReads = (verb: string) =>
+    this.step(`verifyHeadlineReads ${verb}`, () =>
+      expect(this.get(homePageTestIds.heroTitle)).toHaveText(new RegExp(`^${verb}\\s*with The Overview$`)),
+    );
+
+  verifyStandfirstReads = (standfirst: string) =>
+    this.step(`verifyStandfirstReads ${standfirst}`, () =>
+      expect(this.get(homePageTestIds.hero).locator("p").first()).toHaveText(standfirst),
+    );
+
+  // 205g-2 and 205g-3: beside something, Start shows the same offer card as signed in, and
+  // never its length or reading time.
+  verifyOffers = ({ site, title }: { site: string; title: string }) =>
+    this.step(`verifyOffers ${title}`, async () => {
+      await expect(this.get(sourceOfferTestIds.site)).toHaveText(site);
+      await expect(this.get(sourceOfferTestIds.title)).toHaveText(title);
+      await this.expectToHaveCount(sourceOfferTestIds.facts, 0);
+    });
+
+  verifyOffersNothingFromTheTab = () =>
+    this.step("verifyOffersNothingFromTheTab", () => this.expectToHaveCount(sourceOfferTestIds.card, 0));
+
+  makeOverview = () => this.step("makeOverview", () => this.click(homePageTestIds.generateButton));
+
+  pasteADifferentLink = () => this.step("pasteADifferentLink", () => this.click(homePageTestIds.pasteLink));
+
+  verifyOffersNoPasteLink = () =>
+    this.step("verifyOffersNoPasteLink", () => this.expectToHaveCount(homePageTestIds.pasteLink, 0));
+
+  // 205g: Sign in is a peer of Make my overview rather than a line of small type.
+  verifyOffersSignIn = () => this.step("verifyOffersSignIn", () => this.expectToBeVisible(homePageTestIds.signIn));
+
+  signIn = () => this.step("signIn", () => this.click(homePageTestIds.signIn));
+
+  verifyStartIsAbsent = () => this.step("verifyStartIsAbsent", () => this.expectNotToBeVisible(homePageTestIds.hero));
 
   verifyShowsFirstRunHero = (): Promise<HomePageObject> =>
     this.step("verifyShowsFirstRunHero", async () => {

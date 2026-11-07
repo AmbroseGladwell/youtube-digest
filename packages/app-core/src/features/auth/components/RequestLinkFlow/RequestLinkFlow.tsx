@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router";
+import { Navigate, useLocation, useNavigate } from "react-router";
 import { MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
+import { useBackTo } from "../../../../app/useBackTo.js";
+import { useHomeName } from "../../../../app/useHomeName.js";
+import { useLentBackLink } from "../../../../app/useLentBackLink.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { ErrorState } from "../../../../components/shared/ErrorState/ErrorState.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
@@ -17,6 +20,7 @@ import { useSignInWithEmailCodeMutation } from "../../mutations/useSignInWithEma
 import { useWebSignInLanding } from "../../useWebSignInLanding.js";
 import type { PendingSignIn } from "../../types/PendingSignIn.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
+import { isFromStart } from "../../fromStart.js";
 import { authFailureMessage, CODE_SPENT, LINK_SPENT } from "../../util/authFailureMessage.js";
 import { savedOverviewsNote } from "../../util/savedOverviewsNote.js";
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
@@ -78,12 +82,26 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
   const libraryMove = useLibraryMove();
 
   const inExtension = surface === "extension";
+  const sent = inExtension ? pending : sentHere;
+  const setSent = inExtension ? setPending : setSentHere;
+
+  // Reached from Start, the bar says where home is: the panel draws no link of its own here,
+  // so the slot holds it from the first frame (205g-4, design 205d-2's shape).
+  const homeName = useHomeName();
+  const fromStart = isFromStart(useLocation().state);
+  const backHome = useBackTo(Routes.home());
+  useLentBackLink({
+    to: Routes.home(),
+    label: homeName,
+    lent: isPanel && fromStart && sent === null && welcomeName === undefined,
+    inPage: false,
+    follow: backHome,
+  });
+
   // A build with no server of its own must always be able to name one. One built for a
   // server offers to change it only where that is of any use: loaded unpacked against a
   // local API, never in a build installed from the Web Store.
   const askForServer = !inExtension ? "never" : knownServer === null ? "always" : serverSwitchable ? "onRequest" : "never";
-  const sent = inExtension ? pending : sentHere;
-  const setSent = inExtension ? setPending : setSentHere;
 
   const analytics = useAnalytics();
 
@@ -297,15 +315,23 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
             </>
           ) : (
             <>
-              New here?{" "}
-              <PageLink
-                to={Routes.createAccount()}
-                replace
-                onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
-                data-testid={requestLinkFlowTestIds.switchLink}
-              >
-                Create an account
-              </PageLink>
+              {/* 205g-4: there is no Create account on the signed-out panel. The first
+                  overview makes the account, and the line says so in a link's place. */}
+              {isPanel ? (
+                "New here? Your first overview sets up your account."
+              ) : (
+                <>
+                  New here?{" "}
+                  <PageLink
+                    to={Routes.createAccount()}
+                    replace
+                    onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
+                    data-testid={requestLinkFlowTestIds.switchLink}
+                  >
+                    Create an account
+                  </PageLink>
+                </>
+              )}
               {offersWebAppCode && (
                 <>
                   <br />
