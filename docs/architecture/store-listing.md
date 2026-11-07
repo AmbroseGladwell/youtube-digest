@@ -83,6 +83,25 @@ The section order of "What every overview holds" is the reader's own
 can be bought yet. Podcasts and PDFs are left out, though the product's own onboarding calls
 them coming: an unshipped capability on a store page is a rejection risk.
 
+**Naming the six providers got the listing rejected.** The first submission of 0.4.2 said
+"Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral", and the store called it
+"excessive keywords in the item's description" under Spam and placement in the Store
+(violation reference Yellow Argon, 7 November 2026). The list was accurate, and accuracy is
+not the test: six company names in a row reads as keyword stuffing whatever they are there
+for. The copy now says a key is yours and points at settings for which providers take one,
+and the list lives on the site instead, where no policy governs it.
+
+**No company is named in the description at all now.** The store quoted only the six-name
+list, and "Connect Claude or another MCP assistant" would probably have survived, since naming
+what a connector connects to is description rather than stuffing. It went anyway: a second
+rejection costs days, the protocol's name carries the meaning without the brand's, and a
+listing that names nobody cannot be read as naming people for reach. Chrome went too, from
+"synced between Chrome and the web app": on a Chrome listing the browser is a given, and
+"between the browser extension and the web app" names the two things the reader actually holds
+rather than one of them twice. It is not "The Overview browser extension" because the page is
+already titled that, and a bullet carrying the brand twice is the shape this section just
+removed from elsewhere. No company appears in the description.
+
 **There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
 an account sees no overviews at all, so the copy offers an account from the start and the
 privacy line says what an account actually costs: an email address, no password, no name
@@ -131,7 +150,7 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 >
 > ➤ Ask your assistant what you have saved
 >
-> Connect Claude or another MCP assistant and it can search everything you have kept by topic,
+> Connect your AI assistant through MCP and it can search everything you have kept by topic,
 > tag or verdict, read any overview in full, and cite the second a point was made.
 >
 > ➤ See the hours add up
@@ -144,14 +163,14 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > Free, with an account:
 >
 > • 5 overviews a month written on us, or 10 a month on your own AI API key
-> • Your library synced between Chrome and the web app at theoverviewapp.com
+> • Your library synced between the browser extension and the web app at theoverviewapp.com
 > • Narration in any of the voices, and your library open to your AI assistant
 >
 > ➤ Bring your own key, and it stays yours
 >
-> Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral and it is stored on your
-> device and sent straight to that provider, never through our servers. There is a setting
-> that says "only ever use my key", and it is obeyed.
+> Add your own AI provider key and it is stored on your device and sent straight to that
+> provider, never through our servers. The providers you can use are listed in the extension's
+> settings. There is a setting that says "only ever use my key", and it is obeyed.
 >
 > ➤ Privacy
 >
