@@ -91,10 +91,13 @@ not the test: six company names in a row reads as keyword stuffing whatever they
 for. The copy now says a key is yours and points at settings for which providers take one,
 and the list lives on the site instead, where no policy governs it.
 
-A single brand name used for what it actually integrates with is a different thing, and
-"Connect Claude or another MCP assistant" was not flagged. It stays, because naming the
-assistant is how a reader knows the connector will work for them. If a later review disagrees,
-"Connect your AI assistant" says the same thing and loses nothing but the recognition.
+**No company is named in the description at all now.** The store quoted only the six-name
+list, and "Connect Claude or another MCP assistant" would probably have survived, since naming
+what a connector connects to is description rather than stuffing. It went anyway: a second
+rejection costs days, the protocol's name carries the meaning without the brand's, and a
+listing that names nobody cannot be read as naming people for reach. The only platform left in
+the copy is Chrome itself, in "synced between Chrome and the web app", which is the store the
+page is on.
 
 **There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
 an account sees no overviews at all, so the copy offers an account from the start and the
@@ -144,7 +147,7 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 >
 > ➤ Ask your assistant what you have saved
 >
-> Connect Claude or another MCP assistant and it can search everything you have kept by topic,
+> Connect your AI assistant through MCP and it can search everything you have kept by topic,
 > tag or verdict, read any overview in full, and cite the second a point was made.
 >
 > ➤ See the hours add up
