@@ -3,22 +3,16 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "../support/fixtures.testHelper.js";
-import { Routes } from "../../src/app/Routes.js";
-import { readerPlayerBarTestIds } from "../../src/features/reader/components/ReaderPlayerBar/ReaderPlayerBarTestIds.js";
-import { cookingModeTestIds } from "../../src/features/reader/components/CookingMode/CookingModeTestIds.js";
 import { milestoneCardTestIds } from "../../src/features/timeSaved/components/MilestoneCard/MilestoneCardTestIds.js";
-import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
-import { capturePageTestIds } from "../../src/features/capture/CapturePage/CapturePageTestIds.js";
-import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
-import type { CapturePageObject } from "../pageObjects/CapturePageObject.testHelper.js";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import { SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
-import { storeLibrary, theNote, theRecipe } from "./storeLibrary.testHelper.js";
+import { storeLibrary, theDataNote, theSellingNote } from "./storeLibrary.testHelper.js";
 
-// Two screens are captures of a real side panel rather than renders. Cooking mode needs a
-// taller panel than this canvas and its narration state ("Waiting for you") cannot be reached
-// without the TTS pool; the playlist preview is a real 204-video playlist, which no fixture
-// would be (docs/architecture/store-listing.md, "The screenshots").
+// Four of the five screens are captures of a real side panel rather than renders. A render
+// here is taken at the harness's viewport, and the panel's layout is driven by media queries
+// that read that viewport, so a 420px-wide element inside a 1280px window lays itself out as
+// the desktop app and not as the panel anyone installs
+// (docs/architecture/store-listing.md, "The screenshots").
 const SOURCES = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../../../apps/extension/store/sources",
@@ -30,10 +24,16 @@ const SHOTS = path.resolve(
 );
 
 // Every shot is the side panel, because the side panel is the extension. Its other surface,
-// app.html, is an options_ui page nothing in the product links to, so a listing that showed
-// the wide layout would be selling a screen almost nobody opens
+// app.html, is an options_ui page nothing in the product links to, so the one shot that is
+// not the panel is the library the account syncs to, and its caption says so
 // (docs/architecture/store-listing.md, "The screenshots").
-const PANEL_WIDTH = 420;
+
+// Captures are placed by height, not width, so the panel is the same size in every one of
+// them and the listing does not jump as it is scrolled through. The four sources were taken
+// at slightly different panel widths, so their placed widths differ by about three pixels;
+// the right edge is the fixed one, which puts that difference against the abstracted page
+// where nothing lines up with it anyway.
+const CAPTURE_HEIGHT = 700;
 
 // The two families tokens.scss names. The app's own @font-face rules ship in the extension's
 // public/fonts.css, which this harness never loads, so a shot taken without this would be the
@@ -53,27 +53,11 @@ const MARK =
   '<circle cx="16" cy="14.5" r="7.5" fill="none" stroke="#E2511E" stroke-width="3"></circle>' +
   '<rect x="7" y="25" width="18" height="2.5" fill="#E2511E"></rect></svg>';
 
-// Narration is rendered by the TTS pool, which this harness cannot reach, so the bar reads
-// "Read-along · no audio", true here and false in a real install. Showing a bar that says
-// the product has no sound would be the misleading option.
-const noNarrationSaid = [readerPlayerBarTestIds.root, cookingModeTestIds.voice]
-  .map((id) => `[data-testid="${id}"]`)
-  .join(", ")
-  .concat(" { display: none !important; }");
-
 // The keys screen shows the last four characters of the stored key, and the shared seed's
 // end in "test", which reads as a fixture on a store page rather than as someone's key.
 const ANTHROPIC_KEY: ApiKeys = {
   keys: { anthropic: { key: "sk-ant-api03-7f2c9e41b6d8", addedAt: "2026-09-12T09:00:00.000Z" } },
 };
-
-const recipeMethodCook = "RecipeMethod.cook";
-
-// A takeover screen covers the whole side panel in Chrome, where it is positioned against the
-// panel's own viewport. In these shots #root is a positioned, clipped box, so it becomes the
-// takeover's containing block and the reader's sticky head paints over it. This puts the real
-// order back; it changes no pixel of the screen itself.
-const TAKEOVER_ABOVE_THE_HEAD = "dialog[open] { z-index: 50 !important; }";
 
 const SIGNED_IN = {
   sync: true,
@@ -83,13 +67,15 @@ const SIGNED_IN = {
 const dressed = async (page: Page): Promise<void> => {
   await page.addStyleTag({ url: FONTS });
   await page.evaluate(() => document.fonts.ready);
-  await page.addStyleTag({ content: `* { caret-color: transparent !important; }\n${noNarrationSaid}` });
+  await page.addStyleTag({ content: "* { caret-color: transparent !important; }" });
   await expect
     .poll(() => page.evaluate(() => [...document.images].every((image) => image.complete)))
     .toBe(true);
 };
 
-type Surface = "panel" | "wide" | "chat" | "dialog" | "capture";
+// What fills the window to the left of the panel. "wide" is the one shot that is not the
+// panel at all, and fills the window with the web app instead.
+type Surface = "page" | "chat" | "wide";
 
 interface Caption {
   lead: string;
@@ -100,24 +86,36 @@ interface Caption {
   breakAtSplit?: boolean;
 }
 
-// The panel is 420px and the store's frame is 1280, so the rest of the image is a caption and
+interface Composition {
+  surface?: Surface;
+  // The width to place a capture at, which panelFrom works out from the image. Null renders
+  // the live #root at the panel's own width instead.
+  captureWidth?: number | null;
+  // The two notes the chat surface's reply names, passed in so they come from the library
+  // rather than being written out here.
+  cites?: readonly [string, string];
+}
+
+// The panel is a fifth of the store's 1280 frame, so the rest of the image is a caption and
 // the browser the panel is docked in. The panel's own pixels are untouched: nothing is
-// scaled, recoloured or drawn over, and the window behind it is deliberately an abstraction,
-// a title bar and soft grey blocks, carrying no site's name, mark or layout
+// scaled unevenly, recoloured or drawn over, and the window behind it is deliberately an
+// abstraction, a title bar and soft grey blocks, carrying no site's name, mark or layout
 // (docs/architecture/store-listing.md, "The screenshots").
 const composed = (
   page: Page,
   { lead, accent, sub, breakAtSplit = false }: Caption,
-  surface: Surface = "panel",
+  { surface = "page", captureWidth = null, cites = ["", ""] }: Composition = {},
 ): Promise<void> =>
   page.evaluate(
-    ([width, ground, grid, ink, muted, accentInk, chrome, mark, leadText, accentText, subText, which, splitLine]) => {
-      const PANEL = Number(width);
-      const chatting = which === "chat";
-      const centred = which === "dialog";
+    ([placed, tall, ground, grid, ink, muted, accentInk, chrome, mark, leadText, accentText, subText, which, splitLine, named]) => {
       // A capture of a real panel, placed in the window the way a live panel is.
-      const captured = which === "capture";
-      const docked = which === "panel" || chatting || captured;
+      const captured = placed !== null;
+      // The width Chrome opens the side panel at, for a live render. Every capture brings
+      // its own, worked out from the image.
+      const PANEL = Number(placed ?? 420);
+      const HEIGHT = Number(tall);
+      const chatting = which === "chat";
+      const docked = which !== "wide";
       document.documentElement.style.background = String(ground);
       Object.assign(document.body.style, {
         margin: "0",
@@ -140,14 +138,15 @@ const composed = (
 
       // The window the panel is docked in: a title bar, an address pill with no text, and
       // blocks standing in for a page. Nothing here names or resembles a particular site.
+      // One geometry for every shot, so the frame does not move as the listing is scrolled.
+      const INSET = 16;
+      const BAR = 38;
       const frame = add(document.body, "div", {
         position: "absolute",
-        // One window geometry for every shot, so the frame does not jump as the listing is
-        // scrolled through. Its height is the one the real captures come at.
-        top: "16px",
+        top: `${INSET}px`,
         left: chatting ? "470px" : "578px",
         right: "30px",
-        bottom: "16px",
+        bottom: `${INSET}px`,
         borderRadius: "16px",
         background: "#f3f0ea",
         boxShadow: "0 40px 90px rgba(21, 22, 24, 0.18), 0 2px 6px rgba(21, 22, 24, 0.06)",
@@ -155,7 +154,7 @@ const composed = (
       });
       const bar = add(frame, "div", {
         display: "flex",
-        height: "38px",
+        height: `${BAR}px`,
         background: String(chrome),
         alignItems: "center",
         gap: "7px",
@@ -181,14 +180,17 @@ const composed = (
       const page_ = add(frame, "div", {
         display: docked ? "flex" : "none",
         position: "absolute",
-        top: "38px",
+        top: `${BAR}px`,
         left: "0",
         right: `${PANEL}px`,
         bottom: "0",
         padding: "26px 24px",
         flexDirection: "column",
         gap: "14px",
-        maskImage: "linear-gradient(to bottom, #000 45%, transparent 92%)",
+        // The blocks are a page that carries on past the window, so they fade out. A
+        // conversation does not: it is the whole of what it is, and a faded last line reads
+        // as a rendering fault.
+        maskImage: chatting ? "none" : "linear-gradient(to bottom, #000 45%, transparent 92%)",
       });
       if (chatting) {
         at(page_, { justifyContent: "center", gap: "10px", padding: "26px 22px" });
@@ -205,9 +207,10 @@ const composed = (
           });
           node.innerHTML = html;
         };
+        const [measured, built] = named as readonly [string, string];
         bubble("What have I saved about how AI is changing software?", true);
         bubble(
-          "Two overviews. <strong>How software engineering is changing</strong> measures the shift with the author's own data, and <strong>Turn Claude Code Into Your AI Operating System</strong> is the practical build.",
+          `Two overviews. <strong>${measured}</strong> measures the shift with the author's own data, and <strong>${built}</strong> is the practical build.`,
           false,
         );
         bubble("Which one should I act on first?", true);
@@ -278,6 +281,9 @@ const composed = (
       logo.append(name);
 
       // The panel itself, docked at the window's right edge, at the width Chrome gives it.
+      // A capture is set the same distance off the window's top and bottom edges, so it sits
+      // in the frame rather than filling it.
+      const inner = frame.clientHeight - BAR;
       const root = document.getElementById("root");
       if (root !== null) {
         at(
@@ -285,11 +291,10 @@ const composed = (
           docked
             ? {
                 position: "absolute",
-                top: captured ? "47px" : "38px",
+                top: captured ? `${BAR + Math.round((inner - HEIGHT) / 2)}px` : `${BAR}px`,
                 right: "0",
                 bottom: captured ? "auto" : "0",
-                // A capture sizes itself from the image inside it.
-                height: captured ? "auto" : "",
+                height: captured ? `${HEIGHT}px` : "",
                 width: `${PANEL}px`,
                 overflow: "hidden",
                 // A capture is a rectangle of pixels, and a hard corner against the window's
@@ -299,120 +304,126 @@ const composed = (
               }
             : {
                 position: "absolute",
-                top: "38px",
+                top: `${BAR}px`,
                 left: "0",
                 bottom: "0",
-                right: centred ? "0" : "",
-                width: centred ? "" : "1180px",
+                width: "1180px",
                 overflow: "hidden",
               },
         );
         frame.append(root);
       }
     },
-    [PANEL_WIDTH, GROUND, GRID, INK, MUTED, ACCENT, CHROME, MARK, lead, accent, sub, surface, breakAtSplit] as const,
+    [captureWidth, CAPTURE_HEIGHT, GROUND, GRID, INK, MUTED, ACCENT, CHROME, MARK, lead, accent, sub, surface, breakAtSplit, cites] as const,
   );
 
-// After composition, because composing moves #root into the window frame and puts its
-// scroller back to the top.
-const scrolledTo = async (page: Page, heading: string): Promise<void> => {
-  const section = page.getByText(heading, { exact: true });
-  await expect(section).toBeVisible();
-  await section.evaluate((element) => {
-    element.scrollIntoView({ block: "center", behavior: "instant" });
-  });
-  await expect(section).toBeInViewport();
-};
+// A capture taken by hand catches a line or two of the dimmed browser behind the panel on
+// one or two of its edges, which reads as a dark hairline once the capture is set into the
+// window. Whole rows and columns of it are trimmed off, so the sources stay exactly what came
+// off the machine and the next capture needs no cropping either.
+const EDGE_TRIM_LIMIT = 8;
 
-// A rectangle of the capture to soften, as fractions of the image, for a line that names
-// somebody. Public does not mean theirs to advertise with
-// (docs/architecture/store-listing.md, "The screenshots").
-interface Softened {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
+// The browser behind the panel dims to about rgb(53,53,53). The panel's own ink is near
+// rgb(21,22,24), so a band this tight around the chrome grey cannot catch text.
+const CHROME_GREY = { lowest: 35, highest: 75, spread: 6 } as const;
 
-// The panel's own pixels, from a real install, put where the live panel would be.
-const panelFrom = (page: Page, file: string, soften: Softened | null = null): Promise<void> =>
-  page.evaluate(
-    ([source, region]) => {
+// The panel's own pixels, from a real install, put where the live panel would be. Returns the
+// width the shared height gives it, which composed() then docks it at.
+const panelFrom = async (page: Page, file: string): Promise<number> => {
+  const source = `data:image/png;base64,${readFileSync(path.join(SOURCES, file)).toString("base64")}`;
+  const aspect = await page.evaluate(
+    async ([data, limit, grey]) => {
+      const shot = new Image();
+      shot.src = String(data);
+      await shot.decode();
+      const whole = document.createElement("canvas");
+      whole.width = shot.naturalWidth;
+      whole.height = shot.naturalHeight;
+      const drawing = whole.getContext("2d", { willReadFrequently: true });
+      if (drawing === null) throw new Error("no 2d context");
+      drawing.drawImage(shot, 0, 0);
+      const { data: pixels, width, height } = drawing.getImageData(0, 0, whole.width, whole.height);
+
+      const band = grey as { lowest: number; highest: number; spread: number };
+      const dimmed = (x: number, y: number): boolean => {
+        const i = (y * width + x) * 4;
+        const r = pixels[i] ?? 0;
+        const g = pixels[i + 1] ?? 0;
+        const b = pixels[i + 2] ?? 0;
+        const flat = Math.abs(r - g) < band.spread && Math.abs(g - b) < band.spread;
+        return flat && r > band.lowest && r < band.highest;
+      };
+      // One stray pixel should not keep an edge, and one lit pixel should not lose a row.
+      const nearlyAll = (count: number, of: number): boolean => count >= of * 0.98;
+      const dimmedRow = (y: number): boolean => {
+        let n = 0;
+        for (let x = 0; x < width; x += 1) if (dimmed(x, y)) n += 1;
+        return nearlyAll(n, width);
+      };
+      const dimmedColumn = (x: number): boolean => {
+        let n = 0;
+        for (let y = 0; y < height; y += 1) if (dimmed(x, y)) n += 1;
+        return nearlyAll(n, height);
+      };
+
+      const most = Number(limit);
+      let top = 0;
+      while (top < most && dimmedRow(top)) top += 1;
+      let bottom = 0;
+      while (bottom < most && dimmedRow(height - 1 - bottom)) bottom += 1;
+      let left = 0;
+      while (left < most && dimmedColumn(left)) left += 1;
+      let right = 0;
+      while (right < most && dimmedColumn(width - 1 - right)) right += 1;
+
+      const panel = document.createElement("canvas");
+      panel.width = width - left - right;
+      panel.height = height - top - bottom;
+      const onto = panel.getContext("2d");
+      if (onto === null) throw new Error("no 2d context");
+      onto.drawImage(whole, left, top, panel.width, panel.height, 0, 0, panel.width, panel.height);
+      Object.assign(panel.style, { width: "100%", height: "100%", display: "block" });
+
       const root = document.getElementById("root");
-      if (root === null) return;
-      root.replaceChildren();
-      const frame = document.createElement("div");
-      frame.style.position = "relative";
-      const shot = document.createElement("img");
-      shot.src = String(source);
-      shot.style.width = "100%";
-      shot.style.display = "block";
-      frame.append(shot);
-      if (region !== null) {
-        const patch = document.createElement("div");
-        const box = region as Softened;
-        Object.assign(patch.style, {
-          position: "absolute",
-          left: `${box.left * 100}%`,
-          top: `${box.top * 100}%`,
-          width: `${box.width * 100}%`,
-          height: `${box.height * 100}%`,
-          background: "#f6f4f0",
-        });
-        frame.append(patch);
-      }
-      root.append(frame);
+      root?.replaceChildren(panel);
+      return panel.width / panel.height;
     },
-    [`data:image/png;base64,${readFileSync(path.join(SOURCES, file)).toString("base64")}`, soften] as const,
+    [source, EDGE_TRIM_LIMIT, CHROME_GREY] as const,
   );
+  return Math.round(aspect * CAPTURE_HEIGHT);
+};
 
 const shoot = (page: Page, name: string): Promise<Buffer> =>
   page.screenshot({ path: path.join(SHOTS, `${name}.png`), animations: "disabled" });
-
-// The route change cross-fades, and the screen being left is still painted while it does, so
-// a shot taken too early catches the capture screen behind the note.
-const onlyOneScreen = (page: Page): Promise<void> =>
-  expect(
-    page.getByTestId(capturePageTestIds.root).or(page.getByTestId(readerPageTestIds.root)),
-  ).toHaveCount(1);
-
-const readerOn = async (
-  launcher: { openPage: (path: string) => Promise<void> },
-  capture: CapturePageObject,
-  overviewId: string,
-): Promise<ReaderPageObject> => {
-  await launcher.openPage(Routes.overview(overviewId));
-  const reader = await new ReaderPageObject(capture.testContext).verifyIsShown();
-  await onlyOneScreen(capture.page);
-  return reader;
-};
 
 // The captions sell what the reader gets, not what the software has, and they say it the
 // positive way round: what an hour of your evening buys, never what your saved list is full
 // of (docs/architecture/store-listing.md, "The words").
 
-test("a note, which is what saving something gets you", async ({ launcher, backendSimulator }) => {
-  storeLibrary(backendSimulator);
-  const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, showMilestoneCards: false });
-  await readerOn(launcher, capture, theNote().id);
+test("a note, which is what saving something gets you", async ({ launcher }) => {
+  const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
+  const width = await panelFrom(capture.page, "note-panel.png");
   await dressed(capture.page);
-  await composed(capture.page, {
-    lead: "All the info,",
-    accent: "less wait.",
-    breakAtSplit: true,
-    sub: "Videos, articles and recipes become a short overview: the premise, the core claim, the key points and what to do next.",
-  });
+  await composed(
+    capture.page,
+    {
+      lead: "All the info,",
+      accent: "less wait.",
+      breakAtSplit: true,
+      sub: "Videos, articles and recipes become a short overview: the premise, the core claim, the key points and what to do next.",
+    },
+    { captureWidth: width },
+  );
 
   await shoot(capture.page, "1-note");
 });
 
 // Following a playlist is the one thing that works at more than one video at a time, so it
-// gets the slot chapters had. It is a capture of a real 204-video playlist: the numbers are
-// the point, and no fixture would carry them honestly.
+// gets the slot chapters had.
 test("a pasted playlist, previewed before it runs", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
+  const width = await panelFrom(capture.page, "playlist-panel.png");
   await dressed(capture.page);
-  await panelFrom(capture.page, "playlist-panel.png", { left: 0.03, top: 0.293, width: 0.40, height: 0.032 });
   await composed(
     capture.page,
     {
@@ -421,7 +432,7 @@ test("a pasted playlist, previewed before it runs", async ({ launcher }) => {
       sub: "Paste a playlist link, then convert what's there or follow it so new videos become overviews as they're added.",
       breakAtSplit: true,
     },
-    "capture",
+    { captureWidth: width },
   );
 
   await shoot(capture.page, "2-playlist");
@@ -453,7 +464,7 @@ test("the hours the habit gives back", async ({ launcher, backendSimulator }) =>
       accent: "evenings back.",
       sub: "Every overview you read instead of watching is counted, so you can see the hours saved add up. Sign in and the same library opens in the web app, on any device.",
     },
-    "wide",
+    { surface: "wide" },
   );
 
   await shoot(shelf.page, "3-time-saved");
@@ -461,17 +472,11 @@ test("the hours the habit gives back", async ({ launcher, backendSimulator }) =>
 
 // The connection itself, in the panel, with the conversation it makes possible beside it. The
 // panel is the product's own screen; the bubbles are an illustration of the assistant's side,
-// drawn in onboarding's own bubble styling and citing notes that really are in the library
-// these shots are taken from (docs/architecture/store-listing.md, "The screenshots").
-test("the connection, and the conversation it allows", async ({ launcher, backendSimulator }) => {
-  backendSimulator.connections.seed({
-    id: "claude",
-    clientName: "Claude",
-    createdAt: "2026-09-12T12:00:00.000Z",
-    lastUsedAt: new Date("2026-11-05T18:30:00.000Z").toISOString(),
-  });
-  const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, ...SIGNED_IN });
-  await launcher.openPage(Routes.settingsSection("connections"));
+// drawn in onboarding's own bubble styling and citing notes that really are in the house
+// account's samples (docs/architecture/store-listing.md, "The screenshots").
+test("the connection, and the conversation it allows", async ({ launcher }) => {
+  const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
+  const width = await panelFrom(capture.page, "assistant-panel.png");
   await dressed(capture.page);
   await composed(
     capture.page,
@@ -480,7 +485,11 @@ test("the connection, and the conversation it allows", async ({ launcher, backen
       accent: "one question away.",
       sub: "Connect your AI assistant and it can pull together everything you’ve saved on a topic, turning your library into context it can work from.",
     },
-    "chat",
+    {
+      surface: "chat",
+      captureWidth: width,
+      cites: [theDataNote().source.title, theSellingNote().source.title],
+    },
   );
 
   await shoot(capture.page, "4-assistant");
@@ -488,8 +497,8 @@ test("the connection, and the conversation it allows", async ({ launcher, backen
 
 test("cooking from a recipe, one step at a time", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
+  const width = await panelFrom(capture.page, "cooking-panel.png");
   await dressed(capture.page);
-  await panelFrom(capture.page, "cooking-panel.png");
   await composed(
     capture.page,
     {
@@ -498,7 +507,7 @@ test("cooking from a recipe, one step at a time", async ({ launcher }) => {
       sub: "Recipes you save now get a cooking mode, one step at a time: read aloud, with ingredients a tap away. Servings scaled, and units converted for you.",
       breakAtSplit: true,
     },
-    "capture",
+    { captureWidth: width },
   );
 
   await shoot(capture.page, "5-cooking");

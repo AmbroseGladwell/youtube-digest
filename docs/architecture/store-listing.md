@@ -185,27 +185,50 @@ because what leaves the device is disclosed twice over, in the data-usage form a
 The one justification that reaches past the package is `unlimitedStorage`, which says the
 library also syncs: without it the sentence implies the device holds the only copy.
 
-**Say what the code does, not what sounds tidy.** Three of these said more than was true in
-their first draft, and the manifest or the source contradicts each: the panel is not the only
-surface, because `options_ui` registers `app.html`; `tabs` does look at tabs the reader has
-not asked about, because the worker queries every YouTube watch tab by URL; and "nothing is
-kept on a server unless the reader signs in" is vacuous now that an account is needed to make
-an overview at all. A reviewer reads the manifest beside the justification.
+**Say what the code does, not what sounds tidy.** Every one of these said more than was true
+in some draft, and the manifest or the source contradicts each. A reviewer reads the manifest
+beside the justification, so each is written from the code and checked against it again
+before the listing is submitted:
+
+- The panel is not the only surface: `options_ui` registers `app.html`.
+- The panel is not where the library is searched: `HomePage` is the library everywhere but
+  the panel, where it is the one video or page the panel sits beside.
+- `tabs` does look at tabs the reader has not asked about, because the worker queries every
+  YouTube watch tab by URL, and it does one thing to a tab rather than read it, because
+  `chromeArticlePages.reload` reloads one.
+- `scripting` injects three things, not two: `articleReader.js`, `reportPlayback` and
+  `seekPlayback`. The last moves the video, which "reads the player's position" hid.
+- `chrome.storage.session` holds four keys, not one: `pending-request`, `pending-page`,
+  `latest-report` and `error-destination`. "One pending request" and "nothing else is kept in
+  it" were both false, and `latest-report` outlives the panel opening.
+- Narration audio is not on the device at all. It is on R2 behind the API
+  (`docs/features/tts-pre-rendered-speech.md`), so `unlimitedStorage` is for the transcripts,
+  which are the large part.
+- "Nothing is kept on a server unless the reader signs in" is vacuous now that an account is
+  needed to make an overview at all.
+- Pressing the toolbar button grants nothing: the action has no `onClicked` handler and only
+  opens the panel through `setPanelBehavior`, so `activeTab` comes from the menu click alone.
+- The menu item is "Create an overview of this page" on the page context, not "The Overview"
+  on pages and links.
+- The content script matches `www.youtube.com` only, so `m.youtube.com` is the captions path
+  and not the injected button.
 
 | Permission | What to paste |
 |---|---|
-| `activeTab` | Pressing the toolbar button or the context-menu entry is what grants access to the tab the reader is on, which is how the extension reads the page it is being asked about without standing access to every site. |
-| `contextMenus` | Adds one right-click entry, "The Overview", which opens the side panel on the page or link the reader right-clicked. |
-| `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read, listened to and searched. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. |
-| `tabs` | To tell which video is in front of the reader, so the overview is about the right one and the panel follows them from video to video. The extension reads the active tab, and queries YouTube watch tabs by URL for the same purpose. This permission is used for addresses and titles only. Reading the contents of a page needs `scripting`, and happens only when the reader asks for an overview of that page. |
-| `scripting` | To inject two small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other reads the YouTube player's current position, so the transcript and the read along can follow the video while the overview is open. Neither runs on a page the reader has not opened the panel against. |
-| `storage` | The service worker keeps one pending request in `chrome.storage.session`: the address and title of the page the reader pressed the button or the context menu entry on, held only until the side panel has opened and can pick it up. Session storage is cleared when the browser closes, and nothing else is kept in it. Settings and the reader's own API key are in the panel's own `localStorage`, which needs no permission. |
-| `unlimitedStorage` | The library of overviews, with their transcripts and narration audio, is held on the device in IndexedDB, and a few hundred of them exceed the default quota. Narration audio is the largest part. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
-| `declarativeNetRequestWithHostAccess` | One rule, which removes the `Origin` header from this extension's own requests to youtube.com. YouTube answers 403 to a transcript request that carries a `chrome-extension://` origin, and `Origin` is a forbidden header that `fetch` cannot drop. The rule is scoped to requests this extension makes, to youtube.com, of type XHR, so it can never touch a call carrying the reader's API key. |
+| `activeTab` | The extension adds one right-click item, "Create an overview of this page". Choosing it is what grants activeTab for that tab, and that grant is the only thing that lets the extension read the page: it injects a small script into that one tab to pull out the article text, which is what the overview is written from. Nothing is read until the reader chooses the item, the access covers only the tab they right-clicked in, and it ends when that tab navigates away or closes. Without it the same right-click would have to interrupt the reader with a site access prompt first. Standing access to a site is a separate optional permission, asked for one site at a time from inside the panel, and only when the reader chooses to keep that site. |
+| `contextMenus` | The extension uses it for exactly one menu item, "Create an overview of this page", shown on the page context of any http or https page. Choosing it opens the side panel and starts an overview of the page the reader is on. That click also does two things the extension depends on: it is the user gesture Chrome requires before a side panel may be opened, and it is what grants activeTab, so the page can be read without standing access to every site. No other menu items are created. Nothing is added to selections, links, images or editable fields, and the menu does not change with what the page contains. The item is made once on install and remade on update, which is why the handler clears the old one before creating it. |
+| `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read and listened to, and where settings and the assistant connection live. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. That page is where the library of saved overviews is browsed and searched; the panel is the one video or page it sits beside. |
+| `tabs` | To tell which video or page is in front of the reader, so the overview is about the right one and the panel follows them from tab to tab. The extension reads the active tab, and queries YouTube watch tabs by URL so the button it injects into each can show the right state. Addresses and titles are all it takes from a tab. The one thing it does to a tab rather than read from it is reload it, offered only when an article could not be read and a reload is the remedy, and only when the reader presses that button. Reading the contents of a page needs the scripting permission below, and happens only when the reader asks for an overview of that page. |
+| `scripting` | To inject three small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other two work with the YouTube player while the panel is open beside it: one reports the player's current position, so the transcript and the read along follow the video, and one moves the video to a position when the reader taps a timestamp in the panel. None of them runs on a tab the reader has not opened the panel against or asked for an overview of. |
+| `storage` | Only chrome.storage.session, which is held in memory and gone when the browser closes. Four short-lived things go in it. The address of a video, or the address, title and tab id of a page, that the reader pressed the button or the context menu entry on, each removed as soon as the side panel has picked it up. The current run's progress, so the button injected into a YouTube page can show the right state, removed when that run is cleared. And, for a signed-in reader, the API address and session token the service worker posts error reports to. Nothing else is kept in it. Settings and the reader's own API key are in the panel's own localStorage, which needs no permission. |
+| `unlimitedStorage` | The library of overviews is held on the device in IndexedDB, along with the full transcript of every video an overview was written from. The transcripts are the large part: one long video's transcript dwarfs the overview written from it, and a few hundred of them exceed the default quota. Narration audio is not kept here, and is streamed from the account's API when the reader presses Listen. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
+| `declarativeNetRequestWithHostAccess` | One rule, which removes the Origin header from this extension's own requests to youtube.com. YouTube answers 403 to a player call carrying a chrome-extension origin, which is where captions come from, and Origin is a forbidden header that fetch() cannot remove itself. The rule is scoped three ways: to requests this extension initiates, to youtube.com, and to XHR. It cannot affect any other request, including calls that carry the reader's own API key. |
 
 **Host permissions**, `https://www.youtube.com/*` and `https://m.youtube.com/*`: to read the
-watch page the reader is on and fetch that video's captions, which is the text every note is
-written from.
+watch page the reader is on and fetch that video's captions, which is the text every overview
+is written from. On `www.youtube.com` a content script also places The Overview button in
+YouTube's own action row; the mobile host is for the captions path only, which is why the
+content script does not match it.
 
 **Optional host permissions**, asked for only when the reader chooses the thing that needs
 them, and never at install:
@@ -244,9 +267,9 @@ transferred to determine creditworthiness or for lending.
 ## The screenshots
 
 `task store:screenshots` renders five 1280×800 PNGs into `apps/extension/store/screenshots`.
-Three are rendered from the real components through the same component harness the IWFT suite
-uses; two are captures of a real side panel, committed under
-`apps/extension/store/sources/`. It is a separate Playwright config,
+Four of them place a capture of a real side panel, committed under
+`apps/extension/store/sources/`; one is rendered from the real components through the same
+component harness the IWFT suite uses. It is a separate Playwright config,
 `playwright-shots.config.ts`, because these are not tests: they assert nothing, they write
 files, and CI must not run them.
 
@@ -258,62 +281,78 @@ word.
 
 | The shot | The gain | Where it comes from |
 |---|---|---|
-| `1-note` | All the info, less wait. | rendered: a sample note in the panel |
-| `2-playlist` | Point it at a whole playlist. | capture: a real 204-video playlist |
+| `1-note` | All the info, less wait. | capture: a note in the panel |
+| `2-playlist` | Point it at a whole playlist. | capture: a real 26-video playlist, previewed |
 | `3-time-saved` | Get your evenings back. | rendered: the web app at the one-hour milestone |
-| `4-assistant` | Your whole library, one question away. | rendered: Settings › Connections, with a drawn conversation |
+| `4-assistant` | Your whole library, one question away. | capture: Settings › Connections, with a drawn conversation beside it |
 | `5-cooking` | Cook without the scrolling. | capture: cooking mode, mid-recipe |
 
-**Why two are captures and not renders.** Cooking mode's controls sit below the dialog's own
-box (`.content` is `min-height: 100%` plus its padding), so at this canvas's 800px the panel
-cannot show the screen whole at any size, because a real side panel is taller. Its narration state,
-"Waiting for you" and "Say it again", also needs the TTS pool, which the harness cannot
-reach. The playlist preview's numbers are the whole point of that shot, and only a real
-playlist has 205 videos, one skipped and 6.1 million tokens against them. Both are placed in
-the same window as the rendered shots by `panelFrom`, at their own aspect, with a 12px radius
-so a captured rectangle does not read as pasted onto a soft-cornered window.
+**Why the panel is captured and not rendered.** A render here is taken at the harness's
+viewport, and the panel's layout is driven by media queries that read that viewport, not the
+element: `ReaderMasthead.module.scss` re-grids to `"back menu" / "head head" /
+"actions actions"` below `61.9375rem`. Shrinking `#root` to 420px inside a 1280px window
+therefore lays the panel out as the desktop app, and the first set of rendered shots put the
+Listen and favourite controls in a place that exists in no install. A capture cannot drift
+that way. `3-time-saved` stays a render because it is the wide web app at a wide viewport, so
+there is no mismatch to get wrong.
 
-**The content is the house account's samples**, fetched from `GET /api/samples` and committed
-as `packages/app-core/playwright/store/sampleNotes.json`. That is the same set Start offers
-and the home page shows (`docs/features/onboarding.md`, "Try a sample"), which settles the
-question a store screenshot otherwise raises: invented notes would put made-up judgements in
-front of real-sounding channel names. `task store:samples` refreshes the file; committing it
-keeps the shots identical between runs.
+Two things are also only reachable in a real install. Cooking mode's narration state,
+"Waiting for you" and "Say it again", needs the TTS pool. And a playlist preview's numbers
+are the whole point of that shot: only a real playlist has 26 videos and 780,000 tokens
+against them.
+
+**All four captures are placed at one height, not one width.** `CAPTURE_HEIGHT` is 700px,
+centred in the window below the title bar, and each capture's width follows from its own
+aspect, so the four come out within about two pixels of each other. The right edge is the
+fixed one, which puts that difference against the abstracted page, where nothing lines up
+with it anyway. A 12px radius keeps a captured rectangle from reading as pasted onto a
+soft-cornered window.
+
+**A capture taken by hand catches the dimmed browser behind the panel**, a line or two of
+near-black down one edge, which reads as a hairline fault once the capture is set into the
+window. `panelFrom` trims whole rows and columns of that grey off every capture before
+placing it, up to `EDGE_TRIM_LIMIT`. The sources stay exactly what came off the machine, and
+the next capture needs no cropping either.
+
+**What is in them.** The four captures are notes from the author's own library, each of a
+public video, article or recipe. `3-time-saved` is the house account's samples, fetched from
+`GET /api/samples` and committed as `packages/app-core/playwright/store/sampleNotes.json`:
+the same set Start offers and the home page shows (`docs/features/onboarding.md`, "Try a
+sample"), which settles the question a rendered screenshot otherwise raises, because invented
+notes would put made-up judgements in front of real-sounding channel names. `task
+store:samples` refreshes the file; committing it keeps that shot identical between runs.
 
 **One window for all five**, at one height and one position, so the frame does not jump as the
-listing is scrolled through. Its height is the one the real captures come at.
+listing is scrolled through.
 
 Three departures from what a reader would see, recorded here because a store screenshot that
 misleads is a rejection:
 
-- **The player bar is hidden** in the rendered note shots. Narration needs the TTS pool, so
-  the bar reads "Read-along · no audio", true in the harness and false in a real install.
-  Showing a bar that says the product has no sound would be the misleading option.
 - **The page behind the panel is an abstraction**: a title bar and soft grey blocks, carrying
   no site's name, mark or layout. A mocked-up YouTube page would be a picture of YouTube,
   which the store's policies treat as someone else's branding.
 - **The conversation in `4-assistant` is drawn**, in onboarding's own bubble styling
-  (`OnboardingSlide.module.scss`), citing two notes that really are in the library the other
-  shots are taken from. The capability is real and shipping (`docs/features/mcp-connector.md`);
-  the assistant's own interface is not ours to photograph, and imitating one would be passing
-  off.
+  (`OnboardingSlide.module.scss`). It names two notes by title, and those titles are read out
+  of `sampleNotes.json` rather than written into the shot, so refreshing the samples and
+  dropping either one fails that shot instead of citing a note nobody has. The capability is
+  real and shipping (`docs/features/mcp-connector.md`); the assistant's own interface is not
+  ours to photograph, and imitating one would be passing off.
+- **`4-assistant`'s chat pane does not fade** where the grey blocks do. The blocks are a page
+  carrying on past the window, so they fade out; a conversation is the whole of what it is,
+  and a faded last line reads as a rendering fault.
 
-Nothing inside a panel is scaled, recoloured or re-laid-out. The fonts are pulled from Google
-Fonts in the rendered shots, because the app's `@font-face` rules ship in the extension's
-`public/fonts.css`, which the harness never loads; they are the same two families
+Nothing inside a panel is scaled unevenly, recoloured or re-laid-out. The fonts in the
+rendered shot are pulled from Google Fonts, because the app's `@font-face` rules ship in the
+extension's `public/fonts.css`, which the harness never loads; they are the same two families
 `tokens.scss` names.
 
-**One line of `2-playlist` is painted out**, and it is the fourth departure: the playlist's
-owner, a named individual. The playlist is public and the capture is factual, which is why it
-was preferred to an invented one, but public is not the same as theirs to advertise with, and
-a person's name on a commercial listing can read as an endorsement they never gave. `soften`
-in `panelFrom` covers that one line in the panel's own ground. Nothing else is touched: every
-count, label and control in the shot is the capture's own, so no claim the screenshot makes
-has changed.
-
-Blurring it was tried first and looked worse: a grey smudge under the title reads as a fault,
-and it draws the eye to what was hidden. An organisation's playlist would need no edit at all:
-the right of publicity and the personal-data question both attach to people, not companies.
+**`1-note` names a creator**, the channel the video is from, with the verdict the product gave
+it. The video is public, the capture is factual, and the channel name is there because the
+product shows it on every note: a listing shot that hid it would be showing a screen the
+product does not have. The verdict is a judgement about how well covered the video's subject
+already is, not about the person. An earlier `2-playlist` capture was replaced for the
+narrower version of this: it was one individual's playlist, where the name carried no product
+meaning and read as an endorsement nobody gave. The replacement is an institution's.
 
 ## The icon and the promo tile
 
