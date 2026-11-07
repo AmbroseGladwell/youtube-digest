@@ -36,6 +36,18 @@ test("with a note open, moving the tab on offers to make an overview of what's t
   await reader.verifyOnThisTabLineSays("Another video on this tab", "Make an overview");
 });
 
+test("the line is a stone-tint pill, and its offer is text rather than a button", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  seedOpenNote(backendSimulator);
+  const capture = await launcher.launchPanel(panel);
+  const reader = await capture.openStoredOverview();
+  await launcher.watchAnotherVideo(ANOTHER_URL);
+
+  await reader.verifyOnThisTabLineIsDrawnAsAPill();
+});
+
 test("where the library already holds it, the offer is to read it", async ({
   launcher,
   backendSimulator,

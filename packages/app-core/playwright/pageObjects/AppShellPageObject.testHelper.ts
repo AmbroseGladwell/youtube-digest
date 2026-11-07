@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import type { NavigationDirection } from "../../src/util/viewTransitions.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
+import { accountMenuTestIds } from "../../src/features/auth/components/AccountMenu/AccountMenuTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { AccountMenuPageObject } from "./AccountMenuPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
@@ -305,6 +306,31 @@ export class AppShellPageObject extends PageObject {
     this.step("verifyNewOverviewHasFocus", () =>
       expect(this.get(appShellTestIds.newOverviewButton)).toBeFocused(),
     );
+
+  // The bar's + New is the web's pill everywhere but a touch-sized full layout, where it
+  // grows to the 44px target (docs/features/extension-panel.md, "+ New joins the panel's bar").
+  verifyNewOverviewButtonIsTheWebsSize = () =>
+    this.step("verifyNewOverviewButtonIsTheWebsSize", async () =>
+      expect(await this.newOverviewButtonSizing()).toEqual({ minHeight: "auto", paddingInline: "14px" }),
+    );
+
+  verifyNewOverviewButtonIsTheTouchTarget = () =>
+    this.step("verifyNewOverviewButtonIsTheTouchTarget", async () =>
+      expect(await this.newOverviewButtonSizing()).toEqual({ minHeight: "44px", paddingInline: "16px" }),
+    );
+
+  private newOverviewButtonSizing = () =>
+    this.get(appShellTestIds.newOverviewButton).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { minHeight: style.minHeight, paddingInline: style.paddingLeft };
+    });
+
+  verifyGapToTheAccountMenuIs = (pixels: number) =>
+    this.step(`verifyGapToTheAccountMenuIs ${pixels}`, async () => {
+      const button = (await this.get(appShellTestIds.newOverviewButton).boundingBox())!;
+      const account = (await this.get(accountMenuTestIds.trigger).boundingBox())!;
+      expect(Math.round(account.x - (button.x + button.width))).toBe(pixels);
+    });
 
   openNewOverview = (): Promise<NewOverviewDialogPageObject> =>
     this.step("openNewOverview", async () => {

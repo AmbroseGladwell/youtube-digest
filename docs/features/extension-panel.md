@@ -135,6 +135,12 @@ a second copy of a run's progress in the document — the panel's own page is wh
 watched. Starting one from the dialog closes it and returns the panel to home, which is
 where creating from the offer would have left it anyway.
 
+**Its button is the web's, not the phone's.** The bar's touch rule, which grows `+ New` to
+the 44px target below 992px, is scoped to the full layout's `.actions`. The panel is under
+that breakpoint at any width Chrome is dragged to, but it is a pointer surface, so it keeps
+the web's pill and the web's `0.5rem` to the account menu. Design 205c-2 draws 36px, to match
+the account circle; the owner asked for the web's size, and that is what is built.
+
 **Its shape is the web's own width query, and always was.** 205c-2 asks for the phone's
 sheet at panel width and the centred dialog from 768 up. `NewOverviewDialog` has drawn
 exactly that since 3a/3b. The panel is a real narrow viewport, so `@media (max-width:

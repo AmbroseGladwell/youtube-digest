@@ -1251,6 +1251,24 @@ export class ReaderPageObject extends PageObject {
       await expect(this.get(onThisTabLineTestIds.offer)).toHaveText(offer);
     });
 
+  // Design 205e-5: a stone-tint pill, with the offer as plain text rather than a button.
+  // An undefined custom property falls back to nothing in silence, which is how the pill
+  // shipped square, so what is asserted is the drawn radius and not the declaration.
+  verifyOnThisTabLineIsDrawnAsAPill = () =>
+    this.step("verifyOnThisTabLineIsDrawnAsAPill", async () => {
+      const line = await this.get(onThisTabLineTestIds.root).evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { radius: parseFloat(style.borderTopLeftRadius), height: element.getBoundingClientRect().height };
+      });
+      expect(line.radius).toBeGreaterThanOrEqual(line.height / 2);
+
+      const offer = await this.get(onThisTabLineTestIds.offer).evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { border: style.borderTopStyle, background: style.backgroundColor };
+      });
+      expect(offer).toEqual({ border: "none", background: "rgba(0, 0, 0, 0)" });
+    });
+
   clickOnThisTabOffer = () =>
     this.step("clickOnThisTabOffer", () => this.click(onThisTabLineTestIds.offer));
 
