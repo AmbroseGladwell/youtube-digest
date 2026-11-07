@@ -65,12 +65,30 @@ secrets production needs, and `task deploy:secrets` renders it under `bws run` a
 written to a file, typed into a terminal or pasted into a dashboard
 (`docs/architecture/deploy.md`). Everything that is not a secret lives in `fly.toml`'s
 `[env]`, in the repository. The TTS service is a second Fly app with its own template,
-`services/tts/.env.prod.tpl`, and its own task, `task deploy:tts:secrets`. Two values have
-to live outside Bitwarden, as GitHub Actions secrets, because GitHub's runners can read
-nothing else. One is the Fly deploy token the CI deploy job uses, piped from
-`fly tokens create` into `gh secret set` without appearing on screen
-(`docs/architecture/deploy.md`). The other is PostHog's personal API key for uploading
-source maps (`docs/architecture/errors-and-logs.md`, "Source maps").
+`services/tts/.env.prod.tpl`, and its own task, `task deploy:tts:secrets`.
+
+**What a runner needs lives in GitHub as well**, because GitHub's runners can read nothing
+else: there is no Bitwarden token in CI, by the decision at the end of this file. These are
+set with `gh secret set`, piped from the command that mints them so no value appears on
+screen, and kept in `overview-prod` too, since the hand-run escape hatches read them from
+there.
+
+| GitHub Actions secret | What it is | Where it is explained |
+|---|---|---|
+| `FLY_API_TOKEN` | The deploy token for the app, from `fly tokens create` | `docs/architecture/deploy.md` |
+| `FLY_TTS_API_TOKEN` | The same for the TTS app, which deploys separately | `docs/architecture/deploy.md`, "The TTS service" |
+| `POSTHOG_CLI_API_KEY` | A personal API key, for uploading the web app's source maps | `docs/architecture/errors-and-logs.md`, "Source maps" |
+| `POSTHOG_CLI_PROJECT_ID` | Which PostHog project those maps belong to | as above |
+| `TRELLO_API_KEY` | So a merged PR can move its card to Done | `CLAUDE.md`, "The backlog lives in Trello" |
+| `TRELLO_TOKEN` | The token beside that key | as above |
+| `CHROME_PUBLISHER_ID` | The publisher the store listing belongs to | `docs/architecture/store-listing.md`, "The API credentials" |
+| `CHROME_SERVICE_ACCOUNT_KEY` | A Google Cloud service account's whole JSON key file | as above |
+
+The last one is the only downloaded key file among them, and the only one that cannot be
+revoked by expiry, so it is deleted from the machine that made it as soon as it is set. Its
+project turns Google's `iam.disableServiceAccountKeyCreation` off to mint it and back on
+afterwards: re-enforcing the constraint does not invalidate a key that already exists, it
+only blocks making another, which is the right default between rotations.
 
 ## Projects are the environment boundary
 

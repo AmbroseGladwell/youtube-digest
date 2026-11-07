@@ -399,7 +399,16 @@ Made once, as the account that owns the dashboard:
 2. Create a service account. **It needs no roles and no permissions**: the store's dashboard,
    not Cloud IAM, is what grants it access. Name it for the publisher rather than for this
    job, because a publisher can register only one.
-3. Create a JSON key for it and download the file.
+3. Create a JSON key for it and download the file. **This is refused under an organisation**,
+   with `iam.disableServiceAccountKeyCreation`: Google enforces it on new organisations by
+   default, and a key that cannot expire is what the constraint exists to stop. Override it on
+   that one project (Organisation policies, the constraint, Manage policy, the project as the
+   resource, Override parent's policy, a rule with enforcement Off), take the key, then put it
+   back: re-enforcing does not invalidate a key that already exists. Note there are two
+   constraints of that name, `iam.disableServiceAccountKeyCreation` and
+   `iam.managed.disableServiceAccountKeyCreation`, with the same display name and evaluated
+   concurrently, so turning off whichever is not the one in force changes nothing. A personal
+   Google account belongs to no organisation and has none of this.
 4. In the dashboard, under Account, paste the service account's **generated address**,
    `name@project-id.iam.gserviceaccount.com` rather than a Gmail address, into **Service account**.
 5. `gh secret set CHROME_SERVICE_ACCOUNT_KEY < the-key-file.json`, and
