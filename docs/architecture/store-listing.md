@@ -244,9 +244,9 @@ transferred to determine creditworthiness or for lending.
 ## The screenshots
 
 `task store:screenshots` renders five 1280×800 PNGs into `apps/extension/store/screenshots`.
-Three are rendered from the real components through the same component harness the IWFT suite
-uses; two are captures of a real side panel, committed under
-`apps/extension/store/sources/`. It is a separate Playwright config,
+Four of them place a capture of a real side panel, committed under
+`apps/extension/store/sources/`; one is rendered from the real components through the same
+component harness the IWFT suite uses. It is a separate Playwright config,
 `playwright-shots.config.ts`, because these are not tests: they assert nothing, they write
 files, and CI must not run them.
 
@@ -258,62 +258,78 @@ word.
 
 | The shot | The gain | Where it comes from |
 |---|---|---|
-| `1-note` | All the info, less wait. | rendered: a sample note in the panel |
-| `2-playlist` | Point it at a whole playlist. | capture: a real 204-video playlist |
+| `1-note` | All the info, less wait. | capture: a note in the panel |
+| `2-playlist` | Point it at a whole playlist. | capture: a real 26-video playlist, previewed |
 | `3-time-saved` | Get your evenings back. | rendered: the web app at the one-hour milestone |
-| `4-assistant` | Your whole library, one question away. | rendered: Settings › Connections, with a drawn conversation |
+| `4-assistant` | Your whole library, one question away. | capture: Settings › Connections, with a drawn conversation beside it |
 | `5-cooking` | Cook without the scrolling. | capture: cooking mode, mid-recipe |
 
-**Why two are captures and not renders.** Cooking mode's controls sit below the dialog's own
-box (`.content` is `min-height: 100%` plus its padding), so at this canvas's 800px the panel
-cannot show the screen whole at any size, because a real side panel is taller. Its narration state,
-"Waiting for you" and "Say it again", also needs the TTS pool, which the harness cannot
-reach. The playlist preview's numbers are the whole point of that shot, and only a real
-playlist has 205 videos, one skipped and 6.1 million tokens against them. Both are placed in
-the same window as the rendered shots by `panelFrom`, at their own aspect, with a 12px radius
-so a captured rectangle does not read as pasted onto a soft-cornered window.
+**Why the panel is captured and not rendered.** A render here is taken at the harness's
+viewport, and the panel's layout is driven by media queries that read that viewport, not the
+element: `ReaderMasthead.module.scss` re-grids to `"back menu" / "head head" /
+"actions actions"` below `61.9375rem`. Shrinking `#root` to 420px inside a 1280px window
+therefore lays the panel out as the desktop app, and the first set of rendered shots put the
+Listen and favourite controls in a place that exists in no install. A capture cannot drift
+that way. `3-time-saved` stays a render because it is the wide web app at a wide viewport, so
+there is no mismatch to get wrong.
 
-**The content is the house account's samples**, fetched from `GET /api/samples` and committed
-as `packages/app-core/playwright/store/sampleNotes.json`. That is the same set Start offers
-and the home page shows (`docs/features/onboarding.md`, "Try a sample"), which settles the
-question a store screenshot otherwise raises: invented notes would put made-up judgements in
-front of real-sounding channel names. `task store:samples` refreshes the file; committing it
-keeps the shots identical between runs.
+Two things are also only reachable in a real install. Cooking mode's narration state,
+"Waiting for you" and "Say it again", needs the TTS pool. And a playlist preview's numbers
+are the whole point of that shot: only a real playlist has 26 videos and 780,000 tokens
+against them.
+
+**All four captures are placed at one height, not one width.** `CAPTURE_HEIGHT` is 700px,
+centred in the window below the title bar, and each capture's width follows from its own
+aspect, so the four come out within about two pixels of each other. The right edge is the
+fixed one, which puts that difference against the abstracted page, where nothing lines up
+with it anyway. A 12px radius keeps a captured rectangle from reading as pasted onto a
+soft-cornered window.
+
+**A capture taken by hand catches the dimmed browser behind the panel**, a line or two of
+near-black down one edge, which reads as a hairline fault once the capture is set into the
+window. `panelFrom` trims whole rows and columns of that grey off every capture before
+placing it, up to `EDGE_TRIM_LIMIT`. The sources stay exactly what came off the machine, and
+the next capture needs no cropping either.
+
+**What is in them.** The four captures are notes from the author's own library, each of a
+public video, article or recipe. `3-time-saved` is the house account's samples, fetched from
+`GET /api/samples` and committed as `packages/app-core/playwright/store/sampleNotes.json`:
+the same set Start offers and the home page shows (`docs/features/onboarding.md`, "Try a
+sample"), which settles the question a rendered screenshot otherwise raises, because invented
+notes would put made-up judgements in front of real-sounding channel names. `task
+store:samples` refreshes the file; committing it keeps that shot identical between runs.
 
 **One window for all five**, at one height and one position, so the frame does not jump as the
-listing is scrolled through. Its height is the one the real captures come at.
+listing is scrolled through.
 
 Three departures from what a reader would see, recorded here because a store screenshot that
 misleads is a rejection:
 
-- **The player bar is hidden** in the rendered note shots. Narration needs the TTS pool, so
-  the bar reads "Read-along · no audio", true in the harness and false in a real install.
-  Showing a bar that says the product has no sound would be the misleading option.
 - **The page behind the panel is an abstraction**: a title bar and soft grey blocks, carrying
   no site's name, mark or layout. A mocked-up YouTube page would be a picture of YouTube,
   which the store's policies treat as someone else's branding.
 - **The conversation in `4-assistant` is drawn**, in onboarding's own bubble styling
-  (`OnboardingSlide.module.scss`), citing two notes that really are in the library the other
-  shots are taken from. The capability is real and shipping (`docs/features/mcp-connector.md`);
-  the assistant's own interface is not ours to photograph, and imitating one would be passing
-  off.
+  (`OnboardingSlide.module.scss`). It names two notes by title, and those titles are read out
+  of `sampleNotes.json` rather than written into the shot, so refreshing the samples and
+  dropping either one fails that shot instead of citing a note nobody has. The capability is
+  real and shipping (`docs/features/mcp-connector.md`); the assistant's own interface is not
+  ours to photograph, and imitating one would be passing off.
+- **`4-assistant`'s chat pane does not fade** where the grey blocks do. The blocks are a page
+  carrying on past the window, so they fade out; a conversation is the whole of what it is,
+  and a faded last line reads as a rendering fault.
 
-Nothing inside a panel is scaled, recoloured or re-laid-out. The fonts are pulled from Google
-Fonts in the rendered shots, because the app's `@font-face` rules ship in the extension's
-`public/fonts.css`, which the harness never loads; they are the same two families
+Nothing inside a panel is scaled unevenly, recoloured or re-laid-out. The fonts in the
+rendered shot are pulled from Google Fonts, because the app's `@font-face` rules ship in the
+extension's `public/fonts.css`, which the harness never loads; they are the same two families
 `tokens.scss` names.
 
-**One line of `2-playlist` is painted out**, and it is the fourth departure: the playlist's
-owner, a named individual. The playlist is public and the capture is factual, which is why it
-was preferred to an invented one, but public is not the same as theirs to advertise with, and
-a person's name on a commercial listing can read as an endorsement they never gave. `soften`
-in `panelFrom` covers that one line in the panel's own ground. Nothing else is touched: every
-count, label and control in the shot is the capture's own, so no claim the screenshot makes
-has changed.
-
-Blurring it was tried first and looked worse: a grey smudge under the title reads as a fault,
-and it draws the eye to what was hidden. An organisation's playlist would need no edit at all:
-the right of publicity and the personal-data question both attach to people, not companies.
+**`1-note` names a creator**, the channel the video is from, with the verdict the product gave
+it. The video is public, the capture is factual, and the channel name is there because the
+product shows it on every note: a listing shot that hid it would be showing a screen the
+product does not have. The verdict is a judgement about how well covered the video's subject
+already is, not about the person. An earlier `2-playlist` capture was replaced for the
+narrower version of this: it was one individual's playlist, where the name carried no product
+meaning and read as an endorsement nobody gave. The replacement is an institution's.
 
 ## The icon and the promo tile
 

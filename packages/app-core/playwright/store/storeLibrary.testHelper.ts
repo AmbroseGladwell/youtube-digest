@@ -37,12 +37,11 @@ const titled = (fragment: string): OverviewRecord => {
   return found;
 };
 
-// The notes the shots name, each picked for what it carries rather than what it is about: a
-// verdict with somewhere to go and three steps under How to apply, and the one note whose
-// creator is selling something.
-export const theNote = (): OverviewRecord => titled("Compound Interest");
+// The two notes the assistant shot's conversation names. They are quoted as titles rather
+// than rendered, so looking them up is what keeps the quote true: refresh the samples and
+// drop either one, and that shot fails rather than citing a note nobody has.
 export const theSellingNote = (): OverviewRecord => titled("AI Operating System");
-export const theRecipe = (): OverviewRecord => titled("Caribbean chicken");
+export const theDataNote = (): OverviewRecord => titled("software engineering is changing");
 
 // Most of them are read, so the running total is a figure worth showing rather than the few
 // minutes two notes come to (docs/features/time-saved.md).
