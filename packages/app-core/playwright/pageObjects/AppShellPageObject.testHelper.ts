@@ -301,6 +301,11 @@ export class AppShellPageObject extends PageObject {
   clickNewOverview = () =>
     this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
 
+  verifyNewOverviewHasFocus = () =>
+    this.step("verifyNewOverviewHasFocus", () =>
+      expect(this.get(appShellTestIds.newOverviewButton)).toBeFocused(),
+    );
+
   openNewOverview = (): Promise<NewOverviewDialogPageObject> =>
     this.step("openNewOverview", async () => {
       await this.clickNewOverview();
