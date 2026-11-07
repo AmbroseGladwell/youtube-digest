@@ -46,17 +46,17 @@ test("a panel open on something that isn't a video says which page it wants inst
   await capture.verifySaysThereIsNoVideo();
 });
 
-test("without keys the panel asks for them rather than offering a button that would fail", async ({
+// DECISIONS.md, OV-205: home's "a key missing" face is gone. A reader with no key of their
+// own still makes overviews on ours, so in a build with a server it never showed; only the
+// at-limit message routes to keys now. Create stays disabled where nothing can make one,
+// which is a shell with no server and no key — this one.
+test("without keys or a server the panel offers no button that would fail, and asks for nothing", async ({
   launcher,
 }) => {
   const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
 
   await capture.verifyOffersToCreate(false);
-  await capture.verifyAsksForKeys(true);
-
-  const settings = await capture.openKeysSettings();
-  await settings.verifyListIsShown(false);
-  await settings.clickBackToSettings();
+  await capture.verifyAsksForKeys(false);
 });
 
 test("creating turns the whole panel into the run, which reports the same steps the dialog does", async ({
@@ -167,13 +167,13 @@ test("the panel creates with the Anthropic key alone, and asks for no transcript
   await capture.verifyOffersToCreate(true);
 });
 
-test("the panel still asks when it is the Anthropic key that is missing", async ({ launcher }) => {
+test("the panel offers nothing when the Anthropic key is missing, and still asks for nothing", async ({ launcher }) => {
   const capture = await launcher.launchPanel({
     apiKeys: NO_KEYS,
     activeVideoUrl: WATCHED_URL,
     youTubeFetch: true,
   });
 
-  await capture.verifyAsksForKeys(true);
+  await capture.verifyAsksForKeys(false);
   await capture.verifyOffersToCreate(false);
 });

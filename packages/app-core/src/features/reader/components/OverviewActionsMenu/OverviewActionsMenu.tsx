@@ -195,7 +195,10 @@ export function OverviewActionsMenu({
               {recipe !== null ? "Copy recipe link" : isArticle ? "Copy article link" : "Copy YouTube link"}
             </button>
           )}
-          {compact ? (
+          {/* Design 6h: only the panel has a web app elsewhere to open the note in, and
+              design 205b-2 ends the panel's menu with Delete as the phone's does, so in the
+              panel both are here and Delete is last either way. */}
+          {compact &&
             webApp !== null &&
             ("href" in webApp ? (
               <a
@@ -222,18 +225,16 @@ export function OverviewActionsMenu({
                   {webApp.reason}
                 </span>
               </button>
-            ))
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              className={`${styles.item} ${styles.itemDanger}`}
-              onClick={choose("delete", onDelete)}
-              data-testid={overviewActionsMenuTestIds.deleteItem}
-            >
-              Delete overview
-            </button>
-          )}
+            ))}
+          <button
+            type="button"
+            role="menuitem"
+            className={`${styles.item} ${styles.itemDanger}`}
+            onClick={choose("delete", onDelete)}
+            data-testid={overviewActionsMenuTestIds.deleteItem}
+          >
+            Delete overview
+          </button>
         </div>
       )}
     </div>
