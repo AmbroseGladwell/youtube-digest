@@ -83,6 +83,19 @@ The section order of "What every overview holds" is the reader's own
 can be bought yet. Podcasts and PDFs are left out, though the product's own onboarding calls
 them coming: an unshipped capability on a store page is a rejection risk.
 
+**Naming the six providers got the listing rejected.** The first submission of 0.4.2 said
+"Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral", and the store called it
+"excessive keywords in the item's description" under Spam and placement in the Store
+(violation reference Yellow Argon, 7 November 2026). The list was accurate, and accuracy is
+not the test: six company names in a row reads as keyword stuffing whatever they are there
+for. The copy now says a key is yours and points at settings for which providers take one,
+and the list lives on the site instead, where no policy governs it.
+
+A single brand name used for what it actually integrates with is a different thing, and
+"Connect Claude or another MCP assistant" was not flagged. It stays, because naming the
+assistant is how a reader knows the connector will work for them. If a later review disagrees,
+"Connect your AI assistant" says the same thing and loses nothing but the recognition.
+
 **There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
 an account sees no overviews at all, so the copy offers an account from the start and the
 privacy line says what an account actually costs: an email address, no password, no name
@@ -149,9 +162,9 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 >
 > ➤ Bring your own key, and it stays yours
 >
-> Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral and it is stored on your
-> device and sent straight to that provider, never through our servers. There is a setting
-> that says "only ever use my key", and it is obeyed.
+> Add your own AI provider key and it is stored on your device and sent straight to that
+> provider, never through our servers. The providers you can use are listed in the extension's
+> settings. There is a setting that says "only ever use my key", and it is obeyed.
 >
 > ➤ Privacy
 >
