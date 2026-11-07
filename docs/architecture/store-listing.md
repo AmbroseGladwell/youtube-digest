@@ -185,31 +185,50 @@ because what leaves the device is disclosed twice over, in the data-usage form a
 The one justification that reaches past the package is `unlimitedStorage`, which says the
 library also syncs: without it the sentence implies the device holds the only copy.
 
-**Say what the code does, not what sounds tidy.** Five of these said more than was true in
-their first draft, and the manifest or the source contradicts each: the panel is not the only
-surface, because `options_ui` registers `app.html`; `tabs` does look at tabs the reader has
-not asked about, because the worker queries every YouTube watch tab by URL; "nothing is
-kept on a server unless the reader signs in" is vacuous now that an account is needed to make
-an overview at all; pressing the toolbar button grants nothing, because the action has no
-`onClicked` handler and only opens the panel through `setPanelBehavior`, so `activeTab` comes
-from the menu click alone; and the menu item is "Create an overview of this page" on the page
-context, not "The Overview" on pages and links. A reviewer reads the manifest beside the
-justification.
+**Say what the code does, not what sounds tidy.** Every one of these said more than was true
+in some draft, and the manifest or the source contradicts each. A reviewer reads the manifest
+beside the justification, so each is written from the code and checked against it again
+before the listing is submitted:
+
+- The panel is not the only surface: `options_ui` registers `app.html`.
+- The panel is not where the library is searched: `HomePage` is the library everywhere but
+  the panel, where it is the one video or page the panel sits beside.
+- `tabs` does look at tabs the reader has not asked about, because the worker queries every
+  YouTube watch tab by URL, and it does one thing to a tab rather than read it, because
+  `chromeArticlePages.reload` reloads one.
+- `scripting` injects three things, not two: `articleReader.js`, `reportPlayback` and
+  `seekPlayback`. The last moves the video, which "reads the player's position" hid.
+- `chrome.storage.session` holds four keys, not one: `pending-request`, `pending-page`,
+  `latest-report` and `error-destination`. "One pending request" and "nothing else is kept in
+  it" were both false, and `latest-report` outlives the panel opening.
+- Narration audio is not on the device at all. It is on R2 behind the API
+  (`docs/features/tts-pre-rendered-speech.md`), so `unlimitedStorage` is for the transcripts,
+  which are the large part.
+- "Nothing is kept on a server unless the reader signs in" is vacuous now that an account is
+  needed to make an overview at all.
+- Pressing the toolbar button grants nothing: the action has no `onClicked` handler and only
+  opens the panel through `setPanelBehavior`, so `activeTab` comes from the menu click alone.
+- The menu item is "Create an overview of this page" on the page context, not "The Overview"
+  on pages and links.
+- The content script matches `www.youtube.com` only, so `m.youtube.com` is the captions path
+  and not the injected button.
 
 | Permission | What to paste |
 |---|---|
 | `activeTab` | The extension adds one right-click item, "Create an overview of this page". Choosing it is what grants activeTab for that tab, and that grant is the only thing that lets the extension read the page: it injects a small script into that one tab to pull out the article text, which is what the overview is written from. Nothing is read until the reader chooses the item, the access covers only the tab they right-clicked in, and it ends when that tab navigates away or closes. Without it the same right-click would have to interrupt the reader with a site access prompt first. Standing access to a site is a separate optional permission, asked for one site at a time from inside the panel, and only when the reader chooses to keep that site. |
 | `contextMenus` | The extension uses it for exactly one menu item, "Create an overview of this page", shown on the page context of any http or https page. Choosing it opens the side panel and starts an overview of the page the reader is on. That click also does two things the extension depends on: it is the user gesture Chrome requires before a side panel may be opened, and it is what grants activeTab, so the page can be read without standing access to every site. No other menu items are created. Nothing is added to selections, links, images or editable fields, and the menu does not change with what the page contains. The item is made once on install and remade on update, which is why the handler clears the old one before creating it. |
-| `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read, listened to and searched. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. |
-| `tabs` | To tell which video is in front of the reader, so the overview is about the right one and the panel follows them from video to video. The extension reads the active tab, and queries YouTube watch tabs by URL for the same purpose. This permission is used for addresses and titles only. Reading the contents of a page needs `scripting`, and happens only when the reader asks for an overview of that page. |
-| `scripting` | To inject two small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other reads the YouTube player's current position, so the transcript and the read along can follow the video while the overview is open. Neither runs on a page the reader has not opened the panel against. |
-| `storage` | The service worker keeps one pending request in `chrome.storage.session`: the address and title of the page the reader pressed the button or the context menu entry on, held only until the side panel has opened and can pick it up. Session storage is cleared when the browser closes, and nothing else is kept in it. Settings and the reader's own API key are in the panel's own `localStorage`, which needs no permission. |
-| `unlimitedStorage` | The library of overviews, with their transcripts and narration audio, is held on the device in IndexedDB, and a few hundred of them exceed the default quota. Narration audio is the largest part. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
-| `declarativeNetRequestWithHostAccess` | One rule, which removes the `Origin` header from this extension's own requests to youtube.com. YouTube answers 403 to a transcript request that carries a `chrome-extension://` origin, and `Origin` is a forbidden header that `fetch` cannot drop. The rule is scoped to requests this extension makes, to youtube.com, of type XHR, so it can never touch a call carrying the reader's API key. |
+| `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read and listened to, and where settings and the assistant connection live. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. That page is where the library of saved overviews is browsed and searched; the panel is the one video or page it sits beside. |
+| `tabs` | To tell which video or page is in front of the reader, so the overview is about the right one and the panel follows them from tab to tab. The extension reads the active tab, and queries YouTube watch tabs by URL so the button it injects into each can show the right state. Addresses and titles are all it takes from a tab. The one thing it does to a tab rather than read from it is reload it, offered only when an article could not be read and a reload is the remedy, and only when the reader presses that button. Reading the contents of a page needs the scripting permission below, and happens only when the reader asks for an overview of that page. |
+| `scripting` | To inject three small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other two work with the YouTube player while the panel is open beside it: one reports the player's current position, so the transcript and the read along follow the video, and one moves the video to a position when the reader taps a timestamp in the panel. None of them runs on a tab the reader has not opened the panel against or asked for an overview of. |
+| `storage` | Only chrome.storage.session, which is held in memory and gone when the browser closes. Four short-lived things go in it. The address of a video, or the address, title and tab id of a page, that the reader pressed the button or the context menu entry on, each removed as soon as the side panel has picked it up. The current run's progress, so the button injected into a YouTube page can show the right state, removed when that run is cleared. And, for a signed-in reader, the API address and session token the service worker posts error reports to. Nothing else is kept in it. Settings and the reader's own API key are in the panel's own localStorage, which needs no permission. |
+| `unlimitedStorage` | The library of overviews is held on the device in IndexedDB, along with the full transcript of every video an overview was written from. The transcripts are the large part: one long video's transcript dwarfs the overview written from it, and a few hundred of them exceed the default quota. Narration audio is not kept here, and is streamed from the account's API when the reader presses Listen. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
+| `declarativeNetRequestWithHostAccess` | One rule, which removes the Origin header from this extension's own requests to youtube.com. YouTube answers 403 to a player call carrying a chrome-extension origin, which is where captions come from, and Origin is a forbidden header that fetch() cannot remove itself. The rule is scoped three ways: to requests this extension initiates, to youtube.com, and to XHR. It cannot affect any other request, including calls that carry the reader's own API key. |
 
 **Host permissions**, `https://www.youtube.com/*` and `https://m.youtube.com/*`: to read the
-watch page the reader is on and fetch that video's captions, which is the text every note is
-written from.
+watch page the reader is on and fetch that video's captions, which is the text every overview
+is written from. On `www.youtube.com` a content script also places The Overview button in
+YouTube's own action row; the mobile host is for the captions path only, which is why the
+content script does not match it.
 
 **Optional host permissions**, asked for only when the reader chooses the thing that needs
 them, and never at install:
