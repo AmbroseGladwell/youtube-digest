@@ -1,6 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { sampleDeckTestIds } from "../../src/features/onboarding/components/SampleDeck/SampleDeckTestIds.js";
-import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 // Web Start's sample deck (155l): one card in front, cycling, and See all to lay it out as a list.
@@ -24,11 +23,6 @@ export class SampleDeckPageObject extends PageObject {
       await expect(this.#cards()).toHaveCount(count);
       await expect(this.page.locator(`[data-testid="${sampleDeckTestIds.card}"][tabindex="0"]`)).toHaveCount(1);
     });
-
-  verifyHeadlineReads = (verb: string) =>
-    this.step(`verifyHeadlineReads ${verb}`, () =>
-      expect(this.page.getByTestId(homePageTestIds.heroTitle)).toHaveText(new RegExp(`^${verb}\\s*with The Overview$`)),
-    );
 
   next = () => this.step("next", () => this.click(sampleDeckTestIds.next));
 

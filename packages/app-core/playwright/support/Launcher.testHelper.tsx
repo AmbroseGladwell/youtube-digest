@@ -18,6 +18,7 @@ import { ConsentPageObject } from "../pageObjects/ConsentPageObject.testHelper.j
 import { CapturePageObject } from "../pageObjects/CapturePageObject.testHelper.js";
 import { ErrorStatePageObject } from "../pageObjects/ErrorStatePageObject.testHelper.js";
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
+import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
 import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
 import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
 import { MiniPlayerPageObject } from "../pageObjects/MiniPlayerPageObject.testHelper.js";
@@ -40,8 +41,6 @@ import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHe
 import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
 import { SampleDeckPageObject } from "../pageObjects/SampleDeckPageObject.testHelper.js";
 import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
-import { PanelStartPageObject } from "../pageObjects/PanelStartPageObject.testHelper.js";
-import { panelStartTestIds } from "../../src/features/onboarding/components/PanelStart/PanelStartTestIds.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
 import { HowToApplyFlipPageObject } from "../pageObjects/HowToApplyFlipPageObject.testHelper.js";
 import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.testHelper.js";
@@ -113,11 +112,11 @@ export class Launcher {
     test.step("Launcher.launchPanel", async () => {
       await this.mountApp({ ...options, layout: "panel", surface: options.surface ?? "extension" });
       const capture = new CapturePageObject(this.testContext);
-      // Signed out, the panel's home is onboarding's Start, or once the device has had an
-      // account, the way back into it (designs 46n and 46q).
+      // Signed out, the panel's home is the web's Start compressed, or once the device has
+      // had an account, the way back into it (designs 205g and 46q).
       if (options.sync === true && !options.syncConnection?.apiUrl) {
         await expect(
-          this.page.getByTestId(panelStartTestIds.root).or(this.page.getByTestId(signedOutGateTestIds.root)),
+          this.page.getByTestId(homePageTestIds.hero).or(this.page.getByTestId(signedOutGateTestIds.root)),
         ).toBeVisible();
         return capture;
       }
@@ -338,10 +337,6 @@ export class Launcher {
 
   get firstOverviewMilestone(): FirstOverviewMilestonePageObject {
     return new FirstOverviewMilestonePageObject(this.testContext);
-  }
-
-  get panelStart(): PanelStartPageObject {
-    return new PanelStartPageObject(this.testContext);
   }
 
   // From Start through a sample to onboarding's account screen, where the create-account form is.

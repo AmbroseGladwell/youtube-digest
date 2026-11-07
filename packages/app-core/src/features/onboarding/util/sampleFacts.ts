@@ -3,7 +3,9 @@ import { articleReadMinutes, formatClock, recipeMinutes, sourceName, type Shared
 export type SampleKind = "video" | "article" | "recipe";
 
 const KIND_LABEL: Record<SampleKind, string> = { video: "Video", article: "Article", recipe: "Recipe" };
-const VERB: Record<SampleKind, string> = { video: "Watch Less,", article: "Learn More,", recipe: "Cook More," };
+// Start's headline verb for a kind, wherever the kind comes from: the deck's front card
+// (155l), or in the panel what the tab holds (205g-2, 205g-3).
+export const START_VERB: Record<SampleKind, string> = { video: "Watch Less,", article: "Learn More,", recipe: "Cook More," };
 
 export const sampleKindOf = (note: SharedNote): SampleKind =>
   note.source.kind === "youtube" ? "video" : note.recipe ? "recipe" : "article";
@@ -36,11 +38,11 @@ export function sampleFacts(note: SharedNote): SampleFacts {
     kindLabel: KIND_LABEL[kind],
     source: sourceName(note.source),
     length,
-    verb: VERB[kind],
+    verb: START_VERB[kind],
     name: [note.source.title, KIND_LABEL[kind], length].filter(Boolean).join(", "),
     first: note.recipe ? { label: "Summary", text: note.recipe.summary } : { label: "Premise", text: note.inOneLine },
     sections: kind === "recipe" ? ["Ingredients", "Method"] : ["Key points", "How to apply", "Verdict"],
   };
 }
 
-export const DEFAULT_START_VERB = VERB.video;
+export const DEFAULT_START_VERB = START_VERB.video;
