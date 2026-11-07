@@ -95,9 +95,10 @@ and the list lives on the site instead, where no policy governs it.
 list, and "Connect Claude or another MCP assistant" would probably have survived, since naming
 what a connector connects to is description rather than stuffing. It went anyway: a second
 rejection costs days, the protocol's name carries the meaning without the brand's, and a
-listing that names nobody cannot be read as naming people for reach. The only platform left in
-the copy is Chrome itself, in "synced between Chrome and the web app", which is the store the
-page is on.
+listing that names nobody cannot be read as naming people for reach. Chrome went too, from
+"synced between Chrome and the web app": on a Chrome listing the browser is a given, and
+"between the extension and the web app" names the two things the reader actually holds rather
+than one of them twice. No company appears in the description.
 
 **There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
 an account sees no overviews at all, so the copy offers an account from the start and the
@@ -160,7 +161,7 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > Free, with an account:
 >
 > • 5 overviews a month written on us, or 10 a month on your own AI API key
-> • Your library synced between Chrome and the web app at theoverviewapp.com
+> • Your library synced between the extension and the web app at theoverviewapp.com
 > • Narration in any of the voices, and your library open to your AI assistant
 >
 > ➤ Bring your own key, and it stays yours
