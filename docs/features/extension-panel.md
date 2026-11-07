@@ -44,14 +44,18 @@ claim even when the same shell happens to supply both.
 Signed in, that is. Signed out, the panel's home is onboarding's Start, or on a device that
 has had an account the way back into it (`onboarding.md`, "In the extension panel").
 
-**Opening (15a).** The masthead is the mark and `Settings` — no `+ New`, no nav. Below
-it, the offer: the headline, the standfirst, and one action. `Create overview` is live
-when there is a video in front of the panel and both keys are set; it is disabled with
-the reason underneath when there is not. A dead control normally violates `CLAUDE.md`'s
-degrade-visibly rule, and this one is the exception the rule allows: the button is the
-page's only subject, so removing it would leave a page about nothing, and the line under
-it says exactly what is missing. Where the missing thing is the keys, the panel says so
-and links to Settings, the same way the empty library hero does.
+**Opening (15a, then 205a and 205f).** The masthead is the brand slot, `+ New` and the
+account menu — the phone's bar, and still no nav. Below it, what the tab holds: one offer
+card giving "Source · Kind" and the title for a video and a page alike, then `Create
+overview` and what is left this month. No headline and no standfirst while there is
+something to take; with nothing on the tab they come back, with Recent under them.
+
+`Create overview` is live when there is something in front of the panel and an overview
+can be made of it — which needs either a key of the reader's or a server to make it on,
+so a reader with no key of their own is ready anyway. It is disabled where neither is
+there, which in practice is an unpacked build. Nothing says why any more: 205f-3 took the
+keys note out, having judged the state unreachable in a build with a server, and the
+at-limit message is the panel's only route to API keys now.
 
 **Working (15b).** The whole page becomes the run. It is the same numbered progress list
 the dialog shows, because it is literally the same component: `GenerationSteps` was
@@ -96,9 +100,13 @@ already running, which is design 17d — `docs/features/injected-button.md`.
 ## One slot, one way out
 
 OV-205, designs 205a–205h and 205w. The panel's places are home — the tab in front of it —
-and everywhere a reader can go from there: a note, settings, a section of settings, a legal
-page. Before this, only settings and a section said how to leave, each in its own words, and
-the note said nothing at all: the mark in the bar went home but nothing told anyone so.
+and everywhere a reader can go from there: a note, settings, a section of settings. The
+queue is not in the extension, and the policy pages open in the web app rather than here
+(`PolicyLinks` and `AccountTermsLine` build their address from `useKnownApiUrl`, which is
+the server this build was made for whether or not anyone is signed in), so neither is a
+panel place and neither lends a link. Before this, only settings and a section said how to
+leave, each in its own words, and the note said nothing at all: the mark in the bar went
+home but nothing told anyone so.
 
 **The way back is named after home, and home is the tab.** `useHomeName` answers
 `This video`, `This page` or `Home` from `useActiveVideoUrl` and `useActivePage`, reusing
@@ -223,6 +231,12 @@ A shell that cannot sync at all has no web app to open, so the item is not there
   way would leave the window. Sticking the panel's head also gave it a stacking context,
   which the menu cannot escape however high its own z-index goes, so the head outranks
   the tab strip rather than the menu trying to.
+- **The panel's ⋯ ends with `Delete overview`, after `Open in web app`.** 205b-2 draws the
+  panel's menu in the phone's order, ending in Delete, and does not draw 6h's `Open in web
+  app` at all. Both are kept: 6h's reasoning — the panel is the one surface where the web
+  app is somewhere else — is untouched by OV-205, and the panel had no way to delete a note
+  before this. Delete is last either way, as the design has it.
+
 - **`Mark read` left the panel's head again.** 34v had put it beside `Listen`, because
   reading the note in front of the video is the one time saved the panel can see. 205b
   moves it where the phone keeps it: in the `⋯` menu, and with `Favourite` at the note's
@@ -230,8 +244,12 @@ A shell that cannot sync at all has no web app to open, so the item is not there
   `Favourite` beside it, and keeps its panel job of docking the player at the foot of the
   window rather than reading the note where it stands.
 - **The keys block has gone from home entirely.** It used to show when a key was missing.
-  205f-3 removes it: a reader without a key of their own still makes overviews on ours, so
-  it was a paragraph about a problem they do not have.
+  205f-3 removes it: `GenerationReadiness.ourKeyUsable` needs only a server that makes
+  overviews, so in any build with one a reader without a key of their own is ready anyway
+  and the block was a paragraph about a problem they do not have. `Create overview` is
+  still disabled where nothing can make one — a shell with no server and no key, which is
+  an unpacked build — and the at-limit message is now the only route to API keys from the
+  panel.
 - **The design names `--motion-state` for the hand-off's "about 320ms".** The token is
   120ms. OV-167 already made that call for the phone and the panel reuses its stylesheet,
   so the base duration is `--motion-arrive` (300ms), unchanged.

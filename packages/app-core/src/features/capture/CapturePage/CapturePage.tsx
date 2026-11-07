@@ -6,8 +6,6 @@ import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { useActivePage, useArticlePages } from "../../../app/ArticlePagesContext.js";
 import { isOfferedPage } from "../../../app/isOfferedPage.js";
-import { BYO_KEY_NOTE } from "../../apiKeys/byoKeyNote.js";
-import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
@@ -288,17 +286,6 @@ export function CapturePage() {
         )}
 
         {nothingToTake && <RecentOverviews entries={overviewsQuery.data ?? []} />}
-
-        {/* 205f-3 would have this gone, on the grounds that a reader without a key of
-            their own still makes overviews on ours. That holds only where there is a
-            server to make them on: with neither, Create is dead and nothing would say
-            why, which is the one thing CLAUDE.md's degrade-visibly rule will not have.
-            So it stays, and shows exactly when generation is impossible. */}
-        {!keysReady && limit === null && (
-          <div className={styles.keys} data-testid={capturePageTestIds.keysNote}>
-            <KeyPromptNote testIds={capturePageTestIds.keyPrompt} readiness={readiness} detail={BYO_KEY_NOTE} from="panel" />
-          </div>
-        )}
 
         <div className={styles.milestones}>
           <MilestoneStack
