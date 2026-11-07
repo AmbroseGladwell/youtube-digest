@@ -120,6 +120,8 @@
 .panelActions {
   margin-left: auto;
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .pane {
@@ -143,7 +145,9 @@
     padding: 0.75rem 1.25rem;
   }
 
-  .newOverviewButton {
+  // The touch target belongs to the full layout's bar. The panel is narrower than this at
+  // any width Chrome is dragged to, and is a pointer surface, so it keeps the web's button.
+  .actions .newOverviewButton {
     min-height: 2.75rem;
     padding-inline: 1rem;
   }

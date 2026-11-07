@@ -18,6 +18,26 @@ test("the side panel's masthead is the mark and Settings, with no + New and no l
   await launcher.appShell.verifyIsParedBackToThePanel();
 });
 
+// The panel is narrower than the touch breakpoint at any width Chrome is dragged to, but it
+// is a pointer surface, so its bar is the web's and not the phone's.
+test("the panel's + New is the web's button, with the web's gap to the account menu", async ({
+  launcher,
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 780 });
+  await launcher.launchPanel(panel);
+
+  await launcher.appShell.verifyNewOverviewButtonIsTheWebsSize();
+  await launcher.appShell.verifyGapToTheAccountMenuIs(8);
+});
+
+test("a phone's full layout still gets the 44px touch target", async ({ launcher, page }) => {
+  await page.setViewportSize({ width: 390, height: 780 });
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  await launcher.appShell.verifyNewOverviewButtonIsTheTouchTarget();
+});
+
 test("the extension's own full page is still the library, with all of that chrome", async ({
   launcher,
 }) => {
