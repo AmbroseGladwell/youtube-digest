@@ -1,6 +1,11 @@
 # Open questions
 
-Ordered by how much they matter. Each has evidence attached, because several of these look like small decisions and are not.
+Each has evidence attached, because several of these look like small decisions and are not.
+
+The order was by how much each matters, and the numbers are now fixed, because other docs cite
+them (`cost-model.md` opens on #2). New questions are appended rather than slotted in. **#6, added
+7 Nov 2026, outranks every other question here:** it is about what an overview is for, and the
+answer moves #1 and #4 with it.
 
 ## 1. The verdict scale does not discriminate
 
@@ -45,3 +50,66 @@ Two harder questions are untested. A verdict is only useful if the reader believ
 ## 5. Speech
 
 Designed and measured, not built. See `tts-pre-rendered-speech.md`. The open choices are which voice, which audio format, whether to backfill existing notes at roughly 90 seconds of CPU each, and where the audio lives. Everything else about it is settled and proven on one real note.
+
+## 6. Is an overview triage, or is it comprehension?
+
+**Answered by the owner on 7 Nov 2026: comprehension, with the triage kept inside it.** The
+reasoning is that the product is becoming a knowledge and context layer, and a triage note is
+not enough context to be worth carrying into a conversation six months later. The verdict is
+not dropped and is not demoted: it stays part of every overview, and
+`docs/architecture/product-direction.md` argues it is worth more in a context layer than it
+ever was in a reader.
+
+What that settles, and what it does not:
+
+- **It settles the budget argument.** When a long source makes coverage and brevity compete,
+  coverage wins. OV-87 and OV-203 are raising their key-point ceilings in the right direction,
+  and `coreSection.ts`'s "seven is the ceiling however long the video is" was a cost decision
+  that has now been overtaken. Change it deliberately and record why.
+- **It ungates OV-216**, the evidence and quotations card, which was waiting on this answer.
+- **It does not license length for its own sake.** `README.md`'s measure of success is still
+  time not spent on the original, and OV-87's open question about tone at length is still
+  open: a long note that reads clipped is a worse note, not a more complete one.
+- **It does not settle #4**, which is still the untested one underneath: whether a reader
+  believes a verdict enough to skip something on its say-so. Comprehension being the product
+  makes that question more important, not less, because the verdict now has two jobs.
+
+The question as it was first put follows.
+
+Added 7 Nov 2026, from two outside conversations the owner brought in
+(`docs/reference/chatgpt-overview-quality-and-context.md`,
+`docs/reference/gemini-longform-podcast-pipeline.md`). The comparison, the costs and what
+would change are in `docs/architecture/overview-quality.md`. This is the question itself.
+
+`README.md` says the product is **triage**: "most saved content is not worth your time, and
+you can't tell which until after you've spent it", the output "is deliberately not a summary
+... this produces a judgment", watch it anyway defaults to No, and the verdict distribution
+across a real library should be unflattering.
+
+The alternative is **comprehension**: a reader who has not consumed the original can
+accurately explain its important ideas and tell the source's claims apart from the evidence
+for them. Its first principle is the opposite of the triage one: don't miss important
+substance just to make something shorter.
+
+A two-hour podcast that repackages standard advice gets a blunt verdict and a short note
+under the first, and a six-to-ten-minute deep brief under the second.
+
+**The evidence that this is live, rather than philosophical:** the build has been drifting
+towards comprehension for a month, one good local decision at a time, without anyone saying
+so. OV-87 raises the key-point ceiling for long videos, against `coreSection.ts`'s explicit
+"seven is the ceiling however long the video is". OV-203 asks for more key points on a dense
+short article. OV-202 measures how much of a source a note covers. Articles already have
+`paragraphsInTheFinalStretch` and `chaptersTooBigToSkip`, both of which exist so a note does
+not miss parts of its source. None of those was wrong. None of them asked whether the
+ceiling was a cost decision or a product one.
+
+**What would settle it:** not an argument. #4 is the untested question underneath, and it is
+still untested: whether a reader believes a verdict enough to skip something on its say-so.
+If they do, triage is the product and length is a cost to be minimised. If they read the
+note instead of the source and want more of it, comprehension is the product and the verdict
+is a header on it.
+
+A third answer is available and should be considered before the other two: that the verdict
+is the triage layer and the key points are the comprehension layer, they already coexist,
+and the real question is only which one gets the budget when a long source makes them
+compete.
