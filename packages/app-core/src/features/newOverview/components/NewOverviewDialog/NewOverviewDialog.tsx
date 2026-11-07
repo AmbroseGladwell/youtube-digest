@@ -53,6 +53,7 @@ export function NewOverviewDialog({
   onCaptureReasonCommit,
 }: NewOverviewDialogProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
+  const returnFocusTo = useRef<HTMLElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
   const [url, setUrl] = useState("");
   const [playlist, setPlaylist] = useState<{ target: PlaylistTarget; pastedUrl: string; from: PlaylistFlowEntry } | null>(null);
@@ -73,13 +74,28 @@ export function NewOverviewDialog({
         const target = prefill !== null && playlistsAvailable ? playlistTargetOf(prefill) : null;
         setPlaylist(target === null ? null : { target, pastedUrl: prefill!, from: "home" });
       }
+      returnFocusTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       element.showModal();
     }
     if (!open && element.open) {
       element.close();
+      returnFocusTo.current = null;
       setPlaylist(null);
     }
   }, [open, activeVideoUrl, prefill]);
+
+  // The panel closes this by unmounting it, so close()'s own focus restoration never runs
+  // (docs/features/extension-panel.md, "What the panel did break is the way back out").
+  useEffect(
+    () => () => {
+      const returnTo = returnFocusTo.current;
+      returnFocusTo.current = null;
+      if (returnTo !== null && returnTo.isConnected) {
+        returnTo.focus();
+      }
+    },
+    [],
+  );
 
   const inProgress = run !== null && run.overview === null && run.error === null;
 
@@ -123,8 +139,8 @@ export function NewOverviewDialog({
       }}
       data-testid={newOverviewDialogTestIds.root}
     >
-      <div className={styles.panel}>
-        <span className={styles.handle} aria-hidden="true" />
+      <div className={styles.panel} data-testid={newOverviewDialogTestIds.panel}>
+        <span className={styles.handle} aria-hidden="true" data-testid={newOverviewDialogTestIds.handle} />
 
         {playlist !== null && run === null ? (
           <>

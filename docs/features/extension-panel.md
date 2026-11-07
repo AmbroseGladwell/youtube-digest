@@ -135,6 +135,20 @@ a second copy of a run's progress in the document — the panel's own page is wh
 watched. Starting one from the dialog closes it and returns the panel to home, which is
 where creating from the offer would have left it anyway.
 
+**Its shape is the web's own width query, and always was.** 205c-2 asks for the phone's
+sheet at panel width and the centred dialog from 768 up. `NewOverviewDialog` has drawn
+exactly that since 3a/3b. The panel is a real narrow viewport, so `@media (max-width:
+47.9375rem)` already fires in it. OV-207 added no `asSheet` prop and no `isPanel` branch:
+a second way of saying the same thing is what `handoffLive` had to be rescued from above.
+
+**What the panel did break is the way back out.** A `<dialog>` hands focus back to whatever
+opened it when `close()` runs, but the panel removes the element in the same commit that
+closes it, so there was nothing left to run and focus fell to the body. `NewOverviewDialog`
+now remembers its opener while it is open and hands focus back itself on unmount, guarded on
+the opener still being in the document, so signing out, which takes `+ New` away too,
+restores nothing. The web is untouched: there the dialog stays mounted and the browser's own
+restoration still does the work.
+
 **The wordmark is "The Overview" in the panel too.** The stone reskin had shortened it to
 "Overview" while this doc recorded the opposite as a deliberate departure; 205c settled it
 the doc's way and the code now matches. Only its size is the panel's.
