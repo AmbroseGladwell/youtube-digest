@@ -185,17 +185,21 @@ because what leaves the device is disclosed twice over, in the data-usage form a
 The one justification that reaches past the package is `unlimitedStorage`, which says the
 library also syncs: without it the sentence implies the device holds the only copy.
 
-**Say what the code does, not what sounds tidy.** Three of these said more than was true in
+**Say what the code does, not what sounds tidy.** Five of these said more than was true in
 their first draft, and the manifest or the source contradicts each: the panel is not the only
 surface, because `options_ui` registers `app.html`; `tabs` does look at tabs the reader has
-not asked about, because the worker queries every YouTube watch tab by URL; and "nothing is
+not asked about, because the worker queries every YouTube watch tab by URL; "nothing is
 kept on a server unless the reader signs in" is vacuous now that an account is needed to make
-an overview at all. A reviewer reads the manifest beside the justification.
+an overview at all; pressing the toolbar button grants nothing, because the action has no
+`onClicked` handler and only opens the panel through `setPanelBehavior`, so `activeTab` comes
+from the menu click alone; and the menu item is "Create an overview of this page" on the page
+context, not "The Overview" on pages and links. A reviewer reads the manifest beside the
+justification.
 
 | Permission | What to paste |
 |---|---|
-| `activeTab` | Pressing the toolbar button or the context-menu entry is what grants access to the tab the reader is on, which is how the extension reads the page it is being asked about without standing access to every site. |
-| `contextMenus` | Adds one right-click entry, "The Overview", which opens the side panel on the page or link the reader right-clicked. |
+| `activeTab` | The extension adds one right-click item, "Create an overview of this page". Choosing it is what grants activeTab for that tab, and that grant is the only thing that lets the extension read the page: it injects a small script into that one tab to pull out the article text, which is what the overview is written from. Nothing is read until the reader chooses the item, the access covers only the tab they right-clicked in, and it ends when that tab navigates away or closes. Without it the same right-click would have to interrupt the reader with a site access prompt first. Standing access to a site is a separate optional permission, asked for one site at a time from inside the panel, and only when the reader chooses to keep that site. |
+| `contextMenus` | The extension uses it for exactly one menu item, "Create an overview of this page", shown on the page context of any http or https page. Choosing it opens the side panel and starts an overview of the page the reader is on. That click also does two things the extension depends on: it is the user gesture Chrome requires before a side panel may be opened, and it is what grants activeTab, so the page can be read without standing access to every site. No other menu items are created. Nothing is added to selections, links, images or editable fields, and the menu does not change with what the page contains. The item is made once on install and remade on update, which is why the handler clears the old one before creating it. |
 | `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read, listened to and searched. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. |
 | `tabs` | To tell which video is in front of the reader, so the overview is about the right one and the panel follows them from video to video. The extension reads the active tab, and queries YouTube watch tabs by URL for the same purpose. This permission is used for addresses and titles only. Reading the contents of a page needs `scripting`, and happens only when the reader asks for an overview of that page. |
 | `scripting` | To inject two small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other reads the YouTube player's current position, so the transcript and the read along can follow the video while the overview is open. Neither runs on a page the reader has not opened the panel against. |
