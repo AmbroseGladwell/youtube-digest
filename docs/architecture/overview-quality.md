@@ -285,8 +285,26 @@ answers what OV-216 left open: not every key point gets evidence. The budget bel
 dial as everything else (OV-87), and the quotations go where the claim would otherwise have to be
 taken on trust.
 
+**Where the quotation lives, decided 8 Nov 2026: inside the key point it supports**, not in a
+section of its own. The owner's call, and it is right for listening as much as for reading: a
+claim and the words that back it belong together, and a separate evidence block would be the
+"list of six summaries and six quotations" the conversation itself warns against.
+
+**A quoted point may carry one short line on what the quotation adds, and only then.** This is
+narrower than the "why it matters" line rejected above, and the difference is the test: that line
+said why the *point* mattered, which duplicates How to apply. This says what the *quotation* adds
+that the paraphrase cannot, which is a real thing when the speaker hedged, contradicted
+themselves, or put it more bluntly than a summary would dare. **If the honest answer would restate
+the point, there is no line, and probably no quotation either.** The owner's rule: only if it
+does.
+
 `standsOut` is already the "standout moment" the conversation asks for as a separate element, and
 under point-not-quote it gains its quotation for nothing.
+
+**It applies across every source kind**, since the mechanism is positional and all three already
+position: video and podcasts by transcript segment, articles by paragraph. **Recipes are the
+exception**: a recipe has no argument to evidence, and a quoted line from a method step would be
+the step itself.
 
 **OV-202 needs a brevity counterweight, or it optimises one way forever.** The five-question test
 the conversation ends on includes one nobody has encoded: *have we avoided spending their time on
@@ -390,6 +408,75 @@ padding this product exists to strip.
 **It stays invisible.** The outside framework names three depths for the reader ("Quick brief",
 "Deep brief"). A label like that tells someone they got the cheap version. The article budget is
 invisible today and that is correct.
+
+### What scales and what does not, and the arithmetic that decides it
+
+Worked out with the owner on 8 Nov 2026, from the question: is 6 to 9 key points enough for a
+two-hour interview?
+
+**The count is not the binding constraint. The minutes are.** A two-hour source is roughly
+18,000 words (the Diary of a CEO episode OV-87 cites was about that). Against a 6 to 10 minute
+target at `noteTiming.ts`'s 150 words a minute, so 900 to 1,500 words of note:
+
+| | Note | Substance carried |
+|---|---|---|
+| Today's ceiling: 7 points at 40 words, 8 chapters at 25 | **6.5 min** | 2.7% of source |
+| 9 points, same length | 7.4 min | 3.4% |
+| 9 points at 60 words, 12 chapters at 45, 4 quotations | **11.3 min** | 6.7% |
+
+**Today's seven points already spend 6.5 of the ten minutes available.** There is no room for
+nine long points *and* richer chapters *and* evidence. Something gives.
+
+#### Chapters are navigation, not coverage
+
+This is the call that makes the budget work. `coreSection.ts` currently says to "let the chapters
+carry the rest of the structure", which reads as though chapters are where the substance that did
+not fit goes. On a two-hour source that cannot be true: twelve chapters at 45 words is 540 words,
+a third of the whole budget, and it amounts to a second summary competing with the first.
+
+**So chapter summaries stay short and navigational**, roughly two lines, whatever the source's
+length. They say where you are, not what was argued. The substance lives in the key points and
+their evidence.
+
+With chapters held navigational, the deep tier fits:
+
+| | Words |
+|---|---|
+| premise, verdict, how to apply, selling, watch anyway (all fixed) | 265 |
+| big picture | 150 |
+| core argument | 80 |
+| 9 key points at 60 | 540 |
+| 4 quotations at 30 | 120 |
+| 12 chapters at 25, navigational | 300 |
+| **total** | **1,455, about 9.7 minutes** |
+
+#### Which sections scale
+
+Nothing in the budget says this today, and it is the missing half of OV-87's dials.
+
+| Scales with the source | Fixed at every length | Why fixed |
+|---|---|---|
+| the big picture | **the premise** | it is a library row, 25 words, and widening it wrecks the list |
+| the core argument, modestly | how to apply | three good actions beat seven; a longer source does not yield more things worth doing this week |
+| key points: count **and** words each | what it sells | a fact, not a summary |
+| chapter **count** | watch or listen it anyway | a judgement and a reason |
+| the evidence count | chapter **summary length** | navigational, see above |
+| the verdict's reasoning, modestly | | |
+
+**The core argument rises modestly and no more**, from 60 words towards about 80 at the deep tier.
+It stays singular, because the big picture now carries the surrounding ground and the second
+thread, which is what it was being stretched to hold before.
+
+**The verdict's reasoning should scale a little too.** "One or two sentences" is thin justification
+for a judgement on two hours of material, and the verdict is the field a reader is most likely to
+act on.
+
+#### Is 6 to 9 enough?
+
+Nine is affordable, on the conditions above. Beyond nine, two things break: the budget, and the
+listening. A flat list of twelve points read aloud is not an explanation, it is an inventory, and
+no amount of linking words fixes it. **If nine richer points plus evidence still does not cover a
+two-hour source, the answer is OV-87's second slice, multi-pass, not a longer list.**
 
 ### Medium is the wrong axis, form is
 
