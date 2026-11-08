@@ -386,6 +386,43 @@ life into a video that has nothing to say about it. The prompt could say so: whe
 video doesn't bear on what we know of the reader, give the plain action and leave their
 life out of it.
 
+#### Tried: a rule against forcing the reader in, 8 Nov 2026
+
+This run tried exactly that rule, added after the fit line, and reverted it:
+
+> Use what you know of me only where the video bears on it. Where it doesn't, give the
+> plain step and leave my life out of it: don't invent a workplace, a project or an
+> occasion to hang the step on.
+
+The no-reader runs never see the fit line, so they were copied from the run above and
+only the five readers were written again (run `readers-fit-rule`, $3.80 to write, $1.96 to
+judge). Then every action was judged afresh.
+
+**The judge isn't steady from run to run.** The 100 no-reader actions were word for word
+the same in both runs, yet 17 of them got a different helpfulness label. Their practical and
+helpful share fell from 94% to 81%. It judges each video's readers side by side, so its bar
+moves with what it's comparing. **Compare a reader against no reader within a run, never
+one run's percentage against another's.**
+
+| Reader | Gap to no reader, before | After | Fits, before | After |
+|---|---|---|---|---|
+| parent | −24 | −21 | 28% | 11% |
+| founder | −3 | −12 | 52% | 39% |
+| retiree | −26 | −30 | 50% | 13% |
+| specific-parent | −24 | −19 | 50% | 23% |
+| specific-founder | −3 | −9 | 57% | 47% |
+
+The gap is each reader's practical and helpful share minus no reader's, in points.
+
+**It over-corrected.** The readers got more actions, closer to no reader's count. Those
+actions were more generic: fit halved or worse for the parent, the retiree and the specific
+parent. They were no more helpful against no reader: the gap moved a few points either
+way, which is within the judge's own wobble. The model didn't learn to tell a forced step
+from a fitted one. It just used the reader less. **Personalised steps that occasionally
+over-reach serve a reader better than plain ones, so the prompt is unchanged.** A fix
+for forcing has to keep the fitted steps, for example an example of each in the prompt,
+and be judged on the same terms (OV-236).
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
