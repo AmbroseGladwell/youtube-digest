@@ -156,6 +156,11 @@ line (design 62j) and onboarding. Now only a create-account link may insert. A s
 whose address has no account by the time it is opened, because the account was deleted or
 the link predates this rule, is refused as `link_invalid` and makes nothing.
 
+**The sign-in screen says it both ways.** `Check your email`, on the sign-in page and on the
+consent screen, reads "If there’s an account for … we’ve sent it a sign-in link … If there
+isn’t, the email says how to create one", since a mail goes either way and the screen may not
+say which.
+
 **The no-account mail keeps the one-a-minute cooldown.** Its ask still writes a
 `magic_links` row, so it is held back like a link, but the row is written already spent:
 nothing was mailed that could use it, and its code can never sign in. The mail's button

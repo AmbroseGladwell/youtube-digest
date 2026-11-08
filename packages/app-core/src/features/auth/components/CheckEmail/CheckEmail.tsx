@@ -42,8 +42,9 @@ export function CheckEmail({
           </>
         ) : (
           <>
-            We sent a sign-in link to <strong data-testid={checkEmailTestIds.email}>{email}</strong>. It works once,
-            for the next {MAGIC_LINK_TTL_MINUTES} minutes.
+            If there’s an account for <strong data-testid={checkEmailTestIds.email}>{email}</strong>, we’ve sent it a
+            sign-in link. It works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes. If there isn’t, the email says
+            how to create one.
           </>
         )
       }
