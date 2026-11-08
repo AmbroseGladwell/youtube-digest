@@ -342,6 +342,45 @@ The audio rules the conversation lists are mostly already in `WRITING_RULES`. Tw
 both are worth adding when evidence lands: do not read headings aloud excessively, and do not say
 the same insight in the key points, the takeaways and the verdict. The second is checkable.
 
+### Trust: what was said, what we read into it, how good it is
+
+The owner brought this in on 8 Nov 2026 as a non-negotiable editorial standard. It asks every
+overview to keep three things apart: **what the source said**, **what we read into it**, and
+**how valuable it is**, with six rules under it.
+
+**Most of it is already the standard here, and two parts are stronger than the rule asks.**
+
+| The rule | Here |
+|---|---|
+| Never invent quotations or make a paraphrase look like one | **Structurally impossible** once evidence lands: the model names segments, code lifts the text (OV-216). A rule can be broken; this cannot |
+| Preserve important qualifications and uncertainty | `coreSection.ts`: "always keep any caveat, criticism or counter-argument the video itself raises" |
+| Don't omit a significant counterargument because it complicates the summary | the same rule, and it is **stricter than the framework**, which only asks for this at its longest tier |
+| Attribute opinions and disputed claims to the person making them | `coreSection.ts`: "keep who claims something when the video presents it as one person's claim rather than settled fact". Naming *which speaker* needs diarisation and is not available on auto-captions (OV-226) |
+| Include timestamps or source references | every key point already carries a segment range; articles carry paragraph positions |
+| **Don't present an anecdote as proof of a general claim** | **not covered anywhere** |
+
+**The three-way split already exists as fields**, and ours is richer than the one proposed:
+
+- **How valuable it is** is the verdict, and it is two axes rather than one: novelty judged
+  against the field, and `similarTo` against the reader's own library (`novelty-scale.md`),
+  plus `dubious` and what the source sells.
+- **What the source said** is what evidence becomes (OV-216).
+- **What we read into it** is the key point's own prose and the big picture.
+
+**What is genuinely missing is one rule and one shape.**
+
+1. **The anecdote rule.** A source that tells one story and generalises from it should have that
+   noted, not laundered into a key point that reads as established. This is close to what
+   `dubious` already flags, but narrower: the claim need not be wrong, only unevidenced. Worth
+   adding to the prompt and worth deciding whether it feeds `dubious` or stands apart.
+2. **A reader cannot tell report from reading inside a key point.** The prose blends both.
+   Evidence fixes it for the points that carry a quotation, and leaves the rest as they are.
+
+**The precedent to follow for both is `dubious-reasons.md`,** which already gives each claim
+behind the flag **its basis, a reason and its moment in the video**. That is exactly the
+report-against-reading split, already designed and shipped for one section. Evidence should match
+its shape rather than invent a second vocabulary for the same idea.
+
 ### Depth: length plus chapter count, one budget, invisible
 
 **Depth by length is already built on one side of a fork and missing on the other.**
@@ -414,41 +453,57 @@ invisible today and that is correct.
 Worked out with the owner on 8 Nov 2026, from the question: is 6 to 9 key points enough for a
 two-hour interview?
 
-**The count is not the binding constraint. The minutes are.** A two-hour source is roughly
-18,000 words (the Diary of a CEO episode OV-87 cites was about that). Against a 6 to 10 minute
-target at `noteTiming.ts`'s 150 words a minute, so 900 to 1,500 words of note:
+**Chapters cost nothing.** An earlier version of this section budgeted chapter summaries into the
+note's length and concluded the budget was tight. That was wrong, and the owner caught it.
+Chapters are the reader's third tab (`chapters.md`); in `overviewNoteLines.ts` they appear only
+as a `chapterIndex` link on a key point, and `noteTiming` counts note lines. **So chapter titles
+and summaries are never read aloud and never counted in the read or listen time.** They cost
+output tokens and nothing else.
 
-| | Note | Substance carried |
+**With chapters out of it, the budget is roomy.** A two-hour source against a 6 to 10 minute
+target, at `noteTiming.ts`'s 150 words a minute:
+
+| | Words | Listen |
 |---|---|---|
-| Today's ceiling: 7 points at 40 words, 8 chapters at 25 | **6.5 min** | 2.7% of source |
-| 9 points, same length | 7.4 min | 3.4% |
-| 9 points at 60 words, 12 chapters at 45, 4 quotations | **11.3 min** | 6.7% |
+| Today: 7 points at 40, no big picture | 605 | 4.0 min |
+| Plus the big picture, core argument at 80 | 775 | 5.2 min |
+| 9 points at 60, 4 quotations | 1,155 | 7.7 min |
+| 12 points at 60, 5 quotations | 1,365 | 9.1 min |
+| 15 points at 60, 6 quotations | 1,575 | 10.5 min |
 
-**Today's seven points already spend 6.5 of the ten minutes available.** There is no room for
-nine long points *and* richer chapters *and* evidence. Something gives.
+So **a two-hour source can afford twelve richer points with evidence and still sit inside nine
+minutes.** The count was never the constraint it looked like.
 
-#### Chapters are navigation, not coverage
+#### The real consequence: for a listener, the key points are the whole note
 
-This is the call that makes the budget work. `coreSection.ts` currently says to "let the chapters
-carry the rest of the structure", which reads as though chapters are where the substance that did
-not fit goes. On a two-hour source that cannot be true: twelve chapters at 45 words is 540 words,
-a third of the whole budget, and it amounts to a second summary competing with the first.
+`coreSection.ts` justifies its seven-point ceiling by saying "let the chapters carry the rest of
+the structure". **For a listener that promise is empty**, because chapters are never spoken. A
+reader can open the third tab; someone walking the dog cannot.
 
-**So chapter summaries stay short and navigational**, roughly two lines, whatever the source's
-length. They say where you are, not what was argued. The substance lives in the key points and
-their evidence.
+Since listening is the realistic use case (`README.md`), it follows that:
 
-With chapters held navigational, the deep tier fits:
+- **Key points plus their evidence have to stand alone.** They are the entire substance anyone
+  hears. Nothing downstream rescues a point that was cut.
+- **Long sources should get more points, not merely longer ones.** The earlier version of this
+  section argued the opposite, on the strength of the wrong arithmetic.
+- **Chapters can get richer at no cost to the note's length**, so there is no reason to hold their
+  summaries short. They are the reader's map, and their only cost is tokens.
 
-| | Words |
-|---|---|
-| premise, verdict, how to apply, selling, watch anyway (all fixed) | 265 |
-| big picture | 150 |
-| core argument | 80 |
-| 9 key points at 60 | 540 |
-| 4 quotations at 30 | 120 |
-| 12 chapters at 25, navigational | 300 |
-| **total** | **1,455, about 9.7 minutes** |
+#### What is left to decide: how many points before a list stops being an explanation
+
+The budget allows twelve to fifteen. **Listening probably does not.** A flat list of fifteen read
+aloud is an inventory, and the existing linking words ("First," "Then," "And finally") thin out
+long before that.
+
+Two ways, and this is the owner's call:
+
+- **Cap around nine or ten** and spend the remaining budget on evidence and on longer points. Safe,
+  and it keeps the audio shape that works today.
+- **Go higher and group them in the narration**, which is the "insights grouped into themes" idea
+  from the outside framework. There is now budget room for it, it needs a grouping the model has
+  to produce, and it is a new audio shape to design and test.
+
+Chapters cannot resolve this one, for the reason above.
 
 #### Which sections scale
 
@@ -459,8 +514,8 @@ Nothing in the budget says this today, and it is the missing half of OV-87's dia
 | the big picture | **the premise** | it is a library row, 25 words, and widening it wrecks the list |
 | the core argument, modestly | how to apply | three good actions beat seven; a longer source does not yield more things worth doing this week |
 | key points: count **and** words each | what it sells | a fact, not a summary |
-| chapter **count** | watch or listen it anyway | a judgement and a reason |
-| the evidence count | chapter **summary length** | navigational, see above |
+| the evidence count | watch or listen it anyway | a judgement and a reason |
+| chapter count **and** summary length | | both are free of the note's length |
 | the verdict's reasoning, modestly | | |
 
 **The core argument rises modestly and no more**, from 60 words towards about 80 at the deep tier.
@@ -470,13 +525,6 @@ thread, which is what it was being stretched to hold before.
 **The verdict's reasoning should scale a little too.** "One or two sentences" is thin justification
 for a judgement on two hours of material, and the verdict is the field a reader is most likely to
 act on.
-
-#### Is 6 to 9 enough?
-
-Nine is affordable, on the conditions above. Beyond nine, two things break: the budget, and the
-listening. A flat list of twelve points read aloud is not an explanation, it is an inventory, and
-no amount of linking words fixes it. **If nine richer points plus evidence still does not cover a
-two-hour source, the answer is OV-87's second slice, multi-pass, not a longer list.**
 
 ### Medium is the wrong axis, form is
 
