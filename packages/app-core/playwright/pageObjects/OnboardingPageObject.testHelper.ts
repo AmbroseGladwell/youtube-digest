@@ -19,6 +19,7 @@ import { onboardingVideoTestIds } from "../../src/features/onboarding/components
 import { onboardingVoiceTestIds } from "../../src/features/onboarding/components/OnboardingVoice/OnboardingVoiceTestIds.js";
 import { onboardingPageTestIds } from "../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
 import { AboutYouSentencePageObject } from "./AboutYouSentencePageObject.testHelper.js";
+import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
@@ -250,6 +251,10 @@ export class OnboardingPageObject extends PageObject {
     return new AboutYouSentencePageObject(this.testContext);
   }
 
+  get voicePicker() {
+    return new NarrationVoicePickerPageObject(this.testContext);
+  }
+
   verifyWhatThisChangesShowsExample = (shown: boolean) =>
     this.step(`verifyWhatThisChangesShowsExample ${shown}`, () =>
       shown
@@ -267,6 +272,84 @@ export class OnboardingPageObject extends PageObject {
   continueFromAboutYou = () => this.step("continueFromAboutYou", () => this.click(onboardingAboutYouTestIds.continue));
 
   continueFromVoice = () => this.step("continueFromVoice", () => this.click(onboardingVoiceTestIds.continue));
+
+  // OV-210 (210a–210k): below the brand row one area scrolls, and each step's foot is pinned to
+  // its bottom. The foot is the sticky element nearest the step's Continue.
+  #scroller = () => this.get(onboardingPageTestIds.scroller);
+  #foot = (continueTestId: string) =>
+    this.get(continueTestId).evaluate((button) => {
+      let foot: Element | null = button;
+      while (foot !== null && getComputedStyle(foot).position !== "sticky") foot = foot.parentElement;
+      const box = foot!.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, fade: Number(getComputedStyle(foot!, "::before").opacity) };
+    });
+
+  verifyContinueInReachWithoutScrolling = (continueTestId: string) =>
+    this.step(`verifyContinueInReachWithoutScrolling ${continueTestId}`, async () => {
+      expect(await this.#scroller().evaluate((scroller) => scroller.scrollTop)).toBe(0);
+      expect(await this.page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+      await this.verifyContinueIsInView(continueTestId);
+    });
+
+  verifyContinueIsInView = (continueTestId: string) =>
+    this.step(`verifyContinueIsInView ${continueTestId}`, () => expect(this.get(continueTestId)).toBeInViewport({ ratio: 1 }));
+
+  // Nothing of the step may show beneath the foot while it is pinned.
+  verifyFootSitsOnTheWindowsEdge = (continueTestId: string) =>
+    this.step("verifyFootSitsOnTheWindowsEdge", async () => {
+      const { bottom } = await this.#foot(continueTestId);
+      expect(Math.abs(bottom - (await this.page.evaluate(() => window.innerHeight)))).toBeLessThan(1);
+    });
+
+  verifyStepOverflows = (overflows: boolean) =>
+    this.step(`verifyStepOverflows ${overflows}`, async () => {
+      const room = await this.#scroller().evaluate((scroller) => scroller.scrollHeight - scroller.clientHeight);
+      if (overflows) expect(room).toBeGreaterThan(0);
+      else expect(room).toBeLessThanOrEqual(0);
+    });
+
+  verifyFootFadeIsShown = (continueTestId: string, shown: boolean) =>
+    this.step(`verifyFootFadeIsShown ${shown}`, () =>
+      expect.poll(async () => (await this.#foot(continueTestId)).fade, { timeout: 2_000 }).toBe(shown ? 1 : 0),
+    );
+
+  scrollStepToTheEnd = () =>
+    this.step("scrollStepToTheEnd", () =>
+      expect(async () => {
+        const atTheEnd = await this.#scroller().evaluate((scroller) => {
+          scroller.scrollTop = scroller.scrollHeight;
+          return scroller.scrollTop > 0 && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+        });
+        expect(atTheEnd).toBe(true);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyClearOfTheFoot = (testId: string, continueTestId: string) =>
+    this.step(`verifyClearOfTheFoot ${testId}`, async () => {
+      const bottom = await this.get(testId).evaluate((element) => element.getBoundingClientRect().bottom);
+      const footTop = (await this.#foot(continueTestId)).top;
+      expect(bottom).toBeLessThanOrEqual(footTop);
+    });
+
+  focusTopicField = () => this.step("focusTopicField", () => this.get(onboardingTopicsTestIds.typeField).focus());
+
+  leaveTopicField = () => this.step("leaveTopicField", () => this.get(onboardingTopicsTestIds.typeField).blur());
+
+  verifyTopicFieldHasFocus = () =>
+    this.step("verifyTopicFieldHasFocus", () => expect(this.get(onboardingTopicsTestIds.typeField)).toBeFocused());
+
+  verifyContinueIsShown = (continueTestId: string, shown: boolean) =>
+    this.step(`verifyContinueIsShown ${shown}`, () =>
+      shown ? this.expectToBeVisible(continueTestId) : this.expectNotToBeVisible(continueTestId),
+    );
+
+  verifyPreviewStaysPut = async (move: () => Promise<unknown>) =>
+    this.step("verifyPreviewStaysPut", async () => {
+      const preview = this.get(onboardingPreviewTestIds.root).filter({ visible: true });
+      const before = (await preview.boundingBox())!.y;
+      await move();
+      expect((await preview.boundingBox())!.y).toBeCloseTo(before, 0);
+    });
 
   verifyTeaser = ({ title, premise }: { title: string; premise: string }) =>
     this.step(`verifyTeaser ${title}`, async () => {

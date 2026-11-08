@@ -35,16 +35,77 @@
   gap: 0.625rem;
 }
 
+// Pinned to the foot of the step's scroll area on every step, so Continue never scrolls off;
+// a step that fits looks as it did (docs/features/onboarding-foot.md, designs 210a–210k).
 @mixin foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   margin-top: auto;
-  padding-top: 0.5rem;
+  margin-inline: calc(-1 * var(--onboarding-gutter, 0px));
+  margin-bottom: calc(-1 * var(--onboarding-end, 0px));
+  padding: 0.75rem var(--onboarding-gutter, 0px) max(0.75rem, env(safe-area-inset-bottom));
+  background: var(--ground);
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
 
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    height: var(--sticky-fade-height);
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+      to top,
+      var(--ground),
+      color-mix(in srgb, var(--ground) 85%, transparent) 33%,
+      color-mix(in srgb, var(--ground) 45%, transparent) 62%,
+      color-mix(in srgb, var(--ground) 15%, transparent) 84%,
+      transparent
+    );
+  }
+
+  :global([data-content-below]) &::before {
+    opacity: 1;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    &::before {
+      animation: foot-fade-out linear both;
+      animation-timeline: scroll();
+      animation-range: calc(100% - var(--sticky-fade-arrive)) 100%;
+    }
+  }
+
+  @keyframes foot-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
   @media (min-width: 64rem) {
     margin-top: 0;
-    padding-top: 0.25rem;
+    padding: 0.875rem var(--onboarding-gutter, 0px) 1.5rem;
+
+    &::before {
+      left: -100vw;
+      right: -100vw;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0 -100vw;
+      z-index: -1;
+      background: var(--ground);
+    }
   }
 }
 
