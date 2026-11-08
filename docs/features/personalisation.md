@@ -13,7 +13,8 @@ on the reader's key and on us alike (`runOverviewGeneration` reads them from Set
   the video spells out as long as it sensibly applies it, and a context is what makes those
   steps fit. A rule follows it: fit what the reader already does and the limits they live
   with, and never invent a project, role or occasion for them (OV-236, measured in
-  `model-comparison.md`). **It shapes How to apply and nothing else:** the right depth differs per video, so
+  `model-comparison.md`). Articles carry the same rule
+  (`readerFit`, OV-238), applied without its own measurement. **It shapes How to apply and nothing else:** the right depth differs per video, so
   one stated level can't set it, and the verdict stays judged against the field.
 - **`sectionsEnabled`**, which of the four optional sections the overview has: the verdict,
   what it sells, how to apply, and watch it anyway. The premise, key points, chapters and
