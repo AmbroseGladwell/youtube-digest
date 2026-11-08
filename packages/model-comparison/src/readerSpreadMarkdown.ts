@@ -1,6 +1,6 @@
 import type { FetchedTranscript } from "@overview/transcripts";
 import { contextUse, type ActionsByReader, type PairSpread, type ReaderSpread } from "./readerSpread.js";
-import { NOISE_PAIR, type SpreadReader } from "./spreadReaders.js";
+import { BEFORE, NOISE_PAIR, type SpreadReader } from "./spreadReaders.js";
 import type { ActionJudgmentSummary } from "./summariseActionJudgments.js";
 
 const percent = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
@@ -99,6 +99,7 @@ function judgedLines(judge: string, summaries: readonly ActionJudgmentSummary[])
         `| ${s.reader} | ${s.videos} | ${s.actions} | ${share(s.practicalAndHelpful, s.actions)} | ${share(s.concrete, s.actions)} | ${share(s.doable, s.actions)} | ${share(s.helpful, s.actions)} | ${s.marginal} | ${s.unhelpful} | ${s.contradicts} | ${s.sensibleExtension} |`,
     ),
     "",
+    ...beforeAndAfterLines(summaries),
     "### Fit to the reader",
     "",
     "| Reader | Fits | Generic | Misreads | Given nothing: right | Given nothing: missed |",
@@ -106,6 +107,30 @@ function judgedLines(judge: string, summaries: readonly ActionJudgmentSummary[])
     ...known.map(
       (s) =>
         `| ${s.reader} | ${share(s.fits, s.actions)} | ${share(s.generic, s.actions)} | ${share(s.misreads, s.actions)} | ${s.emptyRight} | ${s.emptyMissed} |`,
+    ),
+    "",
+  ];
+}
+
+// Each reader's actions from the earlier run beside this run's, labelled in the same calls.
+export function beforeAndAfterLines(summaries: readonly ActionJudgmentSummary[]): string[] {
+  const byName = new Map(summaries.map((summary) => [summary.reader, summary]));
+  const pairs = summaries.flatMap((after) => {
+    const before = byName.get(`${after.reader}${BEFORE}`);
+    return before === undefined ? [] : [[before, after] as const];
+  });
+  if (pairs.length === 0) return [];
+  const rate = (part: number, whole: number) => percent(part, whole);
+  return [
+    "### Before and after, judged together",
+    "",
+    `Each reader's actions from the earlier run (${BEFORE}) and this run's, labelled in the same calls, so both are held to one bar.`,
+    "",
+    "| Reader | Practical and helpful, before | After | Fits, before | After | Marginal, before | After |",
+    "|---|---|---|---|---|---|---|",
+    ...pairs.map(
+      ([before, after]) =>
+        `| ${after.reader} | ${rate(before.practicalAndHelpful, before.actions)} | ${rate(after.practicalAndHelpful, after.actions)} | ${rate(before.fits, before.actions)} | ${rate(after.fits, after.actions)} | ${before.marginal} of ${before.actions} | ${after.marginal} of ${after.actions} |`,
     ),
     "",
   ];

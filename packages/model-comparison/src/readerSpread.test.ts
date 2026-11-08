@@ -4,7 +4,8 @@ import { actionsByVideo, contextUse, readerSpread, sameActions, usesCue, wordOve
 import { personalisedVerdict } from "./readerSpreadMarkdown.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { makeRunRecord } from "./RunRecordFactory.testHelper.js";
-import { READER_SETS, SPREAD_READERS } from "./spreadReaders.js";
+import { asBefore, READER_SETS, SPREAD_READERS } from "./spreadReaders.js";
+import { PARENTING_SET, TRANSCRIPT_SET } from "./transcriptSet.js";
 
 const ran = (videoId: string, items: string[]) => makeRunRecord({ videoId, overview: makeOverview({ howToApply: { items } }) });
 
@@ -91,7 +92,7 @@ test("how many actions each reader got is counted from 0 to 3", () => {
 test("the readers are genuinely different, and two of them are nobody, for the noise floor", () => {
   const contexts = SPREAD_READERS.map((reader) => reader.readerContext);
   assert.deepEqual(contexts.slice(0, 2), [null, null]);
-  assert.equal(new Set(contexts.slice(2)).size, 3);
+  assert.equal(new Set(contexts.slice(2)).size, contexts.length - 2);
   assert.ok(contexts.slice(2).every((context) => context !== null && context.startsWith("I'm")));
 });
 
@@ -130,4 +131,15 @@ test("the specific readers carry learned items into the context the app would se
     assert.ok(reader.readerContext!.length <= 600, reader.name);
     assert.ok(reader.cues.learned.length > 0);
   }
+});
+
+test("the parenting videos are kept apart from the model comparison's set, never sharing one", () => {
+  const main = new Set(TRANSCRIPT_SET.map((entry) => entry.url));
+  assert.ok(PARENTING_SET.length > 0);
+  assert.equal(PARENTING_SET.filter((entry) => main.has(entry.url)).length, 0);
+});
+
+test("an earlier run's reader keeps their context and cues, under a name that says so", () => {
+  const parent = READER_SETS.broad.find((reader) => reader.name === "parent")!;
+  assert.deepEqual(asBefore(parent), { ...parent, name: "parent@before" });
 });

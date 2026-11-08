@@ -26,3 +26,19 @@ export const TRANSCRIPT_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=G9P9D9hptq8", chosenFor: "65 min long interview, judged original" },
   { url: "https://www.youtube.com/watch?v=TOk-DUDmN6E", chosenFor: "2 h 22 min parliamentary hearing, many speakers" },
 ];
+
+// For the readers harness only (OV-236): the main set is business-heavy, and a parent
+// saves parenting videos. Kept apart so the model comparison's set never changes.
+export const PARENTING_SET: readonly TranscriptSetEntry[] = [
+  { url: "https://www.youtube.com/watch?v=FwA43CfdJNY", chosenFor: "11 min talking head, life with a third child" },
+  { url: "https://www.youtube.com/watch?v=PHpPtdk9rco", chosenFor: "14 min stage talk, repair after yelling" },
+  { url: "https://www.youtube.com/watch?v=P02Hmvds08I", chosenFor: "25 min podcast chat, newborn and siblings" },
+  { url: "https://www.youtube.com/watch?v=FtDTkl93Km0", chosenFor: "28 min solo talk, a family behaviour board" },
+  { url: "https://www.youtube.com/watch?v=1PNqoHNJwew", chosenFor: "35 min interview, responsibility and connection, judged dubious" },
+  { url: "https://www.youtube.com/watch?v=b_1q4OHEW9U", chosenFor: "80 min interview, attachment, judged dubious" },
+  { url: "https://www.youtube.com/watch?v=xzqhunEabs0", chosenFor: "100 min interview, firm parenting and newborn life" },
+];
+
+export const TRANSCRIPT_SETS = { main: TRANSCRIPT_SET, parenting: PARENTING_SET } as const;
+export type TranscriptSetName = keyof typeof TRANSCRIPT_SETS;
+export const isTranscriptSetName = (name: string): name is TranscriptSetName => name in TRANSCRIPT_SETS;
