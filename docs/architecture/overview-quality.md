@@ -486,8 +486,39 @@ Since listening is the realistic use case (`README.md`), it follows that:
   hears. Nothing downstream rescues a point that was cut.
 - **Long sources should get more points, not merely longer ones.** The earlier version of this
   section argued the opposite, on the strength of the wrong arithmetic.
-- **Chapters can get richer at no cost to the note's length**, so there is no reason to hold their
-  summaries short. They are the reader's map, and their only cost is tokens.
+- **Chapters are the reader's map, and the dial to turn is the count, not the length of each
+  summary.** See below.
+
+#### Chapters: scale the count, hold the summary
+
+Chapters cost the note nothing, which makes it tempting to let their summaries grow. **That would
+break them**, because navigation and coverage want opposite things. A coverage summary tries to
+save you the trip; a navigation summary helps you choose where to go. Twenty chapters of rich
+prose is not a map, it is a second document nobody can scan.
+
+**The prompt already asks for the right thing**, and should be left alone on this point.
+`chaptersSection.ts`: "A chapter is a stretch a reader would skip to, not a paragraph", with a
+title of at most 8 plain words and "a summary of one or two sentences (40 words at most) on what
+that stretch covers, **so that reading the list down is a map of the video**". It also already
+forbids the two ways a chapter list goes wrong: "never split a stretch to make the list longer,
+and never merge two subjects to make it shorter".
+
+So, concretely:
+
+- **The count scales, and it needs to scale a lot.** "Most videos have 3 to 8" is the hint at
+  every length today. For a two-hour interview that is nowhere near enough to navigate by; the
+  right number is more like fifteen to twenty. At 40 words each that is 800 words of output,
+  which costs tokens and **zero** reading or listening time.
+- **The 40-word ceiling stays**, at every length. It is what keeps a long list scannable, and
+  holding it is a positive choice rather than a saving.
+- **There is no schema `.max()` on video chapters**, where articles take theirs from the budget
+  (`articleChaptersSection.ts`). That is OV-87's to fix.
+- **One rule is missing and is the specific navigation failure:** two adjacent chapters whose
+  summaries could be swapped without anyone noticing. "Reading the list down is a map" implies
+  each entry is distinctive, but nothing says so, and nothing checks it. On a long source with
+  twenty chapters this is the failure that will actually happen.
+- **Chapters do not get evidence.** Quotations belong in the key points (OV-216). A quotation in
+  a chapter summary would turn the map back into a document.
 
 #### What is left to decide: how many points before a list stops being an explanation
 
