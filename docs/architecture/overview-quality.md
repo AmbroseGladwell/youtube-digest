@@ -200,6 +200,84 @@ inside a key point's existing range that carry the claim, and have code lift the
 This supersedes the "if it is a new field" half of OV-216, which left open the possibility of
 generated quotations.
 
+### How much evidence, and how long: the two budgets that fight
+
+Added 8 Nov 2026, from the owner's own statement of the promise and from measuring the
+worked example the outside conversation produced.
+
+**The promise, in the owner's words:** a reader should trust they are getting a very good
+understanding of what the source was about without consuming the whole thing, **and** the
+overview has to be short enough that listening to it is considerably easier than listening to
+the original. Those two pull against each other, and every rule below exists because of it.
+
+**The worked example overshot its own target, measured.** Asked to improve a real note on the
+Rieseberg interview, the conversation produced a version it estimated at 4 to 5 minutes of
+listening. At `noteTiming.ts`'s own `SPOKEN_WORDS_PER_MINUTE` of 150 it is **7.2 minutes against
+the original's 3.2**: 1,088 words against 488.
+
+Counted, not estimated, the extra 600 words went to:
+
+| Added | Words | Worth it |
+|---|---|---|
+| Six "Why it matters" lines | 165 | **no**, see below |
+| "The bigger business lesson" | 132 | **no**, it is the original's key point 7 promoted to a section |
+| A note apologising for a quotation it could not supply | 44 | no |
+| Fuller explanation inside the insights | ~260 | **yes**, this is the part the owner liked |
+
+So roughly 340 words, over two minutes of the increase, bought no understanding at all. **A
+framework that measures only coverage will do this every time**, which is the next point.
+
+**Do not add a "why it matters" per key point.** It is the single largest source of the bloat,
+it duplicates How to apply, which already answers it and is personalised, and it breaks the
+conversation's own rule against repeating an insight across the points, the takeaways and the
+verdict. Where a point's significance genuinely is not obvious, that belongs in the big picture,
+which is the field that exists to carry it.
+
+**Evidence is budgeted, not templated.** The conversation's own numbers are 3 to 5 quotations a
+note, with timestamps, used "as proof points" rather than one per insight. That is right, and it
+answers what OV-216 left open: not every key point gets evidence. The budget belongs on the same
+dial as everything else (OV-87), and the quotations go where the claim would otherwise have to be
+taken on trust.
+
+`standsOut` is already the "standout moment" the conversation asks for as a separate element, and
+under point-not-quote it gains its quotation for nothing.
+
+**OV-202 needs a brevity counterweight, or it optimises one way forever.** The five-question test
+the conversation ends on includes one nobody has encoded: *have we avoided spending their time on
+details that do not materially improve their understanding?* OV-202 measures how much of the
+source a note represents. **Coverage alone is trivially gamed by writing more.** The number that
+matters is coverage against the note's own spoken length, which `noteTiming.ts` already computes,
+so the measure should report a ratio rather than a share. Then OV-87's budget changes can be
+judged on whether they bought understanding or merely spent minutes.
+
+### Structure the data, compose the narration
+
+The outside conversation ends by contradicting its own format, and it is right to:
+
+> Rather than making every key point follow a rigid template of insight, quotation, why it
+> matters, I'd make the quotation part of the narrative wherever it naturally strengthens
+> understanding. The ideal experience is not someone listening to a list of six summaries and six
+> quotations. It's someone hearing a coherent, intelligent explanation.
+
+That matters more here than it did there, because listening is the realistic use case rather than
+a bonus feature (`README.md`), and a structured note read straight out does sound like a form
+being filled in.
+
+**It is not a reason to abandon structure, and the mechanism to have both already exists.**
+`spokenScript` composes the narration from `NoteLine`s, and each line carries `line.spoken ??
+line.text`, so a line may read differently aloud from how it renders. `coreSection.ts` already
+uses this, telling the model never to number its own points because each is read after a linking
+word such as "First," or "Then,".
+
+So: **the fields stay structured**, which is what the page, the filters, the migrations and the
+MCP connector all need, **and the spoken form introduces evidence in prose** rather than
+announcing it. An evidence line's `spoken` is "He puts it this way, …"; its `text` is a
+quotation block. Neither the schema nor the reader has to choose.
+
+The audio rules the conversation lists are mostly already in `WRITING_RULES`. Two are not, and
+both are worth adding when evidence lands: do not read headings aloud excessively, and do not say
+the same insight in the key points, the takeaways and the verdict. The second is checkable.
+
 ### Depth: length plus chapter count, one budget, invisible
 
 **Depth by length is already built on one side of a fork and missing on the other.**
