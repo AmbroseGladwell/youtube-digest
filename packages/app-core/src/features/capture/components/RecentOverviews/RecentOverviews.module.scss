@@ -7,10 +7,9 @@
 }
 
 .heading {
+  @include controls.section-label;
+
   margin: 0.25rem 0 0;
-  color: var(--stone);
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 .row {
