@@ -97,6 +97,19 @@ paragraph's first eight words for a text fragment. A number outside the article 
 **Pages change.** The quote is taken when the note is made, and no text is kept to repair it with.
 If the words later change, the link opens at the top of the page. That's why the mock-up says so.
 
+**A point built over a run of paragraphs names where the run begins** (OV-240, 8 Nov 2026). A
+video's key point names a segment range, but an article's names one paragraph. The rule was
+"null for a point the piece builds across several places", and on OV-202's coverage set 11 of 25
+article key points came back null, against 5 of 41 for video. Every one of the 11 was honest: each
+drew on two or more paragraphs, usually a whole section. A null point has no link for the reader
+and is invisible to the coverage measure, so `articleCoreSection.ts` now asks for the paragraph
+where the run or section begins. That is where a reader would start reading, as a video's range
+start is where it starts playing. Null is kept for a point gathered from places far apart.
+Afterwards 0 of 26 were null, and all 26 named paragraphs were checked by hand: each is where its
+point is made, or the opening of the stretch that makes it. Paragraph ranges were considered
+and not chosen: they would change the schema, the record and the screen, to say what the start of
+the run already says.
+
 ## No article text is kept
 
 Decided 2026-11-02. Only the note and metadata are stored. So there's no Transcript tab, links go
