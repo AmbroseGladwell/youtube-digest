@@ -153,23 +153,41 @@ editorial verdict is weaker than novelty plus what stands out plus dubious plus 
 
 ### The order, and the rule that keeps triage alive
 
-**Everything needed to decide "is this worth my time" comes before the first thing that takes
-time to read, and that block never grows with the source's length.**
+**The rule: a reader must reach the verdict before they reach anything long.** If someone has to
+get through six minutes to find out something was recycled, triage is dead.
+
+**That rule is already satisfied**, because the verdict sits third in `overviewNoteLines.ts`,
+ahead of the key points. The note does not need rearranging to protect triage; it needs the two
+new fields placed without breaking it.
+
+**Decided by the owner, 8 Nov 2026: what it sells and watch it anyway stay last.** An earlier
+draft of this section proposed hauling both into a triage block at the top. That was wrong:
+
+- **Watch it anyway is not a triage signal, it is the conclusion** the verdict leads to. The
+  verdict is the signal, and it is already early.
+- **The narration's close is worth protecting.** The spoken script ends on "No, you can probably
+  skip the video, the overview covers it", which is where the product's argument lands. A
+  listener hears everything in order and gains nothing from a front-loaded conclusion, so moving
+  it would have cost the ending for no benefit.
+
+So one order serves both surfaces, and the reading-against-listening tension does not arise.
 
 | | Section | Grows with length |
 |---|---|---|
-| **Triage** | premise, 25 words | no |
-| | verdict: novelty, what stands out, dubious, selling | no |
-| | watch or listen to it anyway | no |
-| | time saved | no |
+| **Opens** | premise, 25 words | no |
+| | verdict: novelty, what stands out, dubious | no |
 | **Comprehension** | **the big picture** (new) | yes |
 | | the core argument (`coreClaim`) | a little |
 | | key points, each with its evidence (new) | yes |
 | | how to apply | no |
 | | chapters, transcript | yes |
+| **Closes** | what it sells | no |
+| | watch or listen to it anyway | no |
 
-If a reader has to get through six minutes to find out something was recycled, triage is dead.
-The break between the two blocks is the whole design.
+The one question left is where the big picture lands relative to the verdict and the core
+argument, which is OV-227. The recommendation there is premise, verdict, big picture, core
+argument: the verdict needs only the premise to make sense, and the big picture exists to set up
+the core argument so it reads oddly after it.
 
 ### Three orienting fields that must not repeat each other
 
@@ -179,10 +197,33 @@ distinction has to be stated in the prompt, not hoped for:
 | Field | Answers | Never does |
 |---|---|---|
 | Premise | what this **is** | say what it argues |
-| Big picture | what **question** it is answering, and why that question matters | state the answer |
-| Core argument | what it **answers** | restate the question |
+| Big picture | the **ground** the argument stands on: what question is being engaged, why it matters, **and what else the source covers that the core argument cannot** | restate either of the others |
+| Core argument | what it **answers**, singular | carry a second thread |
 
-The thing, the question, the answer.
+The thing, the ground, the answer.
+
+**The third column of the big picture's row is the part that was nearly missed, and the example
+proves it.** Decomposing the 101-word "big picture" the outside conversation wrote for a real
+note on the Rieseberg interview:
+
+| | Words | |
+|---|---|---|
+| Restates the premise | 23 | already a field |
+| Restates the central argument | 48 | already a field |
+| **The second thread: software gets cheaper, so customer empathy becomes the advantage** | **30** | **genuinely new** |
+
+**71% of it duplicated fields that already exist.** The 30 words that did not are the interview's
+*other* subject, which `coreClaim` cannot carry because it is deliberately singular: "the single
+most important thing to take from this video". In the original note that thread had nowhere to
+live but key point 7, which is exactly why the rewrite kept promoting it into sections of its own.
+
+So the big picture earns its place by carrying scope, not by restating substance. **A big picture
+that could be deleted without losing anything the premise and the core argument do not already
+say is a failed one**, and that is a testable property rather than a matter of taste.
+
+**The central argument needs no new work.** `coreSection.ts` already gives `coreClaim` 60 words
+and the right scoping. The outside framework's version of it is 48 words saying the same thing.
+The only open question is whether it should grow on very long sources, and OV-227 asks it.
 
 ### Evidence: the model points, code quotes
 
