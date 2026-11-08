@@ -211,6 +211,41 @@ reliability, latency, cost and check pass rates, and, once there are judgments o
 the judge's win rates and the blind check's agreement; and `sideBySide.html`, which shows each
 video's notes and chapters from every model in one row, with any failed checks marked.
 
+## Different readers
+
+OV-230. The same harness asks a different question of How to apply: does it change with the
+reader? `npm run readers` runs production's own single pass, on one model, over the
+transcript set five times, differing only in `readerContext`:
+
+- **parent**, **founder** and **retiree**, written as About you entries and composed by
+  `composeReaderContext`, as the app sends them, and chosen to share as little as possible
+  (`spreadReaders.ts`)
+- **nobody**, twice, with no context: the **noise floor**. A model rewords the same advice
+  from one run to the next, so two readers' actions differing proves nothing until they
+  differ by more than two runs for nobody do
+
+Everything is measured by code over the saved records (`readerSpread.ts`), never asked of a
+model. A video counts only when all five passed, so a failure can't pass for a difference.
+Per pair of readers the report gives how many videos had identical actions, ignoring case
+and punctuation, and the mean word overlap: shared words over all words in either list,
+1 for the same words, 0 for none in common, and two empty lists agreeing. It says how many
+videos had the same actions for everyone, counts each reader's 0 to 3 actions, and gives a
+verdict: personalised where every pair of readers overlaps less than the noise floor.
+
+What it can't see is an action that **misreads** its reader, which says we know you and
+gets it wrong. So the report ends with every video's actions for each reader, side by side,
+for reading by eye.
+
+```sh
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --budget 1 --limit 3
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --budget 3
+```
+
+The default model is GPT-6.1 Sol, production's on our key. `report.md` lands in the run's
+folder. A rerun under the same name pays only for what hasn't settled.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
