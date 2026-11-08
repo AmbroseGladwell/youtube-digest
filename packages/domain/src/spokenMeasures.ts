@@ -62,7 +62,7 @@ const FRACTION_CHARS = Object.keys(UNICODE_FRACTION).join("");
 const PART_NAME: Record<number, string> = { 3: "third", 4: "quarter", 5: "fifth", 6: "sixth", 8: "eighth" };
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 
-const AMOUNT = `(?:\\d+\\s?[${FRACTION_CHARS}]|\\d+\\s\\d\\/\\d{1,2}|[${FRACTION_CHARS}]|\\d\\/\\d{1,2}|\\d+(?:[.,]\\d+)?)`;
+const AMOUNT = `(?:\\d+\\s?[${FRACTION_CHARS}]|\\d+[\\s-]\\d\\/\\d{1,2}|[${FRACTION_CHARS}]|\\d\\/\\d{1,2}|\\d+(?:[.,]\\d+)?)`;
 const UNIT = Object.keys(UNIT_NAME)
   .sort((a, b) => b.length - a.length)
   .map((unit) => unit.replace(/[.\s]/g, (char) => (char === "." ? "\\.?" : "\\s?")))
@@ -79,7 +79,7 @@ interface Fraction {
 }
 
 const readAmount = (amount: string): Fraction => {
-  const mixed = amount.match(new RegExp(`^(\\d+)?\\s?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
+  const mixed = amount.match(new RegExp(`^(\\d+)?[\\s-]?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
   if (mixed === null) return { whole: null, parts: null, plain: amount };
   const parts: [number, number] = mixed[2] ? UNICODE_FRACTION[mixed[2]]! : [Number(mixed[3]), Number(mixed[4])];
   const named = parts[0] < parts[1] && (parts[1] === 2 || PART_NAME[parts[1]] !== undefined);
@@ -141,6 +141,10 @@ export function spokenMeasures(text: string): string {
     .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])\\s?[x×]\\s?(?=(\\d+))`, "gu"), packShare)
     .replace(MEASURE, measure)
     .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])`, "gu"), lonePart)
+    .replace(/(?<![\p{L}\d/])(\d+)-(\d\/\d{1,2})(?![\d/])/gu, (whole, count: string, part: string) => {
+      const read = readAmount(`${count} ${part}`);
+      return read.parts === null ? whole : amountWords(read);
+    })
     .replace(/(\p{L})\s?\/\s?(?=\d|gas\b)/gu, "$1, or ")
     .replace(/\s\+\s/g, " plus ")
     .replace(/\s{2,}/g, " ")

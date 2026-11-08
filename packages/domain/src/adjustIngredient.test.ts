@@ -20,6 +20,9 @@ test("an amount at the start of a line scales, and only the amount is marked", (
 test("fractions and ranges scale as kitchen fractions", () => {
   assert.equal(adjustedText(adjustIngredient("1½ tsp salt", 0.5, "asWritten")), "¾ tsp salt");
   assert.equal(doubled("2–3 tbsp cold water"), "4–6 tbsp cold water");
+  assert.equal(doubled("2-3 tbsp cold water"), "4–6 tbsp cold water");
+  assert.equal(doubled("1-1/2 cups sweetened shredded coconut"), "3 cups sweetened shredded coconut");
+  assert.equal(adjustedText(adjustIngredient("1-1/2 teaspoons vanilla extract", 0.5, "asWritten")), "¾ teaspoon vanilla extract");
   assert.equal(adjustedText(adjustIngredient("1/2 cup milk", 3, "asWritten")), "1½ cups milk");
 });
 
@@ -28,6 +31,26 @@ test("one becoming several takes the plural of its noun", () => {
   assert.equal(doubled("1 small garlic clove, grated"), "2 small garlic cloves, grated");
   assert.equal(doubled("1 bay leaf"), "2 bay leaves");
   assert.equal(doubled("Juice of 1 lemon"), "Juice of 2 lemons");
+  assert.equal(doubled("1 red chilli, finely chopped"), "2 red chillies, finely chopped");
+  assert.equal(doubled("1 ripe avocado, stoned"), "2 ripe avocados, stoned");
+  assert.equal(doubled("1 large tomato"), "2 large tomatoes");
+});
+
+test("with no comma, the noun is the word before how it's prepared", () => {
+  assert.equal(doubled("1 onion finely chopped"), "2 onions finely chopped");
+  assert.equal(doubled("1 large onion finely chopped"), "2 large onions finely chopped");
+  assert.equal(doubled("1 red chilli deseeded and finely chopped"), "2 red chillies deseeded and finely chopped");
+  assert.equal(doubled("1 garlic clove crushed"), "2 garlic cloves crushed");
+  assert.equal(doubled("1 leek finely sliced"), "2 leeks finely sliced");
+  assert.equal(doubled("1 ripe avocado stoned and cubed"), "2 ripe avocados stoned and cubed");
+  assert.equal(doubled("1 butternut squash peeled, deseeded and cut into chunks"), "2 butternut squashes peeled, deseeded and cut into chunks");
+  assert.equal(doubled("1 dried bay leaf"), "2 dried bay leaves");
+  assert.equal(doubled("1 smoked haddock fillet"), "2 smoked haddock fillets");
+});
+
+test("a heaped or level spoon is still a spoon", () => {
+  assert.equal(doubled("1 heaped tsp ground coriander"), "2 heaped tsp ground coriander");
+  assert.equal(doubled("1 level teaspoon salt"), "2 level teaspoons salt");
 });
 
 test("a tin's size stays as sold, and is said to", () => {

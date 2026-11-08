@@ -54,7 +54,7 @@ const UNIT_WORDS: Array<[RegExp, keyof typeof UNITS]> = [
 
 const VULGAR: Record<string, number> = { "¼": 0.25, "½": 0.5, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3, "⅛": 0.125 };
 const VULGAR_CLASS = "¼½¾⅓⅔⅛";
-const NUMBER = `(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[${VULGAR_CLASS}])?|[${VULGAR_CLASS}])`;
+const NUMBER = `(?:\\d+(?:\\s+|-)\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[${VULGAR_CLASS}])?|[${VULGAR_CLASS}])`;
 const AMOUNT = new RegExp(`^(${NUMBER})(?:\\s*[-–]\\s*(${NUMBER}))?`);
 const PACK = new RegExp(`^\\s*[x×]\\s*(\\d+(?:[.,]\\d+)?)\\s*([a-z]+)\\b`, "i");
 const ANY_NUMBER = new RegExp(`\\d|[${VULGAR_CLASS}]`);
@@ -69,7 +69,7 @@ const parseNumber = (text: string): number => {
   const trimmed = text.trim();
   const vulgarTail = trimmed.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)?\\s*([${VULGAR_CLASS}])$`));
   if (vulgarTail) return Number((vulgarTail[1] ?? "0").replace(",", ".")) + VULGAR[vulgarTail[2]!]!;
-  const mixed = trimmed.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  const mixed = trimmed.match(/^(\d+)(?:\s+|-)(\d+)\/(\d+)$/);
   if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
   const fraction = trimmed.match(/^(\d+)\/(\d+)$/);
   if (fraction) return Number(fraction[1]) / Number(fraction[2]);
@@ -107,35 +107,52 @@ const formatNumber = (value: number, unit: Unit | null): string => {
   return `${total === 0 ? "" : total}${best[1]}`;
 };
 
+const SPOON_MEASURE = /^(?:heaped|level|rounded)\s+/i;
+
 const unitNamed = (text: string): { unit: keyof typeof UNITS; length: number } | null => {
+  const measure = text.match(SPOON_MEASURE)?.[0] ?? "";
   for (const [pattern, unit] of UNIT_WORDS) {
-    const match = text.match(pattern);
-    if (match) return { unit, length: match[0].length };
+    const match = text.slice(measure.length).match(pattern);
+    if (match && (measure === "" || UNITS[unit]!.system === "both")) return { unit, length: measure.length + match[0].length };
   }
   return null;
 };
 
-const IRREGULAR: Record<string, string> = { leaf: "leaves", loaf: "loaves", half: "halves", knife: "knives" };
+const IRREGULAR: Record<string, string> = { leaf: "leaves", loaf: "loaves", half: "halves", knife: "knives", chilli: "chillies" };
 
 const plural = (word: string): string => {
   const lower = word.toLowerCase();
   if (IRREGULAR[lower]) return IRREGULAR[lower]!;
   if (/s$/i.test(word)) return word;
   if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
-  if (/(?:ch|sh|x|z|o)$/i.test(word)) return `${word}es`;
+  if (/(?:ch|sh|x|z|tomato|potato|mango)$/i.test(word)) return `${word}es`;
   return `${word}s`;
 };
 
-// "1 small garlic clove, grated" doubled is "2 small garlic cloves, grated": the noun is
-// the last word before the first comma or bracket.
+const PREPARED_HOW = /^(?:finely|roughly|thinly|thickly|coarsely|lightly|freshly|very|well)$/i;
+const PREPARED = /^[a-z]{3,}ed$/i;
+
+// "1 small garlic clove, grated" doubled is "2 small garlic cloves, grated": the noun is the
+// last word before the first comma or bracket, or before how it's prepared where there's no
+// comma ("1 onion finely chopped"). A noun we can't find stays singular rather than a guess.
 const pluralised = (rest: string): string => {
-  const match = rest.match(/^(\s*[^,(;]*?)([A-Za-z]+)(\s*(?:[,(;].*)?)$/);
-  return match ? `${match[1]}${plural(match[2]!)}${match[3]}` : rest;
+  const end = rest.search(/[,(;]/);
+  const head = end === -1 ? rest : rest.slice(0, end);
+  const words = [...head.matchAll(/\S+/g)];
+  const prepared = words.findIndex(
+    ([word], index) =>
+      index > 0 &&
+      (PREPARED_HOW.test(word) || (PREPARED.test(word) && (index === words.length - 1 || /^(?:and|or|then)$/i.test(words[index + 1]![0])))),
+  );
+  const noun = words[prepared === -1 ? words.length - 1 : prepared - 1];
+  if (noun === undefined || !/^[a-z]+$/i.test(noun[0])) return rest;
+  const at = noun.index!;
+  return `${rest.slice(0, at)}${plural(noun[0])}${rest.slice(at + noun[0].length)}`;
 };
 
 // "1½ cups", "1 cup": a unit written as a word agrees with its new amount; "tbsp" and "g" don't change.
 const agreeing = (unitText: string, many: boolean): string => {
-  const word = unitText.trimStart();
+  const word = unitText.match(/[a-z]+$/i)?.[0] ?? "";
   if (!/^[a-z]{3,}$/i.test(word) || /^(?:tsps?|tbsps?|tbs|lbs?|kg)$/i.test(word)) return unitText;
   const space = unitText.slice(0, unitText.length - word.length);
   if (many) return space + plural(word);

@@ -157,7 +157,11 @@ guess:
 - A pack size in brackets straight after the pack ("1 small tub (200g) crème fraîche") is the
   pack's size, not a second amount: the count scales and the bracket stays.
 - One becoming several takes the plural of its noun: "1 small garlic clove" doubled is "2 small
-  garlic cloves".
+  garlic cloves". The noun is the last word before a comma or bracket, or before how it's
+  prepared where there's no comma ("1 onion finely chopped" is "2 onions finely chopped", OV-242).
+  A noun that can't be found stays singular rather than a word being guessed at.
+- "1-1/2 cups", the US way of writing 1½, is one amount, not a range, on screen and aloud (OV-242).
+  "Heaped" or "level" before a spoon leaves it a spoon.
 - The method keeps the author's words and amounts, and says so above step 1 once anything is
   adjusted. Its oven temperatures are the one thing US units change (OV-150, see "Oven
   temperatures in US units").

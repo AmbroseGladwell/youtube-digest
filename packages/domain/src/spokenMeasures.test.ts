@@ -44,6 +44,14 @@ test("a size that describes the thing is said singular", () => {
   ]);
 });
 
+test("a US mixed number with a hyphen is one amount", () => {
+  says([
+    ["1-1/2 cups sweetened shredded coconut", "1 and a half cups sweetened shredded coconut"],
+    ["1-1/2 teaspoons vanilla extract", "1 and a half teaspoons vanilla extract"],
+    ["2-3 tbsp water", "2 to 3 tablespoons water"],
+  ]);
+});
+
 test("a share of a pack sold whole is said as a share of one", () => {
   says([
     ["½ × 190g jar pesto", "half a 190 gram jar pesto"],
