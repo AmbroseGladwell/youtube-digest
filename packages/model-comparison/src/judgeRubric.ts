@@ -50,6 +50,12 @@ winner.`;
 const transcriptLines = (fetched: FetchedTranscript) =>
   fetched.transcript.map((segment) => `[${formatTimestamp(segment.startMs)}] ${segment.text}`).join("\n");
 
+export const transcriptForJudging = (fetched: FetchedTranscript): string => `Title: ${fetched.video.title}
+Channel: ${fetched.video.channel}
+
+Transcript:
+${transcriptLines(fetched)}`;
+
 export const noteForJudging = (overview: Overview): string =>
   overviewMarkdown(overview)
     .replace(/\]\(https?:\/\/[^)]+\)/g, "]")
@@ -59,11 +65,7 @@ export const noteForJudging = (overview: Overview): string =>
 export function judgePrompt(fetched: FetchedTranscript, noteA: Overview, noteB: Overview) {
   return {
     systemPrompt: SYSTEM_PROMPT,
-    userMessage: `Title: ${fetched.video.title}
-Channel: ${fetched.video.channel}
-
-Transcript:
-${transcriptLines(fetched)}
+    userMessage: `${transcriptForJudging(fetched)}
 
 === Note A ===
 ${noteForJudging(noteA)}

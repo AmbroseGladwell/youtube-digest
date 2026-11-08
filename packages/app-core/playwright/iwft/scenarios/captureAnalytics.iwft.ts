@@ -1,3 +1,4 @@
+import { DEFAULT_SECTIONS_ENABLED } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
@@ -42,10 +43,48 @@ test("making an overview is counted from asking to reading it, with where it was
           standsOut: true,
           tagsReused: 0,
           tagsAdded: 3,
+          howToApplyWritten: true,
+          howToApplyItems: 1,
+          personalised: false,
         },
       },
       { name: "capture.newOverviewDialog.readChosen", props: { overviewId: overview!.id, from: "dialog" } },
     ]);
+});
+
+const finishedProps = (backendSimulator: BackendSimulator) =>
+  captureEvents(backendSimulator).find(({ name }) => name === "capture.newOverview.finished")?.props;
+
+test("How to apply is counted by how many actions it holds, an empty list as written, and never by what the actions or the reader say", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.setGeneratedOutputOverrides({ howToApply: { items: [] } });
+  await launcher.launch({ ...SIGNED_IN, aboutYou: { who: ["nurse"], time: [], focus: ["night shifts"] } });
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect
+    .poll(() => finishedProps(backendSimulator))
+    .toMatchObject({ howToApplyWritten: true, howToApplyItems: 0, personalised: true });
+  const sent = JSON.stringify(backendSimulator.analytics.events());
+  expect(sent).not.toContain("nurse");
+  expect(sent).not.toContain("night shifts");
+});
+
+test("How to apply switched off is counted as not written, not as an empty list", async ({ launcher, backendSimulator }) => {
+  backendSimulator.setGeneratedOutputOverrides({ howToApply: undefined });
+  await launcher.launch({ ...SIGNED_IN, sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, howToApply: false } });
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect
+    .poll(() => finishedProps(backendSimulator))
+    .toMatchObject({ howToApplyWritten: false, howToApplyItems: 0, personalised: false });
 });
 
 test("how the capture's time split is reported beside its events, step by step, and agrees with the event's duration", async ({

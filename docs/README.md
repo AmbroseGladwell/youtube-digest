@@ -22,7 +22,8 @@ Five folders, five different questions.
   per model, with tokens, latency and cost measured from the providers' own usage reports,
   the four run outcomes, the automatic checks and what each catches, the pairwise judge
   that never reads its own provider's notes, the blind A/B check that calibrates it, the transcript set,
-  the budget, how to run it, and the results.
+  the budget, how to run it, and the results; and OV-230's run of How to apply for three
+  different readers against a noise floor of two runs for nobody, measured by code.
 - `cost-model.md` — OV-19's decision on what personalisation costs: one shared note per
   video seeded by its first reader, then a personal pass per reader written from that note
   without the transcript. It covers the measured cost per reader, how the personal pass

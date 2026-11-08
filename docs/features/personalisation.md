@@ -129,3 +129,27 @@ written.
 `settings.personalisation.sectionSwitched` with the section and whether it is now on, and
 `settings.personalisation.aboutYouSaved` with whether it is now set. Onboarding counts the
 entries in each section and how many were typed. The text is never logged.
+
+### Is How to apply any good?
+
+How to apply is the only section the reader context shapes, so it is the only place
+personalisation can fail where a reader sees it, and the section most able to cost their
+trust (OV-230). Three numbers answer it, all counted by code, none carrying an action or any
+part of the context:
+
+- **The reveal's choice.** `onboarding.writtenForYou.shown` once For anyone is ready, then
+  `onboarding.writtenForYou.flipped` with `to` on every flip. A reader's last flip is their
+  choice; a reader shown the flip who never flipped didn't choose, and is counted apart.
+- **Switched off.** `settings.personalisation.sectionSwitched` with `section: howToApply`,
+  read beside `learningSwitched`. The profile feeds How to apply, so the two are the two
+  halves of one chain: without both, a wrong action can't be traced to the profile or the
+  section.
+- **How many actions.** `capture.newOverview.finished` carries `howToApplyWritten`,
+  `howToApplyItems` (0 to 3) and `personalised`, whether a reader context went into the
+  prompt. Written with no items is the prompt's "return an empty list rather than inventing
+  something"; if that is near zero across a library of mixed content, the section is making
+  advice up. Not written is the section switched off.
+
+They are read together on the PostHog dashboard "How to apply". Whether the actions change
+from one reader to another is the harness's question, not analytics': `npm run readers`
+(`docs/architecture/model-comparison.md`, "Different readers").

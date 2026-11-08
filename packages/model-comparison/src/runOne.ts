@@ -22,7 +22,7 @@ export interface RunOneOptions {
   model: ComparedModel;
   apiKey: string;
   fetched: FetchedTranscript;
-  profile?: ReaderProfile;
+  profile?: Partial<ReaderProfile>;
   http?: typeof fetch;
   now?: () => number;
 }

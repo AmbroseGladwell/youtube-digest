@@ -211,6 +211,218 @@ reliability, latency, cost and check pass rates, and, once there are judgments o
 the judge's win rates and the blind check's agreement; and `sideBySide.html`, which shows each
 video's notes and chapters from every model in one row, with any failed checks marked.
 
+## Different readers
+
+OV-230. The same harness asks a different question of How to apply: does it change with the
+reader? `npm run readers` runs production's own single pass, on one model, over the
+transcript set five times, differing only in `readerContext`:
+
+- **parent**, **founder** and **retiree**, written as About you entries and composed by
+  `composeReaderContext`, as the app sends them, and chosen to share as little as possible
+  (`spreadReaders.ts`). `--readers specific` runs two far more detailed readers instead,
+  with learned items, and `--readers all` both; readers already settled under the run's
+  name aren't paid for again
+- **nobody**, twice, with no context: the **noise floor**. A model rewords the same advice
+  from one run to the next, so two readers' actions differing proves nothing until they
+  differ by more than two runs for nobody do
+
+Everything is measured by code over the saved records (`readerSpread.ts`), never asked of a
+model. A video counts only when all five passed, so a failure can't pass for a difference.
+Per pair of readers the report gives how many videos had identical actions, ignoring case
+and punctuation, and the mean word overlap: shared words over all words in either list,
+1 for the same words, 0 for none in common. Videos where both readers got nothing are
+counted apart and left out of the overlap: saying nothing to two readers agrees, but isn't
+evidence the context was ignored, and on the first run it alone lifted every pair of
+readers to the noise floor. It says how many
+videos had the same actions for everyone, counts each reader's 0 to 3 actions, and gives a
+verdict: personalised where every pair of readers overlaps less than the noise floor. Its
+"Context used" counts the actions naming one of a reader's cue words, from the sentence and
+from the learned items apart, against how often nobody's actions hit the same words.
+
+What it can't see is an action that **misreads** its reader, which says we know you and
+gets it wrong. So the report ends with every video's actions for each reader, side by side,
+for reading by eye.
+
+```sh
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --budget 1 --limit 3
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --budget 3
+```
+
+The default model is GPT-6.1 Sol, production's on our key. `report.md` lands in the run's
+folder. A rerun under the same name pays only for what hasn't settled.
+
+### Results: first readers run, 8 Nov 2026
+
+GPT-6.1 Sol, all 20 videos, 100 overviews, all passed (4 retried after a dropped
+connection), $3.39.
+
+**The actions change with the reader.** Every pair of readers overlaps less than two runs
+for nobody: 0.20 to 0.26 against a noise floor of 0.39. One video of 20 gave everyone the
+same actions, and two or three gave a pair nothing to do.
+
+| Reader | 0 actions | 1 | 2 | 3 |
+|---|---|---|---|---|
+| nobody (each run) | 2 | 0 | 4 | 14 |
+| parent | 3 | 1 | 9 | 7 |
+| founder | 2 | 3 | 4 | 11 |
+| retiree | 3 | 3 | 7 | 7 |
+
+**A reader gets fewer actions.** Nobody got three on 14 videos; the parent and the retiree
+on 7. The model trims what doesn't fit rather than padding.
+
+**The parent is served least.** Counting actions that name something from the reader's own
+context (the report's "Context used", a keyword count by code): founder 21 of 44 on 11
+videos, retiree 17 of 38 on 9, parent 8 of 40 on 5. Nobody hits those words 0 to 4 times in
+50, so the counts aren't the videos' own vocabulary. The prompt's one example is a parent's ("school nights"), yet the
+parent's night shifts and young children reach the fewest actions. The founder's count is
+flattered by a set heavy with business videos.
+
+**No misreading found.** A keyword scan for actions contradicting their reader (children
+for the founder, a job for the retiree) found one, a harmless conditional ("If you market a
+business") for the parent. Read by eye, the best use the context precisely: "On your next 5
+sales calls…" for the founder on an app-ideas video, "without sacrificing sleep" for the
+parent on a marriage video, "If you draw from investments, ask your pension provider to
+model an early market fall" for the retiree. The weakest stretch it: the retiree's
+app-ideas actions become a library-volunteer task.
+
+### Results: specific readers, 8 Nov 2026
+
+The same 20 videos for two readers who filled in every part of About you and have four
+learned items each (`--readers specific`): an A&E nurse and dad of twin three-year-olds on
+night shifts, and a solo founder of an invoicing app for UK plumbers. 40 overviews, all
+passed, $1.51.
+
+| Reader | Word overlap with nobody | Actions using their context | From the sentence | From learned |
+|---|---|---|---|---|
+| parent | 0.26 | 8 of 40 (20%) | 8 | 0 |
+| specific-parent | 0.22–0.24 | 19 of 44 (43%) | 10 | 13 |
+| founder | 0.21 | 21 of 44 (48%) | 21 | 0 |
+| specific-founder | 0.26–0.27 | 18 of 46 (39%) | 17 | 2 |
+
+**More detail doesn't move the actions further from nobody's.** Overlap stays in the band the
+broad readers sit in. The video bounds what there is to do; the context changes how it's
+put, not what it is.
+
+**Learned items are what reached the parent.** 13 of the specific parent's 44 actions draw on
+them (the budget spreadsheet, strength training, Sunday cooking), and they lift a parent from
+the least served reader to level with the others. The founder's are used twice, both where
+the video is about the thing (an ISA on compound interest, LinkedIn on what to post), which
+is the restraint wanted, not a miss.
+
+**The keyword count undersells the specific founder.** By eye its actions are the most fitted
+in the run: "Ask 5 paying plumbers to walk through their latest invoice…", "Rewrite your
+invoicing app's upgrade screen around 1 concrete plumber outcome…", "Before changing your £20
+monthly price…". The broad founder's say "prospects" and "customers", which the count rewards
+just the same. A keyword proxy can't tell naming the reader's world from fitting it; that
+needs a judged measure.
+
+**Little shoehorning.** The weakest uses of a learned item: "For your next household budget
+decision, ask an artificial intelligence assistant for 3 competing options…" on a video about
+AI at Shopify.
+
+### Judged: practical and helpful
+
+`--judge` asks whether the actions are any use (`judgeActions.ts`). A judge from another
+provider than the writer's (`--judge-model`, else the first of `JUDGES` that qualifies)
+reads each video's transcript with every reader's actions at once. The readers are named
+"Reader 1" and so on, in an order shuffled per video. It labels each action: concrete or
+a principle; from the video, a sensible extension of it, or contradicting it; for a known
+reader, whether it fits, is generic or misreads them; doable within a couple of weeks; and
+helpful, marginal or unhelpful. For a reader given nothing, it says whether nothing was right.
+Code counts the labels (`summariseActionJudgments.ts`). **Practical and helpful** is
+concrete, not contradicting the video, not misreading the reader, doable, and helpful. An
+answer that skips, repeats or invents an action is a failure, not a partial count.
+
+Every reader chose to save the video, so the judge takes their interest in its subject as
+given. Without that line, the first trial marked down any action whose video didn't match
+the reader ("this nurse has no interest in apps"), which a real reader never meets.
+
+```sh
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --readers all --judge --judge-model anthropic:claude-opus-5-5 --budget 8
+```
+
+#### Results, 8 Nov 2026
+
+Opus 5.5 judging the GPT-6.1 Sol actions of all seven readers over 20 videos, 312 actions.
+It cost $1.96. One answer labelled 3 of 13 actions and was rerun.
+
+| Reader | Actions | Practical and helpful | Marginal | Fits | Generic | Misreads |
+|---|---|---|---|---|---|---|
+| nobody | 50 | 48 (96%) | 2 | – | – | – |
+| nobody-again | 50 | 46 (92%) | 4 | – | – | – |
+| parent | 40 | 28 (70%) | 12 | 11 (28%) | 28 | 1 |
+| founder | 44 | 40 (91%) | 4 | 23 (52%) | 21 | 0 |
+| retiree | 38 | 26 (68%) | 12 | 19 (50%) | 18 | 1 |
+| specific-parent | 44 | 31 (70%) | 13 | 22 (50%) | 22 | 0 |
+| specific-founder | 46 | 42 (91%) | 4 | 26 (57%) | 20 | 0 |
+
+**The advice is practical.** 95% to 100% of every reader's actions are concrete and
+doable. None contradicts its video. None was judged unhelpful. Every empty list was judged
+right. The only shortfall is "marginal": harmless, but little difference.
+
+**Readers who aren't founders get more marginal actions, 30% against 4–9%.** The judge's
+reasons fall into three kinds:
+
+- **Forced into the reader's life.** For example, filming "a real workplace problem" for an
+  A&E nurse, asking a nursery whether it uses AI tutoring, or a library volunteer's
+  "project decision". The writer reaches for the context where the video gives it nowhere
+  to go.
+- **Generic, where the judge knows better.** For example, a headphone case check for a
+  reader with "no known travel needs". The same action for nobody is helpful. So part of
+  the gap is the judge holding a known reader to a higher bar, not worse advice.
+- **Repeats.** A second action that restates the first.
+
+**Founders match nobody because the videos suit them.** The set is heavy with business
+and tech. Among the readers, fit is the clearer signal. Detail and learned items take the
+parent from 28% fitted to 50%, at the same 70% practical and helpful. The specific founder
+fits best of all, at 57%, which is what the keyword count missed.
+
+**What it says for How to apply:** personalising makes the actions fit better without
+making them less practical. Where it costs anything, it's a step that drags the reader's
+life into a video that has nothing to say about it. The prompt could say so: when the
+video doesn't bear on what we know of the reader, give the plain action and leave their
+life out of it.
+
+#### Tried: a rule against forcing the reader in, 8 Nov 2026
+
+This run tried exactly that rule, added after the fit line, and reverted it:
+
+> Use what you know of me only where the video bears on it. Where it doesn't, give the
+> plain step and leave my life out of it: don't invent a workplace, a project or an
+> occasion to hang the step on.
+
+The no-reader runs never see the fit line, so they were copied from the run above and
+only the five readers were written again (run `readers-fit-rule`, $3.80 to write, $1.96 to
+judge). Then every action was judged afresh.
+
+**The judge isn't steady from run to run.** The 100 no-reader actions were word for word
+the same in both runs, yet 17 of them got a different helpfulness label. Their practical and
+helpful share fell from 94% to 81%. It judges each video's readers side by side, so its bar
+moves with what it's comparing. **Compare a reader against no reader within a run, never
+one run's percentage against another's.**
+
+| Reader | Gap to no reader, before | After | Fits, before | After |
+|---|---|---|---|---|
+| parent | −24 | −21 | 28% | 11% |
+| founder | −3 | −12 | 52% | 39% |
+| retiree | −26 | −30 | 50% | 13% |
+| specific-parent | −24 | −19 | 50% | 23% |
+| specific-founder | −3 | −9 | 57% | 47% |
+
+The gap is each reader's practical and helpful share minus no reader's, in points.
+
+**It over-corrected.** The readers got more actions, closer to no reader's count. Those
+actions were more generic: fit halved or worse for the parent, the retiree and the specific
+parent. They were no more helpful against no reader: the gap moved a few points either
+way, which is within the judge's own wobble. The model didn't learn to tell a forced step
+from a fitted one. It just used the reader less. **Personalised steps that occasionally
+over-reach serve a reader better than plain ones, so the prompt is unchanged.** A fix
+for forcing has to keep the fitted steps, for example an example of each in the prompt,
+and be judged on the same terms (OV-236).
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

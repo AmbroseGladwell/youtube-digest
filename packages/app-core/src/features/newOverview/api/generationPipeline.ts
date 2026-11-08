@@ -69,6 +69,9 @@ export interface RunOverviewGenerationOptions {
   // How many of the note's tags were already in the library, counted against the library
   // as the run saw it (docs/features/tag-reuse.md).
   onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
+  // Whether anything about the reader went into the prompt, as composed for this run
+  // (docs/features/personalisation.md, "Analytics").
+  onPersonalised?: ((personalised: boolean) => void) | undefined;
   // Onboarding fetches the transcript, or reads the article, at once but writes only once the reader has answered
   // or skipped About you, so the first overview is made from their answers. Topics and
   // Settings are read after it settles (docs/features/onboarding.md, "Writing waits").
@@ -157,12 +160,13 @@ async function writeOverview(
     deps.settingsStore.get(),
   ]);
   const existingTags = tagUsage(library.map((overview) => overview.tags));
+  const readerContext = composeReaderContext(settings.aboutYou, settings.learned);
   const make = () =>
     deps.makeOverview(
       {
         ...what,
         captureReason: null,
-        readerContext: composeReaderContext(settings.aboutYou, settings.learned),
+        readerContext,
         sectionsEnabled: settings.sectionsEnabled,
         existingTopics,
         pastClaims,
@@ -180,6 +184,7 @@ async function writeOverview(
   const known = new Set(existingTags.map(({ tag }) => tag));
   const reused = overview.tags.filter((tag) => known.has(tag)).length;
   options.onTagged?.({ reused, added: overview.tags.length - reused });
+  options.onPersonalised?.(readerContext !== null);
   const saved = {
     ...overview,
     ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),

@@ -17,9 +17,11 @@ import { OnboardingStep } from "./OnboardingStep.js";
 
 // A property can only be a choice, a flag, a number or one of our own random ids: nothing
 // that could carry a URL, a video id or a sentence the reader wrote
-// (docs/architecture/analytics.md, "What an event may carry").
+// (docs/architecture/analytics.md, "What an event may carry"). One added to an event that
+// already exists is optional, so an older client's event still parses ("Adding a property").
 export const ANALYTICS_IDS = [OverviewId, TopicId] as const;
-export type AnalyticsProp = z.ZodEnum | z.ZodBoolean | z.ZodNumber | (typeof ANALYTICS_IDS)[number];
+type AnalyticsValue = z.ZodEnum | z.ZodBoolean | z.ZodNumber | (typeof ANALYTICS_IDS)[number];
+export type AnalyticsProp = AnalyticsValue | z.ZodOptional<AnalyticsValue>;
 export type AnalyticsProps = Record<string, AnalyticsProp>;
 
 export interface AnalyticsEventDefinition<P extends AnalyticsProps = AnalyticsProps> {
@@ -695,7 +697,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, and how many of its tags were already in the library; its duration measured by the app",
+        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, and whether anything about the reader was sent; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -706,6 +708,9 @@ export const analyticsEvents = {
           standsOut: z.boolean(),
           tagsReused: z.number().int().nonnegative(),
           tagsAdded: z.number().int().nonnegative(),
+          howToApplyWritten: z.boolean().optional(),
+          howToApplyItems: z.number().int().nonnegative().optional(),
+          personalised: z.boolean().optional(),
         },
       ),
       failed: event("An overview the reader asked for could not be made, and why", {
