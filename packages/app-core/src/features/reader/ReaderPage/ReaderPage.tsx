@@ -6,7 +6,6 @@ import {
   SUMMARY_SECTION,
   adjustedText,
   recipeText,
-  recipeYield,
   sourceName,
   type RecipeUnits,
   isUnreadableRecordError,
@@ -177,8 +176,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
-    () => (overview ? overviewNoteLines(overview, recipe === null ? {} : { ingredients: shownIngredients, units: recipeUnits }) : []),
-    [overview, recipe, shownIngredients, recipeUnits],
+    () =>
+      overview
+        ? overviewNoteLines(
+            overview,
+            recipe === null ? {} : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment?.methodAmounts ?? [] },
+          )
+        : [],
+    [overview, recipe, shownIngredients, recipeUnits, adjustment],
   );
   const methodActions = useMemo(() => (recipe === null ? [] : actionsOf(recipe.steps)), [recipe]);
   const summaryLines = useMemo(
@@ -375,6 +380,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   recipe: recipePage.recipe,
                   ingredients: shownIngredients,
                   adjusted: adjustment.copyNote,
+                  methodAmounts: adjustment.methodAmounts,
                 }),
               )
               .then(() => setRecipeCopied(true));
@@ -545,6 +551,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     cooking={recipeCooking}
                     stacked={isPhone && !isPanel}
                     usTemperatures={recipeUnits === "us"}
+                    methodAmounts={adjustment.methodAmounts}
                   />
                 </>
               )}
@@ -647,7 +654,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             source={recipePage.source}
             from={sourceName(recipePage.source)}
             recipe={recipePage.recipe}
-            ingredients={shownIngredients}
+            lines={adjustment?.lines ?? []}
+            methodAmounts={adjustment?.methodAmounts ?? []}
             adjusted={adjustment?.copyNote ?? null}
             onDone={endPrinting}
           />
@@ -663,14 +671,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             actionNote={adjustment.actionNote}
             surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
             usTemperatures={recipeUnits === "us"}
+            methodAmounts={adjustment.methodAmounts}
             ingredients={
               <>
-                {adjustment.status !== null && (
-                  <p className={styles.cookingAdjusted}>
-                    {adjustment.status} The method keeps the recipe’s amounts
-                    {recipePage.recipe.yield === null ? "" : `, for ${recipeYield(recipePage.recipe.yield).amount}`}.
-                  </p>
-                )}
+                {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
                 <RecipeIngredients
                   adjustment={adjustment}
                   scale={scale}

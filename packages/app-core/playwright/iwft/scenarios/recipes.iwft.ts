@@ -48,7 +48,7 @@ test("servings and units adjust the amounts they can read, mark them, and say wh
     "Adjusted for 8 servings in US units. 2 lines have no amount to adjust.",
   );
   await expect(page.getByTestId("RecipeMethod.note")).toHaveText(
-    "The method gives the recipe’s own amounts, for 4 servings, with oven temperatures in °F.",
+    "Amounts the method repeats from the ingredients are adjusted for 8 servings in US units, and marked. Oven temperatures are in °F. Everything else is as the recipe gives it.",
   );
   await expect(page.getByTestId("RecipeMethod.step").first()).toContainText("Heat the oven to 425°F (400°F fan)");
   await expect(page.getByTestId("OvenText.converted")).toHaveText(["425°F", "400°F"]);

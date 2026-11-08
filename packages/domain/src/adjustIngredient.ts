@@ -9,7 +9,9 @@ export type AdjustedIngredient =
   | { kind: "asWritten"; line: string }
   // Read, but nothing about it moved: a 1× line, or one already in the units asked for.
   | { kind: "same"; line: string }
-  | { kind: "adjusted"; pieces: IngredientPiece[]; packAsSold: boolean }
+  // `written` is the amount as the page gave it, and `plural` the noun that took its plural, so
+  // the method can find the same amount and say it the same way (OV-231).
+  | { kind: "adjusted"; pieces: IngredientPiece[]; packAsSold: boolean; written: string; plural: { from: string; to: string } | null }
   // No amount we can read, or more than one, so it stays exactly as the page wrote it.
   | { kind: "unreadable"; line: string };
 
@@ -226,8 +228,17 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
     { text: packText, changed: false },
     { text: tail, changed: false },
   ].filter(({ text }) => text !== "");
-  return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized };
+  const written = `${amount[0]}${named === null ? "" : rest.slice(0, spaced.length + named.length)}`;
+  return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized, written, plural: pluralTaken(afterUnit, tail) };
 }
+
+const pluralTaken = (before: string, after: string): { from: string; to: string } | null => {
+  if (before === after) return null;
+  const was = before.split(/\s+/);
+  const now = after.split(/\s+/);
+  const at = was.findIndex((word, index) => word !== now[index]);
+  return at === -1 ? null : { from: was[at]!.replace(/[^a-z]/gi, ""), to: now[at]!.replace(/[^a-z]/gi, "") };
+};
 
 // "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
 // its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
@@ -243,7 +254,7 @@ function packsOf(line: string, lead: string, size: string, afterSize: string, fa
     { text: ` × ${size}`, changed: false },
     { text: `${word[1]}${factor > 1 ? plural(singular) : singular}${tail}`, changed: false },
   ].filter(({ text }) => text !== "");
-  return { kind: "adjusted", pieces, packAsSold: true };
+  return { kind: "adjusted", pieces, packAsSold: true, written: size, plural: null };
 }
 
 export const adjustedText = (adjusted: AdjustedIngredient): string =>

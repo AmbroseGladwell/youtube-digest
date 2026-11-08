@@ -1,6 +1,16 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { recipeFigures, recipeFiguresLine, recipeStepGroups, type RecipeNote, type WebSource } from "@overview/domain";
+import {
+  methodPieces,
+  recipeFigures,
+  recipeFiguresLine,
+  recipeStepGroups,
+  type AdjustedIngredient,
+  type IngredientPiece,
+  type MethodAmount,
+  type RecipeNote,
+  type WebSource,
+} from "@overview/domain";
 import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import styles from "./RecipePrintSheet.module.scss";
 import { recipePrintSheetTestIds } from "./RecipePrintSheetTestIds.js";
@@ -9,15 +19,27 @@ export interface RecipePrintSheetProps {
   source: WebSource;
   from: string;
   recipe: RecipeNote;
-  ingredients: readonly string[];
+  lines: readonly AdjustedIngredient[];
+  methodAmounts: readonly MethodAmount[];
   adjusted: string | null;
   onDone: () => void;
 }
 
+// Ink may not carry the tint, so on paper a changed amount is set in bold (231l).
+function Printed({ pieces }: { pieces: readonly IngredientPiece[] }) {
+  return (
+    <>
+      {pieces.map((piece, index) => (piece.changed ? <strong key={index}>{piece.text}</strong> : <Fragment key={index}>{piece.text}</Fragment>))}
+    </>
+  );
+}
+
+const piecesOf = (line: AdjustedIngredient): IngredientPiece[] => (line.kind === "adjusted" ? line.pieces : [{ text: line.line, changed: false }]);
+
 // Design 144s: the page's recipe on one sheet, black on white whatever the theme, with the
 // page's own image above it and our name and mark at the foot, and none of our words
 // (OV-148). It exists only while the print dialog is open, which waits for the image.
-export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, onDone }: RecipePrintSheetProps) {
+export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, adjusted, onDone }: RecipePrintSheetProps) {
   const [imageSettled, setImageSettled] = useState(source.imageUrl === null);
 
   useEffect(() => {
@@ -59,7 +81,7 @@ export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, 
         {adjusted !== null && (
           <>
             <br />
-            {adjusted}
+            {adjusted.replace(/\.$/, "")}: changed amounts in bold.
           </>
         )}
       </p>
@@ -67,8 +89,10 @@ export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, 
         <div>
           <h2 className={styles.heading}>Ingredients</h2>
           <ul>
-            {ingredients.map((line, index) => (
-              <li key={index}>{line}</li>
+            {lines.map((line, index) => (
+              <li key={index}>
+                <Printed pieces={piecesOf(line)} />
+              </li>
             ))}
           </ul>
         </div>
@@ -84,7 +108,9 @@ export function RecipePrintSheet({ source, from, recipe, ingredients, adjusted, 
                 {name !== null && <h3 className={styles.group}>{name}</h3>}
                 <ol start={start}>
                   {steps.map((text) => (
-                    <li key={text}>{text}</li>
+                    <li key={text}>
+                      <Printed pieces={methodPieces(text, methodAmounts)} />
+                    </li>
                   ))}
                 </ol>
               </div>
