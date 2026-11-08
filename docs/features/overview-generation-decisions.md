@@ -578,7 +578,10 @@ changes *how many*. Measured on GPT-6.1 Sol (`docs/architecture/model-comparison
 
 - **Long sources cover more.** It held on both samples of each prompt.
 - **Short ones are unchanged within run-to-run noise.**
-- **The judge called it level.** Its reasons were about fields this change doesn't touch.
+- **The judges can't separate it from noise.** The whole-note judge called it level, on fields
+  this change doesn't touch. A judge that sees only the key points leaned against the new prompt,
+  but it leaned as far between two runs of the old prompt. Where it does lean, it marks down
+  caveats about evidence, which is the anecdote rule.
 - **It costs the same.**
 
 ## Stress-testing against genres outside the samples

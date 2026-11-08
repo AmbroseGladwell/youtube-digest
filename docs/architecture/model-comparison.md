@@ -206,6 +206,23 @@ task secrets:run -- npm run judge --workspace packages/model-comparison -- \
   --run ov-214-after --against ov-214-before --budget 4
 ```
 
+`judge-key-points` judges only the key points, between two runs that already exist. It
+generates nothing, and reads videos from the main set and the coverage set:
+
+```sh
+task secrets:run -- npm run judge-key-points --workspace packages/model-comparison -- \
+  --run ov-214-after --against ov-214-before --budget 3
+```
+
+- **What the judge sees:** the transcript, plus each note's premise, core claim and key points
+  with their places. The premise and claim are there only so it can tell a point that repeats
+  them. It never sees chapters, the verdict or the sponsor section.
+- **Both orders:** every pair is judged twice, once each way round. A side wins a dimension only
+  when both orders agree; a split is a tie.
+- **Dimensions:** choice, completeness, faithfulness and overall (`keyPointsRubric.ts`).
+- **Where it goes:** the report lands in `.local/key-point-judgments/<run>--against--<run>/report.md`.
+- **Cost:** about $0.08 a pair.
+
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
 `task secrets:run` (`docs/conventions/secrets.md`), and listed in `scripts/sanityCheck.env`.
 A model whose provider has no key is skipped with a line saying so.
@@ -687,8 +704,41 @@ ov-214-before` on the 20 videos, judged by Gemini 3.1 Pro:
     app-animations note's "pointer-driven tilt" was called invented. It comes from the video's
     description, which the model sees and the judge doesn't.
 
-**A whole-note judge can't isolate a change to one field.** A judge that sees only the key
-points would be the sharper test. OV-228's blind listen is where the whole note gets judged.
+**A whole-note judge can't isolate a change to one field**, so a judge that sees only the key
+points was built (`judge-key-points`, above) and run on notes that already existed. Nothing
+new was generated for it. Judging cost $7.00, and the 12 notes from the stopped run had cost
+$0.35 to write.
+
+| Pair | Prompts | Pairs | Wins | Ties | Losses | Win rate |
+|---|---|---|---|---|---|---|
+| `ov-214-after` against `ov-214-before` | new against old | 20 | 5 | 4 | 11 | 35% |
+| `coverage-ov-214` against `coverage-2026-11-08` | new against old | 6 | 1 | 3 | 2 | 42% |
+| `coverage-ov-214-b` against `coverage-ov-214-control` | new against old | 7 | 1 | 2 | 4 | 29% |
+| `ov-214-before-b` against `ov-214-before` | **old against old** | 12 | 0 | 5 | 7 | **21%** |
+| `coverage-ov-214-control` against `coverage-2026-11-08` | **old against old** | 7 | 3 | 2 | 2 | 57% |
+| `coverage-ov-214-b` against `coverage-ov-214` | **new against new** | 7 | 2 | 1 | 4 | 36% |
+
+The overall call is shown, with a tie counting as half a win. `ov-214-before-b` is 12 notes from
+an old-prompt run that was stopped part way, kept because they already existed. One coverage
+pair errored on the network and wasn't retried.
+
+**This judge can't tell the prompts apart from writing the same note twice.** The same prompt
+run twice scored from 21% to 57%. Every new-against-old figure falls inside that range. Two
+writes of one note differ by more than the prompt change does. So this measure shows neither
+that the new key points are better nor that they are worse.
+
+**Where it does lean, it marks down the note's own judgment of the evidence.** In old against
+old as well as new against old, its reasons call a caveat about evidence "editorial critique",
+"external fact-checking" or a waste of space. On the hearing it held "presents no quantitative
+results" against the new note. On Shopify it wanted back the affirmations point, which the new
+rule dropped because it rests on one anecdote. That pulls against the trust standard decided on
+8 Nov 2026 (`overview-quality.md`, "Trust"): keep what a claim rests on, and don't present an
+anecdote as proof. So part of the new prompt's lean is the anecdote rule doing what it was
+asked to do, judged by a rubric that doesn't share that value.
+
+**What a sharper test would need:** several notes per video for each prompt, so the comparison
+is between prompts and not between two single writes. Or the reader's own blind picks, which
+OV-228 runs on the whole note.
 
 **Cost didn't move:** 1,690 output tokens a note before, 1,716 after. Key points total about
 205 words either way.
