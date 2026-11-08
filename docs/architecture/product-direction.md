@@ -310,6 +310,35 @@ is at a laptop. Of everything in this document, this is the item with the larges
 - **The library has to be worth using with no assistant attached.** Still the most important
   constraint, and still `README.md`'s own measure.
 
+## The first release, as it stands on 8 November 2026
+
+Decided 5 Nov 2026 and **refined by the owner on 8 Nov 2026**. Recorded here because no doc held
+it: it lived in card descriptions and in one session's memory.
+
+- **The cohort is friends and family.** Not a wider hand-picked tester group. That is a smaller,
+  more forgiving audience, and it changes what the release has to answer for.
+- **The overview work comes first.** Improvements to the note land before anything is shared more
+  widely. This is the sequencing decision behind the current sprint, and it reverses an earlier
+  reading of this document that put instrumentation ahead of quality.
+- Unlisted store listing, nobody pays, unchanged from 5 Nov.
+
+**What that changes about measurement.** An earlier version of this document argued that
+forward-only instrumentation had to land before any tester arrived, because evidence not
+collected is evidence lost. That still holds in principle and is much weaker here:
+
+- **The overlap rate is close to pointless for this cohort.** A handful of people who know each
+  other will rarely save the same source, and the number only means something at scale.
+- **Extension installs matter less** when you handed out every link yourself and can ask.
+- **The profile keep rate still matters**, because each person generates their own profile and
+  the signal does not depend on the group being large.
+- **A structured way to report a problem matters less than it looked**, because friends and
+  family will simply tell you. It is still worth having, and it is no longer close to mandatory.
+
+**What it does not change.** `open-questions.md` #4, whether a reader trusts a verdict enough to
+skip something on its say-so, is still the deepest untested question, and a small friendly cohort
+is a weak test of it: people who know you are the least likely to tell you the verdict was wrong.
+That is a real limit of this release and worth naming before conclusions are drawn from it.
+
 ## A reading of the sequence
 
 Not a decision. The order that respects what is already known:

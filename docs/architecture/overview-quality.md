@@ -202,6 +202,23 @@ distinction has to be stated in the prompt, not hoped for:
 
 The thing, the ground, the answer.
 
+**Asked 8 Nov 2026: are the premise and the big picture distinct enough to coexist?** The answer
+is that they cannot merge, because they live in different places. The premise is a **list** field:
+the library row, `search_overviews`'s light listing, `buildSearchHaystack`. Its 25-word cap exists
+so a hundred rows stay scannable, and a paragraph cannot do that job.
+
+**But on the note page both would appear in sequence and read repetitively**, which the 71% figure
+below is evidence of. So the proposal is to keep both fields and **stop showing the premise on the
+note page**: the big picture opens the note, the premise fills in where a short source earns no big
+picture, and the two never appear together. The repetition is then prevented structurally rather
+than by asking the prompt to avoid it. The distinction that makes it hold is that **the premise is
+about the artefact and the big picture is about the subject.** Recorded on OV-225, with the
+deletion test as the check that settles it on evidence.
+
+**Decided 8 Nov 2026: a recipe gets no big picture.** A recipe has no argument to set up, and
+its premise is already its orientation. Articles get one on the same rule as video, or the fork
+drifts further.
+
 **Decided 8 Nov 2026: the big picture is structural**, like the premise and the key points,
 rather than one of the four sections a reader can switch off
 (`overview-generation-decisions.md`, "The composable prompt"). A note without it is a note with
@@ -377,10 +394,20 @@ overview to keep three things apart: **what the source said**, **what we read in
 
 **What is genuinely missing is one rule and one shape.**
 
-1. **The anecdote rule.** A source that tells one story and generalises from it should have that
-   noted, not laundered into a key point that reads as established. This is close to what
-   `dubious` already flags, but narrower: the claim need not be wrong, only unevidenced. Worth
-   adding to the prompt and worth deciding whether it feeds `dubious` or stands apart.
+1. **The anecdote rule. Decided 8 Nov 2026: it stands apart from `dubious`, and it is an
+   extension of a rule that already exists rather than a new field.** A source that tells one
+   story and generalises from it should have that noted, not laundered into a key point that
+   reads as established.
+
+   It is not `dubious`, because `dubious` means the claim contradicts mainstream evidence or is
+   conveniently self-serving. "Generalises from one story" is **unevidenced rather than wrong**,
+   and folding it in would make the flag noisier, which costs exactly what makes the flag worth
+   having: it is rare, so a reader believes it.
+
+   **The shape to follow is already in `coreSection.ts`**, which says to "keep who claims
+   something when the video presents it as one person's claim rather than settled fact". The
+   anecdote rule is the same move one step further: keep the fact that it rests on one case. So
+   it belongs in the key-points instruction beside that sentence, not as a field of its own.
 2. **A reader cannot tell report from reading inside a key point.** The prose blends both.
    Evidence fixes it for the points that carry a quotation, and leaves the rest as they are.
 
