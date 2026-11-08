@@ -28,7 +28,7 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
 
   return (
     <section className={styles.root} aria-labelledby="recent-overviews" data-testid={recentOverviewsTestIds.root}>
-      <h3 className={styles.heading} id="recent-overviews">
+      <h3 className={styles.heading} id="recent-overviews" data-testid={recentOverviewsTestIds.heading}>
         Recent
       </h3>
       {recent.map(({ overview }) => (

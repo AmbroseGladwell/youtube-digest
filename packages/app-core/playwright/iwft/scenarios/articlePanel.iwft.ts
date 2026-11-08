@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { articleSourceId, type ArticleRead, type ExtractedArticle } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -54,6 +54,23 @@ const chrome = {
   reloads: (page: Page) => page.evaluate(() => window.__iwftArticlePages__?.reloads),
 };
 
+// An undefined custom property draws in the parent's colour without a word (OV-212), so what is
+// compared is the drawn colour against the --label token resolved beside it, in both schemes.
+const expectDrawnInTheLabelTone = async (page: Page, label: Locator) => {
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme });
+    const { drawn, token } = await label.evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--label)";
+      element.after(probe);
+      const token = getComputedStyle(probe).color;
+      probe.remove();
+      return { drawn: getComputedStyle(element).color, token };
+    });
+    expect(drawn, colorScheme).toBe(token);
+  }
+};
+
 test("on a page that's neither, the panel says what it works on and shows what's recent, with no button", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeArticleOverview());
   backendSimulator.overviews.seed(makeOverview());
@@ -64,6 +81,7 @@ test("on a page that's neither, the panel says what it works on and shows what's
   );
   await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveCount(0);
   await expect(page.getByTestId(recentOverviewsTestIds.row)).toHaveCount(2);
+  await expectDrawnInTheLabelTone(page, page.getByTestId(recentOverviewsTestIds.heading));
 });
 
 test("a site's front page is not offered, since it is a list of other stories", async ({ page, launcher }) => {
@@ -82,6 +100,7 @@ test("first time on a site: the panel warns, Chrome asks, and an allowed article
   await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ granted: false }) });
 
   await expect(page.getByTestId(sourceOfferTestIds.site)).toHaveText("theharbourpost.example · Article");
+  await expectDrawnInTheLabelTone(page, page.getByTestId(sourceOfferTestIds.site));
   await expect(page.getByTestId(sourceOfferTestIds.title)).toHaveText(OPEN_PAGE.title);
   await expect(page.getByTestId(sourceOfferTestIds.facts), "nothing has been read yet").toHaveCount(0);
   await expect(page.getByTestId(capturePageTestIds.firstTimeNote)).toContainText("We only read a page when you press Create.");
