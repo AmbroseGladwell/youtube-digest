@@ -162,11 +162,20 @@ guess:
   A noun that can't be found stays singular rather than a word being guessed at.
 - "1-1/2 cups", the US way of writing 1½, is one amount, not a range, on screen and aloud (OV-242).
   "Heaped" or "level" before a spoon leaves it a spoon.
-- The method keeps the author's words and amounts, and says so above step 1 once anything is
-  adjusted. Its oven temperatures are the one thing US units change (OV-150, see "Oven
-  temperatures in US units").
+- The method keeps the author's words, and its amounts follow the ingredients only where they
+  repeat an ingredient line (OV-231, designs 231a–231m, owner 8 Nov 2026, reversing 144y–144ab):
+  the same amount as written, followed by a word of that line's name. "Put 100g plain flour, 2
+  large eggs" doubled is "Put 200g plain flour, 4 large eggs", marked as a changed ingredient
+  amount is, and "1 onion" takes its plural as the line does. **A share stays as written**: "1
+  tbsp of the oil" may be part of the batch and "about 3 tbsp of the batter" is per pancake, so
+  doubling it would make bigger pancakes, and code can't tell the two apart. A share left alone is
+  still cookable; a wrongly doubled one isn't. Times, sizes, counts of pieces and proportions
+  never match. Above step 1: "Amounts the method repeats from the ingredients are adjusted for 16
+  pancakes, and marked. Everything else is as the recipe gives it." Oven temperatures convert in
+  US units (OV-150, see "Oven temperatures in US units"). In `methodAmounts.ts`.
 
-Copy and Print take the lines as shown, with a line saying what they were adjusted from.
+Copy and Print take the lines and the method as shown, with a line saying what they were
+adjusted from. On paper a changed amount is in bold, since ink may not carry the tint (231l).
 
 ## Copy and print
 
@@ -182,7 +191,9 @@ dead link is left out) and closes with "Made with The Overview" beside the mark.
 Changed by the owner on 2026-11-03 (OV-148, https://trello.com/c/WEIryD5R). A recipe's narration is
 the whole recipe: the Summary, then the ingredients, then the method. So pressing Listen makes one
 render that has every section ready, and plays straight through. The ingredients are read as shown,
-so an adjusted amount is what is heard, and adjusting servings or units makes a fresh render.
+so an adjusted amount is what is heard, and adjusting servings or units makes a fresh render. The
+method's adjusted amounts (OV-231) are read as shown too, inside that same render, so they cost no
+extra one.
 
 - **Headings are counted, as key points are.** "There are 8 ingredients" and "The method, in 6
   steps", counted in code.
@@ -304,7 +315,9 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   takes the phone's sizes. Between 768 and 943px the drawer is 20rem and the side margins 2rem, so
   the step keeps a phone's width beside a full list (190l–190o). The size changes once each way,
   at the start of opening and the end of closing, never mid-slide (190i). The voice carries on.
-  While servings or units are adjusted, every action carries "Amounts as written, for 4 servings".
+  While servings or units are adjusted, every action carries "Adjusted for 16 pancakes" (231f,
+  replacing 150af's "Amounts as written"), with the method's adjusted amounts marked in the action;
+  the Ingredients sheet says "Adjusted for 16 pancakes, and so is the method." (231j).
 - **Labels, conditions and checks (150p–150au).** See "A step's actions". A label is a small
   heading over each of its step's actions; a condition is in Bold 700 in the label colour, the
   action at 400. Checks read as actions.
@@ -327,8 +340,8 @@ Decided by the owner on 3 Nov 2026 (150ak), closing 144x's question. US units tu
 Celsius into Fahrenheit, fan figures included, on the note, in cooking step by step and in what is
 read aloud, marked on the stone tint like a changed amount. Oven figures land on a dial's 25° marks,
 as the usual tables do (180°C is 350°F, 220°C is 425°F); anything under 120°C converts exactly.
-Gas marks, Fahrenheit and the method's amounts stay as written, and the method's note says
-"…with oven temperatures in °F". Copy and Print still give the method as the page wrote it.
+Gas marks and Fahrenheit stay as written, and the method's note says "Oven temperatures are in
+°F." Copy and Print still give the temperatures as the page wrote them.
 
 ## Sharing
 
@@ -340,8 +353,17 @@ the top of the shared page, so the site is still one tap away.
 
 - **The shared page is the reader's recipe, read-only.** The method with Read aloud, Cook step by
   step and Cook from here in the bar, through the same `useRecipeVoice` and `useCookingMode`.
-  Servings and units are not adjustable there, so cooking shows the amounts as written. Its
-  analytics are `sharedPage.cooking.*`, and the kept place is on the visitor's device.
+  Its analytics are `sharedPage.cooking.*`, and the kept place is on the visitor's device.
+- **Servings and units adjust there as on the reader's own copy** (OV-244, owner 8 Nov 2026,
+  reversing OV-159's "not adjustable"): the ingredients, the method's repeated amounts, US oven
+  temperatures and cooking mode. The adjustment is the visitor's, on their device; the copy never
+  changes. Servings start again on each visit and the units are remembered, as on the reader page.
+- **The sharer's narration plays only for the recipe as written.** Adjusted and signed out, the
+  voice is the read-along without audio, and under the ingredients the page says "Read aloud
+  plays the recipe as it was shared. To hear it read aloud as adjusted, create an account.",
+  whose link starts onboarding around the copy, as Save does. Adjusted and signed in, it renders
+  afresh on the visitor's own account in their own voice. Back to the recipe as written brings
+  the sharer's audio back.
 - **The narration is the sharer's,** as for any share (`sharing.md`): the as-written render, which
   has always read the method, so the voice now has lines on the page to follow all the way through.
 - **Copies shared before OV-159 have no method.** `RecipeNote` still lets `steps` be empty with

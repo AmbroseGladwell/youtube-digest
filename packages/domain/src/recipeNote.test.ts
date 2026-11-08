@@ -7,6 +7,8 @@ import { overviewMetaParts } from "./overviewMetaParts.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
 import { recipeFigures, recipeMinutes, recipeStepGroups, recipeYield } from "./recipeFacts.js";
 import { recipeText } from "./recipeText.js";
+import { adjustIngredient } from "./adjustIngredient.js";
+import { methodAmounts } from "./methodAmounts.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 import { SharedNote } from "./SharedNote.js";
 import { overviewTimeSaved } from "./timeSavedSummary.js";
@@ -97,6 +99,24 @@ test("in US units the method's oven temperatures are shown and read in Fahrenhei
   );
   assert.equal(line?.text, "Heat the oven to 425°F (400°F fan).");
   assert.equal(line?.spoken, "Step 1. Heat the oven to 425 degrees Fahrenheit.");
+});
+
+test("the method's repeated amounts are shown, read and copied as adjusted, and its shares as written", () => {
+  const ingredients = ["100g plain flour", "300ml milk"];
+  const amounts = methodAmounts(ingredients, ingredients.map((line) => adjustIngredient(line, 2, "asWritten")));
+  const steps = [
+    { text: "Whisk 100g plain flour with 300ml milk.", group: null },
+    { text: "Pour in about 3 tbsp of the batter.", group: null },
+  ];
+  const overview = makeRecipeOverview({ ingredients, steps, stepCount: 2 });
+  const method = overviewNoteLines(overview, { methodAmounts: amounts }).filter(({ section, heading }) => section === "Method" && !heading);
+  assert.deepEqual(
+    method.map(({ text }) => text),
+    ["Whisk 200g plain flour with 600ml milk.", "Pour in about 3 tbsp of the batter."],
+  );
+  assert.equal(method[0]?.spoken, "Step 1. Whisk 200 grams plain flour with 600 millilitres milk.");
+  const copied = recipeText({ title: "T", from: "F", url: "https://e.example/r", recipe: overview.recipe!, ingredients, adjusted: null, methodAmounts: amounts });
+  assert.match(copied, /1\. Whisk 200g plain flour with 600ml milk\.\n2\. Pour in about 3 tbsp of the batter\./);
 });
 
 test("the ingredients are read as shown, and a copy shared without the method stops after them", () => {

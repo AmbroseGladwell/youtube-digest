@@ -1,4 +1,4 @@
-import { ShareToken, shareSnapshot, type Overview, type SharePayload } from "@overview/domain";
+import { DEFAULT_NARRATION_VOICE, ShareToken, shareSnapshot, spokenScript, type Overview, type SharePayload } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
@@ -360,12 +360,12 @@ const sharedRecipe = async (
   await launcher.sharedOverviewPage.verifyIsShown();
 };
 
-test("a shared recipe carries the whole method, and can be cooked step by step", async ({ launcher, page, backendSimulator }) => {
+test("a shared recipe carries the whole method, opens as written, and can be cooked step by step", async ({ launcher, page, backendSimulator }) => {
   await sharedRecipe(launcher, makeRecipeOverview());
 
   await expect(page.getByText("An overview of a recipe from Example Kitchen")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ingredients · 8" })).toBeVisible();
-  await expect(page.getByTestId("RecipeIngredients.units.asWritten")).toHaveCount(0);
+  await expect(page.getByTestId("RecipeIngredients.units.asWritten")).toBeChecked();
   await expect(page.getByRole("heading", { name: "Method · 4 steps" })).toBeVisible();
   await expect(page.getByTestId("RecipeMethod.step")).toHaveCount(4);
   await expect(page.getByTestId("RecipeMethod.onThePage")).toHaveCount(0);
@@ -383,6 +383,69 @@ test("a shared recipe carries the whole method, and can be cooked step by step",
   await expect
     .poll(() => backendSimulator.analytics.sharedPage.events().map(({ name }) => name))
     .toEqual(expect.arrayContaining(["sharedPage.cooking.started", "sharedPage.cooking.left"]));
+});
+
+const sharedRecipeNarrated = (overview: ReturnType<typeof makeRecipeOverview>): SharePayload => {
+  const lines = spokenScript(overview);
+  return {
+    state: "shared",
+    token: TOKEN,
+    sharedAt: "2026-11-03T11:00:00.000Z",
+    snapshot: shareSnapshot({
+      overview,
+      transcript: null,
+      narration: {
+        key: "a".repeat(64),
+        voice: DEFAULT_NARRATION_VOICE,
+        durationSeconds: lines.length * 2,
+        lineStartsSeconds: lines.map((_, index) => index * 2),
+      },
+    }),
+  };
+};
+
+test("a visitor adjusts a shared recipe as on their own copy, and is told an account reads it aloud adjusted", async ({ launcher, page }) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedRecipeNarrated(makeRecipeOverview()));
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await launcher.sharedOverviewPage.verifyIsShown();
+
+  await expect(page.getByTestId("ReaderPlayerBar.pacerTag")).toBeHidden();
+  await expect(page.getByTestId("SharedOverviewPage.adjustedVoice")).toHaveCount(0);
+
+  for (let step = 0; step < 4; step += 1) {
+    await page.getByTestId("RecipeIngredients.more").click();
+  }
+  await page.getByTestId("RecipeIngredients.units.us").check();
+  await expect(page.getByTestId("RecipeIngredients.servings")).toHaveText("8 servings");
+  await expect(page.getByTestId("RecipeIngredients.line").nth(3)).toHaveText("4¼ cups vegetable stock");
+  await expect(page.getByTestId("RecipeMethod.step").first()).toContainText("Heat the oven to 425°F (400°F fan)");
+  await expect(page.getByTestId("SharedOverviewPage.adjustedVoice")).toHaveText(
+    "Read aloud plays the recipe as it was shared. To hear it read aloud as adjusted, create an account.",
+  );
+  await expect(page.getByTestId("ReaderPlayerBar.pacerTag")).toBeVisible();
+
+  await page.getByTestId("RecipeIngredients.backToWritten").click();
+  await expect(page.getByTestId("RecipeIngredients.servings")).toHaveText("4 servings");
+  await expect(page.getByTestId("SharedOverviewPage.adjustedVoice")).toHaveCount(0);
+  await expect(page.getByTestId("ReaderPlayerBar.pacerTag")).toBeHidden();
+
+  await page.getByTestId("RecipeIngredients.more").click();
+  await page.getByTestId("SharedOverviewPage.adjustedVoiceAccount").click();
+  await launcher.onboardingPage.verifyIsShown();
+});
+
+test("signed in, an adjusted shared recipe is narrated afresh on the visitor's own account", async ({ launcher, page, backendSimulator }) => {
+  await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
+  await launcher.inlineSharePayload(sharedRecipeNarrated(makeRecipeOverview()));
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await launcher.sharedOverviewPage.verifyIsShown();
+
+  await page.getByTestId("RecipeIngredients.more").click();
+  await expect(page.getByTestId("RecipeIngredients.servings")).toHaveText("5 servings");
+  await expect(page.getByTestId("SharedOverviewPage.adjustedVoice")).toHaveCount(0);
+  await page.getByTestId("ReaderPlayerBar.playButton").click();
+  await expect.poll(() => backendSimulator.narration.requestCount()).toBeGreaterThan(0);
 });
 
 test("a recipe shared before the method travelled with it sends the visitor to the page, with nothing to cook", async ({ launcher, page }) => {

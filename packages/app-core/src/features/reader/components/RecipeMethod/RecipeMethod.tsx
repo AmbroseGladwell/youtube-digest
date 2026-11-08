@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import { recipeStepGroups, sourceName, type RecipeAction, type RecipeNote, type WebSource } from "@overview/domain";
+import { recipeStepGroups, sourceName, type MethodAmount, type RecipeAction, type RecipeNote, type WebSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import { RecipeLineChoice } from "./RecipeLineChoice.js";
@@ -13,13 +13,14 @@ export interface RecipeMethodProps {
   // The voice moves through these, so its place is an action and the tint a sentence (design 150ac).
   actions: readonly RecipeAction[];
   source: WebSource;
-  // Said once above step 1 when the ingredients were adjusted: the method keeps the author's.
+  // Said once above step 1 when the ingredients were adjusted: what in the method followed them.
   note: string | null;
   voice: RecipeListVoice | null;
   cooking: RecipeCooking | null;
   // On a phone the way into cooking runs full width under the heading (design 150b).
   stacked: boolean;
   usTemperatures: boolean;
+  methodAmounts: readonly MethodAmount[];
 }
 
 // The way into cooking step by step (designs 150a, 150w): from step 1, or from where the reader
@@ -34,7 +35,7 @@ export interface RecipeCooking {
 // Designs 144g and 144u: a numbered list whose numbering carries on through the page's own
 // groups, so "step 9" means one thing. Where the method stayed on the page, a copy shared before
 // OV-159 and one saved from it, the heading keeps its count and the page is one link away.
-export function RecipeMethod({ recipe, actions, source, note, voice, cooking, stacked, usTemperatures }: RecipeMethodProps) {
+export function RecipeMethod({ recipe, actions, source, note, voice, cooking, stacked, usTemperatures, methodAmounts }: RecipeMethodProps) {
   const headingId = useId();
   const from = sourceName(source);
   const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
@@ -118,14 +119,14 @@ export function RecipeMethod({ recipe, actions, source, note, voice, cooking, st
                   const shown =
                     active && spoken !== null ? (
                       <>
-                        <OvenText text={text.slice(0, spoken.start)} us={usTemperatures} />
+                        <OvenText text={text.slice(0, spoken.start)} us={usTemperatures} amounts={methodAmounts} />
                         <mark className={styles.spoken} data-testid={recipeMethodTestIds.spokenAction}>
-                          <OvenText text={text.slice(spoken.start, spoken.end)} us={usTemperatures} />
+                          <OvenText text={text.slice(spoken.start, spoken.end)} us={usTemperatures} amounts={methodAmounts} />
                         </mark>
-                        <OvenText text={text.slice(spoken.end)} us={usTemperatures} />
+                        <OvenText text={text.slice(spoken.end)} us={usTemperatures} amounts={methodAmounts} />
                       </>
                     ) : (
-                      <OvenText text={text} us={usTemperatures} />
+                      <OvenText text={text} us={usTemperatures} amounts={methodAmounts} />
                     );
                   return (
                     <li

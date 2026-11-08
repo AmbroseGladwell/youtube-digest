@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import { recipeStepGroups, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { recipeStepGroups, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import styles from "./CookingStepsSheet.module.scss";
@@ -11,13 +11,14 @@ export interface CookingStepsSheetProps {
   actions: readonly RecipeAction[];
   at: number;
   usTemperatures: boolean;
+  methodAmounts: readonly MethodAmount[];
   onChoose: (step: number) => void;
   onClose: () => void;
 }
 
 // Design 150m: every step by its first action, done ones ticked and the current one tinted.
 // Choosing one goes to its first action and reads it, backwards or forwards.
-export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, onChoose, onClose }: CookingStepsSheetProps) {
+export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, methodAmounts, onChoose, onClose }: CookingStepsSheetProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const headingId = useId();
   const current = actions[at]?.step ?? 0;
@@ -80,7 +81,7 @@ export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, on
                       </i>
                       <span className={styles.text}>
                         <span className={styles.hidden}>Step {step + 1}{step < current ? ", done" : ""}. </span>
-                        <OvenText text={first?.text ?? ""} us={usTemperatures} />
+                        <OvenText text={first?.text ?? ""} us={usTemperatures} amounts={methodAmounts} />
                       </span>
                     </button>
                   </li>
