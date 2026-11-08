@@ -322,6 +322,70 @@ needs a judged measure.
 decision, ask an artificial intelligence assistant for 3 competing options…" on a video about
 AI at Shopify.
 
+### Judged: practical and helpful
+
+`--judge` asks whether the actions are any use (`judgeActions.ts`). A judge from another
+provider than the writer's (`--judge-model`, else the first of `JUDGES` that qualifies)
+reads each video's transcript with every reader's actions at once. The readers are named
+"Reader 1" and so on, in an order shuffled per video. It labels each action: concrete or
+a principle; from the video, a sensible extension of it, or contradicting it; for a known
+reader, whether it fits, is generic or misreads them; doable within a couple of weeks; and
+helpful, marginal or unhelpful. For a reader given nothing, it says whether nothing was right.
+Code counts the labels (`summariseActionJudgments.ts`). **Practical and helpful** is
+concrete, not contradicting the video, not misreading the reader, doable, and helpful. An
+answer that skips, repeats or invents an action is a failure, not a partial count.
+
+Every reader chose to save the video, so the judge takes their interest in its subject as
+given. Without that line, the first trial marked down any action whose video didn't match
+the reader ("this nurse has no interest in apps"), which a real reader never meets.
+
+```sh
+task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+  --run readers-2026-11-08 --readers all --judge --judge-model anthropic:claude-opus-5-5 --budget 8
+```
+
+#### Results, 8 Nov 2026
+
+Opus 5.5 judging the GPT-6.1 Sol actions of all seven readers over 20 videos, 312 actions.
+It cost $1.96. One answer labelled 3 of 13 actions and was rerun.
+
+| Reader | Actions | Practical and helpful | Marginal | Fits | Generic | Misreads |
+|---|---|---|---|---|---|---|
+| nobody | 50 | 48 (96%) | 2 | – | – | – |
+| nobody-again | 50 | 46 (92%) | 4 | – | – | – |
+| parent | 40 | 28 (70%) | 12 | 11 (28%) | 28 | 1 |
+| founder | 44 | 40 (91%) | 4 | 23 (52%) | 21 | 0 |
+| retiree | 38 | 26 (68%) | 12 | 19 (50%) | 18 | 1 |
+| specific-parent | 44 | 31 (70%) | 13 | 22 (50%) | 22 | 0 |
+| specific-founder | 46 | 42 (91%) | 4 | 26 (57%) | 20 | 0 |
+
+**The advice is practical.** 95% to 100% of every reader's actions are concrete and
+doable. None contradicts its video. None was judged unhelpful. Every empty list was judged
+right. The only shortfall is "marginal": harmless, but little difference.
+
+**Readers who aren't founders get more marginal actions, 30% against 4–9%.** The judge's
+reasons fall into three kinds:
+
+- **Forced into the reader's life.** For example, filming "a real workplace problem" for an
+  A&E nurse, asking a nursery whether it uses AI tutoring, or a library volunteer's
+  "project decision". The writer reaches for the context where the video gives it nowhere
+  to go.
+- **Generic, where the judge knows better.** For example, a headphone case check for a
+  reader with "no known travel needs". The same action for nobody is helpful. So part of
+  the gap is the judge holding a known reader to a higher bar, not worse advice.
+- **Repeats.** A second action that restates the first.
+
+**Founders match nobody because the videos suit them.** The set is heavy with business
+and tech. Among the readers, fit is the clearer signal. Detail and learned items take the
+parent from 28% fitted to 50%, at the same 70% practical and helpful. The specific founder
+fits best of all, at 57%, which is what the keyword count missed.
+
+**What it says for How to apply:** personalising makes the actions fit better without
+making them less practical. Where it costs anything, it's a step that drags the reader's
+life into a video that has nothing to say about it. The prompt could say so: when the
+video doesn't bear on what we know of the reader, give the plain action and leave their
+life out of it.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
