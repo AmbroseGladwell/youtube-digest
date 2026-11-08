@@ -353,8 +353,17 @@ the top of the shared page, so the site is still one tap away.
 
 - **The shared page is the reader's recipe, read-only.** The method with Read aloud, Cook step by
   step and Cook from here in the bar, through the same `useRecipeVoice` and `useCookingMode`.
-  Servings and units are not adjustable there, so cooking shows the amounts as written. Its
-  analytics are `sharedPage.cooking.*`, and the kept place is on the visitor's device.
+  Its analytics are `sharedPage.cooking.*`, and the kept place is on the visitor's device.
+- **Servings and units adjust there as on the reader's own copy** (OV-244, owner 8 Nov 2026,
+  reversing OV-159's "not adjustable"): the ingredients, the method's repeated amounts, US oven
+  temperatures and cooking mode. The adjustment is the visitor's, on their device; the copy never
+  changes. Servings start again on each visit and the units are remembered, as on the reader page.
+- **The sharer's narration plays only for the recipe as written.** Adjusted and signed out, the
+  voice is the read-along without audio, and under the ingredients the page says "Read aloud
+  plays the recipe as it was shared. To hear it read aloud as adjusted, create an account.",
+  whose link starts onboarding around the copy, as Save does. Adjusted and signed in, it renders
+  afresh on the visitor's own account in their own voice. Back to the recipe as written brings
+  the sharer's audio back.
 - **The narration is the sharer's,** as for any share (`sharing.md`): the as-written render, which
   has always read the method, so the voice now has lines on the page to follow all the way through.
 - **Copies shared before OV-159 have no method.** `RecipeNote` still lets `steps` be empty with

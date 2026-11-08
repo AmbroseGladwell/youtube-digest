@@ -338,6 +338,11 @@ pacer: the audio belongs to the shared copy, so the visitor hears it. A copy sha
 narration gets no API at all, and falls back to the pacer exactly as a signed-out reader
 does.
 
+A shared recipe the visitor adjusts (OV-244) is no longer the script that render is of, so the
+page swaps the player's API with the recipe's state: the copy's own while it's as written; the
+account's, in the visitor's voice, when they're signed in; none, which is the pacer, when
+they're not (`recipe-notes.md`, "Sharing").
+
 ## The way in
 
 The page is also how new people arrive, and **every way in goes through onboarding**

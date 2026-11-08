@@ -8,4 +8,6 @@ export const sharedOverviewPageTestIds = {
   saveButton: "SharedOverviewPage.saveButton",
   watchButton: "SharedOverviewPage.watchButton",
   overviewPanel: "SharedOverviewPage.overviewPanel",
+  adjustedVoice: "SharedOverviewPage.adjustedVoice",
+  adjustedVoiceAccount: "SharedOverviewPage.adjustedVoiceAccount",
 };
