@@ -202,6 +202,11 @@ distinction has to be stated in the prompt, not hoped for:
 
 The thing, the ground, the answer.
 
+**Decided 8 Nov 2026: the big picture is structural**, like the premise and the key points,
+rather than one of the four sections a reader can switch off
+(`overview-generation-decisions.md`, "The composable prompt"). A note without it is a note with
+no ground under its claim.
+
 **The third column of the big picture's row is the part that was nearly missed, and the example
 proves it.** Decomposing the 101-word "big picture" the outside conversation wrote for a real
 note on the Rieseberg interview:
@@ -337,6 +342,47 @@ number of chapters the model found raise the allowance**, since chapters are alr
 reading of how many distinct things the source does. A measured proxy from data the note already
 holds, and no second model call. That should be the general rule across all three media rather
 than an article fix.
+
+**Checked against the outside framework's three tiers, 8 Nov 2026.** Its quick, standard and
+deep briefs map onto the budget more closely than they look, and the differences are worth
+naming:
+
+| | Its short | Its medium | Its long | The budget today |
+|---|---|---|---|---|
+| Key insights | 2 to 3 | 4 to 6 | 6 to 9 | 3 at 400 words, rising to 7 beyond 6,000 |
+| Whole-note length | 1 to 2 min | 3 to 5 min | 6 to 10 min | **not budgeted at all** |
+
+**Two of its tier rules should be rejected.**
+
+- **It drops the verdict from the short tier.** Here the verdict is the triage, it is cheap, and
+  a two-minute clip is exactly where a reader most wants to be told not to bother. It stays at
+  every length.
+- **It saves "important disagreements and nuances" for the long tier.** `coreSection.ts` already
+  demands them at every length: "always keep any caveat, criticism or counter-argument the video
+  itself raises". We are stricter, and should stay stricter.
+
+Its "some content won't have practical takeaways, don't force content that isn't there" is
+already the rule: `summary-prompt.md` says write "Nothing actionable" rather than inventing
+something.
+
+**Three things are genuinely not covered, and one of them matters a lot.**
+
+1. **The note has no whole-length target, only per-field budgets, and fields multiply.** This is
+   the gap that produced the 7.2-minute example above: every field can sit inside its own
+   allowance while the note as a whole is twice as long as it should be. The budget should carry
+   **a target spoken length per tier**, checkable after generation with `noteTiming.ts`, which
+   already computes listen minutes. OV-202's counterweight *measures* total length; nothing
+   *targets* it.
+2. **Richer should mean longer points, not more of them.** The framework's top tier goes to nine
+   insights "grouped into themes". Nine is too many for a flat list and grouping them would be a
+   third structure beside points and chapters. **Chapters already are the grouping**, which is
+   what `coreSection.ts` means by "let the chapters carry the rest of the structure". So prefer
+   raising the words-per-point ceiling over raising the count: that is also where the one
+   genuinely good part of the rewritten example went, about 260 words of fuller explanation
+   inside the insights.
+3. **The ceiling is a number nobody has picked.** OV-87 says raise it for long sources without
+   saying to what. Given (2), the answer is probably a modest rise in count and a larger rise in
+   words per point.
 
 **The budget governs the big picture too**, or every short video grows a preamble, which is the
 padding this product exists to strip.
