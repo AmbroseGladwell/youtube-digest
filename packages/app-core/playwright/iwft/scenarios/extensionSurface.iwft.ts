@@ -12,6 +12,7 @@ test("the extension says its library is its own, where an empty shelf would othe
   const home = await launcher.launch({ surface: "extension" });
   await home.verifyShowsFirstRunHero();
   await home.verifyShowsSeparateLibraryNote();
+  await home.verifyOffersNoExtension();
 });
 
 test("signed out, the extension's Settings says signing in keeps its library in step", async ({ launcher }) => {
@@ -27,6 +28,7 @@ test("the web app, which has no second library to be confused with, says none of
 }) => {
   const home = await launcher.launch({ surface: "web", sync: true });
   await home.verifyHasNoSeparateLibraryNote();
+  await home.verifyOffersTheExtension();
 
   const settings = await (await launcher.appShell.openSettings()).openSection("account");
   await settings.syncPanel.verifyHintReads(/^Sign in with your email, and this browser keeps your library in step/);

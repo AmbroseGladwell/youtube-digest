@@ -35,6 +35,7 @@ import { DEFAULT_START_VERB, sampleFacts } from "../../onboarding/util/sampleFac
 import { SourceOffer } from "../../capture/components/SourceOffer/SourceOffer.js";
 import { fromStart } from "../../auth/fromStart.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
+import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
 import type { Sample } from "@overview/domain";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
@@ -391,16 +392,16 @@ function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside =
               Or press <strong className={styles.heroStrong}>Overview</strong> under any YouTube
               video with the Chrome extension.
             </p>
-            <button
-              type="button"
+            <a
               className={styles.getExtension}
-              disabled
-              title="The extension isn't in the Web Store yet"
-              data-testid={homePageTestIds.getExtensionButton}
+              href={CHROME_EXTENSION_URL}
+              target="_blank"
+              rel="noopener"
+              data-testid={homePageTestIds.getExtensionLink}
             >
               Get the extension
               <StrokeIcon name="arrowRight" size={14} />
-            </button>
+            </a>
           </div>
         )}
       </div>

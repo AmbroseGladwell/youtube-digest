@@ -1,8 +1,7 @@
 import { domainOf } from "@overview/domain";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
+import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
 import type { ArticleFailureCopy } from "./articleFailureCopy.js";
-
-export const CHROME_EXTENSION_URL = "https://chromewebstore.google.com/detail/bcobfcijigdegfldefejaeicgcogienn";
 
 // Where the reader could read it themselves: already in the extension, on a computer that
 // could have it, or on a phone that can't.
