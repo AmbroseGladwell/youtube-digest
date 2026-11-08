@@ -122,6 +122,14 @@ const lonePart = (_: string, whole: string | undefined, char: string) => {
   return whole === undefined ? words.replace(/^a /, "") : `${whole} and ${words}`;
 };
 
+// "½ × 190g jar", a halved recipe's share of a jar sold whole, is "half a 190 gram jar".
+const packShare = (_: string, whole: string | undefined, char: string, size: string) => {
+  const parts = UNICODE_FRACTION[char]!;
+  const a = /^(?:8|1[18](?!\d))/.test(size) ? "an" : "a";
+  if (whole !== undefined) return `${whole} and ${partWords(parts)} `;
+  return parts[1] === 2 ? `half ${a} ` : `${partWords(parts)} of ${a} `;
+};
+
 export function spokenMeasures(text: string): string {
   return text
     .replace(/\s+\([^()]*\)/g, "")
@@ -130,6 +138,7 @@ export function spokenMeasures(text: string): string {
     )
     .replace(/(?<![\p{L}\d.])(\d+)\s?[°º]/gu, (whole, degrees) => temperature(whole, degrees, undefined))
     .replace(/\b[Gg]as\s(?:[Mm]ark\s)?(\d)/g, "gas mark $1")
+    .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])\\s?[x×]\\s?(?=(\\d+))`, "gu"), packShare)
     .replace(MEASURE, measure)
     .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])`, "gu"), lonePart)
     .replace(/(\p{L})\s?\/\s?(?=\d|gas\b)/gu, "$1, or ")

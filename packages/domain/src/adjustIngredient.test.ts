@@ -34,7 +34,37 @@ test("a tin's size stays as sold, and is said to", () => {
   const adjusted = adjustIngredient("2 × 400g tins cannellini beans, drained", 2, "us");
   assert.equal(adjustedText(adjusted), "4 × 400g tins cannellini beans, drained");
   assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
-  assert.equal(adjustIngredient("400g tin chopped tomatoes", 2, "asWritten").kind, "unreadable");
+});
+
+test("a line that starts with a pack size scales by how many packs", () => {
+  const adjusted = adjustIngredient("400g can chopped tomatoes", 2, "asWritten");
+  assert.equal(adjustedText(adjusted), "2 × 400g cans chopped tomatoes");
+  assert.deepEqual(changed(adjusted), ["2"]);
+  assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
+  assert.equal(doubled("400g tin of tomatoes"), "2 × 400g tins of tomatoes");
+  assert.equal(adjustedText(adjustIngredient("500g tub mascarpone", 3, "us")), "3 × 500g tubs mascarpone");
+  assert.equal(adjustedText(adjustIngredient("190g jar pesto", 0.5, "asWritten")), "½ × 190g jar pesto");
+  assert.equal(adjustedText(adjustIngredient("400g can chopped tomatoes", 1.5, "asWritten")), "1½ × 400g cans chopped tomatoes");
+  assert.equal(doubled("4 × 400g tins"), "8 × 400g tins");
+});
+
+test("a pack's size is never converted, so changing units alone leaves it the same", () => {
+  assert.equal(adjustIngredient("400g can chopped tomatoes", 1, "us").kind, "same");
+});
+
+test("a pack size in brackets after the pack is not a second amount", () => {
+  const adjusted = adjustIngredient("1 small tub (200g) low-fat crème fraîche", 2, "asWritten");
+  assert.equal(adjustedText(adjusted), "2 small tubs (200g) low-fat crème fraîche");
+  assert.deepEqual(changed(adjusted), ["2"]);
+  assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
+  assert.equal(adjustIngredient("1 small tub (200g) low-fat crème fraîche", 1, "us").kind, "same");
+});
+
+test("a second amount anywhere else still keeps a line as written", () => {
+  assert.equal(adjustIngredient("1 tbsp (15ml) oil", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("1 tub (or 2 small ones) yoghurt", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("400–500g jar passata", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("400g can tomatoes, plus 1 tbsp purée", 2, "asWritten").kind, "unreadable");
 });
 
 test("lines with no amount, or more than one, stay as written", () => {

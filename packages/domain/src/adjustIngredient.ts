@@ -58,7 +58,11 @@ const NUMBER = `(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[${VU
 const AMOUNT = new RegExp(`^(${NUMBER})(?:\\s*[-–]\\s*(${NUMBER}))?`);
 const PACK = new RegExp(`^\\s*[x×]\\s*(\\d+(?:[.,]\\d+)?)\\s*([a-z]+)\\b`, "i");
 const ANY_NUMBER = new RegExp(`\\d|[${VULGAR_CLASS}]`);
-const PACK_WORD = /^\s*(?:tins?|cans?|packs?|packets?|jars?|bags?|bottles?|cartons?|blocks?|sachets?|pots?|tubs?)\b/i;
+const PACK_WORDS = "tins?|cans?|packs?|packets?|jars?|bags?|bottles?|cartons?|blocks?|sachets?|pots?|tubs?";
+const PACK_WORD = new RegExp(`^\\s*(?:${PACK_WORDS})\\b`, "i");
+const LEADING_PACK_WORD = new RegExp(`^(\\s*)(${PACK_WORDS})\\b`, "i");
+// "1 small tub (200g)": the bracket is the tub's size as sold, not a second amount.
+const PACK_SIZE = new RegExp(`\\b(?:${PACK_WORDS})\\s*\\(\\s*${NUMBER}\\s*[a-z]*\\s*\\)`, "i");
 const LEAD_IN = /^((?:the\s+)?(?:juice|zest|zest and juice|juice and zest|seeds|leaves)\s+of\s+)/i;
 
 const parseNumber = (text: string): number => {
@@ -175,8 +179,11 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   const named = pack === null ? unitNamed(rest.slice(spaced.length)) : null;
   if (named === null && pack === null && PACK_WORD.test(rest)) return { kind: "unreadable", line };
   const afterUnit = named === null ? rest : rest.slice(spaced.length + named.length);
-  if (named !== null && PACK_WORD.test(afterUnit)) return { kind: "unreadable", line };
-  if (ANY_NUMBER.test(afterUnit)) return { kind: "unreadable", line };
+  if (named !== null && PACK_WORD.test(afterUnit)) {
+    return high === null ? packsOf(line, lead, `${amount[0]}${rest.slice(0, spaced.length + named.length)}`, afterUnit, factor) : { kind: "unreadable", line };
+  }
+  const packSized = named === null && pack === null && PACK_SIZE.test(afterUnit);
+  if (ANY_NUMBER.test(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit)) return { kind: "unreadable", line };
 
   const from = named === null ? null : UNITS[named.unit]!;
   const to = from === null ? null : target(from, low * factor * from.size, units);
@@ -202,7 +209,24 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
     { text: packText, changed: false },
     { text: tail, changed: false },
   ].filter(({ text }) => text !== "");
-  return { kind: "adjusted", pieces, packAsSold: pack !== null };
+  return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized };
+}
+
+// "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
+// its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
+function packsOf(line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient {
+  if (ANY_NUMBER.test(afterSize)) return { kind: "unreadable", line };
+  if (factor === 1) return { kind: "same", line };
+  const word = afterSize.match(LEADING_PACK_WORD)!;
+  const tail = afterSize.slice(word[0].length);
+  const singular = word[2]!.replace(/s$/i, "");
+  const pieces: IngredientPiece[] = [
+    { text: lead, changed: false },
+    { text: formatNumber(factor, null), changed: true },
+    { text: ` × ${size}`, changed: false },
+    { text: `${word[1]}${factor > 1 ? plural(singular) : singular}${tail}`, changed: false },
+  ].filter(({ text }) => text !== "");
+  return { kind: "adjusted", pieces, packAsSold: true };
 }
 
 export const adjustedText = (adjusted: AdjustedIngredient): string =>

@@ -151,8 +151,11 @@ guess:
 - Units move within their kind only: weight to weight, volume to volume. Grams of flour never become
   cups, which would need a density we'd be guessing. Spoons stay spoons in both systems.
 - A tin's size stays as sold ("4 × 400g tins"), and says so. A line that starts with a pack size
-  ("400g tin of tomatoes") is left as written, since scaling it would mean buying a tin that isn't
-  sold.
+  scales by how many packs instead (OV-231): "400g can chopped tomatoes" doubled is "2 × 400g cans
+  chopped tomatoes", and halved is "½ × 400g can", read aloud as "half a 400 gram can". Changing
+  units alone leaves it the same, since the size is what's sold.
+- A pack size in brackets straight after the pack ("1 small tub (200g) crème fraîche") is the
+  pack's size, not a second amount: the count scales and the bracket stays.
 - One becoming several takes the plural of its noun: "1 small garlic clove" doubled is "2 small
   garlic cloves".
 - The method keeps the author's words and amounts, and says so above step 1 once anything is
