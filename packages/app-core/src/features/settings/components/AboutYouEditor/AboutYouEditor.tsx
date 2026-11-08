@@ -56,6 +56,7 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange, onSheetOp
     if (open === null) return;
     const element = dialog.current;
     if (element !== null && !element.open) element.showModal();
+    popover.current?.scrollIntoView({ block: "nearest" });
     heading.current?.focus();
   }, [open, onSheetOpen]);
 

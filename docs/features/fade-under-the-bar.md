@@ -67,8 +67,9 @@ drawn and a ground fade above it would only muddy that shadow. On the web it flo
 from every edge, so a band of fade above it would span the page and not read as the bar's
 at all. Its shadow is its edge.
 
-**Onboarding gets nothing of its own**, because what it sticks sits at `1.5rem`, clear of
-the bar.
+**Onboarding's stepper carries it** since OV-210, when the step began to scroll under it, and
+the onboarding foot carries the same curve mirrored, rising from its top edge while content
+runs under it (`onboarding-foot.md`).
 
 ## Arriving, and the two paths that draw it
 

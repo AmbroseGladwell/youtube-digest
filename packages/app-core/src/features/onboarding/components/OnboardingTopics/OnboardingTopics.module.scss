@@ -82,6 +82,14 @@
   @include onboarding.foot;
 }
 
+// On a touch screen the keyboard takes half the screen while a topic is typed, so the foot
+// stands aside for it and Pick is the action (210c).
+@media (pointer: coarse) {
+  .root:has(.input:focus) .foot {
+    display: none;
+  }
+}
+
 .count {
   margin: 0;
   font-size: 0.8125rem;

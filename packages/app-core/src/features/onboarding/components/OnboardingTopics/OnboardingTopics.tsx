@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { sameTopicName, STARTER_TOPICS } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
@@ -37,6 +37,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
     onChange(next);
   };
   const [typing, setTyping] = useState("");
+  const field = useRef<HTMLInputElement>(null);
   const fieldId = useId();
   const suggestedId = useId();
   const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
@@ -51,6 +52,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
     if (name === "") return;
     if (!has(name)) setChosen((current) => [...current, name]);
     setTyping("");
+    field.current?.focus();
   };
 
   return (
@@ -102,6 +104,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
         </label>
         <span className={styles.field}>
           <input
+            ref={field}
             id={fieldId}
             className={styles.input}
             placeholder="Type a topic"
@@ -139,14 +142,15 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
         </div>
       </div>
 
+      <p className={styles.count} aria-live="polite" data-testid={onboardingTopicsTestIds.count}>
+        {chosen.length > 0 ? (
+          <strong>{chosen.length} picked</strong>
+        ) : (
+          "No topics yet? That's fine. New overviews will wait in Unsorted until you sort them."
+        )}
+      </p>
+
       <div className={styles.foot}>
-        <p className={styles.count} aria-live="polite" data-testid={onboardingTopicsTestIds.count}>
-          {chosen.length > 0 ? (
-            <strong>{chosen.length} picked</strong>
-          ) : (
-            "No topics yet? That's fine. New overviews will wait in Unsorted until you sort them."
-          )}
-        </p>
         <button
           type="button"
           className={styles.primary}

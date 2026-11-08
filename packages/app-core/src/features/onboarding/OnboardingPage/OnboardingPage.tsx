@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { OverviewMark } from "../../../components/shared/OverviewMark/OverviewMark.js";
+import { PageScrolledSentinel } from "../../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useLibraryAccountId } from "../../../stores/LibraryAccountContext.js";
 import { useStores } from "../../../stores/StoresContext.js";
@@ -52,6 +53,7 @@ import { OnboardingProgressBar } from "../components/OnboardingProgressBar/Onboa
 import { OnboardingSlide } from "../components/OnboardingSlide/OnboardingSlide.js";
 import { OnboardingStepsForYou } from "../components/OnboardingStepsForYou/OnboardingStepsForYou.js";
 import { OnboardingTopics, type OnboardingTopicSuggestions } from "../components/OnboardingTopics/OnboardingTopics.js";
+import { useContentBelow } from "../useContentBelow.js";
 import { useTopicSuggestions } from "../useTopicSuggestions.js";
 import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
 import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
@@ -103,6 +105,7 @@ interface OnboardingProps {
 function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
+  const [contentEnd, contentBelow] = useContentBelow();
   const { connection } = useSyncConnection();
   const accountId = libraryAccountIdOf(connection);
   const signedIn = accountId !== null;
@@ -121,6 +124,10 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const [savingTopics, setSavingTopics] = useState(false);
   const [picking, setPicking] = useState<readonly string[] | null>(null);
   const step = progress.step;
+  const scroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (scroller.current !== null) scroller.current.scrollTop = 0;
+  }, [step, asking]);
   const share = progress.share;
   const sample = share?.sample ?? false;
   const steps = share === null ? ONBOARDING_STEPS : FROM_SHARE_STEPS;
@@ -513,6 +520,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     }
   })();
 
+  const narrowProgress = progressBar !== null && <div className={styles.narrowProgress}>{progressBar}</div>;
   const position = indexOf(step) + 2;
   const back = () => {
     analytics.onboarding.step.backChosen({ step });
@@ -522,7 +530,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   };
 
   return (
-    <div className={styles.root} data-testid={onboardingPageTestIds.root}>
+    <div className={styles.root} data-content-below={contentBelow ? "" : undefined} data-testid={onboardingPageTestIds.root}>
       <header className={styles.top}>
         <Link className={styles.brand} to={Routes.home()}>
           <OverviewMark />
@@ -530,61 +538,68 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
         </Link>
       </header>
 
-      <div className={styles.layout}>
+      <div className={styles.layout} ref={scroller} data-testid={onboardingPageTestIds.scroller}>
+        <PageScrolledSentinel />
         <main className={styles.main} aria-labelledby={ONBOARDING_HEADING_ID}>
-          {progressBar !== null && <div className={styles.narrowProgress}>{progressBar}</div>}
           {asking === null || signedIn ? (
             <>
-              <div className={styles.nav}>
-                {step !== "plan" && !signedIn && (
-                  <button
-                    type="button"
-                    className={styles.back}
-                    aria-label="Back"
-                    onClick={back}
-                    data-testid={onboardingPageTestIds.back}
-                  >
-                    <StrokeIcon name="arrowLeft" size={18} />
-                  </button>
-                )}
-                <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
-                  {Array.from({ length: storyLength }, (_, index) => (
-                    <span key={index} className={index < position ? styles.segmentDone : styles.segment} />
-                  ))}
-                </span>
-                <span className={styles.visuallyHidden}>
-                  Screen {position} of {storyLength}
-                </span>
-                {SKIPPABLE.includes(step) && (
-                  <button
-                    type="button"
-                    className={styles.skip}
-                    onClick={() => {
-                      analytics.onboarding.step.skipped({ step });
-                      next();
-                    }}
-                    data-testid={onboardingPageTestIds.skip}
-                  >
-                    Skip
-                  </button>
-                )}
+              <div className={styles.stepper} data-sticky-fade="" data-testid={onboardingPageTestIds.stepper}>
+                {narrowProgress}
+                <div className={styles.nav}>
+                  {step !== "plan" && !signedIn && (
+                    <button
+                      type="button"
+                      className={styles.back}
+                      aria-label="Back"
+                      onClick={back}
+                      data-testid={onboardingPageTestIds.back}
+                    >
+                      <StrokeIcon name="arrowLeft" size={18} />
+                    </button>
+                  )}
+                  <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
+                    {Array.from({ length: storyLength }, (_, index) => (
+                      <span key={index} className={index < position ? styles.segmentDone : styles.segment} />
+                    ))}
+                  </span>
+                  <span className={styles.visuallyHidden}>
+                    Screen {position} of {storyLength}
+                  </span>
+                  {SKIPPABLE.includes(step) && (
+                    <button
+                      type="button"
+                      className={styles.skip}
+                      onClick={() => {
+                        analytics.onboarding.step.skipped({ step });
+                        next();
+                      }}
+                      data-testid={onboardingPageTestIds.skip}
+                    >
+                      Skip
+                    </button>
+                  )}
+                </div>
               </div>
               {screen}
             </>
           ) : (
-            <div className={styles.asking}>
-              <button
-                type="button"
-                className={styles.backFromAccount}
-                onClick={() => setAsking(null)}
-                data-testid={onboardingPageTestIds.backFromAccount}
-              >
-                <StrokeIcon name="arrowLeft" size={16} />
-                Back to your overview
-              </button>
-              <RequestLinkFlow intent={asking} />
-            </div>
+            <>
+              {narrowProgress}
+              <div className={styles.asking}>
+                <button
+                  type="button"
+                  className={styles.backFromAccount}
+                  onClick={() => setAsking(null)}
+                  data-testid={onboardingPageTestIds.backFromAccount}
+                >
+                  <StrokeIcon name="arrowLeft" size={16} />
+                  Back to your overview
+                </button>
+                <RequestLinkFlow intent={asking} />
+              </div>
+            </>
           )}
+          <span className={styles.end} ref={contentEnd} aria-hidden="true" />
         </main>
 
         <div className={styles.wide}>{previewOf(progressBar)}</div>
