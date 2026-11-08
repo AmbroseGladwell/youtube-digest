@@ -130,6 +130,132 @@ that it costs more passes and must be measured rather than assumed.
 What it is worth reading for: the reminder that "loss in the middle" is the specific failure
 mode at length, which is exactly what OV-202 exists to detect.
 
+## The structure: what an improved overview looks like
+
+Worked out with the owner on 8 Nov 2026, after #6 was answered. **Two new fields, not a new
+format.** Reading `coreSection.ts` against the outside framework, almost everything it
+proposes already exists here under another name, and the two things that do not are small.
+
+### What is genuinely missing
+
+- **A big picture, and the premise cannot become one.** The premise is explicitly a scanning
+  field: 25 words, "what this video IS, not what it argues", format and territory, "the line I
+  read when scanning, so it has to be enough on its own for me to remember which video this
+  was." That is a library-row label. Widening it wrecks the list without producing orientation,
+  which is why a long-form note reads thin at the top: you get a label, then a claim, with no
+  ground under either.
+- **Evidence under the key points.** Points already carry `startSegmentIndex`/`endSegmentIndex`,
+  but a range is navigation, not evidence. Nothing shows what was actually said.
+
+Everything else in the framework is already here and mostly better: `coreClaim` is already 60
+words rather than a sentence, "what it means" is How to apply and is personalised, and its single
+editorial verdict is weaker than novelty plus what stands out plus dubious plus selling.
+
+### The order, and the rule that keeps triage alive
+
+**Everything needed to decide "is this worth my time" comes before the first thing that takes
+time to read, and that block never grows with the source's length.**
+
+| | Section | Grows with length |
+|---|---|---|
+| **Triage** | premise, 25 words | no |
+| | verdict: novelty, what stands out, dubious, selling | no |
+| | watch or listen to it anyway | no |
+| | time saved | no |
+| **Comprehension** | **the big picture** (new) | yes |
+| | the core argument (`coreClaim`) | a little |
+| | key points, each with its evidence (new) | yes |
+| | how to apply | no |
+| | chapters, transcript | yes |
+
+If a reader has to get through six minutes to find out something was recycled, triage is dead.
+The break between the two blocks is the whole design.
+
+### Three orienting fields that must not repeat each other
+
+The failure mode of adding a big picture is three paragraphs that all read as summaries. The
+distinction has to be stated in the prompt, not hoped for:
+
+| Field | Answers | Never does |
+|---|---|---|
+| Premise | what this **is** | say what it argues |
+| Big picture | what **question** it is answering, and why that question matters | state the answer |
+| Core argument | what it **answers** | restate the question |
+
+The thing, the question, the answer.
+
+### Evidence: the model points, code quotes
+
+**Do not ask the model to write quotations.** Have it name the one or two transcript segments
+inside a key point's existing range that carry the claim, and have code lift the text verbatim.
+
+- **Fabrication becomes structurally impossible** rather than checkable after the fact. It is the
+  same discipline as `docs/prototype/constraints.md`'s "never let a model count": the model
+  points, code quotes.
+- **Output barely moves.** It emits indices, not prose.
+- **It reads aloud**, because the quote is a real sentence someone said, introduced naturally.
+  A model-written pseudo-quote is not.
+- **It works unchanged for articles and recipes**, which already position by paragraph.
+
+This supersedes the "if it is a new field" half of OV-216, which left open the possibility of
+generated quotations.
+
+### Depth: length plus chapter count, one budget, invisible
+
+**Depth by length is already built on one side of a fork and missing on the other.**
+`articleNoteBudget.ts` scales key points, words per point and the chapter ceiling from a measured
+word count, and `articleChaptersSection.ts` takes its schema `.max()` from it. Video has none of
+it: `coreSection.ts` says flatly "Seven is the ceiling however long the video is."
+
+Two article-side mechanisms matter more than the table and video has neither:
+**`paragraphsInTheFinalStretch`**, which holds a note to the end of the piece, and
+**`chaptersTooBigToSkip`**, which forces any section holding more than a quarter of the source
+into the key points. Those are the anti-loss-in-the-middle rules.
+
+**Density is the open question, and the answer is already in OV-203:** a 900-word checklist and a
+900-word opinion column are not the same note and no word count tells them apart, so **let the
+number of chapters the model found raise the allowance**, since chapters are already its own
+reading of how many distinct things the source does. A measured proxy from data the note already
+holds, and no second model call. That should be the general rule across all three media rather
+than an article fix.
+
+**The budget governs the big picture too**, or every short video grows a preamble, which is the
+padding this product exists to strip.
+
+**It stays invisible.** The outside framework names three depths for the reader ("Quick brief",
+"Deep brief"). A label like that tells someone they got the cheap version. The article budget is
+invisible today and that is correct.
+
+### Medium is the wrong axis, form is
+
+**The library already contains podcasts, treated as video.** OV-92's transcript set is chosen for
+format spread and includes talking heads, interviews, podcasts, narrated explainers, skits, a
+whiteboard lesson, screen shares, a product review and reaction commentary. A YouTube video can be
+a monologue or a three-way argument; so can a podcast; an article can be an essay or a reference
+doc. Forking per medium produces prompts that drift, and there are already two forks with a third
+coming.
+
+So: **one framework, and only the differences that are real capability differences rather than
+editorial taste.** There are three.
+
+1. **Who said what.** The one genuine difference, and it is gated on data rather than wording.
+   Auto-captions carry no speaker labels, and 19 of OV-92's 20 videos are auto-captions only, so
+   attribution is unavailable on the path that produces almost every note today. OV-106's speech
+   to text can produce diarisation. Until it does, asking for attribution makes the model guess,
+   which is the OV-120 failure.
+2. **What the note cannot carry.** Articles have `ReadAnyway.leftOut` naming code samples or a
+   table. Video has watch it anyway for when the visual is the claim. **A podcast has nothing
+   visual to lose, so listen it anyway needs a different meaning or it will answer No on every
+   episode**: the case is a moment where the delivery carries what the words do not. Decide it
+   before OV-106 builds it.
+3. **Resources.** Articles link out, video descriptions carry the links an episode mentions,
+   podcast show notes carry them too. One mechanism, three places (OV-203).
+
+Everything else the framework asks for is already in `coreSection.ts`, which demands names,
+numbers, dates and studies, and says to "always keep any caveat, criticism or counter-argument
+the video itself raises, and keep who claims something when the video presents it as one person's
+claim rather than settled fact."
+
 ## What the changes cost
 
 Measured baseline, from `model-comparison.md` and `cost-model.md`, on GPT-6.1 Sol over 20
@@ -140,8 +266,13 @@ $0.033 per 20 minutes of video, and $0.1118 for the 2 hour 22 minute hearing.
 |---|---|---|
 | Significance over sequence | prompt only | free, possibly negative |
 | Depth tiering by length (OV-87, OV-203) | more output on long sources only | +20% to +40% on a long video, under +10% on a short one |
-| Evidence and quotations | more output | small, and it rides on the same call |
+| The big picture | more output, scaled by the budget | +6% to +12% of output on a long source, nothing on a short one |
+| Evidence, as segment indices | **indices, not prose** | close to free |
 | Completeness check against the source (OV-202) | **a second call carrying the transcript** | close to 2x an overview |
+
+**The structure above is the cheap half.** The big picture and evidence together are about
++10% on output, which is the highest comprehension gain per penny on this list. The completeness
+check is the expensive half, and it is separable: the structure can ship without it.
 
 So an overview with the whole framework lands somewhere near **$0.07 to $0.09**, and the
 2h22 hearing near $0.22. These are extrapolations from the measured baseline, not
@@ -174,9 +305,10 @@ Not a decision, and deliberately not a plan. In dependency order rather than pri
 4. **OV-87 and OV-203**, the depth budgets, tuned against OV-202's number.
 5. **Log the overlap rate**, which is a precondition buried inside OV-124 and which decides
    whether a completeness check is affordable at all.
-6. **Evidence and quotations** (OV-216), which is the one new section. No longer gated: the
-   fork went its way. It matters more under a context layer than it does in a reader, because
-   a claim an assistant carries into a conversation should be traceable to what was said.
+6. **The big picture and evidence**, the two new fields in "The structure" above. No longer
+   gated: the fork went its way. Evidence matters more under a context layer than in a reader,
+   because a claim an assistant carries into a conversation should be traceable to what was
+   said, and as segment indices it is close to free.
 
 ## What this does not settle
 
