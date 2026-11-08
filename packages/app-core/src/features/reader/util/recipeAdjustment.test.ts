@@ -23,6 +23,18 @@ describe("recipeAdjustment", () => {
     expect(adjustment.servings).toBe("8 servings");
   });
 
+  it("says a yield in the page's words once, not after its own verb", () => {
+    const serves = { ...recipe, yield: "Serves 6" };
+    const adjustment = recipeAdjustment(serves, { kind: "servings", base: 6, count: 12 }, "asWritten");
+    expect(adjustment.status).toBe("Adjusted for 12. 2 lines have no amount to adjust.");
+    expect(adjustment.copyNote).toBe("Adjusted for 12, from the recipe’s 6.");
+    expect(adjustment.actionNote).toBe("Amounts as written, for 6");
+    expect(adjustment.servings).toBe("Serves 12");
+    expect(recipeAdjustment({ ...recipe, yield: "Makes 12" }, { kind: "servings", base: 12, count: 24 }, "asWritten").actionNote).toBe(
+      "Amounts as written, for 12",
+    );
+  });
+
   it("uses a multiplier where the page gives no yield", () => {
     const noYield = { ...recipe, yield: null };
     expect(initialScale(noYield)).toEqual({ kind: "multiplier", times: 1 });

@@ -40,7 +40,7 @@ test("servings and units adjust the amounts they can read, mark them, and say wh
 
   await expect(page.getByTestId("RecipeIngredients.servings")).toHaveText("8 servings");
   await expect(page.getByTestId("RecipeIngredients.line").nth(0)).toHaveText("6 large leeks, trimmed and halved lengthways");
-  await expect(page.getByTestId("RecipeIngredients.line").nth(2)).toHaveText("4 × 400g tins cannellini beans, drained· tin size as sold");
+  await expect(page.getByTestId("RecipeIngredients.line").nth(2)).toHaveText("4 × 400g tins cannellini beans, drained· pack size as sold");
   await expect(page.getByTestId("RecipeIngredients.line").nth(3)).toHaveText("4¼ cups vegetable stock");
   await expect(page.getByTestId("RecipeIngredients.line").nth(4)).toHaveText("2 lemons, zested and juiced");
   await expect(page.getByTestId("RecipeIngredients.changed").first()).toHaveText("6");

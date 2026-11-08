@@ -50,7 +50,7 @@ function Line({ line }: { line: AdjustedIngredient }) {
           <span key={index}>{piece.text}</span>
         ),
       )}
-      {line.packAsSold && <span className={styles.aside}>· tin size as sold</span>}
+      {line.packAsSold && <span className={styles.aside}>· pack size as sold</span>}
     </>
   );
 }

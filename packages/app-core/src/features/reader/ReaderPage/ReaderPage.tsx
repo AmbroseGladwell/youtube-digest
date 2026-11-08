@@ -6,6 +6,7 @@ import {
   SUMMARY_SECTION,
   adjustedText,
   recipeText,
+  recipeYield,
   sourceName,
   type RecipeUnits,
   isUnreadableRecordError,
@@ -667,7 +668,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 {adjustment.status !== null && (
                   <p className={styles.cookingAdjusted}>
                     {adjustment.status} The method keeps the recipe’s amounts
-                    {recipePage.recipe.yield === null ? "" : `, for ${recipePage.recipe.yield}`}.
+                    {recipePage.recipe.yield === null ? "" : `, for ${recipeYield(recipePage.recipe.yield).amount}`}.
                   </p>
                 )}
                 <RecipeIngredients

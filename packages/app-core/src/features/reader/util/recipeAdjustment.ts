@@ -1,4 +1,4 @@
-import { adjustIngredient, pluralise, servingsLabel, yieldCount, type AdjustedIngredient, type Recipe, type RecipeUnits } from "@overview/domain";
+import { adjustIngredient, pluralise, recipeYield, servingsLabel, yieldCount, type AdjustedIngredient, type Recipe, type RecipeUnits } from "@overview/domain";
 
 export const RECIPE_MULTIPLIERS = [0.5, 1, 2, 3] as const;
 export type RecipeMultiplier = (typeof RECIPE_MULTIPLIERS)[number];
@@ -47,7 +47,7 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     factor === 1
       ? null
       : scale.kind === "servings"
-        ? `for ${servingsLabel(recipe.yield!, scale.count).replace(/^Makes /, "")}`
+        ? `for ${recipeYield(servingsLabel(recipe.yield!, scale.count)).amount}`
         : MULTIPLIER_WORD[scale.times];
   const what =
     sized === null
@@ -56,7 +56,8 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
         ? `Adjusted ${sized}${unitsPhrase === "" ? "" : ` in ${unitsPhrase}`}.`
         : `${sized}${unitsPhrase === "" ? "" : `, in ${unitsPhrase}`}.`;
   const status = `${what}${unread === 0 ? "" : ` ${pluralise(unread, "line has", "lines have")} no amount to adjust.`}`;
-  const asWritten = recipe.yield === null ? "the recipe as written" : `the recipe’s ${servingsLabel(recipe.yield, yieldCount(recipe.yield) ?? 0).replace(/^Makes /, "")}`;
+  const forYield = recipe.yield === null ? null : recipeYield(recipe.yield).amount;
+  const asWritten = forYield === null ? "the recipe as written" : `the recipe’s ${forYield}`;
   return {
     lines,
     adjusted: true,
@@ -64,11 +65,11 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     copyNote: `${what.slice(0, -1)}, from ${asWritten}.`,
     methodNote:
       units === "us"
-        ? `The method gives the recipe’s own amounts${recipe.yield === null ? "" : `, for ${recipe.yield}`}, with oven temperatures in °F.`
-        : recipe.yield === null
+        ? `The method gives the recipe’s own amounts${forYield === null ? "" : `, for ${forYield}`}, with oven temperatures in °F.`
+        : forYield === null
           ? "The method gives the recipe’s own amounts and temperatures."
-          : `The method gives the recipe’s own amounts and temperatures, for ${recipe.yield}.`,
-    actionNote: `${units === "us" ? "Temperatures in °F. " : ""}Amounts as written${recipe.yield === null ? "" : `, for ${recipe.yield}`}`,
+          : `The method gives the recipe’s own amounts and temperatures, for ${forYield}.`,
+    actionNote: `${units === "us" ? "Temperatures in °F. " : ""}Amounts as written${forYield === null ? "" : `, for ${forYield}`}`,
     servings,
   };
 }

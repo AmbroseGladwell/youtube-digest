@@ -5,7 +5,7 @@ import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.j
 import { overviewMarkdown } from "./overviewMarkdown.js";
 import { overviewMetaParts } from "./overviewMetaParts.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
-import { recipeFigures, recipeMinutes, recipeStepGroups } from "./recipeFacts.js";
+import { recipeFigures, recipeMinutes, recipeStepGroups, recipeYield } from "./recipeFacts.js";
 import { recipeText } from "./recipeText.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 import { SharedNote } from "./SharedNote.js";
@@ -168,4 +168,15 @@ test("the markdown export gives the summary, ingredients and numbered method", (
   assert.match(markdown, /## Ingredients\n\n- 3 large leeks, trimmed/);
   assert.match(markdown, /## Method\n\n1\. Roast the leeks for 20 minutes\.\n\n### For the beans\n\n2\. Simmer/);
   assert.doesNotMatch(markdown, /Key points|Premise/);
+});
+
+test("a yield that already says what it is isn't labelled twice", () => {
+  const figure = (yieldText: string) => recipeFigures({ prepMinutes: null, cookMinutes: null, totalMinutes: null, yield: yieldText })[0];
+  assert.deepEqual(figure("Makes 12"), { label: "Makes", value: "12" });
+  assert.deepEqual(figure("Serves 6"), { label: "Serves", value: "6" });
+  assert.deepEqual(figure("Serves 4–6"), { label: "Serves", value: "4–6" });
+  assert.deepEqual(figure("Servings: 4"), { label: "Serves", value: "4" });
+  assert.deepEqual(figure("4 servings"), { label: "Makes", value: "4 servings" });
+  assert.deepEqual(figure("16 servings"), { label: "Makes", value: "16 servings" });
+  assert.deepEqual(recipeYield("Makes about 20 cookies"), { label: "Makes", amount: "about 20 cookies" });
 });
