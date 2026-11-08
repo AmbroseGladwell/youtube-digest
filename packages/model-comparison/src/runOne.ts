@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, type Overview } from "@overview/domain";
 import {
   GenerationError,
   ProviderKeyRefusedError,
@@ -52,14 +52,23 @@ export const isTheModelsDoing = (error: unknown): boolean =>
     !(error instanceof ProviderRequestError) &&
     !(error instanceof ProviderKeyRefusedError));
 
-export async function runOne({
+export interface RunGenerationOptions {
+  model: ComparedModel;
+  apiKey: string;
+  sourceId: string;
+  generate: (client: GenerationClient, meta: { id: OverviewId; savedAt: string }) => Promise<Overview>;
+  http?: typeof fetch;
+  now?: () => number;
+}
+
+export async function runGeneration({
   model,
   apiKey,
-  fetched,
-  profile,
+  sourceId,
+  generate,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: RunOneOptions): Promise<RunRecord> {
+}: RunGenerationOptions): Promise<RunRecord> {
   const metered = meteredFetch(model.provider, http, now);
   const inner = createGenerationClient({ ...model, apiKey, http: metered.http });
   const attempts: unknown[] = [];
@@ -75,10 +84,7 @@ export async function runOne({
   let error: string | null = null;
   let overview: RunRecord["overview"] = null;
   try {
-    overview = await generateOverview(client, { ...comparisonInput(fetched), ...profile }, {
-      id: OverviewId.parse(randomUUID()),
-      savedAt: startedAt,
-    });
+    overview = await generate(client, { id: OverviewId.parse(randomUUID()), savedAt: startedAt });
     outcome = attempts.length === 1 ? "passed-first" : "passed-after-retry";
   } catch (thrown) {
     outcome = isTheModelsDoing(thrown) ? "failed" : "errored";
@@ -86,7 +92,7 @@ export async function runOne({
   }
 
   return {
-    videoId: fetched.video.id ?? fetched.video.url,
+    videoId: sourceId,
     provider: model.provider,
     model: model.model,
     startedAt,
@@ -99,3 +105,10 @@ export async function runOne({
     overview,
   };
 }
+
+export const runOne = ({ fetched, profile, ...options }: RunOneOptions): Promise<RunRecord> =>
+  runGeneration({
+    ...options,
+    sourceId: fetched.video.id ?? fetched.video.url,
+    generate: (client, meta) => generateOverview(client, { ...comparisonInput(fetched), ...profile }, meta),
+  });

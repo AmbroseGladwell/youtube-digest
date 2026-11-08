@@ -24,6 +24,8 @@ export * from "./generateProfileItems.js";
 export * from "./generateForAnyoneSteps.js";
 export * from "./generateTopicMatches.js";
 export * from "./article/ArticleGenerationInput.js";
+export * from "./article/articleParagraphs.js";
+export type { GeneratedArticleOutput } from "./article/assembleArticleOverview.js";
 export * from "./article/composeArticlePrompt.js";
 export * from "./article/generateArticleOverview.js";
 export * from "./article/generateOverviewOf.js";

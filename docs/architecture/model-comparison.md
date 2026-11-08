@@ -509,6 +509,93 @@ source, and the article prompt keeps its own "Most news has nothing to apply" li
 to watch for, if articles are ever measured: readers getting an empty list where a plain
 step was right, which on news is already common.
 
+## Coverage
+
+OV-202. The checks catch broken rules and the judge picks the better of two notes, but
+neither says whether a note **covers its source**. A note can pass every check and still
+skip the middle hour of an interview. OV-87's budget and OV-214's selection rule both need
+a number to move, so `npm run coverage` measures it.
+
+**It is positional, counted by code, and never asks a model** (`measureCoverage.ts`). Each
+key point already names where it comes from: a segment range for a video, one paragraph
+for an article. So does the start of each chapter. Every position is weighted by the
+words it holds, so a video and an article are measured the same way. Recipes would be
+measured the same way too, but none are in the set yet. Per note:
+
+| Figure | What it counts |
+|---|---|
+| In a point's range | the share of the source's words inside some key point's range |
+| In a reached chapter | the share of words in chapters that at least one key point lands in |
+| Largest gap | the longest stretch, by words, that no key point lands in, and where it is |
+| By third | key points whose middle falls in the first, middle and last third of the words |
+| Unplaced | key points with no position, which the prompt asks for when a point is built across the source. Counted beside the measure, never scored as uncovered. A note with no placed point is **unmeasurable**, not 0% |
+
+**Compare like with like.** An article's key point names one paragraph, not a range, so
+its "in a point's range" reads low by design. Across kinds, the chapter share and the
+largest gap are the figures to compare.
+
+It reads the last raw attempt, as the checks do. The judged half of the card, whether the
+note says the *important* things, is not built. Positions are enough to show a budget
+change moving coverage, and a judge can be added later if they turn out not to be.
+
+### The coverage set
+
+Twelve sources rather than the twenty, to keep each rerun cheap (`coverageSet.ts`). There
+are seven videos from 1 minute to 2 hours 22 minutes, including **the Diary of a CEO
+episode OV-87 and OV-202 name** (James Talarico, 18,563 words), and five articles from 290
+to 6,210 words. They cover fitness, politics, finance, technology, interviews, a hearing,
+news, opinion, a practical guide, a data explainer and a long essay. The sources are fetched
+into `.local/coverage/`, outside the main set's folder, so the model comparison's set never
+changes.
+
+```sh
+task secrets:run -- npm run coverage --workspace packages/model-comparison -- \
+  --run coverage-2026-11-08 --budget 1.5
+# the same report again, free, from what the run already holds
+npm run coverage --workspace packages/model-comparison -- --run coverage-2026-11-08 --measure-only
+```
+
+`coverage.md` lands in the run's folder. A rerun under the same name pays only for what
+hasn't settled, so a prompt or budget change gets a new run name and is compared beside the
+old one.
+
+### Results: baseline, 8 Nov 2026
+
+GPT-6.1 Sol, a blank reader, the prompt as of OV-236. All 12 notes passed, 4 articles after
+the retry. It cost **$0.61**.
+
+| Source | Length | Key points | In a point's range | In a reached chapter | Largest gap | By third |
+|---|---|---|---|---|---|---|
+| fitness clip | 1:05 | 3 | 90% | 100% (3 of 3) | 7%, 1:00–1:06 | 1 / 1 / 1 |
+| EU news explainer | 9:15 | 5 | 53% | 59% (5 of 7) | 24%, 0:00–2:18 | 1 / 3 / 1 |
+| compound interest | 16:58 | 5 | 79% | 82% (5 of 6) | 18%, 0:00–2:52 | 1 / 3 / 1 |
+| app animations, screen share | 22:50 | 7 | 70% | 93% (6 of 7) | 11%, 0:00–2:39 | 2 / 2 / 3 |
+| Shopify CEO interview | 1:04:49 | 7 (1 unplaced) | 37% | 68% (7 of 13) | 29%, 40:00–59:07 | 3 / 2 / 1 |
+| **Diary of a CEO, Talarico** | 1:36:47 | 7 (2 unplaced) | 37% | 59% (5 of 10) | 22%, 0:00–20:37 | 1 / 3 / 1 |
+| Education Committee hearing | 2:22:15 | 7 (2 unplaced) | 25% | 26% (5 of 20) | 41%, 1:10:10–2:06:08 | 2 / 2 / 1 |
+| Reddit news report | 290 words | 3 (1 unplaced) | 17% | 100% (1 of 1) | 43%, paragraphs 1–5 | 0 / 1 / 1 |
+| LLM Voice essay | 1,102 words | 4 (1 unplaced) | 20% | 83% (3 of 4) | 35%, paragraphs 6–10 | 2 / 0 / 1 |
+| ADHD design guide | 1,401 words | 5 (3 unplaced) | 6% | 30% (1 of 5) | 69%, paragraphs 1–42 | 0 / 0 / 2 |
+| living conditions explainer | 4,500 words | 6 (3 unplaced) | 7% | 50% (3 of 7) | 49%, paragraphs 20–59 | 2 / 0 / 1 |
+| startup ideas essay | 6,210 words | 7 (3 unplaced) | 6% | 37% (4 of 10) | 47%, paragraphs 57–116 | 2 / 1 / 1 |
+
+**Coverage falls with length, as OV-87 says.** Videos under 25 minutes reach 59% to 100% of
+their chapters. The three over an hour reach 26% to 68%. The hearing is the clearest case:
+seven key points for 20 chapters, and nothing at all from the 56 minutes between 1:10 and
+2:06. Seven points is the ceiling, and the long sources all hit it.
+
+**The Diary of a CEO episode: 37% of its words sit inside a key point's range, and 5 of
+its 10 chapters are reached.** It doesn't lose the middle. It loses the ends: the
+opening 20 minutes on family and vocation, and the last 22 minutes on faith and the Texas
+campaign, are only touched by the two unplaced points. That is the number OV-87's budget
+change has to move.
+
+**Articles leave far more key points unplaced: 11 of 25, against 5 of 41 for videos.** The
+measure still works on what is placed, but for an article it sees only half the note. And
+an unplaced point also has no "go to it" link for the reader. Whether that's the article
+prompt being too ready with null is a question for the article notes, not for this
+measure.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

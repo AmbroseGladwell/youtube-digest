@@ -22,15 +22,19 @@
     "judge": "npm run build && node dist/cli/judgeComparison.js",
     "blind": "npm run build && node dist/cli/blindCheck.js",
     "cost-model": "npm run build && node dist/cli/compareCostModel.js",
-    "readers": "npm run build && node dist/cli/compareReaders.js"
+    "readers": "npm run build && node dist/cli/compareReaders.js",
+    "coverage": "npm run build && node dist/cli/measureCoverage.js"
   },
   "dependencies": {
+    "@overview/articles": "*",
     "@overview/domain": "*",
     "@overview/generation": "*",
     "@overview/transcripts": "*",
+    "jsdom": "^26.1.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^22.7.5",
     "typescript": "^5.6.3"
   }
