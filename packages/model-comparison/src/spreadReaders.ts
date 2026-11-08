@@ -57,6 +57,15 @@ const BROAD: readonly SpreadReader[] = [
     { who: ["retired"], time: ["the allotment", "volunteering at the library"], focus: ["staying fit in my seventies"] },
     { sentence: ["retire", "pension", "allotment", "garden", "library", "volunteer", "seventies", "walking"], learned: [] },
   ),
+  // A second parent, with one role and a different job, to tell "parents" from "that sentence".
+  reader(
+    "parent-two",
+    { who: ["mum of a four-year-old"], time: ["part-time bookkeeping", "swimming lessons"], focus: ["calmer bedtimes"] },
+    {
+      sentence: ["mum", "child", "kid", "four-year", "preschool", "toddler", "famil", "bookkeep", "swim", "bedtime"],
+      learned: [],
+    },
+  ),
 ];
 
 // As detailed as a reader who filled in every part of About you and kept learning on.
@@ -98,5 +107,10 @@ export const READER_SETS = {
 export type ReaderSet = keyof typeof READER_SETS;
 
 export const SPREAD_READERS: readonly SpreadReader[] = READER_SETS.broad;
+
+// A reader's actions from an earlier run, judged in the same call as this run's, so a
+// prompt change is compared under one bar: the judge's labels shift from run to run.
+export const BEFORE = "@before";
+export const asBefore = (reader: SpreadReader): SpreadReader => ({ ...reader, name: `${reader.name}${BEFORE}` });
 
 export const NOISE_PAIR = ["nobody", "nobody-again"] as const;

@@ -6,22 +6,25 @@ import type { FetchedTranscript } from "@overview/transcripts";
 import { judgmentStore, pickStore } from "./judgmentStore.js";
 import { runDirectoryStore } from "./runDirectoryStore.js";
 import { videoLengthMs } from "./summariseRuns.js";
+import type { TranscriptSetName } from "./transcriptSet.js";
 
 const dataDirectory = fileURLToPath(new URL("../.local/", import.meta.url));
 
 export const comparisonPaths = {
   transcripts: join(dataDirectory, "transcripts"),
+  transcriptsOf: (set: TranscriptSetName) => join(dataDirectory, set === "main" ? "transcripts" : `transcripts-${set}`),
   run: (name: string) => join(dataDirectory, "runs", name),
   judgments: (name: string) => join(dataDirectory, "judgments", name),
   picks: (name: string) => join(dataDirectory, "picks", name),
 };
 
-export async function loadTranscripts(): Promise<FetchedTranscript[]> {
-  const files = await readdir(comparisonPaths.transcripts).catch(() => []);
+export async function loadTranscripts(set: TranscriptSetName = "main"): Promise<FetchedTranscript[]> {
+  const directory = comparisonPaths.transcriptsOf(set);
+  const files = await readdir(directory).catch(() => []);
   const loaded = await Promise.all(
     files
       .filter((file) => file.endsWith(".json"))
-      .map(async (file) => JSON.parse(await readFile(join(comparisonPaths.transcripts, file), "utf-8")) as FetchedTranscript),
+      .map(async (file) => JSON.parse(await readFile(join(directory, file), "utf-8")) as FetchedTranscript),
   );
   return loaded.sort((left, right) => videoLengthMs(left) - videoLengthMs(right));
 }

@@ -2,7 +2,8 @@ import { mkdir, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import { fetchInnerTubeTranscript, withSingleRetry, type YouTubeFetch } from "@overview/transcripts";
 import { comparisonPaths } from "../comparisonPaths.js";
-import { TRANSCRIPT_SET } from "../transcriptSet.js";
+import { parseArgs } from "node:util";
+import { isTranscriptSetName, TRANSCRIPT_SETS } from "../transcriptSet.js";
 
 const nodeFetch: YouTubeFetch = async (request) => {
   const response = await fetch(request.url, { method: request.method, headers: request.headers, body: request.body ?? null });
@@ -16,11 +17,19 @@ const videoIdOf = (url: string) => {
   return id;
 };
 
-await mkdir(comparisonPaths.transcripts, { recursive: true });
+const { values } = parseArgs({ options: { set: { type: "string", default: "main" } } });
+if (!isTranscriptSetName(values.set)) {
+  console.error(`usage: npm run fetch-transcripts -- [--set ${Object.keys(TRANSCRIPT_SETS).join("|")}]`);
+  process.exit(1);
+}
+const TRANSCRIPT_SET = TRANSCRIPT_SETS[values.set];
+const directory = comparisonPaths.transcriptsOf(values.set);
+
+await mkdir(directory, { recursive: true });
 let failures = 0;
 for (const { url, chosenFor } of TRANSCRIPT_SET) {
   const videoId = videoIdOf(url);
-  const path = join(comparisonPaths.transcripts, `${videoId}.json`);
+  const path = join(directory, `${videoId}.json`);
   if (await access(path).then(() => true, () => false)) {
     console.error(`have    ${videoId}  ${chosenFor}`);
     continue;
@@ -38,5 +47,5 @@ for (const { url, chosenFor } of TRANSCRIPT_SET) {
   }
 }
 
-console.error(`\n${TRANSCRIPT_SET.length - failures} of ${TRANSCRIPT_SET.length} transcripts in ${comparisonPaths.transcripts}`);
+console.error(`\n${TRANSCRIPT_SET.length - failures} of ${TRANSCRIPT_SET.length} transcripts in ${directory}`);
 process.exit(failures === 0 ? 0 : 1);

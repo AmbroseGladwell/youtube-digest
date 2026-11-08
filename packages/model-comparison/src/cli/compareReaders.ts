@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -10,11 +11,14 @@ import { runOne } from "../runOne.js";
 import { actionJudgeFor, judgeActions, type ActionJudgeRecord } from "../judgeActions.js";
 import { jsonRecordStore, safePathPart } from "../jsonRecordStore.js";
 import { summariseActionJudgments } from "../summariseActionJudgments.js";
-import { READER_SETS, type ReaderSet } from "../spreadReaders.js";
+import { asBefore, BEFORE, READER_SETS, type ReaderSet, type SpreadReader } from "../spreadReaders.js";
+import { isTranscriptSetName } from "../transcriptSet.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 
 const USAGE = `usage: task secrets:run -- npm run readers --workspace packages/model-comparison -- \\
-  --run <name> [--readers broad|specific|all] [--judge [--judge-model provider:model]] [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
+  --run <name> [--readers broad|specific|all] [--judge [--judge-model provider:model]] [--budget <dollars>] [--limit <videos>] [--model provider:model]
+  [--videos main|parenting|main,parenting]
+  [--against <earlier run>]   judge that run's readers beside this run's, in the same calls`;
 
 const LANES = 4;
 
@@ -27,18 +31,27 @@ const { values } = parseArgs({
     budget: { type: "string", default: "2" },
     limit: { type: "string" },
     model: { type: "string", default: "openai:gpt-6.1-sol" },
+    against: { type: "string" },
+    videos: { type: "string", default: "main" },
   },
 });
 
 const budgetDollars = Number(values.budget);
-if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0 || !(values.readers in READER_SETS)) {
+const videoSets = values.videos.split(",");
+if (
+  !values.run ||
+  !Number.isFinite(budgetDollars) ||
+  budgetDollars <= 0 ||
+  !(values.readers in READER_SETS) ||
+  !videoSets.every(isTranscriptSetName)
+) {
   console.error(USAGE);
   process.exit(1);
 }
 const SPREAD_READERS = READER_SETS[values.readers as ReaderSet];
 
 const model = parseComparedModel(values.model);
-const all = await loadTranscripts();
+const all = (await Promise.all(videoSets.filter(isTranscriptSetName).map((set) => loadTranscripts(set)))).flat();
 const transcripts = values.limit === undefined ? all : all.slice(0, Number(values.limit));
 const keys = providerKeysFromEnv();
 const apiKey = keys[model.provider];
@@ -49,8 +62,20 @@ if (!apiKey) {
 
 const runDirectory = comparisonPaths.run(values.run);
 const stores = new Map(SPREAD_READERS.map((reader) => [reader.name, runDirectoryStore(join(runDirectory, reader.name))]));
+// Only readers who saw the reader context, and only those the earlier run has: nobody's
+// prompt has no fit line, so its actions can't differ between the runs.
+const beforeReaders: readonly SpreadReader[] =
+  values.against === undefined
+    ? []
+    : SPREAD_READERS.filter(
+        (reader) => reader.readerContext !== null && existsSync(join(comparisonPaths.run(values.against!), reader.name)),
+      ).map(asBefore);
+const beforeStores = new Map(
+  beforeReaders.map((reader) => [reader.name, runDirectoryStore(join(comparisonPaths.run(values.against!), reader.name.slice(0, -BEFORE.length)))]),
+);
+const judgedReaders = [...SPREAD_READERS, ...beforeReaders];
 const judgments = jsonRecordStore<ActionJudgeRecord>(
-  join(comparisonPaths.judgments(values.run), `actions-${values.readers}`),
+  join(comparisonPaths.judgments(values.run), `actions-${values.readers}${values.against === undefined ? "" : `-vs-${values.against}`}`),
   (record) => `${safePathPart(record.judge)}/${safePathPart(record.videoId)}.json`,
 );
 const everyRecord = async () => [
@@ -81,13 +106,14 @@ for (const reader of SPREAD_READERS) {
 }
 
 const wanted = new Set(transcripts.map((fetched) => fetched.video.id ?? fetched.video.url));
+const allStores = new Map([...stores, ...beforeStores]);
 const runs = new Map(
   await Promise.all(
-    SPREAD_READERS.map(async (reader) => [reader.name, (await stores.get(reader.name)!.all()).filter((record) => wanted.has(record.videoId))] as const),
+    judgedReaders.map(async (reader) => [reader.name, (await allStores.get(reader.name)!.all()).filter((record) => wanted.has(record.videoId))] as const),
   ),
 );
 const byVideo = actionsByVideo(runs);
-const names = SPREAD_READERS.map((reader) => reader.name);
+const names = judgedReaders.map((reader) => reader.name);
 const transcriptsById = new Map(all.map((fetched) => [fetched.video.id ?? fetched.video.url, fetched]));
 
 if (values.judge) {
@@ -104,7 +130,7 @@ if (values.judge) {
         () =>
           judgeActions({
             fetched: transcriptsById.get(videoId)!,
-            readers: SPREAD_READERS.map((reader) => ({ ...reader, actions: actions.get(reader.name) ?? [] })),
+            readers: judgedReaders.map((reader) => ({ ...reader, actions: actions.get(reader.name) ?? [] })),
             writer: model,
             judge,
             keys,
@@ -124,7 +150,7 @@ if (values.judge) {
 
 const judgedRecords = (await judgments.all()).filter((record) => record.outcome === "judged" && byVideo.has(record.videoId));
 const markdown = readerSpreadMarkdown(
-  SPREAD_READERS,
+  judgedReaders,
   readerSpread(names, byVideo),
   byVideo,
   transcriptsById,

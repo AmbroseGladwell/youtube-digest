@@ -423,6 +423,86 @@ over-reach serve a reader better than plain ones, so the prompt is unchanged.** 
 for forcing has to keep the fitted steps, for example an example of each in the prompt,
 and be judged on the same terms (OV-236).
 
+### OV-236: fit what they do, don't invent, 8 Nov 2026
+
+**Judging two prompts side by side.** `--against <run>` adds an earlier run's readers to
+this run's, named `parent@before` and so on. Both versions are labelled in the same judge
+calls, so they're held to the same standard; the report's "Before and after, judged
+together" sets them side by side. Only readers with a context are added, because the
+no-reader prompt has no fit line and can't differ.
+
+**More readers and videos.** `parent-two` is a second parent, a mum of a four-year-old
+who does part-time bookkeeping. It has one role where the first parent has two, to tell
+"parents" apart from "that sentence". `--videos parenting` adds seven parenting videos the
+owner saved (`PARENTING_SET`), fetched with `npm run fetch-transcripts -- --set parenting`
+into their own folder. The model comparison's 20 videos are unchanged. A parent saves
+parenting videos, and the 20 were business-heavy.
+
+**The prompt.** After the fit line, How to apply now says:
+
+> Fit each step to what they already do and the limits they live with: their time, the
+> people around them, the work and plans they already have. Never give them a new project,
+> role or occasion just to hang a step on. "On your next 5 sales calls, ask how they handle
+> this today" fits a founder; "Film a problem on your ward" forces a nurse.
+
+It's built from the judge's own reasons. Fitted steps applied the video to something the
+reader already does (sales calls, a colleague after a hard shift, troponin tests).
+Marginal ones invented something new for them to do (filming in A&E, a library "project
+decision", a side project).
+
+Run `readers-fit-v2`, judged against `readers-2026-11-08` on 24 of 27 videos (17 main, 7
+parenting):
+
+| Reader | Practical and helpful, before | After | Fits, before | After | Marginal, before | After |
+|---|---|---|---|---|---|---|
+| parent | 71% | 87% | 48% | 72% | 16 of 56 | 5 of 39 |
+| parent-two | 74% | 88% | 53% | 76% | 15 of 57 | 5 of 42 |
+| specific-parent | 78% | 89% | 68% | 89% | 13 of 59 | 5 of 46 |
+| founder | 82% | 88% | 56% | 75% | 8 of 45 | 5 of 40 |
+| specific-founder | 67% | 87% | 38% | 85% | 20 of 61 | 5 of 39 |
+| retiree | 53% | 71% | 47% | 68% | 23 of 49 | 9 of 31 |
+
+- **Every reader is better on both counts.** Misreads fell from 11 to 3.
+- **The parenting videos found forcing the other way round.** Before, the specific founder
+  got parenting advice as if they had children ("If planning a third child…"), all
+  marginal. After, they get nothing on a video about a third child, and fitted steps
+  elsewhere.
+- **Parents aren't served worse.** `parent-two` scores level with `parent`. The parent's
+  low numbers in the first run were the business-heavy videos, not parents.
+- **The cost is fewer actions.** Readers get about 30% fewer. Counted rather than as a
+  share, every reader has a few fewer practical and helpful steps: about 238 before, 203
+  after.
+- **More readers get nothing where the judge saw a plain step:** 17 times, against 5,
+  out of about 144 reader-videos. Examples are the headline-reading check on the EU news
+  video and checking before you build on the app-ideas video. Some of that is the
+  side-by-side judging: "an identical reader got one".
+
+**Tried and reverted: "give the plain step anyway".** Run `readers-fit-v3` added "Where
+none of that connects to the video, give the plain step anyway: an empty list is only for
+a video with nothing to do". It was judged against `readers-fit-v2` on 25 videos.
+
+| Reader | Practical and helpful, v2 | v3 | Fits, v2 | v3 | Misreads, v2 | v3 |
+|---|---|---|---|---|---|---|
+| parent | 84% | 75% | 68% | 52% | 1 | 1 |
+| parent-two | 85% | 80% | 73% | 61% | 0 | 5 |
+| specific-parent | 88% | 88% | 91% | 67% | 0 | 0 |
+| founder | 80% | 76% | 78% | 73% | 1 | 0 |
+| specific-founder | 91% | 74% | 85% | 67% | 1 | 1 |
+| retiree | 65% | 56% | 61% | 53% | 1 | 3 |
+
+It never left a list empty, even where empty was right. Readers got about 50% more
+actions, but more of them were marginal and misreads rose from 4 to 10. The worst gave a
+mum erection advice, and the third-child advice came back for the founder. Steps padded
+out like that are what loses a reader's trust, so **v2 is the prompt**. Fewer, sharper
+steps beat more, padded ones.
+
+**The judge drops more as calls grow.** With 12 or more readers in one call, 3 or 4 of 27
+answers skipped an action or an empty verdict, on the same videos on a retry. They are
+left out as failures rather than counted part-way.
+
+`articleHowToApplySection.ts` keeps the plain fit line. The rule hasn't been measured on
+articles.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

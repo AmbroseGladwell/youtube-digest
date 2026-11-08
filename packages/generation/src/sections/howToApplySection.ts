@@ -4,7 +4,14 @@ import type { PromptSection } from "../PromptSection.js";
 export const HOW_TO_APPLY_TARGET_WORDS = 30;
 export const HOW_TO_APPLY_MAX_WORDS = 40;
 
-export const howToApplyInstructions = (readerContext: string | null) => `
+// OV-236: fitting to the reader is wanted, inventing a life for them isn't. Measured in
+// docs/architecture/model-comparison.md, "Different readers".
+const FIT = `Fit each step to what they already do and the limits they live with: their
+time, the people around them, the work and plans they already have. Never give them a new
+project, role or occasion just to hang a step on. "On your next 5 sales calls, ask how
+they handle this today" fits a founder; "Film a problem on your ward" forces a nurse.`;
+
+export const howToApplyInstructions =(readerContext: string | null) => `
 ## How to apply
 1 to 3 things I could actually do, concrete and specific, not principles.
 "Do a 10 minute phone-free wind-down before bed on school nights." not
@@ -13,7 +20,7 @@ list rather than inventing something.
 
 Each is one complete sentence, ${HOW_TO_APPLY_TARGET_WORDS} words at most, that reads
 naturally after "First,", "Then," or "And finally,": an instruction, never a
-label and a colon.${readerContext ? `\n\nAbout the reader, for fit: ${readerContext}` : ""}`;
+label and a colon.${readerContext ? `\n\nAbout the reader, for fit: ${readerContext}\n\n${FIT}` : ""}`;
 
 export const howToApplyShape = () => ({
   items: HowToApply.shape.items.element
