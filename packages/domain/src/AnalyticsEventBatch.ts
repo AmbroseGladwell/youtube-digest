@@ -82,7 +82,9 @@ export function parseAnalyticsEvent(sent: SentAnalyticsEvent): AnalyticsEvent | 
   const definition = analyticsEventDefinitions.get(sent.name);
   if (definition === undefined) return null;
   const props = z.object(definition.props).strict().safeParse(sent.props);
-  return props.success ? { name: sent.name as AnalyticsEventName, props: props.data, at: sent.at } : null;
+  if (!props.success) return null;
+  const present = Object.entries(props.data).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined);
+  return { name: sent.name as AnalyticsEventName, props: Object.fromEntries(present), at: sent.at };
 }
 
 export function parseSharedPageEvent(sent: SentAnalyticsEvent): AnalyticsEvent | null {

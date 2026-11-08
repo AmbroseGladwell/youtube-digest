@@ -115,6 +115,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
       let tagging = { reused: 0, added: 0 };
+      let personalised = false;
       // A video capture's duration is the timing's own, so the two agree; an article's is
       // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
       let timing: ClientTimingReport | null = null;
@@ -201,6 +202,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onTagged: (counted) => {
             tagging = counted;
           },
+          onPersonalised: (sent) => {
+            personalised = sent;
+          },
           onTimed: (timed) => {
             timing = timed;
           },
@@ -221,6 +225,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 standsOut: saved.verdict?.standsOut != null,
                 tagsReused: tagging.reused,
                 tagsAdded: tagging.added,
+                howToApplyWritten: saved.howToApply !== null,
+                howToApplyItems: saved.howToApply?.items.length ?? 0,
+                personalised,
               });
               setRun((current) =>
                 current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },

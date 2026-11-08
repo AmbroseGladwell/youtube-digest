@@ -15,7 +15,8 @@ test("every event is named feature.screen.action in camelCase and says what it m
 test("every property is a choice, a flag, a number or one of our own ids, so none can carry text, a URL or a video id", () => {
   const ids: readonly unknown[] = ANALYTICS_IDS;
   for (const [name, definition] of everyEvent) {
-    for (const [prop, schema] of Object.entries(definition.props)) {
+    for (const [prop, declared] of Object.entries(definition.props)) {
+      const schema = declared instanceof z.ZodOptional ? declared.unwrap() : declared;
       assert.ok(
         schema instanceof z.ZodEnum ||
           schema instanceof z.ZodBoolean ||

@@ -194,6 +194,14 @@ Call it after the fact, not before. `mcp.consentScreen.approved` is sent once th
 has taken the answer, and `mcp.settingsConnections.revoked` once the revoke succeeded, so a count is a count of
 things that happened.
 
+### Adding a property
+
+A property added to an event that already exists is declared `.optional()`. The server
+parses an event's properties strictly, so a required one would drop that event from every
+client built before it, and an installed extension can lag the server by a store review.
+The app still always sends it, and the IWFT asserts it does. In PostHog, an event without
+the property is one from an older client, not a zero.
+
 ## The client
 
 `AnalyticsRuntime` sits inside the sync runtime, because it sends over the reader's

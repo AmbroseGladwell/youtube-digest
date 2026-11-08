@@ -32,6 +32,25 @@ test("free text or a URL in a property is refused, whether declared or not", () 
   );
 });
 
+test("an older client's event still counts without a property added since, and a newer one's is checked", () => {
+  const finished = {
+    overviewId: "6f1c2a4e-8b3d-4c5e-9f7a-1b2c3d4e5f60",
+    from: "dialog",
+    transcriptSource: "service",
+    durationMs: 900,
+    reasonGiven: false,
+    novelty: "original",
+    standsOut: false,
+    tagsReused: 0,
+    tagsAdded: 3,
+  };
+  const name = "capture.newOverview.finished";
+  assert.deepEqual(parseAnalyticsEvent({ name, props: finished, at: AT })?.props, finished);
+  const newer = { ...finished, howToApplyWritten: true, howToApplyItems: 0, personalised: true };
+  assert.deepEqual(parseAnalyticsEvent({ name, props: newer, at: AT })?.props, newer);
+  assert.equal(parseAnalyticsEvent({ name, props: { ...newer, howToApplyItems: -1 }, at: AT }), null);
+});
+
 test("a batch is one context and between one and the maximum number of events", () => {
   const events = [{ name: "mcp.consentScreen.approved", props: {}, at: AT }];
   assert.ok(AnalyticsEventBatch.safeParse({ context, events }).success);
