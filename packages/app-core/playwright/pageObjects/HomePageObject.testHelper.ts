@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
 import { sourceOfferTestIds } from "../../src/features/capture/components/SourceOffer/SourceOfferTestIds.js";
+import { CHROME_EXTENSION_URL } from "../../src/util/chromeExtensionUrl.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testHelper.js";
@@ -87,6 +88,16 @@ export class HomePageObject extends PageObject {
       await this.expectNotToBeVisible(homePageTestIds.separateLibraryNote);
       return this;
     });
+
+  verifyOffersTheExtension = () =>
+    this.step("verifyOffersTheExtension", async () => {
+      const link = this.get(homePageTestIds.getExtensionLink);
+      await expect(link).toHaveAttribute("href", CHROME_EXTENSION_URL);
+      await expect(link).toHaveAttribute("target", "_blank");
+    });
+
+  verifyOffersNoExtension = () =>
+    this.step("verifyOffersNoExtension", () => this.expectToHaveCount(homePageTestIds.getExtensionLink, 0));
 
   // The hero's own field (design 2b): the same run + New starts, taken from the page.
   verifyHeroFieldDisabled = () =>

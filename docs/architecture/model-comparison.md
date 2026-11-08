@@ -592,9 +592,29 @@ change has to move.
 
 **Articles leave far more key points unplaced: 11 of 25, against 5 of 41 for videos.** The
 measure still works on what is placed, but for an article it sees only half the note. And
-an unplaced point also has no "go to it" link for the reader. Whether that's the article
-prompt being too ready with null is a question for the article notes, not for this
-measure.
+an unplaced point also has no "go to it" link for the reader. OV-240 changed that (below).
+
+### Results: a run names where it begins, OV-240, 8 Nov 2026
+
+All 11 nulls were honest under the old rule: each point drew on two or more paragraphs. The
+article prompt now asks for the paragraph where such a run begins (`docs/features/article-notes.md`,
+"Positions are paragraphs"). Run `coverage-ov-240` regenerated only the five articles. The seven
+video notes were copied from the baseline, since no video prompt changed. It cost **$0.19**.
+
+| Article | Unplaced, before → after | In a reached chapter | Largest gap |
+|---|---|---|---|
+| Reddit news report | 1 of 3 → 0 of 3 | 100% → 100% | 43% → 24% |
+| LLM Voice essay | 1 of 4 → 0 of 5 | 83% → 100% | 35% → 24% |
+| ADHD design guide | 3 of 5 → 0 of 5 | 30% → 62% | 69% → 31% |
+| living conditions explainer | 3 of 6 → 0 of 6 | 50% → 78% | 49% → 25% |
+| startup ideas essay | 3 of 7 → 0 of 7 | 37% → 85% | 47% → 27% |
+| **mean** | **11 of 25 → 0 of 26** | **60% → 85%** | **48% → 26%** |
+
+These are fresh notes, not the same notes with numbers added, so some points differ from
+the baseline's. A change from 11 nulls to none is well beyond that noise. The chapter and gap
+figures move mostly because points the measure couldn't see before now count. The notes didn't
+start covering more of their articles. What they do show is that the article measure now
+sees the whole note.
 
 ## Results: first full run, 12 Oct 2026
 

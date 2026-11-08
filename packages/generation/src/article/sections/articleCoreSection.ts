@@ -69,8 +69,11 @@ each set is taken close to failure."
 Bad: "Volume over load."
 
 Give each point the paragraph it comes from, as paragraphIndex, taken from
-the numbered paragraphs below, so the reader can go to it. Use null for a
-point the piece builds across several places.`;
+the numbered paragraphs below, so the reader can go to it. When the piece
+builds a point over a run of paragraphs or a whole section, give the
+paragraph where that run begins. Use null only when the point gathers
+places far apart in the piece, so no one paragraph is a fair place to
+start reading.`;
   },
   schemaShape: (input) => {
     const budget = articleNoteBudget(input.article.wordCount);

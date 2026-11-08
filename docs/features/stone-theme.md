@@ -118,9 +118,8 @@ decision, so the screens read complete while the work is scoped. Each is honest 
 in the way CLAUDE.md's degrade-visibly rule allows: a disabled pill with a title saying
 why, or a jump to where the thing lives today.
 
-- **`Get the extension`** (`HomePage`, design 2b, web surface only). A disabled ghost pill.
-  **To wire in:** an `href` to the Web Store listing once it is published
-  (`chrome-web-store-account` in the project notes), and the button becomes a link.
+None at present. `Get the extension` (`HomePage`, design 2b) was the last, and links to the
+Web Store listing since OV-7.
 
 ## The single overview
 

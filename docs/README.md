@@ -29,6 +29,16 @@ Five folders, five different questions.
   without the transcript. It covers the measured cost per reader, how the personal pass
   judged against today's single pass, what that didn't show, the rules a build has to keep,
   and how to run it again.
+- `overview-quality.md`: what an overview is *for*, and what would make it better: the
+  triage-against-comprehension fork that `open-questions.md` #6 puts, the ChatGPT editorial
+  framework mapped onto the sections that already exist (and the two it silently deletes),
+  what the Gemini conversation adds and the false premise its headline advice rests on, and
+  what each proposed change costs against OV-92's measured baseline.
+- `product-direction.md`: the layers, the library and the context engine: how much of the
+  outside framing already exists here, the sentence in `mcp-connector.md` that has already
+  half-decided the library-against-context-engine question, the profile that already learns
+  and reaches one prompt section, why `similarTo` is not the connection primitive it looks
+  like, and what is on the board for this already.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told
@@ -268,3 +278,17 @@ usable (`accessibility-checklist.md`, everything under `ai/`), and where a file
 under `coding-conventions/` conflicted with a decision already made here
 (state management, file layout), it's been trimmed to only what's still
 relevant and points back to the doc that actually governs this repo.
+
+Two of its files are not generic at all. They are conversations the owner had elsewhere
+about this product, saved unedited on 7 Nov 2026 so the thinking survives the session that
+read it. Both argue with decisions already taken here, and both carry unverified numbers:
+
+- `chatgpt-overview-quality-and-context.md`: one editorial framework at three depths, the
+  significance-over-sequence rule, evidence and attribution, a completeness checklist,
+  Explore further on demand, and the closing argument that the product is a personal context
+  layer rather than a summariser. Read with `architecture/overview-quality.md` and
+  `architecture/product-direction.md`, which say which parts are new here.
+- `gemini-longform-podcast-pipeline.md`: podcast and long-form ingestion, transcript
+  acquisition, pricing. Most of it is either already decided here with better numbers
+  (`architecture/tiers.md`, `cost-model.md`, OV-106) or rests on a premise about this build
+  that is false. `architecture/overview-quality.md` says which is which.

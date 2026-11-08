@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { pastedLinkFailureCopy, CHROME_EXTENSION_URL } from "./pastedLinkFailureCopy.js";
+import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
+import { pastedLinkFailureCopy } from "./pastedLinkFailureCopy.js";
 
 const URL_OF_PAGE = "https://www.harbourpost.example/bridge";
 

@@ -16,7 +16,7 @@ export const homePageTestIds = {
   keysSavedLine: "HomePage.keysSavedLine",
   settingsLink: "HomePage.settingsLink",
   separateLibraryNote: "HomePage.separateLibraryNote",
-  getExtensionButton: "HomePage.getExtensionButton",
+  getExtensionLink: "HomePage.getExtensionLink",
   exampleOverview: "HomePage.exampleOverview",
   heroTitle: "HomePage.heroTitle",
   fromCreateNote: "HomePage.fromCreateNote",
