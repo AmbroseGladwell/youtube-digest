@@ -249,6 +249,40 @@ task secrets:run -- npm run readers --workspace packages/model-comparison -- \
 The default model is GPT-6.1 Sol, production's on our key. `report.md` lands in the run's
 folder. A rerun under the same name pays only for what hasn't settled.
 
+### Results: first readers run, 8 Nov 2026
+
+GPT-6.1 Sol, all 20 videos, 100 overviews, all passed (4 retried after a dropped
+connection), $3.39.
+
+**The actions change with the reader.** Every pair of readers overlaps less than two runs
+for nobody: 0.20 to 0.26 against a noise floor of 0.39. One video of 20 gave everyone the
+same actions, and two or three gave a pair nothing to do.
+
+| Reader | 0 actions | 1 | 2 | 3 |
+|---|---|---|---|---|
+| nobody (each run) | 2 | 0 | 4 | 14 |
+| parent | 3 | 1 | 9 | 7 |
+| founder | 2 | 3 | 4 | 11 |
+| retiree | 3 | 3 | 7 | 7 |
+
+**A reader gets fewer actions.** Nobody got three on 14 videos; the parent and the retiree
+on 7. The model trims what doesn't fit rather than padding.
+
+**The parent is served least.** Counting actions that name something from the reader's own
+context (a keyword count, by code): founder 22 of 44 on 11 videos, retiree 17 of 38 on 9,
+parent 8 of 40 on 5. Nobody hits those words 0 to 5 times in 50, so the counts aren't the
+videos' own vocabulary. The prompt's one example is a parent's ("school nights"), yet the
+parent's night shifts and young children reach the fewest actions. The founder's count is
+flattered by a set heavy with business videos.
+
+**No misreading found.** A keyword scan for actions contradicting their reader (children
+for the founder, a job for the retiree) found one, a harmless conditional ("If you market a
+business") for the parent. Read by eye, the best use the context precisely: "On your next 5
+sales calls…" for the founder on an app-ideas video, "without sacrificing sleep" for the
+parent on a marriage video, "If you draw from investments, ask your pension provider to
+model an early market fall" for the retiree. The weakest stretch it: the retiree's
+app-ideas actions become a library-volunteer task.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
