@@ -124,6 +124,32 @@
   @include controls.pill-sm;
 }
 
+.adjustedVoice {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.adjustedVoiceAccount {
+  @include controls.quiet-control;
+
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.1875rem;
+  cursor: pointer;
+}
+
+.cookingAdjusted {
+  margin: 0 3rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
 .note {
   display: flex;
   flex-direction: column;

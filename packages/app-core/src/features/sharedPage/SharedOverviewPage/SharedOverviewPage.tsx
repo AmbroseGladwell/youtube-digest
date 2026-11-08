@@ -1,8 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  adjustedText,
   DEFAULT_HEAD_IMAGE_SIZE,
+  DEFAULT_NARRATION_VOICE,
+  type RecipeUnits,
   type HeadImageSize,
   NOVELTY_LABEL,
   SUMMARY_SECTION,
@@ -33,7 +36,11 @@ import { RecipeMethod } from "../../reader/components/RecipeMethod/RecipeMethod.
 import { RecipePageLink } from "../../reader/components/RecipePageLink/RecipePageLink.js";
 import { RecipeCookButton } from "../../reader/components/RecipeCookButton/RecipeCookButton.js";
 import { RecipeTimes } from "../../reader/components/RecipeTimes/RecipeTimes.js";
-import { initialScale, recipeAdjustment } from "../../reader/util/recipeAdjustment.js";
+import { initialScale, recipeAdjustment, type RecipeScale } from "../../reader/util/recipeAdjustment.js";
+import { readRecipeUnits, writeRecipeUnits } from "../../reader/recipeUnitsStorage.js";
+import { useNarrationApi } from "../../player/NarrationApiContext.js";
+import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
+import { sharedNarrationApi } from "../util/sharedNarrationApi.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
@@ -99,15 +106,34 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         : webArticle.article.chapters.length > 1
           ? ARTICLE_TABS
           : ["Overview" as const];
-  const recipeAsWritten = useMemo(
-    () => (note.recipe == null ? null : recipeAdjustment(note.recipe, initialScale(note.recipe), "asWritten")),
-    [note.recipe],
+  // Adjusted on the visitor's device, never in the copy, as on the reader's own page (OV-244).
+  const [recipeScale, setRecipeScale] = useState<RecipeScale | null>(null);
+  const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
+  const chooseUnits = (units: RecipeUnits) => {
+    setRecipeUnits(units);
+    writeRecipeUnits(units);
+  };
+  const scale = recipeScale ?? (note.recipe == null ? null : initialScale(note.recipe));
+  const adjustment = useMemo(
+    () => (note.recipe == null || scale === null ? null : recipeAdjustment(note.recipe, scale, recipeUnits)),
+    [note.recipe, scale, recipeUnits],
   );
+  const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
+  const adjusted = adjustment?.adjusted ?? false;
   const [tab, setTab] = useState<ReaderTab>("Overview");
   const isPhone = useIsPhone();
   const [transcriptOpenAtMs, setTranscriptOpenAtMs] = useState<number | null>(null);
 
-  const lines = useMemo(() => overviewNoteLines(note), [note]);
+  const lines = useMemo(
+    () =>
+      overviewNoteLines(
+        note,
+        adjustment === null || !adjusted
+          ? {}
+          : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment.methodAmounts },
+      ),
+    [note, adjustment, adjusted, shownIngredients, recipeUnits],
+  );
   const captions = useMemo(() => overviewNoteCaptions(note), [note]);
   const track = useMemo(() => playerTrackFor(note, lines), [note, lines]);
   const notePlayer = useNotePlayer(track);
@@ -118,9 +144,21 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     [lines, note.recipe],
   );
   const player = usePlayer();
+  const { signedIn } = useSharedPageReader();
+  // The copy's narration is the sharer's render of the recipe as written, so it plays only for
+  // that. Adjusted, a signed-in visitor renders afresh on their own account; signed out, the
+  // voice is the read-along without audio, and the page says an account reads it aloud (OV-244).
+  const narration = payload.snapshot.narration;
+  const sharedApi = useMemo(() => sharedNarrationApi(narration), [narration]);
+  const accountApi = useNarrationApi();
+  const accountVoice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
+  useEffect(() => {
+    const own = adjusted && signedIn;
+    player.setVoice(own ? accountVoice : (narration?.voice ?? DEFAULT_NARRATION_VOICE));
+    player.setApi(!adjusted ? sharedApi : own ? accountApi : null);
+  }, [player, adjusted, signedIn, sharedApi, accountApi, accountVoice, narration]);
   const navigate = useNavigate();
   const analytics = useAnalytics();
-  const { signedIn } = useSharedPageReader();
   const { overviewStore } = useStores();
   const held = useQuery({ ...overviewWithStateQueryOptions(overviewStore, note.id), enabled: signedIn });
   const saveFromShare = useSaveFromShare();
@@ -134,16 +172,14 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       setSaving(false);
     }
   };
+  const createAccount = () => {
+    analytics.sharedPage.actions.saveChosen();
+    startOnboardingFromShare(payload.token, payload.snapshot);
+    void navigate(Routes.onboarding());
+  };
   const saveAction =
     !signedIn
-      ? {
-          label: "Save to my overviews",
-          onChoose: () => {
-            analytics.sharedPage.actions.saveChosen();
-            startOnboardingFromShare(payload.token, payload.snapshot);
-            void navigate(Routes.onboarding());
-          },
-        }
+      ? { label: "Save to my overviews", onChoose: createAccount }
       : held.data != null
         ? {
             label: "Open in my overviews",
@@ -353,29 +389,46 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     )
                   }
                 />
-                {recipePage !== null && recipeAsWritten !== null && (
+                {recipePage !== null && adjustment !== null && scale !== null && (
                   <>
                     <RecipeIngredients
-                      adjustment={recipeAsWritten}
-                      scale={initialScale(recipePage.recipe)}
-                      units="asWritten"
+                      adjustment={adjustment}
+                      scale={scale}
+                      units={recipeUnits}
                       columns={!isPhone}
-                      adjustable={false}
+                      adjustable={true}
                       voice={recipeVoice?.ingredients ?? null}
-                      onScaleChange={() => undefined}
-                      onUnitsChange={() => undefined}
-                      onReset={() => undefined}
+                      onScaleChange={setRecipeScale}
+                      onUnitsChange={chooseUnits}
+                      onReset={() => {
+                        setRecipeScale(null);
+                        chooseUnits("asWritten");
+                      }}
                     />
+                    {adjusted && !signedIn && (
+                      <p className={styles.adjustedVoice} data-testid={sharedOverviewPageTestIds.adjustedVoice}>
+                        Read aloud plays the recipe as it was shared. To hear it read aloud as adjusted,{" "}
+                        <button
+                          type="button"
+                          className={styles.adjustedVoiceAccount}
+                          onClick={createAccount}
+                          data-testid={sharedOverviewPageTestIds.adjustedVoiceAccount}
+                        >
+                          create an account
+                        </button>
+                        .
+                      </p>
+                    )}
                     <RecipeMethod
                       recipe={recipePage.recipe}
                       actions={methodActions}
                       source={recipePage.source}
-                      note={null}
+                      note={adjustment.methodNote}
                       voice={recipeVoice?.method ?? null}
                       cooking={recipeCooking}
                       stacked={isPhone}
-                      usTemperatures={false}
-                      methodAmounts={[]}
+                      usTemperatures={recipeUnits === "us"}
+                      methodAmounts={adjustment.methodAmounts}
                     />
                   </>
                 )}
@@ -407,29 +460,32 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         {!signedIn && <MakeYourOwnAside />}
       </div>
 
-      {cookable && recipeAsWritten !== null && (
+      {cookable && adjustment !== null && scale !== null && (
         <CookingMode
           mode={cooking}
           title={recipePage.source.title}
           from={sourceName(recipePage.source)}
           steps={recipePage.recipe.steps}
           actions={methodActions}
-          actionNote={null}
+          actionNote={adjustment.actionNote}
           surface={isPhone ? "phone" : "web"}
-          usTemperatures={false}
-          methodAmounts={[]}
+          usTemperatures={recipeUnits === "us"}
+          methodAmounts={adjustment.methodAmounts}
           ingredients={
-            <RecipeIngredients
-              adjustment={recipeAsWritten}
-              scale={initialScale(recipePage.recipe)}
-              units="asWritten"
-              columns={false}
-              adjustable={false}
-              voice={null}
-              onScaleChange={() => undefined}
-              onUnitsChange={() => undefined}
-              onReset={() => undefined}
-            />
+            <>
+              {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
+              <RecipeIngredients
+                adjustment={adjustment}
+                scale={scale}
+                units={recipeUnits}
+                columns={false}
+                adjustable={false}
+                voice={null}
+                onScaleChange={setRecipeScale}
+                onUnitsChange={chooseUnits}
+                onReset={() => undefined}
+              />
+            </>
           }
         />
       )}
