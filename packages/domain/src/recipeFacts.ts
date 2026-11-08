@@ -7,6 +7,16 @@ export const recipeMinutes = (minutes: number): string => {
   return `${Math.floor(minutes / 60)} hr${rest === 0 ? "" : ` ${rest} min`}`;
 };
 
+// A yield is kept in the page's words, so it may already say what it is: "Makes 12" and
+// "Serves 6" lead with their own verb, which is taken as the label rather than said twice.
+const YIELD_VERB = /^(makes|serves|yields?|servings?|portions?)\s*:?\s*(?=.*\d)/i;
+
+export function recipeYield(yieldText: string): { label: string; amount: string } {
+  const verb = yieldText.match(YIELD_VERB);
+  if (verb === null) return { label: "Makes", amount: yieldText };
+  return { label: /^(?:serves|servings?|portions?)$/i.test(verb[1]!) ? "Serves" : "Makes", amount: yieldText.slice(verb[0].length) };
+}
+
 export interface RecipeFigure {
   label: string;
   value: string;
@@ -19,7 +29,10 @@ export function recipeFigures(recipe: Pick<Recipe, "prepMinutes" | "cookMinutes"
   if (recipe.prepMinutes !== null) figures.push({ label: "Prep", value: recipeMinutes(recipe.prepMinutes) });
   if (recipe.cookMinutes !== null) figures.push({ label: "Cook", value: recipeMinutes(recipe.cookMinutes) });
   if (recipe.totalMinutes !== null) figures.push({ label: "Total", value: recipeMinutes(recipe.totalMinutes) });
-  if (recipe.yield !== null) figures.push({ label: "Makes", value: recipe.yield });
+  if (recipe.yield !== null) {
+    const { label, amount } = recipeYield(recipe.yield);
+    figures.push({ label, value: amount });
+  }
   return figures;
 }
 

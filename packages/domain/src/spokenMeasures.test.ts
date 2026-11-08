@@ -44,6 +44,23 @@ test("a size that describes the thing is said singular", () => {
   ]);
 });
 
+test("a US mixed number with a hyphen is one amount", () => {
+  says([
+    ["1-1/2 cups sweetened shredded coconut", "1 and a half cups sweetened shredded coconut"],
+    ["1-1/2 teaspoons vanilla extract", "1 and a half teaspoons vanilla extract"],
+    ["2-3 tbsp water", "2 to 3 tablespoons water"],
+  ]);
+});
+
+test("a share of a pack sold whole is said as a share of one", () => {
+  says([
+    ["½ × 190g jar pesto", "half a 190 gram jar pesto"],
+    ["½ × 800g tin tomatoes", "half an 800 gram tin tomatoes"],
+    ["¼ × 400g can beans", "a quarter of a 400 gram can beans"],
+    ["1½ × 400g cans chopped tomatoes", "1 and a half 400 gram cans chopped tomatoes"],
+  ]);
+});
+
 test("oven temperatures, gas marks and times are said in full", () => {
   says([
     ["Heat the oven to 200°C/180°C fan/gas 6.", "Heat the oven to 200 degrees Celsius, or 180 degrees Celsius fan, or gas mark 6."],

@@ -156,15 +156,43 @@ test("the bar's Cook from here starts at the action the voice is on", async ({ p
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Season to taste.");
 });
 
-test("in US units the mode shows the oven in Fahrenheit and says the amounts are the recipe's", async ({ page, launcher, backendSimulator }) => {
+test("in US units the mode shows the oven in Fahrenheit and says the units changed", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeRecipeOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
 
   await page.getByTestId("RecipeIngredients.units.us").check();
   await page.getByTestId("RecipeMethod.cook").click();
-  await expect(page.getByTestId("CookingMode.note")).toHaveText("Temperatures in °F. Amounts as written, for 4 servings");
+  await expect(page.getByTestId("CookingMode.note")).toHaveText("In US units");
   await expect(page.getByTestId("CookingMode.action")).toContainText("Heat the oven to 425°F (400°F fan)");
+});
+
+test("a doubled recipe's step shows the amounts it repeats from the ingredients adjusted, and a share as written", async ({ page, launcher, backendSimulator }) => {
+  const base = makeRecipeOverview();
+  const steps = [
+    { text: "Put 100g plain flour, 2 large eggs and 300ml milk into a bowl, then whisk to a smooth batter.", group: null },
+    { text: "Pour in about 3 tbsp of the batter and swirl it to cover the base.", group: null },
+  ];
+  backendSimulator.overviews.seed(
+    makeRecipeOverview({
+      recipe: { ...base.recipe!, ingredients: ["100g plain flour", "2 large eggs", "300ml milk", "3 tbsp butter"], steps, stepCount: steps.length },
+    }),
+  );
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  for (let step = 0; step < 4; step += 1) {
+    await page.getByTestId("RecipeIngredients.more").click();
+  }
+  await page.getByTestId("RecipeMethod.cook").click();
+
+  await expect(page.getByTestId("CookingMode.note")).toHaveText("Adjusted for 8 servings");
+  await expect(page.getByTestId("CookingMode.action")).toContainText("Put 200g plain flour, 4 large eggs and 600ml milk into a bowl");
+  await expect(page.getByTestId("CookingMode.action").getByTestId("OvenText.adjusted")).toHaveText(["200g", "4", "600ml"]);
+  await page.getByTestId("CookingMode.forward").click();
+  await page.getByTestId("CookingMode.forward").click();
+  await expect(page.getByTestId("CookingMode.action")).toContainText("Pour in about 3 tbsp of the batter");
+  await expect(page.getByTestId("CookingMode.action").getByTestId("OvenText.adjusted")).toHaveCount(0);
+  await expect(page.getByTestId("CookingMode.note")).toHaveText("Adjusted for 8 servings");
 });
 
 test("a swipe up moves on, a swipe down goes back, and a short drag doesn't move", async ({ page, launcher, backendSimulator }) => {

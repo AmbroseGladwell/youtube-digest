@@ -5,8 +5,10 @@ import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.j
 import { overviewMarkdown } from "./overviewMarkdown.js";
 import { overviewMetaParts } from "./overviewMetaParts.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
-import { recipeFigures, recipeMinutes, recipeStepGroups } from "./recipeFacts.js";
+import { recipeFigures, recipeMinutes, recipeStepGroups, recipeYield } from "./recipeFacts.js";
 import { recipeText } from "./recipeText.js";
+import { adjustIngredient } from "./adjustIngredient.js";
+import { methodAmounts } from "./methodAmounts.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 import { SharedNote } from "./SharedNote.js";
 import { overviewTimeSaved } from "./timeSavedSummary.js";
@@ -99,6 +101,24 @@ test("in US units the method's oven temperatures are shown and read in Fahrenhei
   assert.equal(line?.spoken, "Step 1. Heat the oven to 425 degrees Fahrenheit.");
 });
 
+test("the method's repeated amounts are shown, read and copied as adjusted, and its shares as written", () => {
+  const ingredients = ["100g plain flour", "300ml milk"];
+  const amounts = methodAmounts(ingredients, ingredients.map((line) => adjustIngredient(line, 2, "asWritten")));
+  const steps = [
+    { text: "Whisk 100g plain flour with 300ml milk.", group: null },
+    { text: "Pour in about 3 tbsp of the batter.", group: null },
+  ];
+  const overview = makeRecipeOverview({ ingredients, steps, stepCount: 2 });
+  const method = overviewNoteLines(overview, { methodAmounts: amounts }).filter(({ section, heading }) => section === "Method" && !heading);
+  assert.deepEqual(
+    method.map(({ text }) => text),
+    ["Whisk 200g plain flour with 600ml milk.", "Pour in about 3 tbsp of the batter."],
+  );
+  assert.equal(method[0]?.spoken, "Step 1. Whisk 200 grams plain flour with 600 millilitres milk.");
+  const copied = recipeText({ title: "T", from: "F", url: "https://e.example/r", recipe: overview.recipe!, ingredients, adjusted: null, methodAmounts: amounts });
+  assert.match(copied, /1\. Whisk 200g plain flour with 600ml milk\.\n2\. Pour in about 3 tbsp of the batter\./);
+});
+
 test("the ingredients are read as shown, and a copy shared without the method stops after them", () => {
   const adjusted = overviewNoteLines(makeRecipeOverview(), { ingredients: ["6 large leeks, trimmed"] });
   assert.deepEqual(adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text), ["6 large leeks, trimmed"]);
@@ -168,4 +188,15 @@ test("the markdown export gives the summary, ingredients and numbered method", (
   assert.match(markdown, /## Ingredients\n\n- 3 large leeks, trimmed/);
   assert.match(markdown, /## Method\n\n1\. Roast the leeks for 20 minutes\.\n\n### For the beans\n\n2\. Simmer/);
   assert.doesNotMatch(markdown, /Key points|Premise/);
+});
+
+test("a yield that already says what it is isn't labelled twice", () => {
+  const figure = (yieldText: string) => recipeFigures({ prepMinutes: null, cookMinutes: null, totalMinutes: null, yield: yieldText })[0];
+  assert.deepEqual(figure("Makes 12"), { label: "Makes", value: "12" });
+  assert.deepEqual(figure("Serves 6"), { label: "Serves", value: "6" });
+  assert.deepEqual(figure("Serves 4–6"), { label: "Serves", value: "4–6" });
+  assert.deepEqual(figure("Servings: 4"), { label: "Serves", value: "4" });
+  assert.deepEqual(figure("4 servings"), { label: "Makes", value: "4 servings" });
+  assert.deepEqual(figure("16 servings"), { label: "Makes", value: "16 servings" });
+  assert.deepEqual(recipeYield("Makes about 20 cookies"), { label: "Makes", amount: "about 20 cookies" });
 });

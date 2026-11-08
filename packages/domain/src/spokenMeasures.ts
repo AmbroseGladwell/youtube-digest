@@ -62,7 +62,7 @@ const FRACTION_CHARS = Object.keys(UNICODE_FRACTION).join("");
 const PART_NAME: Record<number, string> = { 3: "third", 4: "quarter", 5: "fifth", 6: "sixth", 8: "eighth" };
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 
-const AMOUNT = `(?:\\d+\\s?[${FRACTION_CHARS}]|\\d+\\s\\d\\/\\d{1,2}|[${FRACTION_CHARS}]|\\d\\/\\d{1,2}|\\d+(?:[.,]\\d+)?)`;
+const AMOUNT = `(?:\\d+\\s?[${FRACTION_CHARS}]|\\d+[\\s-]\\d\\/\\d{1,2}|[${FRACTION_CHARS}]|\\d\\/\\d{1,2}|\\d+(?:[.,]\\d+)?)`;
 const UNIT = Object.keys(UNIT_NAME)
   .sort((a, b) => b.length - a.length)
   .map((unit) => unit.replace(/[.\s]/g, (char) => (char === "." ? "\\.?" : "\\s?")))
@@ -79,7 +79,7 @@ interface Fraction {
 }
 
 const readAmount = (amount: string): Fraction => {
-  const mixed = amount.match(new RegExp(`^(\\d+)?\\s?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
+  const mixed = amount.match(new RegExp(`^(\\d+)?[\\s-]?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
   if (mixed === null) return { whole: null, parts: null, plain: amount };
   const parts: [number, number] = mixed[2] ? UNICODE_FRACTION[mixed[2]]! : [Number(mixed[3]), Number(mixed[4])];
   const named = parts[0] < parts[1] && (parts[1] === 2 || PART_NAME[parts[1]] !== undefined);
@@ -122,6 +122,14 @@ const lonePart = (_: string, whole: string | undefined, char: string) => {
   return whole === undefined ? words.replace(/^a /, "") : `${whole} and ${words}`;
 };
 
+// "½ × 190g jar", a halved recipe's share of a jar sold whole, is "half a 190 gram jar".
+const packShare = (_: string, whole: string | undefined, char: string, size: string) => {
+  const parts = UNICODE_FRACTION[char]!;
+  const a = /^(?:8|1[18](?!\d))/.test(size) ? "an" : "a";
+  if (whole !== undefined) return `${whole} and ${partWords(parts)} `;
+  return parts[1] === 2 ? `half ${a} ` : `${partWords(parts)} of ${a} `;
+};
+
 export function spokenMeasures(text: string): string {
   return text
     .replace(/\s+\([^()]*\)/g, "")
@@ -130,8 +138,13 @@ export function spokenMeasures(text: string): string {
     )
     .replace(/(?<![\p{L}\d.])(\d+)\s?[°º]/gu, (whole, degrees) => temperature(whole, degrees, undefined))
     .replace(/\b[Gg]as\s(?:[Mm]ark\s)?(\d)/g, "gas mark $1")
+    .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])\\s?[x×]\\s?(?=(\\d+))`, "gu"), packShare)
     .replace(MEASURE, measure)
     .replace(new RegExp(`(?<![\\p{L}\\d])(\\d+)?\\s?([${FRACTION_CHARS}])`, "gu"), lonePart)
+    .replace(/(?<![\p{L}\d/])(\d+)-(\d\/\d{1,2})(?![\d/])/gu, (whole, count: string, part: string) => {
+      const read = readAmount(`${count} ${part}`);
+      return read.parts === null ? whole : amountWords(read);
+    })
     .replace(/(\p{L})\s?\/\s?(?=\d|gas\b)/gu, "$1, or ")
     .replace(/\s\+\s/g, " plus ")
     .replace(/\s{2,}/g, " ")

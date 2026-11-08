@@ -20,6 +20,9 @@ test("an amount at the start of a line scales, and only the amount is marked", (
 test("fractions and ranges scale as kitchen fractions", () => {
   assert.equal(adjustedText(adjustIngredient("1½ tsp salt", 0.5, "asWritten")), "¾ tsp salt");
   assert.equal(doubled("2–3 tbsp cold water"), "4–6 tbsp cold water");
+  assert.equal(doubled("2-3 tbsp cold water"), "4–6 tbsp cold water");
+  assert.equal(doubled("1-1/2 cups sweetened shredded coconut"), "3 cups sweetened shredded coconut");
+  assert.equal(adjustedText(adjustIngredient("1-1/2 teaspoons vanilla extract", 0.5, "asWritten")), "¾ teaspoon vanilla extract");
   assert.equal(adjustedText(adjustIngredient("1/2 cup milk", 3, "asWritten")), "1½ cups milk");
 });
 
@@ -28,13 +31,63 @@ test("one becoming several takes the plural of its noun", () => {
   assert.equal(doubled("1 small garlic clove, grated"), "2 small garlic cloves, grated");
   assert.equal(doubled("1 bay leaf"), "2 bay leaves");
   assert.equal(doubled("Juice of 1 lemon"), "Juice of 2 lemons");
+  assert.equal(doubled("1 red chilli, finely chopped"), "2 red chillies, finely chopped");
+  assert.equal(doubled("1 ripe avocado, stoned"), "2 ripe avocados, stoned");
+  assert.equal(doubled("1 large tomato"), "2 large tomatoes");
+});
+
+test("with no comma, the noun is the word before how it's prepared", () => {
+  assert.equal(doubled("1 onion finely chopped"), "2 onions finely chopped");
+  assert.equal(doubled("1 large onion finely chopped"), "2 large onions finely chopped");
+  assert.equal(doubled("1 red chilli deseeded and finely chopped"), "2 red chillies deseeded and finely chopped");
+  assert.equal(doubled("1 garlic clove crushed"), "2 garlic cloves crushed");
+  assert.equal(doubled("1 leek finely sliced"), "2 leeks finely sliced");
+  assert.equal(doubled("1 ripe avocado stoned and cubed"), "2 ripe avocados stoned and cubed");
+  assert.equal(doubled("1 butternut squash peeled, deseeded and cut into chunks"), "2 butternut squashes peeled, deseeded and cut into chunks");
+  assert.equal(doubled("1 dried bay leaf"), "2 dried bay leaves");
+  assert.equal(doubled("1 smoked haddock fillet"), "2 smoked haddock fillets");
+});
+
+test("a heaped or level spoon is still a spoon", () => {
+  assert.equal(doubled("1 heaped tsp ground coriander"), "2 heaped tsp ground coriander");
+  assert.equal(doubled("1 level teaspoon salt"), "2 level teaspoons salt");
 });
 
 test("a tin's size stays as sold, and is said to", () => {
   const adjusted = adjustIngredient("2 × 400g tins cannellini beans, drained", 2, "us");
   assert.equal(adjustedText(adjusted), "4 × 400g tins cannellini beans, drained");
   assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
-  assert.equal(adjustIngredient("400g tin chopped tomatoes", 2, "asWritten").kind, "unreadable");
+});
+
+test("a line that starts with a pack size scales by how many packs", () => {
+  const adjusted = adjustIngredient("400g can chopped tomatoes", 2, "asWritten");
+  assert.equal(adjustedText(adjusted), "2 × 400g cans chopped tomatoes");
+  assert.deepEqual(changed(adjusted), ["2"]);
+  assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
+  assert.equal(doubled("400g tin of tomatoes"), "2 × 400g tins of tomatoes");
+  assert.equal(adjustedText(adjustIngredient("500g tub mascarpone", 3, "us")), "3 × 500g tubs mascarpone");
+  assert.equal(adjustedText(adjustIngredient("190g jar pesto", 0.5, "asWritten")), "½ × 190g jar pesto");
+  assert.equal(adjustedText(adjustIngredient("400g can chopped tomatoes", 1.5, "asWritten")), "1½ × 400g cans chopped tomatoes");
+  assert.equal(doubled("4 × 400g tins"), "8 × 400g tins");
+});
+
+test("a pack's size is never converted, so changing units alone leaves it the same", () => {
+  assert.equal(adjustIngredient("400g can chopped tomatoes", 1, "us").kind, "same");
+});
+
+test("a pack size in brackets after the pack is not a second amount", () => {
+  const adjusted = adjustIngredient("1 small tub (200g) low-fat crème fraîche", 2, "asWritten");
+  assert.equal(adjustedText(adjusted), "2 small tubs (200g) low-fat crème fraîche");
+  assert.deepEqual(changed(adjusted), ["2"]);
+  assert.equal(adjusted.kind === "adjusted" && adjusted.packAsSold, true);
+  assert.equal(adjustIngredient("1 small tub (200g) low-fat crème fraîche", 1, "us").kind, "same");
+});
+
+test("a second amount anywhere else still keeps a line as written", () => {
+  assert.equal(adjustIngredient("1 tbsp (15ml) oil", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("1 tub (or 2 small ones) yoghurt", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("400–500g jar passata", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("400g can tomatoes, plus 1 tbsp purée", 2, "asWritten").kind, "unreadable");
 });
 
 test("lines with no amount, or more than one, stay as written", () => {
