@@ -6,7 +6,7 @@ import { makeArticleOverview } from "../../../src/features/overviews/types/Overv
 import { articleFailureNoticeTestIds } from "../../../src/features/capture/components/ArticleFailureNotice/ArticleFailureNoticeTestIds.js";
 import { articleLinkStatusTestIds } from "../../../src/features/newOverview/components/ArticleLinkStatus/ArticleLinkStatusTestIds.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
-import { CHROME_EXTENSION_URL } from "../../../src/features/newOverview/util/pastedLinkFailureCopy.js";
+import { CHROME_EXTENSION_URL } from "../../../src/util/chromeExtensionUrl.js";
 
 const SIGNED_IN = {
   sync: true,
