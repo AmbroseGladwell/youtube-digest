@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { inUsOvenTemperatures, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { inMethodAmounts, inUsOvenTemperatures, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useScreenAwake } from "../../../../util/useScreenAwake.js";
 import type { CookingMode as CookingModeState, CookingVoice } from "../../ReaderPage/useCookingMode.js";
@@ -24,6 +24,7 @@ export interface CookingModeProps {
   ingredients: ReactNode;
   surface: CookingSurface;
   usTemperatures: boolean;
+  methodAmounts: readonly MethodAmount[];
 }
 
 const DOTS_UP_TO = 20;
@@ -84,14 +85,14 @@ function VoiceLine({ voice, step, firstScreen, onTryAgain }: { voice: CookingVoi
   );
 }
 
-function ActionText({ action, us }: { action: RecipeAction; us: boolean }) {
-  if (action.condition === null) return <OvenText text={action.text} us={us} />;
+function ActionText({ action, us, amounts }: { action: RecipeAction; us: boolean; amounts: readonly MethodAmount[] }) {
+  if (action.condition === null) return <OvenText text={action.text} us={us} amounts={amounts} />;
   return (
     <>
       <b className={styles.condition} data-testid={cookingModeTestIds.condition}>
-        <OvenText text={action.condition} us={us} />
+        <OvenText text={action.condition} us={us} amounts={amounts} />
       </b>
-      <OvenText text={action.text.slice(action.condition.length)} us={us} />
+      <OvenText text={action.text.slice(action.condition.length)} us={us} amounts={amounts} />
     </>
   );
 }
@@ -100,7 +101,7 @@ function ActionText({ action, us }: { action: RecipeAction; us: boolean }) {
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
 // web is a full-screen takeover with each control's key on it, where the ingredients open as a
 // column beside the step (190a–190k) (docs/features/recipe-notes.md, "Cooking step by step").
-export function CookingMode({ mode, title, from, steps, actions, actionNote, ingredients, surface, usTemperatures }: CookingModeProps) {
+export function CookingMode({ mode, title, from, steps, actions, actionNote, ingredients, surface, usTemperatures, methodAmounts }: CookingModeProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const ingredientsButton = useRef<HTMLButtonElement | null>(null);
   const drawerId = useId();
@@ -309,13 +310,13 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                       </p>
                     )}
                     <p className={styles.action} style={{ "--length": length } as CSSProperties} data-testid={cookingModeTestIds.action}>
-                      <ActionText action={action} us={usTemperatures} />
+                      <ActionText action={action} us={usTemperatures} amounts={methodAmounts} />
                     </p>
                     {showPreview && (
                       <div className={styles.preview} data-testid={cookingModeTestIds.next}>
                         <b data-testid={cookingModeTestIds.nextLead}>{following.step === action.step ? "Then" : `Then step ${following.step + 1}`}</b>
                         <span>
-                          <OvenText text={following.text} us={usTemperatures} />
+                          <OvenText text={following.text} us={usTemperatures} amounts={methodAmounts} />
                         </span>
                       </div>
                     )}
@@ -323,7 +324,7 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                 </div>
 
                 <p className={styles.announce} aria-live="polite">
-                  {`${placeOf(action).replace(" · ", ", ")}. ${usTemperatures ? inUsOvenTemperatures(action.text) : action.text}`}
+                  {`${placeOf(action).replace(" · ", ", ")}. ${usTemperatures ? inUsOvenTemperatures(inMethodAmounts(action.text, methodAmounts)) : inMethodAmounts(action.text, methodAmounts)}`}
                 </p>
 
                 <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
@@ -375,6 +376,7 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
               actions={actions}
               at={mode.at}
               usTemperatures={usTemperatures}
+              methodAmounts={methodAmounts}
               onChoose={(step) => {
                 setStepsOpen(false);
                 mode.goToStep(step);

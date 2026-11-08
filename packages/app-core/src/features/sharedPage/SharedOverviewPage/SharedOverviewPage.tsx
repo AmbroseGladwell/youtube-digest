@@ -375,6 +375,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       cooking={recipeCooking}
                       stacked={isPhone}
                       usTemperatures={false}
+                      methodAmounts={[]}
                     />
                   </>
                 )}
@@ -416,6 +417,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           actionNote={null}
           surface={isPhone ? "phone" : "web"}
           usTemperatures={false}
+          methodAmounts={[]}
           ingredients={
             <RecipeIngredients
               adjustment={recipeAsWritten}

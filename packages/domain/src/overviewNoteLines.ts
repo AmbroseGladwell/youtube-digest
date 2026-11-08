@@ -4,6 +4,7 @@ import type { SharedNote } from "./SharedNote.js";
 import type { RecipeUnits } from "./adjustIngredient.js";
 import { recipeActions } from "./recipeActions.js";
 import { inUsOvenTemperatures } from "./usOvenTemperatures.js";
+import { inMethodAmounts, type MethodAmount } from "./methodAmounts.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import { spokenDuration } from "./spokenDuration.js";
 import { spokenMeasures } from "./spokenMeasures.js";
@@ -92,7 +93,7 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
 export function overviewNoteLines(
   overview: SharedNote,
-  shown: { ingredients?: readonly string[]; units?: RecipeUnits } = {},
+  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[] } = {},
 ): NoteLine[] {
   const lines: NoteLine[] = [];
 
@@ -125,7 +126,8 @@ export function overviewNoteLines(
       METHOD_SECTION,
       { text: METHOD_SECTION, spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps` },
       recipeActions(recipe.steps).map(({ text: written, step, index, label }) => {
-        const text = shown.units === "us" ? inUsOvenTemperatures(written) : written;
+        const adjusted = inMethodAmounts(written, shown.methodAmounts ?? []);
+        const text = shown.units === "us" ? inUsOvenTemperatures(adjusted) : adjusted;
         const said = spokenMeasures(text.replace(/^…/, ""));
         return { text, spoken: index === 0 ? `Step ${step + 1}. ${label === null ? "" : `${label}. `}${said}` : said };
       }),
