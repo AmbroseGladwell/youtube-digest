@@ -7,11 +7,14 @@ import { actionsByVideo, readerSpread } from "../readerSpread.js";
 import { readerSpreadMarkdown } from "../readerSpreadMarkdown.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
+import { actionJudgeFor, judgeActions, type ActionJudgeRecord } from "../judgeActions.js";
+import { jsonRecordStore, safePathPart } from "../jsonRecordStore.js";
+import { summariseActionJudgments } from "../summariseActionJudgments.js";
 import { READER_SETS, type ReaderSet } from "../spreadReaders.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 
 const USAGE = `usage: task secrets:run -- npm run readers --workspace packages/model-comparison -- \\
-  --run <name> [--readers broad|specific|all] [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
+  --run <name> [--readers broad|specific|all] [--judge [--judge-model provider:model]] [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
 
 const LANES = 4;
 
@@ -19,6 +22,8 @@ const { values } = parseArgs({
   options: {
     run: { type: "string" },
     readers: { type: "string", default: "broad" },
+    judge: { type: "boolean", default: false },
+    "judge-model": { type: "string" },
     budget: { type: "string", default: "2" },
     limit: { type: "string" },
     model: { type: "string", default: "openai:gpt-6.1-sol" },
@@ -35,7 +40,8 @@ const SPREAD_READERS = READER_SETS[values.readers as ReaderSet];
 const model = parseComparedModel(values.model);
 const all = await loadTranscripts();
 const transcripts = values.limit === undefined ? all : all.slice(0, Number(values.limit));
-const apiKey = providerKeysFromEnv()[model.provider];
+const keys = providerKeysFromEnv();
+const apiKey = keys[model.provider];
 if (!apiKey) {
   console.error(`no ${model.provider} key in the environment`);
   process.exit(1);
@@ -43,7 +49,14 @@ if (!apiKey) {
 
 const runDirectory = comparisonPaths.run(values.run);
 const stores = new Map(SPREAD_READERS.map((reader) => [reader.name, runDirectoryStore(join(runDirectory, reader.name))]));
-const everyRecord = async () => (await Promise.all([...stores.values()].map((store) => store.all()))).flat();
+const judgments = jsonRecordStore<ActionJudgeRecord>(
+  join(comparisonPaths.judgments(values.run), `actions-${values.readers}`),
+  (record) => `${safePathPart(record.judge)}/${safePathPart(record.videoId)}.json`,
+);
+const everyRecord = async () => [
+  ...(await Promise.all([...stores.values()].map((store) => store.all()))).flat(),
+  ...(await judgments.all()),
+];
 const log = (line: string) => console.error(line);
 
 for (const reader of SPREAD_READERS) {
@@ -75,11 +88,49 @@ const runs = new Map(
 );
 const byVideo = actionsByVideo(runs);
 const names = SPREAD_READERS.map((reader) => reader.name);
+const transcriptsById = new Map(all.map((fetched) => [fetched.video.id ?? fetched.video.url, fetched]));
+
+if (values.judge) {
+  const judge = actionJudgeFor(model, values["judge-model"] === undefined ? null : parseComparedModel(values["judge-model"]));
+  if (!keys[judge.provider]) {
+    console.error(`no ${judge.provider} key in the environment for the judge`);
+    process.exit(1);
+  }
+  const done = new Set((await judgments.all()).filter((record) => record.outcome !== "errored").map((record) => record.videoId));
+  const tasks = [...byVideo]
+    .filter(([videoId]) => !done.has(videoId))
+    .map(
+      ([videoId, actions]) =>
+        () =>
+          judgeActions({
+            fetched: transcriptsById.get(videoId)!,
+            readers: SPREAD_READERS.map((reader) => ({ ...reader, actions: actions.get(reader.name) ?? [] })),
+            writer: model,
+            judge,
+            keys,
+          }),
+    );
+  const outcome = await spendWithinBudget({
+    lanes: Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane)),
+    budgetDollars,
+    spentDollars: totalSpent(await everyRecord()),
+    save: judgments.save,
+    describe: (record, spent) =>
+      `judging ${record.videoId}: ${record.outcome}${record.error ? ` (${record.error.slice(0, 120)})` : ""}, $${(record.costDollars ?? 0).toFixed(4)} (spent $${spent.toFixed(4)} of $${budgetDollars.toFixed(2)})`,
+    log,
+  });
+  if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget while judging.`);
+}
+
+const judgedRecords = (await judgments.all()).filter((record) => record.outcome === "judged" && byVideo.has(record.videoId));
 const markdown = readerSpreadMarkdown(
   SPREAD_READERS,
   readerSpread(names, byVideo),
   byVideo,
-  new Map(all.map((fetched) => [fetched.video.id ?? fetched.video.url, fetched])),
+  transcriptsById,
+  judgedRecords.length === 0
+    ? null
+    : { judge: judgedRecords[0]!.judge, summaries: summariseActionJudgments(names, judgedRecords) },
 );
 await writeFile(join(runDirectory, "report.md"), markdown);
 console.log(markdown);
