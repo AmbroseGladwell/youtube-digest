@@ -500,8 +500,14 @@ steps beat more, padded ones.
 answers skipped an action or an empty verdict, on the same videos on a retry. They are
 left out as failures rather than counted part-way.
 
-`articleHowToApplySection.ts` keeps the plain fit line. The rule hasn't been measured on
-articles.
+**Articles share the rule, unmeasured (OV-238).** `readerFit` in `howToApplySection.ts`
+puts the reader's context and the rule into both the video and the article prompts, so
+they can't drift apart. The owner chose to apply it without an article run: the readers
+harness only runs YouTube transcripts, and an article runner, an article set and a
+judged run would cost more than the risk is worth. The rule is about the reader, not the
+source, and the article prompt keeps its own "Most news has nothing to apply" line. What
+to watch for, if articles are ever measured: readers getting an empty list where a plain
+step was right, which on news is already common.
 
 ## Results: first full run, 12 Oct 2026
 
