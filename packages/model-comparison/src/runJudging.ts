@@ -40,6 +40,28 @@ export function judgingPairs(
     });
 }
 
+export function promptPairs(
+  candidateRuns: readonly RunRecord[],
+  baselineRuns: readonly RunRecord[],
+  transcripts: ReadonlyMap<string, FetchedTranscript>,
+): JudgingPair[] {
+  const passedBaselines = baselineRuns.filter((record) => isPassed(record) && record.overview !== null);
+  return candidateRuns
+    .filter((record) => isPassed(record) && record.overview !== null)
+    .flatMap((record) => {
+      const reference = passedBaselines.find((other) => other.videoId === record.videoId && nameOf(other) === nameOf(record));
+      const fetched = transcripts.get(record.videoId);
+      if (reference === undefined || fetched === undefined) return [];
+      return [
+        {
+          fetched,
+          baseline: { name: nameOf(reference), overview: reference.overview! },
+          candidate: { name: nameOf(record), overview: record.overview! },
+        },
+      ];
+    });
+}
+
 export interface RunJudgingOptions {
   pairs: readonly JudgingPair[];
   keys: Partial<Record<Provider, string>>;

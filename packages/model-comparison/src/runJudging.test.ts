@@ -4,7 +4,7 @@ import { VideoId } from "@overview/domain";
 import type { RecordStore } from "./jsonRecordStore.js";
 import type { JudgePairOptions } from "./judgePair.js";
 import type { JudgeRecord } from "./JudgeRecord.js";
-import { judgingPairs, runJudging } from "./runJudging.js";
+import { judgingPairs, promptPairs, runJudging } from "./runJudging.js";
 import { makeFetchedTranscript } from "./FetchedTranscriptFactory.testHelper.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { makeRunRecord } from "./RunRecordFactory.testHelper.js";
@@ -33,6 +33,19 @@ test("a pair needs both the baseline and the candidate to have passed on the sam
   assert.deepEqual(
     pairs.map((pair) => `${pair.candidate.name} ${pair.fetched.video.id}`),
     ["openai:gpt-6-luna a"],
+  );
+});
+
+test("a prompt pair sets a model's note against the same model's note from the earlier run", () => {
+  const pairs = promptPairs(
+    [run("openai:gpt-6.1-sol", "a"), run("openai:gpt-6.1-sol", "b"), run("gemini:gemini-3.8-flash", "a")],
+    [run("openai:gpt-6.1-sol", "a"), run("openai:gpt-6.1-sol", "b", "failed"), run(BASELINE, "a")],
+    transcripts,
+  );
+
+  assert.deepEqual(
+    pairs.map((pair) => `${pair.baseline.name} ${pair.candidate.name} ${pair.fetched.video.id}`),
+    ["openai:gpt-6.1-sol openai:gpt-6.1-sol a"],
   );
 });
 

@@ -710,8 +710,9 @@ Not a decision, and deliberately not a plan. In dependency order rather than pri
    triage kept inside it.** Everything below is now unblocked, OV-216 included.
 2. **OV-202**, the coverage measure, which OV-87 already depends on and which is the only
    way to tell whether any of the rest worked.
-3. **Significance over sequence**, which is a prompt change measurable on OV-92's existing
-   harness and good under either answer to the fork.
+3. ~~Significance over sequence~~. **Done, 8 Nov 2026 (OV-214).** Long sources reach more of
+   their chapters, short ones are unchanged, and cost is the same
+   (`overview-generation-decisions.md`).
 4. **OV-87 and OV-203**, the depth budgets, tuned against OV-202's number.
 5. **Log the overlap rate**, which is a precondition buried inside OV-124 and which decides
    whether a completeness check is affordable at all.

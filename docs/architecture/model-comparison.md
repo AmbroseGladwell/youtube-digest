@@ -197,6 +197,15 @@ npm run blind --workspace packages/model-comparison -- --run 2026-10-12 \
 
 `--candidates provider:model,...` limits judging to some candidates.
 
+`--against <earlier run>` judges a prompt rather than a model. It sets each model's note in
+`--run` against the same model's note from the earlier run, and the judge is chosen as usual,
+never from the provider that wrote the notes:
+
+```sh
+task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+  --run ov-214-after --against ov-214-before --budget 4
+```
+
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
 `task secrets:run` (`docs/conventions/secrets.md`), and listed in `scripts/sanityCheck.env`.
 A model whose provider has no key is skipped with a line saying so.
@@ -615,6 +624,79 @@ the baseline's. A change from 11 nulls to none is well beyond that noise. The ch
 figures move mostly because points the measure couldn't see before now count. The notes didn't
 start covering more of their articles. What they do show is that the article measure now
 sees the whole note.
+
+### Results: significance over sequence, OV-214, 8 Nov 2026
+
+The key-points rule now says how to choose (`overview-generation-decisions.md`, "key points
+are chosen by significance"). It was measured two ways, both on GPT-6.1 Sol: coverage on the
+coverage set, and the judge on the 20 videos. In all it cost **$3.69**.
+
+**One run per prompt isn't enough.** A control run of the unchanged prompt
+(`coverage-ov-214-control`) moved Talarico from 37% to 50% of words inside a point's range, with
+nothing changed. So each side has two samples:
+
+- **Old prompt:** the baseline (videos from `coverage-2026-11-08`, articles from
+  `coverage-ov-240`) and the control.
+- **New prompt:** `coverage-ov-214` and `coverage-ov-214-b`.
+
+| Source | Length | In a reached chapter, old | New | Largest gap, old | New |
+|---|---|---|---|---|---|
+| fitness clip | 1:05 | 100%, 100% | 100%, 70% | 7%, 19% | 15%, 30% |
+| EU news explainer | 9:15 | 59%, 59% | 59%, 59% | 24%, 24% | 24%, 24% |
+| compound interest | 16:58 | 82%, 82% | 100%, 82% | 18%, 18% | 6%, 18% |
+| app animations | 22:50 | 93%, 96% | 79%, 60% | 11%, 9% | 14%, 22% |
+| **Shopify CEO interview** | 1:04:49 | 68%, 63% | 71%, 51% | 29%, 21% | 13%, 21% |
+| **Diary of a CEO, Talarico** | 1:36:47 | 59%, 70% | 72%, 72% | 22%, 22% | 22%, 22% |
+| **Education Committee hearing** | 2:22:15 | 26%, 45% | 58%, 66% | 41%, 41% | 28%, 29% |
+| articles, mean of 5 | | 85% | 88% | 28% | 26% |
+
+**The three long sources are where it moves, and the change held on both new samples.**
+
+- Across those three, the mean share of words in a reached chapter rose from 55% to 65%.
+- The mean largest gap fell from 29% to 22%.
+- The hearing moved most. Its 56-minute gap from 1:10 to 2:06 shrank to 40 minutes in one
+  sample (1:26:30–2:06:08) and 37 in the other (1:10:10–1:46:51).
+- Short videos and articles are level within the noise above.
+
+The app-animations note is lower in both new samples. In sample b it dropped the opening
+point, that animation gives agent-built apps their craft. That is the video's thesis, already
+in the core claim, so the rule against points a reader could get from the premise is doing what
+it says.
+
+**Talarico, read by hand.** Before and after cover the same six subjects. The closing point on
+faith and burnout is now placed (1:17:03–1:27:30) rather than left unplaced, and the first point
+gains its concrete example, a $12 million donation. **The opening 20 minutes are still not
+represented.** That is a matter of how many points the note gets, OV-87's dial, not of which.
+
+**The judge called it level, and couldn't have seen the change.** Run `ov-214-after --against
+ov-214-before` on the 20 videos, judged by Gemini 3.1 Pro:
+
+- **The result:** the new prompt won 11 and lost 9.
+- **Its reasons:** nearly all are about chapters, the verdict or the sponsor section. Every field
+  is written again from scratch, so the note as a whole varies from run to run, and that decides
+  the call.
+- **Position bias:** it picked whichever note came first in 14 of 20 pairs.
+- **Faithfulness:** the new prompt won 2, tied 12 and lost 6.
+  - **Three of the six losses are in fields this change doesn't touch:** the verdict twice and
+    the sponsor once.
+  - **One is the anecdote rule doing what it was added for.** The fitness clip is marked down
+    for "a critique of the evidence" in its last point, which notes that four years of one
+    man's training is the only evidence.
+  - **Two are about key points.** The small-talk note lost a minor caveat, that asking about
+    someone's hours isn't wrong, when it swapped the point that carried it for another. And the
+    app-animations note's "pointer-driven tilt" was called invented. It comes from the video's
+    description, which the model sees and the judge doesn't.
+
+**A whole-note judge can't isolate a change to one field.** A judge that sees only the key
+points would be the sharper test. OV-228's blind listen is where the whole note gets judged.
+
+**Cost didn't move:** 1,690 output tokens a note before, 1,716 after. Key points total about
+205 words either way.
+
+**The automatic checks hold, with one point a word over.** All 20 notes were valid first time
+on both prompts. `keyPointsWithinTarget` went from 20 of 20 to 19 of 20: one note has two points
+of 41 words against the target of 40. The schema's limit is 50, and the length instruction
+didn't change.
 
 ## Results: first full run, 12 Oct 2026
 
