@@ -1,5 +1,5 @@
 import type { FetchedTranscript } from "@overview/transcripts";
-import type { ActionsByReader, PairSpread, ReaderSpread } from "./readerSpread.js";
+import { contextUse, type ActionsByReader, type PairSpread, type ReaderSpread } from "./readerSpread.js";
 import { NOISE_PAIR, type SpreadReader } from "./spreadReaders.js";
 
 const percent = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
@@ -51,6 +51,20 @@ export function readerSpreadMarkdown(
     "| Reader | 0 | 1 | 2 | 3 |",
     "|---|---|---|---|---|",
     ...readers.map((reader) => `| ${reader.name} | ${(spread.itemCounts[reader.name] ?? [0, 0, 0, 0]).join(" | ")} |`),
+    "",
+    "## Context used",
+    "",
+    "Actions naming one of the reader's cue words, from their sentence or their learned items, against how many of nobody's actions hit the same words by chance. A keyword proxy: it can't tell a fitted action from one that merely names the reader's job.",
+    "",
+    "| Reader | Actions | From the sentence | From learned | Either | On videos | Nobody, same words |",
+    "|---|---|---|---|---|---|---|",
+    ...readers
+      .filter((reader) => reader.readerContext !== null)
+      .map((reader) => contextUse(reader, NOISE_PAIR[0], byVideo))
+      .map(
+        (use) =>
+          `| ${use.reader} | ${use.actions} | ${use.fromSentence} | ${use.fromLearned} | ${use.fromEither} (${percent(use.fromEither, use.actions)}) | ${use.videos} | ${use.nobodyFromEither} of ${use.nobodyActions} (${percent(use.nobodyFromEither, use.nobodyActions)}) |`,
+      ),
     "",
     "## Each video",
     "",

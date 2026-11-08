@@ -219,7 +219,9 @@ transcript set five times, differing only in `readerContext`:
 
 - **parent**, **founder** and **retiree**, written as About you entries and composed by
   `composeReaderContext`, as the app sends them, and chosen to share as little as possible
-  (`spreadReaders.ts`)
+  (`spreadReaders.ts`). `--readers specific` runs two far more detailed readers instead,
+  with learned items, and `--readers all` both; readers already settled under the run's
+  name aren't paid for again
 - **nobody**, twice, with no context: the **noise floor**. A model rewords the same advice
   from one run to the next, so two readers' actions differing proves nothing until they
   differ by more than two runs for nobody do
@@ -233,7 +235,9 @@ counted apart and left out of the overlap: saying nothing to two readers agrees,
 evidence the context was ignored, and on the first run it alone lifted every pair of
 readers to the noise floor. It says how many
 videos had the same actions for everyone, counts each reader's 0 to 3 actions, and gives a
-verdict: personalised where every pair of readers overlaps less than the noise floor.
+verdict: personalised where every pair of readers overlaps less than the noise floor. Its
+"Context used" counts the actions naming one of a reader's cue words, from the sentence and
+from the learned items apart, against how often nobody's actions hit the same words.
 
 What it can't see is an action that **misreads** its reader, which says we know you and
 gets it wrong. So the report ends with every video's actions for each reader, side by side,
@@ -269,9 +273,9 @@ same actions, and two or three gave a pair nothing to do.
 on 7. The model trims what doesn't fit rather than padding.
 
 **The parent is served least.** Counting actions that name something from the reader's own
-context (a keyword count, by code): founder 22 of 44 on 11 videos, retiree 17 of 38 on 9,
-parent 8 of 40 on 5. Nobody hits those words 0 to 5 times in 50, so the counts aren't the
-videos' own vocabulary. The prompt's one example is a parent's ("school nights"), yet the
+context (the report's "Context used", a keyword count by code): founder 21 of 44 on 11
+videos, retiree 17 of 38 on 9, parent 8 of 40 on 5. Nobody hits those words 0 to 4 times in
+50, so the counts aren't the videos' own vocabulary. The prompt's one example is a parent's ("school nights"), yet the
 parent's night shifts and young children reach the fewest actions. The founder's count is
 flattered by a set heavy with business videos.
 
@@ -282,6 +286,41 @@ sales calls…" for the founder on an app-ideas video, "without sacrificing slee
 parent on a marriage video, "If you draw from investments, ask your pension provider to
 model an early market fall" for the retiree. The weakest stretch it: the retiree's
 app-ideas actions become a library-volunteer task.
+
+### Results: specific readers, 8 Nov 2026
+
+The same 20 videos for two readers who filled in every part of About you and have four
+learned items each (`--readers specific`): an A&E nurse and dad of twin three-year-olds on
+night shifts, and a solo founder of an invoicing app for UK plumbers. 40 overviews, all
+passed, $1.51.
+
+| Reader | Word overlap with nobody | Actions using their context | From the sentence | From learned |
+|---|---|---|---|---|
+| parent | 0.26 | 8 of 40 (20%) | 8 | 0 |
+| specific-parent | 0.22–0.24 | 19 of 44 (43%) | 10 | 13 |
+| founder | 0.21 | 21 of 44 (48%) | 21 | 0 |
+| specific-founder | 0.26–0.27 | 18 of 46 (39%) | 17 | 2 |
+
+**More detail doesn't move the actions further from nobody's.** Overlap stays in the band the
+broad readers sit in. The video bounds what there is to do; the context changes how it's
+put, not what it is.
+
+**Learned items are what reached the parent.** 13 of the specific parent's 44 actions draw on
+them (the budget spreadsheet, strength training, Sunday cooking), and they lift a parent from
+the least served reader to level with the others. The founder's are used twice, both where
+the video is about the thing (an ISA on compound interest, LinkedIn on what to post), which
+is the restraint wanted, not a miss.
+
+**The keyword count undersells the specific founder.** By eye its actions are the most fitted
+in the run: "Ask 5 paying plumbers to walk through their latest invoice…", "Rewrite your
+invoicing app's upgrade screen around 1 concrete plumber outcome…", "Before changing your £20
+monthly price…". The broad founder's say "prospects" and "customers", which the count rewards
+just the same. A keyword proxy can't tell naming the reader's world from fitting it; that
+needs a judged measure.
+
+**Little shoehorning.** The weakest uses of a learned item: "For your next household budget
+decision, ask an artificial intelligence assistant for 3 competing options…" on a video about
+AI at Shopify.
 
 ## Results: first full run, 12 Oct 2026
 

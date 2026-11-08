@@ -86,3 +86,42 @@ export function readerSpread(readers: readonly string[], byVideo: ReadonlyMap<st
     itemCounts,
   };
 }
+
+export interface ContextUse {
+  reader: string;
+  actions: number;
+  fromSentence: number;
+  fromLearned: number;
+  fromEither: number;
+  videos: number;
+  nobodyActions: number;
+  nobodyFromEither: number;
+}
+
+const escaped = (cue: string) => cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const usesCue = (action: string, cues: readonly string[]): boolean =>
+  cues.some((cue) => new RegExp(`(?<![\\p{L}\\p{N}])${escaped(cue)}`, "iu").test(action));
+
+// How often a reader's actions draw on what we know of them, against how often actions
+// written for nobody hit the same words by chance: the baseline the count has to beat.
+export function contextUse(
+  reader: { name: string; cues: { sentence: readonly string[]; learned: readonly string[] } },
+  nobody: string,
+  byVideo: ReadonlyMap<string, ActionsByReader>,
+): ContextUse {
+  const all = [...reader.cues.sentence, ...reader.cues.learned];
+  const theirs = [...byVideo.values()].map((actions) => actions.get(reader.name) ?? []);
+  const nobodys = [...byVideo.values()].flatMap((actions) => actions.get(nobody) ?? []);
+  const flat = theirs.flat();
+  return {
+    reader: reader.name,
+    actions: flat.length,
+    fromSentence: flat.filter((action) => usesCue(action, reader.cues.sentence)).length,
+    fromLearned: flat.filter((action) => usesCue(action, reader.cues.learned)).length,
+    fromEither: flat.filter((action) => usesCue(action, all)).length,
+    videos: theirs.filter((actions) => actions.some((action) => usesCue(action, all))).length,
+    nobodyActions: nobodys.length,
+    nobodyFromEither: nobodys.filter((action) => usesCue(action, all)).length,
+  };
+}

@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { actionsByVideo, readerSpread, sameActions, wordOverlap } from "./readerSpread.js";
+import { actionsByVideo, contextUse, readerSpread, sameActions, usesCue, wordOverlap } from "./readerSpread.js";
 import { personalisedVerdict } from "./readerSpreadMarkdown.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { makeRunRecord } from "./RunRecordFactory.testHelper.js";
-import { SPREAD_READERS } from "./spreadReaders.js";
+import { READER_SETS, SPREAD_READERS } from "./spreadReaders.js";
 
 const ran = (videoId: string, items: string[]) => makeRunRecord({ videoId, overview: makeOverview({ howToApply: { items } }) });
 
@@ -93,4 +93,41 @@ test("the readers are genuinely different, and two of them are nobody, for the n
   assert.deepEqual(contexts.slice(0, 2), [null, null]);
   assert.equal(new Set(contexts.slice(2)).size, 3);
   assert.ok(contexts.slice(2).every((context) => context !== null && context.startsWith("I'm")));
+});
+
+test("a cue counts only at the start of a word, whatever its case", () => {
+  assert.equal(usesCue("Plan a night-shift nap.", ["shift"]), true);
+  assert.equal(usesCue("Shift your bedtime.", ["shift"]), true);
+  assert.equal(usesCue("Avoid makeshift fixes.", ["shift"]), false);
+  assert.equal(usesCue("Ask an A&E colleague.", ["A&E"]), true);
+});
+
+test("context use is counted from the sentence and from learned items apart, against nobody's chance hits", () => {
+  const byVideo = actionsByVideo(
+    new Map([
+      ["nobody", [ran("one", ["Get more sleep.", "Plan meals."])]],
+      ["parent", [ran("one", ["Nap before a night shift.", "Batch-cook on Sunday for the week.", "Plan meals."])]],
+    ]),
+  );
+
+  const use = contextUse({ name: "parent", cues: { sentence: ["night", "sleep"], learned: ["batch"] } }, "nobody", byVideo);
+
+  assert.deepEqual(use, {
+    reader: "parent",
+    actions: 3,
+    fromSentence: 1,
+    fromLearned: 1,
+    fromEither: 2,
+    videos: 1,
+    nobodyActions: 2,
+    nobodyFromEither: 1,
+  });
+});
+
+test("the specific readers carry learned items into the context the app would send, within its length", () => {
+  for (const reader of READER_SETS.specific.slice(2)) {
+    assert.match(reader.readerContext!, / Also: .+\.$/);
+    assert.ok(reader.readerContext!.length <= 600, reader.name);
+    assert.ok(reader.cues.learned.length > 0);
+  }
 });

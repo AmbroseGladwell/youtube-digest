@@ -7,17 +7,18 @@ import { actionsByVideo, readerSpread } from "../readerSpread.js";
 import { readerSpreadMarkdown } from "../readerSpreadMarkdown.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
-import { SPREAD_READERS } from "../spreadReaders.js";
+import { READER_SETS, type ReaderSet } from "../spreadReaders.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 
 const USAGE = `usage: task secrets:run -- npm run readers --workspace packages/model-comparison -- \\
-  --run <name> [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
+  --run <name> [--readers broad|specific|all] [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
 
 const LANES = 4;
 
 const { values } = parseArgs({
   options: {
     run: { type: "string" },
+    readers: { type: "string", default: "broad" },
     budget: { type: "string", default: "2" },
     limit: { type: "string" },
     model: { type: "string", default: "openai:gpt-6.1-sol" },
@@ -25,10 +26,11 @@ const { values } = parseArgs({
 });
 
 const budgetDollars = Number(values.budget);
-if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0) {
+if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0 || !(values.readers in READER_SETS)) {
   console.error(USAGE);
   process.exit(1);
 }
+const SPREAD_READERS = READER_SETS[values.readers as ReaderSet];
 
 const model = parseComparedModel(values.model);
 const all = await loadTranscripts();
