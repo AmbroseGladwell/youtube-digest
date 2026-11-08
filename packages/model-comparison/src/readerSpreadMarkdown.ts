@@ -24,7 +24,7 @@ export function readerSpreadMarkdown(
   transcripts: ReadonlyMap<string, FetchedTranscript>,
 ): string {
   const pairRow = (pair: PairSpread) =>
-    `| ${pair.left} · ${pair.right} | ${pair.videos} | ${pair.identical} (${percent(pair.identical, pair.videos)}) | ${overlap(pair.meanWordOverlap)} |`;
+    `| ${pair.left} · ${pair.right} | ${pair.videos} | ${pair.bothEmpty} | ${pair.identical} (${percent(pair.identical, pair.videos)}) | ${overlap(pair.meanWordOverlap)} |`;
   const lines = [
     "# How to apply for different readers",
     "",
@@ -38,10 +38,10 @@ export function readerSpreadMarkdown(
     "",
     "## Pairs",
     "",
-    "Word overlap is shared words over all words in either pair's actions: 1 the same words, 0 none in common. The first row is the noise floor.",
+    "Word overlap is shared words over all words in either pair's actions: 1 the same words, 0 none in common, taken over the videos where at least one of the pair had something to do. Both empty is counted apart: nothing for either reader agrees, but isn't evidence the context was ignored. The first row is the noise floor.",
     "",
-    "| Pair | Videos | Identical | Mean word overlap |",
-    "|---|---|---|---|",
+    "| Pair | Videos | Both empty | Identical | Mean word overlap |",
+    "|---|---|---|---|---|",
     ...spread.pairs.filter(isNoise).map(pairRow),
     ...spread.pairs.filter((pair) => !isNoise(pair) && isAboutNobody(pair)).map(pairRow),
     ...spread.pairs.filter((pair) => !isAboutNobody(pair)).map(pairRow),

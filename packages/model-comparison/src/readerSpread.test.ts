@@ -68,6 +68,20 @@ test("actions that ignore the reader are caught: the same for everyone, and no f
   assert.match(personalisedVerdict(spread), /^1 of 1 reader pairs overlap as much as two runs for nobody/);
 });
 
+test("two readers both given nothing to do are counted apart, not as the same advice", () => {
+  const byVideo = actionsByVideo(
+    new Map([
+      ["parent", [ran("one", []), ran("two", ["Nap before a night shift."])]],
+      ["founder", [ran("one", []), ran("two", ["Book five sales calls this week."])]],
+    ]),
+  );
+
+  const [pair] = readerSpread(["parent", "founder"], byVideo).pairs;
+
+  assert.equal(pair!.bothEmpty, 1);
+  assert.equal(pair!.meanWordOverlap, 0);
+});
+
 test("how many actions each reader got is counted from 0 to 3", () => {
   const byVideo = actionsByVideo(new Map([["parent", [ran("one", []), ran("two", ["A.", "B.", "C."]), ran("three", ["A."])]]]));
 

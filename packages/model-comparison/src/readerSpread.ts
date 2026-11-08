@@ -8,6 +8,7 @@ export interface PairSpread {
   right: string;
   videos: number;
   identical: number;
+  bothEmpty: number;
   meanWordOverlap: number | null;
 }
 
@@ -25,8 +26,7 @@ const wordsOf = (actions: readonly string[]) => new Set(actions.flatMap((action)
 export const sameActions = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((action, index) => normalised(action) === normalised(right[index]!));
 
-// Jaccard over the words of every action: 1 is the same words, 0 none shared. Two empty
-// lists are the same answer, not an undefined one.
+// Jaccard over the words of every action: 1 is the same words, 0 none shared.
 export function wordOverlap(left: readonly string[], right: readonly string[]): number {
   const leftWords = wordsOf(left);
   const rightWords = wordsOf(right);
@@ -51,16 +51,22 @@ export function actionsByVideo(runs: ReadonlyMap<string, readonly RunRecord[]>):
   return new Map([...byVideo].filter(([, actions]) => readers.every((name) => actions.has(name))));
 }
 
+// Two empty lists agree, but saying nothing to two readers is no evidence the context was
+// ignored, so they are counted apart and left out of the overlap.
 export function readerSpread(readers: readonly string[], byVideo: ReadonlyMap<string, ActionsByReader>): ReaderSpread {
   const videos = [...byVideo.values()];
   const pairs = readers.flatMap((left, index) =>
     readers.slice(index + 1).map((right): PairSpread => {
-      const overlaps = videos.map((actions) => wordOverlap(actions.get(left)!, actions.get(right)!));
+      const bothEmpty = videos.filter((actions) => actions.get(left)!.length === 0 && actions.get(right)!.length === 0);
+      const overlaps = videos
+        .filter((actions) => !bothEmpty.includes(actions))
+        .map((actions) => wordOverlap(actions.get(left)!, actions.get(right)!));
       return {
         left,
         right,
         videos: videos.length,
         identical: videos.filter((actions) => sameActions(actions.get(left)!, actions.get(right)!)).length,
+        bothEmpty: bothEmpty.length,
         meanWordOverlap: overlaps.length === 0 ? null : overlaps.reduce((total, overlap) => total + overlap, 0) / overlaps.length,
       };
     }),

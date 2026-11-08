@@ -228,7 +228,10 @@ Everything is measured by code over the saved records (`readerSpread.ts`), never
 model. A video counts only when all five passed, so a failure can't pass for a difference.
 Per pair of readers the report gives how many videos had identical actions, ignoring case
 and punctuation, and the mean word overlap: shared words over all words in either list,
-1 for the same words, 0 for none in common, and two empty lists agreeing. It says how many
+1 for the same words, 0 for none in common. Videos where both readers got nothing are
+counted apart and left out of the overlap: saying nothing to two readers agrees, but isn't
+evidence the context was ignored, and on the first run it alone lifted every pair of
+readers to the noise floor. It says how many
 videos had the same actions for everyone, counts each reader's 0 to 3 actions, and gives a
 verdict: personalised where every pair of readers overlaps less than the noise floor.
 
