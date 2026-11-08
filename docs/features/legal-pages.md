@@ -145,6 +145,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-08 | privacy | OV-199 | The account section says only creating an account makes one, and an address with no account that asks to sign in is mailed so, with no link; deleting your account says signing in again finds no account, and creating one starts empty. |
 | 2026-11-06 | privacy | OV-184 | Deleting your account describes the button, the code first, what goes in one step, the ask to PostHog and its timing, the deletion record and what stays; the account section says the code guards deletion too; the retention table gained the deletion record and reworded narration. |
 | 2026-11-06 | terms | OV-184 | Accounts: deleted from Settings after a code, not by email. |
 | 2026-11-05 | privacy | OV-14 | The account section says the name can be changed and the email moved; the step-up code, the new-address code, the old address's notice and revert link, and the change record kept; a retention row for the codes and the record. |

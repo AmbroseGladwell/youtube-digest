@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-06";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-08";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -65,7 +65,9 @@ const sections: readonly LegalSection[] = [
           or remove the name, and move the account to a new address, from Settings. Signing in sends a one-time
           link to that address, through Brevo, our email provider. The link, and the code in the same email, work
           once and expire after fifteen minutes. We store only a hash of each, never the link itself. The extension
-          signs in by typing a code from that link, which lasts ten minutes.
+          signs in by typing a code from that link, which lasts ten minutes. Only creating an account makes one: an
+          address with no account that asks to sign in is sent an email saying so, with a way to create one, and no
+          link.
         </p>
         <p>
           Changing your email, or deleting your account, sends a code to your current address first, unless you
@@ -443,8 +445,8 @@ const sections: readonly LegalSection[] = [
           record that your account fetched a video's captions, for the rest of its year; the anonymous copies in the
           shared cache; and the record of the deletion itself, which holds no address. Server logs expire on their
           own within fourteen days. The device you deleted from removes its copy of your library; copies on other
-          devices stay on those devices, signed out, until you clear the site's data there. Signing in again with the
-          same address starts a new, empty account.
+          devices stay on those devices, signed out, until you clear the site's data there. Signing in with the same
+          address afterwards finds no account; creating one with it starts a new, empty account.
         </p>
         <p>
           <strong>Without an account.</strong> Turning analytics off in Settings › Privacy deletes the random id

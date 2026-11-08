@@ -70,6 +70,21 @@ export function accountEmail(mail: AccountMail, siteUrl: string): EmailContent {
         ],
         reason: "You’re getting this because someone asked to move an account on The Overview to this address.",
       });
+    case "noAccount":
+      return compose({
+        siteUrl,
+        subject: "There’s no account for this address",
+        preview: "No sign-in link, and nothing has been made.",
+        heading: "There’s no account for this address",
+        body: "Someone asked to sign in to The Overview with this address, but no account uses it, so there’s no sign-in link.",
+        code: null,
+        action: { label: "Create an account", link: mail.createAccountLink },
+        notes: [
+          "If it was you, you may have an account under a different address: sign in with that one. Or create an account with this address.",
+          "If it wasn’t, ignore this. Nothing has been made.",
+        ],
+        reason: "You’re getting this because someone asked to sign in to The Overview with this address.",
+      });
     case "emailChanged":
       return compose({
         siteUrl,

@@ -34,7 +34,8 @@ said in as many words.
 the inbox, so a grace period would protect nothing those don't. It would also mean keeping
 data someone asked us to delete, and a sweep job this project has no runner for, which is why
 the 30-day deletion of unlinked anonymous analytics is unbuilt too. Signing in with the same
-address afterwards makes a new, empty account, exactly as a first sign-in does.
+address afterwards finds no account and is told so by mail; creating an account with it makes a
+new, empty one, through onboarding like any other (OV-199, `sign-in.md`).
 
 **The step-up, not a fresh magic link and not a typed address.** Sessions slide for 30 days, so
 an unlocked device could otherwise delete an account with no way back. The inbox is the

@@ -23,7 +23,8 @@ export interface IssuedMagicLink {
 
 // One link per address per minute, so a public endpoint that sends mail cannot be turned
 // on someone's inbox. Inside the cooldown nothing is issued and the caller answers exactly
-// as if it had been (docs/features/sign-in.md).
+// as if it had been. A spent link only holds the cooldown: it is never mailed and can never
+// sign in (docs/features/sign-in.md).
 export async function issueMagicLink(
   sql: SqlClient,
   {
@@ -32,6 +33,7 @@ export async function issueMagicLink(
     intent,
     firstName,
     anonymousId,
+    spent,
     now,
   }: {
     email: string;
@@ -39,6 +41,7 @@ export async function issueMagicLink(
     intent: AuthIntent;
     firstName: string | null;
     anonymousId: string | null;
+    spent: boolean;
     now: Date;
   },
 ): Promise<IssuedMagicLink | null> {
@@ -54,8 +57,8 @@ export async function issueMagicLink(
   const code = surface === "web" ? generateLinkCode() : null;
   const expiresAt = new Date(now.getTime() + MAGIC_LINK_TTL_MS).toISOString();
   await sql.query(
-    `insert into magic_links (email, surface, intent, first_name, anonymous_id, token_hash, code_hash, created_at, expires_at)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz)`,
+    `insert into magic_links (email, surface, intent, first_name, anonymous_id, token_hash, code_hash, created_at, expires_at, consumed_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz, case when $10 then $8::timestamptz end)`,
     [
       email,
       surface,
@@ -66,6 +69,7 @@ export async function issueMagicLink(
       code === null ? null : hashToken(code),
       now.toISOString(),
       expiresAt,
+      spent,
     ],
   );
   return { email, token, code: code === null ? null : formatLinkCode(code), expiresAt };

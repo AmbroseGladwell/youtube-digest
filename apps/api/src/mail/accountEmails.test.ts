@@ -63,6 +63,21 @@ test("the already-taken mail carries no code and says nothing has changed", () =
   assert.ok(text.includes("If it wasn’t, ignore this. Nothing has changed."));
 });
 
+test("the no-account mail says there's no link, and its one button creates an account", () => {
+  const { subject, html, text } = accountEmail(
+    { kind: "noAccount", to: "reader@example.com", createAccountLink: "https://overview.example/create-account" },
+    SITE,
+  );
+  assert.equal(subject, "There’s no account for this address");
+  assert.match(html, /<a class="ov-button" href="https:\/\/overview\.example\/create-account"[^>]*>Create an account<\/a>/);
+  assert.ok(!html.includes("letter-spacing: 0.12em"));
+  assert.ok(text.includes("Create an account:\nhttps://overview.example/create-account\n"));
+  for (const body of [html, text]) {
+    assert.ok(body.includes("no account uses it, so there’s no sign-in link"));
+    assert.ok(body.includes("If it wasn’t, ignore this. Nothing has been made."));
+  }
+});
+
 test("the old address's notice names the new address, the UTC time, and one button that moves the account back", () => {
   const { subject, html, text } = accountEmail(
     {

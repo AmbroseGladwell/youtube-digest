@@ -17,7 +17,7 @@ export class DeleteAccountDialogPageObject extends PageObject {
   verifyBodyNames = (email: string) =>
     this.step(`verifyBodyNames ${email}`, () =>
       expect(this.get(deleteAccountDialogTestIds.body)).toHaveText(
-        `Your account and everything in it are deleted straight away. This can’t be undone: signing in again with ${email} starts a new, empty account.`,
+        `Your account and everything in it are deleted straight away. This can’t be undone: creating an account with ${email} again starts a new, empty one.`,
       ),
     );
 

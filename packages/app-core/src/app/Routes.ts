@@ -1,4 +1,4 @@
-import { consentPath, REVERT_EMAIL_PATH, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
+import { consentPath, CREATE_ACCOUNT_PATH, REVERT_EMAIL_PATH, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
@@ -14,7 +14,9 @@ export const Routes = {
   settingsSection: (section: SettingsSectionId) => `/settings/${section}`,
   // The path the server writes into every magic link, so the two cannot drift apart.
   signIn: () => SIGN_IN_PATH,
-  createAccount: () => "/create-account",
+  // The path the server writes into the mail an address with no account gets for asking to
+  // sign in (docs/features/sign-in.md, "Which mail an address gets").
+  createAccount: () => CREATE_ACCOUNT_PATH,
   // Onboarding's screens after Start, which is the home page's own field (docs/features/onboarding.md).
   onboarding: () => "/start",
   connectExtension: () => "/connect-extension",
