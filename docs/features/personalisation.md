@@ -151,4 +151,5 @@ part of the context:
   advice up. Not written is the section switched off.
 
 They are read together on the PostHog dashboard "How to apply". Whether the actions change
-from one reader to another is the harness's question, not analytics'.
+from one reader to another is the harness's question, not analytics': `npm run readers`
+(`docs/architecture/model-comparison.md`, "Different readers").
