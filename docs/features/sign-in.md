@@ -22,6 +22,7 @@ the names that document gave them, it says so.
 | The auth client, beside the sync client, over one shared requester | `packages/sync/src`: `apiRequest.ts`, `fetchAuthApi.ts`, `AuthApi.ts` |
 | Where a link lands, and where signing in starts | `packages/app-core/src/features/auth/SignInPage/` |
 | Creating an account: a first name, and a link marked as a sign-up | `features/auth/CreateAccountPage/`, `migrations/V0005__account_first_names_and_link_intents.sql`, `packages/domain/src/AuthIntent.ts` |
+| Signing in never makes an account: the no-account mail, and a sign-in link that only finds one | `src/auth/authRoutes.ts`, `findAccount.ts`, `issueMagicLink.ts`, `src/mail/accountEmails.ts`, `packages/domain/src/createAccountLink.ts` |
 | Asking, waiting, the extension's code, the welcome | `features/auth/components/RequestLinkFlow/` and the screens beside it |
 | The account menu in the bar and the panel | `features/auth/components/AccountMenu/` |
 | The extension remembering it is waiting for a code | `features/auth/usePendingSignIn.ts`, `types/PendingSignIn.ts` |
@@ -138,12 +139,34 @@ new account skips onboarding, so `/create-account` sends a signed-out reader to 
 to onboarding already under way. Every link to it keeps pointing there. Only a shell with no
 server still shows 9b's page (`docs/features/onboarding.md`, "Every Create account").
 
-**The answer still does not say whether an address has an account.** `POST
-/api/auth/magic-link` answers `202 { accepted: true }` for either intent, as before. Only
-the mail differs: an address with no account gets "Finish creating your account", greeted
-by name; an address that already has one gets the ordinary sign-in mail, and its name is
-not changed. Whoever reads that mail already owns the address, so they learn nothing a
-stranger could.
+### Which mail an address gets
+
+**The answer never says whether an address has an account.** `POST /api/auth/magic-link`
+answers `202 { accepted: true }` for either intent, and only the mail differs. Whoever reads
+the mail already owns the address, so they learn nothing a stranger could.
+
+| Asked to | Address has an account | Address has none |
+|---|---|---|
+| Sign in | the sign-in mail | "There’s no account for this address": no link, and one button, `Create an account`, to `/create-account` |
+| Create an account | the sign-in mail, and its name is not changed | "Finish creating your account", greeted by name |
+
+**A sign-in link never makes an account (OV-199).** Before it, a sign-in for an unknown
+address was sent a working link, and opening it made an account that had skipped the terms
+line (design 62j) and onboarding. Now only a create-account link may insert. A sign-in link
+whose address has no account by the time it is opened, because the account was deleted or
+the link predates this rule, is refused as `link_invalid` and makes nothing.
+
+**The no-account mail keeps the one-a-minute cooldown.** Its ask still writes a
+`magic_links` row, so it is held back like a link, but the row is written already spent:
+nothing was mailed that could use it, and its code can never sign in. The mail's button
+goes to `/create-account`, which leads to Start, so an account made from it goes through
+onboarding like any other. It says the same to a reader who has just deleted an account as
+to one who mistyped, since telling them apart would confirm an account once existed.
+
+**A create-account link still signs in wherever it is opened.** The account row is made by
+the server as the link is spent, before the client routes anywhere. Its only sender where
+there are accounts is onboarding's account screen, whose run resumes in the tab that holds
+it (`onboarding.md`), so no change was needed for OV-199.
 
 **The name is written only by the insert that makes the account.**
 `findOrCreateAccount` takes the name the link was asked with and writes it only when
@@ -152,8 +175,9 @@ created an account. The route logs `account created` or `signed in`, with the ac
 id, the intent and the surface, so the two can be counted apart. Each session made logs
 `session created` and each ended `signed out`, under its account and session ids, so one
 device's session can be followed from sign-in to sign-out; never its address
-(`docs/architecture/errors-and-logs.md`, "Sign-in and mail"). An account made by an ordinary sign-in has
-no name, and every screen that would use one falls back to the address.
+(`docs/architecture/errors-and-logs.md`, "Sign-in and mail"). An account made before OV-199 by
+an ordinary sign-in, or by a create-account link sent without a name, has no name, and every
+screen that would use one falls back to the address.
 
 **The name travels with the session.** `SignedIn`, `LinkedSession` and `SessionInfo` carry
 `firstName`, nullable and defaulted, so an older server's answer still parses. The client
@@ -215,10 +239,11 @@ when it is opened, so the link cannot be made into a redirect to anywhere else
 (`mcp-connector.md`, "The consent screen"). A link that has expired keeps its return: the
 new link asked for from that page comes back to the same request.
 
-**Asking makes no account; only a consumed link does.** An address anyone can type into
-a public form is not evidence of anything. `magic_links` stores the address, and the
-account row is created by the sign-in that proved it, through the same
-`findOrCreateAccount` the CLI uses.
+**Asking makes no account; only a consumed create-account link does.** An address anyone
+can type into a public form is not evidence of anything. `magic_links` stores the address,
+and the account row is created by the create-account link that proved it, through the same
+`findOrCreateAccount` the CLI uses. A sign-in link only finds an account, through
+`findAccount` ("Which mail an address gets").
 
 **One link per address per minute, and the answer does not change.** A public endpoint
 that sends mail is otherwise a way to fill someone's inbox. Inside the cooldown the

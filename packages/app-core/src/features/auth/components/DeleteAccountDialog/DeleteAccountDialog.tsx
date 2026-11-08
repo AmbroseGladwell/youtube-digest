@@ -137,8 +137,8 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
               </button>
             </div>
             <p className={styles.body} data-testid={deleteAccountDialogTestIds.body}>
-              Your account and everything in it are deleted straight away. This can’t be undone: signing in again with{" "}
-              <strong>{email}</strong> starts a new, empty account.
+              Your account and everything in it are deleted straight away. This can’t be undone: creating an account
+              with <strong>{email}</strong> again starts a new, empty one.
             </p>
             <div className={styles.group}>
               <p className={styles.groupLabel}>Deleted</p>

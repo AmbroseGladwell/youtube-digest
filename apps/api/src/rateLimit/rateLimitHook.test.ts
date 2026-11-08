@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { LightMyRequestResponse } from "fastify";
+import { findOrCreateAccount } from "../auth/findOrCreateAccount.js";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import type { RateLimit } from "./RateLimit.js";
@@ -113,7 +114,7 @@ test("one address asking for links for many inboxes is refused past its limit", 
   assert.ok(asked.every((response) => response.statusCode === 202));
 
   assertThrottled(await askForLink(testApp, "one-more@example.com"));
-  assert.equal(testApp.mailer.sent.length, rateLimits.magicLinkPerAddress.limit);
+  assert.equal(testApp.mailer.accountMails.length, rateLimits.magicLinkPerAddress.limit);
   await testApp.close();
 });
 
@@ -177,6 +178,7 @@ test("guessing emailed codes from one address is refused past its limit", async 
 
 test("a reader signing in the ordinary way is never near a limit", async () => {
   const testApp = await createTestApp();
+  await findOrCreateAccount(testApp.sql, "reader@example.com");
   await askForLink(testApp, "reader@example.com");
   testApp.clock.advance(2 * 60 * 1000);
   await askForLink(testApp, "reader@example.com");

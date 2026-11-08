@@ -18,6 +18,9 @@ export function createLogMailer(log: (line: string) => void = console.error): Ma
         case "emailTaken":
           log(`emailTaken for ${mail.to}`);
           return;
+        case "noAccount":
+          log(`noAccount for ${mail.to}: create ${mail.createAccountLink}`);
+          return;
         case "emailChanged":
           log(`emailChanged for ${mail.to} (now ${mail.newEmail}): revert ${mail.revertLink}`);
           return;

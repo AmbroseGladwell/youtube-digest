@@ -681,7 +681,9 @@ spoken line.
 |---|---|---|
 | `magic link sent` | `info` | `surface`, `purpose` |
 | `magic link held back` | `warn` | `surface`, `intent`, `reason: "cooldown"`: a second link asked for inside a minute, answered as if sent |
+| `no account mailed` | `info` | `surface`: a sign-in asked for an address with no account, which was mailed so instead of a link (`docs/features/sign-in.md`) |
 | `signed in`, `account created` | `info` | `accountId`, `intent`, `surface` |
+| `sign-in refused` | `warn` | `intent`, `surface`: a sign-in link opened for an address with no account; nothing was made |
 | `session created` | `info` | `accountId`, `sessionId`, `surface` |
 | `signed out` | `info` | `transport`, under the ending session's `accountId` and `sessionId` (`docs/features/account-libraries.md`) |
 | `link code issued` | `info` | `transport` |

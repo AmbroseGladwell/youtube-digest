@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { findOrCreateAccount } from "../auth/findOrCreateAccount.js";
 import { MailDeliveryError } from "./brevoMailer.js";
 
 const EMAIL = "reader@example.com";
@@ -14,6 +15,7 @@ const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.ms
 test("a magic link sent is logged at info with its surface and purpose, and never its address or link", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
+  await findOrCreateAccount(testApp.sql, EMAIL);
 
   await askForLink(testApp);
 
@@ -28,6 +30,7 @@ test("a magic link sent is logged at info with its surface and purpose, and neve
 test("a second link inside the cooldown is logged at warn as held back, though the caller is answered the same", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
+  await findOrCreateAccount(testApp.sql, EMAIL);
   await askForLink(testApp);
 
   const again = await askForLink(testApp);

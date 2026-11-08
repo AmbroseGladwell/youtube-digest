@@ -101,8 +101,10 @@ export const apiLogLines = coded("api", {
   auth: {
     magicLinkSent: line("info", "magic link sent", "A sign-in link went out. Never the address, the link or its token."),
     magicLinkHeldBack: line("warn", "magic link held back", "A second link asked for inside the cooldown, answered as if sent."),
+    noAccountMailed: line("info", "no account mailed", "A sign-in was asked for an address with no account; it was told so by mail, and no link went out."),
     signedIn: line("info", "signed in", "An existing account used a link."),
     accountCreated: line("info", "account created", "A link created an account that did not exist."),
+    signInRefused: line("warn", "sign-in refused", "A sign-in link was used for an address with no account; nothing was made."),
     sessionCreated: line("info", "session created", "A device signed in; each device gets its own session."),
     signedOut: line("info", "signed out", "A session ended, under the account and session that held it."),
     linkCodeIssued: line("info", "link code issued", "A code was minted to carry a session to the extension."),

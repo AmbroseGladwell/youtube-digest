@@ -144,6 +144,7 @@ export * from "./EmailChangeAsked.js";
 export * from "./EmailChangeReverted.js";
 export * from "./revertEmailLink.js";
 export * from "./signInLink.js";
+export * from "./createAccountLink.js";
 export * from "./consentPath.js";
 export * from "./ConnectionRequest.js";
 export * from "./ConnectionDecision.js";

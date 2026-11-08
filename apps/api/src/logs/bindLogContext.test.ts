@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { REQUEST_ID_HEADER } from "@overview/domain";
+import { findOrCreateAccount } from "../auth/findOrCreateAccount.js";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { letInOverview } from "../testing/TestAccount.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -39,6 +40,7 @@ test("every line of a signed-in request carries its account, its session and the
 test("one account's two devices are told apart by their sessions, and sign-in names the session it made", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
+  await findOrCreateAccount(testApp.sql, EMAIL);
   await testApp.app.inject({ method: "POST", url: "/api/auth/magic-link", payload: { email: EMAIL, surface: "web" } });
   await testApp.app.inject({ method: "POST", url: "/api/auth/sign-in", payload: { token: testApp.mailer.lastToken() } });
   const phone = await makeSession(testApp.sql, { email: EMAIL, now: testApp.clock.now });

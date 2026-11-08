@@ -1,6 +1,7 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
+import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const SERVER = "https://sync.test";
@@ -260,6 +261,21 @@ test.describe("signing in on the web", () => {
     await launcher.signInPage.verifyShowsCode(SIMULATED_LINK_CODE);
     const menu = await launcher.appShell.accountMenu.open();
     await menu.verifyItemsRead(["Sign in", "Create account", "Settings"]);
+  });
+
+  test("an address with no account is answered like any other, and its mail's Create an account leads to Start", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    await launcher.launch({ sync: true });
+    const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
+
+    await signIn.requestLink("nobody@example.com");
+    await signIn.verifyChecksEmail("nobody@example.com");
+    await launcher.openPage(Routes.createAccount());
+
+    await launcher.homePage.verifyShowsStart();
+    test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_SIGN_IN)).toBe(0);
   });
 
   test("a spent link says so and asks for the address again right there", async ({ launcher, backendSimulator }) => {

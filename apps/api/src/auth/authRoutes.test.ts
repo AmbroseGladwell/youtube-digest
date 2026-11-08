@@ -4,12 +4,19 @@ import type { LightMyRequestResponse } from "fastify";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { createLogger } from "../logs/createLogger.js";
 import { createTestApp, TEST_APP_URL, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { hashToken } from "./hashToken.js";
 import { SESSION_COOKIE } from "./sessionCookie.js";
 
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const EMAIL = "reader@example.com";
+
+const createReaderApp = async (...args: Parameters<typeof createTestApp>): Promise<TestApp> => {
+  const testApp = await createTestApp(...args);
+  await findOrCreateAccount(testApp.sql, EMAIL);
+  return testApp;
+};
 
 const setCookie = (response: LightMyRequestResponse): string => {
   const header = response.headers["set-cookie"];
@@ -42,7 +49,7 @@ const signInOnTheWeb = async (testApp: TestApp): Promise<string> => {
 };
 
 test("asking for a link mails one that points at the app, and keeps only the token's hash", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
 
   const response = await askForLink(testApp, "web", " Reader@Example.com ");
 
@@ -66,7 +73,7 @@ const askForLinkBack = (testApp: TestApp, surface: "web" | "extension", returnTo
   testApp.app.inject({ method: "POST", url: "/api/auth/magic-link", payload: { email: EMAIL, surface, returnTo } });
 
 test("a link asked for from the consent screen returns there once it has signed in", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
 
   const response = await askForLinkBack(testApp, "web", CONSENT);
 
@@ -88,7 +95,7 @@ test("a link can be asked to return only to a consent screen", async () => {
 });
 
 test("an extension link returns nowhere, since it signs in the panel and not the tab", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
 
   await askForLinkBack(testApp, "extension", CONSENT);
 
@@ -117,7 +124,7 @@ test("an address that is not an email is refused before anything is sent", async
 });
 
 test("a second ask within a minute is answered the same and sends nothing", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   testApp.clock.advance(30 * 1000);
 
@@ -132,7 +139,7 @@ test("a second ask within a minute is answered the same and sends nothing", asyn
 });
 
 test("a web link signs the browser in with a cookie the API then accepts", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
 
   const response = await signIn(testApp, testApp.mailer.lastToken());
@@ -153,7 +160,7 @@ test("a web link signs the browser in with a cookie the API then accepts", async
 });
 
 test("the cookie is not marked Secure when the app is served over plain http", async () => {
-  const testApp = await createTestApp({ appUrl: "http://localhost:5173" });
+  const testApp = await createReaderApp({ appUrl: "http://localhost:5173" });
   await askForLink(testApp, "web");
 
   const response = await signIn(testApp, testApp.mailer.lastToken());
@@ -163,7 +170,7 @@ test("the cookie is not marked Secure when the app is served over plain http", a
 });
 
 test("a link works once: the second use is refused as link_invalid", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   const token = testApp.mailer.lastToken();
   await signIn(testApp, token);
@@ -177,7 +184,7 @@ test("a link works once: the second use is refused as link_invalid", async () =>
 });
 
 test("a link older than fifteen minutes is refused, and so is a token nobody was sent", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   testApp.clock.advance(16 * MINUTE_MS);
 
@@ -191,7 +198,7 @@ test("a link older than fifteen minutes is refused, and so is a token nobody was
 });
 
 test("a web mail carries a code, kept only as its hash", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
 
   const code = testApp.mailer.lastCode();
@@ -203,7 +210,7 @@ test("a web mail carries a code, kept only as its hash", async () => {
 });
 
 test("an extension mail carries no code, since its link leads to one", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "extension");
 
   assert.equal(testApp.mailer.sent[0]!.code, null);
@@ -211,7 +218,7 @@ test("an extension mail carries no code, since its link leads to one", async () 
 });
 
 test("the code from a web mail signs the browser in with a cookie, however it was typed", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   const typed = ` ${testApp.mailer.lastCode().toLowerCase().replace("-", " ")} `;
 
@@ -231,7 +238,7 @@ test("the code from a web mail signs the browser in with a cookie, however it wa
 });
 
 test("one mail signs in once: the code spends the link, and the link spends the code", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   const token = testApp.mailer.lastToken();
   const code = testApp.mailer.lastCode();
@@ -250,7 +257,7 @@ test("one mail signs in once: the code spends the link, and the link spends the 
 });
 
 test("a code works only with the address it was sent to, and only for fifteen minutes", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "web");
   const code = testApp.mailer.lastCode();
 
@@ -260,7 +267,7 @@ test("a code works only with the address it was sent to, and only for fifteen mi
   const expired = await enterCode(testApp, code);
   assert.equal(expired.statusCode, 410);
   assert.equal(expired.json().error.code, "link_invalid");
-  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  assert.deepEqual(await testApp.sql.query("select email from accounts"), [{ email: EMAIL }]);
   await testApp.close();
 });
 
@@ -280,7 +287,7 @@ test("a create-account mail's code makes the account with the name it was asked 
 });
 
 test("a link asked for from the extension answers a code and signs no browser in", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "extension");
 
   const response = await signIn(testApp, testApp.mailer.lastToken());
@@ -298,7 +305,7 @@ test("a link asked for from the extension answers a code and signs no browser in
 });
 
 test("the code exchanges once for a bearer the panel can sync with", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "extension");
   const { linkCode } = (await signIn(testApp, testApp.mailer.lastToken())).json();
 
@@ -318,14 +325,14 @@ test("the code exchanges once for a bearer the panel can sync with", async () =>
 });
 
 test("a code is read however the reader typed it, and refused once ten minutes have passed", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await askForLink(testApp, "extension");
   const { linkCode } = (await signIn(testApp, testApp.mailer.lastToken())).json();
   const typed = ` ${(linkCode as string).toLowerCase().replace("-", " ")} `;
   testApp.clock.advance(11 * MINUTE_MS);
   assert.equal((await exchange(testApp, typed)).json().error.code, "link_invalid");
 
-  const fresh = await createTestApp();
+  const fresh = await createReaderApp();
   await askForLink(fresh, "extension");
   const second = (await signIn(fresh, fresh.mailer.lastToken())).json();
   const relaxed = await exchange(fresh, ` ${(second.linkCode as string).toLowerCase().replace("-", " ")} `);
@@ -339,7 +346,7 @@ const mintCode = (testApp: TestApp, headers: Record<string, string>) =>
   testApp.app.inject({ method: "POST", url: "/api/session/link-code", headers });
 
 test("a web app already signed in hands the extension a code that signs it in with no email", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
   const mailed = testApp.mailer.sent.length;
 
@@ -362,7 +369,7 @@ test("a web app already signed in hands the extension a code that signs it in wi
 });
 
 test("a minted code works once and lapses after ten minutes, like an emailed one", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const headers = { cookie: await signInOnTheWeb(testApp), [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
   const first = (await mintCode(testApp, headers)).json().linkCode;
   const second = (await mintCode(testApp, headers)).json().linkCode;
@@ -375,7 +382,7 @@ test("a minted code works once and lapses after ten minutes, like an emailed one
 });
 
 test("minting a code needs a session, and the client version a cross-site form cannot send", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
 
   assert.equal((await mintCode(testApp, { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) })).statusCode, 401);
@@ -385,7 +392,7 @@ test("minting a code needs a session, and the client version a cross-site form c
 });
 
 test("signing out with the cookie deletes the session and clears the cookie", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
 
   const signOut = await testApp.app.inject({
@@ -403,7 +410,7 @@ test("signing out with the cookie deletes the session and clears the cookie", as
 test("signing in, a session made for the extension and signing out are logged by account id, never by address", async () => {
   const lines: Array<Record<string, unknown>> = [];
   const logger = createLogger([{ write: (chunk: string) => void lines.push(JSON.parse(chunk)) }]);
-  const testApp = await createTestApp({}, { logger });
+  const testApp = await createReaderApp({}, { logger });
   const cookie = await signInOnTheWeb(testApp);
   const { accountId } = (await whoAmI(testApp, { cookie })).json();
   const headers = { cookie, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
@@ -413,7 +420,7 @@ test("signing in, a session made for the extension and signing out are logged by
   await testApp.app.inject({ method: "DELETE", url: "/api/session", headers });
 
   const line = (msg: string) => lines.find((logged) => logged.msg === msg);
-  assert.equal(line("account created")?.accountId, accountId);
+  assert.equal(line("signed in")?.accountId, accountId);
   assert.equal(lines.find((logged) => logged.msg === "session created" && logged.surface === "extension")?.accountId, accountId);
   assert.deepEqual(
     { accountId: line("signed out")?.accountId, transport: line("signed out")?.transport },
@@ -424,7 +431,7 @@ test("signing in, a session made for the extension and signing out are logged by
 });
 
 test("a write with the cookie still needs the client version, so a cross-site form cannot make one", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
 
   const response = await testApp.app.inject({ method: "DELETE", url: "/api/session", headers: { cookie } });
@@ -435,7 +442,7 @@ test("a write with the cookie still needs the client version, so a cross-site fo
 });
 
 test("a cookie session used more than an hour on is re-issued with its new expiry", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
   testApp.clock.advance(2 * HOUR_MS);
 
@@ -449,7 +456,7 @@ test("a cookie session used more than an hour on is re-issued with its new expir
 });
 
 test("a bearer is looked at before the cookie, so the extension's header is never mistaken for the tab's session", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   const cookie = await signInOnTheWeb(testApp);
 
   const response = await whoAmI(testApp, { cookie, authorization: "Bearer not-a-real-token" });
@@ -514,12 +521,68 @@ test("an address that already has an account is sent a sign-in link and keeps it
   await testApp.close();
 });
 
-test("an account made by signing in has no name, and says so rather than inventing one", async () => {
+test("signing in with an address that has no account mails it a way to create one, and makes nothing", async () => {
   const testApp = await createTestApp();
 
-  const cookie = await signInOnTheWeb(testApp);
+  const response = await askForLink(testApp, "web");
 
-  assert.equal((await whoAmI(testApp, { cookie })).json().firstName, null);
+  assert.equal(response.statusCode, 202);
+  assert.deepEqual(response.json(), { accepted: true });
+  assert.deepEqual(testApp.mailer.sent, []);
+  assert.deepEqual(testApp.mailer.accountMails, [
+    { kind: "noAccount", to: EMAIL, createAccountLink: `${TEST_APP_URL}/create-account` },
+  ]);
+  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  await testApp.close();
+});
+
+test("the no-account mail is held to the same one-a-minute cooldown as a link", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "extension");
+  testApp.clock.advance(30 * 1000);
+
+  const second = await askForLink(testApp, "extension");
+
+  assert.equal(second.statusCode, 202);
+  assert.equal(testApp.mailer.accountMails.length, 1);
+  testApp.clock.advance(MINUTE_MS);
+  await askForLink(testApp, "extension");
+  assert.equal(testApp.mailer.accountMails.length, 2);
+  await testApp.close();
+});
+
+test("the row that holds a no-account cooldown is spent, so no code can sign in with it", async () => {
+  const testApp = await createTestApp();
+  await askForLink(testApp, "web");
+  const [row] = await testApp.sql.query<{ consumed_at: string | null }>("select consumed_at from magic_links");
+
+  assert.notEqual(row!.consumed_at, null);
+  await testApp.close();
+});
+
+test("a sign-in link whose address has no account by the time it is opened is refused and makes nothing", async () => {
+  const testApp = await createReaderApp();
+  await askForLink(testApp, "web");
+  await testApp.sql.query("delete from accounts");
+
+  const response = await signIn(testApp, testApp.mailer.lastToken());
+
+  assert.equal(response.json().error.code, "link_invalid");
+  assert.equal(response.headers["set-cookie"], undefined);
+  assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
+  await testApp.close();
+});
+
+test("a sign-in for an address with no account is logged without the address", async () => {
+  const lines: Array<Record<string, unknown>> = [];
+  const logger = createLogger([{ write: (chunk: string) => void lines.push(JSON.parse(chunk)) }]);
+  const testApp = await createTestApp({}, { logger });
+
+  await askForLink(testApp, "web");
+
+  assert.equal(lines.find((logged) => logged.msg === "no account mailed")?.surface, "web");
+  assert.equal(lines.find((logged) => logged.msg === "magic link sent"), undefined);
+  assert.doesNotMatch(JSON.stringify(lines), new RegExp(EMAIL));
   await testApp.close();
 });
 
@@ -577,7 +640,7 @@ test("an extension's create-account link links the id when the browser opens it"
 });
 
 test("an account that already existed is never linked to an anonymous id", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await signInOnTheWeb(testApp);
   testApp.clock.advance(2 * MINUTE_MS);
 
@@ -589,7 +652,7 @@ test("an account that already existed is never linked to an anonymous id", async
 });
 
 test("an anonymous id sent with an ordinary sign-in is not kept", async () => {
-  const testApp = await createTestApp();
+  const testApp = await createReaderApp();
   await testApp.app.inject({
     method: "POST",
     url: "/api/auth/magic-link",

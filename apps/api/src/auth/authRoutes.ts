@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   apiLogLines,
+  createAccountLink,
   EmailCodeRequest,
   LinkCodeRequest,
   type EmailChangeReverted,
@@ -22,6 +23,7 @@ import { consumeLinkCode } from "./consumeLinkCode.js";
 import { consumeMagicLink, consumeMagicLinkCode, type ConsumedMagicLink } from "./consumeMagicLink.js";
 import { revertEmailChange } from "./emailChange.js";
 import { createSessionForAccount } from "./createSession.js";
+import { findAccount } from "./findAccount.js";
 import { findOrCreateAccount } from "./findOrCreateAccount.js";
 import { issueLinkCode } from "./issueLinkCode.js";
 import { issueMagicLink } from "./issueMagicLink.js";
@@ -52,9 +54,8 @@ const codeEmailOf = (request: FastifyRequest): string | null => {
 };
 
 // Every answer here is the same whether or not the address has an account, and an account
-// is only ever made by a consumed link, never by asking for one. Only the mail differs: an
-// address that asks to create an account it already has is sent a sign-in link
-// (docs/features/sign-in.md).
+// is only ever made by a consumed create-account link. Only the mail differs
+// (docs/features/sign-in.md, "Which mail an address gets").
 export function authRoutes(
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure, eventSink }: AuthRoutesOptions,
@@ -68,18 +69,24 @@ export function authRoutes(
       request.body,
       "The sign-in request",
     );
+    const hasAccount = await accountExists(sql, email);
+    const sendsLink = hasAccount || intent === "createAccount";
     const issued = await issueMagicLink(sql, {
       email,
       surface,
       intent,
-      firstName,
-      anonymousId: intent === "createAccount" ? (anonymousId ?? null) : null,
+      firstName: sendsLink ? firstName : null,
+      anonymousId: sendsLink && intent === "createAccount" ? (anonymousId ?? null) : null,
+      spent: !sendsLink,
       now: clock(),
     });
     if (issued === null) {
       request.log.warn(apiLogLines.auth.magicLinkHeldBack({ surface, intent, reason: "cooldown" }));
+    } else if (!sendsLink) {
+      await mailer.sendAccountMail({ kind: "noAccount", to: issued.email, createAccountLink: createAccountLink(appUrl) });
+      request.log.info(apiLogLines.auth.noAccountMailed({ surface }));
     } else {
-      const creating = intent === "createAccount" && !(await accountExists(sql, issued.email));
+      const creating = intent === "createAccount" && !hasAccount;
       const purpose = creating ? "createAccount" : "signIn";
       await mailer.sendMagicLink({
         to: issued.email,
@@ -101,7 +108,14 @@ export function authRoutes(
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<SignedIn> => {
-    const account = await findOrCreateAccount(sql, link.email, link.firstName);
+    const account =
+      link.intent === "createAccount"
+        ? await findOrCreateAccount(sql, link.email, link.firstName)
+        : await findAccount(sql, link.email);
+    if (account === null) {
+      request.log.warn(apiLogLines.auth.signInRefused({ intent: link.intent, surface: link.surface }));
+      throw new ApiError("link_invalid", "There’s no account for this address. Create one to sign in");
+    }
     request.log.info(
       (account.created ? apiLogLines.auth.accountCreated : apiLogLines.auth.signedIn)({
         accountId: account.id,
