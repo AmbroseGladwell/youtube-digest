@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Connection } from "@overview/domain";
+import { connectionProfileLine } from "../../util/connectionProfileLine.js";
 import { connectionUseLine } from "../../util/connectionUseLine.js";
 import styles from "./ConnectionRow.module.scss";
 import { connectionRowTestIds } from "./ConnectionRowTestIds.js";
@@ -8,11 +9,12 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 export interface ConnectionRowProps {
   connection: Connection;
   now: Date;
+  sharingProfile: boolean;
   onRevoke: (connectionId: string) => void;
 }
 
 // Revoking cannot be undone, so the row asks once and says so (design 58i, 58j).
-export function ConnectionRow({ connection, now, onRevoke }: ConnectionRowProps) {
+export function ConnectionRow({ connection, now, sharingProfile, onRevoke }: ConnectionRowProps) {
   const analytics = useAnalytics();
   const [confirming, setConfirming] = useState(false);
   const [returned, setReturned] = useState(false);
@@ -70,6 +72,9 @@ export function ConnectionRow({ connection, now, onRevoke }: ConnectionRowProps)
         </span>
         <span className={styles.useLine} data-testid={connectionRowTestIds.useLine}>
           {connectionUseLine(connection, now)}
+        </span>
+        <span className={styles.useLine} data-testid={connectionRowTestIds.profileLine}>
+          {connectionProfileLine(connection.readsProfile, sharingProfile)}
         </span>
       </span>
       <button

@@ -200,6 +200,7 @@ export const apiLogLines = coded("api", {
   },
   settings: {
     analyticsOptOutSet: line("info", "analytics opt-out set", "A reader turned sharing on or off in Settings."),
+    profileSharingSet: line("info", "profile sharing set", "A reader let connected assistants read what is known about them, or stopped them. Never the profile."),
     narrationVoiceChosen: line("info", "narration voice chosen", "A reader picked a different narration voice."),
     themeChosen: line("info", "theme chosen", "A reader chose System, Light or Dark."),
     accentColourChosen: line("info", "accent colour chosen", "A reader chose an accent colour."),

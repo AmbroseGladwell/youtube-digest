@@ -1,6 +1,7 @@
 export const connectionRowTestIds = {
   root: "connection-row",
   name: "connection-row-name",
+  profileLine: "connection-row-profile-line",
   useLine: "connection-row-use-line",
   revokeButton: "connection-row-revoke",
   confirm: "connection-row-confirm",

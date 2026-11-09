@@ -50,6 +50,12 @@ export class PersonalisationSectionPageObject extends PageObject {
 
   switchKeepLearning = () => this.step("switchKeepLearning", () => this.page.getByTestId(whatWeKnowCardTestIds.keepLearning).click());
 
+  switchShareWithAssistants = () =>
+    this.step("switchShareWithAssistants", () => this.page.getByTestId(whatWeKnowCardTestIds.shareWithAssistants).click());
+
+  verifyCantShareWithAssistants = () =>
+    this.step("verifyCantShareWithAssistants", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.shareWithAssistants)).toHaveCount(0));
+
   verifyCantSwitchLearning = () =>
     this.step("verifyCantSwitchLearning", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.keepLearning)).toHaveCount(0));
 

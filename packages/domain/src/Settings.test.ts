@@ -50,6 +50,15 @@ test("milestone cards show unless turned off, and a record from before the switc
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, showMilestoneCards: false }).showMilestoneCards, false);
 });
 
+test("connected assistants may read the profile unless turned off, and a record from before the switch reads as on", () => {
+  assert.equal(DEFAULT_SETTINGS.shareProfileWithAssistants, true);
+
+  const { shareProfileWithAssistants: _, ...older } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(older).shareProfileWithAssistants, true);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, shareProfileWithAssistants: false }).shareProfileWithAssistants, false);
+});
+
 test("usage is shared unless the account turned it off, and a record from before the switch reads as sharing", () => {
   assert.equal(DEFAULT_SETTINGS.analyticsOptOut, false);
 

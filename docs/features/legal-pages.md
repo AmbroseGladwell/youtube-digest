@@ -145,6 +145,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-09 | privacy | OV-221 | Settings carried by the account name what is learned from your overviews; assistants you connect can read what we know about you (the sentence and learned items with their sources, never removed or unseen ones) when the consent screen said so, until "Share with your assistants" is turned off, and its calls never log it. |
+| 2026-11-09 | terms | OV-221 | Assistants: a connected assistant can read what we know about you, and Settings › Personalisation stops it. |
 | 2026-11-08 | privacy | OV-199 | The account section says only creating an account makes one, and an address with no account that asks to sign in is mailed so, with no link; deleting your account says signing in again finds no account, and creating one starts empty. |
 | 2026-11-06 | privacy | OV-184 | Deleting your account describes the button, the code first, what goes in one step, the ask to PostHog and its timing, the deletion record and what stays; the account section says the code guards deletion too; the retention table gained the deletion record and reworded narration. |
 | 2026-11-06 | terms | OV-184 | Accounts: deleted from Settings after a code, not by email. |

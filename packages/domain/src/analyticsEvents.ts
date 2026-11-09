@@ -642,6 +642,7 @@ export const analyticsEvents = {
         set: z.boolean(),
       }),
       learningSwitched: event("The reader turns Keep learning on or off", { on: z.boolean() }),
+      profileSharingSwitched: event("The reader lets connected assistants read what is known about them, or stops them", { on: z.boolean() }),
       learnedItemRemoved: event("The reader removes a learned item in Settings; never what it says", {}),
       profilePassRan: event("A profile pass finished; never what it found", { added: z.number().int().nonnegative(), key: z.enum(["own", "ours"]) }),
       profilePassFailed: event("A profile pass failed; the reader isn't told", { key: z.enum(["own", "ours"]) }),

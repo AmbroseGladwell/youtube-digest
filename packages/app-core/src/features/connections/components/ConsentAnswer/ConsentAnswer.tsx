@@ -6,9 +6,10 @@ export type ConsentDecision = "approve" | "decline";
 
 export interface ConsentAnswerProps {
   host: string;
-  // Whether the assistant asked to mark overviews as well as read them
-  // (docs/features/mcp-connector.md, "Scopes").
+  // Whether the assistant asked to mark overviews as well as read them, and to read what is
+  // known about the reader (docs/features/mcp-connector.md, "Scopes").
   writes: boolean;
+  readsProfile: boolean;
   deciding: ConsentDecision | null;
   onDecide: (decision: ConsentDecision) => void;
 }
@@ -21,16 +22,23 @@ interface Permission {
 
 const READS: Permission = { icon: "check", text: "Read your overviews and their transcripts", granted: true };
 const MARKS: Permission = { icon: "check", text: "Mark overviews read, unread or favourite", granted: true };
+export const READS_PROFILE_TEXT = "Read what we know about you: your sentence, and what we’ve learned from your overviews";
+const READS_PROFILE: Permission = { icon: "check", text: READS_PROFILE_TEXT, granted: true };
 const CHANGES_NOTHING: Permission = { icon: "circleMinus", text: "Change nothing. Access is read-only", granted: false };
 const CHANGES_NOTHING_ELSE: Permission = { icon: "circleMinus", text: "Not change, add or delete an overview", granted: false };
 const NO_KEYS: Permission = { icon: "circleMinus", text: "Not see your API keys. They stay on your device", granted: false };
 
-const permissionsAsked = (writes: boolean): Permission[] =>
-  writes ? [READS, MARKS, CHANGES_NOTHING_ELSE, NO_KEYS] : [READS, CHANGES_NOTHING, NO_KEYS];
+const permissionsAsked = (writes: boolean, readsProfile: boolean): Permission[] => [
+  READS,
+  ...(writes ? [MARKS] : []),
+  ...(readsProfile ? [READS_PROFILE] : []),
+  writes ? CHANGES_NOTHING_ELSE : CHANGES_NOTHING,
+  NO_KEYS,
+];
 
 // What approving grants, then the answer. Both answers leave for the assistant, so the only
 // thing after a press is a pending state (design 58a, 58c).
-export function ConsentAnswer({ host, writes, deciding, onDecide }: ConsentAnswerProps) {
+export function ConsentAnswer({ host, writes, readsProfile, deciding, onDecide }: ConsentAnswerProps) {
   const pendingLabel = deciding === "approve" ? `Sending you back to ${host}…` : "Declining…";
 
   const button = (decision: ConsentDecision, label: string, className: string, testId: string) => (
@@ -60,7 +68,7 @@ export function ConsentAnswer({ host, writes, deciding, onDecide }: ConsentAnswe
       <div className={styles.card} data-testid={consentAnswerTestIds.root}>
         <p className={styles.label}>It will be able to</p>
         <ul className={styles.permissions}>
-          {permissionsAsked(writes).map(({ icon, text, granted }) => (
+          {permissionsAsked(writes, readsProfile).map(({ icon, text, granted }) => (
             <li key={text} className={styles.permission} data-testid={consentAnswerTestIds.permission}>
               <span className={granted ? styles.granted : styles.withheld}>
                 <StrokeIcon name={icon} size={17} />
@@ -69,7 +77,11 @@ export function ConsentAnswer({ host, writes, deciding, onDecide }: ConsentAnswe
             </li>
           ))}
         </ul>
-        <p className={styles.footnote}>Revoke it any time in Settings › Connections.</p>
+        <p className={styles.footnote}>
+          {readsProfile
+            ? "Revoke it any time in Settings › Connections. Stop assistants reading what we know about you in Settings › Personalisation."
+            : "Revoke it any time in Settings › Connections."}
+        </p>
       </div>
       <div className={styles.actions}>
         {button("approve", "Approve", styles.approve!, consentAnswerTestIds.approveButton)}

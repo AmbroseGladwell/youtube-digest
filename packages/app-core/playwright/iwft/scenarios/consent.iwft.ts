@@ -16,6 +16,7 @@ const request = (overrides: Partial<ConnectionRequest> = {}): ConnectionRequest 
   clientName: "Claude",
   redirectHost: "claude.ai",
   writes: true,
+  readsProfile: true,
   expiresAt: new Date(Date.now() + 26 * MINUTE_MS - 30_000).toISOString(),
   ...overrides,
 });
@@ -36,6 +37,7 @@ test.describe("answering an assistant's request", () => {
     await consent.verifyListsPermissions([
       "Read your overviews and their transcripts",
       "Mark overviews read, unread or favourite",
+      "Read what we know about you: your sentence, and what we’ve learned from your overviews",
       "Not change, add or delete an overview",
       "Not see your API keys. They stay on your device",
     ]);
@@ -43,7 +45,7 @@ test.describe("answering an assistant's request", () => {
   });
 
   test("an assistant that asked only to read is shown as read-only", async ({ launcher, backendSimulator }) => {
-    backendSimulator.connections.seedRequest(request({ writes: false }));
+    backendSimulator.connections.seedRequest(request({ writes: false, readsProfile: false }));
     backendSimulator.auth.accountIsOn("plus");
     await launcher.launch(SIGNED_IN);
 

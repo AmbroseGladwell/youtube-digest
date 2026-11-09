@@ -9,7 +9,7 @@ import {
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
-import { connectionWrites } from "./connectionScope.js";
+import { connectionReadsProfile, connectionWrites } from "./connectionScope.js";
 import { decideAuthorization } from "./decideAuthorization.js";
 import { findPendingAuthorization } from "./findPendingAuthorization.js";
 import { listConnections } from "./listConnections.js";
@@ -39,6 +39,7 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
       clientName: pending.clientName,
       redirectHost: new URL(pending.redirectUri).host,
       writes: connectionWrites(pending.scope),
+      readsProfile: connectionReadsProfile(pending.scope),
       expiresAt: pending.expiresAt,
     };
     return connectionRequest;
@@ -48,14 +49,15 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
     const { approve } = parseOrThrow(ConnectionDecision, request.body, "The decision");
     const { accountId } = request.session!;
     const now = clock();
-    if ((await findPendingAuthorization(sql, request.params.id, now)) === null) {
+    const pending = await findPendingAuthorization(sql, request.params.id, now);
+    if (pending === null) {
       throw notPending();
     }
     const redirectTo = await decideAuthorization(sql, { id: request.params.id, accountId, approve, urls, now });
     if (redirectTo === null) {
       throw notPending();
     }
-    request.log.info(apiLogLines.mcp.connectionRequestDecided({ approved: approve }));
+    request.log.info(apiLogLines.mcp.connectionRequestDecided({ approved: approve, readsProfile: connectionReadsProfile(pending.scope) }));
     const decided: ConnectionDecided = { redirectTo };
     return decided;
   });

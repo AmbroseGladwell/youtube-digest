@@ -22,7 +22,7 @@ test("a request with no token is turned away with the metadata a client follows 
   assert.equal(response.statusCode, 401);
   assert.equal(
     response.headers["www-authenticate"],
-    `Bearer resource_metadata="${TEST_APP_URL}/.well-known/oauth-protected-resource/mcp", scope="overviews:read overviews:write"`,
+    `Bearer resource_metadata="${TEST_APP_URL}/.well-known/oauth-protected-resource/mcp", scope="overviews:read overviews:write profile:read"`,
   );
   await testApp.close();
 });
@@ -62,7 +62,7 @@ test("initialize answers with its own latest version when it does not know the c
   await testApp.close();
 });
 
-test("tools/list offers the seven tools, all but mark_overviews marked read-only, with a schema for each one's arguments", async () => {
+test("tools/list offers the eight tools, all but mark_overviews marked read-only, with a schema for each one's arguments", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await makeAccount(testApp));
 
@@ -72,7 +72,7 @@ test("tools/list offers the seven tools, all but mark_overviews marked read-only
 
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript", "mark_overviews"],
+    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript", "get_profile", "mark_overviews"],
   );
   assert.deepEqual(
     tools.filter((tool) => !tool.annotations.readOnlyHint).map((tool) => tool.name),

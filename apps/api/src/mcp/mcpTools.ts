@@ -14,6 +14,7 @@ import {
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
+import { getProfile } from "./getProfile.js";
 import { markOverviews } from "./markOverviews.js";
 import { mcpTool, toolError, type McpTool, type McpToolOutcome } from "./McpTool.js";
 import { pageOf, type Page } from "./pageOf.js";
@@ -239,4 +240,4 @@ const getTranscript = mcpTool({
   },
 });
 
-export const mcpTools: readonly McpTool[] = [searchOverviews, listTopics, listTags, getOverview, getOverviews, getTranscript, markOverviews];
+export const mcpTools: readonly McpTool[] = [searchOverviews, listTopics, listTags, getOverview, getOverviews, getTranscript, getProfile, markOverviews];

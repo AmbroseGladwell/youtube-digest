@@ -21,6 +21,9 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     if (patch.analyticsOptOut !== undefined) {
       request.log.info(apiLogLines.settings.analyticsOptOutSet({ analyticsOptOut: patch.analyticsOptOut }));
     }
+    if (patch.shareProfileWithAssistants !== undefined) {
+      request.log.info(apiLogLines.settings.profileSharingSet({ shareProfileWithAssistants: patch.shareProfileWithAssistants }));
+    }
     if (patch.narrationVoice !== undefined) {
       request.log.info(apiLogLines.settings.narrationVoiceChosen({ narrationVoice: patch.narrationVoice }));
     }
