@@ -1,16 +1,16 @@
 import { aboutYouSentence, type AboutYou } from "./AboutYou.js";
-import { keptLearnedItems, type LearnedItems } from "./LearnedItem.js";
+import { noticedLearnedItems, type LearnedItems } from "./LearnedItem.js";
 import type { Settings } from "./Settings.js";
 
 export const MAX_READER_CONTEXT_LENGTH = 600;
 
 // What generation reads as the reader context (docs/features/personalisation.md). The prompt
-// only ever gives it to How to apply. Learned items follow the sentence, newest first, for as
-// many as fit under the cap; the sentence always fits.
+// only ever gives it to How to apply. Learned items the reader has been shown follow the
+// sentence, newest first, for as many as fit under the cap; the sentence always fits.
 export function composeReaderContext(aboutYou: AboutYou, learned: LearnedItems = {}): string | null {
   const sentence = aboutYouSentence(aboutYou);
   const fitted: string[] = [];
-  for (const { text } of keptLearnedItems(learned)) {
+  for (const { text } of noticedLearnedItems(learned)) {
     const line = learnedLine([...fitted, text]);
     if (sentence.length + 1 + line.length > MAX_READER_CONTEXT_LENGTH) break;
     fitted.push(text);

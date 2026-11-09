@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { keptLearnedItems, learnedItemKey, profilePassIsDue, removedLearnedItems, unnoticedLearnedItems, type LearnedItem } from "./LearnedItem.js";
+import {
+  keptLearnedItems,
+  learnedItemKey,
+  noticedLearnedItems,
+  profilePassIsDue,
+  removedLearnedItems,
+  unnoticedLearnedItems,
+  type LearnedItem,
+} from "./LearnedItem.js";
 
 const item = (overrides: Partial<LearnedItem>): LearnedItem => ({
   text: "building an app",
@@ -38,4 +46,12 @@ test("the notice shows what the reader hasn't been told about, and never a remov
   const gone = item({ text: "gone", removedAt: "2026-11-02T11:00:00.000Z" });
 
   assert.deepEqual(unnoticedLearnedItems({ told, fresh, gone }), [fresh]);
+});
+
+test("only what the reader has been told about may be used, and never a removed item", () => {
+  const told = item({ text: "told", noticedAt: "2026-11-01T11:00:00.000Z" });
+  const fresh = item({ text: "fresh" });
+  const gone = item({ text: "gone", noticedAt: "2026-11-01T11:00:00.000Z", removedAt: "2026-11-02T11:00:00.000Z" });
+
+  assert.deepEqual(noticedLearnedItems({ told, fresh, gone }), [told]);
 });
