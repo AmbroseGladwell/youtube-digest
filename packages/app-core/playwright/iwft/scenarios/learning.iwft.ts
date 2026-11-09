@@ -86,6 +86,22 @@ test("dismissing the notice keeps the item and doesn't show it again", async ({ 
   await settings.personalisation.verifyLearned("building a consumer app");
 });
 
+test("an item seen in What we know about you counts as shown, so the library doesn't offer it again", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(seededOverview("seeded00001"));
+  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, learned: { "building a consumer app": learnedItem("building a consumer app", { noticedAt: null }) } });
+  await launcher.learnedNotice.verifyOffers("building a consumer app");
+
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.verifyLearned("building a consumer app");
+
+  await expect
+    .poll(async () => (await backendSimulator.settingsStore.get()).learned["building a consumer app"]?.noticedAt ?? null)
+    .not.toBeNull();
+  await launcher.appShell.clickBrand();
+  await launcher.learnedNotice.verifyIsGone();
+});
+
 test("Settings shows what was learned and where from, a removed item goes, and Keep learning switches off", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launch({

@@ -178,13 +178,14 @@ describe("runOverviewGeneration", () => {
     ]);
   });
 
-  it("writes for what was learned as well as the sentence, and leaves a removed item out", async () => {
+  it("writes for what was learned and shown as well as the sentence, and leaves out a removed item and one not yet shown", async () => {
     const { deps, inputs, setAboutYou, setLearned } = makeDeps();
-    const learnedItem = { source: "From 2 overviews", learnedAt: "2026-11-01T10:00:00.000Z", noticedAt: null };
+    const learnedItem = { source: "From 2 overviews", learnedAt: "2026-11-01T10:00:00.000Z", noticedAt: "2026-11-01T11:00:00.000Z" };
     setAboutYou({ who: ["nurse"], time: [], focus: [] });
     setLearned({
       "building an app": { ...learnedItem, text: "building an app", removedAt: null },
       "saving for a home": { ...learnedItem, text: "saving for a home", removedAt: "2026-11-02T10:00:00.000Z" },
+      "running a marathon": { ...learnedItem, text: "running a marathon", noticedAt: null, removedAt: null },
     });
 
     await runOverviewGeneration(VIDEO.url, deps);

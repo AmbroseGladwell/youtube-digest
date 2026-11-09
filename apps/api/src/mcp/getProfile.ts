@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   aboutYouSentence,
   DEFAULT_SETTINGS,
-  keptLearnedItems,
+  noticedLearnedItems,
   readStoredRecord,
   SETTINGS_MIGRATIONS,
   Settings,
@@ -46,7 +46,7 @@ export const getProfile = mcpTool({
       return toolError(SHARING_OFF);
     }
     const sentence = aboutYouSentence(settings.aboutYou);
-    const learned = keptLearnedItems(settings.learned).filter(({ noticedAt }) => noticedAt !== null);
+    const learned = noticedLearnedItems(settings.learned);
     if (sentence === "" && learned.length === 0) {
       return { text: NOTHING_KNOWN };
     }

@@ -231,8 +231,9 @@ const sections: readonly LegalSection[] = [
           what it cost and how long it took, never what it sent or found.
         </p>
         <p>
-          A notice on your library says what was learned, with Undo. From the next overview you make, each item
-          goes with it, beside your About you sentence, and is kept
+          Nothing learned is used until you have been shown it, by a notice on your library, with Undo, or in
+          Settings › Personalisation. From then on it goes with each overview you make, beside your About you
+          sentence, and is kept
           with your settings, on the device and, with an account, synced to our server. Settings ›
           Personalisation shows everything learned and where it came from. Remove takes an item out, and Clear
           everything removes them all; a removed item's words stay in your settings, marked removed, so it is

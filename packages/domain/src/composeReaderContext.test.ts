@@ -8,7 +8,7 @@ const item = (text: string, overrides: Partial<LearnedItem> = {}): LearnedItem =
   text,
   source: "From 2 overviews",
   learnedAt: "2026-11-01T10:00:00.000Z",
-  noticedAt: null,
+  noticedAt: "2026-11-01T11:00:00.000Z",
   removedAt: null,
   ...overrides,
 });
@@ -24,6 +24,13 @@ test("learned items follow the sentence, and a removed one is left out", () => {
   );
 
   assert.equal(context, "I'm a dad. Also: building an app.");
+});
+
+test("an item the reader hasn't been shown yet is left out until it has been", () => {
+  const aboutYou = { ...EMPTY_ABOUT_YOU, who: ["dad"] };
+
+  assert.equal(composeReaderContext(aboutYou, { app: item("building an app", { noticedAt: null }) }), "I'm a dad.");
+  assert.equal(composeReaderContext(aboutYou, { app: item("building an app") }), "I'm a dad. Also: building an app.");
 });
 
 test("learned items alone are a context", () => {
