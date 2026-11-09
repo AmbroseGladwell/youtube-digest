@@ -7,6 +7,7 @@ import { makeArticleOverview, makeOverview } from "../../../src/features/overvie
 import { articleFailureNoticeTestIds } from "../../../src/features/capture/components/ArticleFailureNotice/ArticleFailureNoticeTestIds.js";
 import { sourceOfferTestIds } from "../../../src/features/capture/components/SourceOffer/SourceOfferTestIds.js";
 import { recentOverviewsTestIds } from "../../../src/features/capture/components/RecentOverviews/RecentOverviewsTestIds.js";
+import { kindChipTestIds } from "../../../src/components/shared/KindChip/KindChipTestIds.js";
 import { capturePageTestIds } from "../../../src/features/capture/CapturePage/CapturePageTestIds.js";
 import { readerNoticeTestIds } from "../../../src/features/reader/components/ReaderNotice/ReaderNoticeTestIds.js";
 import { articleChaptersPanelTestIds } from "../../../src/features/reader/components/ArticleChaptersPanel/ArticleChaptersPanelTestIds.js";
@@ -81,6 +82,7 @@ test("on a page that's neither, the panel says what it works on and shows what's
   );
   await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveCount(0);
   await expect(page.getByTestId(recentOverviewsTestIds.row)).toHaveCount(2);
+  await expect(page.getByTestId(kindChipTestIds.root)).toHaveText(["Article"]);
   await expectDrawnInTheLabelTone(page, page.getByTestId(recentOverviewsTestIds.heading));
 });
 

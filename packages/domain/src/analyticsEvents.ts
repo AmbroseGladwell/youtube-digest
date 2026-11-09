@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AccentColour, HeadImageSize, ThemeMode } from "./Appearance.js";
 import { OverviewId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
+import { ModelId } from "./ModelId.js";
 import { Plan } from "./Plan.js";
 import { Provider } from "./Provider.js";
 import { AuthIntent } from "./AuthIntent.js";
@@ -15,11 +16,11 @@ import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
 import { OnboardingStep } from "./OnboardingStep.js";
 
-// A property can only be a choice, a flag, a number or one of our own random ids: nothing
-// that could carry a URL, a video id or a sentence the reader wrote
-// (docs/architecture/analytics.md, "What an event may carry"). One added to an event that
-// already exists is optional, so an older client's event still parses ("Adding a property").
-export const ANALYTICS_IDS = [OverviewId, TopicId] as const;
+// A property can only be a choice, a flag, a number, one of our own random ids or a
+// provider's model id: nothing that could carry a URL, a video id or a sentence the reader
+// wrote (docs/architecture/analytics.md, "What an event may carry"). One added to an event
+// that already exists is optional, so an older client's event still parses ("Adding a property").
+export const ANALYTICS_IDS = [OverviewId, TopicId, ModelId] as const;
 type AnalyticsValue = z.ZodEnum | z.ZodBoolean | z.ZodNumber | (typeof ANALYTICS_IDS)[number];
 export type AnalyticsProp = AnalyticsValue | z.ZodOptional<AnalyticsValue>;
 export type AnalyticsProps = Record<string, AnalyticsProp>;
@@ -126,6 +127,7 @@ export const CaptureFailure = z.enum([
   "article-blocked",
   "article-not-found",
   "article-no-answer",
+  "model-refused",
   "generation",
   "unknown",
 ]);
@@ -722,6 +724,9 @@ export const analyticsEvents = {
         from: CaptureEntry,
         failure: CaptureFailure,
         durationMs: z.number().int().nonnegative(),
+        // The provider and model the reader chose, on a `model-refused` failure only.
+        provider: Provider.optional(),
+        model: ModelId.optional(),
       }),
       alreadyHeld: event("The reader asks for a video the library already holds an overview of, so nothing is made", {
         from: CaptureEntry,

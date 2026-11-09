@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   aboutYouIsEmpty,
   aboutYouPatch,
@@ -6,6 +6,7 @@ import {
   EMPTY_ABOUT_YOU,
   keptLearnedItems,
   learnedItemKey,
+  unnoticedLearnedItems,
   type AboutYou,
   type LearnedItem,
   type LearnedItems,
@@ -68,10 +69,11 @@ function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
 }
 
 // Designs 141k and 141l: the sentence as it reads, then in place with its sections editable,
-// what was learned and Keep learning. It is what every overview from now on is written for, so
-// the card says where it goes on us. Where no key can run the pass, learning isn't offered, but
-// items already held stay readable and removable, since they're still sent
-// (docs/features/personalisation.md).
+// what was learned and Keep learning. Listing an item shows it to the reader as the library's
+// notice does, so it is marked noticed and used from then on. It is what every overview from
+// now on is written for, so the card says where it goes on us. Where no key can run the pass,
+// learning isn't offered, but items already held stay readable and removable, since they're
+// still sent (docs/features/personalisation.md).
 export function WhatWeKnowCard() {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
@@ -85,6 +87,16 @@ export function WhatWeKnowCard() {
   const signedIn = useSync().connected;
   const sharingProfile = settings?.shareProfileWithAssistants ?? true;
   const empty = aboutYouIsEmpty(aboutYou) && learned.length === 0;
+  const unnoticed = open ? unnoticedLearnedItems(settings?.learned ?? {}) : [];
+  const unnoticedTexts = unnoticed.map(({ text }) => text).join("\n");
+
+  useEffect(() => {
+    if (unnoticed.length === 0) return;
+    const at = new Date().toISOString();
+    updateSettings.mutate({
+      learned: Object.fromEntries(unnoticed.map((item) => [learnedItemKey(item.text), { ...item, noticedAt: at }])),
+    });
+  }, [unnoticedTexts]);
 
   const removed = (items: readonly LearnedItem[]): LearnedItems => {
     const at = new Date().toISOString();

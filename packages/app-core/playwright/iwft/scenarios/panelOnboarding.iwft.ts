@@ -1,3 +1,4 @@
+import type { ExtractedArticle } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
@@ -20,6 +21,20 @@ const signedOutPanel = {
   analyticsConsent: null,
 };
 const { analyticsConsent: _neverAsked, ...signedOutPanelAnswered } = signedOutPanel;
+const PAGE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
+const PAGE_TITLE = "The town that pays its bridge bill twice";
+const PAGE_ARTICLE: ExtractedArticle = {
+  url: PAGE_URL,
+  title: PAGE_TITLE,
+  siteName: "The Harbour Post",
+  author: null,
+  publishedAt: null,
+  language: "en",
+  imageUrl: null,
+  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+  wordCount: 3220,
+  recipe: null,
+};
 
 test("a new reader makes their first overview of the video the panel is beside, lands on it signed in, and is offered their AI", async ({
   launcher,
@@ -166,16 +181,20 @@ test("the gate's Sign in keeps no way back to the gate", async ({ launcher }) =>
 });
 
 // Beside something the offer takes the field's place, and the different link brings it back.
+// A pasted link has no tab to read, so our server reads it. Seeded readable: with no answer the
+// simulator says it read nothing, and the read-failure screen raced the video screen (OV-213).
 test("beside a video, a different link can still be pasted", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "read", article: PAGE_ARTICLE });
   await launcher.launchPanel(signedOutPanelAnswered);
   const start = await launcher.homePage.verifyShowsStart();
 
   await start.pasteADifferentLink();
 
   await start.verifyOffersNothingFromTheTab();
-  await start.submitHeroUrl("https://theharbourpost.example/2026/11/bridge-bill-twice");
+  await start.submitHeroUrl(PAGE_URL);
   await launcher.onboardingPage.verifyOnScreen("video");
+  await launcher.onboardingPage.verifyVideoTitle(PAGE_TITLE);
 });
 
 // Drawn tall: at 720 the panel scrolls rather than squeezing the deck (205g).
@@ -194,8 +213,6 @@ test("below 720 the panel scrolls", async ({ launcher, backendSimulator, page })
   await launcher.sampleDeck.verifyIsShown();
 });
 
-const PAGE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
-const PAGE_TITLE = "The town that pays its bridge bill twice";
 
 test("beside a page, the panel's Start offers it, and the page is read in the browser rather than spending a trial read", async ({
   launcher,
@@ -208,21 +225,7 @@ test("beside a page, the panel's Start offers it, and the page is read in the br
     articlePages: {
       page: { url: PAGE_URL, title: PAGE_TITLE, tabId: 7 },
       granted: true,
-      read: {
-        status: "read",
-        article: {
-          url: PAGE_URL,
-          title: PAGE_TITLE,
-          siteName: "The Harbour Post",
-          author: null,
-          publishedAt: null,
-          language: "en",
-          imageUrl: null,
-          sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
-          wordCount: 3220,
-          recipe: null,
-        },
-      },
+      read: { status: "read", article: PAGE_ARTICLE },
     },
   });
 

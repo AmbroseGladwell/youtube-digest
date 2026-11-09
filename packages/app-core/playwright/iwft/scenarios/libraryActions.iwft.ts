@@ -1,5 +1,10 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import {
+  makeArticleOverview,
+  makeOverview,
+  makeRecipeOverview,
+  makeRecipeVideoOverview,
+} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const WIDE_THUMBNAIL =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720'%3E%3Crect width='1280' height='720' fill='%23cccccc'/%3E%3C/svg%3E";
@@ -81,7 +86,7 @@ test("a row prints its read, listen and video times, and the note it opens says 
   await reader.verifyMetaReads("1 min read · 1 min listen · 11:38 video");
 });
 
-test("a row drops the video term when the source recorded no duration, rather than guessing", async ({
+test("a row drops the length but keeps the kind when the source recorded no duration, rather than guessing", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -93,7 +98,7 @@ test("a row drops the video term when the source recorded no duration, rather th
 
   const library = await launcher.launchExpectingLibrary();
 
-  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen");
+  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen · Video");
 });
 
 test("a row's favourite and Read line up, and the note's favourite keeps the row's shape", async ({
@@ -229,4 +234,24 @@ test("a card with no thumbnail leaves the image slot out entirely", async ({ lau
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).verifyHasNoThumbnail();
+});
+
+// Design 232a: a video is most of the library and names itself in the meta line, so only
+// the other kinds lead with a chip, and a recipe video's is a recipe's.
+test("every row but a video leads with its kind, and every row names it in the meta line", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-11-09T00:00:00.000Z" }));
+  backendSimulator.overviews.seed(makeArticleOverview({ savedAt: "2026-11-08T00:00:00.000Z" }));
+  backendSimulator.overviews.seed(makeRecipeOverview({ savedAt: "2026-11-07T00:00:00.000Z" }));
+  backendSimulator.overviews.seed(makeRecipeVideoOverview({ savedAt: "2026-11-06T00:00:00.000Z" }));
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.nthCard(0).verifyHasNoKindChip();
+  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen · Video");
+  await library.nthCard(1).verifyKindChipReads("Article");
+  await library.nthCard(2).verifyKindChipReads("Recipe · 4 servings");
+  await library.nthCard(3).verifyKindChipReads("Recipe · Serves 6");
 });

@@ -70,6 +70,20 @@
   font-size: 0.75rem;
 }
 
+// What it is, then its warnings (design 232a): each group moves to the next line whole, and
+// only breaks inside when it is wider than the row on its own.
+.kickerGroup {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  min-width: 0;
+
+  &:empty {
+    display: none;
+  }
+}
+
 .topic {
   font-size: 0.78125rem;
   font-weight: 600;
@@ -86,10 +100,12 @@
   gap: 0.25rem;
   font-weight: 600;
   color: var(--alert);
+  white-space: nowrap;
 }
 
 .selling {
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .titleLink {

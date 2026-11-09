@@ -48,7 +48,7 @@ test("a note saved before the field existed at all still opens", async ({
   const reader = await library.cardWithTitle("A dated video").openReaderFromTitle();
 
   await reader.verifyShowsNoPublished();
-  await reader.verifyMetaReads("1 min read · 1 min listen");
+  await reader.verifyMetaReads("1 min read · 1 min listen · Video");
 });
 
 test("a generated note keeps the date the source gave it", async ({ launcher, backendSimulator }) => {

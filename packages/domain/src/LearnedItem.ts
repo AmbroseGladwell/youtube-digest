@@ -32,6 +32,11 @@ export const removedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
 export const unnoticedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
   keptLearnedItems(learned).filter(({ noticedAt }) => noticedAt === null);
 
+// What generation and assistants may use: kept, and shown to the reader by the library's notice
+// or Settings, so nothing shapes an overview before the reader has been told of it.
+export const noticedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
+  keptLearnedItems(learned).filter(({ noticedAt }) => noticedAt !== null);
+
 export const PROFILE_PASS_EVERY_OVERVIEWS = 3;
 export const PROFILE_PASS_RECENT_OVERVIEWS = 12;
 export const PROFILE_PASS_REMOVED_ITEMS = 50;

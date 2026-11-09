@@ -11,12 +11,15 @@ import {
 import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
+import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { useSetOverviewCaptureReasonMutation } from "../overviews/mutations/useSetOverviewCaptureReasonMutation.js";
 import { captureReasonFromDraft } from "../overviews/util/captureReasonFromDraft.js";
 import { ArticleAlreadyHeldError } from "./api/ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./api/ArticleReadError.js";
+import { ChosenModelFailedError } from "./api/ChosenModelFailedError.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
+import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
@@ -67,6 +70,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
   const { mutate } = useGenerateOverviewMutation(apiKeys);
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
   const analytics = useAnalytics();
+  const reporter = useErrorReporter();
   const [run, setRun] = useState<NewOverviewRun | null>(null);
   const [held, setHeld] = useState<AlreadyHeld | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -244,11 +248,17 @@ export function useNewOverviewRun(): NewOverviewRunController {
               setHeld({ url, overviewId, readable: error.held.readable });
               return;
             }
+            if (error instanceof ChosenModelFailedError) {
+              const { provider, model, reason, status } = error;
+              reporter.warn({ name: "chosenModelFailed", provider, model, reason, ...(status === null ? {} : { status }) });
+            }
             if (isCurrent()) {
               analytics.capture.newOverview.failed({
                 from,
                 failure: captureFailureOf(error, { transcriptResolved: transcriptSource !== null }),
                 durationMs: durationMs(),
+                provider: error instanceof ChosenModelFailedError ? error.provider : undefined,
+                model: error instanceof ChosenModelFailedError ? error.model : undefined,
               });
               setRun((current) =>
                 current === null
@@ -259,7 +269,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                         current.article !== null && error instanceof ArticleReadError
                           ? { ...current.article, asking: false, failure: error.failure }
                           : current.article,
-                      error: error.message,
+                      error: runErrorOf(error),
                       finishedAt: Date.now(),
                     },
               );
@@ -268,7 +278,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
         },
       );
     },
-    [mutate, commitDraftOnto, analytics],
+    [mutate, commitDraftOnto, analytics, reporter],
   );
 
   const start = useCallback(

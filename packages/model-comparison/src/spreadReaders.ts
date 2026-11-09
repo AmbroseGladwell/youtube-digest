@@ -17,7 +17,7 @@ const learnedFrom = (texts: readonly string[]): LearnedItems =>
   Object.fromEntries(
     texts.map((text, index) => [
       text,
-      { text, source: "From 2 overviews", learnedAt: `2026-11-0${index + 1}T10:00:00.000Z`, noticedAt: null, removedAt: null },
+      { text, source: "From 2 overviews", learnedAt: `2026-11-0${index + 1}T10:00:00.000Z`, noticedAt: `2026-11-0${index + 1}T11:00:00.000Z`, removedAt: null },
     ]),
   );
 

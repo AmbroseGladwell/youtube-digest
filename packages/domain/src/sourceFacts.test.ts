@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
 import { articleSourceId, type WebSource } from "./Source.js";
-import { articleReadMinutes, sourceImage, sourceLength, sourceName } from "./sourceFacts.js";
+import { articleReadMinutes, kindChip, sourceImage, sourceLength, sourceName } from "./sourceFacts.js";
 
 const article: WebSource = {
   kind: "web",
@@ -26,7 +26,10 @@ test("a piece is from its channel, its site, or failing that its address", () =>
 test("the length line names the kind", () => {
   assert.equal(sourceLength(article), "14 min article");
   assert.equal(sourceLength({ ...makeOverview().source, durationMs: 698_000 }), "11:38 video");
-  assert.equal(sourceLength(makeOverview().source), null);
+});
+
+test("a video whose length is not known still says it is a video, and no length is guessed", () => {
+  assert.equal(sourceLength(makeOverview().source), "Video");
 });
 
 test("reading time is 230 words a minute, and never zero", () => {
@@ -45,4 +48,15 @@ test("an article's id is the same for the same address, short, and safe in a pat
   assert.equal(id, await articleSourceId("https://a.example/post"));
   assert.match(id, /^[0-9a-f]{32}$/);
   assert.notEqual(id, await articleSourceId("https://a.example/other"));
+});
+
+test("every kind but a video leads its row with a chip, and a recipe keeps its yield", () => {
+  assert.equal(kindChip(makeOverview()), null);
+  assert.equal(kindChip({ source: article, recipe: null }), "Article");
+  assert.equal(kindChip(makeRecipeOverview()), "Recipe · 4 servings");
+  assert.equal(kindChip(makeRecipeOverview({ yield: null })), "Recipe");
+});
+
+test("a recipe video's chip is a recipe's, not nothing", () => {
+  assert.equal(kindChip(makeRecipeOverview({}, { source: makeOverview().source })), "Recipe · 4 servings");
 });

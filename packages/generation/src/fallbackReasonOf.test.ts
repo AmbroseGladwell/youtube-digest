@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { fallbackReasonOf } from "./fallbackReasonOf.js";
 import {
   GenerationError,
+  ModelRefusedError,
   ProviderKeyRefusedError,
   ProviderOutOfCreditError,
   ProviderRequestError,
@@ -29,6 +30,7 @@ test("a refused key never moves, so the reader sees the key problem", () => {
 
 test("a request the provider calls malformed, or anything else, doesn't move", () => {
   assert.equal(fallbackReasonOf(new ProviderRequestError(400, "bad request")), null);
+  assert.equal(fallbackReasonOf(new ModelRefusedError(400, "grammar too large")), null);
   assert.equal(fallbackReasonOf(new GenerationError("no text content")), null);
   assert.equal(fallbackReasonOf(new TypeError("fetch failed")), null);
 });

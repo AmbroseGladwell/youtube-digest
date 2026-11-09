@@ -59,7 +59,8 @@ it dedupes the overviews, needs at least two behind an item, writes the source l
 overviews on app growth", from their commonest topic) and drops anything already held or removed
 whatever the model says. At most two items a pass, sixty characters each.
 
-It runs after an overview lands, on the key that made it, signed in only. On us it is
+It runs after an overview lands, on the key that made it: on the reader's own key with or
+without an account, on us signed in only. On us it is
 `POST /api/generations/profile`: **free, not counted against the plan or the day's overviews,**
 held to 30 a day for an account by its own rate limit. Failing never touches the overview and
 the reader isn't told; the schedule moves on regardless, so a broken key isn't retried on every
@@ -68,13 +69,18 @@ overview.
 `Settings.learned` is keyed by item, merged one by one, so two devices adding and removing at once
 both land. A removed item stays in the map with `removedAt` set, which is what keeps it from
 coming back; Clear everything removes them all the same way. The reader context is the sentence,
-then "Also: …" with the newest items for as many as fit under 600 characters.
+then "Also: …" with the newest items the reader has been shown, for as many as fit under 600
+characters.
 
-**Telling the reader.** An item stays unnoticed until shown, so nothing joins the profile unseen.
-The notice is on the library only (141n), so it can't cover a note or the read-along, and it
+**Telling the reader.** An item stays unnoticed until shown, and an unnoticed item is never used:
+not in an overview's reader context (`noticedLearnedItems` in `composeReaderContext`), not by an
+assistant. So nothing shapes an overview before the reader has been told of it (OV-248). Shown
+means the notice was on screen for its ten seconds, or dismissed, or See was pressed; or the item
+was listed in What we know about you in Settings, which marks every unnoticed item it lists. The
+reader never has to approve anything: one visit to the library covers every new item. The notice is on the library only (141n), so it can't cover a note or the read-along, and it
 waits there if the reader was reading when the pass finished. It stays ten seconds, longer while
-hovered or focused. Undo removes the item and says so for four seconds; See opens Settings. Items
-already in use are used from the next overview.
+hovered or focused. Undo removes the item and says so for four seconds; See opens Settings. A shown
+item is used from the next overview.
 
 **Settings › Personalisation** shows What we know about you: the sentence, Learned from your
 overviews with each item's source and Remove, Keep learning, and, signed in, Share with your

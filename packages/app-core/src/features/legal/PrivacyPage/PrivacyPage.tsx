@@ -170,17 +170,29 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>On your own key.</strong> If you add an API key from Anthropic, OpenAI, Google, DeepSeek, xAI or
           Mistral, the key is stored on the device you added it on and nowhere else. Your device sends the
-          transcript or article, together with your About you sentence, straight to that provider, under the
+          transcript or article, together with your About you sentence and what we have learned from your
+          overviews, straight to that provider, under the
           provider's own terms and privacy policy. We are not in that path and never see the key, the request or
           the answer.
         </p>
         <p>
           <strong>On our key.</strong> When you have no key, or yours can't be used, the overview is written on our
-          key: your device sends the transcript or article and your About you sentence to our server, which sends
+          key: your device sends the transcript or article, your About you sentence and what we have learned from
+          your overviews to our server, which sends
           them to OpenAI in the United States and returns the overview. The overview says when it was written this
           way. If you would rather your transcripts never went through us, turn on "Only ever use my key" in
           Settings › API keys. During onboarding, your first overview and the topic suggestions beside it are made
           on our key too, from the title, description and opening of the video or page.
+        </p>
+        <p>
+          Your About you sentence and what we have learned from your overviews shape only How to apply, the
+          section that suggests what you might do with the video. When your first overview is shown to you in
+          onboarding, How to apply is also written once for anyone, so you can compare: the overview's title,
+          channel, one-line premise, central claim and key points go to the provider whose key made the overview,
+          and if that was our key, through our server to OpenAI. No transcript and nothing about you goes with
+          them, and the result is kept only on your device. When a sample overview is saved into your account, its
+          title, channel or site, premise and key points go through our server to OpenAI with the names and
+          descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole
@@ -196,6 +208,41 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting is our legitimate interest in
           keeping the service affordable and fair.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "learning",
+    heading: "What we learn from your overviews",
+    body: (
+      <>
+        <p>
+          After every third overview you make, a short pass looks at your recent overviews and proposes at most
+          two short things about what you are working on, each with the overviews it came
+          from ("From 4 overviews on app growth"). It sends your About you sentence, what has already been
+          learned, what you removed, so it isn't proposed again, and, for your twelve newest overviews, the
+          title, one-line premise, topic names and the reason you saved it. No transcripts are sent.
+        </p>
+        <p>
+          It runs on the key that made the overview it follows. On your own key your device sends it straight to
+          that provider, as with an overview. On our key it goes through our server to OpenAI in the United
+          States, only when you are signed in, and isn't counted against your overviews; we log that a pass ran,
+          what it cost and how long it took, never what it sent or found.
+        </p>
+        <p>
+          Nothing learned is used until you have been shown it, by a notice on your library, with Undo, or in
+          Settings › Personalisation. From then on it goes with each overview you make, beside your About you
+          sentence, and is kept
+          with your settings, on the device and, with an account, synced to our server. Settings ›
+          Personalisation shows everything learned and where it came from. Remove takes an item out, and Clear
+          everything removes them all; a removed item's words stay in your settings, marked removed, so it is
+          never learned again or sent with an overview. Turning off Keep learning stops the pass, while what is
+          already held is still used until you remove it.
+        </p>
+        <p>
+          <strong>Basis:</strong> performance of our contract with you. <strong>Kept:</strong> with your
+          settings, until you delete the account.
         </p>
       </>
     ),
@@ -245,7 +292,8 @@ const sections: readonly LegalSection[] = [
         <p>
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such
           as opening an overview, choosing a sort order or playing narration, with the choice you made, a count, or
-          a random id of our own for the overview or topic. An event can never carry a link, a video, a title, an
+          a random id of our own for the overview or topic. When an overview can’t be made because of the model you
+          chose, the event names the provider and the model. An event can never carry a link, a video, a title, an
           overview's words or anything you typed, because there is no field shaped to hold them.
         </p>
         <h3>Three situations</h3>
@@ -323,8 +371,10 @@ const sections: readonly LegalSection[] = [
           Our server writes a log line for each request it handles, and ships those lines to PostHog's log store,
           where they are kept for fourteen days. A line names the route, the request's id, and, once known, the
           account and session it was for. It never holds your email, your network address, a link, a video id, a
-          share link or any words from an overview. Finding the account behind an email is a database lookup, not
-          a log search.
+          share link or any words from an overview. When an overview can’t be made on your own key because the model
+          you chose was refused or kept answering in the wrong shape, the line names the provider and the model, so
+          we can see which models fail; never what the provider said back. Finding the account behind an email is a
+          database lookup, not a log search.
         </p>
         <p>
           To keep the service up and to stop abuse, we rate-limit requests by network address. Those counts live in
@@ -374,7 +424,7 @@ const sections: readonly LegalSection[] = [
             ["Cloudflare", "stores narration audio (R2) and serves our domain's DNS", "Cloudflare's network"],
             ["PostHog", "analytics, error reports and server logs", "EU cloud"],
             ["Brevo", "sends sign-in emails", "European Union"],
-            ["OpenAI", "writes overviews and topic suggestions made on our key, and turns your overviews' claims and your searches into embeddings for search", "United States"],
+            ["OpenAI", "writes overviews, topic suggestions and what we learn from your overviews when made on our key, and turns your overviews' claims and your searches into embeddings for search", "United States"],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             ["YouTube (Google)", "answers our server's requests for a playlist's videos", "varies"],
           ]}
@@ -430,6 +480,7 @@ const sections: readonly LegalSection[] = [
           ["Sign-in links and codes", "15 and 10 minutes, as hashes"],
           ["Codes for changing your email, and the record of each change", "the codes 15 minutes, as hashes; the change itself with the account"],
           ["Your library and settings", "until you delete the overview or the account"],
+          ["What we learn from your overviews, and the items you removed", "with your settings, until you delete the account"],
           ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           ["Narration audio", "while an overview uses it; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it"],
           ["Shared links", "until you stop them; the copy goes with the account"],

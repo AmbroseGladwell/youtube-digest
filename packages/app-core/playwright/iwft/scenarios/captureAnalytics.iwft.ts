@@ -134,3 +134,23 @@ test("a run that fails is counted by what went wrong, never by its message", asy
       props: { from: "dialog", failure: "generation", durationMs: expect.any(Number) },
     });
 });
+
+test("a model the provider refuses is counted as its own failure, naming the provider and the model", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.anthropicRefusesTheModel();
+  await launcher.launch({ ...SIGNED_IN, provider: "anthropic", modelByProvider: { anthropic: "claude-haiku-5-5" } });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.form.verifyGenerationErrorIsVisible();
+
+  await expect
+    .poll(() => captureEvents(backendSimulator).at(-1))
+    .toEqual({
+      name: "capture.newOverview.failed",
+      props: { from: "dialog", failure: "model-refused", durationMs: expect.any(Number), provider: "anthropic", model: "claude-haiku-5-5" },
+    });
+  expect(JSON.stringify(backendSimulator.analytics.events())).not.toContain("compiled grammar");
+});

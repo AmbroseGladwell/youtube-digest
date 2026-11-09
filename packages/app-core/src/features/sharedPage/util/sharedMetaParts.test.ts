@@ -20,6 +20,6 @@ describe("sharedMetaParts", () => {
   it("drops a publish date the copy does not carry rather than inventing one", () => {
     const parts = sharedMetaParts(noteOf(null, null), "2026-09-30T11:00:00.000Z");
 
-    expect(parts).toEqual(["1 min read", "1 min listen", "shared 30 Sept"]);
+    expect(parts).toEqual(["1 min read", "1 min listen", "Video", "shared 30 Sept"]);
   });
 });

@@ -253,8 +253,9 @@ anything). So:
   estimates them.
 - **Video** is `video.durationMs`, the video's own length as the platform reports it — not
   the end of its last caption (`docs/features/transcript-retrieval.md`). When it is null —
-  notes generated before that field existed, and live content — the term is dropped rather than guessed, and the
-  line reads `4 min read · 6 min listen`. `readerMetaParts.test.ts` holds that.
+  notes generated before that field existed, and live content — the length is dropped rather
+  than guessed but the kind stays, and the line reads `4 min read · 6 min listen · Video`
+  (OV-232). `sourceFacts.test.ts` holds that.
 
 The spoken rate is not decoration: it is also what paces the reading mark, so the clock in
 the player bar and the "6 min listen" claim are the same number by construction rather than
