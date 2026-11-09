@@ -75,6 +75,14 @@ tasks:
     cmds:
       - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh run -- node scripts/publishExtension.mjs submit {{.CLI_ARGS}}
 
+  deploy:proxy:check:
+    desc: 'Fetch one video through production''s transcript proxy and print the bytes each request carried (e.g. task deploy:proxy:check -- <youtube-url>), after the proxy URL changes (docs/architecture/server-side-transcripts.md)'
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh run -- npm run proxy-sanity-check --workspace apps/api -- {{.CLI_ARGS}}
+
   store:screenshots:
     desc: Render the listing's screenshots into apps/extension/store/screenshots from the real components (docs/architecture/store-listing.md)
     cmds:

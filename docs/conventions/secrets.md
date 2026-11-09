@@ -15,7 +15,7 @@ parts were left out and why.
 | The committed template, `${NAME}` per secret | `.env.tpl` |
 | One command renders it to the gitignored `.env` | `task secrets`, `scripts/secrets.sh`, `scripts/renderEnv.mjs` |
 | Per-machine values that are not secrets | `.env.local`, read after `.env` by the API's scripts |
-| One-off commands get values injected and nothing written | `task secrets:run -- <cmd>` from dev, `task secrets:evals -- <cmd>` from evals; `scripts/sanityCheck.env`, `scripts/evals.env` |
+| One-off commands get values injected and nothing written | `task secrets:run -- <cmd>` from dev, `task secrets:evals -- <cmd>` from evals, listed in `scripts/evals.env` |
 | The one long-lived secret on the machine, in the login keychain | `task secrets:login`, `.envrc` |
 | A commit that stages a secret value is refused | `.githooks/pre-commit`, gitleaks with its default rules plus a Brevo key rule in `.gitleaks.toml`, which also allows the extension's public key through |
 | A tool call that would print a secret into Claude's context is refused | `.claude/settings.json`, `.claude/hooks/guardSecrets.mjs` |
@@ -46,13 +46,13 @@ goes: the extension's origin for CORS, derived from the path the unpacked build 
 loaded from, so different in every worktree until the store's key fixes it
 (`docs/architecture/deploy.md`).
 
-**For one command.** `task secrets:run -- npm run proxy-sanity-check --workspace apps/api
--- <url>` runs the command with `overview-dev`'s secrets in its environment and writes
-nothing. `task secrets:evals -- <cmd>` does the same from `overview-evals`, and is how
-every model-comparison command and `scripts/endToEndSanityCheck.ts` run: anything that
-calls a model provider outside the app itself is an eval, and bills as one.
-`scripts/sanityCheck.env` and `scripts/evals.env` list which keys each side's scripts
-read, for the reader; `bws run` injects the whole project regardless.
+**For one command.** `task secrets:run -- <cmd>` runs the command with `overview-dev`'s
+secrets in its environment and writes nothing. `task secrets:evals -- <cmd>` does the
+same from `overview-evals`, and is how every model-comparison command and
+`scripts/endToEndSanityCheck.ts` run: anything that calls a model provider outside the
+app itself is an eval, and bills as one. `scripts/evals.env` lists which keys those read,
+for the reader; `bws run` injects the whole project regardless. A check of production's
+own configuration runs from `overview-prod`, as `task deploy:proxy:check` does.
 
 **The token.** `bws` needs a machine access token, made in Bitwarden's web UI and scoped
 to the projects it may read. `task secrets:login` stores it in the macOS login keychain
@@ -108,11 +108,15 @@ provider it uses, so each provider's bill splits by environment on its own group
 | Provider | How the bill splits |
 |---|---|
 | OpenAI | one Project per environment (`prod`, `dev`, `evals`), each with its own key; the Costs API groups by project |
-| Anthropic, Gemini | only the harness calls them, so they live in `overview-evals` alone: an `evals` workspace in Anthropic, a Google Cloud project used for nothing else |
-| Decodo (`TRANSCRIPT_PROXY_URL`) | one proxy sub-user each for dev and prod. The harness reads transcripts it fetched once without the proxy (`docs/architecture/model-comparison.md`), so evals has none |
+| Anthropic, Gemini | only the harness calls them, so they live in `overview-evals` alone, as a key used for nothing else; Anthropic's cost report groups by key, so no separate workspace is needed |
+| Decodo (`TRANSCRIPT_PROXY_URL`) | prod only. The local app never uses the proxy, the check of it runs from prod (`task deploy:proxy:check`), and the harness reads transcripts it fetched once without it (`docs/architecture/model-comparison.md`) |
 | Brevo | a separate key each for dev and prod |
 | YouTube Data API, R2 | separate keys each for dev and prod |
 | Neon (`DATABASE_URL`) | prod only; dev runs on local Postgres |
+
+**A key pasted into the app as a reader's own (BYO) key never goes in Bitwarden.** Its
+spend is that reader's, the owner included, and belongs to none of the three; a key
+used both ways makes its bill unsplittable. Make one for each use.
 
 `task secrets:compare` checks it without printing anything: it hashes each value in
 memory and prints a letter per project, the same letter where two hold the same value,
@@ -124,8 +128,8 @@ the same names from `overview-evals` with no change to its code.
 ## Adding a secret
 
 1. Create it in the right project in Bitwarden, keyed as the variable name.
-2. Add `NAME=${NAME}` to `.env.tpl`, or the name to `scripts/sanityCheck.env` if only a
-   one-off dev command reads it, or to `scripts/evals.env` if only the harness does.
+2. Add `NAME=${NAME}` to `.env.tpl`, or the name to `scripts/evals.env` if only the
+   harness reads it.
 3. `task secrets`. Commit the template. Nothing else moves.
 
 To migrate from a hand-written `.env`, `task secrets:seed` creates the project if it is

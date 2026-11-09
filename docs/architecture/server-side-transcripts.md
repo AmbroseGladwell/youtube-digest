@@ -218,8 +218,8 @@ and these numbers are for spotting trends.
 ## Turning it on
 
 It is on in production from OV-55: `TRANSCRIPT_SERVICE = "on"` in `fly.toml`, and
-`TRANSCRIPT_PROXY_URL` in `.env.prod.tpl` and in Bitwarden's `overview-prod` (and
-`overview-dev`, for the check below, as its own proxy sub-user so the two bill apart). Locally it stays off unless `.env.local` says
+`TRANSCRIPT_PROXY_URL` in `.env.prod.tpl` and in Bitwarden's `overview-prod`, and only
+there: the check below runs from that project too, so all proxy traffic is prod's. Locally it stays off unless `.env.local` says
 otherwise.
 
 - **To switch it off,** set `TRANSCRIPT_SERVICE = "off"` and deploy. Every other rung is
@@ -233,7 +233,7 @@ otherwise.
 `npm run proxy-sanity-check --workspace apps/api -- <youtube-url>` fetches one real video
 through the real proxy and prints the bytes each request carried. `--direct` skips the
 proxy, to compare. Run it with the secret injected rather than written anywhere:
-`task secrets:run -- npm run proxy-sanity-check --workspace apps/api -- <url>`. It is the
+`task deploy:proxy:check -- <url>`, which reads the URL from `overview-prod`. It is the
 only thing that can catch a provider's username format changing, so a person runs it
 whenever the proxy URL does.
 
