@@ -539,6 +539,17 @@ long point, so the hard limit is now only a guard against a point running away, 
 it's the target that sets the length. At 40 words the narrations run about 15%
 longer than before this change, against about 20% at 45.
 
+**Decision: In one line works the same way, at 25 and 35 (OV-252).** The 25-word cap was
+the one rule Claude kept breaking. Measured on 9 Nov 2026 with the comparison harness, two
+runs a side as the sample reader: Sonnet 5.5's first one-liners ran to a median of 26 words
+and at most 30 (34 with the schema in the prompt), where GPT-6.1 Sol's never passed 24. 28 of
+Sonnet's 29 correction passes were for it, and the 12 overviews it failed outright were all
+still over after the pass, by a word or two. So 25 stays what the prompt asks for and what
+keeps a library row scannable (`docs/architecture/overview-quality.md`); the record refuses
+only over 35, as a guard against a runaway. The library row clamps to two lines either way.
+Overview schema version 14 alters nothing and holds these records back from clients that
+still refuse 26 words (client version 15).
+
 **Decision: verdict reasoning never opens with the novelty word, and the watch-anyway
 reason never restates the answer.** Narration says the answer itself before the
 reason, and leaves the novelty label on screen only, so either repetition would be
