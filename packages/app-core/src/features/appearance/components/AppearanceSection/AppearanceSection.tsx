@@ -81,11 +81,7 @@ export function AppearanceSection() {
   };
 
   return (
-    <div
-      className={styles.root}
-      data-size={isPanel ? "panel" : isPhone ? "phone" : "wide"}
-      data-testid={appearanceSectionTestIds.root}
-    >
+    <div className={styles.root} data-size={isPanel ? "panel" : isPhone ? "phone" : "wide"} data-testid={appearanceSectionTestIds.root}>
       <div className={styles.card}>
         <p className={styles.label} id={themeLabelId}>
           Theme
@@ -132,11 +128,7 @@ export function AppearanceSection() {
                   data-testid={appearanceSectionTestIds.accent(accentColour)}
                 />
                 <span className={styles.accentFace}>
-                  <span
-                    className={styles.swatch}
-                    aria-hidden="true"
-                    style={{ background: dark ? palette.dark.mark : palette.light.brand }}
-                  >
+                  <span className={styles.swatch} aria-hidden="true" style={{ background: dark ? palette.dark.mark : palette.light.brand }}>
                     {chosen && (
                       <span
                         className={styles.check}
@@ -154,8 +146,7 @@ export function AppearanceSection() {
           })}
         </div>
         <p className={styles.line}>
-          Used for buttons, progress, search hits and the logo. Warnings keep their own colour, so a failure always
-          looks like one.
+          Used for buttons, progress, search hits and the logo. Warnings keep their own colour, so a failure always looks like one.
         </p>
       </div>
 

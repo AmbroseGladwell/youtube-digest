@@ -4,7 +4,11 @@ import { makeQueuedCapture } from "../../playlists/types/PlaylistFactory.testHel
 import { chosenBarLine, madeNowNotice, madeNowOf, makeChosenLabel } from "./chooseCopy.js";
 
 const psychology = (videoId: string, title = "How Sleep Cleans the Brain") =>
-  makeQueuedCapture({ videoId: VideoId.parse(videoId), title, fromPlaylist: { id: PlaylistId.parse("PLpsychology"), title: "Psychology" } });
+  makeQueuedCapture({
+    videoId: VideoId.parse(videoId),
+    title,
+    fromPlaylist: { id: PlaylistId.parse("PLpsychology"), title: "Psychology" },
+  });
 const saved = (videoId: string) =>
   makeQueuedCapture({ videoId: VideoId.parse(videoId), fromPlaylist: { id: PlaylistId.parse("PLsaved"), title: "Saved for later" } });
 const paces: Record<string, PlaylistPace> = { PLpsychology: "fiveADay", PLsaved: "whenChosen" };
@@ -27,15 +31,21 @@ describe("chooseCopy", () => {
     );
     expect(madeNowOf(7, allowance)).toBe(4);
     expect(madeNowOf(3, allowance)).toBe(3);
-    expect(chosenBarLine(seven.slice(0, 3), paceOf, orderOf, allowance)).toBe("Made next, oldest first. Psychology stays at up to 5 a day.");
+    expect(chosenBarLine(seven.slice(0, 3), paceOf, orderOf, allowance)).toBe(
+      "Made next, oldest first. Psychology stays at up to 5 a day.",
+    );
   });
 
   it("from several playlists, says every pace stays", () => {
-    expect(chosenBarLine([psychology("video000001"), saved("video000002")], paceOf, orderOf)).toBe("Made next, in each playlist’s order. Paces stay as they are.");
+    expect(chosenBarLine([psychology("video000001"), saved("video000002")], paceOf, orderOf)).toBe(
+      "Made next, in each playlist’s order. Paces stay as they are.",
+    );
   });
 
   it("from a playlist made only when chosen, says the rest keep waiting for the reader", () => {
-    expect(chosenBarLine([saved("video000001")], paceOf, orderOf)).toBe("Made next, newest first. The rest of Saved for later keep waiting for you.");
+    expect(chosenBarLine([saved("video000001")], paceOf, orderOf)).toBe(
+      "Made next, newest first. The rest of Saved for later keep waiting for you.",
+    );
   });
 
   it("names the one video made next, or counts several", () => {

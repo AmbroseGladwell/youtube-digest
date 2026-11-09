@@ -1,8 +1,4 @@
-import {
-  libraryEntrySavedAt,
-  libraryEntryTitle,
-  type LibraryEntry,
-} from "../../overviews/types/LibraryEntry.js";
+import { libraryEntrySavedAt, libraryEntryTitle, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import type { LibrarySort } from "../types/LibrarySort.js";
 

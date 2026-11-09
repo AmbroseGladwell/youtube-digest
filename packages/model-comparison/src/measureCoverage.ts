@@ -31,8 +31,7 @@ export interface Coverage {
 
 const sum = (values: readonly number[]): number => values.reduce((total, value) => total + value, 0);
 
-const isInside = (span: PositionSpan, units: number): boolean =>
-  span.start >= 0 && span.start <= span.end && span.end < units;
+const isInside = (span: PositionSpan, units: number): boolean => span.start >= 0 && span.start <= span.end && span.end < units;
 
 function chapterBounds(chapterStarts: readonly number[], units: number): PositionSpan[] {
   const starts = [...new Set(chapterStarts.filter((start) => start >= 0 && start < units))].sort((a, b) => a - b);
@@ -74,7 +73,15 @@ export function measureCoverage({ unitWords, points, chapterStarts }: CoverageIn
     chapters: chapters.length,
   };
   if (placed.length === 0 || totalWords === 0) {
-    return { ...empty, measurable: false, spanShare: null, chapterShare: null, chaptersReached: 0, largestGap: null, pointsByThird: [0, 0, 0] };
+    return {
+      ...empty,
+      measurable: false,
+      spanShare: null,
+      chapterShare: null,
+      chaptersReached: 0,
+      largestGap: null,
+      pointsByThird: [0, 0, 0],
+    };
   }
 
   const covered = unitWords.map((_, index) => placed.some((span) => span.start <= index && index <= span.end));

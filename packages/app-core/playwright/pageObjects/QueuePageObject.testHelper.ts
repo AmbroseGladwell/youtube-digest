@@ -35,11 +35,9 @@ export class QueuePageObject extends PageObject {
 
   verifyNothingWaiting = () => this.step("verifyNothingWaiting", () => this.expectToBeVisible(queuePageTestIds.empty));
 
-  retry = (title: string) =>
-    this.step(`retry ${title}`, () => this.page.getByRole("button", { name: `Try “${title}” again` }).click());
+  retry = (title: string) => this.step(`retry ${title}`, () => this.page.getByRole("button", { name: `Try “${title}” again` }).click());
 
-  dismiss = (title: string) =>
-    this.step(`dismiss ${title}`, () => this.page.getByRole("button", { name: `Dismiss “${title}”` }).click());
+  dismiss = (title: string) => this.step(`dismiss ${title}`, () => this.page.getByRole("button", { name: `Dismiss “${title}”` }).click());
 
   remove = (title: string) =>
     this.step(`remove ${title}`, () => this.page.getByRole("button", { name: `Remove “${title}” from the queue` }).click());
@@ -89,7 +87,9 @@ export class QueuePageObject extends PageObject {
     this.step(`verifyContinuesTomorrow ${label}`, async () => {
       await expect(this.get(queuePageTestIds.tomorrowLabel)).toHaveText(label);
       await expect(this.get(queuePageTestIds.tomorrow).getByTestId(queueRowTestIds.title)).toHaveText(titles);
-      await expect(this.get(queuePageTestIds.tomorrow).getByTestId(queueRowTestIds.status)).toHaveText(titles.map(() => "Continues tomorrow"));
+      await expect(this.get(queuePageTestIds.tomorrow).getByTestId(queueRowTestIds.status)).toHaveText(
+        titles.map(() => "Continues tomorrow"),
+      );
     });
 
   verifyNothingContinuesTomorrow = () =>
@@ -104,16 +104,14 @@ export class QueuePageObject extends PageObject {
   verifyPacedGroupMeta = (metas: string[]) =>
     this.step(`verifyPacedGroupMeta ${metas.join(", ")}`, () => expect(this.get(pacedQueueGroupTestIds.meta)).toHaveText(metas));
 
-  makeNow = (title: string) =>
-    this.step(`makeNow ${title}`, () => this.page.getByRole("button", { name: `Make “${title}” now` }).click());
+  makeNow = (title: string) => this.step(`makeNow ${title}`, () => this.page.getByRole("button", { name: `Make “${title}” now` }).click());
 
   verifyMadeNowNotice = (text: string) =>
     this.step(`verifyMadeNowNotice ${text}`, () => expect(this.get(queuePageTestIds.madeNowNotice)).toHaveText(text));
 
   startChoosing = () => this.step("startChoosing", () => this.get(queuePageTestIds.chooseButton).first().click());
 
-  choose = (title: string) =>
-    this.step(`choose ${title}`, () => this.page.getByRole("checkbox", { name: `Choose “${title}”` }).click());
+  choose = (title: string) => this.step(`choose ${title}`, () => this.page.getByRole("checkbox", { name: `Choose “${title}”` }).click());
 
   verifyChosen = (count: string, line: string) =>
     this.step(`verifyChosen ${count}`, async () => {

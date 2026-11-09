@@ -10,9 +10,7 @@ export function generationClientFromEnv(): GenerationClient {
   const apiKey = process.env.OVERVIEW_API_KEY ?? process.env.ANTHROPIC_API_KEY;
 
   if (apiKey === undefined) {
-    throw new Error(
-      "no API key in the environment: set ANTHROPIC_API_KEY, or OVERVIEW_PROVIDER and OVERVIEW_API_KEY together",
-    );
+    throw new Error("no API key in the environment: set ANTHROPIC_API_KEY, or OVERVIEW_PROVIDER and OVERVIEW_API_KEY together");
   }
 
   return createGenerationClient({

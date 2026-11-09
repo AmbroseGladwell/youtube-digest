@@ -50,16 +50,11 @@ export class AccountMenuPageObject extends PageObject {
 
   verifyTriggerMarksAccountPage = (marked: boolean) =>
     this.step(`verifyTriggerMarksAccountPage ${marked}`, () =>
-      expect(this.get(accountMenuTestIds.trigger)).toHaveCSS(
-        "box-shadow",
-        marked ? /inset/ : "none",
-      ),
+      expect(this.get(accountMenuTestIds.trigger)).toHaveCSS("box-shadow", marked ? /inset/ : "none"),
     );
 
   verifyTriggerLabel = (label: string) =>
-    this.step(`verifyTriggerLabel ${label}`, () =>
-      expect(this.get(accountMenuTestIds.trigger)).toHaveAttribute("aria-label", label),
-    );
+    this.step(`verifyTriggerLabel ${label}`, () => expect(this.get(accountMenuTestIds.trigger)).toHaveAttribute("aria-label", label));
 
   verifySigningOut = () =>
     this.step("verifySigningOut", async () => {
@@ -79,9 +74,7 @@ export class AccountMenuPageObject extends PageObject {
 
   verifySyncStatusShown = (shown: boolean) =>
     this.step(`verifySyncStatusShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(accountMenuTestIds.syncStatus)
-        : this.expectToHaveCount(accountMenuTestIds.syncStatus, 0),
+      shown ? this.expectToBeVisible(accountMenuTestIds.syncStatus) : this.expectToHaveCount(accountMenuTestIds.syncStatus, 0),
     );
 
   verifyWaitingForCode = (email: string) =>

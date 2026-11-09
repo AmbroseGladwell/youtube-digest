@@ -33,8 +33,7 @@ export class ManageTagsDialogPageObject extends PageObject {
 
   startRename = () => this.step("startRename", () => this.click(manageTagsDialogTestIds.renameButton));
 
-  typeNewName = (name: string) =>
-    this.step(`typeNewName ${name}`, () => this.get(manageTagsDialogTestIds.renameInput).fill(name));
+  typeNewName = (name: string) => this.step(`typeNewName ${name}`, () => this.get(manageTagsDialogTestIds.renameInput).fill(name));
 
   verifyRenameSays = (status: string, button: string) =>
     this.step(`verifyRenameSays ${status} ${button}`, async () => {
@@ -49,8 +48,7 @@ export class ManageTagsDialogPageObject extends PageObject {
 
   openMerge = () => this.step("openMerge", () => this.click(manageTagsDialogTestIds.mergeButton));
 
-  keepName = (tag: string) =>
-    this.step(`keepName ${tag}`, () => this.click(manageTagsDialogTestIds.keepOption(tag)));
+  keepName = (tag: string) => this.step(`keepName ${tag}`, () => this.click(manageTagsDialogTestIds.keepOption(tag)));
 
   keepNewName = (name: string) =>
     this.step(`keepNewName ${name}`, async () => {

@@ -30,12 +30,15 @@ export interface RecipePrintSheetProps {
 function Printed({ pieces }: { pieces: readonly IngredientPiece[] }) {
   return (
     <>
-      {pieces.map((piece, index) => (piece.changed ? <strong key={index}>{piece.text}</strong> : <Fragment key={index}>{piece.text}</Fragment>))}
+      {pieces.map((piece, index) =>
+        piece.changed ? <strong key={index}>{piece.text}</strong> : <Fragment key={index}>{piece.text}</Fragment>,
+      )}
     </>
   );
 }
 
-const piecesOf = (line: AdjustedIngredient): IngredientPiece[] => (line.kind === "adjusted" ? line.pieces : [{ text: line.line, changed: false }]);
+const piecesOf = (line: AdjustedIngredient): IngredientPiece[] =>
+  line.kind === "adjusted" ? line.pieces : [{ text: line.line, changed: false }];
 
 // Design 144s: the page's recipe on one sheet, black on white whatever the theme, with the
 // page's own image above it and our name and mark at the foot, and none of our words

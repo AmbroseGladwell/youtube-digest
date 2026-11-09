@@ -303,7 +303,13 @@ test("no line about an account's changes carries an address, a code or a token",
   await revert(testApp, token);
 
   const said = lines.map((line) => line.msg);
-  for (const msg of ["verification asked", "verification confirmed", "email change asked", "email change confirmed", "email change reverted"]) {
+  for (const msg of [
+    "verification asked",
+    "verification confirmed",
+    "email change asked",
+    "email change confirmed",
+    "email change reverted",
+  ]) {
     assert.ok(said.includes(msg), msg);
   }
   const logged = JSON.stringify(lines);

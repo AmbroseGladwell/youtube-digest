@@ -22,10 +22,7 @@ test("with keys already saved, the generate form is usable immediately, no keys 
   await form.verifyGenerateButtonEnabled();
 });
 
-test("submitting a non-YouTube URL shows a validation error and makes no network calls", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("submitting a non-YouTube URL shows a validation error and makes no network calls", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl("https://vimeo.com/12345");
@@ -43,9 +40,7 @@ test("the hero's own field is dead until the keys are in, and says so under it",
   await home.verifyShowsKeysNote();
 });
 
-test("with keys saved the hero field is live, and a link pasted there runs in the dialog", async ({
-  launcher,
-}) => {
+test("with keys saved the hero field is live, and a link pasted there runs in the dialog", async ({ launcher }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();
   await home.verifyHeroFieldEnabled();
@@ -59,10 +54,7 @@ test("with keys saved the hero field is live, and a link pasted there runs in th
   await launcher.readerPage.verifyIsShown();
 });
 
-test("the hero field refuses a non-YouTube link without opening anything", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the hero field refuses a non-YouTube link without opening anything", async ({ launcher, backendSimulator }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();
 

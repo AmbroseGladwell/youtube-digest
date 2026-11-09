@@ -23,14 +23,7 @@ export interface OverviewThumbnailProps {
 // model reads whatever was saved), so an overview saved before thumbnailUrl existed has
 // no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
-export function OverviewThumbnail({
-  video,
-  className,
-  to,
-  state,
-  onOpen,
-  carriesIntoHead = false,
-}: OverviewThumbnailProps) {
+export function OverviewThumbnail({ video, className, to, state, onOpen, carriesIntoHead = false }: OverviewThumbnailProps) {
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
 

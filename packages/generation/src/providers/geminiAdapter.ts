@@ -56,11 +56,7 @@ export const geminiAdapter: ProviderAdapter = {
     // Google says outright which models answer a generateContent call, so nothing here is
     // judged by its name.
     const usable = listed
-      .filter(
-        (model) =>
-          Array.isArray(model.supportedGenerationMethods) &&
-          model.supportedGenerationMethods.includes("generateContent"),
-      )
+      .filter((model) => Array.isArray(model.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
       .map((model) => (typeof model.name === "string" ? bare(model.name) : ""))
       .filter((id) => id !== "");
     return { usable: [...new Set(usable)].sort(), unusable: listed.length - usable.length };

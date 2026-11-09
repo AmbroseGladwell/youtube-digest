@@ -94,8 +94,7 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
 function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
   const { note, transcript } = payload.snapshot;
   const video = note.source.kind === "youtube" ? note.source : null;
-  const webArticle =
-    note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
+  const webArticle = note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
   const recipePage = note.source.kind === "web" && note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
   const recipeNote = note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
   const tabsShown =
@@ -179,24 +178,23 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     startOnboardingFromShare(payload.token, payload.snapshot);
     void navigate(Routes.onboarding());
   };
-  const saveAction =
-    !signedIn
-      ? { label: "Save to my overviews", onChoose: createAccount }
-      : held.data != null
-        ? {
-            label: "Open in my overviews",
-            onChoose: () => {
-              analytics.sharedPage.actions.openChosen();
-              void navigate(Routes.overview(note.id));
-            },
-          }
-        : {
-            label: saving ? "Saving…" : "Save to my overviews",
-            onChoose: () => {
-              analytics.sharedPage.actions.saveChosen();
-              void saveIntoAccount();
-            },
-          };
+  const saveAction = !signedIn
+    ? { label: "Save to my overviews", onChoose: createAccount }
+    : held.data != null
+      ? {
+          label: "Open in my overviews",
+          onChoose: () => {
+            analytics.sharedPage.actions.openChosen();
+            void navigate(Routes.overview(note.id));
+          },
+        }
+      : {
+          label: saving ? "Saving…" : "Save to my overviews",
+          onChoose: () => {
+            analytics.sharedPage.actions.saveChosen();
+            void saveIntoAccount();
+          },
+        };
   const cooking = useCookingMode({
     overviewId: note.id,
     title: note.source.title,
@@ -484,7 +482,6 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             )}
             {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel onPage={null} {...webArticle} />}
           </div>
-
         </main>
 
         {!signedIn && <MakeYourOwnAside />}

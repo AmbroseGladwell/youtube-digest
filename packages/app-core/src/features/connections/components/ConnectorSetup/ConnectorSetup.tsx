@@ -19,10 +19,7 @@ const COPIED_FOR_MS = 2500;
 
 // The address an assistant is given, and the three steps for Claude (design 58k). Copy is
 // offered only where the browser lets a page write to the clipboard.
-export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupProps>(function ConnectorSetup(
-  { label, address },
-  labelRef,
-) {
+export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupProps>(function ConnectorSetup({ label, address }, labelRef) {
   const [copied, setCopied] = useState(false);
   const canCopy = typeof navigator !== "undefined" && navigator.clipboard?.writeText !== undefined;
 

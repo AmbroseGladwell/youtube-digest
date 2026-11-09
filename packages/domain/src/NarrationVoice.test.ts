@@ -1,12 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {
-  DEFAULT_NARRATION_VOICE,
-  NarrationVoice,
-  narrationAccent,
-  narrationLanguage,
-  narrationVoiceName,
-} from "./NarrationVoice.js";
+import { DEFAULT_NARRATION_VOICE, NarrationVoice, narrationAccent, narrationLanguage, narrationVoiceName } from "./NarrationVoice.js";
 
 test("offers the fifteen shortlisted English voices and nothing else", () => {
   assert.equal(NarrationVoice.options.length, 15);

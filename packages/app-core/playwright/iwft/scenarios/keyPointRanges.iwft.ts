@@ -56,9 +56,7 @@ test("a key point's time opens a menu whose Read in transcript opens the transcr
   await reader.verifyTargetTranscriptBlockReads(/Cables keep the tension/);
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.readAlong.rangeFollowed"))
-    .toEqual([
-      { name: "reader.readAlong.rangeFollowed", props: { overviewId: overview.id, line: "keyPoint", by: "transcript" } },
-    ]);
+    .toEqual([{ name: "reader.readAlong.rangeFollowed", props: { overviewId: overview.id, line: "keyPoint", by: "transcript" } }]);
 });
 
 test("pressing a time opens its menu without moving the reading mark, and Escape closes it back onto the time", async ({
@@ -78,11 +76,7 @@ test("pressing a time opens its menu without moving the reading mark, and Escape
   await reader.verifyLineTimeIsFocused("1:05");
 });
 
-test("on a phone the menu is a sheet that names its line, and tapping outside closes it", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("on a phone the menu is a sheet that names its line, and tapping outside closes it", async ({ launcher, backendSimulator, page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();

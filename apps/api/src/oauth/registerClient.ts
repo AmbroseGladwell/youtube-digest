@@ -20,11 +20,7 @@ export interface RegisteredClient {
 // Dynamic registration is open, as MCP clients expect: a client is only a name and where to
 // send the reader back, and it can read nothing until a reader approves it
 // (docs/features/mcp-connector.md, "Registering a client").
-export async function registerClient(
-  sql: SqlClient,
-  registration: ClientRegistration,
-  now: Date,
-): Promise<RegisteredClient> {
+export async function registerClient(sql: SqlClient, registration: ClientRegistration, now: Date): Promise<RegisteredClient> {
   const refused = registration.redirect_uris.find((uri) => !isAllowedRedirectUri(uri));
   if (refused !== undefined) {
     throw new OAuthError("invalid_redirect_uri", "Redirect URIs must be https, or http to this machine, with no fragment");
@@ -35,7 +31,14 @@ export async function registerClient(
   await sql.query(
     `insert into oauth_clients (id, client_name, redirect_uris, token_endpoint_auth_method, client_secret_hash, created_at)
        values ($1, $2, $3, $4, $5, $6::timestamptz)`,
-    [clientId, registration.client_name ?? null, registration.redirect_uris, method, secret === null ? null : hashToken(secret), now.toISOString()],
+    [
+      clientId,
+      registration.client_name ?? null,
+      registration.redirect_uris,
+      method,
+      secret === null ? null : hashToken(secret),
+      now.toISOString(),
+    ],
   );
   return {
     client_id: clientId,

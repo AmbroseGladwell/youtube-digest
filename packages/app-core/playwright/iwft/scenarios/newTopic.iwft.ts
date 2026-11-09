@@ -2,13 +2,9 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 
-const unsortedOverview = (title: string) =>
-  makeOverview({ source: { ...makeOverview().source, title, channel: "Practical Engineering" } });
+const unsortedOverview = (title: string) => makeOverview({ source: { ...makeOverview().source, title, channel: "Practical Engineering" } });
 
-test("the rail offers a new topic even when the library has none to filter by", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the rail offers a new topic even when the library has none to filter by", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(unsortedOverview("The Quiet Return of Nuclear Baseload"));
 
   const library = await launcher.launchExpectingLibrary();
@@ -19,10 +15,7 @@ test("the rail offers a new topic even when the library has none to filter by", 
   await dialog.verifyCreateIsDisabled(true);
 });
 
-test("naming the topic says what it will do, and creating it makes it filterable", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("naming the topic says what it will do, and creating it makes it filterable", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(unsortedOverview("The Quiet Return of Nuclear Baseload"));
 
   const library = await launcher.launchExpectingLibrary();
@@ -37,10 +30,7 @@ test("naming the topic says what it will do, and creating it makes it filterable
   await library.filterPanel.verifyOffersTopic("climate");
 });
 
-test("unsorted overviews can be moved in as the topic is made, and the button counts them", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("unsorted overviews can be moved in as the topic is made, and the button counts them", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(unsortedOverview("The Quiet Return of Nuclear Baseload"));
   backendSimulator.overviews.seed(unsortedOverview("What a Heat Pump Actually Costs to Run"));
 
@@ -59,15 +49,10 @@ test("unsorted overviews can be moved in as the topic is made, and the button co
   expect(overviews.every((overview) => overview.topicIds.length === 1)).toBe(true);
 });
 
-test("a library with nothing unsorted offers no list to move in", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a library with nothing unsorted offers no list to move in", async ({ launcher, backendSimulator }) => {
   const topic = makeTopic({ name: "energy" });
   backendSimulator.overviews.seedTopic(topic);
-  backendSimulator.overviews.seed(
-    makeOverview({ topicIds: [topic.id], source: { ...makeOverview().source, title: "Already filed" } }),
-  );
+  backendSimulator.overviews.seed(makeOverview({ topicIds: [topic.id], source: { ...makeOverview().source, title: "Already filed" } }));
 
   const library = await launcher.launchExpectingLibrary();
   const dialog = await library.openNewTopic();

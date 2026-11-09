@@ -46,7 +46,10 @@ test("one account's two devices are told apart by their sessions, and sign-in na
   const phone = await makeSession(testApp.sql, { email: EMAIL, now: testApp.clock.now });
   const laptop = await makeSession(testApp.sql, { email: EMAIL, now: testApp.clock.now });
 
-  for (const [device, reqId] of [[phone, "request-phone"], [laptop, "request-laptop"]] as const) {
+  for (const [device, reqId] of [
+    [phone, "request-phone"],
+    [laptop, "request-laptop"],
+  ] as const) {
     await testApp.app.inject({ method: "GET", url: "/api/changes", headers: { ...device.headers, [REQUEST_ID_HEADER]: reqId } });
   }
 

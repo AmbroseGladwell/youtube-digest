@@ -11,7 +11,9 @@ const INPUT = {
   removed: ["saving for a home"],
   overviews: [overview("One", ["Startups"]), overview("Two", ["Startups", "Tech"]), overview("Three", ["Tech"])],
 };
-const answering = (items: unknown): GenerationClient => async () => ({ items });
+const answering =
+  (items: unknown): GenerationClient =>
+  async () => ({ items });
 
 test("code counts the overviews behind an item and names their most common topic", async () => {
   const items = await generateProfileItems(answering([{ text: "building a consumer app", overviewIndices: [0, 1, 1] }]), INPUT);

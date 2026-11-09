@@ -6,9 +6,7 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = ANTHROPIC_KEY;
 
-test("a successful generation ends up in the library, and opens in the reader when asked", async ({
-  launcher,
-}) => {
+test("a successful generation ends up in the library, and opens in the reader when asked", async ({ launcher }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();
   const dialog = await launcher.appShell.openNewOverview();
@@ -23,10 +21,7 @@ test("a successful generation ends up in the library, and opens in the reader wh
   await library.cardWithTitle("The Simulated Video").verifyTitle("The Simulated Video");
 });
 
-test("a live link shared from the iOS app makes a note, stored under the plain watch link", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a live link shared from the iOS app makes a note, stored under the plain watch link", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl(`https://www.youtube.com/live/${IWFT_VIDEO_ID}?is=2_N5yomNqBmNf2yl`);
@@ -36,10 +31,7 @@ test("a live link shared from the iOS app makes a note, stored under the plain w
   expect(overview?.source.url).toBe(VALID_URL);
 });
 
-test("the transcript-fetch phase surfaces its error, and generation never reaches Anthropic", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the transcript-fetch phase surfaces its error, and generation never reaches Anthropic", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.SERVICE_TRANSCRIPT);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
@@ -65,10 +57,7 @@ test("a stalled transcript fetch holds the first step there, with nothing claime
   await dialog.verifyStepDetail("02", "Queued");
 });
 
-test("a failed generation call surfaces its error without saving anything to the library", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a failed generation call surfaces its error without saving anything to the library", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 

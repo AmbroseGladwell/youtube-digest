@@ -12,7 +12,11 @@ import { onboardingTeaserTestIds } from "./OnboardingTeaserTestIds.js";
 export function OnboardingTeaser({ overview, sample = false, beside = false }: { overview: Overview; sample?: boolean; beside?: boolean }) {
   const { byline, first, locked } = onboardingSources[overview.source.kind].teaser(overview);
   return (
-    <section className={beside ? `${styles.root} ${styles.beside}` : styles.root} aria-label="Your overview, so far" data-testid={onboardingTeaserTestIds.root}>
+    <section
+      className={beside ? `${styles.root} ${styles.beside}` : styles.root}
+      aria-label="Your overview, so far"
+      data-testid={onboardingTeaserTestIds.root}
+    >
       <span className={styles.ready}>
         <StrokeIcon name="check" size={13} />
         {sample ? "Your sample overview is ready" : "Your overview is ready"}

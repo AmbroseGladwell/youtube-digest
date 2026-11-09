@@ -71,7 +71,9 @@ const judged = (candidate: string, videoId: string, outcome: JudgeRecord["outcom
 });
 
 const allPairs = judgingPairs(
-  ["a", "b"].flatMap((video) => [BASELINE, "openai:gpt-6-luna", "anthropic:claude-haiku-5-5", "gemini:gemini-3.8-flash"].map((model) => run(model, video))),
+  ["a", "b"].flatMap((video) =>
+    [BASELINE, "openai:gpt-6-luna", "anthropic:claude-haiku-5-5", "gemini:gemini-3.8-flash"].map((model) => run(model, video)),
+  ),
   transcripts,
   BASELINE,
 );
@@ -79,10 +81,7 @@ const allPairs = judgingPairs(
 test("settled judgments are not paid for twice, errored ones are, and a judge with no key is skipped", async () => {
   const asked: string[] = [];
   const lines: string[] = [];
-  const store = memoryStore([
-    judged("anthropic:claude-haiku-5-5", "a", "judged"),
-    judged("gemini:gemini-3.8-flash", "a", "errored", 0),
-  ]);
+  const store = memoryStore([judged("anthropic:claude-haiku-5-5", "a", "judged"), judged("gemini:gemini-3.8-flash", "a", "errored", 0)]);
 
   const outcome = await runJudging({
     pairs: allPairs,

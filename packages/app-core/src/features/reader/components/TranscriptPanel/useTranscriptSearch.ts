@@ -37,10 +37,7 @@ export function useTranscriptSearch(blocks: TranscriptBlock[]): TranscriptSearch
     },
     // Wraps, because the counter reads "4/4" and the only thing left to offer there is
     // the first one again.
-    step: (delta) =>
-      setCurrentIndex((index) =>
-        matches.length === 0 ? 0 : (index + delta + matches.length) % matches.length,
-      ),
+    step: (delta) => setCurrentIndex((index) => (matches.length === 0 ? 0 : (index + delta + matches.length) % matches.length)),
     matchesInBlock: (blockIndex) => byBlock.get(blockIndex) ?? [],
   };
 }

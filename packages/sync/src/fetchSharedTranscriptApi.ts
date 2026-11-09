@@ -9,11 +9,9 @@ export function createFetchSharedTranscriptApi(options: FetchSharedTranscriptApi
   const request = createApiRequester(options);
   return {
     get: (videoId) =>
-      answered(request("GET", `/shared-transcripts/${encodeURIComponent(videoId)}`, StoredTranscript)).catch(
-        (error: unknown) => {
-          if (isSyncRequestError(error) && error.code === "not_found") return null;
-          throw error;
-        },
-      ),
+      answered(request("GET", `/shared-transcripts/${encodeURIComponent(videoId)}`, StoredTranscript)).catch((error: unknown) => {
+        if (isSyncRequestError(error) && error.code === "not_found") return null;
+        throw error;
+      }),
   };
 }

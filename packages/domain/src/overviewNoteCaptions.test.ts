@@ -6,7 +6,14 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 
 test("captions the verdict with what it was judged against", () => {
   const overview = makeOverview({
-    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
+    verdict: {
+      novelty: "common_knowledge",
+      standsOut: null,
+      dubious: false,
+      dubiousClaims: [],
+      reasoning: "Standard advice.",
+      similarTo: [],
+    },
   });
 
   assert.deepEqual(overviewNoteCaptions(overview), { Verdict: NOVELTY_BASIS });

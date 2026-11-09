@@ -10,10 +10,7 @@ export interface ChapterBlockRun {
 // (docs/features/chapters.md), so a block the boundary runs through carries the tail of
 // one and the head of the next and belongs to both runs. Only the chapter the reader
 // opened is ever marked, so the two are never on screen together.
-export function chapterBlockRun(
-  blocks: { startMs: number }[],
-  chapter: { startMs: number; endMs: number },
-): ChapterBlockRun | null {
+export function chapterBlockRun(blocks: { startMs: number }[], chapter: { startMs: number; endMs: number }): ChapterBlockRun | null {
   const from = blockAtPosition(blocks, chapter.startMs);
   if (from === -1) {
     return null;

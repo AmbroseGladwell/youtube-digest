@@ -26,10 +26,7 @@ test("a name the catalogue doesn't have is refused", () => {
 
 test("free text or a URL in a property is refused, whether declared or not", () => {
   assert.equal(parseAnalyticsEvent({ name: "mcp.consentScreen.declined", props: { plan: "https://x.test/a" }, at: AT }), null);
-  assert.equal(
-    parseAnalyticsEvent({ name: "mcp.consentScreen.approved", props: { note: "what the reader typed" }, at: AT }),
-    null,
-  );
+  assert.equal(parseAnalyticsEvent({ name: "mcp.consentScreen.approved", props: { note: "what the reader typed" }, at: AT }), null);
 });
 
 test("an older client's event still counts without a property added since, and a newer one's is checked", () => {
@@ -55,9 +52,7 @@ test("a batch is one context and between one and the maximum number of events", 
   const events = [{ name: "mcp.consentScreen.approved", props: {}, at: AT }];
   assert.ok(AnalyticsEventBatch.safeParse({ context, events }).success);
   assert.ok(!AnalyticsEventBatch.safeParse({ context, events: [] }).success);
-  assert.ok(
-    !AnalyticsEventBatch.safeParse({ context, events: Array(MAX_ANALYTICS_BATCH_EVENTS + 1).fill(events[0]) }).success,
-  );
+  assert.ok(!AnalyticsEventBatch.safeParse({ context, events: Array(MAX_ANALYTICS_BATCH_EVENTS + 1).fill(events[0]) }).success);
   assert.ok(!AnalyticsEventBatch.safeParse({ context: { ...context, appVersion: "0.4.1 (Reader's Mac)" }, events }).success);
   assert.ok(!AnalyticsEventBatch.safeParse({ context: { ...context, url: "https://x.test" }, events }).success);
 });
@@ -77,14 +72,11 @@ test("a batch from a reader with no account carries the anonymous id they agreed
 
 test("an overview's id is the one id an event may carry, and it must be an id", () => {
   const overviewId = "0b7c9d2e-4f61-4a8b-9c3d-2e1f0a9b8c7d";
-  assert.deepEqual(
-    parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId, tab: "chapters" }, at: AT })?.props,
-    { overviewId, tab: "chapters" },
-  );
-  assert.equal(
-    parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId: "dQw4w9WgXcQ", tab: "chapters" }, at: AT }),
-    null,
-  );
+  assert.deepEqual(parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId, tab: "chapters" }, at: AT })?.props, {
+    overviewId,
+    tab: "chapters",
+  });
+  assert.equal(parseAnalyticsEvent({ name: "reader.tabs.switched", props: { overviewId: "dQw4w9WgXcQ", tab: "chapters" }, at: AT }), null);
   assert.equal(parseAnalyticsEvent({ name: "reader.tabs.switched", props: { tab: "chapters" }, at: AT }), null);
 });
 

@@ -5,10 +5,7 @@ import { generationRunSteps } from "./generationRunSteps.js";
 
 describe("generationRunSteps", () => {
   it("has no audio step, because narration is asked for without anyone waiting on it", () => {
-    expect(generationRunSteps(makeNewOverviewRun()).map((step) => step.label)).toEqual([
-      "Fetching transcript",
-      "Creating overview",
-    ]);
+    expect(generationRunSteps(makeNewOverviewRun()).map((step) => step.label)).toEqual(["Fetching transcript", "Creating overview"]);
   });
 
   const articleRun = (oneTimeAccess = false) => ({
@@ -71,9 +68,7 @@ describe("generationRunSteps", () => {
   });
 
   it("reports the finished overview's own read time, counted from its words", () => {
-    const steps = generationRunSteps(
-      makeNewOverviewRun({ transcriptWords: 1412, overview: makeOverview() }),
-    );
+    const steps = generationRunSteps(makeNewOverviewRun({ transcriptWords: 1412, overview: makeOverview() }));
 
     expect(steps[1]!.detail).toBe("Overview written · 1 min read");
     expect(steps.every((step) => step.state === "done")).toBe(true);

@@ -8,8 +8,5 @@ import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 export function usePlaylistApi(): { api: PlaylistApi; apiUrl: string } | null {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();
-  return useMemo(
-    () => (apiUrl === null ? null : { api: createFetchPlaylistApi({ baseUrl: apiUrl, surface }), apiUrl }),
-    [apiUrl, surface],
-  );
+  return useMemo(() => (apiUrl === null ? null : { api: createFetchPlaylistApi({ baseUrl: apiUrl, surface }), apiUrl }), [apiUrl, surface]);
 }

@@ -46,17 +46,11 @@ const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
     if (items.length === 1) {
       return item;
     }
-    const link =
-      index === 0
-        ? "First"
-        : index === items.length - 1
-          ? "And finally"
-          : middleLinks[(index - 1) % middleLinks.length]!;
+    const link = index === 0 ? "First" : index === items.length - 1 ? "And finally" : middleLinks[(index - 1) % middleLinks.length]!;
     return { ...item, spoken: `${link}, ${afterOrdinal(item.text)}` };
   });
 
-const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body =>
-  range === null ? { text } : { text, range };
+const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body => (range === null ? { text } : { text, range });
 
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 
@@ -115,7 +109,10 @@ export function overviewNoteLines(
     section(SUMMARY_SECTION, { text: SUMMARY_SECTION, spoken: "The summary" }, [{ text: recipe.summary }]);
     section(
       INGREDIENTS_SECTION,
-      { text: INGREDIENTS_SECTION, spoken: ingredients.length === 1 ? "There is one ingredient" : `There are ${ingredients.length} ingredients` },
+      {
+        text: INGREDIENTS_SECTION,
+        spoken: ingredients.length === 1 ? "There is one ingredient" : `There are ${ingredients.length} ingredients`,
+      },
       ingredients.map((text) => {
         const spoken = spokenMeasures(text);
         return spoken === text ? { text } : { text, spoken };
@@ -124,7 +121,10 @@ export function overviewNoteLines(
     );
     section(
       METHOD_SECTION,
-      { text: METHOD_SECTION, spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps` },
+      {
+        text: METHOD_SECTION,
+        spoken: recipe.steps.length === 1 ? "The method, in one step" : `The method, in ${recipe.steps.length} steps`,
+      },
       recipeActions(recipe.steps).map(({ text: written, step, index, label }) => {
         const adjusted = inMethodAmounts(written, shown.methodAmounts ?? []);
         const text = shown.units === "us" ? inUsOvenTemperatures(adjusted) : adjusted;
@@ -137,11 +137,9 @@ export function overviewNoteLines(
   }
 
   section(SUMMARY_SECTION, { text: "Premise", spoken: "The premise" }, [{ text: overview.inOneLine }]);
-  section(
-    "Core claim",
-    overview.thin ? { text: "No clear claim" } : { text: "Core claim", spoken: "The core claim" },
-    [{ text: overview.coreClaim }],
-  );
+  section("Core claim", overview.thin ? { text: "No clear claim" } : { text: "Core claim", spoken: "The core claim" }, [
+    { text: overview.coreClaim },
+  ]);
 
   if (overview.verdict) {
     const { novelty, standsOut, reasoning } = overview.verdict;
@@ -174,7 +172,10 @@ export function overviewNoteLines(
   section(
     HOW_TO_APPLY_SECTION,
     { text: HOW_TO_APPLY_SECTION, spoken: "How you could apply it" },
-    inOrder((overview.howToApply?.items ?? []).map((text) => ({ text })), ACTION_LINKS),
+    inOrder(
+      (overview.howToApply?.items ?? []).map((text) => ({ text })),
+      ACTION_LINKS,
+    ),
     true,
   );
 

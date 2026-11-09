@@ -27,15 +27,11 @@ export function useSetOverviewTopicsMutation() {
       await queryClient.cancelQueries({ queryKey: overviewKeys.all });
 
       const previousList = queryClient.getQueryData<LibraryEntry[]>(overviewKeys.list());
-      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
-        overviewKeys.detail(overview.id),
-      );
+      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(overviewKeys.detail(overview.id));
 
       queryClient.setQueryData<LibraryEntry[]>(overviewKeys.list(), (current) =>
         current?.map((entry) =>
-          entry.kind === "overview" && entry.overview.id === overview.id
-            ? { ...entry, overview: { ...entry.overview, topicIds } }
-            : entry,
+          entry.kind === "overview" && entry.overview.id === overview.id ? { ...entry, overview: { ...entry.overview, topicIds } } : entry,
         ),
       );
       queryClient.setQueryData<OverviewWithState | null>(overviewKeys.detail(overview.id), (current) =>

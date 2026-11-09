@@ -14,7 +14,11 @@ export type CaptureStepOutcome = z.infer<typeof CaptureStepOutcome>;
 export const CaptureOutcome = z.enum(["finished", "failed", "cancelled"]);
 export type CaptureOutcome = z.infer<typeof CaptureOutcome>;
 
-const Milliseconds = z.number().int().min(0).max(24 * 60 * 60 * 1000);
+const Milliseconds = z
+  .number()
+  .int()
+  .min(0)
+  .max(24 * 60 * 60 * 1000);
 
 export const CaptureTimedStep = z.object({ step: CaptureStep, outcome: CaptureStepOutcome, ms: Milliseconds }).strict();
 export type CaptureTimedStep = z.infer<typeof CaptureTimedStep>;

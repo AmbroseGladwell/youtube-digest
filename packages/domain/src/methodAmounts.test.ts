@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import { adjustIngredient, type RecipeUnits } from "./adjustIngredient.js";
 import { inMethodAmounts, methodAmounts, methodPieces } from "./methodAmounts.js";
 
-const pancakes = ["100g plain flour", "2 large eggs", "300ml milk", "1 tbsp sunflower or vegetable oil plus a little extra for frying", "lemon wedges to serve (optional)"];
+const pancakes = [
+  "100g plain flour",
+  "2 large eggs",
+  "300ml milk",
+  "1 tbsp sunflower or vegetable oil plus a little extra for frying",
+  "lemon wedges to serve (optional)",
+];
 const amountsFor = (ingredients: string[], factor: number, units: RecipeUnits = "asWritten") =>
   methodAmounts(
     ingredients,
@@ -26,14 +32,25 @@ test("a method amount that repeats an ingredient line scales with it, and only t
 });
 
 test("a share stays as written, whether it's part of the batch or per pancake", () => {
-  assert.equal(inMethodAmounts("Pour in about 3 tbsp of the batter and swirl it.", amountsFor(["3 tbsp milk"], 2)), "Pour in about 3 tbsp of the batter and swirl it.");
-  assert.equal(inMethodAmounts("Toss the leeks with 1 tbsp of the oil.", amountsFor(["1 tbsp olive oil", "3 leeks"], 2)), "Toss the leeks with 1 tbsp of the oil.");
+  assert.equal(
+    inMethodAmounts("Pour in about 3 tbsp of the batter and swirl it.", amountsFor(["3 tbsp milk"], 2)),
+    "Pour in about 3 tbsp of the batter and swirl it.",
+  );
+  assert.equal(
+    inMethodAmounts("Toss the leeks with 1 tbsp of the oil.", amountsFor(["1 tbsp olive oil", "3 leeks"], 2)),
+    "Toss the leeks with 1 tbsp of the oil.",
+  );
   assert.equal(inMethodAmounts("Spread over 3 tbsp of the sauce.", amountsFor(["3 tbsp passata"], 2)), "Spread over 3 tbsp of the sauce.");
 });
 
 test("times, sizes, pieces and different amounts stay as written", () => {
   const ingredients = ["2 large eggs", "20g butter", "4 tomatoes", "3 tbsp olive oil"];
-  for (const text of ["Cook for 2 minutes on each side.", "Heat a 20cm frying pan.", "Divide it into 4 equal pieces.", "Heat 1 tbsp olive oil in a pan."]) {
+  for (const text of [
+    "Cook for 2 minutes on each side.",
+    "Heat a 20cm frying pan.",
+    "Divide it into 4 equal pieces.",
+    "Heat 1 tbsp olive oil in a pan.",
+  ]) {
     assert.equal(inMethodAmounts(text, amountsFor(ingredients, 2)), text);
   }
 });
@@ -53,5 +70,8 @@ test("units change in the method as they do in the list", () => {
 
 test("as written, and a tin sold at its size, give the method nothing to change", () => {
   assert.deepEqual(amountsFor(pancakes, 1), []);
-  assert.equal(inMethodAmounts("Tip in the 400g can of tomatoes.", amountsFor(["400g can chopped tomatoes"], 2)), "Tip in the 400g can of tomatoes.");
+  assert.equal(
+    inMethodAmounts("Tip in the 400g can of tomatoes.", amountsFor(["400g can chopped tomatoes"], 2)),
+    "Tip in the 400g can of tomatoes.",
+  );
 });

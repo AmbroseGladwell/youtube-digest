@@ -43,10 +43,7 @@ export function useShareUsage(): ShareUsage {
       if (on) analytics.analyticsConsent.settings.switched({ on });
     };
     if (state.signedIn) {
-      updateSettings.mutate(
-        { analyticsOptOut: !on, analyticsOptOutChangedAt: new Date().toISOString() },
-        { onSuccess: switchedOn },
-      );
+      updateSettings.mutate({ analyticsOptOut: !on, analyticsOptOutChangedAt: new Date().toISOString() }, { onSuccess: switchedOn });
       return;
     }
     answerAnalyticsConsent(on ? "share" : "dontShare");

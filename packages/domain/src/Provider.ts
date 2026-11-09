@@ -8,14 +8,7 @@ export type Provider = z.infer<typeof Provider>;
 
 // Design 110a's order: Anthropic leads because it is the one the product was built and
 // judged on, and the rest follow the card's own order.
-export const PROVIDERS: readonly Provider[] = [
-  "anthropic",
-  "openai",
-  "gemini",
-  "deepseek",
-  "xai",
-  "mistral",
-];
+export const PROVIDERS: readonly Provider[] = ["anthropic", "openai", "gemini", "deepseek", "xai", "mistral"];
 
 // Anthropic leads the list and is what a reader with no choice saved falls back to: it is
 // the provider the overview format was built and judged on (design 110a).
@@ -71,5 +64,4 @@ export const PROVIDER_API_ORIGIN: Record<Provider, string> = {
   mistral: "https://api.mistral.ai",
 };
 
-export const providerHostPermission = (provider: Provider): string =>
-  `${PROVIDER_API_ORIGIN[provider]}/*`;
+export const providerHostPermission = (provider: Provider): string => `${PROVIDER_API_ORIGIN[provider]}/*`;

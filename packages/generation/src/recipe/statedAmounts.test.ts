@@ -12,7 +12,10 @@ test("numbers said in words state the same amount as in digits", () => {
 
 test("a line whose amounts were all stated stays as the model copied it", () => {
   const stated = statedNumbersIn(["add two cups of rice and 400g of tomatoes"]);
-  assert.deepEqual(withStatedAmounts(["2 cups rice", "400g tomatoes"], stated), { ingredients: ["2 cups rice", "400g tomatoes"], amountsDropped: 0 });
+  assert.deepEqual(withStatedAmounts(["2 cups rice", "400g tomatoes"], stated), {
+    ingredients: ["2 cups rice", "400g tomatoes"],
+    amountsDropped: 0,
+  });
 });
 
 test("an amount nobody stated leaves the line its name", () => {

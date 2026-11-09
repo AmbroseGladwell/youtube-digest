@@ -39,6 +39,5 @@ export class OnboardingSamplesPageObject extends PageObject {
       expect(this.#rows().filter({ hasText: title }).getByTestId(sampleRowTestIds.opening)).toBeVisible(),
     );
 
-  verifySaysItCouldntOpen = () =>
-    this.step("verifySaysItCouldntOpen", () => this.expectToBeVisible(onboardingSamplesTestIds.failed));
+  verifySaysItCouldntOpen = () => this.step("verifySaysItCouldntOpen", () => this.expectToBeVisible(onboardingSamplesTestIds.failed));
 }

@@ -89,9 +89,7 @@ export function LibraryOverviewCard({
                   {name}
                 </span>
               ))}
-              {overview.verdict && (
-                <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
-              )}
+              {overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {overview.recipe === null && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
             </span>
             {(overview.verdict?.dubious || selling) && (

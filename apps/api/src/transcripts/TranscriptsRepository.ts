@@ -167,10 +167,10 @@ export class TranscriptsRepository {
       let forgotten = 0;
       for (const { video_id, words_hash } of contributed) {
         await tx.query("delete from transcript_contributions where video_id = $1 and words_hash = $2", [video_id, words_hash]);
-        const rows = await tx.query(
-          "delete from shared_transcripts where video_id = $1 and words_hash = $2 returning video_id",
-          [video_id, words_hash],
-        );
+        const rows = await tx.query("delete from shared_transcripts where video_id = $1 and words_hash = $2 returning video_id", [
+          video_id,
+          words_hash,
+        ]);
         forgotten += rows.length;
       }
       return forgotten;

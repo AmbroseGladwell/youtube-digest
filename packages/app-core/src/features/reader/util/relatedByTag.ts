@@ -19,9 +19,6 @@ export function relatedByTag(
     .filter(({ overview }) => overview.id !== current.overview.id)
     .map((entry) => ({ ...entry, sharedTags: overviewTags(entry).filter((tag) => tags.has(tag)).length }))
     .filter(({ sharedTags }) => sharedTags > 0)
-    .sort(
-      (left, right) =>
-        right.sharedTags - left.sharedTags || right.overview.savedAt.localeCompare(left.overview.savedAt),
-    )
+    .sort((left, right) => right.sharedTags - left.sharedTags || right.overview.savedAt.localeCompare(left.overview.savedAt))
     .slice(0, limit);
 }

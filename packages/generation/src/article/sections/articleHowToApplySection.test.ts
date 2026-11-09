@@ -3,8 +3,7 @@ import assert from "node:assert/strict";
 import type { ArticleGenerationInput } from "../ArticleGenerationInput.js";
 import { articleHowToApplySection } from "./articleHowToApplySection.js";
 
-const promptFor = (readerContext: string | null) =>
-  articleHowToApplySection.prompt({ readerContext } as ArticleGenerationInput);
+const promptFor = (readerContext: string | null) => articleHowToApplySection.prompt({ readerContext } as ArticleGenerationInput);
 
 test("a reader's context comes with the same rule videos have: fit their life, don't invent one", () => {
   const prompt = promptFor("I'm a nurse.");

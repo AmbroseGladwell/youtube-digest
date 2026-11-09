@@ -37,11 +37,7 @@ export function readCatalogues(storage: Storage = globalThis.localStorage): Cata
   }
 }
 
-export function writeCatalogue(
-  provider: Provider,
-  catalogue: ModelCatalogue,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function writeCatalogue(provider: Provider, catalogue: ModelCatalogue, storage: Storage = globalThis.localStorage): void {
   storage.setItem(STORAGE_KEY, JSON.stringify({ ...readCatalogues(storage), [provider]: catalogue }));
 }
 

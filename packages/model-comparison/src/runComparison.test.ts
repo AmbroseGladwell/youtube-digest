@@ -36,7 +36,10 @@ test("every model runs every video, and each record is saved", async () => {
 
   assert.equal(outcome.ran, 6);
   assert.equal(store.saved.length, 6);
-  assert.deepEqual(ran.filter((run) => run.startsWith("gpt")), ["gpt-6-luna:a", "gpt-6-luna:b", "gpt-6-luna:c"]);
+  assert.deepEqual(
+    ran.filter((run) => run.startsWith("gpt")),
+    ["gpt-6-luna:a", "gpt-6-luna:b", "gpt-6-luna:c"],
+  );
 });
 
 test("a settled run is not paid for twice, but an errored one is tried again", async () => {

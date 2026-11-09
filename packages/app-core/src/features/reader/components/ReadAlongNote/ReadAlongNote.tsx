@@ -141,12 +141,7 @@ export function ReadAlongNote({
       {/* The way back to the line being read, the transcript's own way back worded for a
           voice instead of a clock, sitting above the player bar rather than on it. */}
       {follow.offered && (
-        <button
-          type="button"
-          className={styles.followButton}
-          onClick={followTheVoice}
-          data-testid={readAlongNoteTestIds.followButton}
-        >
+        <button type="button" className={styles.followButton} onClick={followTheVoice} data-testid={readAlongNoteTestIds.followButton}>
           <span className={styles.followButtonMark} aria-hidden="true" />
           Back to {sectionHeadingAt(lines, activeIndex)}
         </button>

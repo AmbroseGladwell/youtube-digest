@@ -15,7 +15,12 @@ test("a transcript with no segments is faulted", () => {
 });
 
 test("a transcript whose every segment is blank is faulted", () => {
-  const blank = makeStoredTranscript({ segments: [{ text: "  ", startMs: 0, endMs: 1000 }, { text: "", startMs: 1000, endMs: 2000 }] });
+  const blank = makeStoredTranscript({
+    segments: [
+      { text: "  ", startMs: 0, endMs: 1000 },
+      { text: "", startMs: 1000, endMs: 2000 },
+    ],
+  });
   assert.equal(transcriptFault(blank, VIDEO), "no-words");
 });
 

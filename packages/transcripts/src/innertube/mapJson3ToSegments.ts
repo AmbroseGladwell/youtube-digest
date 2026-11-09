@@ -22,11 +22,7 @@ export function mapJson3ToSegments(body: string): TranscriptSegment[] {
   try {
     parsed = JSON.parse(body) as { events?: Json3Event[] };
   } catch (error) {
-    throw innerTubeError(
-      "the caption track was not json3",
-      TranscriptFetchFailure.MALFORMED_RESPONSE,
-      error,
-    );
+    throw innerTubeError("the caption track was not json3", TranscriptFetchFailure.MALFORMED_RESPONSE, error);
   }
 
   const events = parsed.events ?? [];
@@ -51,10 +47,7 @@ export function mapJson3ToSegments(body: string): TranscriptSegment[] {
   }
 
   if (segments.length === 0) {
-    throw innerTubeError(
-      "the caption track came back empty",
-      TranscriptFetchFailure.SOURCE_BLOCKED,
-    );
+    throw innerTubeError("the caption track came back empty", TranscriptFetchFailure.SOURCE_BLOCKED);
   }
   return segments;
 }

@@ -25,10 +25,7 @@ import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
 import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
 import { SurfaceProvider, type Surface } from "./SurfaceContext.js";
 import { YouTubeFetchProvider } from "./YouTubeFetchContext.js";
-import {
-  ProviderPermissionProvider,
-  type ProviderPermissions,
-} from "../features/apiKeys/ProviderPermissionContext.js";
+import { ProviderPermissionProvider, type ProviderPermissions } from "../features/apiKeys/ProviderPermissionContext.js";
 import type { AppRouter } from "./createAppRouter.js";
 import "../theme/global.scss";
 
@@ -80,51 +77,51 @@ export function App({
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
       <ProviderPermissionProvider value={providerPermissions}>
-      <ActiveVideoProvider value={activeVideo}>
-      <ArticlePagesProvider value={articlePages}>
-        <PlaybackProvider value={playback}>
-          <RunBridgeProvider value={runBridge}>
-            <LayoutProvider value={layout}>
-              <SurfaceProvider value={surface}>
-                <AppUpdateProvider value={appUpdate}>
-                  <DefaultApiUrlProvider value={defaultApiUrl}>
-                    <ServerSwitchableProvider value={serverSwitchable}>
-                    <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
-                      <AccentMirrorProvider value={accentMirror}>
-                      <AppBuildProvider value={build}>
-                        <QueryClientProvider client={queryClient}>
-                          <LibraryRuntime library={library} openLibrary={openLibrary} deleteLibrary={deleteLibrary}>
-                            <SyncRuntime>
-                              <AppearanceRuntime>
-                              <ErrorReportingRuntime>
-                                <AnalyticsRuntime>
-                                  <LibraryMoveRuntime>
-                                    <OnboardingRunRuntime>
-                                      <PlayerRuntime>
-                                        <ShareRuntime>
-                                          <RouterProvider router={router} />
-                                        </ShareRuntime>
-                                      </PlayerRuntime>
-                                    </OnboardingRunRuntime>
-                                  </LibraryMoveRuntime>
-                                </AnalyticsRuntime>
-                              </ErrorReportingRuntime>
-                              </AppearanceRuntime>
-                            </SyncRuntime>
-                          </LibraryRuntime>
-                        </QueryClientProvider>
-                      </AppBuildProvider>
-                      </AccentMirrorProvider>
-                    </ErrorDestinationMirrorProvider>
-                    </ServerSwitchableProvider>
-                  </DefaultApiUrlProvider>
-                </AppUpdateProvider>
-              </SurfaceProvider>
-            </LayoutProvider>
-          </RunBridgeProvider>
-        </PlaybackProvider>
-      </ArticlePagesProvider>
-      </ActiveVideoProvider>
+        <ActiveVideoProvider value={activeVideo}>
+          <ArticlePagesProvider value={articlePages}>
+            <PlaybackProvider value={playback}>
+              <RunBridgeProvider value={runBridge}>
+                <LayoutProvider value={layout}>
+                  <SurfaceProvider value={surface}>
+                    <AppUpdateProvider value={appUpdate}>
+                      <DefaultApiUrlProvider value={defaultApiUrl}>
+                        <ServerSwitchableProvider value={serverSwitchable}>
+                          <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
+                            <AccentMirrorProvider value={accentMirror}>
+                              <AppBuildProvider value={build}>
+                                <QueryClientProvider client={queryClient}>
+                                  <LibraryRuntime library={library} openLibrary={openLibrary} deleteLibrary={deleteLibrary}>
+                                    <SyncRuntime>
+                                      <AppearanceRuntime>
+                                        <ErrorReportingRuntime>
+                                          <AnalyticsRuntime>
+                                            <LibraryMoveRuntime>
+                                              <OnboardingRunRuntime>
+                                                <PlayerRuntime>
+                                                  <ShareRuntime>
+                                                    <RouterProvider router={router} />
+                                                  </ShareRuntime>
+                                                </PlayerRuntime>
+                                              </OnboardingRunRuntime>
+                                            </LibraryMoveRuntime>
+                                          </AnalyticsRuntime>
+                                        </ErrorReportingRuntime>
+                                      </AppearanceRuntime>
+                                    </SyncRuntime>
+                                  </LibraryRuntime>
+                                </QueryClientProvider>
+                              </AppBuildProvider>
+                            </AccentMirrorProvider>
+                          </ErrorDestinationMirrorProvider>
+                        </ServerSwitchableProvider>
+                      </DefaultApiUrlProvider>
+                    </AppUpdateProvider>
+                  </SurfaceProvider>
+                </LayoutProvider>
+              </RunBridgeProvider>
+            </PlaybackProvider>
+          </ArticlePagesProvider>
+        </ActiveVideoProvider>
       </ProviderPermissionProvider>
     </YouTubeFetchProvider>
   );

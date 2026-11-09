@@ -7,8 +7,7 @@ export type JsonSchema = Record<string, unknown>;
 // them, and sending it is a 400 rather than a stricter model.
 const KEPT = new Set(["type", "description", "enum", "const"]);
 
-const isObject = (value: unknown): value is JsonSchema =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+const isObject = (value: unknown): value is JsonSchema => typeof value === "object" && value !== null && !Array.isArray(value);
 
 // The leftovers are not dropped, they are said in words. docs/features/overview-generation-decisions.md
 // records that this is already how the array cap reaches the model: structured outputs do

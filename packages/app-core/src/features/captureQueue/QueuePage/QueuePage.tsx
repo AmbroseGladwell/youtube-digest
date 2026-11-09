@@ -146,35 +146,36 @@ export function QueuePage() {
       ? "Made in each playlist’s order while The Overview is open on this phone. Continues next time you open it."
       : "Videos from playlists you follow, made one at a time, each playlist in the order you chose for it, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 
-  const pauseControl = queue.needsKey || monthHeld ? null : queue.paused ? (
-    <button
-      type="button"
-      className={stacked ? styles.iconPrimary : styles.primary}
-      onClick={() => {
-        analytics.queue.controls.resumed({ from: "page" });
-        queue.setPaused(false);
-      }}
-      aria-label={stacked ? "Resume queue" : undefined}
-      data-testid={queuePageTestIds.resumeButton}
-    >
-      <StrokeIcon name="play" size={stacked ? 18 : 13} />
-      {!stacked && "Resume queue"}
-    </button>
-  ) : (
-    <button
-      type="button"
-      className={stacked ? styles.iconSecondary : styles.secondary}
-      onClick={() => {
-        analytics.queue.controls.paused({ from: "page" });
-        queue.setPaused(true);
-      }}
-      aria-label={stacked ? "Pause queue" : undefined}
-      data-testid={queuePageTestIds.pauseButton}
-    >
-      <StrokeIcon name="pause" size={stacked ? 18 : 13} />
-      {!stacked && "Pause queue"}
-    </button>
-  );
+  const pauseControl =
+    queue.needsKey || monthHeld ? null : queue.paused ? (
+      <button
+        type="button"
+        className={stacked ? styles.iconPrimary : styles.primary}
+        onClick={() => {
+          analytics.queue.controls.resumed({ from: "page" });
+          queue.setPaused(false);
+        }}
+        aria-label={stacked ? "Resume queue" : undefined}
+        data-testid={queuePageTestIds.resumeButton}
+      >
+        <StrokeIcon name="play" size={stacked ? 18 : 13} />
+        {!stacked && "Resume queue"}
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={stacked ? styles.iconSecondary : styles.secondary}
+        onClick={() => {
+          analytics.queue.controls.paused({ from: "page" });
+          queue.setPaused(true);
+        }}
+        aria-label={stacked ? "Pause queue" : undefined}
+        data-testid={queuePageTestIds.pauseButton}
+      >
+        <StrokeIcon name="pause" size={stacked ? 18 : 13} />
+        {!stacked && "Pause queue"}
+      </button>
+    );
 
   const clearControl =
     waitingCount === 0 || confirmingClear ? null : (
@@ -216,8 +217,7 @@ export function QueuePage() {
         <div className={styles.confirm} role="group" aria-labelledby="queue-clear-title" data-testid={queuePageTestIds.clearConfirm}>
           <p className={styles.confirmText} id="queue-clear-title" ref={confirmTitle} tabIndex={-1}>
             <strong>Clear the queue?</strong> All {waitingCount.toLocaleString("en-GB")} waiting{" "}
-            {waitingCount === 1 ? "video is" : "videos are"} removed. Your playlists stay followed, so new videos still
-            arrive.
+            {waitingCount === 1 ? "video is" : "videos are"} removed. Your playlists stay followed, so new videos still arrive.
           </p>
           <span className={styles.confirmActions}>
             <button
@@ -253,8 +253,8 @@ export function QueuePage() {
             <StrokeIcon name="key" size={18} />
           </span>
           <p className={styles.noKeyText}>
-            Overviews are made with your own API key, and none is saved {isPanel ? "in the extension" : "here"}. Add one
-            and the queue starts straight away.
+            Overviews are made with your own API key, and none is saved {isPanel ? "in the extension" : "here"}. Add one and the queue
+            starts straight away.
           </p>
           <PageLink
             className={styles.primary}
@@ -378,7 +378,12 @@ export function QueuePage() {
       )}
 
       {chosenCaptures.length > 0 && (
-        <div className={`${styles.chosenBar} ${stacked ? styles.chosenBarStacked : ""}`} role="region" aria-label="Chosen videos" data-testid={queuePageTestIds.chosenBar}>
+        <div
+          className={`${styles.chosenBar} ${stacked ? styles.chosenBarStacked : ""}`}
+          role="region"
+          aria-label="Chosen videos"
+          data-testid={queuePageTestIds.chosenBar}
+        >
           <div className={styles.chosenText} role="status" aria-live="polite">
             <span className={styles.chosenCount} data-testid={queuePageTestIds.chosenCount}>
               {chosenCaptures.length.toLocaleString("en-GB")} chosen

@@ -61,8 +61,7 @@ export class HomePageObject extends PageObject {
 
   pasteADifferentLink = () => this.step("pasteADifferentLink", () => this.click(homePageTestIds.pasteLink));
 
-  verifyOffersNoPasteLink = () =>
-    this.step("verifyOffersNoPasteLink", () => this.expectToHaveCount(homePageTestIds.pasteLink, 0));
+  verifyOffersNoPasteLink = () => this.step("verifyOffersNoPasteLink", () => this.expectToHaveCount(homePageTestIds.pasteLink, 0));
 
   // 205g: Sign in is a peer of Make my overview rather than a line of small type.
   verifyOffersSignIn = () => this.step("verifyOffersSignIn", () => this.expectToBeVisible(homePageTestIds.signIn));
@@ -96,8 +95,7 @@ export class HomePageObject extends PageObject {
       await expect(link).toHaveAttribute("target", "_blank");
     });
 
-  verifyOffersNoExtension = () =>
-    this.step("verifyOffersNoExtension", () => this.expectToHaveCount(homePageTestIds.getExtensionLink, 0));
+  verifyOffersNoExtension = () => this.step("verifyOffersNoExtension", () => this.expectToHaveCount(homePageTestIds.getExtensionLink, 0));
 
   // The hero's own field (design 2b): the same run + New starts, taken from the page.
   verifyHeroFieldDisabled = () =>
@@ -112,8 +110,7 @@ export class HomePageObject extends PageObject {
       await expect(this.get(homePageTestIds.generateButton)).toBeEnabled();
     });
 
-  verifyShowsKeysNote = () =>
-    this.step("verifyShowsKeysNote", () => this.expectToBeVisible(homePageTestIds.keysNote));
+  verifyShowsKeysNote = () => this.step("verifyShowsKeysNote", () => this.expectToBeVisible(homePageTestIds.keysNote));
 
   verifySaysKeysAreSaved = () =>
     this.step("verifySaysKeysAreSaved", async () => {
@@ -146,14 +143,10 @@ export class HomePageObject extends PageObject {
     });
 
   verifyHeroValidationError = (message: string) =>
-    this.step(`verifyHeroValidationError ${message}`, () =>
-      expect(this.get(homePageTestIds.validationError)).toHaveText(message),
-    );
+    this.step(`verifyHeroValidationError ${message}`, () => expect(this.get(homePageTestIds.validationError)).toHaveText(message));
 
   expectRunDialog = (): Promise<NewOverviewDialogPageObject> =>
-    this.step("expectRunDialog", () =>
-      new NewOverviewDialogPageObject(this.testContext).verifyIsShown(),
-    );
+    this.step("expectRunDialog", () => new NewOverviewDialogPageObject(this.testContext).verifyIsShown());
 
   verifyShowsLibrary = (): Promise<LibraryPageObject> =>
     this.step("verifyShowsLibrary", async () => {

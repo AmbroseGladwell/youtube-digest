@@ -12,13 +12,7 @@ export interface ClearFieldButtonProps {
 // colour and hover (docs/features/stone-theme.md, "Transcript search").
 export function ClearFieldButton({ label, onClick, testId }: ClearFieldButtonProps) {
   return (
-    <button
-      type="button"
-      className={styles.root}
-      onClick={onClick}
-      aria-label={label}
-      data-testid={testId}
-    >
+    <button type="button" className={styles.root} onClick={onClick} aria-label={label} data-testid={testId}>
       <StrokeIcon name="close" size={15} />
     </button>
   );

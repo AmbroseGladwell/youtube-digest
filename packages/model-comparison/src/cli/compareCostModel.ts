@@ -71,12 +71,15 @@ const spentSoFar = async () =>
 const settled = (records: readonly { videoId: string; outcome: string }[]) =>
   new Set(records.filter((record) => record.outcome !== "errored").map((record) => record.videoId));
 
-const inLanes = <T>(tasks: T[]): T[][] =>
-  Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane));
+const inLanes = <T>(tasks: T[]): T[][] => Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane));
 
 const log = (line: string) => console.error(line);
 
-async function spend<R extends Spend & { videoId: string; outcome: string }>(phase: string, tasks: (() => Promise<R>)[], save: (record: R) => Promise<void>) {
+async function spend<R extends Spend & { videoId: string; outcome: string }>(
+  phase: string,
+  tasks: (() => Promise<R>)[],
+  save: (record: R) => Promise<void>,
+) {
   const outcome = await spendWithinBudget({
     lanes: inLanes(tasks),
     budgetDollars,
@@ -129,9 +132,7 @@ if (carriedOn) {
 
   for (const arm of ["personal-from-note", "personal-with-transcript"] as const) {
     const done = new Set(
-      (await judgments.all())
-        .filter((record) => record.candidate === arm && record.outcome !== "errored")
-        .map((record) => record.videoId),
+      (await judgments.all()).filter((record) => record.candidate === arm && record.outcome !== "errored").map((record) => record.videoId),
     );
     const candidates = new Map((await stores[arm].all()).filter(isPassed).map((record) => [record.videoId, record]));
     await spend(
@@ -166,4 +167,3 @@ const markdown = costModelMarkdown(
 await writeFile(join(runDirectory, "report.md"), markdown);
 console.log(markdown);
 console.error(`\n$${(await spentSoFar()).toFixed(4)} spent on run ${values.run} in all. Report: ${join(runDirectory, "report.md")}`);
-

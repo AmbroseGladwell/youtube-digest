@@ -17,10 +17,7 @@ const withImage = () => {
 // ever asked for them. These cover the pages that were swapping with no transition at all
 // (docs/features/page-transitions.md).
 
-test("opening Settings, and then one of its sections, are animated journeys", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening Settings, and then one of its sections, are animated journeys", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   await launcher.launchExpectingLibrary();
   const shell = launcher.appShell;
@@ -36,11 +33,7 @@ test("opening Settings, and then one of its sections, are animated journeys", as
 // phone (SettingsPage's `stacked`). Coming back out of one pops history rather than pushing
 // (useBackTo), and react-router replays the transition it recorded on the way in, so the flag
 // on the forward link is what turns both directions on.
-test("on a phone, coming back out of a section and out of Settings is animated too", async ({
-  page,
-  launcher,
-  backendSimulator,
-}) => {
+test("on a phone, coming back out of a section and out of Settings is animated too", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   await page.setViewportSize(PHONE);
   await launcher.launchExpectingLibrary();
@@ -56,11 +49,7 @@ test("on a phone, coming back out of a section and out of Settings is animated t
   await shell.verifyNavigationDirection("back");
 });
 
-test("nothing animates when the reader has asked for reduced motion", async ({
-  page,
-  launcher,
-  backendSimulator,
-}) => {
+test("nothing animates when the reader has asked for reduced motion", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   await page.emulateMedia({ reducedMotion: "reduce" });
   await launcher.launchExpectingLibrary();
@@ -76,10 +65,7 @@ test("nothing animates when the reader has asked for reduced motion", async ({
 // whose record is still being read renders ReaderPage's pending state, and the transition
 // captures a new page with no head image in it (docs/features/page-transitions.md, "Where the
 // design and the build differ"). The second open is the one with something to land on.
-test("the row's thumbnail carries across into the note's head", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the row's thumbnail carries across into the note's head", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage());
   const library = await launcher.launchExpectingLibrary();
   const shell = launcher.appShell;
@@ -109,11 +95,7 @@ test("the head's image carries back into its row", async ({ launcher, backendSim
 // the image to leave from and 9c's return plays instead. The way back has to be the bar's
 // lent link (OV-167), because clicking the head's own would scroll it back into view first
 // and the image would have something to leave from after all.
-test("coming back from a scrolled note leaves the image behind and plays 9c's return", async ({
-  page,
-  launcher,
-  backendSimulator,
-}) => {
+test("coming back from a scrolled note leaves the image behind and plays 9c's return", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage());
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();
@@ -138,10 +120,7 @@ test("a note with no image is 9c unchanged", async ({ launcher, backendSimulator
 
 // 170h: the image does the travelling, so the pane only crossfades. Without an image to
 // carry, the very same navigation keeps 9c's 10px slide.
-test("the pane holds still while the image travels, and slides when it doesn't", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the pane holds still while the image travels, and slides when it doesn't", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage());
   const library = await launcher.launchExpectingLibrary();
   const shell = launcher.appShell;
@@ -160,11 +139,7 @@ test("without an image the pane keeps 9c's slide", async ({ launcher, backendSim
 // width it can't tell one video from another and it costs the title its column. So there is
 // nothing to carry and 9c plays, which is the same answer the panel gets for its own reason
 // (docs/features/page-transitions.md, "Where the design and the build differ").
-test("a phone has no row thumbnail to carry, so the journey stays 9c", async ({
-  page,
-  launcher,
-  backendSimulator,
-}) => {
+test("a phone has no row thumbnail to carry, so the journey stays 9c", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage());
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();

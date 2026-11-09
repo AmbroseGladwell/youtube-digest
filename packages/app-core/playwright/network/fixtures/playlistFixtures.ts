@@ -15,10 +15,12 @@ export const playlistEntry = (videoId: string, title: string, addedAt: string, o
 });
 
 // The fixture video, added first, and a second one added a day later.
-export const psychologyPlaylist = (entries: PlaylistEntry[] = [
-  playlistEntry(IWFT_VIDEO_ID, "The Simulated Video", "2026-09-01T09:00:00.000Z"),
-  playlistEntry("secondVideo1", "How Your Brain Fills In the Gaps", "2026-09-02T09:00:00.000Z"),
-]): PlaylistLookup => ({
+export const psychologyPlaylist = (
+  entries: PlaylistEntry[] = [
+    playlistEntry(IWFT_VIDEO_ID, "The Simulated Video", "2026-09-01T09:00:00.000Z"),
+    playlistEntry("secondVideo1", "How Your Brain Fills In the Gaps", "2026-09-02T09:00:00.000Z"),
+  ],
+): PlaylistLookup => ({
   id: PlaylistId.parse(PSYCHOLOGY_ID),
   title: "Psychology",
   owner: "Veritasium",

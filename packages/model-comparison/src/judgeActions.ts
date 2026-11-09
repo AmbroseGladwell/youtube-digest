@@ -139,7 +139,8 @@ export class JudgeAnswerError extends Error {
 }
 
 export function actionJudgeFor(writer: ComparedModel, chosen: ComparedModel | null = null): ComparedModel {
-  if (chosen !== null && chosen.provider === writer.provider) throw new Error(`a judge from ${writer.provider} would be judging its own provider's actions`);
+  if (chosen !== null && chosen.provider === writer.provider)
+    throw new Error(`a judge from ${writer.provider} would be judging its own provider's actions`);
   const judge = chosen ?? JUDGES.map(parseComparedModel).find((model) => model.provider !== writer.provider);
   if (judge === undefined) throw new Error(`no judge outside ${writer.provider}`);
   return judge;

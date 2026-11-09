@@ -50,9 +50,7 @@ const sharedPayload = (overview = shared()): SharePayload => ({
   }),
 });
 
-test("someone without an account reads the shared overview, and is offered one of their own", async ({
-  launcher,
-}) => {
+test("someone without an account reads the shared overview, and is offered one of their own", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -87,9 +85,7 @@ test("the sharer's own reason is nowhere on the page", async ({ launcher }) => {
   await page.verifyDoesNotMention(REASON);
 });
 
-test("the transcript that travelled with the copy reads without a store to hold it", async ({
-  launcher,
-}) => {
+test("the transcript that travelled with the copy reads without a store to hold it", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -118,10 +114,7 @@ test("a document with no copy in it is a link that goes nowhere, not a broken pa
 
 // A visitor who saves the copy is onboarded around it: the questions, then the account and
 // the plan, and the copy is their first overview (docs/features/onboarding.md, "From a shared page").
-test("saving starts onboarding around the copy, which is the reveal once the account is made", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("saving starts onboarding around the copy, which is the reveal once the account is made", async ({ launcher, backendSimulator }) => {
   const overview = shared();
   await launcher.launch({ sync: true, defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedPayload(overview));
@@ -191,9 +184,7 @@ test("a visitor with an account can leave the questions, sign in, and land on th
   expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
 });
 
-test("a link pasted beside the copy starts onboarding with it, and one it can't use is refused in place", async ({
-  launcher,
-}) => {
+test("a link pasted beside the copy starts onboarding with it, and one it can't use is refused in place", async ({ launcher }) => {
   await launcher.launch({ sync: true, defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedPayload());
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -224,10 +215,7 @@ test("a reader who is signed in is recognised: the head leads to their overviews
   await launcher.homePage.verifyIsShown();
 });
 
-test("signed in, saving puts the copy among their overviews at once, with no questions asked", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed in, saving puts the copy among their overviews at once, with no questions asked", async ({ launcher, backendSimulator }) => {
   const overview = shared();
   await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedPayload(overview));
@@ -326,10 +314,7 @@ test("what a visitor with no account does is counted against the share, under a 
   expect(backendSimulator.analytics.events()).toEqual([]);
 });
 
-test("a stopped link's visit is counted as one, and so is the visitor making their own", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a stopped link's visit is counted as one, and so is the visitor making their own", async ({ launcher, backendSimulator }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload({ state: "revoked" });
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -345,10 +330,7 @@ test("a stopped link's visit is counted as one, and so is the visitor making the
     ]);
 });
 
-const sharedRecipe = async (
-  launcher: Launcher,
-  overview: ReturnType<typeof makeRecipeOverview>,
-) => {
+const sharedRecipe = async (launcher: Launcher, overview: ReturnType<typeof makeRecipeOverview>) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload({
     state: "shared",
@@ -360,7 +342,11 @@ const sharedRecipe = async (
   await launcher.sharedOverviewPage.verifyIsShown();
 };
 
-test("a shared recipe carries the whole method, opens as written, and can be cooked step by step", async ({ launcher, page, backendSimulator }) => {
+test("a shared recipe carries the whole method, opens as written, and can be cooked step by step", async ({
+  launcher,
+  page,
+  backendSimulator,
+}) => {
   await sharedRecipe(launcher, makeRecipeOverview());
 
   await expect(page.getByText("An overview of a recipe from Example Kitchen")).toBeVisible();
@@ -404,7 +390,10 @@ const sharedRecipeNarrated = (overview: ReturnType<typeof makeRecipeOverview>): 
   };
 };
 
-test("a visitor adjusts a shared recipe as on their own copy, and is told an account reads it aloud adjusted", async ({ launcher, page }) => {
+test("a visitor adjusts a shared recipe as on their own copy, and is told an account reads it aloud adjusted", async ({
+  launcher,
+  page,
+}) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedRecipeNarrated(makeRecipeOverview()));
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -435,7 +424,11 @@ test("a visitor adjusts a shared recipe as on their own copy, and is told an acc
   await launcher.onboardingPage.verifyIsShown();
 });
 
-test("signed in, an adjusted shared recipe is narrated afresh on the visitor's own account", async ({ launcher, page, backendSimulator }) => {
+test("signed in, an adjusted shared recipe is narrated afresh on the visitor's own account", async ({
+  launcher,
+  page,
+  backendSimulator,
+}) => {
   await launcher.launch({ sync: true, syncConnection: signedIn(), defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedRecipeNarrated(makeRecipeOverview()));
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -448,7 +441,10 @@ test("signed in, an adjusted shared recipe is narrated afresh on the visitor's o
   await expect.poll(() => backendSimulator.narration.requestCount()).toBeGreaterThan(0);
 });
 
-test("a recipe shared before the method travelled with it sends the visitor to the page, with nothing to cook", async ({ launcher, page }) => {
+test("a recipe shared before the method travelled with it sends the visitor to the page, with nothing to cook", async ({
+  launcher,
+  page,
+}) => {
   const base = makeRecipeOverview();
   await sharedRecipe(launcher, makeRecipeOverview({ recipe: { ...base.recipe!, steps: [] } }));
 

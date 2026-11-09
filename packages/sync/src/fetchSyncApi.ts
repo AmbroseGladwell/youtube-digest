@@ -12,8 +12,7 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
 
   return {
     handshake: () => answered(request("GET", "/handshake", Handshake)),
-    changes: (since, limit = 200) =>
-      answered(request("GET", `/changes?since=${since}&limit=${limit}`, RecordChangesPage)),
+    changes: (since, limit = 200) => answered(request("GET", `/changes?since=${since}&limit=${limit}`, RecordChangesPage)),
     createOverview: (record, ifMatch) => written(request("POST", "/overviews", WrittenRecord, { body: record, ifMatch })),
     reserveOverview: async (overviewId) => {
       await request("POST", "/overview-reservations", z.unknown(), { body: { overviewId } });
@@ -28,10 +27,8 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
       written(request("PUT", `/overviews/${id}/state`, WrittenRecord, { body: { ...patch, updatedAt } })),
     deleteOverview: (id) => request("DELETE", `/overviews/${id}`, WrittenRecord),
     createTopic: (record) => written(request("POST", "/topics", WrittenRecord, { body: record })),
-    updateSettings: (patch, updatedAt) =>
-      written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
-    saveFollowedPlaylist: (record, ifMatch) =>
-      written(request("POST", "/followed-playlists", WrittenRecord, { body: record, ifMatch })),
+    updateSettings: (patch, updatedAt) => written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
+    saveFollowedPlaylist: (record, ifMatch) => written(request("POST", "/followed-playlists", WrittenRecord, { body: record, ifMatch })),
     deleteFollowedPlaylist: (id) => request("DELETE", `/followed-playlists/${encodeURIComponent(id)}`, WrittenRecord),
     saveTranscript: async (transcript) => {
       await request("PUT", `/transcripts/${encodeURIComponent(transcript.videoId)}`, z.unknown(), { body: transcript });

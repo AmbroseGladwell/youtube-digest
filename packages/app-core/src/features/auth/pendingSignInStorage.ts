@@ -13,10 +13,7 @@ export function readPendingSignIn(storage: Storage = globalThis.localStorage): P
   }
 }
 
-export function writePendingSignIn(
-  pending: PendingSignIn | null,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function writePendingSignIn(pending: PendingSignIn | null, storage: Storage = globalThis.localStorage): void {
   if (pending === null) {
     storage.removeItem(STORAGE_KEY);
   } else {

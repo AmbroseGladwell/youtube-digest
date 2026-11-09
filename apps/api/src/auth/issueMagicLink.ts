@@ -1,9 +1,4 @@
-import {
-  MAGIC_LINK_COOLDOWN_SECONDS,
-  MAGIC_LINK_TTL_MINUTES,
-  type AuthIntent,
-  type AuthSurface,
-} from "@overview/domain";
+import { MAGIC_LINK_COOLDOWN_SECONDS, MAGIC_LINK_TTL_MINUTES, type AuthIntent, type AuthSurface } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { generateToken } from "./generateToken.js";
 import { hashToken } from "./hashToken.js";
@@ -46,10 +41,10 @@ export async function issueMagicLink(
   },
 ): Promise<IssuedMagicLink | null> {
   const email = normaliseEmail(rawEmail);
-  const recent = await sql.query<{ id: string }>(
-    "select id from magic_links where email = $1 and created_at > $2::timestamptz limit 1",
-    [email, new Date(now.getTime() - MAGIC_LINK_COOLDOWN_MS).toISOString()],
-  );
+  const recent = await sql.query<{ id: string }>("select id from magic_links where email = $1 and created_at > $2::timestamptz limit 1", [
+    email,
+    new Date(now.getTime() - MAGIC_LINK_COOLDOWN_MS).toISOString(),
+  ]);
   if (recent.length > 0) {
     return null;
   }

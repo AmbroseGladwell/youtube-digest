@@ -10,9 +10,7 @@ const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, youTubeFetch: true };
 
-test("the side panel's masthead is the mark and Settings, with no + New and no list behind it", async ({
-  launcher,
-}) => {
+test("the side panel's masthead is the mark and Settings, with no + New and no list behind it", async ({ launcher }) => {
   await launcher.launchPanel(panel);
 
   await launcher.appShell.verifyIsParedBackToThePanel();
@@ -20,10 +18,7 @@ test("the side panel's masthead is the mark and Settings, with no + New and no l
 
 // The panel is narrower than the touch breakpoint at any width Chrome is dragged to, but it
 // is a pointer surface, so its bar is the web's and not the phone's.
-test("the panel's + New is the web's button, with the web's gap to the account menu", async ({
-  launcher,
-  page,
-}) => {
+test("the panel's + New is the web's button, with the web's gap to the account menu", async ({ launcher, page }) => {
   await page.setViewportSize({ width: 400, height: 780 });
   await launcher.launchPanel(panel);
 
@@ -38,17 +33,13 @@ test("a phone's full layout still gets the 44px touch target", async ({ launcher
   await launcher.appShell.verifyNewOverviewButtonIsTheTouchTarget();
 });
 
-test("the extension's own full page is still the library, with all of that chrome", async ({
-  launcher,
-}) => {
+test("the extension's own full page is still the library, with all of that chrome", async ({ launcher }) => {
   await launcher.launch({ apiKeys: API_KEYS, surface: "extension" });
 
   await launcher.appShell.verifyCarriesTheLibraryChrome();
 });
 
-test("the panel offers to take the video in front of it, and says what that will cost", async ({
-  launcher,
-}) => {
+test("the panel offers to take the video in front of it, and says what that will cost", async ({ launcher }) => {
   const capture = await launcher.launchPanel(panel);
 
   await capture.verifyOffersToCreate(true);
@@ -57,9 +48,7 @@ test("the panel offers to take the video in front of it, and says what that will
   await capture.verifyCaptionsNoteReads(/captions are already here|Fetching its captions now/);
 });
 
-test("a panel open on something that isn't a video says which page it wants instead", async ({
-  launcher,
-}) => {
+test("a panel open on something that isn't a video says which page it wants instead", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: API_KEYS, activeVideoUrl: null });
 
   await capture.verifyOffersNothingToCreate();
@@ -70,9 +59,7 @@ test("a panel open on something that isn't a video says which page it wants inst
 // own still makes overviews on ours, so in a build with a server it never showed; only the
 // at-limit message routes to keys now. Create stays disabled where nothing can make one,
 // which is a shell with no server and no key — this one.
-test("without keys or a server the panel offers no button that would fail, and asks for nothing", async ({
-  launcher,
-}) => {
+test("without keys or a server the panel offers no button that would fail, and asks for nothing", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
 
   await capture.verifyOffersToCreate(false);
@@ -105,10 +92,7 @@ test("a finished run puts the panel on the overview it just wrote", async ({ lau
   await reader.verifyTitle("The Simulated Video");
 });
 
-test("a failed run says so on the panel and offers to start over rather than stranding it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a failed run says so on the panel and offers to start over rather than stranding it", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.ANTHROPIC_MESSAGES);
   const capture = await launcher.launchPanel(panel);
 
@@ -119,10 +103,7 @@ test("a failed run says so on the panel and offers to start over rather than str
   await capture.verifyOffersToCreate(true);
 });
 
-test("cancelling a run hands the panel back rather than leaving the progress list up", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("cancelling a run hands the panel back rather than leaving the progress list up", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const capture = await launcher.launchPanel(panel);
 
@@ -133,10 +114,7 @@ test("cancelling a run hands the panel back rather than leaving the progress lis
   await capture.verifyOffersToCreate(true);
 });
 
-test("a video already in the library is offered to read, not bought a second time", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a video already in the library is offered to read, not bought a second time", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
@@ -155,10 +133,7 @@ test("a video already in the library is offered to read, not bought a second tim
   await reader.verifyTitle("Held already");
 });
 
-test("the panel's reader drops the trail, the stepper and the rail it has nothing to point at", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the panel's reader drops the trail, the stepper and the rail it has nothing to point at", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-15T00:00:00.000Z" }));
   const overview = makeOverview();
   backendSimulator.overviews.seed({
@@ -174,9 +149,7 @@ test("the panel's reader drops the trail, the stepper and the rail it has nothin
 
 // The panel is a browser that fetches its own captions, so a transcript key is not one of
 // the things it is waiting for (docs/features/transcript-retrieval.md).
-test("the panel creates with the Anthropic key alone, and asks for no transcript key", async ({
-  launcher,
-}) => {
+test("the panel creates with the Anthropic key alone, and asks for no transcript key", async ({ launcher }) => {
   const capture = await launcher.launchPanel({
     apiKeys: ANTHROPIC_KEY,
     activeVideoUrl: WATCHED_URL,

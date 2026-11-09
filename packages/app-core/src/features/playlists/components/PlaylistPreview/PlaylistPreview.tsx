@@ -1,11 +1,5 @@
 import { useEffect, useRef } from "react";
-import {
-  PLAYLIST_ORDERS,
-  PLAYLIST_PACES,
-  type PlaylistLookup,
-  type PlaylistOrder,
-  type PlaylistPace,
-} from "@overview/domain";
+import { PLAYLIST_ORDERS, PLAYLIST_PACES, type PlaylistLookup, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ORDER_LABEL, orderInASentence, orderMeaning } from "../../util/orderCopy.js";
 import { allowanceLine, PACE_LABEL, paceConsequence } from "../../util/paceCopy.js";
@@ -58,8 +52,7 @@ export function PlaylistPreview({
   const firstAction = useRef<HTMLButtonElement>(null);
   const toMake = preview.toMake.length;
   const month = useLeftThisMonth();
-  const allowance =
-    month === null || month.resetsOn === null ? null : allowanceLine(pace, toMake, month.left, month.resetsOn);
+  const allowance = month === null || month.resetsOn === null ? null : allowanceLine(pace, toMake, month.left, month.resetsOn);
 
   useEffect(() => firstAction.current?.focus(), []);
 
@@ -105,7 +98,11 @@ export function PlaylistPreview({
           <StrokeIcon name="listVideo" size={15} />
           YouTube playlist
         </p>
-        <h3 className={`${styles.title} ${stacked ? styles.titleStacked : ""}`} id="playlist-preview-title" data-testid={playlistPreviewTestIds.title}>
+        <h3
+          className={`${styles.title} ${stacked ? styles.titleStacked : ""}`}
+          id="playlist-preview-title"
+          data-testid={playlistPreviewTestIds.title}
+        >
           {lookup.title}
         </h3>
         <p className={styles.owner} data-testid={playlistPreviewTestIds.owner}>
@@ -170,11 +167,7 @@ export function PlaylistPreview({
         {foot}
       </p>
 
-      <div
-        className={`${styles.actions} ${stacked ? styles.actionsStacked : ""}`}
-        role="group"
-        aria-label={`Follow ${lookup.title}`}
-      >
+      <div className={`${styles.actions} ${stacked ? styles.actionsStacked : ""}`} role="group" aria-label={`Follow ${lookup.title}`}>
         {toMake > 0 && (
           <button
             ref={firstAction}

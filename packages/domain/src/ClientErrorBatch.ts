@@ -28,12 +28,21 @@ export type ClientErrorSource = z.infer<typeof ClientErrorSource>;
 // bundle, never a page's address (docs/architecture/errors-and-logs.md, "What an error may carry").
 export const ClientErrorFrame = z
   .object({
-    function: z.string().max(128).regex(/^[\w$.<>[\] -]*$/),
-    file: z.string().max(200).regex(/^[\w./@~+-]*$/),
+    function: z
+      .string()
+      .max(128)
+      .regex(/^[\w$.<>[\] -]*$/),
+    file: z
+      .string()
+      .max(200)
+      .regex(/^[\w./@~+-]*$/),
     line: z.number().int().min(0).max(10_000_000),
     column: z.number().int().min(0).max(10_000_000),
     // The id PostHog's CLI injected into the frame's file, which its source map was uploaded under.
-    chunkId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).optional(),
+    chunkId: z
+      .string()
+      .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+      .optional(),
   })
   .strict();
 export type ClientErrorFrame = z.infer<typeof ClientErrorFrame>;
@@ -50,7 +59,10 @@ export type ClientErrorTrailEntry = z.infer<typeof ClientErrorTrailEntry>;
 export const SentClientError = z
   .object({
     source: ClientErrorSource,
-    type: z.string().max(64).regex(/^[A-Za-z_$][\w$]*$/),
+    type: z
+      .string()
+      .max(64)
+      .regex(/^[A-Za-z_$][\w$]*$/),
     message: z.string().max(MAX_ERROR_MESSAGE_LENGTH + 50),
     handled: z.boolean(),
     frames: z.array(ClientErrorFrame).max(MAX_ERROR_FRAMES),

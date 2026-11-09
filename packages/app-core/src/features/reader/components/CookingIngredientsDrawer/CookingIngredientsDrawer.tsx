@@ -38,7 +38,13 @@ export function CookingIngredientsDrawer({ id, open, onClose, onSettled, childre
     >
       <div className={styles.body}>
         <div className={styles.head}>
-          <button type="button" className={styles.close} aria-label="Close" onClick={onClose} data-testid={cookingIngredientsDrawerTestIds.close}>
+          <button
+            type="button"
+            className={styles.close}
+            aria-label="Close"
+            onClick={onClose}
+            data-testid={cookingIngredientsDrawerTestIds.close}
+          >
             <StrokeIcon name="close" size={16} />
           </button>
         </div>

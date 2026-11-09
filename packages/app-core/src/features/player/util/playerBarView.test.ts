@@ -84,9 +84,7 @@ describe("playerBarView", () => {
   it("names the video while its opening is narrated, before the first line starts", () => {
     const opening = { timings: { lineStarts: [4, 60, 120, 180], durationSeconds: 364 } };
 
-    expect(view({ ...opening, status: "playing" }, 2).label.lead).toBe(
-      "Now playing · The Quiet Return of Nuclear Baseload",
-    );
+    expect(view({ ...opening, status: "playing" }, 2).label.lead).toBe("Now playing · The Quiet Return of Nuclear Baseload");
     expect(view({ ...opening, status: "playing" }, 5).label.lead).toBe("Now playing · Premise");
   });
 

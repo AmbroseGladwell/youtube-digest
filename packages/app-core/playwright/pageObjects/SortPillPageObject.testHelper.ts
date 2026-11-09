@@ -56,14 +56,10 @@ export class SortPillPageObject extends PageObject {
   verifyFocusIsOn = (sort: LibrarySort) =>
     this.step(`verifyFocusIsOn ${sort}`, () => expect(this.get(sortPillTestIds.option(sort))).toBeFocused());
 
-  verifyFocusIsOnTheTrigger = () =>
-    this.step("verifyFocusIsOnTheTrigger", () => expect(this.get(sortPillTestIds.trigger)).toBeFocused());
+  verifyFocusIsOnTheTrigger = () => this.step("verifyFocusIsOnTheTrigger", () => expect(this.get(sortPillTestIds.trigger)).toBeFocused());
 
   verifyChecked = (sort: LibrarySort) =>
     this.step(`verifyChecked ${sort}`, () =>
-      expect(this.page.getByRole("menuitemradio", { checked: true })).toHaveAttribute(
-        "data-testid",
-        sortPillTestIds.option(sort),
-      ),
+      expect(this.page.getByRole("menuitemradio", { checked: true })).toHaveAttribute("data-testid", sortPillTestIds.option(sort)),
     );
 }

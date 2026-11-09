@@ -1,8 +1,5 @@
 import { test } from "../../support/fixtures.testHelper.js";
-import {
-  makeOverview,
-  makeOverviewState,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 test("a seeded library renders one card per overview", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Original video" } }));
@@ -32,7 +29,14 @@ test("the list head drops to the singular on a library of one", async ({ launche
 test("the novelty filter narrows the visible cards", async ({ launcher, backendSimulator }) => {
   const novel = makeOverview({
     source: { ...makeOverview().source, title: "Original video" },
-    verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+    verdict: {
+      novelty: "original",
+      standsOut: { text: "A new idea.", range: null },
+      dubious: false,
+      dubiousClaims: [],
+      reasoning: "x",
+      similarTo: [],
+    },
   });
   const recycled = makeOverview({
     source: { ...makeOverview().source, title: "Common knowledge video" },
@@ -49,10 +53,7 @@ test("the novelty filter narrows the visible cards", async ({ launcher, backendS
   await library.cardWithTitle("Original video").verifyTitle("Original video");
 });
 
-test("the read-status filter is on from the start, and turning it off shows what has been read", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the read-status filter is on from the start, and turning it off shows what has been read", async ({ launcher, backendSimulator }) => {
   const unread = makeOverview({ source: { ...makeOverview().source, title: "Unread video" } });
   const read = makeOverview({ source: { ...makeOverview().source, title: "Read video" } });
   backendSimulator.overviews.seed(unread);
@@ -67,10 +68,7 @@ test("the read-status filter is on from the start, and turning it off shows what
   await library.expectCardCountToBe(2);
 });
 
-test("the search box filters by a case-insensitive substring of the video title", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the search box filters by a case-insensitive substring of the video title", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Platysma exercises" } }));
   backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Compound interest" } }));
 
@@ -86,10 +84,7 @@ test("the search box filters by a case-insensitive substring of the video title"
   await library.expectCardCountToBe(2);
 });
 
-test("filters combine with AND: a video matching only one active filter stays hidden", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("filters combine with AND: a video matching only one active filter stays hidden", async ({ launcher, backendSimulator }) => {
   const matchesNeither = makeOverview({
     source: { ...makeOverview().source, title: "Wrong video" },
     verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },

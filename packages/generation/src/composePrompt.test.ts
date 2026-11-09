@@ -127,9 +127,7 @@ test("with an empty transcript, watch-it-anyway's range can only be null", () =>
     sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, watchAnyway: true },
   });
   const picked = schema.pick({ watchAnyway: true });
-  assert.doesNotThrow(() =>
-    picked.parse({ watchAnyway: { answer: "no", reason: "x", range: null } }),
-  );
+  assert.doesNotThrow(() => picked.parse({ watchAnyway: { answer: "no", reason: "x", range: null } }));
   assert.throws(() =>
     picked.parse({
       watchAnyway: { answer: "partial", reason: "x", range: { startSegmentIndex: 0, endSegmentIndex: 0 } },
@@ -146,9 +144,7 @@ const chapterAt = (startSegmentIndex: number) => ({
 test("a chapter names where it starts as a segment index, never a time the model would have to invent", () => {
   const picked = composePrompt(baseInput).schema.pick({ chapters: true });
   assert.doesNotThrow(() => picked.parse({ chapters: [chapterAt(0), chapterAt(1)] }));
-  assert.throws(() =>
-    picked.parse({ chapters: [{ title: "A chapter", summary: "What it covers.", startMs: 0 }] }),
-  );
+  assert.throws(() => picked.parse({ chapters: [{ title: "A chapter", summary: "What it covers.", startMs: 0 }] }));
 });
 
 test("the first chapter starts at segment 0 and each one starts after the one before it", () => {
@@ -288,7 +284,12 @@ test("everything the video supplies reaches the model inside the video block, an
   });
   const block = userMessage.slice(userMessage.indexOf("<video>"), userMessage.indexOf("</video>"));
 
-  for (const supplied of ["<title>Example</title>", "<channel>Example Channel</channel>", "<description>A description.</description>", "[1] Here is the technique."]) {
+  for (const supplied of [
+    "<title>Example</title>",
+    "<channel>Example Channel</channel>",
+    "<description>A description.</description>",
+    "[1] Here is the technique.",
+  ]) {
     assert.ok(block.includes(supplied), `expected ${supplied} inside the video block`);
   }
   assert.ok(!block.includes("My own reason."));
@@ -322,8 +323,17 @@ test("a recipe is optional, and a step names its stretch as segment indexes insi
   const recipe = (steps: unknown[]) => ({ recipe: { summary: "A stew.", ingredients: ["salt"], steps } });
   const recipeField = schema.shape.recipe as z.ZodType;
   assert.equal(recipeField.safeParse(null).success, true);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 1 } }]).recipe).success, true);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 2 } }]).recipe).success, false);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 0 } }]).recipe).success, false);
+  assert.equal(
+    recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 1 } }]).recipe).success,
+    true,
+  );
+  assert.equal(
+    recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 2 } }]).recipe).success,
+    false,
+  );
+  assert.equal(
+    recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 0 } }]).recipe).success,
+    false,
+  );
   assert.equal(recipeField.safeParse(recipe([{ text: "Serve.", group: null, range: null }]).recipe).success, true);
 });

@@ -93,7 +93,9 @@ export async function finishAccountDeletion(
   let lastError: string | null = null;
   const failed = (step: string, error: unknown) => {
     lastError = redactErrorMessage(error instanceof Error ? error.message : String(error));
-    log.error(apiLogLines.auth.accountDeletionStepFailed({ accountId: deletion.accountId, deletionId: deletion.id, step, error: lastError }));
+    log.error(
+      apiLogLines.auth.accountDeletionStepFailed({ accountId: deletion.accountId, deletionId: deletion.id, step, error: lastError }),
+    );
   };
 
   if (steps.narration === "pending" || steps.narration === "failed" || steps.narration === "not_configured") {

@@ -1,9 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import {
-  makeCaptionRun,
-  makeTranscriptSegment,
-} from "./TranscriptSegmentFactory.testHelper.js";
+import { makeCaptionRun, makeTranscriptSegment } from "./TranscriptSegmentFactory.testHelper.js";
 import { transcriptBlocks } from "./transcriptBlocks.js";
 
 const ONE_SENTENCE_IN_FOUR_CUES = [
@@ -24,13 +21,14 @@ describe("transcriptBlocks", () => {
     const blocks = transcriptBlocks(makeCaptionRun(ONE_SENTENCE_IN_FOUR_CUES, { cueMs: 3500 }));
 
     assert.equal(blocks.length, 1);
-    assert.equal(blocks[0]?.text, "The claim starts here, and the whole of it takes four captions before it finally reaches its first full stop.");
+    assert.equal(
+      blocks[0]?.text,
+      "The claim starts here, and the whole of it takes four captions before it finally reaches its first full stop.",
+    );
   });
 
   it("keeps the start time of the caption the block's first words came from", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(ONE_SENTENCE_IN_FOUR_CUES, { startMs: 65_000, cueMs: 3500 }),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(ONE_SENTENCE_IN_FOUR_CUES, { startMs: 65_000, cueMs: 3500 }));
 
     assert.equal(blocks[0]?.startMs, 65_000);
   });
@@ -42,9 +40,7 @@ describe("transcriptBlocks", () => {
   });
 
   it("runs a short sentence on into the next rather than leaving it on its own", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(["And this is where it ends.", "Thanks for watching."]),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(["And this is where it ends.", "Thanks for watching."]));
 
     assert.equal(blocks.length, 1);
     assert.equal(blocks[0]?.text, "And this is where it ends. Thanks for watching.");
@@ -54,9 +50,7 @@ describe("transcriptBlocks", () => {
     const longSentence =
       "This first sentence carries on for long enough on its own to pass the point where a block " +
       "is considered a comfortable size, which takes rather more words than you would think it might.";
-    const blocks = transcriptBlocks(
-      makeCaptionRun([longSentence, "And this is the second thought."]),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun([longSentence, "And this is the second thought."]));
 
     assert.ok(longSentence.length >= 180);
     assert.equal(blocks.length, 2);
@@ -84,9 +78,7 @@ describe("transcriptBlocks", () => {
   });
 
   it("breaks captions with no punctuation at all once they run past the block limit", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(Array(10).fill(UNPUNCTUATED_CUE), { cueMs: 3000 }),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(Array(10).fill(UNPUNCTUATED_CUE), { cueMs: 3000 }));
 
     assert.equal(blocks.length, 2);
     const length = blocks[0]?.text.length ?? 0;
@@ -95,9 +87,7 @@ describe("transcriptBlocks", () => {
   });
 
   it("breaks captions with no punctuation at all once they have run for twenty-five seconds", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(Array(10).fill(UNPUNCTUATED_CUE), { cueMs: 5000 }),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(Array(10).fill(UNPUNCTUATED_CUE), { cueMs: 5000 }));
 
     assert.equal(blocks[1]?.startMs, 25_000);
   });
@@ -119,12 +109,7 @@ describe("transcriptBlocks", () => {
   });
 
   it("drops the non-speech annotations YouTube writes in square brackets", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun([
-        "[Applause] That is the whole idea.",
-        "[MUSIC PLAYING] And here is the next one.",
-      ]),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(["[Applause] That is the whole idea.", "[MUSIC PLAYING] And here is the next one."]));
 
     assert.equal(blocks[0]?.text, "That is the whole idea. And here is the next one.");
   });
@@ -152,20 +137,19 @@ describe("transcriptBlocks", () => {
   });
 
   it("starts a new block when a new speaker starts talking", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(["I think that is right.", ">> But I disagree with that."]),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(["I think that is right.", ">> But I disagree with that."]));
 
     assert.equal(blocks.length, 2);
     assert.equal(blocks[1]?.text, "But I disagree with that.");
   });
 
   it("records which blocks a new speaker opened, since the marker itself is stripped", () => {
-    const blocks = transcriptBlocks(
-      makeCaptionRun(["I think that is right.", ">> But I disagree with that."]),
-    );
+    const blocks = transcriptBlocks(makeCaptionRun(["I think that is right.", ">> But I disagree with that."]));
 
-    assert.deepEqual(blocks.map((block) => block.speakerChange), [false, true]);
+    assert.deepEqual(
+      blocks.map((block) => block.speakerChange),
+      [false, true],
+    );
   });
 
   it("gives each turn of an interview its own block, however short the turn is", () => {
@@ -199,12 +183,15 @@ describe("transcriptBlocks", () => {
       },
     ].map((cue) => makeTranscriptSegment(cue));
 
-    assert.deepEqual(transcriptBlocks(interview).map((block) => block.text), [
-      "Today we're speaking with Professor Tracy K. Smith, Pulitzer Prizewinning poet, former US poet laurate, and professor of English at Harvard University.",
-      "Thank you so much for being here, Professor Smith.",
-      "Thank you.",
-      "I came into your class after hearing you speak at the Harvard bookstore about your latest book, Fearless.",
-    ]);
+    assert.deepEqual(
+      transcriptBlocks(interview).map((block) => block.text),
+      [
+        "Today we're speaking with Professor Tracy K. Smith, Pulitzer Prizewinning poet, former US poet laurate, and professor of English at Harvard University.",
+        "Thank you so much for being here, Professor Smith.",
+        "Thank you.",
+        "I came into your class after hearing you speak at the Harvard bookstore about your latest book, Fearless.",
+      ],
+    );
   });
 
   it("would otherwise run two speakers' words together in one block", () => {

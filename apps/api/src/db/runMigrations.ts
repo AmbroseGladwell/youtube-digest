@@ -46,10 +46,7 @@ export async function runMigrations(
   for (const { file, version, name } of files) {
     const ran = await sql.transaction(async (tx) => {
       await tx.query("select pg_advisory_xact_lock($1)", [MIGRATIONS_LOCK]);
-      const existing = await tx.query<{ version: number }>(
-        "select version from schema_migrations where version = $1",
-        [version],
-      );
+      const existing = await tx.query<{ version: number }>("select version from schema_migrations where version = $1", [version]);
       if (existing.length > 0) {
         return false;
       }

@@ -3,11 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
-import {
-  makeArticleOverview,
-  makeOverview,
-  makeRecipeOverview,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 // Onboarding in the extension's side panel (docs/features/onboarding.md, designs 46n–46q and
 // 205g–205g-4, where Start became the web's own).
@@ -108,10 +104,7 @@ test("the sheet takes the panel over, and every suggestion is offered", async ({
   await onboarding.sentence.verifySectionName("who", "Who you are: retired. Edit.");
 });
 
-test("with no video beside it, Start takes a pasted link instead, and refuses one it can't use", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with no video beside it, Start takes a pasted link instead, and refuses one it can't use", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel({ ...signedOutPanel, activeVideoUrl: null });
   const start = await launcher.homePage.verifyShowsStart();
@@ -124,16 +117,13 @@ test("with no video beside it, Start takes a pasted link instead, and refuses on
   await launcher.onboardingPage.verifyOnScreen("analytics");
 });
 
-test("signed out on a device that has had an account, the panel offers signing back in, and no overviews", async ({
-  launcher,
-}) => {
+test("signed out on a device that has had an account, the panel offers signing back in, and no overviews", async ({ launcher }) => {
   await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
 
   await launcher.signedOutGate.verifyIsShown();
   await launcher.signedOutGate.verifyTitle("Sign in to see your overviews");
   await launcher.homePage.verifyStartIsAbsent();
 });
-
 
 // Designs 205g and 205g-4: signed out, the panel is the web's Start, Sign in stands under
 // Make my overview as a peer, and nothing anywhere offers to create an account instead.
@@ -212,7 +202,6 @@ test("below 720 the panel scrolls", async ({ launcher, backendSimulator, page })
 
   await launcher.sampleDeck.verifyIsShown();
 });
-
 
 test("beside a page, the panel's Start offers it, and the page is read in the browser rather than spending a trial read", async ({
   launcher,

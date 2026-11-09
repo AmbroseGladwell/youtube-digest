@@ -53,10 +53,7 @@ test("our own server fetches transcripts only when switched on, through the prox
     }).transcriptService,
     { proxyUrl: "http://user-{session}:pass@gate.example.com:7000", proxyDailyFetches: 300 },
   );
-  assert.equal(
-    loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "http://user:pass@gate.example.com:7000" }).transcriptService,
-    null,
-  );
+  assert.equal(loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "http://user:pass@gate.example.com:7000" }).transcriptService, null);
   assert.throws(() => loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "socks5://gate.example.com:7000" }), ConfigError);
 });
 
@@ -100,8 +97,7 @@ test("real mail without a key, a sender, or an https app address is refused", ()
   assert.throws(() => loadConfig({ ...brevo, MAIL_FROM: "signin@overview.example" }), ConfigError);
   assert.throws(() => loadConfig({ ...brevo, BREVO_API_KEY: "xkeysib-key" }), ConfigError);
   assert.throws(
-    () =>
-      loadConfig({ ...brevo, APP_URL: "http://localhost:5173", BREVO_API_KEY: "xkeysib-key", MAIL_FROM: "signin@overview.example" }),
+    () => loadConfig({ ...brevo, APP_URL: "http://localhost:5173", BREVO_API_KEY: "xkeysib-key", MAIL_FROM: "signin@overview.example" }),
     ConfigError,
   );
 });
@@ -115,18 +111,12 @@ test("the allowed origins are a comma-separated list, with the extension's own a
     DATABASE_URL,
     CORS_ALLOWED_ORIGINS: "chrome-extension://abcdefghijklmnopabcdefghijklmnop, http://localhost:5173",
   });
-  assert.deepEqual(config.allowedOrigins, [
-    "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
-    "http://localhost:5173",
-  ]);
+  assert.deepEqual(config.allowedOrigins, ["chrome-extension://abcdefghijklmnopabcdefghijklmnop", "http://localhost:5173"]);
 });
 
 test("an allowed origin that is a wildcard or carries a path is refused", () => {
   assert.throws(() => loadConfig({ DATABASE_URL, CORS_ALLOWED_ORIGINS: "*" }), ConfigError);
-  assert.throws(
-    () => loadConfig({ DATABASE_URL, CORS_ALLOWED_ORIGINS: "https://sync.example.com/api" }),
-    ConfigError,
-  );
+  assert.throws(() => loadConfig({ DATABASE_URL, CORS_ALLOWED_ORIGINS: "https://sync.example.com/api" }), ConfigError);
 });
 
 test("serves no web app unless told where one is", () => {
@@ -177,10 +167,7 @@ test("refuses to start without a database", () => {
 });
 
 test("refuses a floor above the server's own client version", () => {
-  assert.throws(
-    () => loadConfig({ DATABASE_URL, MIN_SUPPORTED_CLIENT_VERSION: String(CLIENT_VERSION + 1) }),
-    ConfigError,
-  );
+  assert.throws(() => loadConfig({ DATABASE_URL, MIN_SUPPORTED_CLIENT_VERSION: String(CLIENT_VERSION + 1) }), ConfigError);
 });
 
 test("a floor that is not a whole number is refused", () => {
@@ -202,10 +189,11 @@ test("overviews are made on our key only once there is a key, under a global dai
 });
 
 test("erasing a deleted account's records at PostHog is on with the personal key, which has to name its project", () => {
-  assert.deepEqual(
-    loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test", POSTHOG_PROJECT_ID: "289890" }).analytics.erasure,
-    { personalApiKey: "phx_test", projectId: "289890", host: "https://eu.posthog.com" },
-  );
+  assert.deepEqual(loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test", POSTHOG_PROJECT_ID: "289890" }).analytics.erasure, {
+    personalApiKey: "phx_test",
+    projectId: "289890",
+    host: "https://eu.posthog.com",
+  });
   assert.throws(() => loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test" }), ConfigError);
   assert.throws(() => loadConfig({ DATABASE_URL, POSTHOG_PERSONAL_API_KEY: "phx_test", POSTHOG_PROJECT_ID: "not-a-number" }), ConfigError);
 });

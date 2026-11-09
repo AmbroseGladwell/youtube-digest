@@ -146,11 +146,10 @@ export class OurKeyGenerator {
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
     try {
-      const overview = await generateOverviewOf(
-        createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }),
-        input,
-        { id: overviewId, savedAt: now.toISOString() },
-      );
+      const overview = await generateOverviewOf(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }), input, {
+        id: overviewId,
+        savedAt: now.toISOString(),
+      });
       const tokens = metered.calls.reduce(
         (total, call) => ({
           input: total.input + (call.usage === null ? 0 : call.usage.uncachedInputTokens + call.usage.cachedInputTokens),
@@ -220,7 +219,11 @@ export class OurKeyGenerator {
     return this.#smallPass("topicSuggestions", (client) => generateTopicSuggestions(client, input), log);
   }
 
-  async #smallPass<Result>(pass: "profile" | "forAnyone" | "topics" | "topicSuggestions", run: (client: GenerationClient) => Promise<Result>, log: FastifyBaseLogger): Promise<Result> {
+  async #smallPass<Result>(
+    pass: "profile" | "forAnyone" | "topics" | "topicSuggestions",
+    run: (client: GenerationClient) => Promise<Result>,
+    log: FastifyBaseLogger,
+  ): Promise<Result> {
     const { apiKey, http, clock } = this.#options;
     const startedAt = clock().getTime();
     const metered = meteredFetch(ourKeyModel.provider, http);

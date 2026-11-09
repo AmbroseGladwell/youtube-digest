@@ -30,7 +30,10 @@ async function toTheReveal(launcher: Launcher, { sentence }: { sentence: boolean
   return launcher.readerPage.verifyIsShown();
 }
 
-test("the reveal flips How to apply to the version for anyone and back, by mouse and by arrow key", async ({ launcher, backendSimulator }) => {
+test("the reveal flips How to apply to the version for anyone and back, by mouse and by arrow key", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.writesHowToApply(["Dice a week of onions on Sunday."]);
   await toTheReveal(launcher, { sentence: true });

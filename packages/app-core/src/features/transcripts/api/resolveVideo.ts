@@ -56,10 +56,7 @@ export interface ResolvedVideoWithSource extends ResolvedVideo {
 
 // The rungs in order, each asked only if the one before could not answer. The store is
 // read before any of them (docs/features/transcript-retrieval.md).
-export async function resolveVideo(
-  pastedUrl: string,
-  deps: VideoResolutionDeps,
-): Promise<ResolvedVideoWithSource> {
+export async function resolveVideo(pastedUrl: string, deps: VideoResolutionDeps): Promise<ResolvedVideoWithSource> {
   const url = canonicalYouTubeUrl(pastedUrl) ?? pastedUrl;
   const { stopwatch } = deps;
   const cached = await (stopwatch
@@ -115,10 +112,7 @@ async function saveResolved(resolved: ResolvedVideo, transcriptStore: Transcript
 
 // The url is this request's, not the one the first fetch happened to use: everything else
 // describes the video, but the url is what the reader's timestamp links point at.
-async function readCachedVideo(
-  url: string,
-  transcriptStore: TranscriptStore,
-): Promise<ResolvedVideo | null> {
+async function readCachedVideo(url: string, transcriptStore: TranscriptStore): Promise<ResolvedVideo | null> {
   const parsedId = parseVideoId(url);
   if (parsedId === null) return null;
 

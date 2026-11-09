@@ -27,9 +27,7 @@ describe("extractYouTubeVideoId", () => {
   });
 
   it("reads the id from a live URL, as the iOS share sheet gives for a past stream", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/live/TOk-DUDmN6E?is=2_N5yomNqBmNf2yl")).toBe(
-      "TOk-DUDmN6E",
-    );
+    expect(extractYouTubeVideoId("https://www.youtube.com/live/TOk-DUDmN6E?is=2_N5yomNqBmNf2yl")).toBe("TOk-DUDmN6E");
   });
 
   it("reads the id from a /v/ URL", () => {

@@ -159,13 +159,7 @@ export function SampleDeck({ samples, phone, onFront }: SampleDeckProps) {
         <h2 id={headingId} className={styles.heading}>
           Or try a sample
         </h2>
-        <button
-          type="button"
-          className={styles.toggle}
-          aria-expanded={expanded}
-          onClick={toggleAll}
-          data-testid={sampleDeckTestIds.toggle}
-        >
+        <button type="button" className={styles.toggle} aria-expanded={expanded} onClick={toggleAll} data-testid={sampleDeckTestIds.toggle}>
           {!phone && <StrokeIcon name={expanded ? "stack" : "layoutGrid"} size={14} />}
           {expanded ? (phone ? "One at a time" : "Show one at a time") : phone ? `See all ${n}` : `See all ${n} samples`}
         </button>
@@ -285,7 +279,13 @@ export function SampleDeck({ samples, phone, onFront }: SampleDeckProps) {
             Sample {front + 1} of {n}
           </span>
           <span className={styles.buttons}>
-            <button type="button" className={styles.round} aria-label="Previous sample" onClick={() => step(-1)} data-testid={sampleDeckTestIds.previous}>
+            <button
+              type="button"
+              className={styles.round}
+              aria-label="Previous sample"
+              onClick={() => step(-1)}
+              data-testid={sampleDeckTestIds.previous}
+            >
               <StrokeIcon name="chevronLeft" size={phone ? 18 : 16} />
             </button>
             <button
@@ -303,7 +303,13 @@ export function SampleDeck({ samples, phone, onFront }: SampleDeckProps) {
             >
               <StrokeIcon name={playing ? "pause" : "play"} size={phone ? 16 : 15} />
             </button>
-            <button type="button" className={styles.round} aria-label="Next sample" onClick={() => step(1)} data-testid={sampleDeckTestIds.next}>
+            <button
+              type="button"
+              className={styles.round}
+              aria-label="Next sample"
+              onClick={() => step(1)}
+              data-testid={sampleDeckTestIds.next}
+            >
               <StrokeIcon name="chevronRight" size={phone ? 18 : 16} />
             </button>
           </span>
@@ -410,7 +416,8 @@ function placement(o: {
     p.hidden = true;
     p.z = 11;
     p.opacity = 0;
-    if (!reduced) p.transform = fling ? `translate(${fling * 440}px, 36px) rotate(${fling * 16}deg)` : "translate(-48px, 16px) rotate(-6deg)";
+    if (!reduced)
+      p.transform = fling ? `translate(${fling * 440}px, 36px) rotate(${fling * 16}deg)` : "translate(-48px, 16px) rotate(-6deg)";
     return p;
   }
   behind(true);

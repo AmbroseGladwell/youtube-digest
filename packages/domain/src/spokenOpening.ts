@@ -1,10 +1,7 @@
 import { sourceName } from "./sourceFacts.js";
 import type { Source } from "./Source.js";
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 const monthAndYear = (iso: string) => {
   const date = new Date(iso);

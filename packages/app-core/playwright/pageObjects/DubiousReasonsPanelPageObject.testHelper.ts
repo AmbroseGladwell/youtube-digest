@@ -9,8 +9,7 @@ export class DubiousReasonsPanelPageObject extends PageObject {
       return this;
     });
 
-  verifyIsNotShown = () =>
-    this.step("verifyIsNotShown", () => this.expectNotToBeVisible(dubiousReasonsPanelTestIds.root));
+  verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(dubiousReasonsPanelTestIds.root));
 
   verifyFocusIsOnHeading = () =>
     this.step("verifyFocusIsOnHeading", () => expect(this.get(dubiousReasonsPanelTestIds.heading)).toBeFocused());
@@ -18,8 +17,7 @@ export class DubiousReasonsPanelPageObject extends PageObject {
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () => expect(this.get(dubiousReasonsPanelTestIds.count)).toHaveText(count));
 
-  verifyShowsNoCount = () =>
-    this.step("verifyShowsNoCount", () => this.expectNotToBeVisible(dubiousReasonsPanelTestIds.count));
+  verifyShowsNoCount = () => this.step("verifyShowsNoCount", () => this.expectNotToBeVisible(dubiousReasonsPanelTestIds.count));
 
   verifyClaimsRead = (claims: string[]) =>
     this.step(`verifyClaimsRead ${claims.join(" | ")}`, () =>
@@ -27,9 +25,7 @@ export class DubiousReasonsPanelPageObject extends PageObject {
     );
 
   verifyBasesRead = (bases: string[]) =>
-    this.step(`verifyBasesRead ${bases.join(" | ")}`, () =>
-      expect(this.get(dubiousReasonsPanelTestIds.basis)).toHaveText(bases),
-    );
+    this.step(`verifyBasesRead ${bases.join(" | ")}`, () => expect(this.get(dubiousReasonsPanelTestIds.basis)).toHaveText(bases));
 
   verifyReasonsMention = (reasons: string[]) =>
     this.step(`verifyReasonsMention ${reasons.join(" | ")}`, async () => {

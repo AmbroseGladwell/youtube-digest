@@ -199,7 +199,9 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   if (named === null && pack === null && PACK_WORD.test(rest)) return { kind: "unreadable", line };
   const afterUnit = named === null ? rest : rest.slice(spaced.length + named.length);
   if (named !== null && PACK_WORD.test(afterUnit)) {
-    return high === null ? packsOf(line, lead, `${amount[0]}${rest.slice(0, spaced.length + named.length)}`, afterUnit, factor) : { kind: "unreadable", line };
+    return high === null
+      ? packsOf(line, lead, `${amount[0]}${rest.slice(0, spaced.length + named.length)}`, afterUnit, factor)
+      : { kind: "unreadable", line };
   }
   const packSized = named === null && pack === null && PACK_SIZE.test(afterUnit);
   if (ANY_NUMBER.test(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit)) return { kind: "unreadable", line };

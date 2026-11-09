@@ -31,12 +31,7 @@ export function OnboardingPlan({ made, sample, onFree }: OnboardingPlanProps) {
 
       <div className={styles.cards}>
         <PlanCard name="Free" price="Free" onUs="5 overviews a month on us" ownKey="10 more with your own key">
-          <button
-            type="button"
-            className={styles.choose}
-            onClick={onFree}
-            data-testid={onboardingPlanTestIds.continueWithFree}
-          >
+          <button type="button" className={styles.choose} onClick={onFree} data-testid={onboardingPlanTestIds.continueWithFree}>
             Continue with Free
           </button>
         </PlanCard>

@@ -7,13 +7,7 @@ import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
 import { milestonesColouredHere, rememberMilestonesColoured } from "../../milestonesColouredStorage.js";
 import { useMilestones } from "../../useMilestones.js";
 import { milestoneColourStyle } from "../../util/milestoneColourStyle.js";
-import {
-  formatReachedOn,
-  milestoneTiles,
-  spokenTimeToGo,
-  timeToGo,
-  type MilestoneTile,
-} from "../../util/milestoneTiles.js";
+import { formatReachedOn, milestoneTiles, spokenTimeToGo, timeToGo, type MilestoneTile } from "../../util/milestoneTiles.js";
 import { MilestoneCard } from "../MilestoneCard/MilestoneCard.js";
 import { TimeSavedFigure } from "../TimeSavedFigure/TimeSavedFigure.js";
 import styles from "./MilestonesSection.module.scss";
@@ -92,10 +86,7 @@ export function MilestonesSection() {
               aria-valuemax={next.milestone.minutes}
               aria-valuenow={minutes}
             >
-              <div
-                className={styles.bar}
-                style={{ width: `${((minutes - next.from) / (next.milestone.minutes - next.from)) * 100}%` }}
-              />
+              <div className={styles.bar} style={{ width: `${((minutes - next.from) / (next.milestone.minutes - next.from)) * 100}%` }} />
             </div>
           </div>
         ) : (
@@ -134,17 +125,13 @@ export function MilestonesSection() {
                 data-state={tile.state}
                 data-testid={milestonesSectionTestIds.tile(id)}
               >
-                {isReached && (
-                  <span className={`${styles.fill} ${flood >= 0 ? styles.flood : ""}`} aria-hidden="true" />
-                )}
+                {isReached && <span className={`${styles.fill} ${flood >= 0 ? styles.flood : ""}`} aria-hidden="true" />}
                 <span className={styles.tileName} aria-hidden="true">
                   {tile.milestone.label}
                 </span>
                 <span className={styles.tileDetail} aria-hidden="true">
                   {tile.state === "reached" ? (
-                    <span className={styles.reachedOn}>
-                      {tile.reachedAt === null ? "Reached" : formatReachedOn(tile.reachedAt, now)}
-                    </span>
+                    <span className={styles.reachedOn}>{tile.reachedAt === null ? "Reached" : formatReachedOn(tile.reachedAt, now)}</span>
                   ) : (
                     <span className={styles.tileToGo}>{timeToGo(tile.toGo)}</span>
                   )}
@@ -174,9 +161,7 @@ export function MilestonesSection() {
             key={shown.milestone.id}
             milestone={shown.milestone}
             minutes={shown.milestone.minutes}
-            {...(shown.state === "reached" && shown.reachedAt !== null
-              ? { reachedOn: formatReachedOn(shown.reachedAt, now) }
-              : {})}
+            {...(shown.state === "reached" && shown.reachedAt !== null ? { reachedOn: formatReachedOn(shown.reachedAt, now) } : {})}
             onLineChosen={(by) => milestones.lineChosen(shown.milestone.id, by)}
           />
         </div>

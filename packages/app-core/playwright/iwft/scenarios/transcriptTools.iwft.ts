@@ -12,18 +12,13 @@ const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
 // them (docs/features/transcript-storage.md's silenceMs is what separates them).
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(
-    [
-      "Productivity is the claim here,",
-      "and productivity is the trap",
-      "that this whole video sets",
-      "for anyone listening.",
-    ],
+    ["Productivity is the claim here,", "and productivity is the trap", "that this whole video sets", "for anyone listening."],
     { startMs: 0, cueMs: 3500 },
   ),
-  ...makeCaptionRun(
-    ["The second thing about productivity", "is that it gets measured badly", "almost everywhere."],
-    { startMs: 65_000, cueMs: 4000 },
-  ),
+  ...makeCaptionRun(["The second thing about productivity", "is that it gets measured badly", "almost everywhere."], {
+    startMs: 65_000,
+    cueMs: 4000,
+  }),
   ...makeCaptionRun(["And this is where it ends.", "Thanks for watching."], {
     startMs: 3_661_000,
     cueMs: 3000,
@@ -45,15 +40,10 @@ const seedTranscript = (backendSimulator: {
       channel: "Practical Engineering",
     },
   });
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 };
 
-test("searching the transcript marks every hit and counts them", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("searching the transcript marks every hit and counts them", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -67,10 +57,7 @@ test("searching the transcript marks every hit and counts them", async ({
   await reader.verifyCurrentMatchReads("Productivity");
 });
 
-test("the steppers walk the hits and wrap round rather than stopping at the last one", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the steppers walk the hits and wrap round rather than stopping at the last one", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -88,10 +75,7 @@ test("the steppers walk the hits and wrap round rather than stopping at the last
   await reader.verifyMatchCountReads("3/3");
 });
 
-test("the field clears from its own button, leaving the transcript whole again", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the field clears from its own button, leaving the transcript whole again", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -108,10 +92,7 @@ test("the field clears from its own button, leaving the transcript whole again",
   await reader.verifyHighlightedMatchCountIs(0);
 });
 
-test("Enter walks the hits and Escape empties the field, as a browser's own find does", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Enter walks the hits and Escape empties the field, as a browser's own find does", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -129,10 +110,7 @@ test("Enter walks the hits and Escape empties the field, as a browser's own find
   await reader.verifyMatchCountIsHidden();
 });
 
-test("a search that finds nothing says so rather than leaving a count of zero", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a search that finds nothing says so rather than leaving a count of zero", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -145,11 +123,7 @@ test("a search that finds nothing says so rather than leaving a count of zero", 
   await reader.verifyMatchSteppersAreDisabled();
 });
 
-test("copying puts the whole transcript, and the video it came from, on the clipboard", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("copying puts the whole transcript, and the video it came from, on the clipboard", async ({ launcher, backendSimulator, page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
@@ -167,11 +141,7 @@ test("copying puts the whole transcript, and the video it came from, on the clip
   expect(copied).toContain("1:05\tThe second thing about productivity");
 });
 
-test("exporting writes the same text to a file named after the video", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("exporting writes the same text to a file named after the video", async ({ launcher, backendSimulator, page }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -180,15 +150,10 @@ test("exporting writes the same text to a file named after the video", async ({
   const download = page.waitForEvent("download");
   await reader.clickExportTranscript();
 
-  expect((await download).suggestedFilename()).toBe(
-    "the-quiet-return-of-nuclear-baseload-transcript.txt",
-  );
+  expect((await download).suggestedFilename()).toBe("the-quiet-return-of-nuclear-baseload-transcript.txt");
 });
 
-test("a note with no stored transcript offers no tools to copy, export or search it with", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note with no stored transcript offers no tools to copy, export or search it with", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({ ...overview, source: { ...overview.source, id: VIDEO_ID } });
   const library = await launcher.launchExpectingLibrary();

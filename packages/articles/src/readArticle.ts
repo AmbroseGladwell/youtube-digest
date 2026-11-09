@@ -9,8 +9,7 @@ const MOST_WORDS_IN_A_PAYWALL_TEASER = 400;
 const FEWEST_WORDS_TO_READ_WITHOUT_MARKUP = 500;
 const MOST_WORDS_PER_SENTENCE_OF_PROSE = 60;
 
-const wordsPerSentence = (text: string): number =>
-  wordCount(text) / Math.max(text.match(/[.!?]["”’)]?(\s|$)/g)?.length ?? 1, 1);
+const wordsPerSentence = (text: string): number => wordCount(text) / Math.max(text.match(/[.!?]["”’)]?(\s|$)/g)?.length ?? 1, 1);
 
 // Readability takes the document apart as it reads, so it is handed a copy: this one is the
 // page in the reader's tab. isProbablyReaderable looks for paragraphs, so prose laid out

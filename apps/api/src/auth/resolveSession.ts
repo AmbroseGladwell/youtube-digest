@@ -47,13 +47,23 @@ export async function resolveSession(
   const slid = now.getTime() - new Date(row.last_seen_at).getTime() > SESSION_TOUCH_INTERVAL_MS;
   if (slid) {
     expiresAt = sessionExpiry(now, sessionTtlDays);
-    await sql.query(
-      "update sessions set last_seen_at = $2::timestamptz, expires_at = $3::timestamptz where token_hash = $1",
-      [tokenHash, now.toISOString(), expiresAt],
-    );
+    await sql.query("update sessions set last_seen_at = $2::timestamptz, expires_at = $3::timestamptz where token_hash = $1", [
+      tokenHash,
+      now.toISOString(),
+      expiresAt,
+    ]);
   }
   return {
-    session: { id: row.id, accountId: AccountId.parse(row.account_id), email: row.email, firstName: row.first_name, expiresAt, createdAt: iso(row.created_at), tokenHash, transport },
+    session: {
+      id: row.id,
+      accountId: AccountId.parse(row.account_id),
+      email: row.email,
+      firstName: row.first_name,
+      expiresAt,
+      createdAt: iso(row.created_at),
+      tokenHash,
+      transport,
+    },
     slid,
   };
 }

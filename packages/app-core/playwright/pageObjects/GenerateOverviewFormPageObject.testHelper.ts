@@ -10,14 +10,11 @@ export class GenerateOverviewFormPageObject extends PageObject {
       return this;
     });
 
-  verifyIsHidden = () =>
-    this.step("verifyIsHidden", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeHidden());
+  verifyIsHidden = () => this.step("verifyIsHidden", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeHidden());
 
-  verifyUrlInputVisible = () =>
-    this.step("verifyUrlInputVisible", () => this.expectToBeVisible(generateOverviewFormTestIds.urlInput));
+  verifyUrlInputVisible = () => this.step("verifyUrlInputVisible", () => this.expectToBeVisible(generateOverviewFormTestIds.urlInput));
 
-  fillUrl = (url: string) =>
-    this.step(`fillUrl ${url}`, () => this.get(generateOverviewFormTestIds.urlInput).fill(url));
+  fillUrl = (url: string) => this.step(`fillUrl ${url}`, () => this.get(generateOverviewFormTestIds.urlInput).fill(url));
 
   // A paste, rather than typing, which is what the field checks a link on.
   pasteUrl = (url: string) =>
@@ -45,9 +42,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
   clickGenerate = () => this.step("clickGenerate", () => this.click(generateOverviewFormTestIds.generateButton));
 
   verifyUrlInputHolds = (url: string) =>
-    this.step(`verifyUrlInputHolds ${url}`, () =>
-      expect(this.get(generateOverviewFormTestIds.urlInput)).toHaveValue(url),
-    );
+    this.step(`verifyUrlInputHolds ${url}`, () => expect(this.get(generateOverviewFormTestIds.urlInput)).toHaveValue(url));
 
   submitUrl = (url: string) =>
     this.step(`submitUrl ${url}`, async () => {
@@ -56,9 +51,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
     });
 
   verifyValidationError = (message: string) =>
-    this.step(`verifyValidationError ${message}`, () =>
-      expect(this.get(generateOverviewFormTestIds.validationError)).toHaveText(message),
-    );
+    this.step(`verifyValidationError ${message}`, () => expect(this.get(generateOverviewFormTestIds.validationError)).toHaveText(message));
 
   verifyGenerationError = (message: string | RegExp) =>
     this.step(`verifyGenerationError ${String(message)}`, () =>
@@ -71,23 +64,18 @@ export class GenerateOverviewFormPageObject extends PageObject {
     this.step("verifyGenerationErrorIsVisible", () => this.expectToBeVisible(generateOverviewFormTestIds.generationError));
 
   verifyGenerateButtonEnabled = () =>
-    this.step("verifyGenerateButtonEnabled", () =>
-      expect(this.get(generateOverviewFormTestIds.generateButton)).toBeEnabled(),
-    );
+    this.step("verifyGenerateButtonEnabled", () => expect(this.get(generateOverviewFormTestIds.generateButton)).toBeEnabled());
 
   verifyUrlInputDisabled = () =>
     this.step("verifyUrlInputDisabled", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeDisabled());
 
-  clickUseWatchedVideo = () =>
-    this.step("clickUseWatchedVideo", () => this.click(generateOverviewFormTestIds.watchingButton));
+  clickUseWatchedVideo = () => this.step("clickUseWatchedVideo", () => this.click(generateOverviewFormTestIds.watchingButton));
 
   verifyOffersWatchedVideo = () =>
     this.step("verifyOffersWatchedVideo", () => this.expectToBeVisible(generateOverviewFormTestIds.watchingButton));
 
   verifySaysUrlCameFromWatchedVideo = () =>
-    this.step("verifySaysUrlCameFromWatchedVideo", () =>
-      this.expectToBeVisible(generateOverviewFormTestIds.watchingNote),
-    );
+    this.step("verifySaysUrlCameFromWatchedVideo", () => this.expectToBeVisible(generateOverviewFormTestIds.watchingNote));
 
   verifyWatchedVideoNote = (pattern: RegExp) =>
     this.step(`verifyWatchedVideoNote ${pattern.source}`, () =>
@@ -107,8 +95,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
   verifyHasNoUsageLine = () =>
     this.step("verifyHasNoUsageLine", () => this.expectToHaveCount(generateOverviewFormTestIds.usageLine.root, 0));
 
-  clickUsagePlanLink = () =>
-    this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
+  clickUsagePlanLink = () => this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
 
   // What ran out, in Generate's place, with only the ways round it (designs 95i–95o).
   verifyLimitMessage = ({ title, body, actions }: { title: string; body?: string; actions: string[] }) =>
@@ -130,6 +117,5 @@ export class GenerateOverviewFormPageObject extends PageObject {
   clickLimitAction = (action: string) =>
     this.step(`clickLimitAction ${action}`, () => this.click(generateOverviewFormTestIds.limitMessage.action(action)));
 
-  clickSettingsLink = () =>
-    this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.keyPrompt.settingsLink));
+  clickSettingsLink = () => this.step("clickSettingsLink", () => this.click(generateOverviewFormTestIds.keyPrompt.settingsLink));
 }

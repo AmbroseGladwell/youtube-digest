@@ -14,7 +14,8 @@ export function personalisedVerdict(spread: ReaderSpread): string {
   const between = spread.pairs.filter((pair) => !isAboutNobody(pair));
   const above = between.filter((pair) => pair.meanWordOverlap !== null && noise !== null && pair.meanWordOverlap >= noise);
   if (noise === null || between.length === 0) return "Not enough passed videos to say.";
-  if (above.length === 0) return `Every pair of readers overlaps less than two runs for nobody (${overlap(noise)}): the actions change with the reader.`;
+  if (above.length === 0)
+    return `Every pair of readers overlaps less than two runs for nobody (${overlap(noise)}): the actions change with the reader.`;
   return `${above.length} of ${between.length} reader pairs overlap as much as two runs for nobody (${overlap(noise)}) or more: for them, the context made no difference sampling didn't.`;
 }
 

@@ -42,9 +42,7 @@ export function modelChoices(provider: Provider, catalogue: ModelCatalogue | und
   const named = new Set(recommended.map((choice) => choice.id));
   return {
     recommended,
-    rest: catalogue.usable
-      .filter((id) => !named.has(id))
-      .map((id) => ({ id, label: id, description: null, cents: null })),
+    rest: catalogue.usable.filter((id) => !named.has(id)).map((id) => ({ id, label: id, description: null, cents: null })),
     unusable: catalogue.unusable,
     source: "live",
   };
@@ -57,7 +55,5 @@ export const matchingChoices = (choices: ModelChoice[], search: string): ModelCh
   if (needle === "") {
     return choices;
   }
-  return choices.filter(
-    (choice) => choice.id.toLowerCase().includes(needle) || choice.label.toLowerCase().includes(needle),
-  );
+  return choices.filter((choice) => choice.id.toLowerCase().includes(needle) || choice.label.toLowerCase().includes(needle));
 };

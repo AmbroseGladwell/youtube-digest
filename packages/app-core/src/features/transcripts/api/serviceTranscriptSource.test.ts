@@ -31,7 +31,11 @@ const api = (overrides: Partial<ServiceTranscriptApi>): ServiceTranscriptApi => 
   ...overrides,
 });
 
-const rejectionOf = async (promise: Promise<unknown>) => promise.then(() => null, (error: unknown) => error);
+const rejectionOf = async (promise: Promise<unknown>) =>
+  promise.then(
+    () => null,
+    (error: unknown) => error,
+  );
 
 describe("serviceTranscriptSource", () => {
   it("costs us rather than nothing, so the background prefetch never reaches it", () => {
@@ -75,8 +79,7 @@ describe("serviceTranscriptSource", () => {
     const error = await rejectionOf(
       serviceTranscriptSource(
         api({
-          fetch: () =>
-            Promise.reject(new SyncRequestError("too_many_requests", 429, "spent", { retryAfterSeconds: 60, daily: true })),
+          fetch: () => Promise.reject(new SyncRequestError("too_many_requests", 429, "spent", { retryAfterSeconds: 60, daily: true })),
         }),
       ).resolve(URL, context),
     );
@@ -100,7 +103,10 @@ describe("serviceTranscriptSource", () => {
 
   it("a refusal that gave no wait is tried again after a minute", async () => {
     const error = await rejectionOf(
-      serviceTranscriptSource(api({ fetch: () => Promise.reject(new SyncRequestError("too_many_requests", 429, "slow down")) })).resolve(URL, context),
+      serviceTranscriptSource(api({ fetch: () => Promise.reject(new SyncRequestError("too_many_requests", 429, "slow down")) })).resolve(
+        URL,
+        context,
+      ),
     );
 
     expect((error as TranscriptFetchError).retryAfterSeconds).toBe(60);

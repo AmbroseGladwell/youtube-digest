@@ -17,7 +17,11 @@ const fromPsychology = (videoId: string, savedAt: string) =>
 describe("madeTodayByPlaylist", () => {
   it("counts each playlist's overviews made since local midnight", () => {
     const counts = madeTodayByPlaylist(
-      [fromPsychology("video000001", localIso(0)), fromPsychology("video000002", localIso(14)), fromPsychology("video000003", localIso(23, 25))],
+      [
+        fromPsychology("video000001", localIso(0)),
+        fromPsychology("video000002", localIso(14)),
+        fromPsychology("video000003", localIso(23, 25)),
+      ],
       new Set(),
       NOW,
     );

@@ -18,10 +18,7 @@ export const webAppPlugin = fp<WebAppPluginOptions>(async (app, { root }) => {
     index: false,
     wildcard: false,
     setHeaders: (reply, path) => {
-      reply.header(
-        "cache-control",
-        path.includes(HASHED_ASSETS) ? "public, max-age=31536000, immutable" : "no-cache",
-      );
+      reply.header("cache-control", path.includes(HASHED_ASSETS) ? "public, max-age=31536000, immutable" : "no-cache");
     },
   });
 

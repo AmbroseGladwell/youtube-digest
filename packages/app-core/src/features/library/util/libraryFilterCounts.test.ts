@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
-import {
-  makeOverviewWithState,
-  makeUnreadableEntry,
-} from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { libraryFilterCounts } from "./libraryFilterCounts.js";
 
 const FITNESS = TopicId.parse("11111111-1111-4111-8111-111111111111");
@@ -16,7 +13,14 @@ describe("libraryFilterCounts", () => {
         {
           topicIds: [FITNESS],
           tags: ["saas", "pricing"],
-          verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+          verdict: {
+            novelty: "original",
+            standsOut: { text: "A new idea.", range: null },
+            dubious: false,
+            dubiousClaims: [],
+            reasoning: "x",
+            similarTo: [],
+          },
         },
         { read: true },
       ),
@@ -50,10 +54,7 @@ describe("libraryFilterCounts", () => {
   // A library that says 28 and holds 30 is the prototype's eleven missing notes with a
   // new address (docs/features/record-migrations.md).
   it("counts a record it cannot read in the total, and says so separately", () => {
-    const counts = libraryFilterCounts([
-      makeOverviewWithState({ topicIds: [FITNESS] }, { read: true }),
-      makeUnreadableEntry(),
-    ]);
+    const counts = libraryFilterCounts([makeOverviewWithState({ topicIds: [FITNESS] }, { read: true }), makeUnreadableEntry()]);
 
     expect(counts.total).toBe(2);
     expect(counts.unreadable).toBe(1);

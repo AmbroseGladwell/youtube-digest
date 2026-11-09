@@ -34,9 +34,6 @@ the part worth watching, don't estimate a time.`,
   schemaShape: (input) => ({
     answer: WatchAnyway.shape.answer,
     reason: WatchAnyway.shape.reason,
-    range:
-      input.transcript.length === 0
-        ? z.null()
-        : SegmentRangeShape.nullable(),
+    range: input.transcript.length === 0 ? z.null() : SegmentRangeShape.nullable(),
   }),
 };

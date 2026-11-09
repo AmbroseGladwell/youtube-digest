@@ -12,9 +12,7 @@ export const TRIAL_OVERVIEWS_PER_ADDRESS_DAILY = 3;
 const ADDRESS_RETENTION_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type TrialReadReservation =
-  | { reserved: true }
-  | { reserved: false; reason: "unknown" | "spent" | "address-spent"; used: number };
+export type TrialReadReservation = { reserved: true } | { reserved: false; reason: "unknown" | "spent" | "address-spent"; used: number };
 
 export type TrialReservation =
   | { reserved: true; day: string; used: number }
@@ -106,10 +104,10 @@ export class TrialsRepository {
 
   async release(token: string, day: string, address: string): Promise<void> {
     await this.#releaseToken(hashToken(token));
-    await this.#sql.query(
-      "update trial_address_usage set overviews = greatest(overviews - 1, 0) where day = $1::date and address = $2",
-      [day, hashedAddress(address)],
-    );
+    await this.#sql.query("update trial_address_usage set overviews = greatest(overviews - 1, 0) where day = $1::date and address = $2", [
+      day,
+      hashedAddress(address),
+    ]);
   }
 
   // How many the token has made on our key, or null for a token this server never issued.
@@ -138,8 +136,6 @@ export class TrialsRepository {
   }
 
   async #releaseToken(tokenHash: string): Promise<void> {
-    await this.#sql.query("update trial_tokens set overviews = greatest(overviews - 1, 0) where token_hash = $1", [
-      tokenHash,
-    ]);
+    await this.#sql.query("update trial_tokens set overviews = greatest(overviews - 1, 0) where token_hash = $1", [tokenHash]);
   }
 }

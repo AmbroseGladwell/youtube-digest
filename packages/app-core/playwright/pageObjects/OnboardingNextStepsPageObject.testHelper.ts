@@ -20,9 +20,7 @@ export class OnboardingNextStepsPageObject extends PageObject {
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectNotToBeVisible(onboardingNextStepsTestIds.root));
 
   verifyExtensionCantBeAddedYet = () =>
-    this.step("verifyExtensionCantBeAddedYet", () =>
-      expect(this.get(onboardingNextStepsTestIds.action("extension"))).toBeDisabled(),
-    );
+    this.step("verifyExtensionCantBeAddedYet", () => expect(this.get(onboardingNextStepsTestIds.action("extension"))).toBeDisabled());
 
   dismiss = (step: "own" | "extension" | "ai") => this.step(`dismiss ${step}`, () => this.click(onboardingNextStepsTestIds.dismiss(step)));
 

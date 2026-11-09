@@ -15,21 +15,13 @@ export function GenerationSteps({ run }: GenerationStepsProps) {
   return (
     <ol className={styles.root} aria-live="polite" data-testid={generationStepsTestIds.root}>
       {generationRunSteps(run).map((step) => (
-        <li
-          key={step.number}
-          className={styles.step}
-          data-testid={generationStepsTestIds.step(step.number)}
-          data-state={step.state}
-        >
+        <li key={step.number} className={styles.step} data-testid={generationStepsTestIds.step(step.number)} data-state={step.state}>
           <span className={styles.stepNumber} aria-hidden="true">
             {step.number}
           </span>
           <span className={styles.stepBody}>
             <span className={styles.stepLabel}>{step.label}</span>
-            <span
-              className={styles.stepDetail}
-              data-testid={generationStepsTestIds.stepDetail(step.number)}
-            >
+            <span className={styles.stepDetail} data-testid={generationStepsTestIds.stepDetail(step.number)}>
               {step.detail}
             </span>
             <span className={styles.barTrack} aria-hidden="true">

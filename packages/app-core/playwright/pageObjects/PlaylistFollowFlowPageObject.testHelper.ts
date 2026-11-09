@@ -32,7 +32,12 @@ export class PlaylistFollowFlowPageObject extends PageObject {
 
   verifyFirstActionIsFocused = () =>
     this.step("verifyFirstActionIsFocused", () =>
-      expect(this.page.getByRole("group", { name: /^Follow / }).getByRole("button").first()).toBeFocused(),
+      expect(
+        this.page
+          .getByRole("group", { name: /^Follow / })
+          .getByRole("button")
+          .first(),
+      ).toBeFocused(),
     );
 
   verifyBackfillReads = (label: string) =>

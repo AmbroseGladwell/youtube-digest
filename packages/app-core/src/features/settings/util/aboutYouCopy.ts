@@ -29,7 +29,18 @@ export interface SuggestionGroup {
 
 const LIFE: SuggestionGroup = {
   name: "Life",
-  entries: ["fitness", "sleep", "parenting", "a career change", "a promotion", "languages", "buying a home", "a home project", "a wedding", "exams"],
+  entries: [
+    "fitness",
+    "sleep",
+    "parenting",
+    "a career change",
+    "a promotion",
+    "languages",
+    "buying a home",
+    "a home project",
+    "a wedding",
+    "exams",
+  ],
   example: "a half marathon",
 };
 
@@ -55,7 +66,18 @@ const FIXED_GROUPS: Record<Exclude<AboutYouSection, "focus">, readonly Suggestio
   time: [
     {
       name: "Work",
-      entries: ["software", "design", "my own business", "freelancing", "teaching", "healthcare", "finance", "sales", "a trade", "studying"],
+      entries: [
+        "software",
+        "design",
+        "my own business",
+        "freelancing",
+        "teaching",
+        "healthcare",
+        "finance",
+        "sales",
+        "a trade",
+        "studying",
+      ],
       example: "nursing",
     },
     {

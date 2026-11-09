@@ -30,10 +30,7 @@ test("the rail lists the library's tags under More filters, most used first, and
   await library.verifyCountReads("2 overviews tagged #saas · 2 unread");
 });
 
-test("one tag at a time: choosing another swaps it, and its chip under the search clears it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("one tag at a time: choosing another swaps it, and its chip under the search clears it", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
@@ -56,10 +53,7 @@ test("a search typed beside the tag searches within it", async ({ launcher, back
   await library.verifyCardOrder(["Chrome extension money"]);
 });
 
-test("a link to a tag opens the library filtered to it, with the group it is in open", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a link to a tag opens the library filtered to it, with the group it is in open", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 

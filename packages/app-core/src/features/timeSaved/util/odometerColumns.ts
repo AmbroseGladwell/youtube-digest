@@ -14,8 +14,7 @@ const steps = (from: number, to: number): number[] => {
   return Array.from({ length: Math.abs(to - from) + 1 }, (_, index) => from + index * direction);
 };
 
-const capped = (rows: number[]): number[] =>
-  rows.length > MAX_ROWS ? [rows[0]!, ...rows.slice(-(MAX_ROWS - 1))] : rows;
+const capped = (rows: number[]): number[] => (rows.length > MAX_ROWS ? [rows[0]!, ...rows.slice(-(MAX_ROWS - 1))] : rows);
 
 // The strips a rolling total turns through, minutes first and carrying into tens and then
 // hours like a mechanical counter. Each strip lists the digits it passes from the old value

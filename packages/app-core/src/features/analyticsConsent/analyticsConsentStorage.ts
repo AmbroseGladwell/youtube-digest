@@ -12,10 +12,7 @@ export function readAnalyticsConsent(storage: Storage = globalThis.localStorage)
   }
 }
 
-export function writeAnalyticsConsent(
-  consent: AnalyticsConsent | null,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function writeAnalyticsConsent(consent: AnalyticsConsent | null, storage: Storage = globalThis.localStorage): void {
   try {
     if (consent === null) storage.removeItem(STORAGE_KEY);
     else storage.setItem(STORAGE_KEY, JSON.stringify(consent));

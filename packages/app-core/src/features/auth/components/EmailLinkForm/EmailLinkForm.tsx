@@ -93,16 +93,10 @@ export function EmailLinkForm({
     );
   };
 
-  const describedBy = (field: "email" | "server") =>
-    errorFor(field) === null ? undefined : `${ids}-${field}-error`;
+  const describedBy = (field: "email" | "server") => (errorFor(field) === null ? undefined : `${ids}-${field}-error`);
 
   const button = (
-    <button
-      type="submit"
-      className={styles.submit}
-      disabled={sending}
-      data-testid={emailLinkFormTestIds.submitButton}
-    >
+    <button type="submit" className={styles.submit} disabled={sending} data-testid={emailLinkFormTestIds.submitButton}>
       {submitLabel}
     </button>
   );
@@ -120,12 +114,7 @@ export function EmailLinkForm({
     );
 
   return (
-    <form
-      className={`${styles.root} ${footed ? styles.footed : ""}`}
-      onSubmit={submit}
-      noValidate
-      data-testid={emailLinkFormTestIds.root}
-    >
+    <form className={`${styles.root} ${footed ? styles.footed : ""}`} onSubmit={submit} noValidate data-testid={emailLinkFormTestIds.root}>
       <div className={styles.fields}>
         {serverShown && (
           <label className={styles.label}>
@@ -176,9 +165,7 @@ export function EmailLinkForm({
         )}
         <label className={styles.label}>
           <span className={styles.labelText}>Email</span>
-          <span
-            className={`${styles.field} ${problem?.field === "email" || refused !== null ? styles.fieldInvalid : ""}`}
-          >
+          <span className={`${styles.field} ${problem?.field === "email" || refused !== null ? styles.fieldInvalid : ""}`}>
             <StrokeIcon name="mail" size={16} />
             <input
               id={`${ids}-email`}

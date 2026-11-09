@@ -20,14 +20,8 @@ import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 import { videoRecipe } from "./recipe/videoRecipe.js";
 
-export function assembleOverview(
-  input: GenerationInput,
-  output: GeneratedOutput,
-  meta: { id: OverviewId; savedAt: string },
-): Overview {
-  const topicIds = input.existingTopics
-    .filter((topic) => output.matchedTopicNames.includes(topic.name))
-    .map((topic) => topic.id);
+export function assembleOverview(input: GenerationInput, output: GeneratedOutput, meta: { id: OverviewId; savedAt: string }): Overview {
+  const topicIds = input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id);
 
   // A recipe video's note is its recipe, with the chapters a video has (docs/features/recipe-notes.md).
   const common = {
@@ -103,11 +97,7 @@ export function assembleOverview(
 }
 
 // docs/features/novelty-scale.md, "What stands out".
-function resolveStandsOut(
-  input: GenerationInput,
-  novelty: Novelty,
-  standsOut: GeneratedTimedText | null,
-): StandsOut | null {
+function resolveStandsOut(input: GenerationInput, novelty: Novelty, standsOut: GeneratedTimedText | null): StandsOut | null {
   const text = standsOut?.text.trim() ?? "";
   if (novelty === "common_knowledge" || text === "") {
     return null;
@@ -121,10 +111,7 @@ function resolveOptionalRange(
   input: GenerationInput,
   range: { startSegmentIndex: number; endSegmentIndex: number } | null,
 ): { startMs: number; endMs: number } | null {
-  const fits =
-    range !== null &&
-    range.startSegmentIndex <= range.endSegmentIndex &&
-    range.endSegmentIndex < input.transcript.length;
+  const fits = range !== null && range.startSegmentIndex <= range.endSegmentIndex && range.endSegmentIndex < input.transcript.length;
   return fits ? resolveRange(input, range) : null;
 }
 
@@ -135,8 +122,7 @@ function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chap
     const segment = input.transcript[index];
     if (!segment) {
       throw new GenerationError(
-        `a chapter referenced a segment index out of bounds: ${index} ` +
-          `(transcript has ${input.transcript.length} segments)`,
+        `a chapter referenced a segment index out of bounds: ${index} ` + `(transcript has ${input.transcript.length} segments)`,
       );
     }
     return segment;

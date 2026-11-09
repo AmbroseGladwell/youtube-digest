@@ -1,6 +1,21 @@
 const TRACKING_PARAMETERS = new Set([
-  "cmpid", "dclid", "fbclid", "gbraid", "gclid", "gclsrc", "igshid", "mc_cid", "mc_eid", "msclkid",
-  "ocid", "smid", "twclid", "wbraid", "yclid", "_ga", "_gl",
+  "cmpid",
+  "dclid",
+  "fbclid",
+  "gbraid",
+  "gclid",
+  "gclsrc",
+  "igshid",
+  "mc_cid",
+  "mc_eid",
+  "msclkid",
+  "ocid",
+  "smid",
+  "twclid",
+  "wbraid",
+  "yclid",
+  "_ga",
+  "_gl",
 ]);
 
 const isTracking = (name: string): boolean => name.toLowerCase().startsWith("utm_") || TRACKING_PARAMETERS.has(name.toLowerCase());

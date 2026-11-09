@@ -38,9 +38,7 @@ export function useShareOverviewMutation() {
         // and a copy that leaves it behind has a Transcript tab with nothing in it. Going
         // through the query also means the copy is usually already in hand
         // (docs/features/sharing.md).
-        transcript: await queryClient.fetchQuery(
-          transcriptQueryOptions(transcriptStore, sourceKey(overview.source), fetchTranscript),
-        ),
+        transcript: await queryClient.fetchQuery(transcriptQueryOptions(transcriptStore, sourceKey(overview.source), fetchTranscript)),
         narration: await narrationForShare(narrationApi, spokenScript(overview), voice),
       });
     },

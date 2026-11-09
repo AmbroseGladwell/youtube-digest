@@ -24,10 +24,7 @@ describe("inPlaylistOrder", () => {
   });
 
   it("the playlist's own order decides where YouTube gives no date", () => {
-    const undated = placedEntries([
-      makePlaylistEntry("b", { addedAt: null }),
-      makePlaylistEntry("a", { addedAt: null }),
-    ]);
+    const undated = placedEntries([makePlaylistEntry("b", { addedAt: null }), makePlaylistEntry("a", { addedAt: null })]);
 
     expect(inPlaylistOrder(undated, "oldestFirst").map((entry) => entry.videoId)).toEqual(["b", "a"]);
     expect(inPlaylistOrder(undated, "newestFirst").map((entry) => entry.videoId)).toEqual(["a", "b"]);

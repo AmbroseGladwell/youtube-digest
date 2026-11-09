@@ -10,5 +10,4 @@ export function topicCounts(overviews: Overview[]): Record<string, number> {
   return counts;
 }
 
-export const unsortedOverviews = (overviews: Overview[]): Overview[] =>
-  overviews.filter((overview) => overview.topicIds.length === 0);
+export const unsortedOverviews = (overviews: Overview[]): Overview[] => overviews.filter((overview) => overview.topicIds.length === 0);

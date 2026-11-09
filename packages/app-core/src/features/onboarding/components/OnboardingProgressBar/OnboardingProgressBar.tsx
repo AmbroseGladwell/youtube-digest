@@ -36,12 +36,7 @@ export function OnboardingProgressBar({ phase, fetching, ready, soon, personal, 
           Your overview is ready
         </p>
         {onSeeOverview !== null && (
-          <button
-            type="button"
-            className={styles.see}
-            onClick={onSeeOverview}
-            data-testid={onboardingProgressBarTestIds.seeOverview}
-          >
+          <button type="button" className={styles.see} onClick={onSeeOverview} data-testid={onboardingProgressBarTestIds.seeOverview}>
             See your overview
             <StrokeIcon name="chevronRight" size={16} />
           </button>

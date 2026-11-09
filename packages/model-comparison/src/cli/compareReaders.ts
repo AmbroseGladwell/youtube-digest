@@ -71,7 +71,10 @@ const beforeReaders: readonly SpreadReader[] =
         (reader) => reader.readerContext !== null && existsSync(join(comparisonPaths.run(values.against!), reader.name)),
       ).map(asBefore);
 const beforeStores = new Map(
-  beforeReaders.map((reader) => [reader.name, runDirectoryStore(join(comparisonPaths.run(values.against!), reader.name.slice(0, -BEFORE.length)))]),
+  beforeReaders.map((reader) => [
+    reader.name,
+    runDirectoryStore(join(comparisonPaths.run(values.against!), reader.name.slice(0, -BEFORE.length))),
+  ]),
 );
 const judgedReaders = [...SPREAD_READERS, ...beforeReaders];
 const judgments = jsonRecordStore<ActionJudgeRecord>(
@@ -109,7 +112,9 @@ const wanted = new Set(transcripts.map((fetched) => fetched.video.id ?? fetched.
 const allStores = new Map([...stores, ...beforeStores]);
 const runs = new Map(
   await Promise.all(
-    judgedReaders.map(async (reader) => [reader.name, (await allStores.get(reader.name)!.all()).filter((record) => wanted.has(record.videoId))] as const),
+    judgedReaders.map(
+      async (reader) => [reader.name, (await allStores.get(reader.name)!.all()).filter((record) => wanted.has(record.videoId))] as const,
+    ),
   ),
 );
 const byVideo = actionsByVideo(runs);
@@ -154,10 +159,10 @@ const markdown = readerSpreadMarkdown(
   readerSpread(names, byVideo),
   byVideo,
   transcriptsById,
-  judgedRecords.length === 0
-    ? null
-    : { judge: judgedRecords[0]!.judge, summaries: summariseActionJudgments(names, judgedRecords) },
+  judgedRecords.length === 0 ? null : { judge: judgedRecords[0]!.judge, summaries: summariseActionJudgments(names, judgedRecords) },
 );
 await writeFile(join(runDirectory, "report.md"), markdown);
 console.log(markdown);
-console.error(`\n$${totalSpent(await everyRecord()).toFixed(4)} spent on run ${values.run} in all. Report: ${join(runDirectory, "report.md")}`);
+console.error(
+  `\n$${totalSpent(await everyRecord()).toFixed(4)} spent on run ${values.run} in all. Report: ${join(runDirectory, "report.md")}`,
+);

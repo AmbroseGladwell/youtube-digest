@@ -27,5 +27,4 @@ export function stopReasonFor(error: unknown): StopReason | null {
   }
 }
 
-export const describe = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+export const describe = (error: unknown): string => (error instanceof Error ? error.message : String(error));

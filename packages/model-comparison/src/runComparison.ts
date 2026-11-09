@@ -48,9 +48,7 @@ export function runnableModels(
 export async function runComparison(options: RunComparisonOptions): Promise<ComparisonOutcome> {
   const previous = await options.store.all();
   const settled = new Set(
-    previous
-      .filter((record) => record.outcome !== "errored")
-      .map((record) => runKey(record.provider, record.model, record.videoId)),
+    previous.filter((record) => record.outcome !== "errored").map((record) => runKey(record.provider, record.model, record.videoId)),
   );
 
   let skipped = 0;

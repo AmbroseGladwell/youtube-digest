@@ -5,32 +5,17 @@ import { useLentBackLink } from "../../../app/useLentBackLink.js";
 import { useHomeName } from "../../../app/useHomeName.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
-import {
-  APPEARANCE_STANDFIRST,
-  AppearanceSection,
-} from "../../appearance/components/AppearanceSection/AppearanceSection.js";
+import { APPEARANCE_STANDFIRST, AppearanceSection } from "../../appearance/components/AppearanceSection/AppearanceSection.js";
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
 import { PlaylistsSection } from "../../playlists/components/PlaylistsSection/PlaylistsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
-import {
-  SHARED_LINKS_STANDFIRST,
-  SharedLinksPanel,
-} from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
+import { SHARED_LINKS_STANDFIRST, SharedLinksPanel } from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
-import {
-  MILESTONES_STANDFIRST,
-  MilestonesSection,
-} from "../../timeSaved/components/MilestonesSection/MilestonesSection.js";
+import { MILESTONES_STANDFIRST, MilestonesSection } from "../../timeSaved/components/MilestonesSection/MilestonesSection.js";
 import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
-import {
-  NARRATION_VOICE_STANDFIRST,
-  NarrationVoicePicker,
-} from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
-import {
-  PERSONALISATION_STANDFIRST,
-  PersonalisationSection,
-} from "../components/PersonalisationSection/PersonalisationSection.js";
+import { NARRATION_VOICE_STANDFIRST, NarrationVoicePicker } from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
+import { PERSONALISATION_STANDFIRST, PersonalisationSection } from "../components/PersonalisationSection/PersonalisationSection.js";
 import { SettingsSection, settingsSectionHeadingId } from "../components/SettingsSection/SettingsSection.js";
 import { SettingsSectionList } from "../components/SettingsSectionList/SettingsSectionList.js";
 import type { SettingsSectionId } from "../SettingsSectionId.js";

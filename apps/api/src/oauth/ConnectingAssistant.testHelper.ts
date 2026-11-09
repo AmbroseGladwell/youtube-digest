@@ -44,7 +44,6 @@ export const postForm = (testApp: TestApp, url: string, fields: Record<string, s
     payload: form(fields),
   });
 
-
 // An MCP client as Claude would be one: it registers itself, sends the reader to authorize,
 // and trades what comes back for tokens (docs/features/mcp-connector.md).
 export async function makeConnectingAssistant(
@@ -54,15 +53,19 @@ export async function makeConnectingAssistant(
   const registered = await testApp.app.inject({
     method: "POST",
     url: "/oauth/register",
-    payload: { client_name: "Claude", redirect_uris: [ASSISTANT_REDIRECT_URI], grant_types: ["authorization_code", "refresh_token"], ...registration },
+    payload: {
+      client_name: "Claude",
+      redirect_uris: [ASSISTANT_REDIRECT_URI],
+      grant_types: ["authorization_code", "refresh_token"],
+      ...registration,
+    },
   });
   assert.equal(registered.statusCode, 201, registered.body);
   const { client_id: clientId, client_secret: clientSecret = null } = registered.json();
   const credentials = (): Record<string, string> =>
     clientSecret === null ? { client_id: clientId } : { client_id: clientId, client_secret: clientSecret };
 
-  const authorize = (params: Record<string, string> = {}) =>
-    testApp.app.inject({ method: "GET", url: `/oauth/authorize?${form(params)}` });
+  const authorize = (params: Record<string, string> = {}) => testApp.app.inject({ method: "GET", url: `/oauth/authorize?${form(params)}` });
 
   const startAuthorization = async (params: Record<string, string> = {}): Promise<Authorization> => {
     const verifier = randomBytes(32).toString("base64url");

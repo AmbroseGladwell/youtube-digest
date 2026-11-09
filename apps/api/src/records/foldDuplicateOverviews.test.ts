@@ -48,23 +48,46 @@ async function seed(
 }
 
 const live = async (sql: SqlClient, accountId = ACCOUNT) =>
-  (
-    await sql.query<RecordRow>(
-      `select ${RECORD_COLUMNS} from records where account_id = $1 order by seq`,
-      [accountId],
-    )
-  ).map(storedRecordFromRow);
+  (await sql.query<RecordRow>(`select ${RECORD_COLUMNS} from records where account_id = $1 order by seq`, [accountId])).map(
+    storedRecordFromRow,
+  );
 
 test("per account and video the earliest-made overview is kept, the others' filing and state fold onto it, and the others are tombstoned", async () => {
   const sql = await databaseBeforeTheIndex();
   const video = { ...makeOverview().source, id: VideoId.parse("twice") };
-  const earlier = makeOverview({ source: video, savedAt: "2026-09-01T00:00:00.000Z", topicIds: [TOPIC_A], tags: ["one"], captureReason: null });
-  const later = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z", topicIds: [TOPIC_B], tags: ["one", "two"], captureReason: "Why" });
+  const earlier = makeOverview({
+    source: video,
+    savedAt: "2026-09-01T00:00:00.000Z",
+    topicIds: [TOPIC_A],
+    tags: ["one"],
+    captureReason: null,
+  });
+  const later = makeOverview({
+    source: video,
+    savedAt: "2026-09-02T00:00:00.000Z",
+    topicIds: [TOPIC_B],
+    tags: ["one", "two"],
+    captureReason: "Why",
+  });
   // Seeded in the opposite order, so arrival order and creation order disagree.
   await seed(sql, ACCOUNT, "overview", later.id, withVideo(later), "2026-09-02T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await seed(sql, ACCOUNT, "overview", earlier.id, withVideo(earlier), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
-  await seed(sql, ACCOUNT, "overviewState", later.id, { overviewId: later.id, read: true, favourite: false, userTags: ["later"] }, "2026-09-03T00:00:00.000Z");
-  await seed(sql, ACCOUNT, "overviewState", earlier.id, { overviewId: earlier.id, read: false, favourite: true, userTags: ["keep"] }, "2026-09-02T12:00:00.000Z");
+  await seed(
+    sql,
+    ACCOUNT,
+    "overviewState",
+    later.id,
+    { overviewId: later.id, read: true, favourite: false, userTags: ["later"] },
+    "2026-09-03T00:00:00.000Z",
+  );
+  await seed(
+    sql,
+    ACCOUNT,
+    "overviewState",
+    earlier.id,
+    { overviewId: earlier.id, read: false, favourite: true, userTags: ["keep"] },
+    "2026-09-02T12:00:00.000Z",
+  );
 
   const folds: unknown[] = [];
   await runMigrations(sql, { before: migrationSteps((folded) => folds.push(...folded)) });
@@ -73,7 +96,13 @@ test("per account and video the earliest-made overview is kept, the others' fili
   const records = await live(sql);
   const kept = records.find((record) => record.kind === "overview" && record.id === earlier.id)!;
   assert.deepEqual(
-    { topicIds: kept.body?.topicIds, tags: kept.body?.tags, captureReason: kept.body?.captureReason, rev: kept.rev, updatedAt: kept.updatedAt },
+    {
+      topicIds: kept.body?.topicIds,
+      tags: kept.body?.tags,
+      captureReason: kept.body?.captureReason,
+      rev: kept.rev,
+      updatedAt: kept.updatedAt,
+    },
     { topicIds: [TOPIC_A, TOPIC_B], tags: ["one", "two"], captureReason: "Why", rev: 2, updatedAt: "2026-09-02T00:00:00.000Z" },
   );
   const keptState = records.find((record) => record.kind === "overviewState" && record.id === earlier.id)!;
@@ -136,8 +165,18 @@ test("a copy stored at an older version is read through the migration chain befo
   const sql = await databaseBeforeTheIndex();
   const video = { ...makeOverview().source, id: VideoId.parse("old") };
   const kept = makeOverview({ source: video, savedAt: "2026-09-01T00:00:00.000Z", captureReason: null });
-  const { captureReason: _reason, fromPlaylist: _from, chapters: _chapters, ...olderShape } = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z" });
-  const older = { ...olderShape, savedNote: "From before the rename", keyPoints: ["one", "two", "three"], tags: ["one-tag", "two-tag", "three-tag"] };
+  const {
+    captureReason: _reason,
+    fromPlaylist: _from,
+    chapters: _chapters,
+    ...olderShape
+  } = makeOverview({ source: video, savedAt: "2026-09-02T00:00:00.000Z" });
+  const older = {
+    ...olderShape,
+    savedNote: "From before the rename",
+    keyPoints: ["one", "two", "three"],
+    tags: ["one-tag", "two-tag", "three-tag"],
+  };
   await seed(sql, ACCOUNT, "overview", kept.id, withVideo(kept), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await seed(sql, ACCOUNT, "overview", older.id, withVideo(older), "2026-09-02T00:00:00.000Z", 2);
 

@@ -63,30 +63,18 @@ export class ReaderPageObject extends PageObject {
 
   openManagePlaylists = () => this.step("openManagePlaylists", () => this.click(playlistFromLineTestIds.manageLink));
 
-  verifyTitle = (title: string) =>
-    this.step(`verifyTitle ${title}`, () =>
-      expect(this.get(readerMastheadTestIds.title)).toHaveText(title),
-    );
+  verifyTitle = (title: string) => this.step(`verifyTitle ${title}`, () => expect(this.get(readerMastheadTestIds.title)).toHaveText(title));
 
   verifyPublishedReads = (published: string) =>
-    this.step(`verifyPublishedReads ${published}`, () =>
-      expect(this.get(readerMastheadTestIds.published)).toHaveText(published),
-    );
+    this.step(`verifyPublishedReads ${published}`, () => expect(this.get(readerMastheadTestIds.published)).toHaveText(published));
 
-  verifyShowsNoPublished = () =>
-    this.step("verifyShowsNoPublished", () =>
-      this.expectNotToBeVisible(readerMastheadTestIds.published),
-    );
+  verifyShowsNoPublished = () => this.step("verifyShowsNoPublished", () => this.expectNotToBeVisible(readerMastheadTestIds.published));
 
   verifyMetaReads = (meta: string) =>
-    this.step(`verifyMetaReads ${meta}`, () =>
-      expect(this.get(readerMastheadTestIds.meta)).toHaveText(meta),
-    );
+    this.step(`verifyMetaReads ${meta}`, () => expect(this.get(readerMastheadTestIds.meta)).toHaveText(meta));
 
   verifyPosition = (position: string) =>
-    this.step(`verifyPosition ${position}`, () =>
-      expect(this.get(readerPageTestIds.position)).toHaveText(position),
-    );
+    this.step(`verifyPosition ${position}`, () => expect(this.get(readerPageTestIds.position)).toHaveText(position));
 
   verifyNotFound = () => this.expectToBeVisible(readerPageTestIds.notFound);
 
@@ -96,35 +84,25 @@ export class ReaderPageObject extends PageObject {
 
   verifyFiledUnder = (topicNames: string[]) =>
     this.step(`verifyFiledUnder ${topicNames.join(", ")}`, () =>
-      expect(this.get(topicLineTestIds.chip)).toHaveText(
-        topicNames.map((name) => new RegExp(name)),
-      ),
+      expect(this.get(topicLineTestIds.chip)).toHaveText(topicNames.map((name) => new RegExp(name))),
     );
 
-  verifyIsFiledNowhere = () =>
-    this.step("verifyIsFiledNowhere", () => this.expectToHaveCount(topicLineTestIds.chip, 0));
+  verifyIsFiledNowhere = () => this.step("verifyIsFiledNowhere", () => this.expectToHaveCount(topicLineTestIds.chip, 0));
 
-  openActionsMenu = () =>
-    this.step("openActionsMenu", () => this.click(overviewActionsMenuTestIds.trigger));
+  openActionsMenu = () => this.step("openActionsMenu", () => this.click(overviewActionsMenuTestIds.trigger));
 
   closeActionsMenu = () => this.step("closeActionsMenu", () => this.page.keyboard.press("Escape"));
 
   verifyChannelReads = (channel: string) =>
-    this.step(`verifyChannelReads ${channel}`, () =>
-      expect(this.get(readerMastheadTestIds.channel)).toHaveText(channel),
-    );
+    this.step(`verifyChannelReads ${channel}`, () => expect(this.get(readerMastheadTestIds.channel)).toHaveText(channel));
 
   // The head is four facts wide on the desktop reader and two in the panel, so what it
   // leaves out is as much the behaviour as what it prints.
   verifyMastheadOmits = (pattern: RegExp) =>
-    this.step(`verifyMastheadOmits ${pattern.source}`, () =>
-      expect(this.get(readerMastheadTestIds.root)).not.toHaveText(pattern),
-    );
+    this.step(`verifyMastheadOmits ${pattern.source}`, () => expect(this.get(readerMastheadTestIds.root)).not.toHaveText(pattern));
 
   verifyMastheadMentions = (pattern: RegExp) =>
-    this.step(`verifyMastheadMentions ${pattern.source}`, () =>
-      expect(this.get(readerMastheadTestIds.root)).toHaveText(pattern),
-    );
+    this.step(`verifyMastheadMentions ${pattern.source}`, () => expect(this.get(readerMastheadTestIds.root)).toHaveText(pattern));
 
   // Same line, measured rather than assumed: design 4a puts the verdict and the warnings
   // on the channel's line, above the title, rather than in a second band. Overlap rather
@@ -164,10 +142,7 @@ export class ReaderPageObject extends PageObject {
 
         const unobstructed = await menu.evaluate((element) => {
           const rect = element.getBoundingClientRect();
-          const atCentre = document.elementFromPoint(
-            rect.x + rect.width / 2,
-            rect.y + rect.height / 2,
-          );
+          const atCentre = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
           return atCentre !== null && element.contains(atCentre);
         });
         expect(unobstructed).toBe(true);
@@ -176,21 +151,16 @@ export class ReaderPageObject extends PageObject {
 
   verifyActionsMenuIsShown = (shown: boolean) =>
     this.step(`verifyActionsMenuIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(overviewActionsMenuTestIds.menu)
-        : this.expectNotToBeVisible(overviewActionsMenuTestIds.menu),
+      shown ? this.expectToBeVisible(overviewActionsMenuTestIds.menu) : this.expectNotToBeVisible(overviewActionsMenuTestIds.menu),
     );
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
   // Somewhere that is nobody's popover: the note's own title.
-  clickAwayFromAnyPopover = () =>
-    this.step("clickAwayFromAnyPopover", () => this.click(readerMastheadTestIds.title));
+  clickAwayFromAnyPopover = () => this.step("clickAwayFromAnyPopover", () => this.click(readerMastheadTestIds.title));
 
   verifyEditTopicsCountReads = (count: string) =>
-    this.step(`verifyEditTopicsCountReads ${count}`, () =>
-      expect(this.get(overviewActionsMenuTestIds.topicCount)).toHaveText(count),
-    );
+    this.step(`verifyEditTopicsCountReads ${count}`, () => expect(this.get(overviewActionsMenuTestIds.topicCount)).toHaveText(count));
 
   clickEditTopics = (): Promise<TopicPickerPageObject> =>
     this.step("clickEditTopics", async () => {
@@ -204,33 +174,24 @@ export class ReaderPageObject extends PageObject {
       return this.clickEditTopics();
     });
 
-  removeTopic = (name: string) =>
-    this.step(`removeTopic ${name}`, () => this.click(topicLineTestIds.removeChip(name)));
+  removeTopic = (name: string) => this.step(`removeTopic ${name}`, () => this.click(topicLineTestIds.removeChip(name)));
 
   clickAddTopic = () => this.step("clickAddTopic", () => this.click(topicLineTestIds.addButton));
 
   verifyTopicsAreEditable = (editable: boolean) =>
     this.step(`verifyTopicsAreEditable ${editable}`, () =>
-      editable
-        ? this.expectToBeVisible(topicLineTestIds.addButton)
-        : this.expectNotToBeVisible(topicLineTestIds.addButton),
+      editable ? this.expectToBeVisible(topicLineTestIds.addButton) : this.expectNotToBeVisible(topicLineTestIds.addButton),
     );
 
   verifyReasonReads = (reason: string) =>
-    this.step(`verifyReasonReads ${reason}`, () =>
-      expect(this.get(captureReasonLineTestIds.reason)).toHaveText(reason),
-    );
+    this.step(`verifyReasonReads ${reason}`, () => expect(this.get(captureReasonLineTestIds.reason)).toHaveText(reason));
 
-  verifyHasNoReason = () =>
-    this.step("verifyHasNoReason", () => this.expectNotToBeVisible(captureReasonLineTestIds.root));
+  verifyHasNoReason = () => this.step("verifyHasNoReason", () => this.expectNotToBeVisible(captureReasonLineTestIds.root));
 
   verifyReasonMenuItemReads = (label: string) =>
-    this.step(`verifyReasonMenuItemReads ${label}`, () =>
-      expect(this.get(overviewActionsMenuTestIds.reasonItem)).toHaveText(label),
-    );
+    this.step(`verifyReasonMenuItemReads ${label}`, () => expect(this.get(overviewActionsMenuTestIds.reasonItem)).toHaveText(label));
 
-  clickReasonMenuItem = () =>
-    this.step("clickReasonMenuItem", () => this.click(overviewActionsMenuTestIds.reasonItem));
+  clickReasonMenuItem = () => this.step("clickReasonMenuItem", () => this.click(overviewActionsMenuTestIds.reasonItem));
 
   editReason = () =>
     this.step("editReason", async () => {
@@ -241,35 +202,24 @@ export class ReaderPageObject extends PageObject {
 
   verifyReasonEditorIsShown = (shown: boolean) =>
     this.step(`verifyReasonEditorIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(captureReasonLineTestIds.editor)
-        : this.expectNotToBeVisible(captureReasonLineTestIds.editor),
+      shown ? this.expectToBeVisible(captureReasonLineTestIds.editor) : this.expectNotToBeVisible(captureReasonLineTestIds.editor),
     );
 
   verifyReasonFieldIsFocused = () =>
-    this.step("verifyReasonFieldIsFocused", () =>
-      expect(this.get(captureReasonLineTestIds.input)).toBeFocused(),
-    );
+    this.step("verifyReasonFieldIsFocused", () => expect(this.get(captureReasonLineTestIds.input)).toBeFocused());
 
   verifyReasonFieldHolds = (text: string) =>
-    this.step(`verifyReasonFieldHolds ${text}`, () =>
-      expect(this.get(captureReasonLineTestIds.input)).toHaveValue(text),
-    );
+    this.step(`verifyReasonFieldHolds ${text}`, () => expect(this.get(captureReasonLineTestIds.input)).toHaveValue(text));
 
-  fillReason = (text: string) =>
-    this.step(`fillReason ${text}`, () => this.get(captureReasonLineTestIds.input).fill(text));
+  fillReason = (text: string) => this.step(`fillReason ${text}`, () => this.get(captureReasonLineTestIds.input).fill(text));
 
-  pressEnterInReason = () =>
-    this.step("pressEnterInReason", () => this.get(captureReasonLineTestIds.input).press("Enter"));
+  pressEnterInReason = () => this.step("pressEnterInReason", () => this.get(captureReasonLineTestIds.input).press("Enter"));
 
-  clickSaveReason = () =>
-    this.step("clickSaveReason", () => this.click(captureReasonLineTestIds.saveButton));
+  clickSaveReason = () => this.step("clickSaveReason", () => this.click(captureReasonLineTestIds.saveButton));
 
-  clickCancelReason = () =>
-    this.step("clickCancelReason", () => this.click(captureReasonLineTestIds.cancelButton));
+  clickCancelReason = () => this.step("clickCancelReason", () => this.click(captureReasonLineTestIds.cancelButton));
 
-  clickRemoveReason = () =>
-    this.step("clickRemoveReason", () => this.click(captureReasonLineTestIds.removeButton));
+  clickRemoveReason = () => this.step("clickRemoveReason", () => this.click(captureReasonLineTestIds.removeButton));
 
   verifyOffersToRemoveReason = (offered: boolean) =>
     this.step(`verifyOffersToRemoveReason ${offered}`, () =>
@@ -280,13 +230,10 @@ export class ReaderPageObject extends PageObject {
 
   verifyActiveLineReads = (text: string) =>
     this.step(`verifyActiveLineReads ${text}`, () =>
-      expect(
-        this.get(readAlongNoteTestIds.activeLine).getByTestId(readAlongNoteTestIds.lineText),
-      ).toHaveText(text),
+      expect(this.get(readAlongNoteTestIds.activeLine).getByTestId(readAlongNoteTestIds.lineText)).toHaveText(text),
     );
 
-  verifyNoLineIsActive = () =>
-    this.step("verifyNoLineIsActive", () => this.expectNotToBeVisible(readAlongNoteTestIds.activeLine));
+  verifyNoLineIsActive = () => this.step("verifyNoLineIsActive", () => this.expectNotToBeVisible(readAlongNoteTestIds.activeLine));
 
   // Watched rather than sampled: the scroll this is about happened on its own, a frame
   // after the note rendered, so a single reading taken afterwards would have missed it.
@@ -326,9 +273,7 @@ export class ReaderPageObject extends PageObject {
 
   verifyOffersTheWayBackToTheVoice = (offered: boolean) =>
     this.step(`verifyOffersTheWayBackToTheVoice ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(readAlongNoteTestIds.followButton)
-        : this.expectNotToBeVisible(readAlongNoteTestIds.followButton),
+      offered ? this.expectToBeVisible(readAlongNoteTestIds.followButton) : this.expectNotToBeVisible(readAlongNoteTestIds.followButton),
     );
 
   verifyTheWayBackToTheVoiceReads = (label: string | RegExp) =>
@@ -336,8 +281,7 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readAlongNoteTestIds.followButton)).toHaveText(label),
     );
 
-  clickBackToTheVoice = () =>
-    this.step("clickBackToTheVoice", () => this.click(readAlongNoteTestIds.followButton));
+  clickBackToTheVoice = () => this.step("clickBackToTheVoice", () => this.click(readAlongNoteTestIds.followButton));
 
   verifyBulletedLinesRead = (texts: string[]) =>
     this.step(`verifyBulletedLinesRead ${texts.join(", ")}`, () =>
@@ -359,9 +303,7 @@ export class ReaderPageObject extends PageObject {
     });
 
   verifyNoteLabelsRead = (labels: string[]) =>
-    this.step(`verifyNoteLabelsRead ${labels.join(", ")}`, () =>
-      expect(this.get(readAlongNoteTestIds.lineLabel)).toHaveText(labels),
-    );
+    this.step(`verifyNoteLabelsRead ${labels.join(", ")}`, () => expect(this.get(readAlongNoteTestIds.lineLabel)).toHaveText(labels));
 
   verifyVerdictChipReads = (text: string) =>
     this.step(`verifyVerdictChipReads ${text}`, () => expect(this.get(readAlongNoteTestIds.chip)).toHaveText(text));
@@ -370,14 +312,10 @@ export class ReaderPageObject extends PageObject {
     this.step(`verifyNoteCaptionReads ${text}`, () => expect(this.get(readAlongNoteTestIds.caption)).toHaveText(text));
 
   clickLineWithText = (text: string) =>
-    this.step(`clickLineWithText ${text}`, () =>
-      this.get(readAlongNoteTestIds.line).filter({ hasText: text }).first().click(),
-    );
+    this.step(`clickLineWithText ${text}`, () => this.get(readAlongNoteTestIds.line).filter({ hasText: text }).first().click());
 
-  clickPlayPause = () =>
-    this.step("clickPlayPause", () => this.click(readerPlayerBarTestIds.playButton));
-  clickSkipForward = () =>
-    this.step("clickSkipForward", () => this.click(readerPlayerBarTestIds.skipForwardButton));
+  clickPlayPause = () => this.step("clickPlayPause", () => this.click(readerPlayerBarTestIds.playButton));
+  clickSkipForward = () => this.step("clickSkipForward", () => this.click(readerPlayerBarTestIds.skipForwardButton));
   clickSkipBack = () => this.step("clickSkipBack", () => this.click(readerPlayerBarTestIds.skipBackButton));
 
   // Design 2: [ and ] step the spoken line, from anywhere on the page but a field.
@@ -398,20 +336,14 @@ export class ReaderPageObject extends PageObject {
 
   // The label line is the bar's live region: every state says itself there.
   verifyBarSays = (text: string | RegExp) =>
-    this.step(`verifyBarSays ${String(text)}`, () =>
-      expect(this.get(readerPlayerBarTestIds.label)).toHaveText(text, { timeout: 10_000 }),
-    );
+    this.step(`verifyBarSays ${String(text)}`, () => expect(this.get(readerPlayerBarTestIds.label)).toHaveText(text, { timeout: 10_000 }));
 
   verifyBarClockReads = (text: string | RegExp) =>
-    this.step(`verifyBarClockReads ${String(text)}`, () =>
-      expect(this.get(readerPlayerBarTestIds.clock)).toHaveText(text),
-    );
+    this.step(`verifyBarClockReads ${String(text)}`, () => expect(this.get(readerPlayerBarTestIds.clock)).toHaveText(text));
 
   verifyIsThePacer = (pacer: boolean) =>
     this.step(`verifyIsThePacer ${pacer}`, () =>
-      pacer
-        ? this.expectToBeVisible(readerPlayerBarTestIds.pacerTag)
-        : this.expectNotToBeVisible(readerPlayerBarTestIds.pacerTag),
+      pacer ? this.expectToBeVisible(readerPlayerBarTestIds.pacerTag) : this.expectNotToBeVisible(readerPlayerBarTestIds.pacerTag),
     );
 
   // Design 43i: the voice the bar names opens the voice setting, wherever the bar is.
@@ -435,8 +367,7 @@ export class ReaderPageObject extends PageObject {
         : expect(this.get(readerPlayerBarTestIds.reRecordButton)).toHaveText(label),
     );
 
-  clickBarAction = (action: string) =>
-    this.step(`clickBarAction ${action}`, () => this.click(readerPlayerBarTestIds.action(action)));
+  clickBarAction = (action: string) => this.step(`clickBarAction ${action}`, () => this.click(readerPlayerBarTestIds.action(action)));
 
   verifyOffersBarAction = (action: string, offered: boolean) =>
     this.step(`verifyOffersBarAction ${action} ${offered}`, () =>
@@ -447,20 +378,15 @@ export class ReaderPageObject extends PageObject {
 
   verifyOffersSignInForAudio = (offered: boolean) =>
     this.step(`verifyOffersSignInForAudio ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(readerPlayerBarTestIds.signInLink)
-        : this.expectNotToBeVisible(readerPlayerBarTestIds.signInLink),
+      offered ? this.expectToBeVisible(readerPlayerBarTestIds.signInLink) : this.expectNotToBeVisible(readerPlayerBarTestIds.signInLink),
     );
 
-  verifyShowsPreparingSweep = () =>
-    this.step("verifyShowsPreparingSweep", () => this.expectToBeVisible(playerScrubberTestIds.sweep));
+  verifyShowsPreparingSweep = () => this.step("verifyShowsPreparingSweep", () => this.expectToBeVisible(playerScrubberTestIds.sweep));
 
   // Where the scrubber says the clock is, read off the slider rather than the text so it
   // holds on every surface.
   readScrubberSeconds = (): Promise<number> =>
-    this.step("readScrubberSeconds", async () =>
-      Number(await this.get(playerScrubberTestIds.root).getAttribute("aria-valuenow")),
-    );
+    this.step("readScrubberSeconds", async () => Number(await this.get(playerScrubberTestIds.root).getAttribute("aria-valuenow")));
 
   verifyScrubberSecondsAtLeast = (seconds: number) =>
     this.step(`verifyScrubberSecondsAtLeast ${seconds}`, () =>
@@ -488,8 +414,7 @@ export class ReaderPageObject extends PageObject {
     });
 
   clickRate = () => this.step("clickRate", () => this.click(readerPlayerBarTestIds.rateButton));
-  clickFavourite = () =>
-    this.step("clickFavourite", () => this.click(readerMastheadTestIds.favouriteButton));
+  clickFavourite = () => this.step("clickFavourite", () => this.click(readerMastheadTestIds.favouriteButton));
 
   // The head's circle is the row's circle: the control keeps its shape between a row and
   // the note that row opens, which is the whole reason the two sizes are one number.
@@ -507,16 +432,12 @@ export class ReaderPageObject extends PageObject {
       await this.click(overviewActionsMenuTestIds.readItem);
     });
 
-  clickNoteEndMarkRead = () =>
-    this.step("clickNoteEndMarkRead", () => this.click(noteEndActionsTestIds.readButton));
+  clickNoteEndMarkRead = () => this.step("clickNoteEndMarkRead", () => this.click(noteEndActionsTestIds.readButton));
 
-  clickNoteEndFavourite = () =>
-    this.step("clickNoteEndFavourite", () => this.click(noteEndActionsTestIds.favouriteButton));
+  clickNoteEndFavourite = () => this.step("clickNoteEndFavourite", () => this.click(noteEndActionsTestIds.favouriteButton));
 
   verifyNoteEndReadButtonReads = (label: string) =>
-    this.step(`verifyNoteEndReadButtonReads ${label}`, () =>
-      expect(this.get(noteEndActionsTestIds.readButton)).toHaveText(label),
-    );
+    this.step(`verifyNoteEndReadButtonReads ${label}`, () => expect(this.get(noteEndActionsTestIds.readButton)).toHaveText(label));
 
   verifyNoteEndFavouriteIs = (favourited: boolean) =>
     this.step(`verifyNoteEndFavouriteIs ${favourited}`, () =>
@@ -525,9 +446,7 @@ export class ReaderPageObject extends PageObject {
 
   verifyNoteEndActionsAreShown = (shown: boolean) =>
     this.step(`verifyNoteEndActionsAreShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(noteEndActionsTestIds.root)
-        : this.expectNotToBeVisible(noteEndActionsTestIds.root),
+      shown ? this.expectToBeVisible(noteEndActionsTestIds.root) : this.expectNotToBeVisible(noteEndActionsTestIds.root),
     );
 
   // What a screen reader is given: the figure in full, where the chip itself abbreviates.
@@ -536,9 +455,7 @@ export class ReaderPageObject extends PageObject {
 
   // What the reader sees, which the spoken line above would otherwise cover for.
   verifySavedChipFigureReads = (text: string) =>
-    this.step(`verifySavedChipFigureReads ${text}`, () =>
-      expect(this.get(savedChipTestIds.figure)).toHaveText(text),
-    );
+    this.step(`verifySavedChipFigureReads ${text}`, () => expect(this.get(savedChipTestIds.figure)).toHaveText(text));
 
   verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
 
@@ -634,15 +551,12 @@ export class ReaderPageObject extends PageObject {
     });
 
   verifyDubiousFlagIsNamed = (name: string) =>
-    this.step(`verifyDubiousFlagIsNamed ${name}`, () =>
-      expect(this.get(readerMastheadTestIds.dubiousFlag)).toHaveAccessibleName(name),
-    );
+    this.step(`verifyDubiousFlagIsNamed ${name}`, () => expect(this.get(readerMastheadTestIds.dubiousFlag)).toHaveAccessibleName(name));
 
   verifyDubiousFlagIsFocused = () =>
     this.step("verifyDubiousFlagIsFocused", () => expect(this.get(readerMastheadTestIds.dubiousFlag)).toBeFocused());
 
-  verifyHasNoDubiousFlag = () =>
-    this.step("verifyHasNoDubiousFlag", () => this.expectNotToBeVisible(readerMastheadTestIds.dubiousFlag));
+  verifyHasNoDubiousFlag = () => this.step("verifyHasNoDubiousFlag", () => this.expectNotToBeVisible(readerMastheadTestIds.dubiousFlag));
 
   clickDeleteOverview = (): Promise<DeleteOverviewDialogPageObject> =>
     this.step("clickDeleteOverview", async () => {
@@ -651,8 +565,7 @@ export class ReaderPageObject extends PageObject {
       return new DeleteOverviewDialogPageObject(this.testContext).verifyIsShown();
     });
 
-  clickTab = (tab: string) =>
-    this.step(`clickTab ${tab}`, () => this.click(readerTabsTestIds.tab(tab)));
+  clickTab = (tab: string) => this.step(`clickTab ${tab}`, () => this.click(readerTabsTestIds.tab(tab)));
 
   // The indicator's position is measured off the laid-out buttons, so this is what fails
   // if that measurement ever stops happening — the three labels are different widths and
@@ -667,23 +580,16 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  clickNextOverview = () =>
-    this.step("clickNextOverview", () => this.click(readerPageTestIds.nextLink));
+  clickNextOverview = () => this.step("clickNextOverview", () => this.click(readerPageTestIds.nextLink));
 
-  clickPreviousOverview = () =>
-    this.step("clickPreviousOverview", () => this.click(readerPageTestIds.previousLink));
+  clickPreviousOverview = () => this.step("clickPreviousOverview", () => this.click(readerPageTestIds.previousLink));
 
   verifyRateReads = (rate: string) =>
-    this.step(`verifyRateReads ${rate}`, () =>
-      expect(this.get(readerPlayerBarTestIds.rateButton)).toHaveText(rate),
-    );
+    this.step(`verifyRateReads ${rate}`, () => expect(this.get(readerPlayerBarTestIds.rateButton)).toHaveText(rate));
 
   verifyIsFavourited = (isFavourited: boolean) =>
     this.step(`verifyIsFavourited ${isFavourited}`, () =>
-      expect(this.get(readerMastheadTestIds.favouriteButton)).toHaveAttribute(
-        "aria-pressed",
-        String(isFavourited),
-      ),
+      expect(this.get(readerMastheadTestIds.favouriteButton)).toHaveAttribute("aria-pressed", String(isFavourited)),
     );
 
   // Read state is reported by what the menu offers to do next, so the menu is opened to
@@ -691,9 +597,7 @@ export class ReaderPageObject extends PageObject {
   verifyIsRead = (isRead: boolean) =>
     this.step(`verifyIsRead ${isRead}`, async () => {
       await this.openActionsMenu();
-      await expect(this.get(overviewActionsMenuTestIds.readItem)).toHaveText(
-        isRead ? "Mark as unread" : "Mark as read",
-      );
+      await expect(this.get(overviewActionsMenuTestIds.readItem)).toHaveText(isRead ? "Mark as unread" : "Mark as read");
       await this.clickAwayFromAnyPopover();
     });
 
@@ -717,76 +621,50 @@ export class ReaderPageObject extends PageObject {
   verifyTranscriptTimesSeek = (seekable: boolean) =>
     this.step(`verifyTranscriptTimesSeek ${seekable}`, async () => {
       const seekControls = this.page.getByRole("button", { name: /^Play the video from/ });
-      await (seekable
-        ? expect(seekControls.first()).toBeVisible()
-        : expect(seekControls).toHaveCount(0));
+      await (seekable ? expect(seekControls.first()).toBeVisible() : expect(seekControls).toHaveCount(0));
     });
 
   verifyTranscriptBlockCountIs = (count: number) =>
-    this.step(`verifyTranscriptBlockCountIs ${count}`, () =>
-      this.expectToHaveCount(transcriptPanelTestIds.row, count),
-    );
+    this.step(`verifyTranscriptBlockCountIs ${count}`, () => this.expectToHaveCount(transcriptPanelTestIds.row, count));
 
   verifyTranscriptSpeakerMarkCountIs = (count: number) =>
-    this.step(`verifyTranscriptSpeakerMarkCountIs ${count}`, () =>
-      this.expectToHaveCount(transcriptPanelTestIds.speakerMark, count),
-    );
+    this.step(`verifyTranscriptSpeakerMarkCountIs ${count}`, () => this.expectToHaveCount(transcriptPanelTestIds.speakerMark, count));
 
   verifyTranscriptToolsAreShown = (shown: boolean) =>
     this.step(`verifyTranscriptToolsAreShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(transcriptPanelTestIds.tools)
-        : this.expectNotToBeVisible(transcriptPanelTestIds.tools),
+      shown ? this.expectToBeVisible(transcriptPanelTestIds.tools) : this.expectNotToBeVisible(transcriptPanelTestIds.tools),
     );
 
-  clickCopyTranscript = () =>
-    this.step("clickCopyTranscript", () => this.click(transcriptPanelTestIds.copyButton));
+  clickCopyTranscript = () => this.step("clickCopyTranscript", () => this.click(transcriptPanelTestIds.copyButton));
 
   verifyCopyButtonReads = (label: string) =>
-    this.step(`verifyCopyButtonReads ${label}`, () =>
-      expect(this.get(transcriptPanelTestIds.copyButton)).toHaveText(label),
-    );
+    this.step(`verifyCopyButtonReads ${label}`, () => expect(this.get(transcriptPanelTestIds.copyButton)).toHaveText(label));
 
   verifyTranscriptCannotBeCopied = () =>
-    this.step("verifyTranscriptCannotBeCopied", () =>
-      this.expectNotToBeVisible(transcriptPanelTestIds.copyButton),
-    );
+    this.step("verifyTranscriptCannotBeCopied", () => this.expectNotToBeVisible(transcriptPanelTestIds.copyButton));
 
   searchTheTranscript = (query: string) =>
-    this.step(`searchTheTranscript ${query}`, () =>
-      this.get(transcriptPanelTestIds.searchInput).fill(query),
-    );
+    this.step(`searchTheTranscript ${query}`, () => this.get(transcriptPanelTestIds.searchInput).fill(query));
 
   verifyMatchCountReads = (count: string) =>
-    this.step(`verifyMatchCountReads ${count}`, () =>
-      expect(this.get(transcriptPanelTestIds.matchCount)).toHaveText(count),
-    );
+    this.step(`verifyMatchCountReads ${count}`, () => expect(this.get(transcriptPanelTestIds.matchCount)).toHaveText(count));
 
   verifyMatchCountIsHidden = () =>
-    this.step("verifyMatchCountIsHidden", () =>
-      this.expectNotToBeVisible(transcriptPanelTestIds.matchCount),
-    );
+    this.step("verifyMatchCountIsHidden", () => this.expectNotToBeVisible(transcriptPanelTestIds.matchCount));
 
   verifyHighlightedMatchCountIs = (count: number) =>
-    this.step(`verifyHighlightedMatchCountIs ${count}`, () =>
-      this.expectToHaveCount(transcriptPanelTestIds.match, count),
-    );
+    this.step(`verifyHighlightedMatchCountIs ${count}`, () => this.expectToHaveCount(transcriptPanelTestIds.match, count));
 
   verifyCurrentMatchReads = (text: string) =>
     this.step(`verifyCurrentMatchReads ${text}`, () =>
-      expect(
-        this.get(transcriptPanelTestIds.match).and(this.page.locator('[data-current="true"]')),
-      ).toHaveText(text),
+      expect(this.get(transcriptPanelTestIds.match).and(this.page.locator('[data-current="true"]'))).toHaveText(text),
     );
 
-  clickNextMatch = () =>
-    this.step("clickNextMatch", () => this.click(transcriptPanelTestIds.nextMatchButton));
+  clickNextMatch = () => this.step("clickNextMatch", () => this.click(transcriptPanelTestIds.nextMatchButton));
 
-  clickPreviousMatch = () =>
-    this.step("clickPreviousMatch", () => this.click(transcriptPanelTestIds.previousMatchButton));
+  clickPreviousMatch = () => this.step("clickPreviousMatch", () => this.click(transcriptPanelTestIds.previousMatchButton));
 
-  clickClearSearch = () =>
-    this.step("clickClearSearch", () => this.click(transcriptPanelTestIds.clearSearchButton));
+  clickClearSearch = () => this.step("clickClearSearch", () => this.click(transcriptPanelTestIds.clearSearchButton));
 
   verifyOffersToClearTheSearch = (offered: boolean) =>
     this.step(`verifyOffersToClearTheSearch ${offered}`, () =>
@@ -796,14 +674,10 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifySearchReads = (query: string) =>
-    this.step(`verifySearchReads ${query}`, () =>
-      expect(this.get(transcriptPanelTestIds.searchInput)).toHaveValue(query),
-    );
+    this.step(`verifySearchReads ${query}`, () => expect(this.get(transcriptPanelTestIds.searchInput)).toHaveValue(query));
 
   pressInTheSearchField = (key: string) =>
-    this.step(`pressInTheSearchField ${key}`, () =>
-      this.get(transcriptPanelTestIds.searchInput).press(key),
-    );
+    this.step(`pressInTheSearchField ${key}`, () => this.get(transcriptPanelTestIds.searchInput).press(key));
 
   verifyMatchSteppersAreDisabled = () =>
     this.step("verifyMatchSteppersAreDisabled", async () => {
@@ -811,8 +685,7 @@ export class ReaderPageObject extends PageObject {
       await expect(this.get(transcriptPanelTestIds.nextMatchButton)).toBeDisabled();
     });
 
-  clickExportTranscript = () =>
-    this.step("clickExportTranscript", () => this.click(transcriptPanelTestIds.exportButton));
+  clickExportTranscript = () => this.step("clickExportTranscript", () => this.click(transcriptPanelTestIds.exportButton));
 
   verifyIsFollowingTheVideo = (following: boolean) =>
     this.step(`verifyIsFollowingTheVideo ${following}`, () =>
@@ -824,9 +697,7 @@ export class ReaderPageObject extends PageObject {
   verifyCurrentTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyCurrentTranscriptBlockReads ${String(text)}`, () =>
       expect(
-        this.get(transcriptPanelTestIds.row)
-          .and(this.page.locator('[data-current="true"]'))
-          .getByTestId(transcriptPanelTestIds.rowText),
+        this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]')).getByTestId(transcriptPanelTestIds.rowText),
       ).toHaveText(text),
     );
 
@@ -842,9 +713,7 @@ export class ReaderPageObject extends PageObject {
 
   verifyNoTranscriptBlockIsCurrent = () =>
     this.step("verifyNoTranscriptBlockIsCurrent", () =>
-      expect(
-        this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]')),
-      ).toHaveCount(0),
+      expect(this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'))).toHaveCount(0),
     );
 
   verifyOffersToFollowPlayback = (offered: boolean) =>
@@ -854,13 +723,10 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(transcriptPanelTestIds.followButton),
     );
 
-  clickFollowPlayback = () =>
-    this.step("clickFollowPlayback", () => this.click(transcriptPanelTestIds.followButton));
+  clickFollowPlayback = () => this.step("clickFollowPlayback", () => this.click(transcriptPanelTestIds.followButton));
 
   verifyFollowButtonReads = (label: string) =>
-    this.step(`verifyFollowButtonReads ${label}`, () =>
-      expect(this.get(transcriptPanelTestIds.followButton)).toHaveText(label),
-    );
+    this.step(`verifyFollowButtonReads ${label}`, () => expect(this.get(transcriptPanelTestIds.followButton)).toHaveText(label));
 
   verifyCurrentBlockSaysPlaying = () =>
     this.step("verifyCurrentBlockSaysPlaying", () =>
@@ -873,22 +739,15 @@ export class ReaderPageObject extends PageObject {
 
   verifyTargetBlockNamesChapter = (label: string) =>
     this.step(`verifyTargetBlockNamesChapter ${label}`, () =>
-      expect(
-        this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.chapterChip),
-      ).toHaveText(label),
+      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.chapterChip)).toHaveText(label),
     );
 
-  clickBackToChapters = () =>
-    this.step("clickBackToChapters", () =>
-      this.click(transcriptPanelTestIds.backToChaptersButton),
-    );
+  clickBackToChapters = () => this.step("clickBackToChapters", () => this.click(transcriptPanelTestIds.backToChaptersButton));
 
   verifyCurrentChapterShowsProgress = () =>
     this.step("verifyCurrentChapterShowsProgress", () =>
       expect(
-        this.get(chaptersPanelTestIds.row)
-          .and(this.page.locator('[data-current="true"]'))
-          .getByTestId(chaptersPanelTestIds.progress),
+        this.get(chaptersPanelTestIds.row).and(this.page.locator('[data-current="true"]')).getByTestId(chaptersPanelTestIds.progress),
       ).toHaveAttribute("aria-valuenow", /^\d+$/),
     );
 
@@ -900,9 +759,7 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyLineTimesRead = (labels: string[]) =>
-    this.step(`verifyLineTimesRead ${labels.join(", ")}`, () =>
-      expect(this.get(lineRangeTagTestIds.tag)).toHaveText(labels),
-    );
+    this.step(`verifyLineTimesRead ${labels.join(", ")}`, () => expect(this.get(lineRangeTagTestIds.tag)).toHaveText(labels));
 
   openLineTime = (label: string) =>
     this.step(`openLineTime ${label}`, async () => {
@@ -912,9 +769,7 @@ export class ReaderPageObject extends PageObject {
     });
 
   verifyLineMenuRangeReads = (range: string) =>
-    this.step(`verifyLineMenuRangeReads ${range}`, () =>
-      expect(this.get(lineRangeTagTestIds.menuRange)).toHaveText(range),
-    );
+    this.step(`verifyLineMenuRangeReads ${range}`, () => expect(this.get(lineRangeTagTestIds.menuRange)).toHaveText(range));
 
   verifyLineMenuIsOpen = (open: boolean) =>
     this.step(`verifyLineMenuIsOpen ${open}`, () =>
@@ -932,8 +787,7 @@ export class ReaderPageObject extends PageObject {
   clickOutsideLineMenu = () =>
     this.step("clickOutsideLineMenu", () => this.get(lineRangeTagTestIds.scrim).click({ position: { x: 10, y: 10 } }));
 
-  clickReadInTranscript = () =>
-    this.step("clickReadInTranscript", () => this.click(lineRangeTagTestIds.transcriptButton));
+  clickReadInTranscript = () => this.step("clickReadInTranscript", () => this.click(lineRangeTagTestIds.transcriptButton));
 
   clickReadInTranscriptAt = (label: string) =>
     this.step(`clickReadInTranscriptAt ${label}`, async () => {
@@ -952,46 +806,32 @@ export class ReaderPageObject extends PageObject {
 
   verifyOffersToWatchOnYouTube = (offered: boolean) =>
     this.step(`verifyOffersToWatchOnYouTube ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(lineRangeTagTestIds.watchLink)
-        : this.expectNotToBeVisible(lineRangeTagTestIds.watchLink),
+      offered ? this.expectToBeVisible(lineRangeTagTestIds.watchLink) : this.expectNotToBeVisible(lineRangeTagTestIds.watchLink),
     );
 
   verifyOffersToSkipTheVideo = (offered: boolean) =>
     this.step(`verifyOffersToSkipTheVideo ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(lineRangeTagTestIds.skipButton)
-        : this.expectNotToBeVisible(lineRangeTagTestIds.skipButton),
+      offered ? this.expectToBeVisible(lineRangeTagTestIds.skipButton) : this.expectNotToBeVisible(lineRangeTagTestIds.skipButton),
     );
 
   clickSkipTo = () => this.step("clickSkipTo", () => this.click(lineRangeTagTestIds.skipButton));
 
-  clickListen = () =>
-    this.step("clickListen", () => this.click(readerMastheadTestIds.readAloudButton));
+  clickListen = () => this.step("clickListen", () => this.click(readerMastheadTestIds.readAloudButton));
 
   verifyListenReads = (label: string) =>
-    this.step(`verifyListenReads ${label}`, () =>
-      expect(this.get(readerMastheadTestIds.readAloudButton)).toHaveText(label),
-    );
+    this.step(`verifyListenReads ${label}`, () => expect(this.get(readerMastheadTestIds.readAloudButton)).toHaveText(label));
 
   verifyPlayerIsDocked = (docked: boolean) =>
     this.step(`verifyPlayerIsDocked ${docked}`, () =>
-      docked
-        ? this.expectToBeVisible(readerPlayerBarTestIds.root)
-        : this.expectNotToBeVisible(readerPlayerBarTestIds.root),
+      docked ? this.expectToBeVisible(readerPlayerBarTestIds.root) : this.expectNotToBeVisible(readerPlayerBarTestIds.root),
     );
 
   verifySavedLocallyNoteIsShown = (shown: boolean) =>
     this.step(`verifySavedLocallyNoteIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(savedLocallyNoteTestIds.root)
-        : this.expectNotToBeVisible(savedLocallyNoteTestIds.root),
+      shown ? this.expectToBeVisible(savedLocallyNoteTestIds.root) : this.expectNotToBeVisible(savedLocallyNoteTestIds.root),
     );
 
-  dismissSavedLocallyNote = () =>
-    this.step("dismissSavedLocallyNote", () =>
-      this.click(savedLocallyNoteTestIds.dismissButton),
-    );
+  dismissSavedLocallyNote = () => this.step("dismissSavedLocallyNote", () => this.click(savedLocallyNoteTestIds.dismissButton));
 
   // Design 205b: the panel's reader is the phone's, so the head carries the way back, the
   // image, Listen and Favourite — and no stepper, which is the wide reader's alone.
@@ -1008,30 +848,21 @@ export class ReaderPageObject extends PageObject {
     this.step(`verifyTranscriptFailedReads ${pattern.source}`, () =>
       expect(this.get(transcriptPanelTestIds.errorNote)).toHaveText(pattern),
     );
-  clickRetryTranscript = () =>
-    this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
+  clickRetryTranscript = () => this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
   // YouTube's own phrase for its speech-recognition track, not the developer's
   // (docs/features/transcript-storage.md).
-  verifyShowsMachineTranscribedNote = () =>
-    expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText("Auto-generated");
-  verifyShowsNoMachineTranscribedNote = () =>
-    this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
+  verifyShowsMachineTranscribedNote = () => expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText("Auto-generated");
+  verifyShowsNoMachineTranscribedNote = () => this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPanel = () => this.expectToBeVisible(chaptersPanelTestIds.root);
 
   verifyChaptersNoteReads = (pattern: RegExp) =>
-    this.step(`verifyChaptersNoteReads ${pattern.source}`, () =>
-      expect(this.get(chaptersPanelTestIds.note)).toHaveText(pattern),
-    );
+    this.step(`verifyChaptersNoteReads ${pattern.source}`, () => expect(this.get(chaptersPanelTestIds.note)).toHaveText(pattern));
 
   verifyChapterCountReads = (count: string) =>
-    this.step(`verifyChapterCountReads ${count}`, () =>
-      expect(this.get(chaptersPanelTestIds.count)).toHaveText(count),
-    );
+    this.step(`verifyChapterCountReads ${count}`, () => expect(this.get(chaptersPanelTestIds.count)).toHaveText(count));
 
   verifyChapterTitlesRead = (titles: string[]) =>
-    this.step(`verifyChapterTitlesRead ${titles.join(" / ")}`, () =>
-      expect(this.get(chaptersPanelTestIds.title)).toHaveText(titles),
-    );
+    this.step(`verifyChapterTitlesRead ${titles.join(" / ")}`, () => expect(this.get(chaptersPanelTestIds.title)).toHaveText(titles));
 
   verifyChapterSummariesRead = (summaries: string[]) =>
     this.step(`verifyChapterSummariesRead ${summaries.join(" / ")}`, () =>
@@ -1039,15 +870,11 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyChapterRangesRead = (ranges: string[]) =>
-    this.step(`verifyChapterRangesRead ${ranges.join(", ")}`, () =>
-      expect(this.get(chaptersPanelTestIds.range)).toHaveText(ranges),
-    );
+    this.step(`verifyChapterRangesRead ${ranges.join(", ")}`, () => expect(this.get(chaptersPanelTestIds.range)).toHaveText(ranges));
 
-  private chapterRange = (range: string): Locator =>
-    this.get(chaptersPanelTestIds.range).filter({ hasText: new RegExp(`^${range}$`) });
+  private chapterRange = (range: string): Locator => this.get(chaptersPanelTestIds.range).filter({ hasText: new RegExp(`^${range}$`) });
 
-  clickChapterRange = (range: string) =>
-    this.step(`clickChapterRange ${range}`, () => this.chapterRange(range).click());
+  clickChapterRange = (range: string) => this.step(`clickChapterRange ${range}`, () => this.chapterRange(range).click());
 
   verifyChapterRangesSeek = (seekable: boolean) =>
     this.step(`verifyChapterRangesSeek ${seekable}`, async () => {
@@ -1069,25 +896,19 @@ export class ReaderPageObject extends PageObject {
   verifyChapterRangesLinkOut = (linked: boolean) =>
     this.step(`verifyChapterRangesLinkOut ${linked}`, async () => {
       const links = this.page.getByRole("link", { name: /^Open the video on YouTube at/ });
-      await (linked
-        ? expect(links).toHaveCount(await this.get(chaptersPanelTestIds.row).count())
-        : expect(links).toHaveCount(0));
+      await (linked ? expect(links).toHaveCount(await this.get(chaptersPanelTestIds.row).count()) : expect(links).toHaveCount(0));
     });
 
   verifyCurrentChapterReads = (title: string) =>
     this.step(`verifyCurrentChapterReads ${title}`, () =>
       expect(
-        this.get(chaptersPanelTestIds.row)
-          .and(this.page.locator('[data-current="true"]'))
-          .getByTestId(chaptersPanelTestIds.title),
+        this.get(chaptersPanelTestIds.row).and(this.page.locator('[data-current="true"]')).getByTestId(chaptersPanelTestIds.title),
       ).toHaveText(title),
     );
 
   verifyNoChapterIsCurrent = () =>
     this.step("verifyNoChapterIsCurrent", () =>
-      expect(
-        this.get(chaptersPanelTestIds.row).and(this.page.locator('[data-current="true"]')),
-      ).toHaveCount(0),
+      expect(this.get(chaptersPanelTestIds.row).and(this.page.locator('[data-current="true"]'))).toHaveCount(0),
     );
 
   clickChapterTranscript = (title: string) =>
@@ -1113,23 +934,17 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyActiveTabIs = (tab: string) =>
-    this.step(`verifyActiveTabIs ${tab}`, () =>
-      expect(this.get(readerTabsTestIds.tab(tab))).toHaveAttribute("aria-selected", "true"),
-    );
+    this.step(`verifyActiveTabIs ${tab}`, () => expect(this.get(readerTabsTestIds.tab(tab))).toHaveAttribute("aria-selected", "true"));
 
-  private targetTranscriptBlock = (): Locator =>
-    this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-target="true"]'));
+  private targetTranscriptBlock = (): Locator => this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-target="true"]'));
 
-  private currentTranscriptBlock = (): Locator =>
-    this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'));
+  private currentTranscriptBlock = (): Locator => this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'));
 
   // Where the mark begins. A chapter marks its whole stretch, so this is the first block
   // of the run and the one scrolled to; verifyTargetedTranscriptBlocksRead takes the rest.
   verifyTargetTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyTargetTranscriptBlockReads ${String(text)}`, async () => {
-      await expect(
-        this.targetTranscriptBlock().first().getByTestId(transcriptPanelTestIds.rowText),
-      ).toHaveText(text);
+      await expect(this.targetTranscriptBlock().first().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(text);
       await expect(this.targetTranscriptBlock().first()).toBeInViewport();
       const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
       const row = (await this.targetTranscriptBlock().first().boundingBox())!;
@@ -1137,24 +952,18 @@ export class ReaderPageObject extends PageObject {
     });
 
   verifyNoTranscriptBlockIsTargeted = () =>
-    this.step("verifyNoTranscriptBlockIsTargeted", () =>
-      expect(this.targetTranscriptBlock()).toHaveCount(0),
-    );
+    this.step("verifyNoTranscriptBlockIsTargeted", () => expect(this.targetTranscriptBlock()).toHaveCount(0));
 
   // The whole stretch a chapter marks, in order, so the run's first and last blocks are
   // both named rather than only its start (docs/features/chapters.md).
   verifyTargetedTranscriptBlocksRead = (texts: RegExp[]) =>
     this.step(`verifyTargetedTranscriptBlocksRead ${texts.length}`, () =>
-      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(
-        texts,
-      ),
+      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(texts),
     );
 
   verifyTargetedBlocksNameTheChapterOnce = () =>
     this.step("verifyTargetedBlocksNameTheChapterOnce", () =>
-      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.chapterChip)).toHaveCount(
-        1,
-      ),
+      expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.chapterChip)).toHaveCount(1),
     );
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 
@@ -1232,17 +1041,13 @@ export class ReaderPageObject extends PageObject {
     );
 
   verifyTranscriptIsAtTheTop = () =>
-    this.step("verifyTranscriptIsAtTheTop", () =>
-      expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0),
-    );
+    this.step("verifyTranscriptIsAtTheTop", () => expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0));
 
   // Design 205e: the line in the band under the bar, saying the tab has moved on under
   // the open note.
   verifyOnThisTabLineIsShown = (shown: boolean) =>
     this.step(`verifyOnThisTabLineIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(onThisTabLineTestIds.root)
-        : this.expectNotToBeVisible(onThisTabLineTestIds.root),
+      shown ? this.expectToBeVisible(onThisTabLineTestIds.root) : this.expectNotToBeVisible(onThisTabLineTestIds.root),
     );
 
   verifyOnThisTabLineSays = (message: string, offer: string) =>
@@ -1269,12 +1074,9 @@ export class ReaderPageObject extends PageObject {
       expect(offer).toEqual({ border: "none", background: "rgba(0, 0, 0, 0)" });
     });
 
-  clickOnThisTabOffer = () =>
-    this.step("clickOnThisTabOffer", () => this.click(onThisTabLineTestIds.offer));
+  clickOnThisTabOffer = () => this.step("clickOnThisTabOffer", () => this.click(onThisTabLineTestIds.offer));
 
-  dismissOnThisTabLine = () =>
-    this.step("dismissOnThisTabLine", () => this.click(onThisTabLineTestIds.dismissButton));
-
+  dismissOnThisTabLine = () => this.step("dismissOnThisTabLine", () => this.click(onThisTabLineTestIds.dismissButton));
 
   // At rest the head is still in flow above the tabs, so nothing of the note's own is
   // held against the bar yet (design 205b).
@@ -1334,7 +1136,6 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 });
     });
 
-
   verifyHeadBackLinkIsUnderTheBar = () =>
     this.step("verifyHeadBackLinkIsUnderTheBar", () =>
       expect(async () => {
@@ -1351,19 +1152,13 @@ export class ReaderPageObject extends PageObject {
     });
 
   private get headImage(): HeadImagePageObject {
-    return new HeadImagePageObject(
-      this.testContext,
-      this.get(readerMastheadTestIds.root),
-      this.get(readerMastheadTestIds.title),
-    );
+    return new HeadImagePageObject(this.testContext, this.get(readerMastheadTestIds.root), this.get(readerMastheadTestIds.title));
   }
 
   verifyHeadHasImage = (shown: boolean) =>
     this.step(`verifyHeadHasImage ${shown}`, async () => {
       await this.headImage.verifyShown(shown);
-      await expect(
-        this.get(readerMastheadTestIds.root).getByTestId(overviewThumbnailTestIds.nameTile),
-      ).toHaveCount(0);
+      await expect(this.get(readerMastheadTestIds.root).getByTestId(overviewThumbnailTestIds.nameTile)).toHaveCount(0);
     });
 
   verifyHeadImageSize = (width: number, height: number) => this.headImage.verifySize(width, height);
@@ -1388,11 +1183,9 @@ export class ReaderPageObject extends PageObject {
 
   verifySharperHeadImageShown = (shown: boolean) => this.headImage.verifySharperShown(shown);
 
-  verifyHeadImageLeadsWith = (beside: "channel" | "sourceLine") =>
-    this.headImage.verifyLeadsWith(this.get(readerMastheadTestIds[beside]));
+  verifyHeadImageLeadsWith = (beside: "channel" | "sourceLine") => this.headImage.verifyLeadsWith(this.get(readerMastheadTestIds[beside]));
 
-  verifyHeadImageAbove = (part: "channel" | "sourceLine") =>
-    this.headImage.verifyAbove(this.get(readerMastheadTestIds[part]));
+  verifyHeadImageAbove = (part: "channel" | "sourceLine") => this.headImage.verifyAbove(this.get(readerMastheadTestIds[part]));
 
   verifyAboveTitle = (part: "channel" | "sourceLine") =>
     this.step(`verifyAboveTitle ${part}`, async () => {
@@ -1400,5 +1193,4 @@ export class ReaderPageObject extends PageObject {
       const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
       expect(box.y + box.height).toBeLessThanOrEqual(title.y);
     });
-
 }

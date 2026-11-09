@@ -33,14 +33,7 @@ interface Drag {
 // Design 34za: a tile tinted in the milestone's colour, its pill, the total rolling in,
 // and five lines that cycle, swipe and step with the arrow keys
 // (docs/features/time-saved.md).
-export function MilestoneCard({
-  milestone,
-  minutes,
-  reachedOn,
-  dismiss,
-  onLineChosen,
-  shimmerIndex = 0,
-}: MilestoneCardProps) {
+export function MilestoneCard({ milestone, minutes, reachedOn, dismiss, onLineChosen, shimmerIndex = 0 }: MilestoneCardProps) {
   const lines = MILESTONE_LINES[milestone.id];
   const [held, setHeld] = useState({ hover: false, focus: false, drag: false });
   const paused = held.hover || held.focus || held.drag;
@@ -97,10 +90,8 @@ export function MilestoneCard({
     hold("drag", false);
   };
 
-  const enterClass =
-    line.direction === 1 ? styles.enterFromRight : line.direction === -1 ? styles.enterFromLeft : styles.enterRise;
-  const leaveClass =
-    line.direction === 1 ? styles.leaveToLeft : line.direction === -1 ? styles.leaveToRight : styles.leaveRise;
+  const enterClass = line.direction === 1 ? styles.enterFromRight : line.direction === -1 ? styles.enterFromLeft : styles.enterRise;
+  const leaveClass = line.direction === 1 ? styles.leaveToLeft : line.direction === -1 ? styles.leaveToRight : styles.leaveRise;
 
   return (
     <div
@@ -149,11 +140,7 @@ export function MilestoneCard({
         {milestone.label} saved{reachedOn === undefined ? "" : ` · ${reachedOn}`}
       </p>
       <p className={styles.figure} aria-label={`Time saved: ${spokenTimeSaved(minutes)}`} data-testid={milestoneCardTestIds.figure}>
-        <TimeSavedFigure
-          minutes={minutes}
-          rollFrom={Math.max(0, minutes - ENTRANCE_ROLL_MINUTES)}
-          rollDelayMs={500}
-        />
+        <TimeSavedFigure minutes={minutes} rollFrom={Math.max(0, minutes - ENTRANCE_ROLL_MINUTES)} rollDelayMs={500} />
       </p>
       <div className={styles.lines} aria-live="off">
         {lines.map((text, index) => (

@@ -32,9 +32,7 @@ export async function decideAuthorization(
     return null;
   }
   return withQueryParams(row.redirect_uri, {
-    ...(code === null
-      ? { error: "access_denied", error_description: "The reader did not allow the connection" }
-      : { code }),
+    ...(code === null ? { error: "access_denied", error_description: "The reader did not allow the connection" } : { code }),
     state: row.state,
     iss: urls.issuer,
   });

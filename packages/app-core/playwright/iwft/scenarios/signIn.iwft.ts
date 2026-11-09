@@ -24,9 +24,7 @@ test.describe("the account menu", () => {
     await menu.verifyItemsRead(["Sign in", "Create account", "Settings"]);
   });
 
-  test("opens from the keyboard onto its first item, moves with the arrows, and closes back to its button", async ({
-    launcher,
-  }) => {
+  test("opens from the keyboard onto its first item, moves with the arrows, and closes back to its button", async ({ launcher }) => {
     await launcher.launch({ sync: true });
 
     const menu = await launcher.appShell.accountMenu.openFromKeyboard();
@@ -41,9 +39,7 @@ test.describe("the account menu", () => {
     await menu.verifyIsClosedWithFocusOnTrigger();
   });
 
-  test("signed in, it says who by name and offers connecting the extension, Settings and signing out", async ({
-    launcher,
-  }) => {
+  test("signed in, it says who by name and offers connecting the extension, Settings and signing out", async ({ launcher }) => {
     await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
 
     const menu = await launcher.appShell.accountMenu.open();
@@ -95,10 +91,7 @@ test.describe("the account menu", () => {
 });
 
 test.describe("signing in on the web", () => {
-  test("asking for a link says to check your email, and sends the address once", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("asking for a link says to check your email, and sends the address once", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
@@ -106,9 +99,7 @@ test.describe("signing in on the web", () => {
 
     await signIn.verifyChecksEmail(SIMULATED_EMAIL);
     await signIn.verifyHeadingHasFocus();
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "web", intent: "signIn" },
-    ]);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "signIn" }]);
   });
 
   test("says how many overviews in this browser will join the account", async ({ launcher, backendSimulator }) => {
@@ -131,10 +122,7 @@ test.describe("signing in on the web", () => {
     await signIn.verifySavedOverviewsNoteReads(null);
   });
 
-  test("an address that isn't a whole one is said in place, and nothing is sent", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("an address that isn't a whole one is said in place, and nothing is sent", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
@@ -167,11 +155,7 @@ test.describe("signing in on the web", () => {
   });
 
   // The server sends nothing inside its one-a-minute cooldown (docs/features/sign-in.md).
-  test("another link can be sent once the server's minute is up, and not before", async ({
-    page,
-    launcher,
-    backendSimulator,
-  }) => {
+  test("another link can be sent once the server's minute is up, and not before", async ({ page, launcher, backendSimulator }) => {
     await page.clock.install();
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
@@ -188,10 +172,7 @@ test.describe("signing in on the web", () => {
     test.expect(backendSimulator.auth.magicLinkRequests()).toHaveLength(2);
   });
 
-  test("opening a web link signs this browser in, goes to the library, and the menu says who", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("opening a web link signs this browser in, goes to the library, and the menu says who", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.accountIsNamed("Ada");
     await launcher.launch({ sync: true });
 
@@ -249,10 +230,7 @@ test.describe("signing in on the web", () => {
 
   // The tab the link opened in is the messenger, not the shell that asked: it shows the
   // code and stays signed out (docs/features/sign-in.md).
-  test("a link asked for from the extension shows a code on the web and signs nothing in here", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a link asked for from the extension shows a code on the web and signs nothing in here", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.linkWasAskedForFrom("extension");
     await launcher.launch({ sync: true });
 
@@ -287,15 +265,10 @@ test.describe("signing in on the web", () => {
     const signIn = await launcher.signInPage.verifyAsksForEmail("That link has expired");
     await signIn.requestLink(SIMULATED_EMAIL);
     await signIn.verifyChecksEmail(SIMULATED_EMAIL);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "web", intent: "signIn" },
-    ]);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "signIn" }]);
   });
 
-  test("the sign-in page with no token in it asks for an email and spends nothing", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the sign-in page with no token in it asks for an email and spends nothing", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true });
 
     await launcher.openSignInLink(null);
@@ -344,10 +317,7 @@ test.describe("signing in on the web", () => {
 });
 
 test.describe("creating an account on the web", () => {
-  test("asks for a first name, sends it with the link, and thanks the reader by it", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("asks for a first name, sends it with the link, and thanks the reader by it", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true });
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
 
@@ -357,9 +327,9 @@ test.describe("creating an account on the web", () => {
     await createAccount.verifyKickerReads("Thanks, Ada.");
     await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
     await createAccount.verifyLeadReads(/to finish creating your account/);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "web", intent: "createAccount", firstName: "Ada" },
-    ]);
+    test
+      .expect(backendSimulator.auth.magicLinkRequests())
+      .toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount", firstName: "Ada" }]);
   });
 
   test("the name can be left out, and the link is asked for without one", async ({ launcher, backendSimulator }) => {
@@ -369,9 +339,7 @@ test.describe("creating an account on the web", () => {
     await createAccount.requestLink(SIMULATED_EMAIL);
 
     await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" },
-    ]);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" }]);
   });
 
   test("a name of nothing but spaces is no name, not a refusal", async ({ launcher, backendSimulator }) => {
@@ -382,9 +350,7 @@ test.describe("creating an account on the web", () => {
     await createAccount.requestLink(SIMULATED_EMAIL);
 
     await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" },
-    ]);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" }]);
   });
 
   test("the code from a create-account email finishes creating the account", async ({ launcher, backendSimulator }) => {
@@ -401,9 +367,7 @@ test.describe("creating an account on the web", () => {
     test.expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: "ABCD-EFGH" }]);
   });
 
-  test("signing in leads to Start for a reader with no account, and creating one leads back to signing in", async ({
-    launcher,
-  }) => {
+  test("signing in leads to Start for a reader with no account, and creating one leads back to signing in", async ({ launcher }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
@@ -416,10 +380,7 @@ test.describe("creating an account on the web", () => {
 });
 
 test.describe("signing in from the extension", () => {
-  test("asks for an email, then the code, and greets the reader by name once it works", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("asks for an email, then the code, and greets the reader by name once it works", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.accountIsNamed("Ada");
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
@@ -434,9 +395,7 @@ test.describe("signing in from the extension", () => {
     const menu = await launcher.appShell.accountMenu.open();
     await menu.verifySignedInAs("Ada", SIMULATED_EMAIL);
     await menu.verifySyncStatusShown(true);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "extension", intent: "signIn" },
-    ]);
+    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "extension", intent: "signIn" }]);
     test.expect(backendSimulator.getCallCount(EndpointKey.SYNC_HANDSHAKE)).toBeGreaterThan(0);
   });
 
@@ -464,10 +423,7 @@ test.describe("signing in from the extension", () => {
     await menu.verifyWaitingForCode(SIMULATED_EMAIL);
   });
 
-  test("creating an account from the extension sends the name and waits for the code", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("creating an account from the extension sends the name and waits for the code", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
 
@@ -475,9 +431,9 @@ test.describe("signing in from the extension", () => {
     await createAccount.requestLink(SIMULATED_EMAIL);
 
     await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
-    test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([
-      { email: SIMULATED_EMAIL, surface: "extension", intent: "createAccount", firstName: "Ada" },
-    ]);
+    test
+      .expect(backendSimulator.auth.magicLinkRequests())
+      .toEqual([{ email: SIMULATED_EMAIL, surface: "extension", intent: "createAccount", firstName: "Ada" }]);
   });
 
   test("an extension built without a server asks for one", async ({ launcher }) => {
@@ -541,10 +497,7 @@ test.describe("connecting the extension from the web app", () => {
     await test.expect.poll(() => backendSimulator.getCallCount(EndpointKey.SESSION_LINK_CODE)).toBe(2);
   });
 
-  test("a code the server would not make says so, and tries again on request", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a code the server would not make says so, and tries again on request", async ({ launcher, backendSimulator }) => {
     backendSimulator.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
 
@@ -558,10 +511,7 @@ test.describe("connecting the extension from the web app", () => {
 
   // A web app is still connected once its session has ended, so sending it to /sign-in
   // would only bounce it home. It signs out first, as the menu's Sign in again does.
-  test("a session that has ended says so, and signing in again leads to the email form", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a session that has ended says so, and signing in again leads to the email form", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.sessionHasEnded();
     await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });
 
@@ -581,10 +531,7 @@ test.describe("connecting the extension from the web app", () => {
     await settings.syncPanel.verifyOffersConnectingExtension(false);
   });
 
-  test("the extension takes the web app's code with no email, and greets the reader by name", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the extension takes the web app's code with no email, and greets the reader by name", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.accountIsNamed("Ada");
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
@@ -618,10 +565,7 @@ test.describe("connecting the extension from the web app", () => {
     await signIn.verifyAsksForEmail("Sign in");
   });
 
-  test("the web app's code goes to the extension's own server, with the address tucked away", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the web app's code goes to the extension's own server, with the address tucked away", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
     await signIn.chooseCodeFromWebApp();
@@ -661,9 +605,7 @@ test.describe("connecting the extension from the web app", () => {
     test.expect(backendSimulator.getCallCount(EndpointKey.AUTH_LINK_CODE)).toBe(0);
   });
 
-  test("creating an account in the extension offers no web-app code, since no web app is signed in yet", async ({
-    launcher,
-  }) => {
+  test("creating an account in the extension offers no web-app code, since no web app is signed in yet", async ({ launcher }) => {
     await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
 
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();

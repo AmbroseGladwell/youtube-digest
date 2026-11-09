@@ -36,6 +36,5 @@ export class PrivacySectionPageObject extends PageObject {
       }
     });
 
-  switchAnalytics = () =>
-    this.step("switchAnalytics", () => this.click(privacySectionTestIds.shareUsageSwitch));
+  switchAnalytics = () => this.step("switchAnalytics", () => this.click(privacySectionTestIds.shareUsageSwitch));
 }

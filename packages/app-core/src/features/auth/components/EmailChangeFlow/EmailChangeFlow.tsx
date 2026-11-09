@@ -60,7 +60,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
       },
       onError: (error) => {
         const refused = askProblem(error, new Date());
-        setStep((current) => (current.kind === "starting" ? { kind: "verifying", expiresAt: new Date(0).toISOString(), sentAt: 0 } : current));
+        setStep((current) =>
+          current.kind === "starting" ? { kind: "verifying", expiresAt: new Date(0).toISOString(), sentAt: 0 } : current,
+        );
         setProblem({ kind: refused.kind === "limited" ? "limited" : "other", message: refused.message });
         if (refused.kind === "limited") analytics.settings.sync.verificationRefused({ reason: "limited" });
       },
@@ -250,9 +252,7 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
         </h3>
         <p className={styles.error} role="alert" data-testid={emailChangeFlowTestIds.taken}>
           <StrokeIcon name="alertCircle" size={15} />
-          <span>
-            {step.email} belongs to another account now, so it can’t move to yours. Your email hasn’t changed.
-          </span>
+          <span>{step.email} belongs to another account now, so it can’t move to yours. Your email hasn’t changed.</span>
         </p>
         <div className={styles.actions}>
           <button

@@ -21,10 +21,7 @@ const seedOpenNote = (backendSimulator: { overviews: { seed: (o: ReturnType<type
 
 // Design 205e. The copy is generic on purpose: the reader can see the tab beside the
 // panel, so naming it would only cost the line its one line.
-test("with a note open, moving the tab on offers to make an overview of what's there now", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with a note open, moving the tab on offers to make an overview of what's there now", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -36,10 +33,7 @@ test("with a note open, moving the tab on offers to make an overview of what's t
   await reader.verifyOnThisTabLineSays("Another video on this tab", "Make an overview");
 });
 
-test("the line is a stone-tint pill, and its offer is text rather than a button", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the line is a stone-tint pill, and its offer is text rather than a button", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -48,10 +42,7 @@ test("the line is a stone-tint pill, and its offer is text rather than a button"
   await reader.verifyOnThisTabLineIsDrawnAsAPill();
 });
 
-test("where the library already holds it, the offer is to read it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("where the library already holds it, the offer is to read it", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const held = makeOverview();
   backendSimulator.overviews.seed({
@@ -68,10 +59,7 @@ test("where the library already holds it, the offer is to read it", async ({
 
 // The note being read is the one the tab is on, so there is nothing to have moved away
 // from — and home is already the offer, so the line never shows there either.
-test("the line stays away while the tab still holds the note's own video, and on home", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the line stays away while the tab still holds the note's own video, and on home", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();

@@ -21,9 +21,7 @@ test("the extension's panel carries the same line", async ({ launcher }) => {
   await settings.verifyBuildLineReads("Version 0.1.0 (30bb95a)");
 });
 
-test("a shell that was told nothing about its build has no About section rather than an empty one", async ({
-  launcher,
-}) => {
+test("a shell that was told nothing about its build has no About section rather than an empty one", async ({ launcher }) => {
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
 

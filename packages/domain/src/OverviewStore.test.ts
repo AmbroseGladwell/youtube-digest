@@ -85,10 +85,7 @@ class InMemoryOverviewStore implements OverviewStore {
     return this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE };
   }
 
-  async setOverviewState(
-    overviewId: OverviewId,
-    patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>,
-  ) {
+  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>) {
     const current = await this.getOverviewState(overviewId);
     this.#states.set(overviewId, { ...current, ...patch });
   }
@@ -121,7 +118,11 @@ const exampleOverview: Overview = {
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+  keyPoints: [
+    { text: "one", range: null },
+    { text: "two", range: null },
+    { text: "three", range: null },
+  ],
   topicIds: [],
   tags: ["one-tag", "two-tag", "three-tag"],
   verdict: null,
@@ -201,7 +202,5 @@ test("listClaims returns a lightweight projection, not full overviews", async ()
   const store = new InMemoryOverviewStore();
   await store.saveOverview(exampleOverview);
   const claims = await store.listClaims();
-  assert.deepEqual(claims, [
-    { overviewId: OVERVIEW_ID, title: "Example", claim: "The single assertion this video makes." },
-  ]);
+  assert.deepEqual(claims, [{ overviewId: OVERVIEW_ID, title: "Example", claim: "The single assertion this video makes." }]);
 });

@@ -14,14 +14,12 @@ export class ApiKeysPanelPageObject extends PageObject {
       return this;
     });
 
-  openAddKey = (provider: Provider) =>
-    this.step(`openAddKey ${provider}`, () => this.click(addProviderKeyRowTestIds.open(provider)));
+  openAddKey = (provider: Provider) => this.step(`openAddKey ${provider}`, () => this.click(addProviderKeyRowTestIds.open(provider)));
 
   fillKey = (provider: Provider, value: string) =>
     this.step(`fillKey ${provider}`, () => this.get(addProviderKeyRowTestIds.input(provider)).fill(value));
 
-  clickSaveKey = (provider: Provider) =>
-    this.step(`clickSaveKey ${provider}`, () => this.click(addProviderKeyRowTestIds.save(provider)));
+  clickSaveKey = (provider: Provider) => this.step(`clickSaveKey ${provider}`, () => this.click(addProviderKeyRowTestIds.save(provider)));
 
   addKey = (provider: Provider, value: string) =>
     this.step(`addKey ${provider}`, async () => {
@@ -34,22 +32,16 @@ export class ApiKeysPanelPageObject extends PageObject {
     this.step(`verifyKeyHeld ${provider}`, () => this.expectToBeVisible(providerKeyRowTestIds.root(provider)));
 
   verifyNoKeyHeld = (provider: Provider) =>
-    this.step(`verifyNoKeyHeld ${provider}`, () =>
-      expect(this.get(providerKeyRowTestIds.root(provider))).toHaveCount(0),
-    );
+    this.step(`verifyNoKeyHeld ${provider}`, () => expect(this.get(providerKeyRowTestIds.root(provider))).toHaveCount(0));
 
   verifyInUse = (provider: Provider) =>
     this.step(`verifyInUse ${provider}`, () => this.expectToBeVisible(providerKeyRowTestIds.inUse(provider)));
 
   verifyGenerateWithReads = (text: string) =>
-    this.step(`verifyGenerateWithReads ${text}`, () =>
-      expect(this.get(generateWithCardTestIds.choice)).toHaveText(text),
-    );
+    this.step(`verifyGenerateWithReads ${text}`, () => expect(this.get(generateWithCardTestIds.choice)).toHaveText(text));
 
   chooseProvider = (provider: Provider) =>
-    this.step(`chooseProvider ${provider}`, () =>
-      this.get(generateWithCardTestIds.select).selectOption(provider),
-    );
+    this.step(`chooseProvider ${provider}`, () => this.get(generateWithCardTestIds.select).selectOption(provider));
 
   verifyRefused = (provider: Provider) =>
     this.step(`verifyRefused ${provider}`, () => this.expectToBeVisible(addProviderKeyRowTestIds.problem(provider)));
@@ -61,9 +53,7 @@ export class ApiKeysPanelPageObject extends PageObject {
     });
 
   verifyOnlyMyKeyExplains = (pattern: RegExp) =>
-    this.step(`verifyOnlyMyKeyExplains ${pattern}`, () =>
-      expect(this.get(onlyMyKeySwitchTestIds.explanation)).toHaveText(pattern),
-    );
+    this.step(`verifyOnlyMyKeyExplains ${pattern}`, () => expect(this.get(onlyMyKeySwitchTestIds.explanation)).toHaveText(pattern));
 
   toggleOnlyMyKey = () => this.step("toggleOnlyMyKey", () => this.click(onlyMyKeySwitchTestIds.switch));
 
@@ -77,9 +67,7 @@ export class ApiKeysPanelPageObject extends PageObject {
     this.step(`openModelPicker ${provider}`, () => this.click(providerKeyRowTestIds.model(provider)));
 
   verifyModelReads = (provider: Provider, label: string) =>
-    this.step(`verifyModelReads ${provider} ${label}`, () =>
-      expect(this.get(providerKeyRowTestIds.model(provider))).toContainText(label),
-    );
+    this.step(`verifyModelReads ${provider} ${label}`, () => expect(this.get(providerKeyRowTestIds.model(provider))).toContainText(label));
 
   // Design 110g: the choice arrived by sync and the key did not, so the card carries both
   // ways out rather than a control that cannot work.
@@ -90,8 +78,7 @@ export class ApiKeysPanelPageObject extends PageObject {
       await this.expectToBeVisible(generateWithCardTestIds.useFallback);
     });
 
-  useFallbackKey = () =>
-    this.step("useFallbackKey", () => this.click(generateWithCardTestIds.useFallback));
+  useFallbackKey = () => this.step("useFallbackKey", () => this.click(generateWithCardTestIds.useFallback));
 
   removeAllKeys = () =>
     this.step("removeAllKeys", async () => {

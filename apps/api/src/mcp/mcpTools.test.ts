@@ -168,7 +168,10 @@ test("get_overviews reads every overview under a topic in one call, and never a 
   await reader.inject({
     method: "PUT",
     url: `/api/transcripts/${fitness.source.id}`,
-    body: makeStoredTranscript({ videoId: VideoId.parse(fitness.source.id!), segments: [{ text: "A line only the transcript has.", startMs: 0, endMs: 3000 }] }),
+    body: makeStoredTranscript({
+      videoId: VideoId.parse(fitness.source.id!),
+      segments: [{ text: "A line only the transcript has.", startMs: 0, endMs: 3000 }],
+    }),
   });
 
   const { text } = await client.callTool("get_overviews", { topic: "fitness" });
@@ -395,7 +398,9 @@ test("a connection approved to read only is not offered mark_overviews, and is t
   const client = await connectMcpClient(testApp, reader, "overviews:read");
   const { id } = note(library, "fitness").overview;
 
-  const { instructions } = (await client.request("initialize", { protocolVersion: "2025-06-18", capabilities: {} })) as { instructions: string };
+  const { instructions } = (await client.request("initialize", { protocolVersion: "2025-06-18", capabilities: {} })) as {
+    instructions: string;
+  };
   const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string }> };
   const refused = await client.callTool("mark_overviews", { ids: [id], read: true });
 
@@ -427,7 +432,9 @@ test("search_overviews finds an overview by meaning when no note matches the wor
 test("search_overviews lists word matches before meaning matches, and never marks a word match", async () => {
   const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
   const reader = await makeAccount(testApp);
-  const byWord = noteAbout("Entrenched boards and why they persist", ["Boards wait", "Owners wait", "Everyone waits"], { savedAt: "2026-01-01T00:00:00.000Z" });
+  const byWord = noteAbout("Entrenched boards and why they persist", ["Boards wait", "Owners wait", "Everyone waits"], {
+    savedAt: "2026-01-01T00:00:00.000Z",
+  });
   const byMeaning = foundersNote();
   await reader.inject({ method: "POST", url: "/api/overviews", body: byWord });
   await reader.inject({ method: "POST", url: "/api/overviews", body: byMeaning });

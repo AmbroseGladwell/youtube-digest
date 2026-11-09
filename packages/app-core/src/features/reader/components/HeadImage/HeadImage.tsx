@@ -64,13 +64,7 @@ export function HeadImage({ source, full, className, onToggle, ref, carriesFrom 
       onClick={onToggle}
       data-testid={headImageTestIds.button}
     >
-      <img
-        className={styles.image}
-        src={imageUrl!}
-        alt=""
-        onError={() => setFailed(true)}
-        data-testid={headImageTestIds.image}
-      />
+      <img className={styles.image} src={imageUrl!} alt="" onError={() => setFailed(true)} data-testid={headImageTestIds.image} />
       {sharpUrl !== null && (
         <img
           className={`${styles.image} ${styles.sharp}`}

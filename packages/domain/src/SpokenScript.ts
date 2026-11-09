@@ -14,10 +14,9 @@ export const SpokenScript = z
   .array(z.string().trim())
   .min(1)
   .refine((lines) => lines.some((line) => line !== ""), { message: "A spoken script says something" })
-  .refine(
-    (lines) => lines.reduce((total, line) => total + line.length, 0) <= MAX_SPOKEN_SCRIPT_CHARACTERS,
-    { message: `A spoken script is at most ${MAX_SPOKEN_SCRIPT_CHARACTERS} characters` },
-  );
+  .refine((lines) => lines.reduce((total, line) => total + line.length, 0) <= MAX_SPOKEN_SCRIPT_CHARACTERS, {
+    message: `A spoken script is at most ${MAX_SPOKEN_SCRIPT_CHARACTERS} characters`,
+  });
 export type SpokenScript = z.infer<typeof SpokenScript>;
 
 export function spokenLines(lines: NoteLine[], opening: string | null = null): SpokenScript {

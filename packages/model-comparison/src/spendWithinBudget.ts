@@ -42,5 +42,4 @@ export async function spendWithinBudget<R extends Spend>(options: BudgetedSpend<
   return { ran, spentDollars, stoppedForBudget };
 }
 
-export const totalSpent = (results: readonly Spend[]): number =>
-  results.reduce((total, result) => total + (result.costDollars ?? 0), 0);
+export const totalSpent = (results: readonly Spend[]): number => results.reduce((total, result) => total + (result.costDollars ?? 0), 0);

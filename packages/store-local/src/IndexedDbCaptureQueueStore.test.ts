@@ -4,10 +4,7 @@ import { defineCaptureQueueStoreConformanceSuite, makeQueuedCapture } from "@ove
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { openEnrolledDatabase, openTestDatabase, readOutbox } from "./enrolledDatabase.testHelper.js";
 
-defineCaptureQueueStoreConformanceSuite(
-  "IndexedDbCaptureQueueStore",
-  async () => new IndexedDbCaptureQueueStore(await openTestDatabase()),
-);
+defineCaptureQueueStoreConformanceSuite("IndexedDbCaptureQueueStore", async () => new IndexedDbCaptureQueueStore(await openTestDatabase()));
 
 test("the queue is this device's own: queuing in an enrolled library journals nothing", async () => {
   const db = await openEnrolledDatabase();

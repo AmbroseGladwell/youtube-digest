@@ -11,10 +11,7 @@ import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js"
 // It lives with the overviews rather than in either caller: the panel's capture screen
 // and the injected button ask the same question, and both ask it to avoid paying for a
 // video twice (docs/features/injected-button.md).
-export function overviewForVideoUrl(
-  entries: LibraryEntry[],
-  videoUrl: string | null,
-): Overview | null {
+export function overviewForVideoUrl(entries: LibraryEntry[], videoUrl: string | null): Overview | null {
   if (videoUrl === null) {
     return null;
   }
@@ -22,9 +19,7 @@ export function overviewForVideoUrl(
   if (videoId === null) {
     return null;
   }
-  const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
-    ({ overview }) => sourceKey(overview.source) === videoId,
-  );
+  const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(({ overview }) => sourceKey(overview.source) === videoId);
   return match?.overview ?? null;
 }
 

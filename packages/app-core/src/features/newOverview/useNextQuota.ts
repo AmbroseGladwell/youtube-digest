@@ -28,10 +28,7 @@ function useQuotaContext(): NextQuotaContext | null {
   if (!signedIn) return null;
   return {
     order,
-    usage:
-      usage.data !== undefined
-        ? { status: "known", data: usage.data }
-        : { status: usage.isError ? "unreachable" : "checking" },
+    usage: usage.data !== undefined ? { status: "known", data: usage.data } : { status: usage.isError ? "unreachable" : "checking" },
   };
 }
 

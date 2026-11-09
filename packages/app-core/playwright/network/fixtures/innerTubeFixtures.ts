@@ -16,9 +16,7 @@ export function makePlayerResponseFixture(overrides: Record<string, unknown> = {
       lengthSeconds: "180",
       isLiveContent: false,
       thumbnail: {
-        thumbnails: [
-          { url: `https://i.ytimg.com/vi/${IWFT_VIDEO_ID}/hqdefault.jpg`, width: 480, height: 360 },
-        ],
+        thumbnails: [{ url: `https://i.ytimg.com/vi/${IWFT_VIDEO_ID}/hqdefault.jpg`, width: 480, height: 360 }],
       },
     },
     captions: {

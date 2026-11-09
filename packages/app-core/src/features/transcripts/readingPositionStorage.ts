@@ -1,14 +1,9 @@
 import { ReadingPositions } from "./types/ReadingPosition.js";
-import {
-  forgetReadingPositionIn,
-  readingPositionFor,
-  rememberReadingPosition,
-} from "./util/readingPositions.js";
+import { forgetReadingPositionIn, readingPositionFor, rememberReadingPosition } from "./util/readingPositions.js";
 
 const STORAGE_KEY = "overview.readingPositions.v1";
 
-const storageKeyFor = (accountId: string | null): string =>
-  accountId === null ? STORAGE_KEY : `${STORAGE_KEY}.${accountId}`;
+const storageKeyFor = (accountId: string | null): string => (accountId === null ? STORAGE_KEY : `${STORAGE_KEY}.${accountId}`);
 
 // Every read and write is allowed to fail quietly: a browser that refuses site data
 // costs the reader a convenience, not the transcript (docs/features/reading-position.md).
@@ -30,11 +25,7 @@ function writeAll(positions: ReadingPositions, accountId: string | null, storage
   }
 }
 
-export function readReadingPosition(
-  videoId: string,
-  accountId: string | null,
-  storage: Storage = globalThis.localStorage,
-): number | null {
+export function readReadingPosition(videoId: string, accountId: string | null, storage: Storage = globalThis.localStorage): number | null {
   return readingPositionFor(readAll(accountId, storage), videoId);
 }
 
@@ -47,11 +38,7 @@ export function writeReadingPosition(
   writeAll(rememberReadingPosition(readAll(accountId, storage), videoId, startMs), accountId, storage);
 }
 
-export function forgetReadingPosition(
-  videoId: string,
-  accountId: string | null,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function forgetReadingPosition(videoId: string, accountId: string | null, storage: Storage = globalThis.localStorage): void {
   const positions = readAll(accountId, storage);
   if (readingPositionFor(positions, videoId) !== null) {
     writeAll(forgetReadingPositionIn(positions, videoId), accountId, storage);
@@ -60,11 +47,7 @@ export function forgetReadingPosition(
 
 // Where the reader had got to in the overviews the move on sign-in carried into an account
 // goes with them, without replacing a place the account's library already holds.
-export function moveReadingPositions(
-  videoIds: readonly string[],
-  toAccountId: string,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function moveReadingPositions(videoIds: readonly string[], toAccountId: string, storage: Storage = globalThis.localStorage): void {
   for (const videoId of videoIds) {
     const startMs = readReadingPosition(videoId, null, storage);
     if (startMs === null) continue;

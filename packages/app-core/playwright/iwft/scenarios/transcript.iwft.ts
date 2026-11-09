@@ -6,10 +6,7 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
-import {
-  makeCaptionRun,
-  makeTranscriptSegment,
-} from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
+import { makeCaptionRun, makeTranscriptSegment } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VIDEO_ID = VideoId.parse("captionedVideo1");
@@ -20,22 +17,13 @@ const API_KEYS = ANTHROPIC_KEY;
 // merges into the three blocks below (docs/features/transcript-storage.md).
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(
-    [
-      "The claim starts here,",
-      "and the whole of it takes four captions",
-      "before it finally reaches",
-      "its first full stop.",
-    ],
+    ["The claim starts here,", "and the whole of it takes four captions", "before it finally reaches", "its first full stop."],
     { startMs: 0, cueMs: 3500 },
   ),
-  ...makeCaptionRun(
-    [
-      "This is the part worth watching,",
-      "and this is the reason you might",
-      "want to see it for yourself.",
-    ],
-    { startMs: 65_000, cueMs: 4000 },
-  ),
+  ...makeCaptionRun(["This is the part worth watching,", "and this is the reason you might", "want to see it for yourself."], {
+    startMs: 65_000,
+    cueMs: 4000,
+  }),
   ...makeCaptionRun(["And this is where it ends.", "Thanks for watching."], {
     startMs: 3_661_000,
     cueMs: 3000,
@@ -59,9 +47,7 @@ test("the transcript tab merges the captions into blocks, each against the time 
   backendSimulator,
 }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -72,10 +58,7 @@ test("the transcript tab merges the captions into blocks, each against the time 
   await reader.verifyTranscriptBlockTimesRead(BLOCK_TIMES);
 });
 
-test("each turn of an interview is its own block, marked as a new speaker", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("each turn of an interview is its own block, marked as a new speaker", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
   backendSimulator.transcripts.seed(
     makeStoredTranscript({
@@ -100,22 +83,13 @@ test("each turn of an interview is its own block, marked as a new speaker", asyn
   const reader = await library.nthCard(0).openReader();
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptBlocksRead([
-    "Thank you so much for being here.",
-    "Thank you.",
-    "I came into your class last term.",
-  ]);
+  await reader.verifyTranscriptBlocksRead(["Thank you so much for being here.", "Thank you.", "I came into your class last term."]);
   await reader.verifyTranscriptSpeakerMarkCountIs(3);
 });
 
-test("a transcript with one speaker throughout carries no speaker marks", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a transcript with one speaker throughout carries no speaker marks", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -124,10 +98,7 @@ test("a transcript with one speaker throughout carries no speaker marks", async 
   await reader.verifyTranscriptSpeakerMarkCountIs(0);
 });
 
-test("a note saved before transcripts were stored says so rather than showing an empty tab", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note saved before transcripts were stored says so rather than showing an empty tab", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(null));
 
   const library = await launcher.launchExpectingLibrary();
@@ -137,10 +108,7 @@ test("a note saved before transcripts were stored says so rather than showing an
   await reader.verifyShowsNoStoredTranscript();
 });
 
-test("a note whose video has no stored transcript says the same thing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note whose video has no stored transcript says the same thing", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
 
   const library = await launcher.launchExpectingLibrary();
@@ -150,22 +118,15 @@ test("a note whose video has no stored transcript says the same thing", async ({
   await reader.verifyShowsNoStoredTranscript();
 });
 
-test("machine-heard captions are labelled as such, and a video's own captions are not", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("machine-heard captions are labelled as such, and a video's own captions are not", async ({ launcher, backendSimulator }) => {
   const machineHeardId = VideoId.parse("machineHeardVideo");
   backendSimulator.overviews.seed({
     ...noteOn(machineHeardId, "https://www.youtube.com/watch?v=machineHeardVideo"),
     savedAt: "2026-09-16T00:00:00.000Z",
   });
   backendSimulator.overviews.seed({ ...noteOn(VIDEO_ID), savedAt: "2026-09-15T00:00:00.000Z" });
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: machineHeardId, segments: SEGMENTS, generated: true }),
-  );
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: machineHeardId, segments: SEGMENTS, generated: true }));
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 
   const library = await launcher.launchExpectingLibrary();
   const machineHeard = await library.nthCard(0).openReader();
@@ -179,15 +140,9 @@ test("machine-heard captions are labelled as such, and a video's own captions ar
   await captioned.verifyShowsNoMachineTranscribedNote();
 });
 
-test("a transcript still being read shows the tab's skeleton rather than its empty note", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("a transcript still being read shows the tab's skeleton rather than its empty note", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -195,18 +150,14 @@ test("a transcript still being read shows the tab's skeleton rather than its emp
   // Held open rather than slowed down: a read that never settles is the local store's
   // equivalent of the harness's STALL behaviour (frontend-testing-guide.md 4.3).
   await page.evaluate(() => {
-    window.__iwftStores__.transcriptStore.getTranscript = () =>
-      new Promise<StoredTranscript | null>(() => {});
+    window.__iwftStores__.transcriptStore.getTranscript = () => new Promise<StoredTranscript | null>(() => {});
   });
   await reader.clickTab("Transcript");
 
   await reader.verifyShowsTranscriptSkeleton();
 });
 
-test("generating a note keeps the captions it fetched, and the tab reads them back as blocks", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("generating a note keeps the captions it fetched, and the tab reads them back as blocks", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
 
@@ -282,10 +233,7 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
 };
 
-test("signed in, a transcript fetched on another device reads here, and is kept here", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed in, a transcript fetched on another device reads here, and is kept here", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
   const transcript = makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS });
   backendSimulator.sync.seedTranscript(transcript);
@@ -298,10 +246,7 @@ test("signed in, a transcript fetched on another device reads here, and is kept 
   expect(await backendSimulator.transcriptStore.getTranscript(VIDEO_ID)).toEqual(transcript);
 });
 
-test("signed in, the tab shows it is loading while the account is asked", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed in, the tab shows it is loading while the account is asked", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
   backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
   backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_TRANSCRIPT);
@@ -333,10 +278,7 @@ test("signed in, a transcript the account could not be asked for says so, and tr
   await reader.verifyTranscriptBlocksRead(BLOCKS);
 });
 
-test("signed in, a transcript no device on the account kept says none was stored", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed in, a transcript no device on the account kept says none was stored", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(noteOn(VIDEO_ID));
 
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);

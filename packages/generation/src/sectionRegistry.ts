@@ -21,7 +21,5 @@ const REGISTRY: PromptSection[] = [
 ];
 
 export function enabledSections(input: GenerationInput): PromptSection[] {
-  return REGISTRY.filter(
-    (section) => section.key === "structural" || input.sectionsEnabled[section.key],
-  );
+  return REGISTRY.filter((section) => section.key === "structural" || input.sectionsEnabled[section.key]);
 }

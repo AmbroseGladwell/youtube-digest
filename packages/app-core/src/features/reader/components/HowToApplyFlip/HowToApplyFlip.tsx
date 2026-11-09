@@ -25,7 +25,13 @@ export function HowToApplyFlip({ side, writing, onChoose }: HowToApplyFlipProps)
   };
 
   return (
-    <div className={styles.root} role="radiogroup" aria-label="How to apply, written" onKeyDown={onKeyDown} data-testid={howToApplyFlipTestIds.root}>
+    <div
+      className={styles.root}
+      role="radiogroup"
+      aria-label="How to apply, written"
+      onKeyDown={onKeyDown}
+      data-testid={howToApplyFlipTestIds.root}
+    >
       <button
         type="button"
         ref={you}

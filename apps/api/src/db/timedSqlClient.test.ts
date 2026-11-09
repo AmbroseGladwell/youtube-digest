@@ -49,10 +49,13 @@ test("a quick query logs nothing, and a slow transaction is logged as one with t
   const slow = takingMs(600);
   await timedSqlClient(slow.inner, { log: () => logger, slowMs: 500, now: slow.now }).transaction((tx) => tx.query("select 2"));
 
-  assert.deepEqual(lines.map(({ msg, durationMs }) => [msg, durationMs]), [
-    ["slow query", 600],
-    ["slow transaction", 600],
-  ]);
+  assert.deepEqual(
+    lines.map(({ msg, durationMs }) => [msg, durationMs]),
+    [
+      ["slow query", 600],
+      ["slow transaction", 600],
+    ],
+  );
 });
 
 test("a slow query made for a request is logged under that request's id and account", async () => {

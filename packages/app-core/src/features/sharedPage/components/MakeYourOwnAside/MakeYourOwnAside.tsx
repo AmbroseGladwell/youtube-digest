@@ -41,9 +41,7 @@ export function MakeYourOwnAside() {
       <h2 className={styles.heading} id={headingId}>
         Watch Less, with The Overview
       </h2>
-      <p className={styles.body}>
-        Paste a link to a video or a page and we'll make an overview of it, to read or listen to.
-      </p>
+      <p className={styles.body}>Paste a link to a video or a page and we'll make an overview of it, to read or listen to.</p>
 
       <form
         className={styles.form}
@@ -78,12 +76,7 @@ export function MakeYourOwnAside() {
             {REFUSED_LINK}
           </p>
         )}
-        <button
-          type="submit"
-          className={styles.action}
-          disabled={url.trim() === ""}
-          data-testid={makeYourOwnAsideTestIds.makeButton}
-        >
+        <button type="submit" className={styles.action} disabled={url.trim() === ""} data-testid={makeYourOwnAsideTestIds.makeButton}>
           Make an overview
         </button>
       </form>

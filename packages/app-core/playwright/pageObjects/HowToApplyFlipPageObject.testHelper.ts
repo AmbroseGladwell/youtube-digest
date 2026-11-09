@@ -33,8 +33,9 @@ export class HowToApplyFlipPageObject extends PageObject {
     this.step(`verifyLineReads ${text}`, () => expect(this.get(howToApplyFlipTestIds.line)).toHaveText(text));
 
   verifyStepsRead = (...steps: string[]) =>
-    this.step(`verifyStepsRead ${steps.join(" ")}`, () => expect(this.get(howToApplyFlipTestIds.steps).getByRole("listitem")).toHaveText(steps));
+    this.step(`verifyStepsRead ${steps.join(" ")}`, () =>
+      expect(this.get(howToApplyFlipTestIds.steps).getByRole("listitem")).toHaveText(steps),
+    );
 
-  verifyNoteStepsShown = () =>
-    this.step("verifyNoteStepsShown", () => this.expectNotToBeVisible(howToApplyFlipTestIds.steps));
+  verifyNoteStepsShown = () => this.step("verifyNoteStepsShown", () => this.expectNotToBeVisible(howToApplyFlipTestIds.steps));
 }

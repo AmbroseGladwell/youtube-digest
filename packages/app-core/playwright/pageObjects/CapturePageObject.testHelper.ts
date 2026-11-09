@@ -45,32 +45,21 @@ export class CapturePageObject extends PageObject {
       await this.expectToHaveCount(capturePageTestIds.createButton, 0);
     });
 
-  verifySaysThereIsNoVideo = () =>
-    this.step("verifySaysThereIsNoVideo", () =>
-      this.expectToBeVisible(capturePageTestIds.noVideoNote),
-    );
+  verifySaysThereIsNoVideo = () => this.step("verifySaysThereIsNoVideo", () => this.expectToBeVisible(capturePageTestIds.noVideoNote));
 
   verifySaysNothingAboutMissingVideo = () =>
-    this.step("verifySaysNothingAboutMissingVideo", () =>
-      this.expectNotToBeVisible(capturePageTestIds.noVideoNote),
-    );
+    this.step("verifySaysNothingAboutMissingVideo", () => this.expectNotToBeVisible(capturePageTestIds.noVideoNote));
 
   verifyCaptionsNoteReads = (pattern: RegExp) =>
-    this.step(`verifyCaptionsNoteReads ${pattern.source}`, () =>
-      expect(this.get(capturePageTestIds.captionsNote)).toHaveText(pattern),
-    );
+    this.step(`verifyCaptionsNoteReads ${pattern.source}`, () => expect(this.get(capturePageTestIds.captionsNote)).toHaveText(pattern));
 
   verifyAsksForKeys = (asks: boolean) =>
     this.step(`verifyAsksForKeys ${asks}`, () =>
-      asks
-        ? this.expectToBeVisible(capturePageTestIds.keysNote)
-        : this.expectNotToBeVisible(capturePageTestIds.keysNote),
+      asks ? this.expectToBeVisible(capturePageTestIds.keysNote) : this.expectNotToBeVisible(capturePageTestIds.keysNote),
     );
 
   verifySaysItIsAlreadyInTheLibrary = () =>
-    this.step("verifySaysItIsAlreadyInTheLibrary", () =>
-      this.expectToBeVisible(capturePageTestIds.alreadyInLibraryNote),
-    );
+    this.step("verifySaysItIsAlreadyInTheLibrary", () => this.expectToBeVisible(capturePageTestIds.alreadyInLibraryNote));
 
   clickCreate = () => this.step("clickCreate", () => this.click(capturePageTestIds.createButton));
 
@@ -80,13 +69,10 @@ export class CapturePageObject extends PageObject {
       return new ReaderPageObject(this.testContext).verifyIsShown();
     });
 
-  verifyIsWorking = () =>
-    this.step("verifyIsWorking", () => this.expectToBeVisible(capturePageTestIds.working));
+  verifyIsWorking = () => this.step("verifyIsWorking", () => this.expectToBeVisible(capturePageTestIds.working));
 
   verifyWorkingTitleReads = (title: string) =>
-    this.step(`verifyWorkingTitleReads ${title}`, () =>
-      expect(this.get(capturePageTestIds.workingTitle)).toHaveText(title),
-    );
+    this.step(`verifyWorkingTitleReads ${title}`, () => expect(this.get(capturePageTestIds.workingTitle)).toHaveText(title));
 
   verifySaysToKeepThePanelOpen = () =>
     this.step("verifySaysToKeepThePanelOpen", () =>
@@ -95,29 +81,20 @@ export class CapturePageObject extends PageObject {
 
   verifyAsksForAReason = (asks: boolean) =>
     this.step(`verifyAsksForAReason ${asks}`, () =>
-      asks
-        ? this.expectToBeVisible(captureReasonFieldTestIds.input)
-        : this.expectNotToBeVisible(captureReasonFieldTestIds.input),
+      asks ? this.expectToBeVisible(captureReasonFieldTestIds.input) : this.expectNotToBeVisible(captureReasonFieldTestIds.input),
     );
 
   fillCaptureReason = (reason: string) =>
-    this.step(`fillCaptureReason ${reason}`, () =>
-      this.get(captureReasonFieldTestIds.input).fill(reason),
-    );
+    this.step(`fillCaptureReason ${reason}`, () => this.get(captureReasonFieldTestIds.input).fill(reason));
 
   verifyElapsedIsShown = () =>
-    this.step("verifyElapsedIsShown", () =>
-      expect(this.get(capturePageTestIds.elapsed)).toHaveText(/^\d+:\d\d elapsed$/),
-    );
+    this.step("verifyElapsedIsShown", () => expect(this.get(capturePageTestIds.elapsed)).toHaveText(/^\d+:\d\d elapsed$/));
 
-  verifyShowsGenerationError = () =>
-    this.step("verifyShowsGenerationError", () => this.expectToBeVisible(capturePageTestIds.error));
+  verifyShowsGenerationError = () => this.step("verifyShowsGenerationError", () => this.expectToBeVisible(capturePageTestIds.error));
 
   clickCancel = () => this.step("clickCancel", () => this.click(capturePageTestIds.cancelButton));
 
-  clickStartAgain = () =>
-    this.step("clickStartAgain", () => this.click(capturePageTestIds.startAgainButton));
+  clickStartAgain = () => this.step("clickStartAgain", () => this.click(capturePageTestIds.startAgainButton));
 
-  waitForReader = (): Promise<ReaderPageObject> =>
-    this.step("waitForReader", () => new ReaderPageObject(this.testContext).verifyIsShown());
+  waitForReader = (): Promise<ReaderPageObject> => this.step("waitForReader", () => new ReaderPageObject(this.testContext).verifyIsShown());
 }

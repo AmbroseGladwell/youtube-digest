@@ -36,8 +36,7 @@ const spokenName = (voice: NarrationVoice) => `${narrationVoiceName(voice)}, ${A
 const RING_RADIUS = 16.5;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
-export const NARRATION_VOICE_STANDFIRST =
-  "New audio is read in this voice on every device. Have a listen and see which one you prefer.";
+export const NARRATION_VOICE_STANDFIRST = "New audio is read in this voice on every device. Have a listen and see which one you prefer.";
 
 export interface NarrationVoicePickerProps {
   scrollToChosen?: boolean;
@@ -71,8 +70,7 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
 
   if (api === null) return null;
 
-  const sampleFor = (voice: NarrationVoice): VoiceSample | null =>
-    samples.data?.find((sample) => sample.voice === voice) ?? null;
+  const sampleFor = (voice: NarrationVoice): VoiceSample | null => samples.data?.find((sample) => sample.voice === voice) ?? null;
 
   const choose = (voice: NarrationVoice) => {
     analytics.settings.voice.chosen({ voice });
@@ -124,8 +122,7 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
               <span>
                 <strong className={styles.statusLead}>{narrationVoiceName(justChose)} is your voice now.</strong>{" "}
                 <span className={styles.statusRest}>
-                  New audio uses it on every device. Notes already narrated keep their voice; you can re-record any
-                  of them from the player.
+                  New audio uses it on every device. Notes already narrated keep their voice; you can re-record any of them from the player.
                 </span>
               </span>
             </>

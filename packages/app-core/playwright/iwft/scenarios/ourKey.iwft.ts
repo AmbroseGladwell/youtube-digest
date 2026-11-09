@@ -64,10 +64,7 @@ test("on Plus our key goes first, so the reader's own key is never asked", async
   expect(backendSimulator.ourKey.reservations()).toHaveLength(0);
 });
 
-test("with Only ever use my key on, an out-of-credit key fails rather than going to our key", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with Only ever use my key on, an out-of-credit key fails rather than going to our key", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.anthropicIsOutOfCredit();
   await launcher.launch({ ...SIGNED_IN, onlyMyKey: true });
@@ -79,10 +76,7 @@ test("with Only ever use my key on, an out-of-credit key fails rather than going
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });
 
-test("past the own-key month a Free reader's overview is made on our key, and says why", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("past the own-key month a Free reader's overview is made on our key, and says why", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.ownMonthIsSpent();
   await launcher.launch(SIGNED_IN);

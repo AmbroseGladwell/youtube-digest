@@ -20,7 +20,14 @@ test("a pair already picked is never shown again, and none is left once every pa
   const picks = pairs.slice(0, 2).map((pair) => blindPick(pair, true, "A", "now"));
 
   assert.equal(nextBlindPair(pairs, picks, [])?.candidate.name, "gemini:gemini-3.8-flash");
-  assert.equal(nextBlindPair(pairs, pairs.map((pair) => blindPick(pair, true, "A", "now")), []), null);
+  assert.equal(
+    nextBlindPair(
+      pairs,
+      pairs.map((pair) => blindPick(pair, true, "A", "now")),
+      [],
+    ),
+    null,
+  );
 });
 
 test("pairs the judge has decided are shown first, so picks can be compared with it", () => {

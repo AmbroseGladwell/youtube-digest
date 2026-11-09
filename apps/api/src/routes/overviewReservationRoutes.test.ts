@@ -28,8 +28,19 @@ const reserve = (account: TestAccount, overviewId: string, shareToken?: string) 
 const release = (account: TestAccount, overviewId: string) =>
   account.inject({ method: "DELETE", url: `/api/overview-reservations/${overviewId}`, clientVersion: RESERVING });
 
-const push = (account: TestAccount, overview: ReturnType<typeof storedOverview> | ReturnType<typeof fromBeforeReserving>, { ifMatch, clientVersion = RESERVING }: { ifMatch?: number; clientVersion?: number } = {}) =>
-  account.inject({ method: "POST", url: "/api/overviews", body: overview, clientVersion, reserved: false, ...(ifMatch === undefined ? {} : { ifMatch }) });
+const push = (
+  account: TestAccount,
+  overview: ReturnType<typeof storedOverview> | ReturnType<typeof fromBeforeReserving>,
+  { ifMatch, clientVersion = RESERVING }: { ifMatch?: number; clientVersion?: number } = {},
+) =>
+  account.inject({
+    method: "POST",
+    url: "/api/overviews",
+    body: overview,
+    clientVersion,
+    reserved: false,
+    ...(ifMatch === undefined ? {} : { ifMatch }),
+  });
 
 const ownUsed = async (account: TestAccount): Promise<number> =>
   (await account.inject({ method: "GET", url: "/api/overview-usage" })).json().own.used;
@@ -127,7 +138,11 @@ test("an overview the account already holds answers as it always did, reserved o
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const overview = storedOverview();
-  await push(account, { ...overview, schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview }, { clientVersion: BEFORE_RESERVING });
+  await push(
+    account,
+    { ...overview, schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview },
+    { clientVersion: BEFORE_RESERVING },
+  );
 
   const again = await push(account, overview);
   const regenerated = await push(account, { ...overview, coreClaim: "A different claim." }, { ifMatch: 1 });
@@ -158,7 +173,12 @@ test("an overview made on our key is let in, and an own-key slot still held for 
   const overviewId = randomUUID();
   await reserve(account, overviewId);
 
-  const made = await account.inject({ method: "POST", url: "/api/generations", body: generationRequest(overviewId), clientVersion: RESERVING });
+  const made = await account.inject({
+    method: "POST",
+    url: "/api/generations",
+    body: generationRequest(overviewId),
+    clientVersion: RESERVING,
+  });
   const pushed = await push(account, { ...storedOverview(), ...made.json() });
   const usage = (await account.inject({ method: "GET", url: "/api/overview-usage" })).json();
 

@@ -6,8 +6,7 @@ const SHORT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short",
 
 export const CHECKING = "Checking…";
 
-export const resetDate = (resetsOn: string, narrow = false): string =>
-  (narrow ? SHORT : LONG).format(new Date(`${resetsOn}T00:00:00Z`));
+export const resetDate = (resetsOn: string, narrow = false): string => (narrow ? SHORT : LONG).format(new Date(`${resetsOn}T00:00:00Z`));
 
 export const leftOf = (left: number, limit: number): string => `${left} of ${limit} left`;
 
@@ -49,9 +48,7 @@ export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: Us
           ? `${spentKey === "ours" ? `The ${spentLimit} on us are` : `Your key's ${spentLimit} are`} made this month. This one ${uses}`
           : `This month's ${spentLimit} ${ON_KEY[spentKey]} are made, so this one ${uses}`;
         if (next.key === "ours" && plan !== "plus") {
-          return narrow
-            ? { parts: [`${sentence} ${PLUS_UPSELL}`], link: "Plan" }
-            : { parts: [sentence, PLUS_UPSELL], link: "See plans" };
+          return narrow ? { parts: [`${sentence} ${PLUS_UPSELL}`], link: "Plan" } : { parts: [sentence, PLUS_UPSELL], link: "See plans" };
         }
         return { parts: [sentence], link: planLink };
       }

@@ -71,7 +71,12 @@ export function OnboardingStepsForYou({ aboutYou, onPersonalise, onNext }: Onboa
 
       <div className={styles.foot}>
         {skipped && (
-          <button type="button" className={styles.personalise} onClick={onPersonalise} data-testid={onboardingStepsForYouTestIds.personalise}>
+          <button
+            type="button"
+            className={styles.personalise}
+            onClick={onPersonalise}
+            data-testid={onboardingStepsForYouTestIds.personalise}
+          >
             Personalise my overviews
           </button>
         )}

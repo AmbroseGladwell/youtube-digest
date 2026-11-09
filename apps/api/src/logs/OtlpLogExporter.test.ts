@@ -65,7 +65,10 @@ test("a full batch is sent without waiting for the interval", async () => {
   exporter.write(line("one") + line("two") + line("three"));
   await exporter.flush();
 
-  assert.deepEqual(posted.map(({ bodies }) => bodies), [["one", "two"], ["three"]]);
+  assert.deepEqual(
+    posted.map(({ bodies }) => bodies),
+    [["one", "two"], ["three"]],
+  );
 });
 
 test("a batch the destination refused is dropped, not retried, and the next batch says how many were lost", async () => {
@@ -79,7 +82,10 @@ test("a batch the destination refused is dropped, not retried, and the next batc
   await exporter.flush();
 
   assert.deepEqual(failures, ["Error: the log destination answered 503"]);
-  assert.deepEqual(posted.map(({ bodies }) => bodies), [["log records dropped", "arrived"]]);
+  assert.deepEqual(
+    posted.map(({ bodies }) => bodies),
+    [["log records dropped", "arrived"]],
+  );
   assert.deepEqual(posted[0]!.attributes[0], [
     { key: "logCode", value: { stringValue: "api.logs.recordsDropped" } },
     { key: "service", value: { stringValue: "overview-api" } },
@@ -95,7 +101,10 @@ test("past what it may hold, lines are dropped and counted rather than held with
   answer(200);
   await exporter.flush();
 
-  assert.deepEqual(posted.map(({ bodies }) => bodies), [["log records dropped", "a", "b"]]);
+  assert.deepEqual(
+    posted.map(({ bodies }) => bodies),
+    [["log records dropped", "a", "b"]],
+  );
   assert.deepEqual(posted[0]!.attributes[0], [
     { key: "logCode", value: { stringValue: "api.logs.recordsDropped" } },
     { key: "service", value: { stringValue: "overview-api" } },
@@ -109,7 +118,10 @@ test("closing ships what is still held", async () => {
   exporter.write(line("shutting down"));
   await exporter.close();
 
-  assert.deepEqual(posted.map(({ bodies }) => bodies), [["shutting down"]]);
+  assert.deepEqual(
+    posted.map(({ bodies }) => bodies),
+    [["shutting down"]],
+  );
 });
 
 test("a line that isn't JSON is skipped rather than breaking the batch", async () => {
@@ -118,5 +130,8 @@ test("a line that isn't JSON is skipped rather than breaking the batch", async (
   exporter.write("not json\n" + line("kept"));
   await exporter.flush();
 
-  assert.deepEqual(posted.map(({ bodies }) => bodies), [["kept"]]);
+  assert.deepEqual(
+    posted.map(({ bodies }) => bodies),
+    [["kept"]],
+  );
 });

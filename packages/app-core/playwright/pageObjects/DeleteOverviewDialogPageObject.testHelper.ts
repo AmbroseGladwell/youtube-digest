@@ -10,18 +10,13 @@ export class DeleteOverviewDialogPageObject extends PageObject {
       return this;
     });
 
-  verifyIsNotShown = () =>
-    this.step("verifyIsNotShown", () => this.expectNotToBeVisible(deleteOverviewDialogTestIds.root));
+  verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(deleteOverviewDialogTestIds.root));
 
   verifyBodyMentions = (text: string) =>
-    this.step(`verifyBodyMentions ${text}`, () =>
-      expect(this.get(deleteOverviewDialogTestIds.body)).toContainText(text),
-    );
+    this.step(`verifyBodyMentions ${text}`, () => expect(this.get(deleteOverviewDialogTestIds.body)).toContainText(text));
 
   verifyFocusIsOnCancel = () =>
-    this.step("verifyFocusIsOnCancel", () =>
-      expect(this.get(deleteOverviewDialogTestIds.cancelButton)).toBeFocused(),
-    );
+    this.step("verifyFocusIsOnCancel", () => expect(this.get(deleteOverviewDialogTestIds.cancelButton)).toBeFocused());
 
   clickCancel = () => this.step("clickCancel", () => this.click(deleteOverviewDialogTestIds.cancelButton));
 

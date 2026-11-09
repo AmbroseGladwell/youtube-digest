@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
 import { makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-test("a recipe's note is its summary, the page's times, the ingredients and the method, with no verdict or tabs", async ({ page, launcher, backendSimulator }) => {
+test("a recipe's note is its summary, the page's times, the ingredients and the method, with no verdict or tabs", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeOverview());
   const library = await launcher.launchExpectingLibrary();
   await expect(page.getByText(/1 hr 5 min recipe/)).toBeVisible();
@@ -27,7 +31,11 @@ test("a recipe's note is its summary, the page's times, the ingredients and the 
   await expect(page.getByText("Key points")).toHaveCount(0);
 });
 
-test("servings and units adjust the amounts they can read, mark them, and say what they left alone", async ({ page, launcher, backendSimulator }) => {
+test("servings and units adjust the amounts they can read, mark them, and say what they left alone", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -59,7 +67,11 @@ test("servings and units adjust the amounts they can read, mark them, and say wh
   await expect(page.getByTestId("RecipeIngredients.line").nth(3)).toHaveText("500ml vegetable stock");
 });
 
-test("a thin recipe page is named a recipe in the library, and only a thin video says it has no claim", async ({ page, launcher, backendSimulator }) => {
+test("a thin recipe page is named a recipe in the library, and only a thin video says it has no claim", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeOverview({ thin: true }));
   backendSimulator.overviews.seed(
     makeOverview({ thin: true, verdict: null, source: { ...makeOverview().source, title: "A video that argues nothing" } }),
@@ -103,7 +115,12 @@ test("the library files recipes as their own source once there are others", asyn
   await expect(page.getByTestId("FilterPanel.moreFiltersSummary")).toHaveText("Recipes · Any verdict");
 });
 
-test("copy recipe gives the page's recipe with its source, and never the summary", async ({ page, context, launcher, backendSimulator }) => {
+test("copy recipe gives the page's recipe with its source, and never the summary", async ({
+  page,
+  context,
+  launcher,
+  backendSimulator,
+}) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   backendSimulator.overviews.seed(makeRecipeOverview());
   const library = await launcher.launchExpectingLibrary();
@@ -114,7 +131,9 @@ test("copy recipe gives the page's recipe with its source, and never the summary
 
   await expect(page.getByRole("status").filter({ hasText: "Recipe copied, with a link to Example Kitchen" })).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain("Charred leek and white bean stew\nFrom Example Kitchen: https://examplekitchen.example/recipes/charred-leek-white-bean-stew");
+  expect(copied).toContain(
+    "Charred leek and white bean stew\nFrom Example Kitchen: https://examplekitchen.example/recipes/charred-leek-white-bean-stew",
+  );
   expect(copied).toContain("Ingredients\n- 3 large leeks");
   expect(copied).toContain("Method\n1. Heat the oven");
   expect(copied).not.toContain("weeknight stew rests");
@@ -146,7 +165,11 @@ test("the narration runs from the summary through the ingredients into the metho
   await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Heat the oven");
 });
 
-test("tapping a step or an ingredient moves the voice there, as tapping a line of the note does", async ({ page, launcher, backendSimulator }) => {
+test("tapping a step or an ingredient moves the voice there, as tapping a line of the note does", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -188,7 +211,11 @@ test("Read aloud plays just its list, and stops before the method", async ({ pag
   await expect(page.getByTestId("RecipeMethod.activeStep")).toHaveCount(0);
 });
 
-test("the print sheet carries the page's image and our name and mark, and nothing of our summary", async ({ page, launcher, backendSimulator }) => {
+test("the print sheet carries the page's image and our name and mark, and nothing of our summary", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   await page.route("https://images.example/**", (route) =>
     route.fulfill({
       contentType: "image/png",

@@ -35,9 +35,7 @@ export class IndexedDbSettingsStore implements SettingsStore {
   async unreadable(): Promise<UnreadableRecord | null> {
     const raw = await this.#raw();
     const read = readStoredRecord(raw, Settings, SETTINGS_MIGRATIONS);
-    return read.status === "read"
-      ? null
-      : unreadableRecord("settings", SETTINGS_KEY, read, raw);
+    return read.status === "read" ? null : unreadableRecord("settings", SETTINGS_KEY, read, raw);
   }
 
   async update(patch: Partial<Settings>) {

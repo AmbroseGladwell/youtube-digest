@@ -1,11 +1,7 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
-import {
-  makeArticleOverview,
-  makeOverview,
-  makeRecipeOverview,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeAnalyticsConsent } from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { homePageTestIds } from "../../../src/features/home/HomePage/HomePageTestIds.js";
@@ -384,9 +380,7 @@ test.describe("in the panel", () => {
 
   // 205g-4: the gate's Create an account opens home, which is Start, with no way back to
   // itself. The lone back chevron 205d-5 drew is retired with it.
-  test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({
-    launcher,
-  }) => {
+  test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({ launcher }) => {
     await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
     await launcher.signedOutGate.verifyIsShown();
 

@@ -41,18 +41,12 @@ export async function refreshTokens(
     if (new Date(row.expires_at).getTime() <= now.getTime()) {
       return { kind: "refused", description: "The refresh token has expired" };
     }
-    await tx.query("update connection_tokens set consumed_at = $2::timestamptz where token_hash = $1", [
-      tokenHash,
-      now.toISOString(),
-    ]);
+    await tx.query("update connection_tokens set consumed_at = $2::timestamptz where token_hash = $1", [tokenHash, now.toISOString()]);
     await tx.query("delete from connection_tokens where connection_id = $1 and expires_at <= $2::timestamptz", [
       row.connection_id,
       now.toISOString(),
     ]);
-    await tx.query("update connections set last_used_at = $2::timestamptz where id = $1", [
-      row.connection_id,
-      now.toISOString(),
-    ]);
+    await tx.query("update connections set last_used_at = $2::timestamptz where id = $1", [row.connection_id, now.toISOString()]);
     const tokens = await issueTokens(tx, { connectionId: row.connection_id, scope: row.scope, now });
     return { kind: "issued", tokens, connectionId: row.connection_id, accountId: AccountId.parse(row.account_id), created: false };
   });

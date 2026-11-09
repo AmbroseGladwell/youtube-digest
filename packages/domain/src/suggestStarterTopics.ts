@@ -13,10 +13,7 @@ const mentions = (text: string, term: string) => new RegExp(`\\b${escaped(term)}
 export function suggestStarterTopics(title: string, text: string): string[] {
   return STARTER_TOPICS.map((topic, order) => {
     const terms = [topic.name, ...topic.keywords];
-    const score = terms.reduce(
-      (sum, term) => sum + (mentions(title, term) ? TITLE_WEIGHT : mentions(text, term) ? 1 : 0),
-      0,
-    );
+    const score = terms.reduce((sum, term) => sum + (mentions(title, term) ? TITLE_WEIGHT : mentions(text, term) ? 1 : 0), 0);
     return { name: topic.name, score, order };
   })
     .filter(({ score }) => score >= ENOUGH)

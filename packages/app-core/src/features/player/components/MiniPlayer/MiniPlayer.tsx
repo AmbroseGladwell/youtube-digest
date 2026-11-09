@@ -27,8 +27,7 @@ export function MiniPlayer() {
   const snapshot = usePlayerSnapshot();
   const { pathname } = useLocation();
   const { track } = snapshot;
-  const shown =
-    track !== null && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
+  const shown = track !== null && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
 
   if (!shown) return null;
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
@@ -145,10 +144,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         </button>
       </div>
       <span className={styles.progress} aria-hidden="true">
-        <span
-          className={`${styles.progressFill} ${source === "pacer" ? styles.progressStone : ""}`}
-          style={{ width: `${percent}%` }}
-        />
+        <span className={`${styles.progressFill} ${source === "pacer" ? styles.progressStone : ""}`} style={{ width: `${percent}%` }} />
       </span>
     </div>
   );

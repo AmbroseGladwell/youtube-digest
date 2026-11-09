@@ -9,8 +9,7 @@ export const ArticlePlace = z.object({
 });
 export type ArticlePlace = z.infer<typeof ArticlePlace>;
 
-const encodeFragmentText = (text: string): string =>
-  encodeURIComponent(text).replace(/-/g, "%2D");
+const encodeFragmentText = (text: string): string => encodeURIComponent(text).replace(/-/g, "%2D");
 
 export const articlePlaceUrl = (url: string, { anchor, quote }: ArticlePlace): string =>
   anchor === null ? `${url}#:~:text=${encodeFragmentText(quote)}` : `${url}#${encodeURIComponent(anchor)}`;

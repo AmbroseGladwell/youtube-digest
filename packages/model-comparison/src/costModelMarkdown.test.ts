@@ -19,11 +19,11 @@ test("each reader pays a share of the first stage plus their own pass", () => {
 
 test("an arm's cost counts only the videos every arm passed", () => {
   const fetched = makeFetchedTranscript(40);
-  const transcripts = new Map([["video-one", fetched], ["video-two", fetched]]);
-  const records = [
-    makeRunRecord({ videoId: "video-one", costDollars: 0.02 }),
-    makeRunRecord({ videoId: "video-two", costDollars: 0.5 }),
-  ];
+  const transcripts = new Map([
+    ["video-one", fetched],
+    ["video-two", fetched],
+  ]);
+  const records = [makeRunRecord({ videoId: "video-one", costDollars: 0.02 }), makeRunRecord({ videoId: "video-two", costDollars: 0.5 })];
 
   const cost = armCost(records, new Set(["video-one"]), transcripts);
 

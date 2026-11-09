@@ -9,21 +9,15 @@ export class StaleClientBannerPageObject extends PageObject {
       return this;
     });
 
-  verifyIsAbsent = () =>
-    this.step("verifyIsAbsent", () => this.expectToHaveCount(staleClientBannerTestIds.root, 0));
+  verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectToHaveCount(staleClientBannerTestIds.root, 0));
 
   verifyMessageReads = (message: string) =>
-    this.step(`verifyMessageReads ${message}`, () =>
-      expect(this.get(staleClientBannerTestIds.message)).toHaveText(message),
-    );
+    this.step(`verifyMessageReads ${message}`, () => expect(this.get(staleClientBannerTestIds.message)).toHaveText(message));
 
   verifyOffersUpdate = (label: string) =>
-    this.step(`verifyOffersUpdate ${label}`, () =>
-      expect(this.get(staleClientBannerTestIds.updateButton)).toHaveText(label),
-    );
+    this.step(`verifyOffersUpdate ${label}`, () => expect(this.get(staleClientBannerTestIds.updateButton)).toHaveText(label));
 
-  verifyOffersNoUpdate = () =>
-    this.step("verifyOffersNoUpdate", () => this.expectToHaveCount(staleClientBannerTestIds.updateButton, 0));
+  verifyOffersNoUpdate = () => this.step("verifyOffersNoUpdate", () => this.expectToHaveCount(staleClientBannerTestIds.updateButton, 0));
 
   dismiss = () => this.step("dismiss", () => this.click(staleClientBannerTestIds.dismissButton));
 }

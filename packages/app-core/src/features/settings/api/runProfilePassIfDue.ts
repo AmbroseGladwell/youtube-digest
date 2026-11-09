@@ -29,12 +29,24 @@ export interface ProfilePassDeps {
 // Runs after an overview lands, on the key that made it. Its failing never touches the overview
 // and nothing tells the reader, so it is counted and left; the next due pass picks up from here
 // (docs/features/personalisation.md, "A profile that learns"). True when Settings changed.
-export async function runProfilePassIfDue({ madeOn, own, api, overviewStore, settingsStore, analytics, now = () => new Date() }: ProfilePassDeps): Promise<boolean> {
+export async function runProfilePassIfDue({
+  madeOn,
+  own,
+  api,
+  overviewStore,
+  settingsStore,
+  analytics,
+  now = () => new Date(),
+}: ProfilePassDeps): Promise<boolean> {
   const passAsks = madeOn === "own" && own !== null ? "own" : madeOn === "ours" && api !== null ? "ours" : null;
   if (passAsks === null) return false;
   const counted = analytics.settings.personalisation;
   try {
-    const [settings, overviews, topics] = await Promise.all([settingsStore.get(), overviewStore.listOverviews(), overviewStore.listTopics()]);
+    const [settings, overviews, topics] = await Promise.all([
+      settingsStore.get(),
+      overviewStore.listOverviews(),
+      overviewStore.listTopics(),
+    ]);
     const schedule = {
       overviewCount: overviews.length,
       countAtLastPass: settings.overviewsAtLastProfilePass,
@@ -58,8 +70,7 @@ export async function runProfilePassIfDue({ madeOn, own, api, overviewStore, set
         captureReason: overview.captureReason,
       })),
     };
-    const items: ProfilePassItem[] =
-      passAsks === "own" ? await generateProfileItems(own!, input) : (await api!.profilePass(input)).items;
+    const items: ProfilePassItem[] = passAsks === "own" ? await generateProfileItems(own!, input) : (await api!.profilePass(input)).items;
     counted.profilePassRan({ added: items.length, key: passAsks });
     if (items.length === 0) return true;
 

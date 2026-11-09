@@ -37,10 +37,7 @@ const version1 = {
     compromisesContent: false,
   },
   howToApply: {
-    items: [
-      "Film one set from the side before changing anything.",
-      "Drop the weight until the float happens without pulling.",
-    ],
+    items: ["Film one set from the side before changing anything.", "Drop the weight until the float happens without pulling."],
   },
   watchAnyway: {
     answer: "partial",

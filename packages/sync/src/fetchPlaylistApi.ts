@@ -7,7 +7,6 @@ export type FetchPlaylistApiOptions = ApiRequesterOptions;
 export function createFetchPlaylistApi(options: FetchPlaylistApiOptions): PlaylistApi {
   const request = createApiRequester(options);
   return {
-    lookup: (playlistId) =>
-      answered(request("GET", `/playlists/${encodeURIComponent(playlistId)}`, PlaylistLookup)),
+    lookup: (playlistId) => answered(request("GET", `/playlists/${encodeURIComponent(playlistId)}`, PlaylistLookup)),
   };
 }

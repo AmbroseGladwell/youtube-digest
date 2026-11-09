@@ -20,10 +20,7 @@ const unreadableRecord = (overrides: Partial<UnreadableRecord> = {}): Unreadable
 
 // A library that shows two and holds three is the prototype's eleven missing notes with a
 // new address (docs/features/record-migrations.md).
-test("a record that cannot be read sits in the library where the reader left it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a record that cannot be read sits in the library where the reader left it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(
     makeOverview({
       savedAt: "2026-09-16T00:00:00.000Z",
@@ -47,10 +44,7 @@ test("a record that cannot be read sits in the library where the reader left it"
   await library.expectCardCountToBe(2);
 });
 
-test("opening it explains what happened and offers the video rather than a retry", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening it explains what happened and offers the video rather than a retry", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(unreadableRecord());
   const library = await launcher.launchExpectingLibrary();
 
@@ -65,13 +59,8 @@ test("opening it explains what happened and offers the video rather than a retry
 // A record from the future is the app's fault rather than the data's, and regenerating it
 // would write this client's version over a newer one
 // (docs/features/record-migrations.md).
-test("a record from a newer version says so, and is not offered a way to overwrite it", async ({
-  launcher,
-  backendSimulator,
-}) => {
-  backendSimulator.overviews.seedUnreadable(
-    unreadableRecord({ reason: "future-version", schemaVersion: 99 }),
-  );
+test("a record from a newer version says so, and is not offered a way to overwrite it", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seedUnreadable(unreadableRecord({ reason: "future-version", schemaVersion: 99 }));
   const library = await launcher.launchExpectingLibrary();
 
   await library.unreadableCard.verifyKickerReads("Needs a newer version");
@@ -82,10 +71,7 @@ test("a record from a newer version says so, and is not offered a way to overwri
   await deadEnd.verifyOffersNoGenerateAgain();
 });
 
-test("a record with nothing left to salvage still appears, and offers only the way back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a record with nothing left to salvage still appears, and offers only the way back", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(unreadableRecord({ salvaged: null }));
   const library = await launcher.launchExpectingLibrary();
 

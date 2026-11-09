@@ -76,10 +76,7 @@ test.describe("each account's library", () => {
     await signedInAgain.expectCardCountToBe(1);
   });
 
-  test("a second account signing in on this device never sees the first account's overviews", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a second account signing in on this device never sees the first account's overviews", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("The First Account's"));
     backendSimulator.auth.accountIsNamed("Bea");
     const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: signedInAs("the-first-account") });
@@ -154,10 +151,7 @@ test.describe("signed out", () => {
     await settings.verifyRowReads("account", "Not signed in");
   });
 
-  test("the panel's home is onboarding's Start, showing none of the overviews on this device", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the panel's home is onboarding's Start, showing none of the overviews on this device", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Made Before This Change"));
     await launcher.launchPanel({ sync: true, apiKeys: API_KEYS });
 
@@ -194,16 +188,10 @@ test.describe("signing out", () => {
 
     await launcher.homePage.verifyShowsStart();
     await launcher.signOutNotice.verifyIsAbsent();
-    test
-      .expect(signOutsCounted(backendSimulator))
-      .toEqual([{ pending: 0, stuck: 0, offline: false, timedOut: false }]);
+    test.expect(signOutsCounted(backendSimulator)).toEqual([{ pending: 0, stuck: 0, offline: false, timedOut: false }]);
   });
 
-  test("offline, it goes anyway and says what will sync on the next sign-in here", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("offline, it goes anyway and says what will sync on the next sign-in here", async ({ launcher, backendSimulator, page }) => {
     const overview = titled("Read Offline");
     backendSimulator.overviews.seed(overview);
     await page.route("**/api/overviews/**", (route) => route.abort("internetdisconnected"));
@@ -214,9 +202,7 @@ test.describe("signing out", () => {
     await menu.chooseSignOut();
 
     await launcher.signOutNotice.verifyLeadReads("Signed out while offline. 1 change hasn’t synced to your account yet.");
-    test
-      .expect(signOutsCounted(backendSimulator))
-      .toEqual([{ pending: 1, stuck: 0, offline: true, timedOut: false }]);
+    test.expect(signOutsCounted(backendSimulator)).toEqual([{ pending: 1, stuck: 0, offline: true, timedOut: false }]);
     await launcher.signOutNotice.dismiss();
     await launcher.signOutNotice.verifyIsAbsent();
   });
@@ -253,8 +239,8 @@ test.describe("the move on sign-in", () => {
     const library = await launcher.homePage.verifyShowsLibrary();
     await library.expectCardCountToBe(2);
     test.expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
-    await test
-      .expect.poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "account.signIn.libraryMoved"))
+    await test.expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "account.signIn.libraryMoved"))
       .toEqual([{ name: "account.signIn.libraryMoved", props: { moved: 1, alreadyThere: 1 } }]);
   });
 
@@ -265,10 +251,7 @@ test.describe("the move on sign-in", () => {
 
     await launcher.openSignInLink("the-token-from-the-email");
 
-    await launcher.libraryMoveNotice.verifyReads(
-      "1 Overview was already in your account, so we kept your existing version.",
-      null,
-    );
+    await launcher.libraryMoveNotice.verifyReads("1 Overview was already in your account, so we kept your existing version.", null);
   });
 
   test("says nothing when this browser held nothing", async ({ launcher }) => {
@@ -301,9 +284,7 @@ test.describe("the move on sign-in", () => {
     await launcher.libraryMoveNotice.dismiss();
 
     await launcher.libraryMoveNotice.verifyIsAbsent();
-    await test
-      .expect.poll(() => backendSimulator.analytics.eventNames())
-      .toContain("account.movedNotice.dismissed");
+    await test.expect.poll(() => backendSimulator.analytics.eventNames()).toContain("account.movedNotice.dismissed");
   });
 
   test("the extension says it on the step that welcomes the reader", async ({ launcher, backendSimulator }) => {

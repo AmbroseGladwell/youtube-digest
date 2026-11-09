@@ -15,10 +15,10 @@ const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };
 
 // Long enough that everything below the chrome has somewhere to scroll to.
 const SEGMENTS: TranscriptSegment[] = Array.from({ length: 30 }, (_, index) =>
-  makeCaptionRun(
-    [`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."],
-    { startMs: index * 60_000, cueMs: 3500 },
-  ),
+  makeCaptionRun([`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."], {
+    startMs: index * 60_000,
+    cueMs: 3500,
+  }),
 ).flat();
 
 // The Overview tab has to overflow the panel before anything can be observed about what
@@ -63,18 +63,13 @@ const seedNote = (backendSimulator: {
       publishedAt: "2026-09-01T00:00:00.000Z",
     },
   });
-  backendSimulator.transcripts.seed(
-    makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }),
-  );
+  backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 };
 
 // Design 205b: the panel's reader is the phone's, so the head goes by with the note and
 // only the tabs hold against the bar. That is what leaves the note its room once the line
 // under the bar is there too (205e-5).
-test("the panel holds its tabs against the bar and lets the head scroll away", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the panel holds its tabs against the bar and lets the head scroll away", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -87,10 +82,7 @@ test("the panel holds its tabs against the bar and lets the head scroll away", a
   await reader.verifyHeadBackLinkIsUnderTheBar();
 });
 
-test("on the transcript the tools stay up there with them", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("on the transcript the tools stay up there with them", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -103,10 +95,7 @@ test("on the transcript the tools stay up there with them", async ({
 
 // Listen docks the player at the foot of the window, not at the end of the note where it
 // would need scrolling to (docs/features/audio-player.md).
-test("Listen docks the player at the foot of the window rather than the end of the note", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Listen docks the player at the foot of the window rather than the end of the note", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -120,10 +109,7 @@ test("Listen docks the player at the foot of the window rather than the end of t
 // The note this is seeded from carries all of these, so what the panel keeps is asserted
 // rather than passing on an empty fixture. Design 205b gives it the phone's head, dates
 // included, where the panel used to drop them for want of width.
-test("the panel keeps the judgement beside the topics, and the dates with it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the panel keeps the judgement beside the topics, and the dates with it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -137,10 +123,7 @@ test("the panel keeps the judgement beside the topics, and the dates with it", a
   await reader.verifyMastheadMentions(/saved 16 Sep/);
 });
 
-test("the verdict and the warnings sit on the channel's line", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the verdict and the warnings sit on the channel's line", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -148,10 +131,7 @@ test("the verdict and the warnings sit on the channel's line", async ({
   await reader.verifyJudgementSharesTheChannelLine();
 });
 
-test("the wide reader keeps all of it, having the width for it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the wide reader keeps all of it, having the width for it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -165,11 +145,7 @@ test("the wide reader keeps all of it, having the width for it", async ({
 
 // At the panel's real width, a menu hung from the wrong edge leaves the window and one
 // trapped under the sticky head is painted over by the tabs.
-test("the actions menu opens inside the panel and over the tabs, not under them", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("the actions menu opens inside the panel and over the tabs, not under them", async ({ launcher, backendSimulator, page }) => {
   await page.setViewportSize({ width: 400, height: 720 });
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);

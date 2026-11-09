@@ -26,11 +26,9 @@ export type ApiKeys = z.infer<typeof ApiKeys>;
 
 export const DEFAULT_API_KEYS: ApiKeys = { keys: {} };
 
-export const hasKeyFor = (apiKeys: ApiKeys, provider: Provider): boolean =>
-  apiKeys.keys[provider] !== undefined;
+export const hasKeyFor = (apiKeys: ApiKeys, provider: Provider): boolean => apiKeys.keys[provider] !== undefined;
 
-export const providersWithKeys = (apiKeys: ApiKeys): Provider[] =>
-  Provider.options.filter((provider) => hasKeyFor(apiKeys, provider));
+export const providersWithKeys = (apiKeys: ApiKeys): Provider[] => Provider.options.filter((provider) => hasKeyFor(apiKeys, provider));
 
 // The last four characters, which is what a reader compares against their provider's own
 // list of keys. Short keys are shown whole rather than padded: a key that short is not a

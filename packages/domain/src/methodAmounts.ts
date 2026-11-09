@@ -27,7 +27,9 @@ export function methodAmounts(ingredients: readonly string[], lines: readonly Ad
     const at = ingredient.indexOf(line.written);
     const changed = line.pieces.find((piece) => piece.changed);
     if (at === -1 || changed === undefined) return [];
-    return [{ written: line.written, adjusted: changed.text, names: nameWords(ingredient.slice(at + line.written.length)), plural: line.plural }];
+    return [
+      { written: line.written, adjusted: changed.text, names: nameWords(ingredient.slice(at + line.written.length)), plural: line.plural },
+    ];
   });
 }
 
@@ -48,7 +50,10 @@ interface Edit {
 export function methodPieces(text: string, amounts: readonly MethodAmount[]): IngredientPiece[] {
   const edits: Edit[] = [];
   for (const amount of amounts) {
-    const pattern = new RegExp(`(?<![\\p{L}\\d.,/${FRACTIONS}-])${escaped(amount.written)}(?![\\p{L}\\d/${FRACTIONS}])(\\s+)([\\p{L}]+)`, "giu");
+    const pattern = new RegExp(
+      `(?<![\\p{L}\\d.,/${FRACTIONS}-])${escaped(amount.written)}(?![\\p{L}\\d/${FRACTIONS}])(\\s+)([\\p{L}]+)`,
+      "giu",
+    );
     for (const match of text.matchAll(pattern)) {
       if (!amount.names.includes(singular(match[2]!))) continue;
       const start = match.index;

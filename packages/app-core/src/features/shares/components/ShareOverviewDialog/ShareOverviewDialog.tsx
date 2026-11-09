@@ -80,8 +80,7 @@ export function ShareOverviewDialog({
       return (
         <>
           <p className={styles.body}>
-            Shared links belong to an account, so you can find them again and turn them off. Sign in to
-            make one.
+            Shared links belong to an account, so you can find them again and turn them off. Sign in to make one.
           </p>
           <div className={styles.foot}>
             <button
@@ -113,8 +112,7 @@ export function ShareOverviewDialog({
       return (
         <>
           <p className={styles.body}>
-            The link will say this overview is no longer shared, straight away. If you share it again
-            you’ll get a new link.
+            The link will say this overview is no longer shared, straight away. If you share it again you’ll get a new link.
           </p>
           <div className={styles.foot}>
             <button
@@ -150,8 +148,8 @@ export function ShareOverviewDialog({
       return (
         <>
           <p className={styles.body}>
-            Anyone with the link can read and listen to this overview in a browser, without an account.
-            They get a copy as it is now; later edits stay with you until you update the shared copy.
+            Anyone with the link can read and listen to this overview in a browser, without an account. They get a copy as it is now; later
+            edits stay with you until you update the shared copy.
           </p>
           <div className={styles.cards}>
             <div className={styles.card} data-testid={shareOverviewDialogTestIds.shared}>
@@ -262,10 +260,7 @@ export function ShareOverviewDialog({
             </button>
           </div>
         ) : (
-          <p className={styles.body}>
-            Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t
-            in it.
-          </p>
+          <p className={styles.body}>Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t in it.</p>
         )}
 
         <div className={styles.footSplit}>

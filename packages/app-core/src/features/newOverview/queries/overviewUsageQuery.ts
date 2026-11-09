@@ -14,8 +14,7 @@ export function useOverviewUsageQuery() {
   const accountId = libraryAccountIdOf(connection);
   return useQuery({
     queryKey: generationKeys.usage(accountId),
-    queryFn: (): Promise<OverviewUsage> =>
-      createFetchGenerationApi({ baseUrl: apiUrl!, token: connection.token }).usage(),
+    queryFn: (): Promise<OverviewUsage> => createFetchGenerationApi({ baseUrl: apiUrl!, token: connection.token }).usage(),
     enabled: isConnected(connection) && apiUrl !== null,
     staleTime: 60 * 1000,
     retry: false,

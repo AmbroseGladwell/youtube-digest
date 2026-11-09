@@ -18,11 +18,7 @@ export interface SettingsSectionListProps {
 export function SettingsSectionList({ sections, current, stacked }: SettingsSectionListProps) {
   const analytics = useAnalytics();
   return (
-    <nav
-      className={stacked ? styles.stacked : styles.beside}
-      aria-label="Settings sections"
-      data-testid={settingsSectionListTestIds.root}
-    >
+    <nav className={stacked ? styles.stacked : styles.beside} aria-label="Settings sections" data-testid={settingsSectionListTestIds.root}>
       {sections.map((section) => (
         <PageLink
           key={section.id}

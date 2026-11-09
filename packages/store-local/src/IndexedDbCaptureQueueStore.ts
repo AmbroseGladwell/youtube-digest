@@ -1,9 +1,4 @@
-import {
-  QueuedCapture,
-  type CaptureQueueStore,
-  type PlaylistId,
-  type VideoId,
-} from "@overview/domain";
+import { QueuedCapture, type CaptureQueueStore, type PlaylistId, type VideoId } from "@overview/domain";
 import { CAPTURE_QUEUE_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";

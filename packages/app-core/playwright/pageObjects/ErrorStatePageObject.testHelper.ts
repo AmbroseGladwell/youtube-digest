@@ -11,26 +11,18 @@ export class ErrorStatePageObject extends PageObject {
     });
 
   verifyTitleReads = (title: string): Promise<void> =>
-    this.step(`verifyTitleReads ${title}`, () =>
-      expect(this.get(errorStateTestIds.title)).toHaveText(title),
-    );
+    this.step(`verifyTitleReads ${title}`, () => expect(this.get(errorStateTestIds.title)).toHaveText(title));
 
   verifyOffersAction = (label: string): Promise<void> =>
-    this.step(`verifyOffersAction ${label}`, () =>
-      expect(this.get(errorStateTestIds.action)).toHaveText(label),
-    );
+    this.step(`verifyOffersAction ${label}`, () => expect(this.get(errorStateTestIds.action)).toHaveText(label));
 
-  verifyOffersNoAction = (): Promise<void> =>
-    this.step("verifyOffersNoAction", () => this.expectToHaveCount(errorStateTestIds.action, 0));
+  verifyOffersNoAction = (): Promise<void> => this.step("verifyOffersNoAction", () => this.expectToHaveCount(errorStateTestIds.action, 0));
 
-  verifyOffersWayBack = (): Promise<void> =>
-    this.step("verifyOffersWayBack", () => this.expectToBeVisible(errorStateTestIds.back));
+  verifyOffersWayBack = (): Promise<void> => this.step("verifyOffersWayBack", () => this.expectToBeVisible(errorStateTestIds.back));
 
-  verifyOffersNoWayBack = (): Promise<void> =>
-    this.step("verifyOffersNoWayBack", () => this.expectToHaveCount(errorStateTestIds.back, 0));
+  verifyOffersNoWayBack = (): Promise<void> => this.step("verifyOffersNoWayBack", () => this.expectToHaveCount(errorStateTestIds.back, 0));
 
-  verifyHoldsFocus = (): Promise<void> =>
-    this.step("verifyHoldsFocus", () => expect(this.get(errorStateTestIds.root)).toBeFocused());
+  verifyHoldsFocus = (): Promise<void> => this.step("verifyHoldsFocus", () => expect(this.get(errorStateTestIds.root)).toBeFocused());
 
   verifyWayOutIsOneTabAway = (): Promise<void> =>
     this.step("verifyWayOutIsOneTabAway", async () => {
@@ -39,20 +31,14 @@ export class ErrorStatePageObject extends PageObject {
     });
 
   verifyOffersGenerateAgain = (): Promise<void> =>
-    this.step("verifyOffersGenerateAgain", () =>
-      this.expectToBeVisible(unreadableOverviewTestIds.generateAgain),
-    );
+    this.step("verifyOffersGenerateAgain", () => this.expectToBeVisible(unreadableOverviewTestIds.generateAgain));
 
   verifyOffersNoGenerateAgain = (): Promise<void> =>
-    this.step("verifyOffersNoGenerateAgain", () =>
-      this.expectToHaveCount(unreadableOverviewTestIds.generateAgain, 0),
-    );
+    this.step("verifyOffersNoGenerateAgain", () => this.expectToHaveCount(unreadableOverviewTestIds.generateAgain, 0));
 
-  verifyHasNoBody = (): Promise<void> =>
-    this.step("verifyHasNoBody", () => this.expectToHaveCount(errorStateTestIds.body, 0));
+  verifyHasNoBody = (): Promise<void> => this.step("verifyHasNoBody", () => this.expectToHaveCount(errorStateTestIds.body, 0));
 
-  verifyIsGone = (): Promise<void> =>
-    this.step("verifyIsGone", () => this.expectToHaveCount(errorStateTestIds.root, 0));
+  verifyIsGone = (): Promise<void> => this.step("verifyIsGone", () => this.expectToHaveCount(errorStateTestIds.root, 0));
 
   takeAction = (): Promise<void> => this.step("takeAction", () => this.click(errorStateTestIds.action));
 }

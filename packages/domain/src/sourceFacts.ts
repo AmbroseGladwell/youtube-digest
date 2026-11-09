@@ -18,8 +18,7 @@ export const sourceName = (source: Source): string =>
 // Where a recipe came from, as Copy and Print say it: "Kitchen with Ada on YouTube" (design 122r).
 export const recipeFrom = (source: Source): string => (source.kind === "youtube" ? `${source.channel} on YouTube` : sourceName(source));
 
-export const sourceImage = (source: Source): string | null =>
-  source.kind === "youtube" ? (source.thumbnailUrl ?? null) : source.imageUrl;
+export const sourceImage = (source: Source): string | null => (source.kind === "youtube" ? (source.thumbnailUrl ?? null) : source.imageUrl);
 
 // The words match the library's filter, so a reader connects the two.
 const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article" };

@@ -5,7 +5,16 @@ import { readLibraryView, writeLibraryView } from "./libraryViewStorage.js";
 
 const FITNESS = TopicId.parse("11111111-1111-4111-8111-111111111111");
 const CHOSEN = {
-  filters: { source: "all" as const, topicId: FITNESS, novelty: "original" as const, status: "all" as const, favourite: true, dubious: false, tag: null, query: "" },
+  filters: {
+    source: "all" as const,
+    topicId: FITNESS,
+    novelty: "original" as const,
+    status: "all" as const,
+    favourite: true,
+    dubious: false,
+    tag: null,
+    query: "",
+  },
   sort: "title" as const,
 };
 
@@ -40,7 +49,15 @@ describe("libraryViewStorage", () => {
   it("drops a saved value it no longer knows, keeping the rest and naming what went", () => {
     localStorage.setItem(
       "overview.libraryView.noAccount",
-      JSON.stringify({ version: 1, topic: FITNESS, novelty: "made-up", status: "unread", favourite: false, dubious: false, sort: "verdict" }),
+      JSON.stringify({
+        version: 1,
+        topic: FITNESS,
+        novelty: "made-up",
+        status: "unread",
+        favourite: false,
+        dubious: false,
+        sort: "verdict",
+      }),
     );
 
     expect(readLibraryView(null)).toEqual({

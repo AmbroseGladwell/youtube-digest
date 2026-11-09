@@ -8,9 +8,7 @@ import { SETTINGS_RECORD_ID } from "../records/RecordKind.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import { milestoneChanges } from "./milestoneChanges.js";
 
-const SettingsPatch = Settings.partial()
-  .extend({ sectionsEnabled: SectionsEnabled.partial().optional(), updatedAt: UpdatedAt })
-  .strict();
+const SettingsPatch = Settings.partial().extend({ sectionsEnabled: SectionsEnabled.partial().optional(), updatedAt: UpdatedAt }).strict();
 
 export function settingsRoutes(app: FastifyInstance, records: RecordsRepository): void {
   app.put("/settings", async (request, reply) => {

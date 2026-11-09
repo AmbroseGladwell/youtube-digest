@@ -91,7 +91,10 @@ test("the old address's notice names the new address, the UTC time, and one butt
     SITE,
   );
   assert.equal(subject, "Your email was changed");
-  assert.match(html, /<a class="ov-button" href="https:\/\/overview\.example\/account\/revert#token=a&#38;b"[^>]*>This wasn’t me, move it back<\/a>/);
+  assert.match(
+    html,
+    /<a class="ov-button" href="https:\/\/overview\.example\/account\/revert#token=a&#38;b"[^>]*>This wasn’t me, move it back<\/a>/,
+  );
   assert.ok(text.includes("This wasn’t me, move it back:\nhttps://overview.example/account/revert#token=a&b\n"));
   for (const body of [html, text]) {
     assert.ok(body.includes("now signs in with new@example.org. This address no longer does."));

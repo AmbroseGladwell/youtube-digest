@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ReadingPosition } from "../types/ReadingPosition.js";
-import {
-  READING_POSITIONS_KEPT,
-  forgetReadingPositionIn,
-  readingPositionFor,
-  rememberReadingPosition,
-} from "./readingPositions.js";
+import { READING_POSITIONS_KEPT, forgetReadingPositionIn, readingPositionFor, rememberReadingPosition } from "./readingPositions.js";
 
 describe("readingPositions", () => {
   it("answers null for a video never read", () => {
@@ -13,22 +8,14 @@ describe("readingPositions", () => {
   });
 
   it("remembers the most recent position for a video, replacing the last one", () => {
-    const positions = rememberReadingPosition(
-      rememberReadingPosition([], "video1", 5000),
-      "video1",
-      9000,
-    );
+    const positions = rememberReadingPosition(rememberReadingPosition([], "video1", 5000), "video1", 9000);
 
     expect(positions).toEqual([{ videoId: "video1", startMs: 9000 }]);
     expect(readingPositionFor(positions, "video1")).toBe(9000);
   });
 
   it("keeps the video read most recently first", () => {
-    const positions = rememberReadingPosition(
-      rememberReadingPosition([], "video1", 5000),
-      "video2",
-      1000,
-    );
+    const positions = rememberReadingPosition(rememberReadingPosition([], "video1", 5000), "video2", 1000);
 
     expect(positions.map((position) => position.videoId)).toEqual(["video2", "video1"]);
   });

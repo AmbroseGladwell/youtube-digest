@@ -30,7 +30,17 @@ const count = (n: number) => n.toLocaleString("en-GB");
 // its name with its pace and today's count. A big backfill shows two and the rest behind
 // "N more", so it never floods the page. On a phone or in the panel, rows keep one action
 // and Remove lives in choosing (95ae).
-export function PacedQueueGroup({ group, waitsFor, stacked, canMakeNow, chosen, onToggle, onChooseAll, onMakeNow, onRemove }: PacedQueueGroupProps) {
+export function PacedQueueGroup({
+  group,
+  waitsFor,
+  stacked,
+  canMakeNow,
+  chosen,
+  onToggle,
+  onChooseAll,
+  onMakeNow,
+  onRemove,
+}: PacedQueueGroupProps) {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
   const { playlist, captures } = group;
@@ -44,7 +54,11 @@ export function PacedQueueGroup({ group, waitsFor, stacked, canMakeNow, chosen, 
       : `${PACE_LABEL[group.pace]} · ${count(group.madeToday)} made today · ${count(total)} waiting`;
 
   return (
-    <section className={styles.root} aria-label={waitsFor === "you" ? `Waiting for you from ${playlist.title}` : `Waiting on ${playlist.title}’s pace`} data-testid={pacedQueueGroupTestIds.root}>
+    <section
+      className={styles.root}
+      aria-label={waitsFor === "you" ? `Waiting for you from ${playlist.title}` : `Waiting on ${playlist.title}’s pace`}
+      data-testid={pacedQueueGroupTestIds.root}
+    >
       <div className={styles.head}>
         <span className={styles.headText}>
           <h3 className={styles.title} data-testid={pacedQueueGroupTestIds.title}>
@@ -58,7 +72,12 @@ export function PacedQueueGroup({ group, waitsFor, stacked, canMakeNow, chosen, 
           <button
             type="button"
             className={`${styles.chooseAll} ${stacked ? styles.chooseAllStacked : ""}`}
-            onClick={() => onChooseAll(captures.map((capture) => capture.videoId), !allChosen)}
+            onClick={() =>
+              onChooseAll(
+                captures.map((capture) => capture.videoId),
+                !allChosen,
+              )
+            }
             aria-label={allChosen ? `Clear choices from ${playlist.title}` : `Choose all ${count(total)} from ${playlist.title}`}
             data-testid={pacedQueueGroupTestIds.chooseAllButton}
           >

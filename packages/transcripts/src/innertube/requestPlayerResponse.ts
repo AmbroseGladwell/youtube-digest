@@ -37,10 +37,7 @@ export async function requestPlayerResponse(
   });
 
   if (response.status !== 200) {
-    throw innerTubeError(
-      `the player endpoint answered ${response.status} for ${client.clientName}`,
-      httpFailure(response.status),
-    );
+    throw innerTubeError(`the player endpoint answered ${response.status} for ${client.clientName}`, httpFailure(response.status));
   }
 
   let parsed: unknown;

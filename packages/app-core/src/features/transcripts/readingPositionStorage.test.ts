@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  forgetReadingPosition,
-  moveReadingPositions,
-  readReadingPosition,
-  writeReadingPosition,
-} from "./readingPositionStorage.js";
+import { forgetReadingPosition, moveReadingPositions, readReadingPosition, writeReadingPosition } from "./readingPositionStorage.js";
 
 const makeStorage = (): Storage => {
   const data = new Map<string, string>();

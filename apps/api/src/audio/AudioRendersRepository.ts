@@ -84,10 +84,10 @@ export class AudioRendersRepository {
   // Only the account that asked for a render can throw it away, and never a voice sample,
   // which no account asked for.
   async deleteRequestedBy(key: string, accountId: AccountId): Promise<boolean> {
-    const rows = await this.#sql.query<{ key: string }>(
-      "delete from audio_renders where key = $1 and requested_by = $2 returning key",
-      [key, accountId],
-    );
+    const rows = await this.#sql.query<{ key: string }>("delete from audio_renders where key = $1 and requested_by = $2 returning key", [
+      key,
+      accountId,
+    ]);
     return rows.length > 0;
   }
 

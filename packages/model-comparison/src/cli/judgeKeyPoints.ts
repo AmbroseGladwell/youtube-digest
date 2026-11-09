@@ -44,7 +44,9 @@ const log = (line: string) => console.error(line);
 const { runs, transcripts: mainSet } = await loadComparison(values.run);
 const coverageFiles = (await readdir(comparisonPaths.coverageTranscripts).catch(() => [])).filter((file) => file.endsWith(".json"));
 const coverageSet = await Promise.all(
-  coverageFiles.map(async (file) => JSON.parse(await readFile(join(comparisonPaths.coverageTranscripts, file), "utf-8")) as FetchedTranscript),
+  coverageFiles.map(
+    async (file) => JSON.parse(await readFile(join(comparisonPaths.coverageTranscripts, file), "utf-8")) as FetchedTranscript,
+  ),
 );
 const idOf = (fetched: FetchedTranscript) => fetched.video.id ?? fetched.video.url;
 const byVideo = new Map([...mainSet, ...coverageSet].map((fetched) => [idOf(fetched), fetched] as const));
@@ -68,7 +70,9 @@ const store = jsonRecordStore<KeyPointsJudgeRecord>(
 
 if (!values["measure-only"]) {
   const previous = await store.all();
-  const settled = new Set(previous.filter((record) => record.outcome !== "errored").map((record) => pairKey(record.videoId, record.candidate)));
+  const settled = new Set(
+    previous.filter((record) => record.outcome !== "errored").map((record) => pairKey(record.videoId, record.candidate)),
+  );
   const keys = providerKeysFromEnv();
   const tasks = pairs
     .filter((pair) => !settled.has(pairKey(pair.fetched.video.id ?? pair.fetched.video.url, pair.candidate.name)))
@@ -87,11 +91,13 @@ if (!values["measure-only"]) {
   if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
 }
 
-const videos = transcripts.filter((fetched) => onlyVideos === undefined || onlyVideos.includes(idOf(fetched))).map((fetched) => ({
-  videoId: idOf(fetched),
-  title: fetched.video.title,
-  length: formatTimestamp(videoLengthMs(fetched)),
-}));
+const videos = transcripts
+  .filter((fetched) => onlyVideos === undefined || onlyVideos.includes(idOf(fetched)))
+  .map((fetched) => ({
+    videoId: idOf(fetched),
+    title: fetched.video.title,
+    length: formatTimestamp(videoLengthMs(fetched)),
+  }));
 const markdown = keyPointsJudgingMarkdown(await store.all(), videos, values.run, values.against, KEY_POINTS_RUBRIC_VERSION);
 await mkdir(directory, { recursive: true });
 const reportPath = join(directory, "report.md");

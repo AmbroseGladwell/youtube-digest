@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  AccentColour,
-  DEFAULT_ACCENT_COLOUR,
-  DEFAULT_THEME_MODE,
-  ThemeMode,
-} from "@overview/domain";
+import { AccentColour, DEFAULT_ACCENT_COLOUR, DEFAULT_THEME_MODE, ThemeMode } from "@overview/domain";
 
 export const Appearance = z.object({
   theme: ThemeMode.catch(DEFAULT_THEME_MODE),

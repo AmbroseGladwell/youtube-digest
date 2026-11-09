@@ -51,9 +51,7 @@ test("searching the library is counted once the reader stops typing, with how ma
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
 
   await library.search("sourdough");
-  await expect.poll(() => libraryEvents(backendSimulator)).toEqual([
-    { name: "library.search.searched", props: { results: 1 } },
-  ]);
+  await expect.poll(() => libraryEvents(backendSimulator)).toEqual([{ name: "library.search.searched", props: { results: 1 } }]);
   await library.clearTheSearch();
 
   await expect.poll(() => libraryEvents(backendSimulator).at(-1)).toEqual({ name: "library.search.cleared", props: {} });

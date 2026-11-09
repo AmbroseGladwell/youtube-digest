@@ -22,9 +22,7 @@ export function ConsentAddressCard({ host }: ConsentAddressCardProps) {
           </span>
         </span>
       </div>
-      <p className={styles.note}>
-        The one detail the assistant can’t make up. If you weren’t just using {host}, decline.
-      </p>
+      <p className={styles.note}>The one detail the assistant can’t make up. If you weren’t just using {host}, decline.</p>
     </div>
   );
 }

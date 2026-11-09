@@ -8,14 +8,11 @@ export class ModelPickerDialogPageObject extends PageObject {
       return this;
     });
 
-  verifyOffers = (id: string) =>
-    this.step(`verifyOffers ${id}`, () => this.expectToBeVisible(modelPickerDialogTestIds.choice(id)));
+  verifyOffers = (id: string) => this.step(`verifyOffers ${id}`, () => this.expectToBeVisible(modelPickerDialogTestIds.choice(id)));
 
-  chooseModel = (id: string) =>
-    this.step(`chooseModel ${id}`, () => this.click(modelPickerDialogTestIds.choice(id)));
+  chooseModel = (id: string) => this.step(`chooseModel ${id}`, () => this.click(modelPickerDialogTestIds.choice(id)));
 
-  search = (text: string) =>
-    this.step(`search ${text}`, () => this.get(modelPickerDialogTestIds.search).fill(text));
+  search = (text: string) => this.step(`search ${text}`, () => this.get(modelPickerDialogTestIds.search).fill(text));
 
   close = () => this.step("close", () => this.click(modelPickerDialogTestIds.close));
 
@@ -24,6 +21,5 @@ export class ModelPickerDialogPageObject extends PageObject {
   verifyFellBackToKnownModels = () =>
     this.step("verifyFellBackToKnownModels", () => this.expectToBeVisible(modelPickerDialogTestIds.staleNote));
 
-  verifyGroupsTheRest = () =>
-    this.step("verifyGroupsTheRest", () => this.expectToBeVisible(modelPickerDialogTestIds.restLabel));
+  verifyGroupsTheRest = () => this.step("verifyGroupsTheRest", () => this.expectToBeVisible(modelPickerDialogTestIds.restLabel));
 }

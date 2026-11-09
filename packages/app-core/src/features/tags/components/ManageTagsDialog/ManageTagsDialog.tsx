@@ -102,9 +102,7 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
   const deleteSelected = () => {
     const tags = selected;
     const changed = edit({ from: tags, to: null }, (count) =>
-      tags.length === 1
-        ? `Deleted #${tags[0]} from ${overviewsText(count)}.`
-        : `Deleted ${tags.length} tags from ${overviewsText(count)}.`,
+      tags.length === 1 ? `Deleted #${tags[0]} from ${overviewsText(count)}.` : `Deleted ${tags.length} tags from ${overviewsText(count)}.`,
     );
     analytics.deleted({ tags: tags.length, overviews: changed });
   };
@@ -161,8 +159,8 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
                     Manage tags
                   </h2>
                   <p className={styles.subhead} data-testid={manageTagsDialogTestIds.summary}>
-                    {usage.length} {usage.length === 1 ? "tag" : "tags"} on {overviewsText(entries.length)}.
-                    Changes apply to every overview that uses the tag.
+                    {usage.length} {usage.length === 1 ? "tag" : "tags"} on {overviewsText(entries.length)}. Changes apply to every overview
+                    that uses the tag.
                   </p>
                 </div>
                 <CloseButton onClose={close} />
@@ -235,9 +233,7 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
                         const intoExisting = countOf(target) > 0;
                         const changed = edit({ from: [tag], to: target }, (changedCount) =>
                           intoExisting
-                            ? `Merged #${tag} into #${target}, now on ${overviewsText(
-                                carrying(entries, [tag, target]),
-                              )}.`
+                            ? `Merged #${tag} into #${target}, now on ${overviewsText(carrying(entries, [tag, target]))}.`
                             : `Renamed #${tag} to #${target} on ${overviewsText(changedCount)}.`,
                         );
                         analytics.renamed({ intoExisting, overviews: changed });
@@ -249,12 +245,7 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
                         className={`${styles.row} ${selected.includes(tag) ? styles.rowSelected : ""}`}
                         data-testid={manageTagsDialogTestIds.row(tag)}
                       >
-                        <input
-                          type="checkbox"
-                          className={styles.checkbox}
-                          checked={selected.includes(tag)}
-                          onChange={() => toggle(tag)}
-                        />
+                        <input type="checkbox" className={styles.checkbox} checked={selected.includes(tag)} onChange={() => toggle(tag)} />
                         <span className={styles.box} aria-hidden="true">
                           <StrokeIcon name="check" size={11} />
                         </span>
@@ -331,13 +322,7 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
 
 function CloseButton({ onClose }: { onClose: () => void }) {
   return (
-    <button
-      type="button"
-      className={styles.close}
-      onClick={onClose}
-      aria-label="Close"
-      data-testid={manageTagsDialogTestIds.closeButton}
-    >
+    <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={manageTagsDialogTestIds.closeButton}>
       <StrokeIcon name="close" size={16} />
     </button>
   );
@@ -399,12 +384,7 @@ function RenameRow({
           autoFocus
           data-testid={manageTagsDialogTestIds.renameInput}
         />
-        <button
-          type="submit"
-          className={styles.primary}
-          disabled={!canSave}
-          data-testid={manageTagsDialogTestIds.saveRenameButton}
-        >
+        <button type="submit" className={styles.primary} disabled={!canSave} data-testid={manageTagsDialogTestIds.saveRenameButton}>
           {merges ? "Merge" : "Save"}
         </button>
         <button type="button" className={styles.quiet} onClick={onCancel}>
@@ -459,12 +439,7 @@ function MergeStep({
     >
       <div className={styles.head}>
         <div className={styles.headText}>
-          <button
-            type="button"
-            className={styles.back}
-            onClick={onBack}
-            data-testid={manageTagsDialogTestIds.backButton}
-          >
+          <button type="button" className={styles.back} onClick={onBack} data-testid={manageTagsDialogTestIds.backButton}>
             <StrokeIcon name="arrowLeft" />
             Tags
           </button>
@@ -472,8 +447,8 @@ function MergeStep({
             Merge {tags.length} tags
           </h2>
           <p className={styles.subhead}>
-            {others === 1 ? "The other name becomes an alias" : `The other ${others} names become aliases`} of the
-            one you keep, so new overviews use it too.
+            {others === 1 ? "The other name becomes an alias" : `The other ${others} names become aliases`} of the one you keep, so new
+            overviews use it too.
           </p>
         </div>
         <CloseButton onClose={onClose} />
@@ -487,13 +462,7 @@ function MergeStep({
             className={`${styles.choice} ${keep === tag ? styles.choiceOn : ""}`}
             data-testid={manageTagsDialogTestIds.keepOption(tag)}
           >
-            <input
-              type="radio"
-              name="keep"
-              className={styles.radio}
-              checked={keep === tag}
-              onChange={() => onKeep(tag)}
-            />
+            <input type="radio" name="keep" className={styles.radio} checked={keep === tag} onChange={() => onKeep(tag)} />
             <span className={styles.dot} aria-hidden="true" />
             <span className={styles.tagName}>#{tag}</span>
             <span className={styles.count}>{overviewsText(count)}</span>
@@ -503,13 +472,7 @@ function MergeStep({
           className={`${styles.choice} ${keep === NEW_NAME ? styles.choiceOn : ""}`}
           data-testid={manageTagsDialogTestIds.keepOption(NEW_NAME)}
         >
-          <input
-            type="radio"
-            name="keep"
-            className={styles.radio}
-            checked={keep === NEW_NAME}
-            onChange={() => onKeep(NEW_NAME)}
-          />
+          <input type="radio" name="keep" className={styles.radio} checked={keep === NEW_NAME} onChange={() => onKeep(NEW_NAME)} />
           <span className={styles.dot} aria-hidden="true" />
           {keep === NEW_NAME ? (
             <input

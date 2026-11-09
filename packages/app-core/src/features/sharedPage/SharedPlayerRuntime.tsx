@@ -7,13 +7,7 @@ import { sharedNarrationApi } from "./util/sharedNarrationApi.js";
 // A player of its own, over the copy's own narration rather than the account's. It shadows
 // the app-wide one for this route, which has none of the app's chrome and nothing playing
 // behind it (docs/features/sharing.md).
-export function SharedPlayerRuntime({
-  narration,
-  children,
-}: {
-  narration: SharedNarration | null;
-  children: ReactNode;
-}) {
+export function SharedPlayerRuntime({ narration, children }: { narration: SharedNarration | null; children: ReactNode }) {
   const [engine] = useState(
     () =>
       new PlayerEngine({

@@ -20,7 +20,11 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
 };
 
-test("cooking step by step shows one action at a time, the next one under it, and Next moves on", async ({ page, launcher, backendSimulator }) => {
+test("cooking step by step shows one action at a time, the next one under it, and Next moves on", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -54,7 +58,11 @@ test("cooking step by step shows one action at a time, the next one under it, an
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Turn the heat up to high.");
 });
 
-test("the keys move through it: Space or → for Next, ← for Back, I for the ingredients, Esc to leave", async ({ page, launcher, backendSimulator }) => {
+test("the keys move through it: Space or → for Next, ← for Back, I for the ingredients, Esc to leave", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -167,7 +175,11 @@ test("in US units the mode shows the oven in Fahrenheit and says the units chang
   await expect(page.getByTestId("CookingMode.action")).toContainText("Heat the oven to 425°F (400°F fan)");
 });
 
-test("a doubled recipe's step shows the amounts it repeats from the ingredients adjusted, and a share as written", async ({ page, launcher, backendSimulator }) => {
+test("a doubled recipe's step shows the amounts it repeats from the ingredients adjusted, and a share as written", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   const base = makeRecipeOverview();
   const steps = [
     { text: "Put 100g plain flour, 2 large eggs and 300ml milk into a bowl, then whisk to a smooth batter.", group: null },
@@ -175,7 +187,12 @@ test("a doubled recipe's step shows the amounts it repeats from the ingredients 
   ];
   backendSimulator.overviews.seed(
     makeRecipeOverview({
-      recipe: { ...base.recipe!, ingredients: ["100g plain flour", "2 large eggs", "300ml milk", "3 tbsp butter"], steps, stepCount: steps.length },
+      recipe: {
+        ...base.recipe!,
+        ingredients: ["100g plain flour", "2 large eggs", "300ml milk", "3 tbsp butter"],
+        steps,
+        stepCount: steps.length,
+      },
     }),
   );
   const library = await launcher.launchExpectingLibrary();
@@ -221,7 +238,11 @@ test("a swipe up moves on, a swipe down goes back, and a short drag doesn't move
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
 });
 
-test("the step being cooked fills a little with each of its actions, and is full on its last", async ({ page, launcher, backendSimulator }) => {
+test("the step being cooked fills a little with each of its actions, and is full on its last", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -237,7 +258,11 @@ test("the step being cooked fills a little with each of its actions, and is full
   await expect(fill).toHaveAttribute("style", /width: 100%/);
 });
 
-test("the button above the summary starts cooking, and carries on from the place once there is one", async ({ page, launcher, backendSimulator }) => {
+test("the button above the summary starts cooking, and carries on from the place once there is one", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -258,13 +283,20 @@ const LONG_ACTION =
 
 const longActionRecipe = () => {
   const base = makeRecipeOverview();
-  const steps = [{ text: LONG_ACTION, group: null }, { text: "Cover loosely and leave for 30 minutes.", group: null }];
+  const steps = [
+    { text: LONG_ACTION, group: null },
+    { text: "Cover loosely and leave for 30 minutes.", group: null },
+  ];
   return makeRecipeOverview({ recipe: { ...base.recipe!, steps, stepCount: steps.length } });
 };
 
 const boxOf = async (locator: Locator) => (await locator.boundingBox())!;
 
-test("on the wide web the ingredients make room beside the step, and every key keeps working with them open", async ({ page, launcher, backendSimulator }) => {
+test("on the wide web the ingredients make room beside the step, and every key keeps working with them open", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   const recipe = cookingRecipe();
   backendSimulator.overviews.seed(recipe);
   backendSimulator.narration.seedReady(recipe);
@@ -281,7 +313,9 @@ test("on the wide web the ingredients make room beside the step, and every key k
   await expect(ingredients).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByTestId("CookingIngredientsSheet.root")).toHaveCount(0);
   await expect(page.locator("dialog[open]")).toHaveCount(1);
-  await expect.poll(() => page.evaluate(() => document.activeElement?.closest('[data-testid="CookingIngredientsDrawer.root"]') !== null)).toBe(true);
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.closest('[data-testid="CookingIngredientsDrawer.root"]') !== null))
+    .toBe(true);
 
   await expect.poll(async () => (await boxOf(drawer)).width).toBe(384);
   const action = await boxOf(page.getByTestId("CookingMode.action"));
@@ -364,7 +398,11 @@ test("beside the drawer the action's size follows the column: one step down at 1
   await expect.poll(fontSize).toBe("28px");
 });
 
-test("at phone width the ingredients are still a modal sheet, and Esc leaves only once it is shut", async ({ page, launcher, backendSimulator }) => {
+test("at phone width the ingredients are still a modal sheet, and Esc leaves only once it is shut", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -404,7 +442,11 @@ const longListRecipe = () => {
   return makeRecipeOverview({ recipe: { ...base.recipe!, ingredients: LONG_LIST } });
 };
 
-test("an ingredients list longer than the window scrolls in the drawer, and the controls stay on screen", async ({ page, launcher, backendSimulator }) => {
+test("an ingredients list longer than the window scrolls in the drawer, and the controls stay on screen", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(longListRecipe());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -426,7 +468,7 @@ test("an ingredients list longer than the window scrolls in the drawer, and the 
   await page.keyboard.press("End");
   await expect.poll(() => drawer.evaluate((element) => element.scrollTop > 0)).toBe(true);
   await expect(drawer).toContainText("30 tbsp");
-  await expect(page.getByTestId("CookingMode.action")).toHaveText("Heat the oven to 220°C (200°C fan) and roast the leeks for 20 to 25 minutes.");
+  await expect(page.getByTestId("CookingMode.action")).toHaveText(
+    "Heat the oven to 220°C (200°C fan) and roast the leeks for 20 to 25 minutes.",
+  );
 });
-
-

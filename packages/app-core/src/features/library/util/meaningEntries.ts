@@ -19,7 +19,9 @@ export function meaningEntries(
   }
   const withoutQuery = { ...filters, query: "" };
   const byId = new Map(
-    entries.flatMap((entry) => (entry.kind === "overview" && matchesLibraryFilters(entry, withoutQuery) ? [[entry.overview.id as string, entry] as const] : [])),
+    entries.flatMap((entry) =>
+      entry.kind === "overview" && matchesLibraryFilters(entry, withoutQuery) ? [[entry.overview.id as string, entry] as const] : [],
+    ),
   );
   return result.matches
     .filter(({ overviewId }) => !shownIds.has(overviewId))

@@ -10,10 +10,7 @@ export interface SharePageHtmlInput {
 // A JSON island is inert to a parser and to any script but the one that reads it, as long
 // as nothing in it can close the element that carries it.
 const payloadScript = (payload: SharePayload) =>
-  `<script id="${SHARE_PAYLOAD_ELEMENT_ID}" type="application/json">${JSON.stringify(payload).replace(
-    /</g,
-    "\\u003c",
-  )}</script>`;
+  `<script id="${SHARE_PAYLOAD_ELEMENT_ID}" type="application/json">${JSON.stringify(payload).replace(/</g, "\\u003c")}</script>`;
 
 const GONE_COPY: Record<"revoked" | "unknown", { heading: string; line: string }> = {
   revoked: {

@@ -82,9 +82,7 @@ export function assembleArticleOverview(
         : {
             novelty: verdict.novelty,
             standsOut:
-              verdict.novelty === "common_knowledge" || verdict.standsOut === null
-                ? null
-                : { text: verdict.standsOut.text, range: null },
+              verdict.novelty === "common_knowledge" || verdict.standsOut === null ? null : { text: verdict.standsOut.text, range: null },
             dubious: verdict.dubiousClaims.length > 0,
             dubiousClaims: verdict.dubiousClaims.map(({ claim, basis, reason }) => ({ claim, basis, reason, startMs: null })),
             reasoning: verdict.reasoning,

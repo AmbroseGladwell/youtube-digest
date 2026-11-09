@@ -34,9 +34,7 @@ export function useTabIndicator(active: ReaderTab): TabIndicator {
   useLayoutEffect(() => {
     const measure = () => {
       const element = buttons.current.get(active);
-      setBounds(
-        element ? { offset: element.offsetLeft, width: element.offsetWidth } : { offset: 0, width: 0 },
-      );
+      setBounds(element ? { offset: element.offsetLeft, width: element.offsetWidth } : { offset: 0, width: 0 });
     };
 
     measure();

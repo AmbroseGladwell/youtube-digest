@@ -100,7 +100,7 @@ describe("the tokens", () => {
   it("are Orange at the root and in the dark block", () => {
     const { light, dark, onAction } = ACCENT_PALETTES.orange;
     const root = declaredIn(":root");
-    const darkRoot = declaredIn(':root[data-theme=dark]');
+    const darkRoot = declaredIn(":root[data-theme=dark]");
 
     expect(hex(root["--brand"])).toBe(light.brand);
     expect(hex(root["--action"])).toBe(light.action);

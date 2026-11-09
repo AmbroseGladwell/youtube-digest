@@ -5,10 +5,6 @@ import { stampUpdatedAt } from "./storedUpdatedAt.js";
 // was written, because one function produces both — where stampSchemaVersion on its own
 // belongs to the migration seam, which must not date a record for having been read
 // (docs/features/sync-metadata.md).
-export function stampStoredRecord<T extends object>(
-  record: T,
-  schemaVersion: number,
-  now: Date = new Date(),
-): T {
+export function stampStoredRecord<T extends object>(record: T, schemaVersion: number, now: Date = new Date()): T {
   return stampUpdatedAt(stampSchemaVersion(record, schemaVersion), now);
 }

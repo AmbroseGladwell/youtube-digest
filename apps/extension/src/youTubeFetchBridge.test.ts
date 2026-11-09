@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  isAllowedYouTubeUrl,
-  isYouTubeFetchMessage,
-  isYouTubeFetchReply,
-  YOUTUBE_FETCH,
-} from "./youTubeFetchBridge.js";
+import { isAllowedYouTubeUrl, isYouTubeFetchMessage, isYouTubeFetchReply, YOUTUBE_FETCH } from "./youTubeFetchBridge.js";
 
 // The worker's message handler is reachable by any content script on any page the
 // extension runs in. Without the allowlist the extension is an open CORS proxy for
@@ -36,9 +31,7 @@ describe("isAllowedYouTubeUrl", () => {
 
 describe("the message guards", () => {
   it("recognises a fetch message carrying a request", () => {
-    expect(isYouTubeFetchMessage({ type: YOUTUBE_FETCH, request: { url: "https://www.youtube.com" } })).toBe(
-      true,
-    );
+    expect(isYouTubeFetchMessage({ type: YOUTUBE_FETCH, request: { url: "https://www.youtube.com" } })).toBe(true);
   });
 
   it("rejects the worker's other conversations, and a message with no request on it", () => {

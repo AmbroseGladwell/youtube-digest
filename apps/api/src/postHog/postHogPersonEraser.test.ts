@@ -28,7 +28,11 @@ test("the person under a distinct id is looked up, then deleted with its events,
   assert.equal(await eraser.erase("account-id"), "queued");
   assert.deepEqual(sent, [
     { url: "https://eu.posthog.com/api/projects/12345/persons/?distinct_id=account-id", method: "GET", authorization: "Bearer phx_test" },
-    { url: "https://eu.posthog.com/api/projects/12345/persons/person-uuid/?delete_events=true", method: "DELETE", authorization: "Bearer phx_test" },
+    {
+      url: "https://eu.posthog.com/api/projects/12345/persons/person-uuid/?delete_events=true",
+      method: "DELETE",
+      authorization: "Bearer phx_test",
+    },
   ]);
 });
 

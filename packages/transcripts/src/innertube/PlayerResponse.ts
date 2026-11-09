@@ -14,9 +14,7 @@ export type CaptionTrack = z.infer<typeof CaptionTrack>;
 // Only the fields that are read. Modelling the whole payload would make every unrelated
 // change upstream look like drift.
 export const PlayerResponse = z.object({
-  playabilityStatus: z
-    .object({ status: z.string().optional(), reason: z.string().optional() })
-    .optional(),
+  playabilityStatus: z.object({ status: z.string().optional(), reason: z.string().optional() }).optional(),
   videoDetails: z
     .object({
       videoId: z.string().optional(),
@@ -28,25 +26,19 @@ export const PlayerResponse = z.object({
       isLiveContent: z.boolean().optional(),
       thumbnail: z
         .object({
-          thumbnails: z.array(
-            z.object({ url: z.string(), width: z.number(), height: z.number() }),
-          ),
+          thumbnails: z.array(z.object({ url: z.string(), width: z.number(), height: z.number() })),
         })
         .optional(),
     })
     .optional(),
   captions: z
     .object({
-      playerCaptionsTracklistRenderer: z
-        .object({ captionTracks: z.array(CaptionTrack).optional() })
-        .optional(),
+      playerCaptionsTracklistRenderer: z.object({ captionTracks: z.array(CaptionTrack).optional() }).optional(),
     })
     .optional(),
   microformat: z
     .object({
-      playerMicroformatRenderer: z
-        .object({ publishDate: z.string().optional(), uploadDate: z.string().optional() })
-        .optional(),
+      playerMicroformatRenderer: z.object({ publishDate: z.string().optional(), uploadDate: z.string().optional() }).optional(),
     })
     .optional(),
 });

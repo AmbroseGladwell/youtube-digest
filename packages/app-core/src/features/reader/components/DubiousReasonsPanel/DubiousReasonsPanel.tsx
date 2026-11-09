@@ -51,13 +51,7 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
       <div className={styles.panel}>
         <div className={styles.top}>
           <div className={styles.titles}>
-            <h2
-              className={styles.heading}
-              id={HEADING_ID}
-              ref={heading}
-              tabIndex={-1}
-              data-testid={dubiousReasonsPanelTestIds.heading}
-            >
+            <h2 className={styles.heading} id={HEADING_ID} ref={heading} tabIndex={-1} data-testid={dubiousReasonsPanelTestIds.heading}>
               Why it’s flagged
             </h2>
             {dubiousClaims !== null && dubiousClaims.length > 1 && (
@@ -79,8 +73,7 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
 
         {dubiousClaims === null ? (
           <p className={styles.reason} data-testid={dubiousReasonsPanelTestIds.noReasonSaved}>
-            No reason was saved with this overview. It was made before overviews explained their
-            flags.
+            No reason was saved with this overview. It was made before overviews explained their flags.
           </p>
         ) : (
           <ol className={styles.items}>

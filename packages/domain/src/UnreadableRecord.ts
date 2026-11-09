@@ -21,12 +21,7 @@ export interface UnreadableRecordFailure {
   detail: string;
 }
 
-export function unreadableRecord(
-  kind: UnreadableRecordKind,
-  id: string,
-  failure: UnreadableRecordFailure,
-  raw: unknown,
-): UnreadableRecord {
+export function unreadableRecord(kind: UnreadableRecordKind, id: string, failure: UnreadableRecordFailure, raw: unknown): UnreadableRecord {
   return {
     kind,
     id,

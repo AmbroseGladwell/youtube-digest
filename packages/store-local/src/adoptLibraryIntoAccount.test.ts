@@ -28,7 +28,10 @@ test("an install signed in before accounts had libraries keeps everything under 
   await adoptLibraryIntoAccount({ accountId: ACCOUNT, indexedDB });
 
   const account = await openLocalLibrary({ accountId: ACCOUNT, indexedDB });
-  assert.deepEqual((await account.overviewStore.listOverviews()).map(({ id }) => id), [overview.id]);
+  assert.deepEqual(
+    (await account.overviewStore.listOverviews()).map(({ id }) => id),
+    [overview.id],
+  );
   assert.equal((await account.overviewStore.getOverviewState(overview.id)).read, true);
   assert.equal(await account.syncStorage.isEnrolled(), true);
   assert.equal(await account.syncStorage.cursor(), 7);
@@ -57,7 +60,10 @@ test("running it again changes nothing, so a run that stopped can simply be repe
   await adoptLibraryIntoAccount({ accountId: ACCOUNT, indexedDB });
 
   const account = await openLocalLibrary({ accountId: ACCOUNT, indexedDB });
-  assert.deepEqual((await account.overviewStore.listOverviews()).map(({ id }) => id), [overview.id]);
+  assert.deepEqual(
+    (await account.overviewStore.listOverviews()).map(({ id }) => id),
+    [overview.id],
+  );
   assert.deepEqual(await account.syncStorage.listPending(), pendingBefore);
 });
 

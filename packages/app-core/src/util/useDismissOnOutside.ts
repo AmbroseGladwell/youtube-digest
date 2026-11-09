@@ -10,11 +10,7 @@ type InsideRef = RefObject<HTMLElement | null>;
 // The handler is read back through a ref rather than taken as a dependency, so the
 // listeners are attached once per opening instead of on every render, and still can never
 // be the close() of an earlier one.
-export function useDismissOnOutside(
-  active: boolean,
-  dismiss: () => void,
-  ...insideRefs: InsideRef[]
-): void {
+export function useDismissOnOutside(active: boolean, dismiss: () => void, ...insideRefs: InsideRef[]): void {
   const latest = useRef({ dismiss, insideRefs });
   latest.current = { dismiss, insideRefs };
 

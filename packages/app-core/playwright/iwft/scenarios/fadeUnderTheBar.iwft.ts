@@ -95,10 +95,7 @@ test("the library fades under the bar once it has scrolled, and not before", asy
 
 // Design 166d: not under the bar, which would do nothing for 12px of ground and then land
 // its last pixels on the tab strip's own track.
-test("an overview fades under the tab strip, and under the transcript's tools on that tab", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an overview fades under the tab strip, and under the transcript's tools on that tab", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -116,10 +113,7 @@ test("an overview fades under the tab strip, and under the transcript's tools on
 
 // Design 166f, as 205b leaves it: the panel's head goes by with the note, so its stack is
 // the bar and the tabs and the fade hangs from the tabs.
-test("in the panel the fade hangs from the tabs, the head having scrolled away", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("in the panel the fade hangs from the tabs, the head having scrolled away", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, activeVideoUrl: VIDEO_URL });
   const reader = await capture.openStoredOverview();

@@ -60,9 +60,7 @@ export function verifyTtsDeploy({ deployedCommits, head, poolSize }) {
     throw new Error(`${behind} of ${deployedCommits.length} machines don't report ${short(head)} after the deploy`);
   }
   if (deployedCommits.length !== poolSize) {
-    throw new Error(
-      `the pool has ${deployedCommits.length} machines, not ${poolSize}: fly scale count ${poolSize} --app the-overview-tts`,
-    );
+    throw new Error(`the pool has ${deployedCommits.length} machines, not ${poolSize}: fly scale count ${poolSize} --app the-overview-tts`);
   }
   return `all ${deployedCommits.length} machines report ${short(head)}`;
 }

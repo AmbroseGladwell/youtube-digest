@@ -10,8 +10,7 @@ export class GenerationStatusStripPageObject extends PageObject {
       return this;
     });
 
-  verifyIsHidden = () =>
-    this.step("verifyIsHidden", () => this.expectToHaveCount(generationStatusStripTestIds.root, 0));
+  verifyIsHidden = () => this.step("verifyIsHidden", () => this.expectToHaveCount(generationStatusStripTestIds.root, 0));
 
   verifyReads = (label: string, step: string) =>
     this.step(`verifyReads ${label} / ${step}`, async () => {
@@ -19,11 +18,9 @@ export class GenerationStatusStripPageObject extends PageObject {
       await expect(this.get(generationStatusStripTestIds.step)).toHaveText(new RegExp(`^${step} · \\d+:\\d\\d$`));
     });
 
-  clickDetails = () =>
-    this.step("clickDetails", () => this.click(generationStatusStripTestIds.detailsButton));
+  clickDetails = () => this.step("clickDetails", () => this.click(generationStatusStripTestIds.detailsButton));
 
-  clickReadOverview = () =>
-    this.step("clickReadOverview", () => this.click(generationStatusStripTestIds.readOverviewButton));
+  clickReadOverview = () => this.step("clickReadOverview", () => this.click(generationStatusStripTestIds.readOverviewButton));
 
   verifyStandsDownOnItsOwn = () =>
     this.step("verifyStandsDownOnItsOwn", () =>

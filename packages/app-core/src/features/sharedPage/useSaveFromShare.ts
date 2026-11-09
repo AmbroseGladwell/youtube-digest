@@ -21,7 +21,8 @@ export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview
     async (token, snapshot, options = { sample: false }) => {
       const api = apiUrl === null ? null : createFetchGenerationApi({ baseUrl: apiUrl, token: connection.token });
       const copy = savedFromShare(snapshot.note, options.sample);
-      const overview = options.sample && api !== null ? { ...copy, topicIds: await sortedInto(api, copy, await overviewStore.listTopics()) } : copy;
+      const overview =
+        options.sample && api !== null ? { ...copy, topicIds: await sortedInto(api, copy, await overviewStore.listTopics()) } : copy;
       if (api !== null) {
         await api.reserve(overview.id, token).catch(() => undefined);
       }

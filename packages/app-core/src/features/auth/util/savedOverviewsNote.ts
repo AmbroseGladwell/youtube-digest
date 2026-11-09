@@ -24,8 +24,6 @@ export function savedOverviewsNote(count: number, intent: AuthIntent, place: Lib
   const overviews = count === 1 ? `Overview ${WHERE[place]}` : `${count} Overviews ${WHERE[place]}`;
   const except = count === 1 ? "unless it already has it" : "except any it already has";
   const everywhere =
-    place === "browser"
-      ? ` You’ll then have ${count === 1 ? "it" : "them"} on your phone, in the extension and on any other device.`
-      : "";
+    place === "browser" ? ` You’ll then have ${count === 1 ? "it" : "them"} on your phone, in the extension and on any other device.` : "";
   return `Signing in adds the ${overviews} to your account, ${except}.${everywhere}`;
 }

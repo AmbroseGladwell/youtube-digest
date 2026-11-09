@@ -121,9 +121,8 @@ export function PlaylistsSection() {
         <div className={styles.card} data-testid={playlistsSectionTestIds.empty}>
           <p className={styles.emptyTitle}>You’re not following any playlists</p>
           <p className={styles.emptyBody}>
-            Try this: on YouTube, make an unlisted playlist called “Overview”. Whenever a video looks worth it, save it there
-            instead of Watch Later. Paste the playlist’s link below, and each video you add becomes an overview the next
-            time you open The Overview.
+            Try this: on YouTube, make an unlisted playlist called “Overview”. Whenever a video looks worth it, save it there instead of
+            Watch Later. Paste the playlist’s link below, and each video you add becomes an overview the next time you open The Overview.
           </p>
         </div>
       ) : (
@@ -131,12 +130,15 @@ export function PlaylistsSection() {
           <p className={styles.intro} data-testid={playlistsSectionTestIds.intro}>
             {PLAYLISTS_INTRO}
           </p>
-          <div className={`${styles.card} ${styles.defaults} ${stacked ? styles.defaultsStacked : ""}`} data-testid={playlistsSectionTestIds.defaults}>
+          <div
+            className={`${styles.card} ${styles.defaults} ${stacked ? styles.defaultsStacked : ""}`}
+            data-testid={playlistsSectionTestIds.defaults}
+          >
             <span className={styles.defaultsText}>
               <span className={styles.defaultsTitle}>Pace and order for new playlists</span>
               <span className={styles.defaultsHelp}>
-                Already chosen when you follow one. You can change them there, or for each playlist below. Playlists you
-                already follow keep their own.
+                Already chosen when you follow one. You can change them there, or for each playlist below. Playlists you already follow keep
+                their own.
               </span>
             </span>
             <span className={`${styles.defaultsPickers} ${stacked ? styles.defaultsPickersStacked : ""}`}>

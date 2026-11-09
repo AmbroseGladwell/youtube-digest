@@ -41,8 +41,7 @@ export class MovingLibrary implements MovingStores, AnswerStores {
       return topic;
     },
     saveOverview: async (overview) => void this.#overviews.set(overview.id, overview),
-    getOverviewState: async (overviewId: OverviewId) =>
-      this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE },
+    getOverviewState: async (overviewId: OverviewId) => this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE },
     setOverviewState: async (overviewId, patch) =>
       void this.#states.set(overviewId, {
         ...(this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE }),

@@ -20,11 +20,7 @@ export function asInnerTubeError(error: unknown): TranscriptFetchError {
     : innerTubeError("the request failed", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
 }
 
-export function innerTubeError(
-  message: string,
-  failure: TranscriptFetchFailure,
-  cause?: unknown,
-): TranscriptFetchError {
+export function innerTubeError(message: string, failure: TranscriptFetchFailure, cause?: unknown): TranscriptFetchError {
   return new TranscriptFetchError(message, {
     failure,
     ...(cause === undefined ? {} : { cause }),

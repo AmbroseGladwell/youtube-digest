@@ -4,12 +4,7 @@ import { TranscriptFetchError } from "../TranscriptFetchError.js";
 import type { YouTubeFetch, YouTubeFetchRequest, YouTubeFetchResponse } from "../YouTubeFetch.js";
 import { fetchInnerTubeTranscript } from "./fetchInnerTubeTranscript.js";
 import type { InnerTubeClientConfig } from "./InnerTubeClientConfig.js";
-import {
-  FIXTURE_VIDEO_ID,
-  JSON3_WRITTEN,
-  makeMetadataResponse,
-  makePlayerResponse,
-} from "./PlayerResponseFactory.testHelper.js";
+import { FIXTURE_VIDEO_ID, JSON3_WRITTEN, makeMetadataResponse, makePlayerResponse } from "./PlayerResponseFactory.testHelper.js";
 
 const URL = `https://www.youtube.com/watch?v=${FIXTURE_VIDEO_ID}`;
 
@@ -24,17 +19,14 @@ const ok = (body: unknown): YouTubeFetchResponse => ({
   body: typeof body === "string" ? body : JSON.stringify(body),
 });
 
-function scriptedFetch(
-  handle: (request: YouTubeFetchRequest, clientName: string | undefined) => YouTubeFetchResponse,
-) {
+function scriptedFetch(handle: (request: YouTubeFetchRequest, clientName: string | undefined) => YouTubeFetchResponse) {
   const requests: Array<{ url: string; clientName: string | undefined }> = [];
   const youTubeFetch: YouTubeFetch = (request) => {
     const clientName = request.headers["X-YouTube-Client-Name"];
     requests.push({ url: request.url, clientName });
     return Promise.resolve(handle(request, clientName));
   };
-  const countOf = (clientName: string) =>
-    requests.filter((entry) => entry.clientName === clientName).length;
+  const countOf = (clientName: string) => requests.filter((entry) => entry.clientName === clientName).length;
   const captionCalls = () => requests.filter((entry) => entry.url.includes("timedtext")).length;
   return { youTubeFetch, requests, countOf, captionCalls };
 }

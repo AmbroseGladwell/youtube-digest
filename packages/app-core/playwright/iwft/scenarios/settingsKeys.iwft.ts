@@ -58,9 +58,7 @@ test("removing the key in use moves generation to another key this device holds"
   await settings.apiKeysPanel.verifyInUse("openai");
 });
 
-test("the form's own settings link lands on the keys section, and closes the dialog behind it", async ({
-  launcher,
-}) => {
+test("the form's own settings link lands on the keys section, and closes the dialog behind it", async ({ launcher }) => {
   const form = await launcher.launchExpectingFirstRun();
   await form.clickSettingsLink();
 
@@ -71,18 +69,13 @@ test("the form's own settings link lands on the keys section, and closes the dia
 
 // Nothing but one provider key is ever asked for: the extension fetches captions itself,
 // and the web app asks our server (docs/features/transcript-retrieval.md).
-test("a web reader writes with one provider key alone, because our server fetches the transcript", async ({
-  launcher,
-}) => {
+test("a web reader writes with one provider key alone, because our server fetches the transcript", async ({ launcher }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_KEY });
 
   await form.verifyGenerateButtonEnabled();
 });
 
-test("with our server's fetching off and no extension, the provider key alone is not enough", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with our server's fetching off and no extension, the provider key alone is not enough", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.serviceIsOff();
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_KEY });
 

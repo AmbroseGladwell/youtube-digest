@@ -22,7 +22,9 @@ test("abbreviations, temperatures, decimals and ranges stay inside their sentenc
     "Bake for approx. 25 minutes at 180°C.",
     "Cool for 1.5 hours, e.g. on a rack.",
   ]);
-  assert.deepEqual(pieces("Cook for 20 - 30 minutes (no lid), adding water if needed."), ["Cook for 20 - 30 minutes (no lid), adding water if needed."]);
+  assert.deepEqual(pieces("Cook for 20 - 30 minutes (no lid), adding water if needed."), [
+    "Cook for 20 - 30 minutes (no lid), adding water if needed.",
+  ]);
 });
 
 test("a temperature ending a sentence still ends it", () => {
@@ -41,8 +43,12 @@ test("', then' before a thing rather than a doing stays in one piece", () => {
   assert.deepEqual(pieces("Weigh your flour; or measure it by gently spooning it into a cup, then sweeping off any excess."), [
     "Weigh your flour; or measure it by gently spooning it into a cup, then sweeping off any excess.",
   ]);
-  assert.deepEqual(pieces("Beat the butter until creamy, then gradually beat in the sugar."), ["Beat the butter until creamy, then gradually beat in the sugar."]);
-  assert.deepEqual(pieces("Spread with 2 cups of Ragu, then 1 cup of Cheese Sauce."), ["Spread with 2 cups of Ragu, then 1 cup of Cheese Sauce."]);
+  assert.deepEqual(pieces("Beat the butter until creamy, then gradually beat in the sugar."), [
+    "Beat the butter until creamy, then gradually beat in the sugar.",
+  ]);
+  assert.deepEqual(pieces("Spread with 2 cups of Ragu, then 1 cup of Cheese Sauce."), [
+    "Spread with 2 cups of Ragu, then 1 cup of Cheese Sauce.",
+  ]);
 });
 
 test("'then' without a comma, as in a list of ingredients, never splits", () => {
@@ -88,7 +94,10 @@ test("a sentence that is only an aside in brackets stays with the action before 
 });
 
 test("a step that is only a label stays whole", () => {
-  assert.deepEqual(recipeActions([step("Sauce: ")]).map(({ text, label }) => [text, label]), [["Sauce:", null]]);
+  assert.deepEqual(
+    recipeActions([step("Sauce: ")]).map(({ text, label }) => [text, label]),
+    [["Sauce:", null]],
+  );
 });
 
 test("each action knows its step, its place in it, and where it sits in the page's words", () => {

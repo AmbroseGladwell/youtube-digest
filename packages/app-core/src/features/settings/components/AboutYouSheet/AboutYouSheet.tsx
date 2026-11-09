@@ -15,15 +15,13 @@ export interface AboutYouSheetProps {
   onDone: () => void;
 }
 
-const lengthWith = (entries: readonly string[], extra: string) =>
-  joinInProse(extra === "" ? entries : [...entries, extra]).length;
+const lengthWith = (entries: readonly string[], extra: string) => joinInProse(extra === "" ? entries : [...entries, extra]).length;
 
 // Design 141h: what's in the section, then its suggestion groups, each ending with "Your own".
 export function AboutYouSheet({ section, entries, topicNames, headingId, headingRef, onChange, onDone }: AboutYouSheetProps) {
   const copy = ABOUT_YOU_SECTION_COPY[section];
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const toggle = (entry: string) =>
-    onChange(entries.includes(entry) ? entries.filter((held) => held !== entry) : [...entries, entry]);
+  const toggle = (entry: string) => onChange(entries.includes(entry) ? entries.filter((held) => held !== entry) : [...entries, entry]);
 
   return (
     <div className={styles.root} data-testid={aboutYouSheetTestIds.root}>
@@ -193,10 +191,22 @@ function YourOwn({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps)
           onKeyDown={onKeyDown}
           data-testid={aboutYouSheetTestIds.ownField}
         />
-        <button type="button" className={styles.ownClose} aria-label="Close your own" onClick={onClose} data-testid={aboutYouSheetTestIds.ownClose}>
+        <button
+          type="button"
+          className={styles.ownClose}
+          aria-label="Close your own"
+          onClick={onClose}
+          data-testid={aboutYouSheetTestIds.ownClose}
+        >
           <StrokeIcon name="close" size={14} />
         </button>
-        <button type="button" className={styles.ownAdd} disabled={typed.trim() === ""} onClick={add} data-testid={aboutYouSheetTestIds.ownAdd}>
+        <button
+          type="button"
+          className={styles.ownAdd}
+          disabled={typed.trim() === ""}
+          onClick={add}
+          data-testid={aboutYouSheetTestIds.ownAdd}
+        >
           Add
         </button>
       </div>

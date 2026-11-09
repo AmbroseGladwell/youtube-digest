@@ -50,9 +50,7 @@ export function SharedLinksPanel() {
     confirming === share.token ? (
       <li key={share.token} className={styles.confirmRow} data-testid={sharedLinksPanelTestIds.confirm}>
         <span className={styles.confirmHeading}>Stop sharing “{share.title}”?</span>
-        <span className={styles.confirmBody}>
-          The link will say it’s no longer shared, straight away. Sharing again makes a new link.
-        </span>
+        <span className={styles.confirmBody}>The link will say it’s no longer shared, straight away. Sharing again makes a new link.</span>
         <span className={styles.confirmActions}>
           <button
             type="button"

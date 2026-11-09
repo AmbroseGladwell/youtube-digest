@@ -97,6 +97,11 @@ List the indices (if any) whose claim this article repeats, as similarToIndices.
     similarToIndices:
       input.pastClaims.length === 0
         ? z.array(z.int()).max(0)
-        : z.array(z.int().min(0).max(input.pastClaims.length - 1)),
+        : z.array(
+            z
+              .int()
+              .min(0)
+              .max(input.pastClaims.length - 1),
+          ),
   }),
 };

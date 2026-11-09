@@ -36,7 +36,12 @@ test("a client below the floor is refused at warn with its version, the floor, a
   await testApp.app.inject({
     method: "POST",
     url: "/api/overviews",
-    headers: { ...session.headers, [CLIENT_VERSION_HEADER]: "1", [CLIENT_SURFACE_HEADER]: "extension", [REQUEST_ID_HEADER]: "request-0001" },
+    headers: {
+      ...session.headers,
+      [CLIENT_VERSION_HEADER]: "1",
+      [CLIENT_SURFACE_HEADER]: "extension",
+      [REQUEST_ID_HEADER]: "request-0001",
+    },
     payload: storedOverview(),
   });
 

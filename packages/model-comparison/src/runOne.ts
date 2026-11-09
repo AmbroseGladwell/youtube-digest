@@ -48,9 +48,7 @@ export function measuredCost(model: ComparedModel, calls: MeteredCall[]): number
 
 export const isTheModelsDoing = (error: unknown): boolean =>
   error instanceof SyntaxError ||
-  (error instanceof GenerationError &&
-    !(error instanceof ProviderRequestError) &&
-    !(error instanceof ProviderKeyRefusedError));
+  (error instanceof GenerationError && !(error instanceof ProviderRequestError) && !(error instanceof ProviderKeyRefusedError));
 
 export interface RunGenerationOptions {
   model: ComparedModel;

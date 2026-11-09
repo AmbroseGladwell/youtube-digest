@@ -23,11 +23,8 @@ export const DEFAULT_SYNC_CONNECTION: SyncConnection = {
   firstName: null,
 };
 
-export const isConnected = (
-  connection: SyncConnection,
-): connection is SyncConnection & { apiUrl: string } => connection.apiUrl !== null;
+export const isConnected = (connection: SyncConnection): connection is SyncConnection & { apiUrl: string } => connection.apiUrl !== null;
 
 // Which library this device shows: the signed-in account's, or the no-account one
 // (docs/features/account-libraries.md).
-export const libraryAccountIdOf = (connection: SyncConnection): string | null =>
-  isConnected(connection) ? connection.accountId : null;
+export const libraryAccountIdOf = (connection: SyncConnection): string | null => (isConnected(connection) ? connection.accountId : null);

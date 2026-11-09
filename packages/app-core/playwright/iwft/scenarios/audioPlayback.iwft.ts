@@ -13,9 +13,20 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
+  keyPoints: [
+    { text: "Growth beat expectations.", range: null },
+    { text: "Productivity is moving.", range: null },
+    { text: "Hiring intent has turned.", range: null },
+  ],
   howToApply: { items: ["Re-run the hiring forecast."] },
-  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard synthesis.", similarTo: [] },
+  verdict: {
+    novelty: "common_knowledge",
+    standsOut: null,
+    dubious: false,
+    dubiousClaims: [],
+    reasoning: "Standard synthesis.",
+    similarTo: [],
+  },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
@@ -38,10 +49,7 @@ const ON_OUR_KEY = {
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = ANTHROPIC_KEY;
 
-test("narration that exists says so before the first press, and plays on its own timings", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("narration that exists says so before the first press, and plays on its own timings", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -89,10 +97,7 @@ test("tapping a line seeks the narration to where that line starts", async ({ la
   await reader.verifyBarSays("Now playing · Key points");
 });
 
-test("dragging the scrubber names the line it will land on, and lands on its start", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("dragging the scrubber names the line it will land on, and lands on its start", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -106,10 +111,7 @@ test("dragging the scrubber names the line it will land on, and lands on its sta
   await reader.verifyBarSays("Now playing · Key points");
 });
 
-test("the transport skips fifteen seconds, and the lines are a keystroke apart", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the transport skips fifteen seconds, and the lines are a keystroke apart", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -124,10 +126,7 @@ test("the transport skips fifteen seconds, and the lines are a keystroke apart",
   await reader.verifyScrubberSecondsAtLeast(16);
 });
 
-test("an old note makes its audio on first play, saying so while it waits", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an old note makes its audio on first play, saying so while it waits", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
@@ -163,10 +162,7 @@ test("a render that gives up says so in plain words, and reading along instead s
   await reader.verifyPlayButtonReads("Pause");
 });
 
-test("an account with renders already waiting is told to wait, and offered the pacer", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an account with renders already waiting is told to wait, and offered the pacer", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.accountIsBusy();
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -179,10 +175,7 @@ test("an account with renders already waiting is told to wait, and offered the p
   await reader.verifyIsThePacer(true);
 });
 
-test("past the day's new narration the note reads along instead, saying when more comes", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("past the day's new narration the note reads along instead, saying when more comes", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.dailyCapIsSpent();
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -194,10 +187,7 @@ test("past the day's new narration the note reads along instead, saying when mor
   await reader.verifyIsThePacer(true);
 });
 
-test("a server with no narration is the pacer, marked as such and saying why", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a server with no narration is the pacer, marked as such and saying why", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.simulateEndpointError(EndpointKey.NARRATION_LOOKUP);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -223,10 +213,7 @@ test("reaching the end offers to play again and to mark the note read", async ({
   await reader.verifyIsRead(true);
 });
 
-test("Listen in the library plays in place, and the mini-player follows you into the note", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Listen in the library plays in place, and the mini-player follows you into the note", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -244,10 +231,7 @@ test("Listen in the library plays in place, and the mini-player follows you into
   await reader.verifyBarSays(/^Now playing/);
 });
 
-test("pausing from the mini-player pauses the row too, and × stops and puts it away", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("pausing from the mini-player pauses the row too, and × stops and puts it away", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.narration.seedReady(NOTE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -283,10 +267,7 @@ test("a note made on our key asks for its narration in the background, and has i
   expect(backendSimulator.narration.requestCount()).toBe(1);
 });
 
-test("a note made on the reader's own key asks for no narration until it is first played", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note made on the reader's own key asks for no narration until it is first played", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, plan: "free", apiKeys: API_KEYS });
   await form.submitUrl(VIDEO_URL);
@@ -347,7 +328,7 @@ test("pressing play while a background render is under way asks for it at the fr
   await reader.verifyBarSays(/^Now playing · /);
 });
 
-test("a note made while signed out asks for no narration",async ({ launcher, backendSimulator }) => {
+test("a note made while signed out asks for no narration", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl(VIDEO_URL);
@@ -356,10 +337,7 @@ test("a note made while signed out asks for no narration",async ({ launcher, bac
   expect(backendSimulator.getCallCount(EndpointKey.NARRATION_REQUEST)).toBe(0);
 });
 
-test("a narration request that fails leaves the note it was made for saved and readable", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a narration request that fails leaves the note it was made for saved and readable", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.NARRATION_REQUEST);
   backendSimulator.ourKey.isAvailable();
   const form = await launcher.launchExpectingFirstRun({ ...ON_OUR_KEY, apiKeys: API_KEYS });
@@ -493,13 +471,15 @@ test("a listen played to its end is counted as finished with all of the note hea
   await reader.verifyBarSays(/^Now playing/);
   await reader.verifyBarSays(/^Finished/);
 
-  await expect.poll(() => listens(backendSimulator)).toEqual([
-    { name: "player.playback.started", props: { overviewId: NOTE.id, source: "audio" } },
-    {
-      name: "player.playback.ended",
-      props: { overviewId: NOTE.id, source: "audio", percentHeard: 100, reason: "finished", withOpening: true },
-    },
-  ]);
+  await expect
+    .poll(() => listens(backendSimulator))
+    .toEqual([
+      { name: "player.playback.started", props: { overviewId: NOTE.id, source: "audio" } },
+      {
+        name: "player.playback.ended",
+        props: { overviewId: NOTE.id, source: "audio", percentHeard: 100, reason: "finished", withOpening: true },
+      },
+    ]);
 });
 
 test("stopping from the mini-player ends the listen as stopped, with what was heard in whole tens", async ({
@@ -515,9 +495,7 @@ test("stopping from the mini-player ends the listen as stopped, with what was he
   await expect.poll(() => listens(backendSimulator)).toHaveLength(1);
   await launcher.miniPlayer.clickClose();
 
-  await expect
-    .poll(() => listens(backendSimulator).map(({ name }) => name))
-    .toEqual(["player.playback.started", "player.playback.ended"]);
+  await expect.poll(() => listens(backendSimulator).map(({ name }) => name)).toEqual(["player.playback.started", "player.playback.ended"]);
   const { props } = listens(backendSimulator)[1]!;
   expect(props).toEqual({
     overviewId: NOTE.id,

@@ -17,8 +17,7 @@ import { MAX_KEYS_PER_LOOKUP, MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY, MAX_OUTSTANDI
 const LINES = ["Verdict", "Recycled.", "Standard advice."];
 const MINUTE_MS = 60 * 1000;
 
-const ask = (account: TestAccount, body: Record<string, unknown>) =>
-  account.inject({ method: "POST", url: "/api/audio", body });
+const ask = (account: TestAccount, body: Record<string, unknown>) => account.inject({ method: "POST", url: "/api/audio", body });
 
 const poll = (account: TestAccount, key: string) => account.inject({ method: "GET", url: `/api/audio/${key}` });
 
@@ -352,8 +351,7 @@ const listSamples = (testApp: TestApp) =>
 
 const keyOf = (fileUrl: string) => fileUrl.split("/")[3]!;
 
-const lookUp = (account: TestAccount, keys: string[]) =>
-  account.inject({ method: "POST", url: "/api/audio/lookup", body: { keys } });
+const lookUp = (account: TestAccount, keys: string[]) => account.inject({ method: "POST", url: "/api/audio/lookup", body: { keys } });
 
 test("looking up several keys answers the renders that exist, in whatever state, and skips the rest", async () => {
   const testApp = await createTestApp();
@@ -366,7 +364,10 @@ test("looking up several keys answers the renders that exist, in whatever state,
 
   assert.equal(found.statusCode, 200);
   assert.deepEqual(
-    found.json().renders.map((render: { key: string; status: string }) => [render.key, render.status]).sort(),
+    found
+      .json()
+      .renders.map((render: { key: string; status: string }) => [render.key, render.status])
+      .sort(),
     [
       [heart, "ready"],
       [george, "queued"],
@@ -380,7 +381,10 @@ test("a lookup of no keys, too many keys or something that is not a key is refus
   const account = await makeAccount(testApp);
 
   const none = await lookUp(account, []);
-  const tooMany = await lookUp(account, Array.from({ length: MAX_KEYS_PER_LOOKUP + 1 }, () => "a".repeat(64)));
+  const tooMany = await lookUp(
+    account,
+    Array.from({ length: MAX_KEYS_PER_LOOKUP + 1 }, () => "a".repeat(64)),
+  );
   const notAKey = await lookUp(account, ["heart"]);
 
   assert.equal(none.json().error.code, "invalid_request");
@@ -431,7 +435,10 @@ test("the voice samples are listed without a session, one per voice once they ar
   assert.deepEqual(beforeRendering.json(), { samples: [] });
   assert.equal(rendered.statusCode, 200);
   assert.deepEqual(
-    rendered.json().samples.map((sample: { voice: string }) => sample.voice).sort(),
+    rendered
+      .json()
+      .samples.map((sample: { voice: string }) => sample.voice)
+      .sort(),
     [...NarrationVoice.options].sort(),
   );
   assert.equal(heart.durationSeconds, 2);

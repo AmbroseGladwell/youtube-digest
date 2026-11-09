@@ -6,7 +6,10 @@ const sample = (title) => ({ token: "t", note: { source: { title } } });
 
 test("the notes come out in the order the samples were listed", () => {
   const notes = notesFrom({ samples: [sample("First"), sample("Second")] });
-  assert.deepEqual(notes.map((note) => note.source.title), ["First", "Second"]);
+  assert.deepEqual(
+    notes.map((note) => note.source.title),
+    ["First", "Second"],
+  );
 });
 
 test("an empty list is a failure, not an empty file", () => {

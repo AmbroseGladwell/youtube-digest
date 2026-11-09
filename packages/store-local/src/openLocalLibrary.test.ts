@@ -29,9 +29,15 @@ test("two accounts and the no-account library on one device never see each other
   await a.overviewStore.saveOverview(fromA);
   await noAccount.overviewStore.saveOverview(fromNoAccount);
 
-  assert.deepEqual((await a.overviewStore.listOverviews()).map(({ id }) => id), [fromA.id]);
+  assert.deepEqual(
+    (await a.overviewStore.listOverviews()).map(({ id }) => id),
+    [fromA.id],
+  );
   assert.deepEqual(await b.overviewStore.listOverviews(), []);
-  assert.deepEqual((await noAccount.overviewStore.listOverviews()).map(({ id }) => id), [fromNoAccount.id]);
+  assert.deepEqual(
+    (await noAccount.overviewStore.listOverviews()).map(({ id }) => id),
+    [fromNoAccount.id],
+  );
 });
 
 test("an account's library is still there when it is opened again after closing", async () => {
@@ -43,5 +49,8 @@ test("an account's library is still there when it is opened again after closing"
 
   const again = await openLocalLibrary({ accountId: ACCOUNT_A, indexedDB });
 
-  assert.deepEqual((await again.overviewStore.listOverviews()).map(({ id }) => id), [overview.id]);
+  assert.deepEqual(
+    (await again.overviewStore.listOverviews()).map(({ id }) => id),
+    [overview.id],
+  );
 });

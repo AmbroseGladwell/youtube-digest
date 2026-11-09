@@ -109,11 +109,7 @@ test("a refused key is told apart from every other failure, because a different 
   for (const provider of PROVIDERS) {
     const { http } = recorder(() => ({ status: 401, body: { error: "invalid key" } }));
 
-    await assert.rejects(
-      () => listProviderModels(provider, "sk-wrong", http),
-      ProviderKeyRefusedError,
-      provider,
-    );
+    await assert.rejects(() => listProviderModels(provider, "sk-wrong", http), ProviderKeyRefusedError, provider);
   }
 });
 

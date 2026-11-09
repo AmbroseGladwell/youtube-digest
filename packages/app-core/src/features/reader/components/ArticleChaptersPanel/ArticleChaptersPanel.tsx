@@ -24,52 +24,52 @@ export function ArticleChaptersPanel({ source, article, onPage }: ArticleChapter
       </p>
       {onPage === null && (
         <p className={styles.note}>
-          Each chapter opens the article on {sourceName(source)} in a new tab, at that place. Some sites don’t allow jumping,
-          and if the article has been edited you may land at the top.
+          Each chapter opens the article on {sourceName(source)} in a new tab, at that place. Some sites don’t allow jumping, and if the
+          article has been edited you may land at the top.
         </p>
       )}
       {article.chapters.map((chapter, index) => {
         const status = onPage?.statusOf(chapter.place) ?? null;
         return (
-        <div key={chapter.title} className={styles.row} data-testid={articleChaptersPanelTestIds.row}>
-          <div className={styles.meta}>
-            <span>
-              {chapterNumber(index)} · {articleReadMinutes(chapter.wordCount)} min read
-              {worthReading.has(index) ? " · Worth reading" : ""}
-            </span>
-            {onPage === null ? (
-              <a
-                className={styles.open}
-                href={articlePlaceUrl(source.url, chapter.place)}
-                target="_blank"
-                rel="noopener"
-                aria-label={`Open the article at ${chapter.title}, in a new tab`}
-                data-testid={articleChaptersPanelTestIds.open}
-              >
-                Open the article here
-                <StrokeIcon name="openOut" size={13} />
-              </a>
-            ) : (
-              status !== "missing" && (
-                <button
-                  type="button"
-                  className={styles.show}
-                  onClick={() => onPage.show(chapter.place)}
-                  data-testid={articleChaptersPanelTestIds.show}
+          <div key={chapter.title} className={styles.row} data-testid={articleChaptersPanelTestIds.row}>
+            <div className={styles.meta}>
+              <span>
+                {chapterNumber(index)} · {articleReadMinutes(chapter.wordCount)} min read
+                {worthReading.has(index) ? " · Worth reading" : ""}
+              </span>
+              {onPage === null ? (
+                <a
+                  className={styles.open}
+                  href={articlePlaceUrl(source.url, chapter.place)}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label={`Open the article at ${chapter.title}, in a new tab`}
+                  data-testid={articleChaptersPanelTestIds.open}
                 >
-                  {status === "shown" ? "Shown on the page" : "Show on the page"}
-                </button>
-              )
+                  Open the article here
+                  <StrokeIcon name="openOut" size={13} />
+                </a>
+              ) : (
+                status !== "missing" && (
+                  <button
+                    type="button"
+                    className={styles.show}
+                    onClick={() => onPage.show(chapter.place)}
+                    data-testid={articleChaptersPanelTestIds.show}
+                  >
+                    {status === "shown" ? "Shown on the page" : "Show on the page"}
+                  </button>
+                )
+              )}
+            </div>
+            <h3 className={styles.title}>{chapter.title}</h3>
+            <p className={styles.summary}>{chapter.summary}</p>
+            {status === "missing" && (
+              <p className={styles.missing} data-testid={articleChaptersPanelTestIds.missing}>
+                Couldn’t find this place on the page. The article may have changed since the overview was made.
+              </p>
             )}
           </div>
-          <h3 className={styles.title}>{chapter.title}</h3>
-          <p className={styles.summary}>{chapter.summary}</p>
-          {status === "missing" && (
-            <p className={styles.missing} data-testid={articleChaptersPanelTestIds.missing}>
-              Couldn’t find this place on the page. The article may have changed since the overview was made.
-            </p>
-          )}
-        </div>
         );
       })}
     </div>

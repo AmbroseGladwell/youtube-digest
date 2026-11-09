@@ -46,12 +46,7 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
   };
 
   return (
-    <div
-      className={styles.root}
-      role="region"
-      aria-label="On this tab"
-      data-testid={onThisTabLineTestIds.root}
-    >
+    <div className={styles.root} role="region" aria-label="On this tab" data-testid={onThisTabLineTestIds.root}>
       <span className={styles.icon} aria-hidden="true">
         <StrokeIcon name={tab.kind === "video" ? "video" : "scrollText"} size={14} />
       </span>

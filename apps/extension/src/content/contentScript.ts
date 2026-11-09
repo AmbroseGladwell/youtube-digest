@@ -1,11 +1,6 @@
 import { DEFAULT_ACCENT_COLOUR, type AccentColour } from "@overview/domain/accentPalette";
 import { onAccentColourChanged, readAccentColour } from "../accentColourStorage.js";
-import {
-  BridgeMessage,
-  IDLE_BUTTON_STATE,
-  isButtonStateChanged,
-  type ButtonState,
-} from "../overviewBridge.js";
+import { BridgeMessage, IDLE_BUTTON_STATE, isButtonStateChanged, type ButtonState } from "../overviewBridge.js";
 import { OverviewButton } from "./OverviewButton.js";
 import { findOverviewButtonHost } from "./overviewButtonHost.js";
 import { OVERVIEW_BUTTON_ID } from "./overviewButtonStyles.js";
@@ -23,9 +18,7 @@ let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
 let confirmTimer: ReturnType<typeof setTimeout> | null = null;
 
 const currentVideoId = (): string | null =>
-  window.location.pathname === "/watch"
-    ? new URL(window.location.href).searchParams.get("v")
-    : null;
+  window.location.pathname === "/watch" ? new URL(window.location.href).searchParams.get("v") : null;
 
 // Every state the button is told about arrives here, which is also where waiting for a
 // press to be answered stops.

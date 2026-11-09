@@ -49,8 +49,7 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
   const track = useRef<HTMLDivElement | null>(null);
   const [landing, setLanding] = useState<{ index: number; seconds: number } | null>(null);
   const { fill, tone, thumb } = view.track;
-  const percent =
-    landing === null || durationSeconds <= 0 ? view.track.percent : (landing.seconds / durationSeconds) * 100;
+  const percent = landing === null || durationSeconds <= 0 ? view.track.percent : (landing.seconds / durationSeconds) * 100;
 
   const landingAt = (clientX: number) => {
     const box = track.current!.getBoundingClientRect();
@@ -124,12 +123,7 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
         {view.notches.map((at) => (
           <span key={at} className={styles.notch} style={{ left: `${at * 100}%` }} />
         ))}
-        {thumb && (
-          <span
-            className={`${styles.thumb} ${landing !== null ? styles.thumbDragging : ""}`}
-            style={{ left: `${percent}%` }}
-          />
-        )}
+        {thumb && <span className={`${styles.thumb} ${landing !== null ? styles.thumbDragging : ""}`} style={{ left: `${percent}%` }} />}
         {landing !== null && (
           <span className={styles.tooltip} style={{ left: `${percent}%` }} data-testid={playerScrubberTestIds.tooltip}>
             {landingLabel(lines, landing.index, landing.seconds)}

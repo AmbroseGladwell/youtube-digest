@@ -53,8 +53,7 @@ export function PrivacySection() {
       <div className={styles.card} data-testid={privacySectionTestIds.errorReports}>
         <p className={styles.cardLabel}>Error reports</p>
         <p className={styles.body}>
-          Always sent, so we can fix what breaks. They never include what you watch, read or type, and Analytics
-          doesn’t affect them.
+          Always sent, so we can fix what breaks. They never include what you watch, read or type, and Analytics doesn’t affect them.
         </p>
       </div>
       <div className={styles.links}>

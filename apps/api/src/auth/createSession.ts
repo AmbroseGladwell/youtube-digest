@@ -33,10 +33,6 @@ export async function createSessionForAccount(
   return { id: row!.id, token, accountId, expiresAt };
 }
 
-export async function createSession(
-  sql: SqlClient,
-  email: string,
-  options: CreateSessionOptions,
-): Promise<CreatedSession> {
+export async function createSession(sql: SqlClient, email: string, options: CreateSessionOptions): Promise<CreatedSession> {
   return createSessionForAccount(sql, (await findOrCreateAccount(sql, email)).id, options);
 }

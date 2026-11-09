@@ -22,7 +22,9 @@ export function videoRecipe(input: GenerationInput, generated: GeneratedRecipe):
   const steps = generated.steps.map(({ text, group, range }) => {
     const start = range === null ? undefined : input.transcript[range.startSegmentIndex];
     const end = range === null ? undefined : input.transcript[range.endSegmentIndex];
-    return start === undefined || end === undefined ? { text, group } : { text, group, range: { startMs: start.startMs, endMs: end.endMs } };
+    return start === undefined || end === undefined
+      ? { text, group }
+      : { text, group, range: { startMs: start.startMs, endMs: end.endMs } };
   });
   const listed = ` ${comparable(description)} `;
   const ingredientsSaid = ingredients.flatMap((line, index) => (listed.includes(` ${comparable(line)} `) ? [] : [index]));

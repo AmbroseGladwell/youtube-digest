@@ -64,7 +64,9 @@ export function keyPointsJudgingMarkdown(
     const record = judged.find((candidate) => candidate.videoId === video.videoId);
     if (record === undefined) continue;
     const results = record.results!;
-    lines.push(`| ${video.title} | ${video.length} | ${results.overall} | ${results.choice} | ${results.completeness} | ${results.faithfulness} |`);
+    lines.push(
+      `| ${video.title} | ${video.length} | ${results.overall} | ${results.choice} | ${results.completeness} | ${results.faithfulness} |`,
+    );
   }
   lines.push("", "## Reasons", "");
   for (const video of videos) {

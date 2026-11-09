@@ -41,8 +41,7 @@ export function ConnectionsSection() {
       <div className={styles.card} data-testid={connectionsSectionTestIds.signInFirst}>
         <p className={styles.label}>Sign in first</p>
         <p className={styles.body}>
-          A connection belongs to your account, not to this browser. Sign in, then connect an assistant from here or
-          from the web app.
+          A connection belongs to your account, not to this browser. Sign in, then connect an assistant from here or from the web app.
         </p>
         <div className={styles.actions}>
           <PageLink
@@ -71,10 +70,14 @@ export function ConnectionsSection() {
       <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
         <StrokeIcon name="alertCircle" size={14} />
         Your account couldn't be checked.{" "}
-        <button type="button" className={styles.retry} onClick={() => {
+        <button
+          type="button"
+          className={styles.retry}
+          onClick={() => {
             analytics.mcp.settingsConnections.retried();
             void session.refetch();
-          }}>
+          }}
+        >
           Try again
         </button>
       </p>
@@ -109,10 +112,14 @@ export function ConnectionsSection() {
         <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
           <StrokeIcon name="alertCircle" size={14} />
           Your connections couldn't be loaded.{" "}
-          <button type="button" className={styles.retry} onClick={() => {
-            analytics.mcp.settingsConnections.retried();
-            void connections.refetch();
-          }}>
+          <button
+            type="button"
+            className={styles.retry}
+            onClick={() => {
+              analytics.mcp.settingsConnections.retried();
+              void connections.refetch();
+            }}
+          >
             Try again
           </button>
         </p>
@@ -121,12 +128,7 @@ export function ConnectionsSection() {
       ) : listed.length > 0 ? (
         <>
           <div className={styles.card} data-testid={connectionsSectionTestIds.connected}>
-            <p
-              className={styles.label}
-              ref={connectedLabel}
-              tabIndex={-1}
-              data-testid={connectionsSectionTestIds.connectedLabel}
-            >
+            <p className={styles.label} ref={connectedLabel} tabIndex={-1} data-testid={connectionsSectionTestIds.connectedLabel}>
               Connected
             </p>
             <ul className={styles.list}>

@@ -21,9 +21,7 @@ describe("sharedNarrationApi", () => {
   it("points at the public, content-addressed file every other player uses", () => {
     const api = sharedNarrationApi(NARRATION)!;
 
-    expect(api.fileUrl({ fileUrl: `/api/audio/${NARRATION.key}/file` })).toBe(
-      `/api/audio/${NARRATION.key}/file`,
-    );
+    expect(api.fileUrl({ fileUrl: `/api/audio/${NARRATION.key}/file` })).toBe(`/api/audio/${NARRATION.key}/file`);
   });
 
   // Which is what makes the player fall back to the pacer, as it does for any reader with

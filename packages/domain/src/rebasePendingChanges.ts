@@ -6,10 +6,7 @@ import { stampUpdatedAt } from "./storedUpdatedAt.js";
 // local writes go back on top, in order, so the library never shows an edit as undone
 // between the pull and the push that will carry it. Null means a pending delete, which
 // the pull must not resurrect (docs/features/sync-client.md).
-export function rebasePendingChanges(
-  remote: Record<string, unknown>,
-  pending: readonly OutboxEntry[],
-): Record<string, unknown> | null {
+export function rebasePendingChanges(remote: Record<string, unknown>, pending: readonly OutboxEntry[]): Record<string, unknown> | null {
   let record: Record<string, unknown> | null = remote;
   for (const entry of pending) {
     if (record === null) {

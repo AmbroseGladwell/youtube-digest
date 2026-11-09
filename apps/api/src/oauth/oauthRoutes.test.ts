@@ -45,10 +45,9 @@ test("a public client registers with no secret, and a confidential one gets a se
 
   assert.equal(publicClient.clientSecret, null);
   assert.ok(confidential.clientSecret !== null);
-  const [row] = await testApp.sql.query<{ client_secret_hash: string }>(
-    "select client_secret_hash from oauth_clients where id = $1",
-    [confidential.clientId],
-  );
+  const [row] = await testApp.sql.query<{ client_secret_hash: string }>("select client_secret_hash from oauth_clients where id = $1", [
+    confidential.clientId,
+  ]);
   assert.equal(row!.client_secret_hash, hashToken(confidential.clientSecret));
   await testApp.close();
 });
@@ -96,7 +95,11 @@ test("an unknown client, or a redirect it did not register, is shown an error an
   const assistant = await makeConnectingAssistant(testApp);
 
   const unknown = await assistant.authorize({ client_id: "nobody", redirect_uri: ASSISTANT_REDIRECT_URI, response_type: "code" });
-  const elsewhere = await assistant.authorize({ client_id: assistant.clientId, redirect_uri: "https://evil.test/cb", response_type: "code" });
+  const elsewhere = await assistant.authorize({
+    client_id: assistant.clientId,
+    redirect_uri: "https://evil.test/cb",
+    response_type: "code",
+  });
 
   for (const response of [unknown, elsewhere]) {
     assert.equal(response.statusCode, 400);
@@ -128,7 +131,13 @@ test("authorizing without PKCE goes back to the client as an error carrying its 
 test("asking for another resource or another scope is refused back to the client", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
-  const base = { client_id: assistant.clientId, redirect_uri: ASSISTANT_REDIRECT_URI, response_type: "code", code_challenge_method: "S256", code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM" };
+  const base = {
+    client_id: assistant.clientId,
+    redirect_uri: ASSISTANT_REDIRECT_URI,
+    response_type: "code",
+    code_challenge_method: "S256",
+    code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+  };
 
   const resource = await assistant.authorize({ ...base, resource: "https://elsewhere.test/mcp" });
   const scope = await assistant.authorize({ ...base, scope: "overviews:delete" });

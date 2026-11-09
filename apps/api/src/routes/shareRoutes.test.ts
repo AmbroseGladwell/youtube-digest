@@ -6,8 +6,7 @@ import { createTestApp, TEST_APP_URL } from "../testing/createTestApp.testHelper
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { MAX_LIVE_SHARES_PER_ACCOUNT } from "./shareRoutes.js";
 
-const share = (account: TestAccount, body: unknown) =>
-  account.inject({ method: "POST", url: "/api/shares", body });
+const share = (account: TestAccount, body: unknown) => account.inject({ method: "POST", url: "/api/shares", body });
 
 const live = async (account: TestAccount): Promise<Share[]> => {
   const response = await account.inject({ method: "GET", url: "/api/shares" });

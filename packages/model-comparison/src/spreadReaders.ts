@@ -17,7 +17,13 @@ const learnedFrom = (texts: readonly string[]): LearnedItems =>
   Object.fromEntries(
     texts.map((text, index) => [
       text,
-      { text, source: "From 2 overviews", learnedAt: `2026-11-0${index + 1}T10:00:00.000Z`, noticedAt: `2026-11-0${index + 1}T11:00:00.000Z`, removedAt: null },
+      {
+        text,
+        source: "From 2 overviews",
+        learnedAt: `2026-11-0${index + 1}T10:00:00.000Z`,
+        noticedAt: `2026-11-0${index + 1}T11:00:00.000Z`,
+        removedAt: null,
+      },
     ]),
   );
 
@@ -91,7 +97,21 @@ const SPECIFIC: readonly SpreadReader[] = [
       focus: ["getting from 40 to 100 paying customers", "charging more than £20 a month"],
     },
     {
-      sentence: ["founder", "invoic", "plumber", "trade", "accountant", "cold", "email", "React", "40", "100", "£20", "pricing", "customer"],
+      sentence: [
+        "founder",
+        "invoic",
+        "plumber",
+        "trade",
+        "accountant",
+        "cold",
+        "email",
+        "React",
+        "40",
+        "100",
+        "£20",
+        "pricing",
+        "customer",
+      ],
       learned: ["ISA", "LinkedIn", "burn", "AI coding", "coding tool"],
     },
     ["investing through a stocks and shares ISA", "learning to post on LinkedIn", "worried about burning out", "trying AI coding tools"],

@@ -289,11 +289,7 @@ function RunProgress({
           <>
             <OverviewThumbnail video={run.video} className={styles.thumbnail} />
             <div className={styles.sourceText}>
-              <h2
-                className={styles.sourceTitle}
-                id={headingId}
-                data-testid={newOverviewDialogTestIds.sourceTitle}
-              >
+              <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
                 {run.video.title}
               </h2>
               <p className={styles.sourceMeta}>
@@ -323,11 +319,7 @@ function RunProgress({
 
       {/* Design 21a: the field stays through the done state too, so a reason can still
           be added before pressing Read overview. */}
-      <CaptureReasonField
-        value={run.captureReason}
-        onChange={onCaptureReasonChange}
-        onCommit={onCaptureReasonCommit}
-      />
+      <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />
 
       <div className={styles.foot}>
         <span className={styles.footText}>

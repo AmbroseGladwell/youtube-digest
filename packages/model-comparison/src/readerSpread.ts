@@ -19,9 +19,15 @@ export interface ReaderSpread {
   itemCounts: Record<string, [number, number, number, number]>;
 }
 
-const normalised = (action: string) => action.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
+const normalised = (action: string) =>
+  action
+    .toLowerCase()
+    .replace(/[^a-z0-9' ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-const wordsOf = (actions: readonly string[]) => new Set(actions.flatMap((action) => normalised(action).split(" ")).filter((word) => word !== ""));
+const wordsOf = (actions: readonly string[]) =>
+  new Set(actions.flatMap((action) => normalised(action).split(" ")).filter((word) => word !== ""));
 
 export const sameActions = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((action, index) => normalised(action) === normalised(right[index]!));
@@ -80,8 +86,7 @@ export function readerSpread(readers: readonly string[], byVideo: ReadonlyMap<st
   );
   return {
     videos: videos.length,
-    sameForEveryone: videos.filter((actions) => readers.every((name) => sameActions(actions.get(name)!, actions.get(readers[0]!)!)))
-      .length,
+    sameForEveryone: videos.filter((actions) => readers.every((name) => sameActions(actions.get(name)!, actions.get(readers[0]!)!))).length,
     pairs,
     itemCounts,
   };

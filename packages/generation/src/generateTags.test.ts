@@ -55,7 +55,10 @@ test("a note is re-tagged from its own words, offered the reader's tags, and spe
 
   const tags = await generateTags(client, {
     overview,
-    existingTags: [{ tag: "founder", count: 2 }, { tag: "saas", count: 1 }],
+    existingTags: [
+      { tag: "founder", count: 2 },
+      { tag: "saas", count: 1 },
+    ],
     tagAliases: { "micro-saas": "saas" },
   });
 

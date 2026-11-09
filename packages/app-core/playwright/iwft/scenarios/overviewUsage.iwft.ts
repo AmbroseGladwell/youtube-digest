@@ -88,10 +88,7 @@ test("Plan on the line opens Settings › Plan, where both quotas are counted", 
   await settings.verifyRowReads("plan", "Free · 7 of 10 left");
 });
 
-test("with no key saved, Settings gives the own-key quota as a number, with a way to add a key", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with no key saved, Settings gives the own-key quota as a number, with a way to add a key", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ ours: 38 });
   await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, plan: "plus" });
@@ -151,10 +148,7 @@ test("on Free with both quotas spent, the message names both and offers BYO Plus
   });
 });
 
-test("on Plus with both quotas spent, the message says there's no upgrade, on the hero too", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("on Plus with both quotas spent, the message says there's no upgrade, on the hero too", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ ours: 50, own: 200 });
   const home = await launcher.launch({ ...SIGNED_IN, plan: "plus" });
@@ -201,4 +195,3 @@ test("on the panel, Plus with no key and our key spent is offered a key", async 
     actions: ["Add your own key"],
   });
 });
-

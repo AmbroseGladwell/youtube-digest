@@ -21,9 +21,7 @@ test("a warning is one of the catalogue's, with enums and ids only, never text",
   assert.ok(!ClientWarning.safeParse({ ...fellThrough, name: "somethingElse" }).success);
   assert.ok(!ClientWarning.safeParse({ ...fellThrough, answeredBy: "a transcript" }).success);
   assert.ok(!ClientWarning.safeParse({ ...fellThrough, title: "A reader's video" }).success);
-  assert.ok(
-    !ClientWarning.safeParse({ name: "narrationFellBack", reason: "renderFailed", requestId: "not an id", at: AT }).success,
-  );
+  assert.ok(!ClientWarning.safeParse({ name: "narrationFellBack", reason: "renderFailed", requestId: "not an id", at: AT }).success);
 });
 
 test("a code the API doesn't have is dropped from a narration warning", () => {

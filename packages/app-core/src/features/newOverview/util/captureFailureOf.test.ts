@@ -9,9 +9,9 @@ const before = { transcriptResolved: false };
 
 describe("captureFailureOf", () => {
   it("names a failed run by what went wrong, never by its message", () => {
-    expect(
-      captureFailureOf(new TranscriptFetchError("Video gone", { failure: TranscriptFetchFailure.VIDEO_UNAVAILABLE }), before),
-    ).toBe("video-unavailable");
+    expect(captureFailureOf(new TranscriptFetchError("Video gone", { failure: TranscriptFetchFailure.VIDEO_UNAVAILABLE }), before)).toBe(
+      "video-unavailable",
+    );
     expect(captureFailureOf(new NoTranscriptSourceError("No rung answered", []), before)).toBe("noTranscriptSource");
     expect(captureFailureOf(new GenerationError("The note didn't parse"), before)).toBe("generation");
     expect(captureFailureOf(new Error("Something else entirely"), before)).toBe("unknown");

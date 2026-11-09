@@ -80,7 +80,10 @@ test("a client built before playlists could be followed is never sent one, and i
 
   const response = await account.inject({ method: "GET", url: "/api/changes?since=0", clientVersion: 3 });
 
-  assert.deepEqual(response.json().changes.map((change: { kind: string }) => change.kind), ["settings"]);
+  assert.deepEqual(
+    response.json().changes.map((change: { kind: string }) => change.kind),
+    ["settings"],
+  );
   assert.equal(response.json().next, 2);
   await testApp.close();
 });

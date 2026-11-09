@@ -18,8 +18,7 @@ const CHAPTER_TOO_BIG_TO_SKIP = 0.25;
 
 // Sized from the measured word count, so a short piece can't come back nearly as long as
 // itself and a long one has room to reach its end (docs/features/article-notes.md).
-export const articleNoteBudget = (wordCount: number): ArticleNoteBudget =>
-  BUDGETS.find(([upToWords]) => wordCount <= upToWords)![1];
+export const articleNoteBudget = (wordCount: number): ArticleNoteBudget => BUDGETS.find(([upToWords]) => wordCount <= upToWords)![1];
 
 // At every length: a short piece with one chapter has only this to hold it to its end.
 export function paragraphsInTheFinalStretch(paragraphWords: readonly number[]): ReadonlySet<number> {
@@ -44,5 +43,4 @@ export function chaptersTooBigToSkip(paragraphWords: readonly number[], chapterS
   });
 }
 
-export const mostWordsPerKeyPoint = ({ wordsPerKeyPoint }: ArticleNoteBudget): number =>
-  Math.ceil(wordsPerKeyPoint * ROOM_OVER_THE_TARGET);
+export const mostWordsPerKeyPoint = ({ wordsPerKeyPoint }: ArticleNoteBudget): number => Math.ceil(wordsPerKeyPoint * ROOM_OVER_THE_TARGET);

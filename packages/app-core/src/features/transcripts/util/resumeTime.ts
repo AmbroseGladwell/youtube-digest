@@ -11,8 +11,7 @@ export const resumesAtFrom = (retryAfterSeconds: number | null, now: Date): Date
   new Date(now.getTime() + Math.min(DAY_MS, Math.max(1, retryAfterSeconds ?? secondsToNextUtcDay(now)) * 1000));
 
 // Written out in the reader's own clock, never counted down (docs/features/capture-queue.md).
-export const resumeTimeText = (resumesAt: Date): string =>
-  resumesAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+export const resumeTimeText = (resumesAt: Date): string => resumesAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 export const serverBusyResumeSentence = (resumesAt: Date): string =>
   `Our server asked us to wait a moment. It can again after ${resumeTimeText(resumesAt)}, or the extension can fetch this one now.`;

@@ -11,10 +11,7 @@ test("the id is the first half of the key's SHA-256, spelt a to p", () => {
 });
 
 test("a manifest with a key answers its origin", () => {
-  assert.equal(
-    extensionOriginFrom({ key: PUBLIC_KEY }),
-    "chrome-extension://jnbehpjepnpckmjnbdmckkplbbbmgnhg",
-  );
+  assert.equal(extensionOriginFrom({ key: PUBLIC_KEY }), "chrome-extension://jnbehpjepnpckmjnbdmckkplbbbmgnhg");
 });
 
 test("a manifest without a key is refused with the step that fixes it", () => {

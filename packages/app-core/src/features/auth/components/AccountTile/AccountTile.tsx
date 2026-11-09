@@ -77,12 +77,22 @@ export function AccountTile({ email, firstName, onEditingChange }: AccountTilePr
             )}
           </span>
           {open === null && (
-            <button type="button" className={styles.change} onClick={() => openRow("name")} data-testid={accountTileTestIds.changeNameButton}>
+            <button
+              type="button"
+              className={styles.change}
+              onClick={() => openRow("name")}
+              data-testid={accountTileTestIds.changeNameButton}
+            >
               {firstName === null ? "Add name" : "Change"}
             </button>
           )}
           {open === "email" && firstName !== null && (
-            <button type="button" className={styles.change} onClick={() => openRow("name")} data-testid={accountTileTestIds.changeNameButton}>
+            <button
+              type="button"
+              className={styles.change}
+              onClick={() => openRow("name")}
+              data-testid={accountTileTestIds.changeNameButton}
+            >
               Change
             </button>
           )}
@@ -111,7 +121,12 @@ export function AccountTile({ email, firstName, onEditingChange }: AccountTilePr
           )}
         </span>
         {open !== "email" && (
-          <button type="button" className={styles.change} onClick={() => openRow("email")} data-testid={accountTileTestIds.changeEmailButton}>
+          <button
+            type="button"
+            className={styles.change}
+            onClick={() => openRow("email")}
+            data-testid={accountTileTestIds.changeEmailButton}
+          >
             Change
           </button>
         )}
@@ -133,8 +148,8 @@ export function AccountTile({ email, firstName, onEditingChange }: AccountTilePr
           <span>
             <span className={styles.statusLead}>Your email is now {emailChanged.to}.</span>{" "}
             <span className={styles.statusBody}>
-              Use it to sign in from now on. We’ve told {emailChanged.from} about the change. You’re still signed in here
-              and on your other devices.
+              Use it to sign in from now on. We’ve told {emailChanged.from} about the change. You’re still signed in here and on your other
+              devices.
             </span>
           </span>
         </p>

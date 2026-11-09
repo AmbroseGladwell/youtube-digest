@@ -20,7 +20,10 @@ export function defineCaptureQueueStoreConformanceSuite(
     const store = await createStore();
     await store.enqueue([capture("c", "2026-10-05T09:00:00.002Z"), capture("a", "2026-10-05T09:00:00.000Z")]);
     await store.enqueue([capture("b", "2026-10-05T09:00:00.001Z")]);
-    assert.deepEqual((await store.listQueue()).map((queued) => queued.videoId), ["a", "b", "c"]);
+    assert.deepEqual(
+      (await store.listQueue()).map((queued) => queued.videoId),
+      ["a", "b", "c"],
+    );
   });
 
   test(behaviour("enqueue() keeps a video already in the queue where it is"), async () => {
@@ -37,14 +40,23 @@ export function defineCaptureQueueStoreConformanceSuite(
     await store.enqueue([capture("a", "2026-10-05T09:00:00.000Z"), capture("b", "2026-10-05T09:00:00.001Z")]);
     await store.saveQueued(capture("a", "2026-10-05T09:00:00.000Z", { status: "failed", problem: "noCaptions" }));
     const queue = await store.listQueue();
-    assert.deepEqual(queue.map((queued) => [queued.videoId, queued.status]), [["a", "failed"], ["b", "waiting"]]);
+    assert.deepEqual(
+      queue.map((queued) => [queued.videoId, queued.status]),
+      [
+        ["a", "failed"],
+        ["b", "waiting"],
+      ],
+    );
   });
 
   test(behaviour("removeQueued() takes one video out"), async () => {
     const store = await createStore();
     await store.enqueue([capture("a", "2026-10-05T09:00:00.000Z"), capture("b", "2026-10-05T09:00:00.001Z")]);
     await store.removeQueued(VideoId.parse("a"));
-    assert.deepEqual((await store.listQueue()).map((queued) => queued.videoId), ["b"]);
+    assert.deepEqual(
+      (await store.listQueue()).map((queued) => queued.videoId),
+      ["b"],
+    );
   });
 
   test(behaviour("removeWaiting() clears what is waiting and leaves what needs attention"), async () => {
@@ -54,17 +66,20 @@ export function defineCaptureQueueStoreConformanceSuite(
       capture("b", "2026-10-05T09:00:00.001Z", { status: "skipped", problem: "private" }),
     ]);
     await store.removeWaiting();
-    assert.deepEqual((await store.listQueue()).map((queued) => queued.videoId), ["b"]);
+    assert.deepEqual(
+      (await store.listQueue()).map((queued) => queued.videoId),
+      ["b"],
+    );
   });
 
   test(behaviour("removeWaiting() for one playlist leaves every other playlist's videos"), async () => {
     const store = await createStore();
     const other = { id: PlaylistId.parse("PLother"), title: "Overview" };
-    await store.enqueue([
-      capture("a", "2026-10-05T09:00:00.000Z"),
-      capture("b", "2026-10-05T09:00:00.001Z", { fromPlaylist: other }),
-    ]);
+    await store.enqueue([capture("a", "2026-10-05T09:00:00.000Z"), capture("b", "2026-10-05T09:00:00.001Z", { fromPlaylist: other })]);
     await store.removeWaiting(PlaylistId.parse("PLpsychology"));
-    assert.deepEqual((await store.listQueue()).map((queued) => queued.videoId), ["b"]);
+    assert.deepEqual(
+      (await store.listQueue()).map((queued) => queued.videoId),
+      ["b"],
+    );
   });
 }

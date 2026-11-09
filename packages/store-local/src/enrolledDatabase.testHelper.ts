@@ -9,9 +9,7 @@ export async function openTestDatabase(): Promise<IDBDatabase> {
 }
 
 export async function markEnrolled(db: IDBDatabase): Promise<void> {
-  await promisifyRequest(
-    db.transaction(SYNC_META_STORE, "readwrite").objectStore(SYNC_META_STORE).put(true, SYNC_ENROLLED_KEY),
-  );
+  await promisifyRequest(db.transaction(SYNC_META_STORE, "readwrite").objectStore(SYNC_META_STORE).put(true, SYNC_ENROLLED_KEY));
 }
 
 export async function openEnrolledDatabase(): Promise<IDBDatabase> {
@@ -21,9 +19,7 @@ export async function openEnrolledDatabase(): Promise<IDBDatabase> {
 }
 
 export function readOutbox(db: IDBDatabase): Promise<OutboxEntry[]> {
-  return promisifyRequest<OutboxEntry[]>(
-    db.transaction(OUTBOX_STORE, "readonly").objectStore(OUTBOX_STORE).getAll(),
-  );
+  return promisifyRequest<OutboxEntry[]>(db.transaction(OUTBOX_STORE, "readonly").objectStore(OUTBOX_STORE).getAll());
 }
 
 // The outbox without the transcript entries a saved note brings with it, for tests about

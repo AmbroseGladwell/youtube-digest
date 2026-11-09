@@ -132,7 +132,14 @@ export function sessionRoutes(
       request.log.warn(apiLogLines.auth.verificationHeldBack({ reason: "cooldown" }));
       expiresAt = await latestExpiry(sql, "session_verifications", "session_id", session.id);
     } else {
-      await mailer.sendAccountMail({ kind: "verificationCode", to: session.email, code: issued.code, expiresAt: issued.expiresAt, supportEmail, purpose });
+      await mailer.sendAccountMail({
+        kind: "verificationCode",
+        to: session.email,
+        code: issued.code,
+        expiresAt: issued.expiresAt,
+        supportEmail,
+        purpose,
+      });
       request.log.info(apiLogLines.auth.verificationAsked({ fresh: false, purpose }));
       expiresAt = issued.expiresAt;
     }
@@ -205,7 +212,12 @@ export function sessionRoutes(
   });
 }
 
-async function latestExpiry(sql: SqlClient, table: "session_verifications" | "email_changes", column: "session_id" | "account_id", id: string): Promise<string> {
+async function latestExpiry(
+  sql: SqlClient,
+  table: "session_verifications" | "email_changes",
+  column: "session_id" | "account_id",
+  id: string,
+): Promise<string> {
   const rows = await sql.query<{ expires_at: string | Date }>(
     `select expires_at from ${table} where ${column} = $1 order by created_at desc limit 1`,
     [id],

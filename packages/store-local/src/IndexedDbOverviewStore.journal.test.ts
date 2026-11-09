@@ -129,9 +129,6 @@ test("the journal entry lands in the same transaction as the write, so the two c
   await Promise.all([store.saveOverview(first), store.saveOverview(second)]);
 
   const entries = await readRecordOutbox(db);
-  assert.deepEqual(
-    entries.map((entry) => entry.id).sort(),
-    [first.id, second.id].sort(),
-  );
+  assert.deepEqual(entries.map((entry) => entry.id).sort(), [first.id, second.id].sort());
   assert.ok(entries[0]!.key < entries[1]!.key);
 });

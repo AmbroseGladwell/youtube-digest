@@ -33,10 +33,9 @@ test("pending writes are replayed in order, so the later one wins", () => {
 });
 
 test("a pending state patch keeps every field it did not name", () => {
-  const rebased = rebasePendingChanges(
-    { overviewId: "a", read: false, favourite: true, userTags: ["x"], schemaVersion: 1 },
-    [{ ...entry({ op: "state", patch: { read: true } }), kind: "overviewState" }],
-  );
+  const rebased = rebasePendingChanges({ overviewId: "a", read: false, favourite: true, userTags: ["x"], schemaVersion: 1 }, [
+    { ...entry({ op: "state", patch: { read: true } }), kind: "overviewState" },
+  ]);
   assert.equal(rebased?.read, true);
   assert.equal(rebased?.favourite, true);
   assert.deepEqual(rebased?.userTags, ["x"]);

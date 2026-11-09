@@ -55,7 +55,13 @@ export function QueueRunDialog({ making, open, onClose }: QueueRunDialogProps) {
                 {making.run.video?.title ?? making.capture.title}
               </h2>
             </div>
-            <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={queueRunDialogTestIds.closeButton}>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={onClose}
+              aria-label="Close"
+              data-testid={queueRunDialogTestIds.closeButton}
+            >
               <StrokeIcon name="close" size={16} />
             </button>
           </div>

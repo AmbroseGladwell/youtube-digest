@@ -10,9 +10,7 @@ const API_KEYS = ANTHROPIC_KEY;
 // The panel of a browser that can reach YouTube, which is what an extension always is.
 const PANEL = { apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true } as const;
 
-test("the side panel opens on the video in front of it, and that link is the one it generates from", async ({
-  launcher,
-}) => {
+test("the side panel opens on the video in front of it, and that link is the one it generates from", async ({ launcher }) => {
   await launcher.launch(PANEL);
   const dialog = await launcher.appShell.openNewOverview();
 
@@ -41,9 +39,7 @@ test("a side panel open on something that isn't a video says so by offering noth
   await dialog.form.verifySaysNothingAboutAWatchedVideo();
 });
 
-test("moving to another video offers the new one rather than swapping the link you were about to spend on", async ({
-  launcher,
-}) => {
+test("moving to another video offers the new one rather than swapping the link you were about to spend on", async ({ launcher }) => {
   await launcher.launch(PANEL);
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.verifyUrlInputHolds(WATCHED_URL);
@@ -64,17 +60,12 @@ test("the captions for the video in front of the panel are fetched before anyone
 
   // The store, not the call count: the fetch firing is not the same moment as the
   // captions being held.
-  await expect
-    .poll(() => backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID)))
-    .not.toBeNull();
+  await expect.poll(() => backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID))).not.toBeNull();
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
-test("generating from a video whose captions are already held doesn't buy them a second time", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("generating from a video whose captions are already held doesn't buy them a second time", async ({ launcher, backendSimulator }) => {
   await launcher.launch(PANEL);
   await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 
@@ -96,10 +87,7 @@ test("the video in front of the panel is never looked up in the shared cache, so
   expect(backendSimulator.getCallCount(EndpointKey.SHARED_TRANSCRIPT)).toBe(0);
 });
 
-test("moving to another video goes and gets that one's captions too", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("moving to another video goes and gets that one's captions too", async ({ launcher, backendSimulator }) => {
   await launcher.launch(PANEL);
   await expect.poll(() => backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
 
@@ -107,20 +95,14 @@ test("moving to another video goes and gets that one's captions too", async ({
   await expect.poll(() => backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(2);
 });
 
-test("the panel fetches the captions with no key at all, because the free path costs nothing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the panel fetches the captions with no key at all, because the free path costs nothing", async ({ launcher, backendSimulator }) => {
   await launcher.launch({ surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true });
 
   await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
-test("with only our server's metered rung, nothing is fetched for a video nobody asked about", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with only our server's metered rung, nothing is fetched for a video nobody asked about", async ({ launcher, backendSimulator }) => {
   await launcher.launch({
     apiKeys: API_KEYS,
     surface: "extension",
@@ -132,10 +114,7 @@ test("with only our server's metered rung, nothing is fetched for a video nobody
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
 });
 
-test("the web app, which sees no video, fetches nothing in the background either", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the web app, which sees no video, fetches nothing in the background either", async ({ launcher, backendSimulator }) => {
   await launcher.launch({ apiKeys: API_KEYS, surface: "web" });
   await launcher.appShell.openNewOverview();
 

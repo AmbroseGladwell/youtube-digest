@@ -22,7 +22,8 @@ export function WriteFloorWall({ generating }: WriteFloorWallProps) {
         : { label: appUpdate.label, onSelect: appUpdate.apply };
 
   return (
-    <ErrorState screen="writeFloor"
+    <ErrorState
+      screen="writeFloor"
       title="This version of the app can no longer sync"
       body={
         generating

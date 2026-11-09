@@ -12,9 +12,7 @@ export interface YouTubeFetchMessage {
 
 // A reply rather than a rejection, because a throw inside a sendMessage handler reaches
 // the caller as an opaque lastError with nothing in it to act on.
-export type YouTubeFetchReply =
-  | { ok: true; response: YouTubeFetchResponse }
-  | { ok: false; message: string };
+export type YouTubeFetchReply = { ok: true; response: YouTubeFetchResponse } | { ok: false; message: string };
 
 export const isYouTubeFetchMessage = (message: unknown): message is YouTubeFetchMessage =>
   typeof message === "object" &&

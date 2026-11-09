@@ -2,8 +2,7 @@ import { expect, test } from "../../support/fixtures.testHelper.js";
 
 const IOS_ZOOM_THRESHOLD_PX = 16;
 
-const expectNoneBelowZoomThreshold = (sizes: number[]) =>
-  expect(sizes.filter((size) => size < IOS_ZOOM_THRESHOLD_PX)).toEqual([]);
+const expectNoneBelowZoomThreshold = (sizes: number[]) => expect(sizes.filter((size) => size < IOS_ZOOM_THRESHOLD_PX)).toEqual([]);
 
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true });
@@ -14,27 +13,21 @@ test.describe("on a touch screen", () => {
     await home.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
 
-  test("the new overview dialog's fields are large enough that iOS does not zoom into them", async ({
-    launcher,
-  }) => {
+  test("the new overview dialog's fields are large enough that iOS does not zoom into them", async ({ launcher }) => {
     await launcher.launch();
     const dialog = await launcher.appShell.openNewOverview();
 
     await dialog.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
 
-  test("the settings page's fields are large enough that iOS does not zoom into them", async ({
-    launcher,
-  }) => {
+  test("the settings page's fields are large enough that iOS does not zoom into them", async ({ launcher }) => {
     await launcher.launch();
     const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
     await settings.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
 
-  test("the create-account page's fields are large enough that iOS does not zoom into them", async ({
-    launcher,
-  }) => {
+  test("the create-account page's fields are large enough that iOS does not zoom into them", async ({ launcher }) => {
     await launcher.launch({ sync: true });
     const menu = await launcher.appShell.accountMenu.open();
     const createAccount = await menu.chooseCreateAccount();
@@ -47,7 +40,5 @@ test("a mouse keeps the design's smaller field sizes", async ({ launcher }) => {
   await launcher.launch();
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
-  await settings.verifyFieldFontSizes((sizes) =>
-    expect(sizes.some((size) => size < IOS_ZOOM_THRESHOLD_PX)).toBe(true),
-  );
+  await settings.verifyFieldFontSizes((sizes) => expect(sizes.some((size) => size < IOS_ZOOM_THRESHOLD_PX)).toBe(true));
 });

@@ -36,7 +36,11 @@ export function LearnedNotice() {
     updateSettings.mutate({ learned: patch });
   };
   const texts = items.map(({ text }) => text).join("\n");
-  const noticeAll = () => stamp("noticedAt", items.map(({ text }) => text));
+  const noticeAll = () =>
+    stamp(
+      "noticedAt",
+      items.map(({ text }) => text),
+    );
 
   useEffect(() => {
     if (shown > 0 && counted.current !== shown) {
@@ -85,7 +89,9 @@ export function LearnedNotice() {
     >
       <div className={styles.top}>
         <span className={styles.body}>
-          <span className={styles.head}>{one ? "Added to what we know about you" : `Added ${items.length} things to what we know about you`}</span>
+          <span className={styles.head}>
+            {one ? "Added to what we know about you" : `Added ${items.length} things to what we know about you`}
+          </span>
           {one ? (
             <span className={styles.one} data-testid={learnedNoticeTestIds.item(items[0]!.text)}>
               {items[0]!.text}
@@ -95,7 +101,13 @@ export function LearnedNotice() {
               {items.map(({ text }) => (
                 <li key={text} className={styles.row} data-testid={learnedNoticeTestIds.item(text)}>
                   <span className={styles.rowText}>{text}</span>
-                  <button type="button" className={styles.action} aria-label={`Undo: ${text}`} onClick={() => undo(text)} data-testid={learnedNoticeTestIds.undo(text)}>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    aria-label={`Undo: ${text}`}
+                    onClick={() => undo(text)}
+                    data-testid={learnedNoticeTestIds.undo(text)}
+                  >
                     Undo
                   </button>
                 </li>
@@ -103,7 +115,13 @@ export function LearnedNotice() {
             </ul>
           )}
         </span>
-        <button type="button" className={styles.dismiss} aria-label="Dismiss" onClick={noticeAll} data-testid={learnedNoticeTestIds.dismiss}>
+        <button
+          type="button"
+          className={styles.dismiss}
+          aria-label="Dismiss"
+          onClick={noticeAll}
+          data-testid={learnedNoticeTestIds.dismiss}
+        >
           <StrokeIcon name="close" size={16} />
         </button>
       </div>

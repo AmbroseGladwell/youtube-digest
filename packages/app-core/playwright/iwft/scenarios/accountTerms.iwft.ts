@@ -1,9 +1,6 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
-import {
-  ANONYMOUS_ID,
-  makeAnalyticsConsent,
-} from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
+import { ANONYMOUS_ID, makeAnalyticsConsent } from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 
 const SAID_YES = { analyticsConsent: makeAnalyticsConsent({ answer: "share" }) };
 const SAID_NO = { analyticsConsent: makeAnalyticsConsent({ answer: "dontShare" }) };
@@ -46,10 +43,7 @@ test.describe("the create-account page", () => {
 });
 
 test.describe("linking what was shared", () => {
-  test("a reader who said yes sends their anonymous id with the request to create an account", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a reader who said yes sends their anonymous id with the request to create an account", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, ...SAID_YES });
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
 

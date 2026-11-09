@@ -13,9 +13,7 @@ describe("transcriptFileName", () => {
   });
 
   it("collapses punctuation and spacing into single hyphens", () => {
-    expect(transcriptFileName(videoTitled("Why?  Because: it *works*!"))).toBe(
-      "why-because-it-works-transcript.txt",
-    );
+    expect(transcriptFileName(videoTitled("Why?  Because: it *works*!"))).toBe("why-because-it-works-transcript.txt");
   });
 
   it("leaves no hyphen hanging off either end", () => {

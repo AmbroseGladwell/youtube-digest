@@ -30,8 +30,23 @@ export interface CaptureQueueStripInput {
 // Which of the strip's states the queue is in, most pressing first. Null says nothing at
 // all, which is most of the time (docs/features/capture-queue.md, "The strip").
 export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueStrip | null {
-  const { making, waiting, ready, tomorrow, forYou, failed, skipped, paused, needsKey, hold, limit, viaExtension, batch, notice, attentionDismissed } =
-    input;
+  const {
+    making,
+    waiting,
+    ready,
+    tomorrow,
+    forYou,
+    failed,
+    skipped,
+    paused,
+    needsKey,
+    hold,
+    limit,
+    viaExtension,
+    batch,
+    notice,
+    attentionDismissed,
+  } = input;
 
   if (making !== null) {
     const done = batch?.done ?? 0;

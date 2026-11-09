@@ -15,11 +15,7 @@ export class SharedOverviewPageObject extends PageObject {
   }
 
   get headImage(): HeadImagePageObject {
-    return new HeadImagePageObject(
-      this.testContext,
-      this.get(sharedOverviewPageTestIds.root),
-      this.get(sharedOverviewPageTestIds.title),
-    );
+    return new HeadImagePageObject(this.testContext, this.get(sharedOverviewPageTestIds.root), this.get(sharedOverviewPageTestIds.title));
   }
 
   verifyHeadImageLeadsWithChannel = () => this.headImage.verifyLeadsWith(this.get(sharedOverviewPageTestIds.channel));
@@ -40,9 +36,7 @@ export class SharedOverviewPageObject extends PageObject {
     });
 
   verifyTitleReads = (title: string) =>
-    this.step(`verifyTitleReads ${title}`, () =>
-      expect(this.get(sharedOverviewPageTestIds.title)).toHaveText(title),
-    );
+    this.step(`verifyTitleReads ${title}`, () => expect(this.get(sharedOverviewPageTestIds.title)).toHaveText(title));
 
   verifyMetaReads = (text: string) =>
     this.step(`verifyMetaReads ${text}`, () => expect(this.get(sharedOverviewPageTestIds.meta)).toHaveText(text));
@@ -70,8 +64,7 @@ export class SharedOverviewPageObject extends PageObject {
       await expect(this.get(makeYourOwnAsideTestIds.root)).toHaveCount(0);
     });
 
-  clickYourOverviewsInHeader = () =>
-    this.step("clickYourOverviewsInHeader", () => this.click(sharedPageHeaderTestIds.libraryButton));
+  clickYourOverviewsInHeader = () => this.step("clickYourOverviewsInHeader", () => this.click(sharedPageHeaderTestIds.libraryButton));
 
   verifySaveActionReads = (label: string) =>
     this.step(`verifySaveActionReads ${label}`, async () => {
@@ -102,7 +95,11 @@ export class SharedOverviewPageObject extends PageObject {
     });
 
   openLineTime = (label: string) =>
-    this.step(`openLineTime ${label}`, () => this.get(lineRangeTagTestIds.tag).filter({ hasText: new RegExp(`^${label}$`) }).click());
+    this.step(`openLineTime ${label}`, () =>
+      this.get(lineRangeTagTestIds.tag)
+        .filter({ hasText: new RegExp(`^${label}$`) })
+        .click(),
+    );
 
   verifyOffersToReadInTranscript = (offered: boolean) =>
     this.step(`verifyOffersToReadInTranscript ${offered}`, () =>
@@ -126,8 +123,7 @@ export class SharedOverviewPageObject extends PageObject {
       await expect(this.get(sharedOverviewGoneTestIds.heading)).toHaveText("This overview is no longer shared");
     });
 
-  clickMakeYourOwnFromGone = () =>
-    this.step("clickMakeYourOwnFromGone", () => this.click(sharedOverviewGoneTestIds.makeButton));
+  clickMakeYourOwnFromGone = () => this.step("clickMakeYourOwnFromGone", () => this.click(sharedOverviewGoneTestIds.makeButton));
 
   verifySaysLinkGoesNowhere = () =>
     this.step("verifySaysLinkGoesNowhere", () =>
@@ -157,6 +153,5 @@ export class SharedOverviewPageObject extends PageObject {
       ),
     );
 
-  clickMakeAnOverviewInHeader = () =>
-    this.step("clickMakeAnOverviewInHeader", () => this.click(sharedPageHeaderTestIds.makeButton));
+  clickMakeAnOverviewInHeader = () => this.step("clickMakeAnOverviewInHeader", () => this.click(sharedPageHeaderTestIds.makeButton));
 }

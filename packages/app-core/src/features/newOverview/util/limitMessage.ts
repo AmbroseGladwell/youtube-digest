@@ -30,8 +30,7 @@ const PLUS = card("Plus");
 const OWN_KEY_MONTH: Record<Plan, string> = { free: FREE.ownKey, "byo-plus": BYO_PLUS.ownKey, plus: PLUS.ownKey };
 const PLAN_NAME: Record<Plan, string> = { free: "your free account", "byo-plus": "BYO Plus", plus: "Plus" };
 
-const onKey = (key: KeySource, first: boolean): string =>
-  key === "ours" ? "on us" : first ? "on your own key" : "on your own";
+const onKey = (key: KeySource, first: boolean): string => (key === "ours" ? "on us" : first ? "on your own key" : "on your own");
 
 function madePhrase(spent: SpentQuota[], plainOurs: boolean): string {
   const [first, second] = spent;

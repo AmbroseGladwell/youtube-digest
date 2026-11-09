@@ -165,15 +165,7 @@ export const ErrorScreen = z.enum([
   "revertEmailFailed",
 ]);
 export type ErrorScreen = z.infer<typeof ErrorScreen>;
-export const AccountMenuItem = z.enum([
-  "settings",
-  "connectExtension",
-  "signInAgain",
-  "signOut",
-  "enterCode",
-  "signIn",
-  "createAccount",
-]);
+export const AccountMenuItem = z.enum(["settings", "connectExtension", "signInAgain", "signOut", "enterCode", "signIn", "createAccount"]);
 export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
 export const SettingsSection = z.enum([
   "account",
@@ -230,10 +222,13 @@ export const overviewPageEvents = {
     }),
   },
   cooking: {
-    started: event("The reader starts cooking a recipe step by step, from the method's heading, the button above the summary, the bar's Cook from here, or the place they left", {
-      from: z.enum(["heading", "summary", "bar", "carryOn"]),
-      step: z.number().int().positive(),
-    }),
+    started: event(
+      "The reader starts cooking a recipe step by step, from the method's heading, the button above the summary, the bar's Cook from here, or the place they left",
+      {
+        from: z.enum(["heading", "summary", "bar", "carryOn"]),
+        step: z.number().int().positive(),
+      },
+    ),
     left: event("The reader leaves cooking step by step, by Done or by finishing, with how many actions they heard", {
       by: z.enum(["done", "finish"]),
       actionsHeard: z.number().int().nonnegative(),
@@ -297,9 +292,12 @@ export const analyticsEvents = {
       neighbourFollowed: event("The reader steps to the previous or next overview from the reader's foot", {
         direction: Direction,
       }),
-      backFollowed: event("The reader goes back to all overviews, from the reader's head or from the bar's slot once the head has scrolled under it", {
-        from: BackSource,
-      }),
+      backFollowed: event(
+        "The reader goes back to all overviews, from the reader's head or from the bar's slot once the head has scrolled under it",
+        {
+          from: BackSource,
+        },
+      ),
       lineStepped: event("The reader steps a line of the note with the [ and ] keys", { direction: Direction }),
     },
     overview: {
@@ -314,9 +312,12 @@ export const analyticsEvents = {
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
     },
     dubiousReasons: {
-      opened: event("The reader opens why the overview is marked dubious, with how many reasons it saved; none means it was made before reasons were", {
-        reasonsSaved: z.number().int().min(0).max(MAX_DUBIOUS_CLAIMS),
-      }),
+      opened: event(
+        "The reader opens why the overview is marked dubious, with how many reasons it saved; none means it was made before reasons were",
+        {
+          reasonsSaved: z.number().int().min(0).max(MAX_DUBIOUS_CLAIMS),
+        },
+      ),
       momentFollowed: event("The reader goes to a dubious claim's moment in the video", { by: VideoReach }),
       markedWrong: event("The reader says the dubious flag looks wrong"),
     },
@@ -503,10 +504,13 @@ export const analyticsEvents = {
         kind: z.enum(["video", "playlist", "article"]),
       }),
       linkRefused: event("A reader with no account gives the home page something that isn't a link we can read"),
-      sampleChosen: event("A reader with no account starts onboarding from one of Start's samples: where it sat in the list and its kind, never its title or link", {
-        sample: z.number().int().nonnegative(),
-        kind: z.enum(["video", "article", "recipe"]),
-      }),
+      sampleChosen: event(
+        "A reader with no account starts onboarding from one of Start's samples: where it sat in the list and its kind, never its title or link",
+        {
+          sample: z.number().int().nonnegative(),
+          kind: z.enum(["video", "article", "recipe"]),
+        },
+      ),
     },
     step: {
       shown: event("A screen of onboarding is shown", { step: OnboardingStep }),
@@ -546,10 +550,13 @@ export const analyticsEvents = {
     },
     overview: {
       seenEarly: event("The reader follows See your overview before the questions are done", { step: OnboardingStep }),
-      failed: event("Onboarding's overview couldn't be made, the screen the reader was on when it failed, and whether their account already existed", {
-        step: OnboardingStep,
-        afterAccount: z.boolean(),
-      }),
+      failed: event(
+        "Onboarding's overview couldn't be made, the screen the reader was on when it failed, and whether their account already existed",
+        {
+          step: OnboardingStep,
+          afterAccount: z.boolean(),
+        },
+      ),
       arrived: event(
         "Onboarding's overview reached the account after the account was made: how long the reader had waited for it, in seconds, and on which screen",
         { seconds: z.number().int().nonnegative(), step: OnboardingStep },
@@ -569,16 +576,22 @@ export const analyticsEvents = {
       chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),
     },
     nextSteps: {
-      chosen: event("The reader follows a next step under their first overview: making their own after a sample, the extension or their AI", {
-        step: z.enum(["own", "extension", "ai"]),
-      }),
+      chosen: event(
+        "The reader follows a next step under their first overview: making their own after a sample, the extension or their AI",
+        {
+          step: z.enum(["own", "extension", "ai"]),
+        },
+      ),
       dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["own", "extension", "ai"]) }),
     },
     finished: {
-      revealed: event("Onboarding ends on the reader's first overview, by a new account or one they had, made from a link or saved from a sample or a shared page", {
-        way: AuthIntent,
-        from: z.enum(["link", "sample", "share"]),
-      }),
+      revealed: event(
+        "Onboarding ends on the reader's first overview, by a new account or one they had, made from a link or saved from a sample or a shared page",
+        {
+          way: AuthIntent,
+          from: z.enum(["link", "sample", "share"]),
+        },
+      ),
     },
   },
   analyticsConsent: {
@@ -598,9 +611,12 @@ export const analyticsEvents = {
   settings: {
     page: {
       sectionOpened: event("The reader opens a section of Settings from its list", { section: SettingsSection }),
-      backToSettingsChosen: event("The reader goes back from a section to the list of Settings, from the section's own link or from the bar's slot", {
-        from: BackSource,
-      }),
+      backToSettingsChosen: event(
+        "The reader goes back from a section to the list of Settings, from the section's own link or from the bar's slot",
+        {
+          from: BackSource,
+        },
+      ),
       overviewsChosen: event("The reader leaves Settings for their overviews, from the page's own link or from the bar's slot", {
         from: BackSource,
       }),
@@ -642,9 +658,14 @@ export const analyticsEvents = {
         set: z.boolean(),
       }),
       learningSwitched: event("The reader turns Keep learning on or off", { on: z.boolean() }),
-      profileSharingSwitched: event("The reader lets connected assistants read what is known about them, or stops them", { on: z.boolean() }),
+      profileSharingSwitched: event("The reader lets connected assistants read what is known about them, or stops them", {
+        on: z.boolean(),
+      }),
       learnedItemRemoved: event("The reader removes a learned item in Settings; never what it says", {}),
-      profilePassRan: event("A profile pass finished; never what it found", { added: z.number().int().nonnegative(), key: z.enum(["own", "ours"]) }),
+      profilePassRan: event("A profile pass finished; never what it found", {
+        added: z.number().int().nonnegative(),
+        key: z.enum(["own", "ours"]),
+      }),
       profilePassFailed: event("A profile pass failed; the reader isn't told", { key: z.enum(["own", "ours"]) }),
       learnedNoticeShown: event("The learned-item notice shows on the library", { items: z.number().int().positive() }),
       learnedItemUndone: event("The reader undoes a learned item from the notice; never what it says", {}),
@@ -744,11 +765,14 @@ export const analyticsEvents = {
         from: z.enum(["dialog", "home"]),
       }),
       linkRefused: event("The reader submits something that isn't a link we can read", { from: z.enum(["dialog", "home"]) }),
-      articleLinkFailed: event("A pasted article link couldn't be read by our server, why, and whether the reader was sent to the extension", {
-        from: z.enum(["dialog", "home"]),
-        failure: CaptureFailure,
-        sentToExtension: z.boolean(),
-      }),
+      articleLinkFailed: event(
+        "A pasted article link couldn't be read by our server, why, and whether the reader was sent to the extension",
+        {
+          from: z.enum(["dialog", "home"]),
+          failure: CaptureFailure,
+          sentToExtension: z.boolean(),
+        },
+      ),
       watchingVideoUsed: event("The reader fills the link with the video they're watching"),
       clipboardPasted: event("The reader fills the link from the clipboard"),
       keysLinkFollowed: event("The reader follows the link to set up their keys before making an overview", {
@@ -870,7 +894,10 @@ export const analyticsEvents = {
     filters: {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
       topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
-      sourceChosen: event("The reader filters the library to one kind of source, or back to all", { source: z.enum(["all", "video", "article", "recipe"]), from: FilterControl }),
+      sourceChosen: event("The reader filters the library to one kind of source, or back to all", {
+        source: z.enum(["all", "video", "article", "recipe"]),
+        from: FilterControl,
+      }),
       noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {
         novelty: z.enum([...Novelty.options, "all"]),
         from: FilterControl,
@@ -923,10 +950,13 @@ export const analyticsEvents = {
       searched: event("The reader searches the library, counted once they stop typing; never the words", {
         results: z.number().int().nonnegative(),
       }),
-      meaningMatched: event("A library search came back from matching by meaning: how many overviews it added that no word matched, and whether meaning was available; never the words", {
-        meaningOnly: z.number().int().nonnegative(),
-        available: z.boolean(),
-      }),
+      meaningMatched: event(
+        "A library search came back from matching by meaning: how many overviews it added that no word matched, and whether meaning was available; never the words",
+        {
+          meaningOnly: z.number().int().nonnegative(),
+          available: z.boolean(),
+        },
+      ),
       cleared: event("The reader clears the library search"),
     },
     sortPill: {
@@ -1045,12 +1075,13 @@ export type AnalyticsCatalogue = typeof analyticsEvents;
 
 export type AnalyticsEventName = {
   [Feature in keyof AnalyticsCatalogue]: {
-    [Screen in keyof AnalyticsCatalogue[Feature]]: `${Feature & string}.${Screen & string}.${keyof AnalyticsCatalogue[Feature][Screen] & string}`;
+    [
+      Screen in keyof AnalyticsCatalogue[Feature]
+    ]: `${Feature & string}.${Screen & string}.${keyof AnalyticsCatalogue[Feature][Screen] & string}`;
   }[keyof AnalyticsCatalogue[Feature]];
 }[keyof AnalyticsCatalogue];
 
-export type AnalyticsEventPropsOf<D> =
-  D extends AnalyticsEventDefinition<infer P> ? { [Key in keyof P]: z.infer<P[Key]> } : never;
+export type AnalyticsEventPropsOf<D> = D extends AnalyticsEventDefinition<infer P> ? { [Key in keyof P]: z.infer<P[Key]> } : never;
 
 const flattenCatalogue = (catalogue: AnalyticsCatalogueShape): Map<string, AnalyticsEventDefinition> =>
   new Map(
@@ -1063,5 +1094,4 @@ const flattenCatalogue = (catalogue: AnalyticsCatalogueShape): Map<string, Analy
 
 export const analyticsEventDefinitions: ReadonlyMap<string, AnalyticsEventDefinition> = flattenCatalogue(analyticsEvents);
 
-export const isAnalyticsEventName = (name: string): name is AnalyticsEventName =>
-  analyticsEventDefinitions.has(name);
+export const isAnalyticsEventName = (name: string): name is AnalyticsEventName => analyticsEventDefinitions.has(name);

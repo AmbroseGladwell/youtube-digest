@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-export const SellingType = z.enum([
-  "own_paid_product",
-  "own_free_promotion",
-  "sponsor_or_affiliate",
-  "none",
-]);
+export const SellingType = z.enum(["own_paid_product", "own_free_promotion", "sponsor_or_affiliate", "none"]);
 export type SellingType = z.infer<typeof SellingType>;
 
 export const Selling = z.object({

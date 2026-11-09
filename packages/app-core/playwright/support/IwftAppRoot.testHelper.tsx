@@ -33,15 +33,9 @@ export function IwftAppRoot() {
       serverSwitchable={window.__iwftServerSwitchable__}
       build={window.__iwftBuild__}
       errorDestinationMirror={
-        window.__iwftErrorDestinations__ === null
-          ? null
-          : (destination) => window.__iwftErrorDestinations__?.push(destination)
+        window.__iwftErrorDestinations__ === null ? null : (destination) => window.__iwftErrorDestinations__?.push(destination)
       }
-      accentMirror={
-        window.__iwftAccentMirror__ === null
-          ? null
-          : (accentColour) => window.__iwftAccentMirror__?.push(accentColour)
-      }
+      accentMirror={window.__iwftAccentMirror__ === null ? null : (accentColour) => window.__iwftAccentMirror__?.push(accentColour)}
     />
   );
 }

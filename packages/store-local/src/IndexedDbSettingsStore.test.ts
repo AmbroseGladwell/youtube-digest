@@ -15,9 +15,7 @@ defineSettingsStoreConformanceSuite("IndexedDbSettingsStore", async () => {
 
 async function storeHoldingSettings(stored: unknown): Promise<IndexedDbSettingsStore> {
   const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
-  await promisifyRequest(
-    db.transaction(SETTINGS_STORE, "readwrite").objectStore(SETTINGS_STORE).put(stored, SETTINGS_KEY),
-  );
+  await promisifyRequest(db.transaction(SETTINGS_STORE, "readwrite").objectStore(SETTINGS_STORE).put(stored, SETTINGS_KEY));
   return new IndexedDbSettingsStore(db);
 }
 
@@ -74,7 +72,7 @@ test("a setting a newer client added survives this client changing another one",
 
   await store.update({ readerContext: "I'm a beginner cook." });
 
-  assert.equal((await store.unreadable()), null);
+  assert.equal(await store.unreadable(), null);
 });
 
 test("settings written by a newer client are reported rather than silently reset", async () => {

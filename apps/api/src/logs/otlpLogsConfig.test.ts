@@ -39,7 +39,10 @@ test("the standard OTEL variables name another destination without a code change
 });
 
 test("a destination named without headers isn't handed the PostHog token", () => {
-  const config = otlpLogsConfig({ OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.example/v1/logs" }, { postHog, environment: "production" });
+  const config = otlpLogsConfig(
+    { OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.example/v1/logs" },
+    { postHog, environment: "production" },
+  );
 
   assert.deepEqual(config!.headers, {});
 });

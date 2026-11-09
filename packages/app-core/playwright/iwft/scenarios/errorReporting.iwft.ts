@@ -19,10 +19,7 @@ const request: ConnectionRequest = {
   expiresAt: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
 };
 
-test("a screen that throws while it renders is reported, with what the reader did before it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a screen that throws while it renders is reported, with what the reader did before it", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   const broken = makeOverview({
     source: { ...overview.source, title: "My notes on the divorce" },
@@ -102,9 +99,7 @@ test("an error the tracker couldn't take never reaches the reader", async ({ lau
   expect(backendSimulator.errors.reported()).toEqual([]);
 });
 
-test("the extension hands its worker where errors go and the session, and takes the session back on sign-out", async ({
-  launcher,
-}) => {
+test("the extension hands its worker where errors go and the session, and takes the session back on sign-out", async ({ launcher }) => {
   await launcher.launch({
     sync: true,
     surface: "extension",
@@ -112,9 +107,7 @@ test("the extension hands its worker where errors go and the session, and takes 
     syncConnection: { ...SIGNED_IN.syncConnection, token: "simulated-bearer" },
     errorDestinationMirror: true,
   });
-  await expect
-    .poll(() => launcher.readErrorDestinations())
-    .toEqual([{ apiUrl: "https://sync.test", token: "simulated-bearer" }]);
+  await expect.poll(() => launcher.readErrorDestinations()).toEqual([{ apiUrl: "https://sync.test", token: "simulated-bearer" }]);
 
   await (await launcher.appShell.accountMenu.open()).chooseSignOut();
 

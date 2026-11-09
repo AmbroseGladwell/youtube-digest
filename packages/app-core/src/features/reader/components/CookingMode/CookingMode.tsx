@@ -1,5 +1,12 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { formatTimestamp, inMethodAmounts, inUsOvenTemperatures, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
+import {
+  formatTimestamp,
+  inMethodAmounts,
+  inUsOvenTemperatures,
+  type MethodAmount,
+  type RecipeAction,
+  type RecipeStep,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useScreenAwake } from "../../../../util/useScreenAwake.js";
 import type { CookingMode as CookingModeState, CookingVoice } from "../../ReaderPage/useCookingMode.js";
@@ -41,7 +48,17 @@ const INTERACTIVE = "button, a, input, select, textarea, [contenteditable]";
 
 const placeOf = (action: RecipeAction) => `Step ${action.step + 1}${action.count === 1 ? "" : ` · ${action.index + 1} of ${action.count}`}`;
 
-function VoiceLine({ voice, step, firstScreen, onTryAgain }: { voice: CookingVoice; step: number; firstScreen: boolean; onTryAgain: () => void }) {
+function VoiceLine({
+  voice,
+  step,
+  firstScreen,
+  onTryAgain,
+}: {
+  voice: CookingVoice;
+  step: number;
+  firstScreen: boolean;
+  onTryAgain: () => void;
+}) {
   if (voice === "reading") {
     return (
       <>
@@ -221,7 +238,13 @@ export function CookingMode({
           <div className={styles.screen}>
             <div className={styles.top}>
               <span className={styles.topStart}>
-                <button type="button" className={styles.pill} aria-label="Leave cooking mode" onClick={leave} data-testid={cookingModeTestIds.done}>
+                <button
+                  type="button"
+                  className={styles.pill}
+                  aria-label="Leave cooking mode"
+                  onClick={leave}
+                  data-testid={cookingModeTestIds.done}
+                >
                   <StrokeIcon name="close" size={16} />
                   Done
                 </button>
@@ -335,7 +358,9 @@ export function CookingMode({
                     </p>
                     {showPreview && (
                       <div className={styles.preview} data-testid={cookingModeTestIds.next}>
-                        <b data-testid={cookingModeTestIds.nextLead}>{following.step === action.step ? "Then" : `Then step ${following.step + 1}`}</b>
+                        <b data-testid={cookingModeTestIds.nextLead}>
+                          {following.step === action.step ? "Then" : `Then step ${following.step + 1}`}
+                        </b>
                         <span>
                           <OvenText text={following.text} us={usTemperatures} amounts={methodAmounts} />
                         </span>
@@ -371,14 +396,26 @@ export function CookingMode({
                   <p className={styles.hint} data-testid={cookingModeTestIds.hint}>
                     <StrokeIcon name="headphones" size={14} />
                     <span>Your headphones’ play button moves to the next step</span>
-                    <button type="button" className={styles.dismiss} aria-label="Dismiss" onClick={mode.dismissHint} data-testid={cookingModeTestIds.dismissHint}>
+                    <button
+                      type="button"
+                      className={styles.dismiss}
+                      aria-label="Dismiss"
+                      onClick={mode.dismissHint}
+                      data-testid={cookingModeTestIds.dismissHint}
+                    >
                       <StrokeIcon name="close" size={12} />
                     </button>
                   </p>
                 )}
 
                 <div className={`${styles.controls} ${voiced ? "" : styles.controlsQuiet}`}>
-                  <button type="button" className={styles.control} disabled={mode.at === 0} onClick={mode.back} data-testid={cookingModeTestIds.back}>
+                  <button
+                    type="button"
+                    className={styles.control}
+                    disabled={mode.at === 0}
+                    onClick={mode.back}
+                    data-testid={cookingModeTestIds.back}
+                  >
                     <StrokeIcon name="arrowLeft" size={18} />
                     Back
                     {key("←")}
@@ -435,7 +472,12 @@ export function CookingMode({
             )}
           </div>
           {web && (
-            <CookingIngredientsDrawer id={drawerId} open={ingredientsOpen} onClose={() => setIngredientsOpen(false)} onSettled={column.onDrawerSettled}>
+            <CookingIngredientsDrawer
+              id={drawerId}
+              open={ingredientsOpen}
+              onClose={() => setIngredientsOpen(false)}
+              onSettled={column.onDrawerSettled}
+            >
               {ingredients}
             </CookingIngredientsDrawer>
           )}

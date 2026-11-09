@@ -10,7 +10,11 @@ describe("CaptureStopwatch", () => {
   it("measures each step between its own two readings, and the whole from the first", async () => {
     const stopwatch = new CaptureStopwatch(ticking(1_000, 1_000, 1_310, 1_310, 42_310, 42_320));
 
-    await stopwatch.time("shared-cache", async () => null, () => "no-answer");
+    await stopwatch.time(
+      "shared-cache",
+      async () => null,
+      () => "no-answer",
+    );
     await stopwatch.time("model", async () => "note");
 
     expect(stopwatch.report("finished", 18_400)).toEqual({

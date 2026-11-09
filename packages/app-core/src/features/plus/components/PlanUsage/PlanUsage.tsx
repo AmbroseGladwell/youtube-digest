@@ -9,9 +9,7 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 type Usage = { status: "checking" | "unreachable" } | { status: "known"; data: OverviewUsage };
 
-export type PlanUsageProps =
-  | { signedIn: true; usage: Usage; hasOwnKey: boolean }
-  | { signedIn: false };
+export type PlanUsageProps = { signedIn: true; usage: Usage; hasOwnKey: boolean } | { signedIn: false };
 
 interface Cell {
   id: "ours" | "own";

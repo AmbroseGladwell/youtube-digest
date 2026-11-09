@@ -14,15 +14,16 @@ const VIDEO: VideoSource = {
 
 describe("transcriptPlainText", () => {
   it("names the video before the words, so a pasted transcript says where it came from", () => {
-    const text = transcriptPlainText(VIDEO, [
-      makeTranscriptBlock({ text: "The first paragraph." }),
-    ]);
+    const text = transcriptPlainText(VIDEO, [makeTranscriptBlock({ text: "The first paragraph." })]);
 
-    assert.equal(text, "The Quiet Return of Nuclear Baseload\n" +
+    assert.equal(
+      text,
+      "The Quiet Return of Nuclear Baseload\n" +
         "Practical Engineering\n" +
         "https://www.youtube.com/watch?v=example\n" +
         "\n" +
-        "0:00\tThe first paragraph.\n");
+        "0:00\tThe first paragraph.\n",
+    );
   });
 
   it("prints each block against the time its first words were said", () => {
@@ -32,22 +33,19 @@ describe("transcriptPlainText", () => {
       makeTranscriptBlock({ text: "Third.", startMs: 3_661_000 }),
     ]);
 
-    assert.deepEqual(text.split("\n\n").slice(1), [
-      "0:00\tFirst.",
-      "1:05\tSecond.",
-      "1:01:01\tThird.\n",
-    ]);
+    assert.deepEqual(text.split("\n\n").slice(1), ["0:00\tFirst.", "1:05\tSecond.", "1:01:01\tThird.\n"]);
   });
 
   it("keeps the em dash a change of speaker is printed with", () => {
-    const text = transcriptPlainText(VIDEO, [
-      makeTranscriptBlock({ text: "Thank you.", speakerChange: true }),
-    ]);
+    const text = transcriptPlainText(VIDEO, [makeTranscriptBlock({ text: "Thank you.", speakerChange: true })]);
 
     assert.ok(text.includes("0:00\t— Thank you."));
   });
 
   it("writes only the heading for a video whose transcript has no blocks", () => {
-    assert.equal(transcriptPlainText(VIDEO, []), "The Quiet Return of Nuclear Baseload\nPractical Engineering\nhttps://www.youtube.com/watch?v=example\n\n\n");
+    assert.equal(
+      transcriptPlainText(VIDEO, []),
+      "The Quiet Return of Nuclear Baseload\nPractical Engineering\nhttps://www.youtube.com/watch?v=example\n\n\n",
+    );
   });
 });

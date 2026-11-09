@@ -3,10 +3,7 @@ import { VideoId, type Overview } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
-import {
-  makeOverview,
-  makeOverviewState,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { MILESTONE_LINES } from "../../../src/features/timeSaved/util/milestoneLines.js";
 
@@ -30,10 +27,7 @@ const seedRead = (backendSimulator: BackendSimulator, overview: Overview) => {
 };
 
 test.describe("the running total", () => {
-  test("the library adds up what its read overviews saved, and leaves the unread out", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the library adds up what its read overviews saved, and leaves the unread out", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(11));
     seedRead(backendSimulator, lasting(16));
     backendSimulator.overviews.seed(lasting(120));
@@ -44,10 +38,7 @@ test.describe("the running total", () => {
     await library.verifyTimeSavedSays("25 minutes");
   });
 
-  test("marking a row read adds its saving to the total and says so on the row", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("marking a row read adds its saving to the total and says so on the row", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(lasting(11));
     const library = await launcher.launchExpectingLibrary();
     await library.verifyTimeSavedSays("0 minutes");
@@ -64,10 +55,7 @@ test.describe("the running total", () => {
 
   // The chip abbreviates and a screen reader gets the word in full, so the two are
   // checked apart; "1 mins" was the whole of OV-196.
-  test("a saving of a single minute is said in the singular", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a saving of a single minute is said in the singular", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(lasting(2));
     const library = await launcher.launchExpectingLibrary();
 
@@ -101,10 +89,7 @@ test.describe("the running total", () => {
 });
 
 test.describe("the breakdown", () => {
-  test("says how the figure is counted, the next milestone and the ones reached", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("says how the figure is counted, the next milestone and the ones reached", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(64));
     seedRead(backendSimulator, lasting(5));
 
@@ -156,10 +141,7 @@ test.describe("the breakdown", () => {
 });
 
 test.describe("milestones", () => {
-  test("crossing one brings its card in under the filters, and records it on the account", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("crossing one brings its card in under the filters, and records it on the account", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(26));
     backendSimulator.overviews.seed(lasting(7));
     const library = await launcher.launchExpectingLibrary();
@@ -198,10 +180,7 @@ test.describe("milestones", () => {
     }).toPass();
   });
 
-  test("a milestone crossed more than a day ago, or dismissed, does not show", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a milestone crossed more than a day ago, or dismissed, does not show", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(70));
     const library = await launcher.launchExpectingLibrary({
       milestones: {
@@ -214,10 +193,7 @@ test.describe("milestones", () => {
     await library.milestones.verifyShowsNothing();
   });
 
-  test("crossing several at once stacks them shortest first, and × brings the next forward", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("crossing several at once stacks them shortest first, and × brings the next forward", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(lasting(5 * 60 + 10));
     const library = await launcher.launchExpectingLibrary();
 
@@ -250,10 +226,7 @@ test.describe("milestones", () => {
     await library.milestones.verifyLineReads(lines[2]!);
   });
 
-  test("a milestone hides again if unreading drops the total back below it", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a milestone hides again if unreading drops the total back below it", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(26));
     seedRead(backendSimulator, lasting(7));
     const library = await launcher.launchExpectingLibrary({ milestones: { "30m": { crossedAt: hoursAgo(1), dismissedAt: null } } });
@@ -302,10 +275,7 @@ test.describe("on the panel's home", () => {
     await capture.milestones.verifyFigureSays("Time saved: 39 minutes");
   });
 
-  test("a library already past a milestone with no mark records it and shows it", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a library already past a milestone with no mark records it and shows it", async ({ launcher, backendSimulator }) => {
     seedRead(backendSimulator, lasting(40));
 
     const capture = await launcher.launchPanel();
@@ -359,10 +329,7 @@ test.describe("in the panel's overview", () => {
 
   // Design 205b moves the panel's Mark read off the head and into ⋯, where the phone keeps
   // it; the chip still comes in at the head, because that is where it was pressed.
-  test("Mark as read from ⋯ brings in what it saved, and the note's end says it is read", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("Mark as read from ⋯ brings in what it saved, and the note's end says it is read", async ({ launcher, backendSimulator }) => {
     const overview = watched(11);
     backendSimulator.overviews.seed(overview);
     const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
@@ -397,7 +364,16 @@ test.describe("in the panel's overview", () => {
 test.describe("the verdict filter", () => {
   test("folds under More filters, which says what is set while closed", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(
-      makeOverview({ verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: true, dubiousClaims: null, reasoning: "x", similarTo: [] } }),
+      makeOverview({
+        verdict: {
+          novelty: "original",
+          standsOut: { text: "A new idea.", range: null },
+          dubious: true,
+          dubiousClaims: null,
+          reasoning: "x",
+          similarTo: [],
+        },
+      }),
     );
     const library = await launcher.launchExpectingLibrary();
     await library.filterPanel.verifyVerdictIsFolded();

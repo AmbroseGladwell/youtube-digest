@@ -17,8 +17,16 @@ const article: ExtractedArticle = {
   language: "en",
   imageUrl: null,
   sections: [
-    { heading: null, anchor: null, text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday." },
-    { heading: "Who pays", anchor: "who-pays", text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates." },
+    {
+      heading: null,
+      anchor: null,
+      text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday.",
+    },
+    {
+      heading: "Who pays",
+      anchor: "who-pays",
+      text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates.",
+    },
   ],
   wordCount: 500,
   recipe: null,
@@ -61,7 +69,12 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   },
   selling: { type: "none", detail: "", compromisesContent: false },
   howToApply: { items: [] },
-  readAnyway: { answer: "partial", reason: "The split is worth seeing.", leftOut: "It leaves out the council meeting.", chapterIndexes: [1] },
+  readAnyway: {
+    answer: "partial",
+    reason: "The split is worth seeing.",
+    leftOut: "It leaves out the council meeting.",
+    chapterIndexes: [1],
+  },
   ...overrides,
 });
 
@@ -93,7 +106,11 @@ test("a short article's note is held to a short budget, and an over-long one goe
 
 test("a long article's key points that stop early go back to the model, naming where to reach", async () => {
   const paragraph = Array.from({ length: 300 }, () => "word").join(" ");
-  const long = { ...article, wordCount: 3000, sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n") }] };
+  const long = {
+    ...article,
+    wordCount: 3000,
+    sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n") }],
+  };
   const keyPoints = (index: number) => Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: index }));
   const chapters = [{ title: "All of it", summary: "The whole piece.", startParagraphIndex: 0 }];
   const readAnyway = { answer: "no", reason: "No need.", leftOut: "It leaves out the rest.", chapterIndexes: [] };
@@ -110,10 +127,7 @@ test("a long article's key points that stop early go back to the model, naming w
 
 test("a chapter too big to skip with no key point goes back to the model, naming the chapter", async () => {
   const corrections: string[] = [];
-  const answers = [
-    output({ keyPoints: Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: 0 })) }),
-    output(),
-  ];
+  const answers = [output({ keyPoints: Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: 0 })) }), output()];
   const client: GenerationClient = async ({ userMessage }) => {
     corrections.push(userMessage);
     return answers.shift();
@@ -124,7 +138,10 @@ test("a chapter too big to skip with no key point goes back to the model, naming
 
 test("a short article gets a single chapter", async () => {
   const twoChapters = output();
-  const oneChapter = output({ chapters: [{ title: "All of it", summary: "The whole story.", startParagraphIndex: 0 }], readAnyway: { answer: "no", reason: "No need.", leftOut: "It leaves out the meeting.", chapterIndexes: [] } });
+  const oneChapter = output({
+    chapters: [{ title: "All of it", summary: "The whole story.", startParagraphIndex: 0 }],
+    readAnyway: { answer: "no", reason: "No need.", leftOut: "It leaves out the meeting.", chapterIndexes: [] },
+  });
   const note = await generate(answering(twoChapters, oneChapter), { article: { ...article, wordCount: 32 } });
   assert.equal(note.article?.chapters.length, 1);
 });
@@ -169,7 +186,10 @@ test("a paragraph number becomes a place: the heading's id at a section's start,
 test("each key point knows its chapter, and each chapter's length is measured", async () => {
   const note = await generate(answering(output()));
   assert.deepEqual(note.article?.keyPointChapters, [0, 1, 1]);
-  assert.deepEqual(note.article?.chapters.map(({ wordCount }) => wordCount), [18, 18]);
+  assert.deepEqual(
+    note.article?.chapters.map(({ wordCount }) => wordCount),
+    [18, 18],
+  );
 });
 
 test("an article becomes a stored overview, with a web source and no times", async () => {
@@ -192,7 +212,9 @@ test("a partial read-anyway names its chapters, so a page with no headings still
 });
 
 test("a read-anyway naming a chapter that does not exist goes back to the model", async () => {
-  const wrong = output({ readAnyway: { answer: "partial", reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [9] } });
+  const wrong = output({
+    readAnyway: { answer: "partial", reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [9] },
+  });
   const note = await generate(answering(wrong, output()));
   assert.equal(note.article?.readAnyway?.chapterIndexes.length, 1);
 });
@@ -205,7 +227,9 @@ test("a partial with no parts named goes back to the model rather than failing a
   let calls = 0;
   const client: GenerationClient = async () => {
     calls += 1;
-    return calls === 1 ? output({ readAnyway: { answer: "partial", reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [] } }) : output();
+    return calls === 1
+      ? output({ readAnyway: { answer: "partial", reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [] } })
+      : output();
   };
   assert.equal((await generate(client)).article?.readAnyway?.chapterIndexes.length, 1);
   assert.equal(calls, 2);

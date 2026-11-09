@@ -36,7 +36,12 @@ test("a tie is half a win, so level with the baseline is 50%", () => {
 
 test("judgments are tallied per dimension, and the unjudged are counted apart", () => {
   const [summary] = summariseJudging(
-    [judgment("a", "win"), judgment("b", "loss", "win"), judgment("c", "tie"), { ...judgment("d", "win"), outcome: "failed", results: null }],
+    [
+      judgment("a", "win"),
+      judgment("b", "loss", "win"),
+      judgment("c", "tie"),
+      { ...judgment("d", "win"), outcome: "failed", results: null },
+    ],
     [],
   );
 

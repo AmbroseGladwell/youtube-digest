@@ -60,12 +60,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
         <span className={styles.sheetTitle} id={HEADING_ID}>
           Edit topics
         </span>
-        <button
-          type="button"
-          className={styles.done}
-          onClick={onClose}
-          data-testid={topicPickerTestIds.doneButton}
-        >
+        <button type="button" className={styles.done} onClick={onClose} data-testid={topicPickerTestIds.doneButton}>
           Done
         </button>
       </div>
@@ -73,11 +68,7 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
       {selected.length > 0 && (
         <div className={styles.sheetChips}>
           {selected.map((topic) => (
-            <span
-              key={topic.id}
-              className={styles.sheetChip}
-              data-testid={topicPickerTestIds.sheetChip(topic.name)}
-            >
+            <span key={topic.id} className={styles.sheetChip} data-testid={topicPickerTestIds.sheetChip(topic.name)}>
               {topic.name}
               <button
                 type="button"

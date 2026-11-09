@@ -6,9 +6,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 
 export class MilestonesSectionPageObject extends PageObject {
   verifyFigureSays = (spoken: string) =>
-    this.step(`verifyFigureSays ${spoken}`, () =>
-      expect(this.get(milestonesSectionTestIds.figure)).toHaveAttribute("aria-label", spoken),
-    );
+    this.step(`verifyFigureSays ${spoken}`, () => expect(this.get(milestonesSectionTestIds.figure)).toHaveAttribute("aria-label", spoken));
 
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () => expect(this.get(milestonesSectionTestIds.count)).toHaveText(count));
@@ -25,9 +23,7 @@ export class MilestonesSectionPageObject extends PageObject {
     });
 
   verifyTileIsNamed = (id: MilestoneId, name: string) =>
-    this.step(`verifyTileIsNamed ${id} ${name}`, () =>
-      expect(this.get(milestonesSectionTestIds.tile(id))).toHaveAccessibleName(name),
-    );
+    this.step(`verifyTileIsNamed ${id} ${name}`, () => expect(this.get(milestonesSectionTestIds.tile(id))).toHaveAccessibleName(name));
 
   verifyTileState = (id: MilestoneId, state: "reached" | "next" | "ahead") =>
     this.step(`verifyTileState ${id} ${state}`, () =>

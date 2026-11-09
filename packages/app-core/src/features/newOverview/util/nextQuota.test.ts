@@ -18,7 +18,11 @@ const usageOf = (plan: Plan, used: { ours?: number; own?: number } = {}): Overvi
 
 const nextFor = (
   plan: Plan,
-  { hasOwnKey = true, onlyMyKey = false, used = {} }: { hasOwnKey?: boolean; onlyMyKey?: boolean; used?: { ours?: number; own?: number } } = {},
+  {
+    hasOwnKey = true,
+    onlyMyKey = false,
+    used = {},
+  }: { hasOwnKey?: boolean; onlyMyKey?: boolean; used?: { ours?: number; own?: number } } = {},
 ) =>
   nextQuotaOf({
     order: keyOrderFor({ ourKeyUsable: true, plan, hasOwnKey, onlyMyKey }),

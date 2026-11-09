@@ -4,9 +4,7 @@ import { wordCount } from "./wordCount.js";
 export const Chapter = z
   .object({
     title: z.string().refine((s) => wordCount(s) <= 8, "docs/features/chapters.md: max 8 words"),
-    summary: z
-      .string()
-      .refine((s) => wordCount(s) <= 40, "docs/features/chapters.md: max 40 words"),
+    summary: z.string().refine((s) => wordCount(s) <= 40, "docs/features/chapters.md: max 40 words"),
     startMs: z.number().int().nonnegative(),
     endMs: z.number().int().nonnegative(),
   })

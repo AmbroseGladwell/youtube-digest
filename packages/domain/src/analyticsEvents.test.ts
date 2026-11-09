@@ -18,10 +18,7 @@ test("every property is a choice, a flag, a number or one of our own ids, so non
     for (const [prop, declared] of Object.entries(definition.props)) {
       const schema = declared instanceof z.ZodOptional ? declared.unwrap() : declared;
       assert.ok(
-        schema instanceof z.ZodEnum ||
-          schema instanceof z.ZodBoolean ||
-          schema instanceof z.ZodNumber ||
-          ids.includes(schema),
+        schema instanceof z.ZodEnum || schema instanceof z.ZodBoolean || schema instanceof z.ZodNumber || ids.includes(schema),
         `${name}.${prop} must be an enum, a boolean, a number or an id from ANALYTICS_IDS`,
       );
     }

@@ -10,9 +10,7 @@ const CHOSE_GEMINI_ELSEWHERE = {
   provider: "gemini" as const,
 };
 
-test("a provider chosen on another device, with no key here, is a dead end with both ways out", async ({
-  launcher,
-}) => {
+test("a provider chosen on another device, with no key here, is a dead end with both ways out", async ({ launcher }) => {
   await launcher.launch(CHOSE_GEMINI_ELSEWHERE);
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 
@@ -26,9 +24,7 @@ test("the row says in words that the key is missing here, which a count cannot",
   await settings.verifyRowReads("keys", /no Gemini key here$/);
 });
 
-test("taking the other key out of the dead end changes the choice, and generation is possible again", async ({
-  launcher,
-}) => {
+test("taking the other key out of the dead end changes the choice, and generation is possible again", async ({ launcher }) => {
   await launcher.launch(CHOSE_GEMINI_ELSEWHERE);
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
 

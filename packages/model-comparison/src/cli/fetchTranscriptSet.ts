@@ -30,7 +30,12 @@ let failures = 0;
 for (const { url, chosenFor } of TRANSCRIPT_SET) {
   const videoId = videoIdOf(url);
   const path = join(directory, `${videoId}.json`);
-  if (await access(path).then(() => true, () => false)) {
+  if (
+    await access(path).then(
+      () => true,
+      () => false,
+    )
+  ) {
     console.error(`have    ${videoId}  ${chosenFor}`);
     continue;
   }

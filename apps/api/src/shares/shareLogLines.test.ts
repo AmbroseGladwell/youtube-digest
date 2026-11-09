@@ -28,7 +28,10 @@ test("a link made, opened, stopped and opened again is logged at each step, neve
   );
   assert.equal(saying(lines, "share viewed").length, 1);
   assert.equal(saying(lines, "share revoked")[0]!.accountId, account.accountId);
-  assert.deepEqual(saying(lines, "share page missing").map(({ state }) => state), ["revoked", "unknown"]);
+  assert.deepEqual(
+    saying(lines, "share page missing").map(({ state }) => state),
+    ["revoked", "unknown"],
+  );
   const logged = JSON.stringify(lines);
   assert.doesNotMatch(logged, new RegExp(token));
   assert.doesNotMatch(logged, new RegExp(TITLE));

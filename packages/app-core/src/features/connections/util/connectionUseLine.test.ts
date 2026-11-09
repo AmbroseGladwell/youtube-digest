@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { connectionUseLine } from "./connectionUseLine.js";
 
 const NOW = new Date("2026-09-30T15:00:00Z");
-const line = (lastUsedAt: string) =>
-  connectionUseLine({ createdAt: "2026-09-12T09:00:00Z", lastUsedAt }, NOW, "UTC");
+const line = (lastUsedAt: string) => connectionUseLine({ createdAt: "2026-09-12T09:00:00Z", lastUsedAt }, NOW, "UTC");
 
 describe("connectionUseLine", () => {
   it("says when it connected, and that it was used within the hour", () => {

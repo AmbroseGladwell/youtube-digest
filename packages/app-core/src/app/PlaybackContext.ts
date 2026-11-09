@@ -43,10 +43,7 @@ export function useSeekPlayback(videoId: string | null): ((positionMs: number) =
 
 export function usePlaybackPosition(videoId: string | null): PlaybackPosition | null {
   const source = useContext(PlaybackContext);
-  const position = useSyncExternalStore(
-    source?.subscribe ?? subscribeToNothing,
-    source?.getPosition ?? noPosition,
-  );
+  const position = useSyncExternalStore(source?.subscribe ?? subscribeToNothing, source?.getPosition ?? noPosition);
   if (position === null || videoId === null || position.videoId !== videoId) {
     return null;
   }

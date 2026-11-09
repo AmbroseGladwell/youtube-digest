@@ -17,16 +17,7 @@ export interface CheckEmailProps {
 
 // Design 9c: what happens next, and the two ways out of waiting. The mail's code is the way
 // in for a reader whose mail opens somewhere other than this browser.
-export function CheckEmail({
-  email,
-  intent,
-  firstName,
-  sentAt,
-  resending,
-  onDifferentEmail,
-  onResend,
-  onEnterCode,
-}: CheckEmailProps) {
+export function CheckEmail({ email, intent, firstName, sentAt, resending, onDifferentEmail, onResend, onEnterCode }: CheckEmailProps) {
   const creating = intent === "createAccount";
   return (
     <AuthScreen
@@ -37,32 +28,24 @@ export function CheckEmail({
       lead={
         creating ? (
           <>
-            Open the link we sent to <strong data-testid={checkEmailTestIds.email}>{email}</strong> to finish
-            creating your account. It works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes.
+            Open the link we sent to <strong data-testid={checkEmailTestIds.email}>{email}</strong> to finish creating your account. It
+            works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes.
           </>
         ) : (
           <>
-            If there’s an account for <strong data-testid={checkEmailTestIds.email}>{email}</strong>, we’ve sent it a
-            sign-in link. It works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes. If there isn’t, the email says
-            how to create one.
+            If there’s an account for <strong data-testid={checkEmailTestIds.email}>{email}</strong>, we’ve sent it a sign-in link. It works
+            once, for the next {MAGIC_LINK_TTL_MINUTES} minutes. If there isn’t, the email says how to create one.
           </>
         )
       }
     >
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondary}
-          onClick={onDifferentEmail}
-          data-testid={checkEmailTestIds.differentEmailButton}
-        >
+        <button type="button" className={styles.secondary} onClick={onDifferentEmail} data-testid={checkEmailTestIds.differentEmailButton}>
           Use a different email
         </button>
         <ResendLinkButton sentAt={sentAt} sending={resending} onResend={onResend} />
       </div>
-      <p className={styles.note}>
-        Nothing there? Check your spam folder. You can close this tab. The link opens a new one.
-      </p>
+      <p className={styles.note}>Nothing there? Check your spam folder. You can close this tab. The link opens a new one.</p>
       <p className={styles.note}>
         Reading your email on another device?{" "}
         <button type="button" className={styles.inline} onClick={onEnterCode} data-testid={checkEmailTestIds.enterCodeButton}>

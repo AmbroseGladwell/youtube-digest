@@ -41,7 +41,7 @@ test("past the cap the oldest learned items are dropped whole, and the sentence 
   const learned = Object.fromEntries(
     Array.from({ length: 40 }, (_, index) => [
       String(index),
-      item(`learned thing number ${index}`, { learnedAt: `2026-10-${String(index % 28 + 1).padStart(2, "0")}T10:00:00.000Z` }),
+      item(`learned thing number ${index}`, { learnedAt: `2026-10-${String((index % 28) + 1).padStart(2, "0")}T10:00:00.000Z` }),
     ]),
   );
   const context = composeReaderContext({ ...EMPTY_ABOUT_YOU, who: ["dad"] }, learned)!;

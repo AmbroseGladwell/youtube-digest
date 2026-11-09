@@ -9,7 +9,10 @@ import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 
 const URL_OF_PAGE = "https://news.example.com/bridge";
-const paragraphs = Array.from({ length: 30 }, (_, index) => `<p>Paragraph ${index} says the county reused an old survey, and that residents will pay for the repair twice over.</p>`).join("");
+const paragraphs = Array.from(
+  { length: 30 },
+  (_, index) => `<p>Paragraph ${index} says the county reused an old survey, and that residents will pay for the repair twice over.</p>`,
+).join("");
 const HTML = `<!doctype html><html><head><title>The bridge</title><script>fetch("http://169.254.169.254/");document.title="ran"</script></head><body><article><h1>The bridge</h1>${paragraphs}</article></body></html>`;
 
 const appServing = (page: FetchedPage, logger?: ReturnType<typeof recordingLogger>["logger"]) =>
@@ -80,7 +83,10 @@ test("signed out, a trial reads a few links, whether or not they can be read, th
   for (let n = 0; n < TRIAL_READS; n += 1) read.push((await device.readArticle(URL_OF_PAGE)).statusCode);
   const next = await device.readArticle(URL_OF_PAGE);
 
-  assert.deepEqual(read, Array.from({ length: TRIAL_READS }, () => 200));
+  assert.deepEqual(
+    read,
+    Array.from({ length: TRIAL_READS }, () => 200),
+  );
   assert.equal(next.statusCode, 429);
   assert.equal(next.json().error.details.quota, "trial-reads");
   assert.equal(saying(lines, "trial reads spent").length, 1);

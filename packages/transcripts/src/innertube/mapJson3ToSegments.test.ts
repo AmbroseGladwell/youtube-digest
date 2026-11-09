@@ -54,7 +54,7 @@ test("a track that answers with no cues at all is the source being turned away, 
 
 test("a body that is not json3 is a malformed response rather than a crash", () => {
   assert.throws(
-    () => mapJson3ToSegments("<?xml version=\"1.0\"?><timedtext/>"),
+    () => mapJson3ToSegments('<?xml version="1.0"?><timedtext/>'),
     (error: unknown) => {
       assert.ok(error instanceof TranscriptFetchError);
       assert.equal(error.failure, "malformed-response");

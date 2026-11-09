@@ -20,8 +20,7 @@ import { ProviderKeyRow } from "../ProviderKeyRow/ProviderKeyRow.js";
 import styles from "./ApiKeysPanel.module.scss";
 import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
 
-export const NO_KEYS_STANDFIRST =
-  "To write overviews you’ll need your own API key from one of these providers.";
+export const NO_KEYS_STANDFIRST = "To write overviews you’ll need your own API key from one of these providers.";
 
 // A list, because holding several keys is the point (design 110a, Q1). Keys on this device
 // come first as full rows; providers without one sit below as quiet one-line rows. On a
@@ -145,8 +144,8 @@ export function ApiKeysPanel() {
                 Remove {held.length === 1 ? "your key" : `all ${held.length} keys`} from {here}?
               </p>
               <p className={styles.confirmDetail}>
-                Overviews they made stay in your library. Nothing can be made here until you add a key again. Your
-                other devices keep their own keys.
+                Overviews they made stay in your library. Nothing can be made here until you add a key again. Your other devices keep their
+                own keys.
               </p>
               <div className={styles.confirmActions}>
                 <button

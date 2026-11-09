@@ -20,13 +20,7 @@ const FRACTION_NAME: Record<number, [string, string]> = {
   10: ["tenth", "tenths"],
 };
 
-const money = (
-  _: string,
-  article: string | undefined,
-  symbol: string,
-  amount: string,
-  magnitude: string | undefined,
-) => {
+const money = (_: string, article: string | undefined, symbol: string, amount: string, magnitude: string | undefined) => {
   const [one, many] = CURRENCY_NAME[symbol]!;
   const scale = magnitude ? ` ${MAGNITUDE_NAME[magnitude.toLowerCase()]}` : "";
   const unit = article || (amount === "1" && !magnitude) ? one : many;

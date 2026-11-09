@@ -47,7 +47,8 @@ export function SignInPage() {
       return <RequestLinkFlow intent="signIn" expired returnTo={signInReturnFromSearch(search)} />;
     }
     return (
-      <ErrorState screen="signInLinkFailed"
+      <ErrorState
+        screen="signInLinkFailed"
         title="That link didn't sign you in"
         error={signIn.error}
         body={authFailureMessage(signIn.error, LINK_SPENT)}

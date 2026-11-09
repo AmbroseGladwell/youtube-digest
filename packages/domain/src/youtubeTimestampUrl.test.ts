@@ -12,7 +12,10 @@ describe("youtubeTimestampUrl", () => {
   });
 
   it("preserves an existing query param, such as youtu.be's own si= share token", () => {
-    assert.equal(youtubeTimestampUrl("https://youtu.be/abc123?si=XO0p8bppikm6Ya6v", 92_000), "https://youtu.be/abc123?si=XO0p8bppikm6Ya6v&t=92");
+    assert.equal(
+      youtubeTimestampUrl("https://youtu.be/abc123?si=XO0p8bppikm6Ya6v", 92_000),
+      "https://youtu.be/abc123?si=XO0p8bppikm6Ya6v&t=92",
+    );
   });
 
   it("floors sub-second precision", () => {

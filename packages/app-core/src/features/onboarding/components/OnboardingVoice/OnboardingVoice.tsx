@@ -25,9 +25,7 @@ export function OnboardingVoice({ onContinue }: { onContinue: () => void }) {
     <div className={styles.root} data-testid={onboardingVoiceTestIds.root}>
       <div className={styles.intro}>
         <OnboardingHeading>Who should read your overviews?</OnboardingHeading>
-        <p className={styles.lead}>
-          Tap a voice to have a listen. We'll use it on all your devices, and you can change it any time.
-        </p>
+        <p className={styles.lead}>Tap a voice to have a listen. We'll use it on all your devices, and you can change it any time.</p>
       </div>
       <NarrationApiProvider value={samplesApi}>
         <NarrationVoicePicker labelledBy={ONBOARDING_HEADING_ID} />

@@ -37,12 +37,7 @@ export interface ApiRequesterOptions {
   newRequestId?: () => string;
 }
 
-export type ApiRequester = <T>(
-  method: ApiMethod,
-  path: string,
-  schema: z.ZodType<T>,
-  options?: ApiRequestOptions,
-) => Promise<T | null>;
+export type ApiRequester = <T>(method: ApiMethod, path: string, schema: z.ZodType<T>, options?: ApiRequestOptions) => Promise<T | null>;
 
 // One request against /api: the headers every call carries, the envelope every failure
 // wears, and the schema every answer is parsed with (docs/architecture/api.md).

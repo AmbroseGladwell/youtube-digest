@@ -28,11 +28,7 @@ import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in";
 
-export function accountRowValue(
-  sync: { connected: boolean; status: SyncStatus },
-  connection: SyncConnection,
-  now: Date,
-): string {
+export function accountRowValue(sync: { connected: boolean; status: SyncStatus }, connection: SyncConnection, now: Date): string {
   if (!sync.connected) return NOT_SIGNED_IN_ROW_VALUE;
   const name = connection.firstName ?? connection.email;
   const line = syncStatusLine(sync.status, now);
@@ -108,5 +104,4 @@ export function aboutRowValue(build: AppBuild): string {
 }
 
 // Design 95d: the plan, then what's left of the quota the next overview will use.
-export const planRowValue = (plan: string, count: string | null): string =>
-  count === null ? plan : `${plan} · ${count}`;
+export const planRowValue = (plan: string, count: string | null): string => (count === null ? plan : `${plan} · ${count}`);

@@ -1,10 +1,6 @@
 import type { TranscriptBlock } from "@overview/domain";
 import { useCallback, useEffect, useRef, useState, type RefCallback } from "react";
-import {
-  forgetReadingPosition,
-  readReadingPosition,
-  writeReadingPosition,
-} from "../../../transcripts/readingPositionStorage.js";
+import { forgetReadingPosition, readReadingPosition, writeReadingPosition } from "../../../transcripts/readingPositionStorage.js";
 import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { useLibraryAccountId } from "../../../../stores/LibraryAccountContext.js";
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
@@ -103,10 +99,7 @@ export function useReadingPosition(
 // one to start at the line rather than the nearest to it: a block still half behind the
 // head is not the one being read. A pixel of tolerance, because the scroll that put it
 // there lands on whole device pixels.
-function rowAtRestingLine(
-  container: HTMLElement,
-  line: number,
-): { index: number; startMs: number } | null {
+function rowAtRestingLine(container: HTMLElement, line: number): { index: number; startMs: number } | null {
   const rows = Array.from(container.children);
   const found = rows.findIndex((child) => child.getBoundingClientRect().top >= line - 1);
   const index = found === -1 ? rows.length - 1 : found;

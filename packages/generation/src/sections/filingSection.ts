@@ -17,9 +17,7 @@ export const GeneratedTags = z.array(Tag).min(3).max(MAX_TAGS);
 export function tagInstructions(existingTags: readonly TagCount[]): string {
   const vocabulary = existingTags.slice(0, TAG_VOCABULARY_CAP).map(({ tag }) => tag);
   const tagList =
-    vocabulary.length === 0
-      ? "The reader has no tags yet."
-      : `The reader's existing tags, most used first:\n${vocabulary.join(", ")}`;
+    vocabulary.length === 0 ? "The reader has no tags yet." : `The reader's existing tags, most used first:\n${vocabulary.join(", ")}`;
   return `## Tags
 3 to 6 lowercase, hyphenated tags naming what the video is about, so the
 reader can find the other overviews on the same subject.
@@ -37,9 +35,7 @@ export const filingSection: PromptSection = {
     const topicList =
       input.existingTopics.length === 0
         ? "The reader has no topics yet."
-        : input.existingTopics
-            .map((topic) => `- "${topic.name}"${topic.description ? `: ${topic.description}` : ""}`)
-            .join("\n");
+        : input.existingTopics.map((topic) => `- "${topic.name}"${topic.description ? `: ${topic.description}` : ""}`).join("\n");
     return `
 ## Topic
 Here is the reader's own list of topics:

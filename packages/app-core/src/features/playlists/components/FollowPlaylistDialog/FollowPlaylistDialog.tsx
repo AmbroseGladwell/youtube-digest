@@ -43,7 +43,13 @@ export function FollowPlaylistDialog({ pasted, onClose }: FollowPlaylistDialogPr
             <h2 className={styles.heading} id={HEADING_ID}>
               Follow a playlist
             </h2>
-            <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={followPlaylistDialogTestIds.closeButton}>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={onClose}
+              aria-label="Close"
+              data-testid={followPlaylistDialogTestIds.closeButton}
+            >
               <StrokeIcon name="close" size={16} />
             </button>
           </div>

@@ -10,14 +10,10 @@ export class MiniPlayerPageObject extends PageObject {
     );
 
   verifyTitleReads = (title: string) =>
-    this.step(`verifyTitleReads ${title}`, () =>
-      expect(this.get(miniPlayerTestIds.titleLink)).toContainText(title),
-    );
+    this.step(`verifyTitleReads ${title}`, () => expect(this.get(miniPlayerTestIds.titleLink)).toContainText(title));
 
   verifyPlayButtonReads = (label: string) =>
-    this.step(`verifyPlayButtonReads ${label}`, () =>
-      expect(this.get(miniPlayerTestIds.playButton)).toHaveAttribute("aria-label", label),
-    );
+    this.step(`verifyPlayButtonReads ${label}`, () => expect(this.get(miniPlayerTestIds.playButton)).toHaveAttribute("aria-label", label));
 
   clickPlayPause = () => this.step("clickPlayPause", () => this.click(miniPlayerTestIds.playButton));
 

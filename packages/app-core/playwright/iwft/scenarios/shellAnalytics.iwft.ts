@@ -23,10 +23,7 @@ test("the account menu's opening and the item chosen are counted", async ({ laun
     ]);
 });
 
-test("a dead end's way out is counted by which dead end it was, never its title", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a dead end's way out is counted by which dead end it was, never its title", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   const deadEnd = await launcher.launchExpectingDeadEnd({ ...SIGNED_IN, failingReads: ["topics"] });
 
@@ -37,10 +34,7 @@ test("a dead end's way out is counted by which dead end it was, never its title"
     .toEqual([{ name: "app.errorState.actionChosen", props: { screen: "topicsLoad" } }]);
 });
 
-test("pausing and closing the mini-player are counted against the overview playing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("pausing and closing the mini-player are counted against the overview playing", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   backendSimulator.narration.seedReady(overview);

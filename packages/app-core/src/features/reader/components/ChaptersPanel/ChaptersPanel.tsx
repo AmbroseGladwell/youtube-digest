@@ -19,8 +19,8 @@ export interface ChaptersPanelProps {
   chapters: Chapter[] | null;
   video: VideoSource;
   // A transcript the caller already holds — the shared page's own copy, which travels with
-// the shared overview rather than being read out of a store the visitor has not got
-// (docs/features/sharing.md). Absent, the panel reads the reader's own store.
+  // the shared overview rather than being read out of a store the visitor has not got
+  // (docs/features/sharing.md). Absent, the panel reads the reader's own store.
   held?: StoredTranscript | null;
   onOpenTranscriptAt: (positionMs: number) => void;
   // A recipe video's steps, so each chapter names the ones it covers (design 122j).
@@ -56,8 +56,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
         ? LOOKING_FOR_TRANSCRIPT
         : NO_TRANSCRIPT;
 
-  const currentIndex =
-    chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
+  const currentIndex = chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
 
   const stepsOf = (chapter: Chapter) => chapterStepsLabel(chapter, steps);
   if (chapters === null || chapters.length === 0) {
@@ -142,10 +141,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
                   aria-valuenow={throughChapter(chapter, position.positionMs)}
                   data-testid={chaptersPanelTestIds.progress}
                 >
-                  <span
-                    className={styles.progressFill}
-                    style={{ width: `${throughChapter(chapter, position.positionMs)}%` }}
-                  />
+                  <span className={styles.progressFill} style={{ width: `${throughChapter(chapter, position.positionMs)}%` }} />
                 </span>
               )}
             </div>

@@ -121,15 +121,12 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
         {leftOut > 0 && (
           <div className={styles.leftOut} data-testid={timeSavedSheetTestIds.notCounted}>
             <p className={styles.label}>Not counted</p>
-            {summary.withoutLength > 0 && (
-              <p className={styles.leftOutLine}>{overviews(summary.withoutLength)} without a video length</p>
-            )}
-            {summary.watchVerdict > 0 && (
-              <p className={styles.leftOutLine}>{summary.watchVerdict} the verdict said to watch or read</p>
-            )}
+            {summary.withoutLength > 0 && <p className={styles.leftOutLine}>{overviews(summary.withoutLength)} without a video length</p>}
+            {summary.watchVerdict > 0 && <p className={styles.leftOutLine}>{summary.watchVerdict} the verdict said to watch or read</p>}
             {summary.recipe > 0 && (
               <p className={styles.leftOutLine}>
-                {summary.recipe} {summary.recipe === 1 ? "recipe" : "recipes"}, since you’d cook {summary.recipe === 1 ? "it" : "them"} rather than read {summary.recipe === 1 ? "it" : "them"}
+                {summary.recipe} {summary.recipe === 1 ? "recipe" : "recipes"}, since you’d cook {summary.recipe === 1 ? "it" : "them"}{" "}
+                rather than read {summary.recipe === 1 ? "it" : "them"}
               </p>
             )}
             {summary.lessPartToWatch > 0 && (

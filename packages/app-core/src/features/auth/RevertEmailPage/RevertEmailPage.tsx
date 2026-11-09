@@ -75,7 +75,10 @@ export function RevertEmailPage() {
   );
 
   if (token === null || (revert.isError && isSyncRequestError(revert.error) && revert.error.code === "link_invalid")) {
-    const { reason, email } = token === null ? { reason: "spent" as const, email: null } : refusalReason((revert.error as { details?: Record<string, unknown> }).details);
+    const { reason, email } =
+      token === null
+        ? { reason: "spent" as const, email: null }
+        : refusalReason((revert.error as { details?: Record<string, unknown> }).details);
     return (
       <AuthScreen
         testId={revertEmailPageTestIds.refused}
@@ -110,8 +113,8 @@ export function RevertEmailPage() {
         title="Your account is moved back"
         lead={
           <>
-            Your account signs in with <strong data-testid={revertEmailPageTestIds.email}>{revert.data.email}</strong>{" "}
-            again. Every device was signed out, including any you didn’t recognise.
+            Your account signs in with <strong data-testid={revertEmailPageTestIds.email}>{revert.data.email}</strong> again. Every device
+            was signed out, including any you didn’t recognise.
           </>
         }
       >

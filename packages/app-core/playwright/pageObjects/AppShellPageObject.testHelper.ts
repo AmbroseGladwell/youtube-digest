@@ -139,9 +139,7 @@ export class AppShellPageObject extends PageObject {
   // document.getAnimations() — records nothing in a backgrounded window, which is most of
   // them when the suite runs in parallel, and a real transition then reads as none at all.
   // `animationstart` is no use either: it does not fire for view-transition pseudo-elements.
-  private whileRecordingTransitions = async <T>(
-    go: () => Promise<T>,
-  ): Promise<{ result: T; seen: string[]; opened: number }> => {
+  private whileRecordingTransitions = async <T>(go: () => Promise<T>): Promise<{ result: T; seen: string[]; opened: number }> => {
     // React Router skips a transition that is still running when the next navigation starts,
     // and a skipped one never reaches `ready`. Waiting for quiet first keeps each assertion
     // about its own journey rather than the tail of the one before it.
@@ -285,27 +283,24 @@ export class AppShellPageObject extends PageObject {
     });
 
   private tapBackInBar = async () => {
-      await expect
-        .poll(() =>
-          this.page.evaluate(() =>
-            document.getAnimations().some((animation) => {
-              const effect = animation.effect;
-              return effect instanceof KeyframeEffect && (effect.pseudoElement ?? "").startsWith("::view-transition");
-            }),
-          ),
-        )
-        .toBe(false);
-      const box = (await this.get(appShellTestIds.backLink).boundingBox())!;
-      await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect
+      .poll(() =>
+        this.page.evaluate(() =>
+          document.getAnimations().some((animation) => {
+            const effect = animation.effect;
+            return effect instanceof KeyframeEffect && (effect.pseudoElement ?? "").startsWith("::view-transition");
+          }),
+        ),
+      )
+      .toBe(false);
+    const box = (await this.get(appShellTestIds.backLink).boundingBox())!;
+    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   };
 
-  clickNewOverview = () =>
-    this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
+  clickNewOverview = () => this.step("clickNewOverview", () => this.click(appShellTestIds.newOverviewButton));
 
   verifyNewOverviewHasFocus = () =>
-    this.step("verifyNewOverviewHasFocus", () =>
-      expect(this.get(appShellTestIds.newOverviewButton)).toBeFocused(),
-    );
+    this.step("verifyNewOverviewHasFocus", () => expect(this.get(appShellTestIds.newOverviewButton)).toBeFocused());
 
   // The bar's + New is the web's pill everywhere but a touch-sized full layout, where it
   // grows to the 44px target (docs/features/extension-panel.md, "+ New joins the panel's bar").
@@ -346,9 +341,7 @@ export class AppShellPageObject extends PageObject {
 
   verifyOffersNotNow = (offers: boolean) =>
     this.step(`verifyOffersNotNow ${offers}`, () =>
-      offers
-        ? this.expectToBeVisible(appShellTestIds.notNowLink)
-        : this.expectNotToBeVisible(appShellTestIds.notNowLink),
+      offers ? this.expectToBeVisible(appShellTestIds.notNowLink) : this.expectNotToBeVisible(appShellTestIds.notNowLink),
     );
 
   clickNotNow = () => this.step("clickNotNow", () => this.click(appShellTestIds.notNowLink));

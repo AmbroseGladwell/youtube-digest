@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { OverviewFold, VideoId } from "@overview/domain";
-import {
-  createFetchAuthApi,
-  createFetchSyncApi,
-  INITIAL_SYNC_STATUS,
-  SyncEngine,
-  type SyncStatus,
-} from "@overview/sync";
+import { createFetchAuthApi, createFetchSyncApi, INITIAL_SYNC_STATUS, SyncEngine, type SyncStatus } from "@overview/sync";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
@@ -98,9 +92,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       connected,
       status,
       syncNow: () => void engine.current?.engine.sync(),
-      fetchTranscript: connected
-        ? (videoId: VideoId) => engine.current?.engine.fetchTranscript(videoId) ?? Promise.resolve(null)
-        : null,
+      fetchTranscript: connected ? (videoId: VideoId) => engine.current?.engine.fetchTranscript(videoId) ?? Promise.resolve(null) : null,
       // Nothing is cleared, and the server's answer decides nothing (docs/features/account-libraries.md).
       signingOut,
       signOutNotice,
@@ -128,7 +120,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
           running?.stop();
           await beforeEndingSession?.(outcome).catch(() => undefined);
           if (apiUrl !== null) {
-            await createFetchAuthApi({ baseUrl: apiUrl, token, surface }).signOut().catch(() => undefined);
+            await createFetchAuthApi({ baseUrl: apiUrl, token, surface })
+              .signOut()
+              .catch(() => undefined);
           }
           const stillThisConnection = readSyncConnection().accountId === connection.accountId;
           if (stillThisConnection) {
@@ -140,7 +134,21 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [stores.syncStorage, connected, status, connection, setConnection, apiUrl, token, surface, signingOut, signOutNotice, opening, folds, foldNotice],
+    [
+      stores.syncStorage,
+      connected,
+      status,
+      connection,
+      setConnection,
+      apiUrl,
+      token,
+      surface,
+      signingOut,
+      signOutNotice,
+      opening,
+      folds,
+      foldNotice,
+    ],
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;

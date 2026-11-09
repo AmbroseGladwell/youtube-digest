@@ -42,5 +42,8 @@ test("a private playlist is refused with its own code, so the reader can be told
   const { fetch } = answering(422, { error: { code: "playlist_private", message: "That playlist is private" } });
   const api = createFetchPlaylistApi({ baseUrl: "https://overview.example", fetch });
 
-  await assert.rejects(api.lookup(PlaylistId.parse("PLprivate")), (error) => isSyncRequestError(error) && error.code === "playlist_private");
+  await assert.rejects(
+    api.lookup(PlaylistId.parse("PLprivate")),
+    (error) => isSyncRequestError(error) && error.code === "playlist_private",
+  );
 });

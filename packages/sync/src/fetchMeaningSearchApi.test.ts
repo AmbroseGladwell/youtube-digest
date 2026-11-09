@@ -12,7 +12,10 @@ const answering = (status: number, body: unknown) => {
 };
 
 test("a search is sent as a query and its matches come back closest first", async () => {
-  const matches = [{ overviewId: "a", similarity: 0.6 }, { overviewId: "b", similarity: 0.4 }];
+  const matches = [
+    { overviewId: "a", similarity: 0.6 },
+    { overviewId: "b", similarity: 0.4 },
+  ];
   const { sent, fetch } = answering(200, { available: true, matches });
   const api = createFetchMeaningSearchApi({ baseUrl: "https://overview.example", fetch });
 

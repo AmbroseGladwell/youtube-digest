@@ -20,10 +20,7 @@ test("a word that only looks plural is left alone when nothing matches it", () =
 });
 
 test("a merged-away tag becomes the tag it was merged into", () => {
-  assert.deepEqual(resolveTags(["micro-saas", "pricing"], vocabulary(["saas"], { "micro-saas": "saas" })), [
-    "saas",
-    "pricing",
-  ]);
+  assert.deepEqual(resolveTags(["micro-saas", "pricing"], vocabulary(["saas"], { "micro-saas": "saas" })), ["saas", "pricing"]);
 });
 
 test("a deleted tag cannot come back", () => {

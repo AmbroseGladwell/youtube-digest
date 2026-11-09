@@ -77,13 +77,13 @@ export function EnterCode(props: EnterCodeProps) {
       lead={
         inMail ? (
           <>
-            The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an
-            8-character code under the link. Type it here to sign in this browser.
+            The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an 8-character code under the link.
+            Type it here to sign in this browser.
           </>
         ) : fromEmail ? (
           <>
-            Open the link we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>. The page
-            it opens shows an 8-character code.
+            Open the link we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>. The page it opens shows an
+            8-character code.
           </>
         ) : (
           "In the web app, where you're signed in, open the account menu and choose Connect the extension. It shows an 8-character code."
@@ -202,12 +202,7 @@ export function EnterCode(props: EnterCodeProps) {
                 ? "You can close this panel to open your email. It'll be waiting here when you come back."
                 : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
           </p>
-          <button
-            type="submit"
-            className={styles.submit}
-            disabled={connecting}
-            data-testid={enterCodeTestIds.connectButton}
-          >
+          <button type="submit" className={styles.submit} disabled={connecting} data-testid={enterCodeTestIds.connectButton}>
             {!inMail ? "Connect" : props.intent === "createAccount" ? "Create account" : "Sign in"}
           </button>
         </div>

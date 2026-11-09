@@ -200,8 +200,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     return true;
   };
 
-  const go = (next: OnboardingStep) =>
-    update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
+  const go = (next: OnboardingStep) => update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
   const next = () => go(steps[indexOf(step) + 1] ?? "account");
   // From a shared page, leaving the questions goes back to the page. It's a full load, since
   // the copy is read from the document the server writes (docs/features/sharing.md). A sample
@@ -282,7 +281,8 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   // an account already held, and after the plan is picked for a new one.
   const revealed = useRef(false);
   useEffect(() => {
-    if (!inAccount || (progress.way === "createAccount" && progress.plan === null) || progress.overviewId === null || revealed.current) return;
+    if (!inAccount || (progress.way === "createAccount" && progress.plan === null) || progress.overviewId === null || revealed.current)
+      return;
     revealed.current = true;
     finish(progress.overviewId);
   });
@@ -346,7 +346,13 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     retry();
   };
   // Once the account exists: what the overview is doing until it's in the account's library.
-  const arriving: OnboardingArrivingPhase | null = inAccount ? null : failed ? "failed" : progress.overviewId !== null ? "bringingIn" : "writing";
+  const arriving: OnboardingArrivingPhase | null = inAccount
+    ? null
+    : failed
+      ? "failed"
+      : progress.overviewId !== null
+        ? "bringingIn"
+        : "writing";
 
   // A sample is already made, so there is no overview's progress to show (155f).
   const progressBar = sample ? null : (
@@ -368,9 +374,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   );
 
   const sortedInto =
-    overview === null
-      ? null
-      : overview.topicIds.flatMap((topicId) => topics.find((topic) => topic.id === topicId)?.name ?? []);
+    overview === null ? null : overview.topicIds.flatMap((topicId) => topics.find((topic) => topic.id === topicId)?.name ?? []);
 
   // The overview taking shape: beside the screens on a wide window, and on a phone inside
   // Nearly there, where the bar at the top already shows its progress.
@@ -392,7 +396,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       sortedInto={phase === "ready" ? sortedInto : null}
       forAnyone={sample}
       onTryAgain={() => tryAgain("preview")}
-      teaser={wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null}
+      teaser={
+        wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null
+      }
     />
   );
   const nearlyThereCard = wide || failed || sample ? null : previewOf(null);
@@ -463,30 +469,25 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "stepsForYou":
-        return (
-          <OnboardingStepsForYou
-            aboutYou={aboutYou}
-            onPersonalise={() => update({ step: "aboutYou" })}
-            onNext={next}
-          />
-        );
+        return <OnboardingStepsForYou aboutYou={aboutYou} onPersonalise={() => update({ step: "aboutYou" })} onNext={next} />;
       case "voice":
         return <OnboardingVoice onContinue={next} />;
       case "library":
       case "askYourAi":
       case "moreSources":
         return (
-          <OnboardingSlide
-            slide={step}
-            topics={progress.topics}
-            source={found?.source ?? null}
-            written={share !== null}
-            onNext={next}
-          />
+          <OnboardingSlide slide={step} topics={progress.topics} source={found?.source ?? null} written={share !== null} onNext={next} />
         );
       case "account":
         if (signedIn) {
-          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="signIn" card={nearlyThereCard} onTryAgain={() => tryAgain("account")} />;
+          return (
+            <OnboardingNearlyThere
+              phase={arriving ?? "bringingIn"}
+              after="signIn"
+              card={nearlyThereCard}
+              onTryAgain={() => tryAgain("account")}
+            />
+          );
         }
         return (
           <OnboardingAccount
@@ -504,7 +505,14 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
         );
       case "plan":
         if (progress.plan !== null) {
-          return <OnboardingNearlyThere phase={arriving ?? "bringingIn"} after="plan" card={nearlyThereCard} onTryAgain={() => tryAgain("plan")} />;
+          return (
+            <OnboardingNearlyThere
+              phase={arriving ?? "bringingIn"}
+              after="plan"
+              card={nearlyThereCard}
+              onTryAgain={() => tryAgain("plan")}
+            />
+          );
         }
         return (
           <OnboardingPlan
@@ -547,13 +555,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
                 {narrowProgress}
                 <div className={styles.nav}>
                   {step !== "plan" && !signedIn && (
-                    <button
-                      type="button"
-                      className={styles.back}
-                      aria-label="Back"
-                      onClick={back}
-                      data-testid={onboardingPageTestIds.back}
-                    >
+                    <button type="button" className={styles.back} aria-label="Back" onClick={back} data-testid={onboardingPageTestIds.back}>
                       <StrokeIcon name="arrowLeft" size={18} />
                     </button>
                   )}
@@ -607,4 +609,3 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     </div>
   );
 }
-

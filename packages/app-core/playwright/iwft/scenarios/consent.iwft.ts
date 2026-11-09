@@ -83,11 +83,7 @@ test.describe("answering an assistant's request", () => {
     await consent.verifyHeadingIsNamed(`“${name}” wants to read your overviews`);
   });
 
-  test("approving says where it is going, then sends the reader back with a code", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("approving says where it is going, then sends the reader back with a code", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.accountIsOn("plus");
     await launcher.launch(SIGNED_IN);
@@ -166,10 +162,7 @@ test.describe("answering an assistant's request", () => {
     await consent.verifyOffersApprove(true);
   });
 
-  test("an answer refused because the session has since ended asks for an email again", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("an answer refused because the session has since ended asks for an email again", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.accountIsOn("plus");
     await launcher.launch(SIGNED_IN);
@@ -206,10 +199,7 @@ test.describe("answering an assistant's request", () => {
 });
 
 test.describe("answering while signed out", () => {
-  test("shows the request and asks for an email, with the permissions held back", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("shows the request and asks for an email, with the permissions held back", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seedRequest(request());
     await launcher.launch({ sync: true });
 
@@ -221,10 +211,7 @@ test.describe("answering while signed out", () => {
     await consent.verifyAsksToSignIn();
   });
 
-  test("the link it sends comes back to this request, and the wait says to open it here", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("the link it sends comes back to this request, and the wait says to open it here", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seedRequest(request());
     await launcher.launch({ sync: true });
     await launcher.openConsent(REQUEST_ID);
@@ -250,11 +237,7 @@ test.describe("answering while signed out", () => {
     await launcher.consentPage.verifyNoteReads("Open the link on this phone");
   });
 
-  test("opening the link in the same browser lands back on the request, ready to answer", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("opening the link in the same browser lands back on the request, ready to answer", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.accountIsOn("plus");
     await launcher.launch({ sync: true });
@@ -276,10 +259,7 @@ test.describe("answering while signed out", () => {
       .toEqual(["mcp.consentScreen.shown", "mcp.consentScreen.approved"]);
   });
 
-  test("a link opened on another device says this device is the one sent back", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a link opened on another device says this device is the one sent back", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seedRequest(request());
     backendSimulator.auth.accountIsOn("plus");
     await launcher.launch({ sync: true });
@@ -299,10 +279,7 @@ test.describe("answering while signed out", () => {
     await launcher.homePage.verifyIsShown();
   });
 
-  test("an expired link asks for a new one that still comes back to the request", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("an expired link asks for a new one that still comes back to the request", async ({ launcher, backendSimulator }) => {
     backendSimulator.simulateEndpointError(EndpointKey.AUTH_SIGN_IN);
     await launcher.launch({ sync: true });
     await launcher.openSignInLink("a-link-already-used", consentPath(REQUEST_ID));

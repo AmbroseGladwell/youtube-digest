@@ -108,7 +108,9 @@ test("the method is narrated one action to a line, saying the step's number and 
     { text: "Cook beef - Turn the heat up to high. Add the beef, then cook for 2 mins.", group: null },
     { text: "Season to taste.", group: null },
   ];
-  const lines = overviewNoteLines(makeRecipeOverview({ steps, stepCount: 2 })).filter(({ section, heading }) => section === "Method" && !heading);
+  const lines = overviewNoteLines(makeRecipeOverview({ steps, stepCount: 2 })).filter(
+    ({ section, heading }) => section === "Method" && !heading,
+  );
   assert.deepEqual(
     lines.map(({ text, spoken }) => [text, spoken]),
     [
@@ -131,7 +133,10 @@ test("in US units the method's oven temperatures are shown and read in Fahrenhei
 
 test("the method's repeated amounts are shown, read and copied as adjusted, and its shares as written", () => {
   const ingredients = ["100g plain flour", "300ml milk"];
-  const amounts = methodAmounts(ingredients, ingredients.map((line) => adjustIngredient(line, 2, "asWritten")));
+  const amounts = methodAmounts(
+    ingredients,
+    ingredients.map((line) => adjustIngredient(line, 2, "asWritten")),
+  );
   const steps = [
     { text: "Whisk 100g plain flour with 300ml milk.", group: null },
     { text: "Pour in about 3 tbsp of the batter.", group: null },
@@ -143,15 +148,29 @@ test("the method's repeated amounts are shown, read and copied as adjusted, and 
     ["Whisk 200g plain flour with 600ml milk.", "Pour in about 3 tbsp of the batter."],
   );
   assert.equal(method[0]?.spoken, "Step 1. Whisk 200 grams plain flour with 600 millilitres milk.");
-  const copied = recipeText({ title: "T", from: "F", url: "https://e.example/r", recipe: overview.recipe!, ingredients, adjusted: null, methodAmounts: amounts });
+  const copied = recipeText({
+    title: "T",
+    from: "F",
+    url: "https://e.example/r",
+    recipe: overview.recipe!,
+    ingredients,
+    adjusted: null,
+    methodAmounts: amounts,
+  });
   assert.match(copied, /1\. Whisk 200g plain flour with 600ml milk\.\n2\. Pour in about 3 tbsp of the batter\./);
 });
 
 test("the ingredients are read as shown, and a copy shared without the method stops after them", () => {
   const adjusted = overviewNoteLines(makeRecipeOverview(), { ingredients: ["6 large leeks, trimmed"] });
-  assert.deepEqual(adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text), ["6 large leeks, trimmed"]);
+  assert.deepEqual(
+    adjusted.filter(({ section, heading }) => section === "Ingredients" && !heading).map(({ text }) => text),
+    ["6 large leeks, trimmed"],
+  );
   const shared = overviewNoteLines(makeRecipeOverview({ steps: [] }));
-  assert.equal(shared.some(({ section }) => section === "Method"), false);
+  assert.equal(
+    shared.some(({ section }) => section === "Method"),
+    false,
+  );
 });
 
 test("recipes don't count towards time saved", () => {
@@ -206,7 +225,14 @@ test("a copied recipe is the page's recipe with its source, and never the summar
 
 test("a copy without the method points to the page for it", () => {
   const overview = makeRecipeOverview({ steps: [] });
-  const text = recipeText({ title: "T", from: "Example Kitchen", url: "https://e.example/r", recipe: overview.recipe!, ingredients: ["x"], adjusted: null });
+  const text = recipeText({
+    title: "T",
+    from: "Example Kitchen",
+    url: "https://e.example/r",
+    recipe: overview.recipe!,
+    ingredients: ["x"],
+    adjusted: null,
+  });
   assert.match(text, /The method, 3 steps, is on Example Kitchen: https:\/\/e\.example\/r/);
 });
 

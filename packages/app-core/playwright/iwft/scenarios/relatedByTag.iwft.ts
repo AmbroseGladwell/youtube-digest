@@ -1,9 +1,6 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
-import {
-  makeOverview,
-  makeOverviewState,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
 const SIGNED_IN = {
@@ -19,9 +16,7 @@ const THIS_ONE = titled("This one", ["saas", "founder-interview", "pricing"], "2
 const seedRelated = (backendSimulator: BackendSimulator, count: number) => {
   backendSimulator.overviews.seed(THIS_ONE);
   for (let index = 0; index < count; index += 1) {
-    backendSimulator.overviews.seed(
-      titled(`Related ${index}`, ["saas"], `2026-09-${String(10 + index)}T00:00:00.000Z`),
-    );
+    backendSimulator.overviews.seed(titled(`Related ${index}`, ["saas"], `2026-09-${String(10 + index)}T00:00:00.000Z`));
   }
 };
 
@@ -43,11 +38,7 @@ test("the note ends with its tags and the overviews sharing most of them, newest
 
   await related.verifyHeadingReads("Related by tag");
   await related.verifyTagsRead(["#saas", "#founder-interview", "#pricing"]);
-  await related.verifyRelatedRead([
-    "Shares twoStarter Story",
-    "Shares oneStarter Story",
-    "Shares one, readStarter Story · Read",
-  ]);
+  await related.verifyRelatedRead(["Shares twoStarter Story", "Shares oneStarter Story", "Shares one, readStarter Story · Read"]);
 });
 
 test("three show at first and the rest wait behind Show more, which keeps focus as it becomes Show fewer", async ({
@@ -70,10 +61,7 @@ test("three show at first and the rest wait behind Show more, which keeps focus 
   );
 });
 
-test("a tag opens the library filtered to it, and a related overview opens in the reader", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a tag opens the library filtered to it, and a related overview opens in the reader", async ({ launcher, backendSimulator }) => {
   seedRelated(backendSimulator, 1);
   await launcher.launch(SIGNED_IN);
   await launcher.openPage(Routes.overview(THIS_ONE.id));

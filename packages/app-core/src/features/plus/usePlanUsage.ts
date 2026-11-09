@@ -23,9 +23,6 @@ export function usePlanUsage(): PlanUsageProps | null {
   return {
     signedIn: true,
     hasOwnKey: hasKeyFor(apiKeys, provider),
-    usage:
-      usage.data !== undefined
-        ? { status: "known", data: usage.data }
-        : { status: usage.isError ? "unreachable" : "checking" },
+    usage: usage.data !== undefined ? { status: "known", data: usage.data } : { status: usage.isError ? "unreachable" : "checking" },
   };
 }

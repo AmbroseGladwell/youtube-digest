@@ -1,10 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
-import {
-  ANONYMOUS_ID,
-  makeAnalyticsConsent,
-} from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
+import { ANONYMOUS_ID, makeAnalyticsConsent } from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 
 const NEVER_ASKED = { analyticsConsent: null } as const;
 const SAID_YES = { analyticsConsent: makeAnalyticsConsent({ answer: "share", answeredAt: "2026-09-28T09:00:00.000Z" }) };
@@ -24,16 +21,13 @@ const SIGNED_IN = {
 const SIGNED_OUT_EXPLANATION =
   "Counts which features you use, never what you watch, read or type, under a random ID in this browser that’s deleted when you turn this off. If you create an account later, it’s linked to your account.";
 
-const storedConsent = (page: Page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
+const storedConsent = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
 
 // Designs 62d–62i: one switch for analytics, between Plan and About
 // (docs/features/analytics-consent.md, "Settings › Privacy").
 test.describe("signed out", () => {
   // Design 62d.
-  test("Privacy sits between Plan and About, says nothing is chosen, and keeps error reports apart", async ({
-    launcher,
-  }) => {
+  test("Privacy sits between Plan and About, says nothing is chosen, and keeps error reports apart", async ({ launcher }) => {
     await launcher.launch({ ...NEVER_ASKED, build: BUILD });
     const settings = await launcher.appShell.openSettings();
 
@@ -48,11 +42,7 @@ test.describe("signed out", () => {
   });
 
   // Design 62e.
-  test("turning it on is the same yes as onboarding's: a new id, and sent under it", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("turning it on is the same yes as onboarding's: a new id, and sent under it", async ({ launcher, backendSimulator, page }) => {
     await launcher.launch(NEVER_ASKED);
     const settings = await launcher.appShell.openSettings();
     await settings.openSection("privacy");
@@ -63,13 +53,13 @@ test.describe("signed out", () => {
     await settings.verifyRowReads("privacy", "On");
     const consent = await storedConsent(page);
     test.expect(consent).toMatchObject({ answer: "share" });
-    await test.expect.poll(() => backendSimulator.analytics.events()).toContainEqual({
-      name: "analyticsConsent.settings.switched",
-      props: { on: true },
-    });
-    test
-      .expect(backendSimulator.analytics.batches().every(({ anonymousId }) => anonymousId === consent.anonymousId))
-      .toBe(true);
+    await test.expect
+      .poll(() => backendSimulator.analytics.events())
+      .toContainEqual({
+        name: "analyticsConsent.settings.switched",
+        props: { on: true },
+      });
+    test.expect(backendSimulator.analytics.batches().every(({ anonymousId }) => anonymousId === consent.anonymousId)).toBe(true);
   });
 
   // Design 62f: withdrawing.
@@ -98,10 +88,7 @@ test.describe("signed out", () => {
   });
 
   // Design 62g.
-  test("a no is shown with its date, and turning it on makes a new id rather than reusing one", async ({
-    launcher,
-    page,
-  }) => {
+  test("a no is shown with its date, and turning it on makes a new id rather than reusing one", async ({ launcher, page }) => {
     await launcher.launch(SAID_NO);
     const settings = await launcher.appShell.openSettings();
     await settings.verifyRowReads("privacy", "Off");
@@ -115,9 +102,7 @@ test.describe("signed out", () => {
     test.expect(anonymousId).not.toBe(ANONYMOUS_ID);
   });
 
-  test("the extension says the id is kept in the extension, and opens the policy in a tab of its own", async ({
-    launcher,
-  }) => {
+  test("the extension says the id is kept in the extension, and opens the policy in a tab of its own", async ({ launcher }) => {
     await launcher.launchPanel({ defaultApiUrl: "https://sync.test", ...NEVER_ASKED });
     const settings = await launcher.appShell.openSettings();
     await settings.openSection("privacy");
@@ -145,9 +130,7 @@ test.describe("signed in", () => {
     await settings.privacySection.switchAnalytics();
 
     await settings.privacySection.verifySwitch(false, "Off across your devices since today");
-    await test
-      .expect.poll(async () => (await backendSimulator.settingsStore.get()).analyticsOptOut)
-      .toBe(true);
+    await test.expect.poll(async () => (await backendSimulator.settingsStore.get()).analyticsOptOut).toBe(true);
     const sent = backendSimulator.analytics.eventNames();
     test.expect(sent.at(-1)).toBe("analyticsConsent.settings.switched");
 

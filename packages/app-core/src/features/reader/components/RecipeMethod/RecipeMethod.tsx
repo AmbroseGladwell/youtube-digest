@@ -64,12 +64,21 @@ export function RecipeMethod({
   }, [reachedStep]);
   const cookable = cooking !== null && recipe.steps.length > 0;
   const placeStep = cooking?.placeStep ?? null;
-  const choose = (step: number) => voice?.onSelect(Math.max(0, actions.findIndex((action) => action.step === step)));
+  const choose = (step: number) =>
+    voice?.onSelect(
+      Math.max(
+        0,
+        actions.findIndex((action) => action.step === step),
+      ),
+    );
   return (
     <section className={styles.root} aria-labelledby={headingId} data-testid={recipeMethodTestIds.root}>
       <div className={styles.head}>
         <h3 className={styles.heading} id={headingId}>
-          Method <span className={styles.count}>· {recipe.stepCount} {recipe.stepCount === 1 ? "step" : "steps"}</span>
+          Method{" "}
+          <span className={styles.count}>
+            · {recipe.stepCount} {recipe.stepCount === 1 ? "step" : "steps"}
+          </span>
         </h3>
         <span className={styles.headActions}>
           {voice !== null && recipe.steps.length > 0 && <RecipeReadAloud voice={voice} label="it" testId={recipeMethodTestIds.readAloud} />}
@@ -98,7 +107,12 @@ export function RecipeMethod({
         </>
       )}
       {cookable && stacked && placeStep === null && (
-        <button type="button" className={`${styles.cook} ${styles.cookWide}`} onClick={cooking.onStart} data-testid={recipeMethodTestIds.cook}>
+        <button
+          type="button"
+          className={`${styles.cook} ${styles.cookWide}`}
+          onClick={cooking.onStart}
+          data-testid={recipeMethodTestIds.cook}
+        >
           <StrokeIcon name="chefHat" size={15} />
           Cook step by step
         </button>
@@ -153,7 +167,9 @@ export function RecipeMethod({
                       className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""} ${reached ? styles.stepReached : ""} ${playing ? styles.stepPlaying : ""}`}
                       aria-current={playing ? "step" : (voice === null && active) || undefined}
                       onClick={voice === null ? undefined : () => choose(number - 1)}
-                      data-testid={reached ? recipeMethodTestIds.reachedStep : active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step}
+                      data-testid={
+                        reached ? recipeMethodTestIds.reachedStep : active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step
+                      }
                     >
                       <i className={styles.number} aria-hidden="true">
                         {number}

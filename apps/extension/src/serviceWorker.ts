@@ -100,9 +100,7 @@ async function broadcast(report: RunReport | null): Promise<void> {
         return;
       }
       const state = await stateFor(videoId, report);
-      await chrome.tabs
-        .sendMessage(tab.id, { type: BridgeMessage.BUTTON_STATE_CHANGED, videoId, state })
-        .catch(() => undefined);
+      await chrome.tabs.sendMessage(tab.id, { type: BridgeMessage.BUTTON_STATE_CHANGED, videoId, state }).catch(() => undefined);
     }),
   );
 }
@@ -150,10 +148,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // inside the user gesture that produced this message and the first await spends it.
     // The request is written after, and the nudge below is what covers a panel that
     // mounts before the write lands (docs/features/injected-button.md).
-    const opening =
-      windowId === undefined
-        ? Promise.resolve()
-        : chrome.sidePanel.open({ windowId }).catch(() => undefined);
+    const opening = windowId === undefined ? Promise.resolve() : chrome.sidePanel.open({ windowId }).catch(() => undefined);
 
     void (async () => {
       await chrome.storage.session.set({ [PENDING_REQUEST]: message.videoUrl });
@@ -201,8 +196,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isYouTubeFetchMessage(message)) {
     void fetchYouTubeInWorker(message.request).then(
       (response) => sendResponse({ ok: true, response }),
-      (error: unknown) =>
-        sendResponse({ ok: false, message: error instanceof Error ? error.message : "the fetch failed" }),
+      (error: unknown) => sendResponse({ ok: false, message: error instanceof Error ? error.message : "the fetch failed" }),
     );
     return true;
   }

@@ -70,10 +70,11 @@ export async function exchangeCode(
          values ($1, $2, $3, $4::timestamptz, $4::timestamptz) returning id`,
       [row.account_id, client.id, row.scope, now.toISOString()],
     );
-    await tx.query(
-      "update oauth_authorizations set code_consumed_at = $2::timestamptz, connection_id = $3 where id = $1",
-      [row.id, now.toISOString(), connection!.id],
-    );
+    await tx.query("update oauth_authorizations set code_consumed_at = $2::timestamptz, connection_id = $3 where id = $1", [
+      row.id,
+      now.toISOString(),
+      connection!.id,
+    ]);
     const tokens = await issueTokens(tx, { connectionId: connection!.id, scope: row.scope, now });
     return { kind: "issued", tokens, connectionId: connection!.id, accountId: AccountId.parse(row.account_id), created: true };
   });

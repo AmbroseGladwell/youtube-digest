@@ -1,6 +1,11 @@
-import { DEFAULT_NARRATION_VOICE, DEFAULT_PROVIDER, DEFAULT_SECTIONS_ENABLED,
+import {
+  DEFAULT_NARRATION_VOICE,
+  DEFAULT_PROVIDER,
+  DEFAULT_SECTIONS_ENABLED,
   EMPTY_ABOUT_YOU,
-  keptLearnedItems, timeSavedSummary } from "@overview/domain";
+  keptLearnedItems,
+  timeSavedSummary,
+} from "@overview/domain";
 import { useAppBuild } from "../../app/AppBuildContext.js";
 import { isSyncRequestError } from "@overview/sync";
 import { useShareUsageState } from "../analyticsConsent/useShareUsage.js";
@@ -9,11 +14,7 @@ import { useAppearance } from "../appearance/useAppearance.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { useSessionQuery } from "../auth/queries/sessionQuery.js";
 import { useConnectionsQuery } from "../connections/queries/connectionsQuery.js";
-import {
-  CHECKING_ROW_VALUE,
-  connectionsRowValue,
-  UNREACHABLE_ROW_VALUE,
-} from "../connections/util/connectionsRowValue.js";
+import { CHECKING_ROW_VALUE, connectionsRowValue, UNREACHABLE_ROW_VALUE } from "../connections/util/connectionsRowValue.js";
 import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../overviews/types/LibraryEntry.js";
 import { useNarrationApi } from "../player/NarrationApiContext.js";
@@ -133,9 +134,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     {
       id: "milestones",
       title: "Milestones",
-      value: overviews.isSuccess
-        ? milestonesRowValue(timeSavedSummary(readableEntries(overviews.data)).minutes)
-        : CHECKING_ROW_VALUE,
+      value: overviews.isSuccess ? milestonesRowValue(timeSavedSummary(readableEntries(overviews.data)).minutes) : CHECKING_ROW_VALUE,
     },
     ...(knownApiUrl !== null
       ? [
@@ -146,9 +145,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
-    ...(shareApi !== null
-      ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }]
-      : []),
+    ...(shareApi !== null ? [{ id: "shared" as const, title: "Shared links", value: sharedLinksRowValue(shares?.length ?? 0) }] : []),
     ...(knownApiUrl !== null ? [{ id: "privacy" as const, title: "Privacy", value: shareUsageRowValue(shareUsage) }] : []),
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];

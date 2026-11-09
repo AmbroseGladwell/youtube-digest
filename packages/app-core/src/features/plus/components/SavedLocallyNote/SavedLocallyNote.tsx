@@ -14,8 +14,8 @@ export function SavedLocallyNote({ onDismiss }: SavedLocallyNoteProps) {
   return (
     <div className={styles.root} role="note" data-testid={savedLocallyNoteTestIds.root}>
       <p className={styles.body}>
-        <strong className={styles.lede}>Saved on this browser only.</strong> A free account syncs
-        your overviews to the web app and your other devices, and reads them aloud.
+        <strong className={styles.lede}>Saved on this browser only.</strong> A free account syncs your overviews to the web app and your
+        other devices, and reads them aloud.
       </p>
       <div className={styles.actions}>
         <PageLink

@@ -7,13 +7,7 @@ import type { UnreadableRecordKind } from "./UnreadableRecord.js";
 
 export type SyncedRecordKind = UnreadableRecordKind;
 
-export const SYNCED_RECORD_KINDS: readonly SyncedRecordKind[] = [
-  "overview",
-  "overviewState",
-  "topic",
-  "settings",
-  "followedPlaylist",
-];
+export const SYNCED_RECORD_KINDS: readonly SyncedRecordKind[] = ["overview", "overviewState", "topic", "settings", "followedPlaylist"];
 
 // Zero for a kind the client was built before, so the server never sends it one
 // (docs/features/sync-api.md, "A kind a client was built before").

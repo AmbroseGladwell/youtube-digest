@@ -95,13 +95,7 @@ export class AudioRenderQueue {
     } catch (error) {
       const delay = RETRY_DELAYS_MS[Math.min(job.attempts - 1, RETRY_DELAYS_MS.length - 1)]!;
       const now = clock();
-      const status = await renders.markAttemptFailed(
-        job.key,
-        String(error),
-        new Date(now.getTime() + delay),
-        MAX_RENDER_ATTEMPTS,
-        now,
-      );
+      const status = await renders.markAttemptFailed(job.key, String(error), new Date(now.getTime() + delay), MAX_RENDER_ATTEMPTS, now);
       const failed = { ...entry, error: redactErrorMessage(String(error)), status };
       if (status === "failed") {
         log.error(apiLogLines.audio.renderGaveUp(failed));

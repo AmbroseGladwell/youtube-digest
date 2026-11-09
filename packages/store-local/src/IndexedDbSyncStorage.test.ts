@@ -30,14 +30,7 @@ import {
   TOPICS_STORE,
   TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
-import {
-  markEnrolled,
-  openEnrolledDatabase,
-  openTestDatabase,
-  putRaw,
-  readOutbox,
-  readRaw,
-} from "./enrolledDatabase.testHelper.js";
+import { markEnrolled, openEnrolledDatabase, openTestDatabase, putRaw, readOutbox, readRaw } from "./enrolledDatabase.testHelper.js";
 
 const NOW = new Date("2026-09-26T12:00:00.000Z");
 const now = () => NOW;
@@ -117,7 +110,10 @@ test("enrolling leaves out what this client cannot read, rather than pushing a r
   await storage.enrol();
 
   const pending = await storage.listPending();
-  assert.deepEqual(pending.map((entry) => entry.kind), ["overviewState"]);
+  assert.deepEqual(
+    pending.map((entry) => entry.kind),
+    ["overviewState"],
+  );
   assert.equal(pending[0]?.updatedAt, NOW.toISOString());
 });
 
@@ -186,7 +182,13 @@ test("applying a page writes each record raw with its stamps, remembers its revi
   await storage.applyChanges(
     [
       change({ kind: "overview", id: overview.id, rev: 2, seq: 7, body: overview }),
-      change({ kind: "overviewState", id: overview.id, rev: 1, seq: 8, body: { overviewId: overview.id, read: true, favourite: false, userTags: [] } }),
+      change({
+        kind: "overviewState",
+        id: overview.id,
+        rev: 1,
+        seq: 8,
+        body: { overviewId: overview.id, read: true, favourite: false, userTags: [] },
+      }),
       change({ kind: "topic", id: "topic-1", rev: 1, seq: 9, body: topicBody }),
       change({ kind: "settings", id: "settings", rev: 5, seq: 10, body: { ...DEFAULT_SETTINGS, readerContext: "Theirs" } }),
     ],
@@ -233,7 +235,15 @@ test("a pulled record with a pending local write to it shows the local write on 
   }
 
   await storage.applyChanges(
-    [change({ kind: "overviewState", id: overview.id, rev: 1, seq: 2, body: { overviewId: overview.id, read: false, favourite: true, userTags: [] } })],
+    [
+      change({
+        kind: "overviewState",
+        id: overview.id,
+        rev: 1,
+        seq: 2,
+        body: { overviewId: overview.id, read: false, favourite: true, userTags: [] },
+      }),
+    ],
     2,
   );
 
@@ -307,7 +317,6 @@ test("journal listeners hear a notification once per journaled write", async () 
 
   assert.equal(heard.length, 1);
 });
-
 
 const transcriptEntry = (videoId: string, fetchedAt: string, overviewId: string) => ({
   kind: "transcript",
@@ -383,7 +392,10 @@ test("enrolling leaves out a transcript this client cannot read", async () => {
 
   await storage.enrol();
 
-  assert.deepEqual((await storage.listPending()).filter((entry) => entry.kind === "transcript"), []);
+  assert.deepEqual(
+    (await storage.listPending()).filter((entry) => entry.kind === "transcript"),
+    [],
+  );
 });
 
 test("saving a note on an enrolled library journals its video's transcript alongside it, and says so once", async () => {
@@ -401,10 +413,10 @@ test("saving a note on an enrolled library journals its video's transcript along
       ["transcript", overview.source.id, "transcript"],
     ],
   );
-  assert.deepEqual(
-    (await readOutbox(db)).find((entry) => entry.kind === "transcript")?.change,
-    { op: "transcript", overviewId: overview.id },
-  );
+  assert.deepEqual((await readOutbox(db)).find((entry) => entry.kind === "transcript")?.change, {
+    op: "transcript",
+    overviewId: overview.id,
+  });
   assert.equal(heard, 1);
 });
 
@@ -414,7 +426,10 @@ test("saving a note whose video has no id journals no transcript", async () => {
 
   await new IndexedDbOverviewStore(db).saveOverview(overview);
 
-  assert.deepEqual((await readOutbox(db)).map((entry) => entry.kind), ["overview"]);
+  assert.deepEqual(
+    (await readOutbox(db)).map((entry) => entry.kind),
+    ["overview"],
+  );
 });
 
 test("saving a transcript journals nothing: only a note sends one to the account", async () => {
@@ -446,7 +461,10 @@ test("acknowledging a sent transcript removes it and remembers no revision", asy
 
   await storage.acknowledge(entry!.key, { sent: true });
 
-  assert.deepEqual((await storage.listPending()).map((pending) => pending.kind), ["overview"]);
+  assert.deepEqual(
+    (await storage.listPending()).map((pending) => pending.kind),
+    ["overview"],
+  );
   assert.equal(await storage.revisionOf("transcript", transcript.videoId), null);
 });
 
@@ -498,13 +516,13 @@ test("another device unfollowing takes this device's check and waiting videos wi
     makeQueuedCapture({ videoId: VideoId.parse("failed"), status: "failed", problem: "noCaptions" }),
   ]);
 
-  await new IndexedDbSyncStorage(db, { now }).applyChanges(
-    [change({ kind: "followedPlaylist", id: playlist.id, deleted: true })],
-    5,
-  );
+  await new IndexedDbSyncStorage(db, { now }).applyChanges([change({ kind: "followedPlaylist", id: playlist.id, deleted: true })], 5);
 
   assert.equal(await followed.getCheck(playlist.id), null);
-  assert.deepEqual((await queue.listQueue()).map((queued) => queued.videoId), ["failed"]);
+  assert.deepEqual(
+    (await queue.listQueue()).map((queued) => queued.videoId),
+    ["failed"],
+  );
 });
 
 test("a cursor pulled before this client knew every kind starts again from the beginning, once", async () => {
@@ -546,10 +564,20 @@ test("folding an overview into the account's copy re-files the copy field by fie
     tags: ["one", "two", "three"],
     captureReason: "Why",
   });
-  assert.deepEqual(await overviews.getOverviewState(theirs.id), { overviewId: theirs.id, read: true, favourite: true, userTags: ["later"] });
+  assert.deepEqual(await overviews.getOverviewState(theirs.id), {
+    overviewId: theirs.id,
+    read: true,
+    favourite: true,
+    userTags: ["later"],
+  });
   assert.deepEqual(await overviews.getOverviewState(mine.id), { overviewId: mine.id, read: false, favourite: false, userTags: [] });
   assert.deepEqual(
-    (await readOutbox(db)).map(({ kind, id, change: pending }) => ({ kind, id, op: pending.op, ...(pending.op === "transcript" ? { overviewId: pending.overviewId } : {}) })),
+    (await readOutbox(db)).map(({ kind, id, change: pending }) => ({
+      kind,
+      id,
+      op: pending.op,
+      ...(pending.op === "transcript" ? { overviewId: pending.overviewId } : {}),
+    })),
     [
       { kind: "transcript", id: "twice", op: "transcript", overviewId: theirs.id },
       { kind: "overview", id: theirs.id, op: "topics" },
@@ -592,5 +620,8 @@ test("a fold whose copy already matches the account's journals nothing but still
   await storage.foldOverview(mine.id, theirs.id);
 
   assert.equal(await overviews.getOverview(mine.id), null);
-  assert.deepEqual((await readOutbox(db)).map((entry) => entry.change.op), ["transcript"]);
+  assert.deepEqual(
+    (await readOutbox(db)).map((entry) => entry.change.op),
+    ["transcript"],
+  );
 });

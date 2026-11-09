@@ -14,10 +14,10 @@ const API_KEYS = ANTHROPIC_KEY;
 
 const longTranscript = (): TranscriptSegment[] =>
   Array.from({ length: 30 }, (_, index) =>
-    makeCaptionRun(
-      [`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."],
-      { startMs: index * 60_000, cueMs: 3500 },
-    ),
+    makeCaptionRun([`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."], {
+      startMs: index * 60_000,
+      cueMs: 3500,
+    }),
   ).flat();
 
 const playingAt = (positionMs: number) => ({ videoId: VIDEO_ID, positionMs, playing: true });
@@ -33,10 +33,7 @@ const seedNote = (backendSimulator: BackendSimulator, videoId: VideoId = VIDEO_I
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId, segments: longTranscript() }));
 };
 
-test("coming back to a transcript opens it where you were, not at the top", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("coming back to a transcript opens it where you were, not at the top", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -94,10 +91,7 @@ test("asking to follow the video again forgets the position, so the next visit f
   await reader.verifyCurrentTranscriptBlockReads(/Paragraph 0 opens here/);
 });
 
-test("scrolling back to the top leaves nothing to come back to", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("scrolling back to the top leaves nothing to come back to", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -111,10 +105,7 @@ test("scrolling back to the top leaves nothing to come back to", async ({
   await reader.verifyTranscriptIsAtTheTop();
 });
 
-test("the position is the video's own: another video's transcript opens at the top", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the position is the video's own: another video's transcript opens at the top", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   seedNote(backendSimulator, OTHER_VIDEO_ID);
   const library = await launcher.launchExpectingLibrary();
@@ -129,10 +120,7 @@ test("the position is the video's own: another video's transcript opens at the t
 });
 
 // A chapter names where to open, and that beats where you had got to.
-test("opening the transcript from a chapter goes to the chapter, not to where you left off", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening the transcript from a chapter goes to the chapter, not to where you left off", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,

@@ -60,8 +60,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
       <div className={styles.intro}>
         <OnboardingHeading>What are you curious about?</OnboardingHeading>
         <p className={styles.lead}>
-          Choose the topics that interest you and we'll sort matching overviews into them. You can add or remove topics
-          any time.
+          Choose the topics that interest you and we'll sort matching overviews into them. You can add or remove topics any time.
         </p>
       </div>
 

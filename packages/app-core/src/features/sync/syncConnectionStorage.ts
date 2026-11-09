@@ -14,10 +14,7 @@ export function readSyncConnection(storage: Storage = globalThis.localStorage): 
   }
 }
 
-export function writeSyncConnection(
-  connection: SyncConnection,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function writeSyncConnection(connection: SyncConnection, storage: Storage = globalThis.localStorage): void {
   storage.setItem(STORAGE_KEY, JSON.stringify(connection));
 }
 

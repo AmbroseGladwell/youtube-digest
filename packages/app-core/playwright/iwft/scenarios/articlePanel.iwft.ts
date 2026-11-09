@@ -48,8 +48,7 @@ const beside = (overrides: Partial<IwftArticlePagesConfig> = {}): IwftArticlePag
 const chrome = {
   answer: (page: Page, allowed: boolean) => page.evaluate((next) => window.__iwftArticlePages__?.answerChrome(next), allowed),
   willRead: (page: Page, read: ArticleRead) => page.evaluate((next) => window.__iwftArticlePages__?.willRead(next), read),
-  willFindPlaces: (page: Page, found: boolean | null) =>
-    page.evaluate((next) => window.__iwftArticlePages__?.willFindPlaces(next), found),
+  willFindPlaces: (page: Page, found: boolean | null) => page.evaluate((next) => window.__iwftArticlePages__?.willFindPlaces(next), found),
   moveTo: (page: Page, next: IwftArticlePagesConfig["page"]) => page.evaluate((to) => window.__iwftArticlePages__?.moveTo(to), next),
   rightClick: (page: Page) => page.evaluate((to) => window.__iwftArticlePages__?.rightClick(to), OPEN_PAGE),
   reloads: (page: Page) => page.evaluate(() => window.__iwftArticlePages__?.reloads),
@@ -72,7 +71,11 @@ const expectDrawnInTheLabelTone = async (page: Page, label: Locator) => {
   }
 };
 
-test("on a page that's neither, the panel says what it works on and shows what's recent, with no button", async ({ page, launcher, backendSimulator }) => {
+test("on a page that's neither, the panel says what it works on and shows what's recent, with no button", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeArticleOverview());
   backendSimulator.overviews.seed(makeOverview());
   await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ page: null }) });
@@ -97,7 +100,11 @@ test("a site's front page is not offered, since it is a list of other stories", 
   await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveCount(0);
 });
 
-test("first time on a site: the panel warns, Chrome asks, and an allowed article becomes a note", async ({ page, launcher, backendSimulator }) => {
+test("first time on a site: the panel warns, Chrome asks, and an allowed article becomes a note", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ granted: false }) });
 
@@ -168,9 +175,17 @@ test("a paywall names the words it let through, and costs nothing", async ({ pag
   await launcher.readerPage.verifyIsShown();
 });
 
-test("a page that turns out not to be an article has no button, and going elsewhere clears it", async ({ page, launcher, backendSimulator }) => {
+test("a page that turns out not to be an article has no button, and going elsewhere clears it", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
-  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ read: { status: "failed", reason: "nothing-readable" } }) });
+  await launcher.launchPanel({
+    ...SIGNED_IN,
+    activeVideoUrl: null,
+    articlePages: beside({ read: { status: "failed", reason: "nothing-readable" } }),
+  });
   await page.getByTestId(capturePageTestIds.createButton).click();
 
   await expect(page.getByTestId(articleFailureNoticeTestIds.title)).toHaveText("This page isn’t an article");
@@ -183,7 +198,11 @@ test("a page that turns out not to be an article has no button, and going elsewh
 
 test("a page that didn't load is reloaded and read again", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
-  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ read: { status: "failed", reason: "not-loaded" } }) });
+  await launcher.launchPanel({
+    ...SIGNED_IN,
+    activeVideoUrl: null,
+    articlePages: beside({ read: { status: "failed", reason: "not-loaded" } }),
+  });
   await page.getByTestId(capturePageTestIds.createButton).click();
   await expect(page.getByTestId(articleFailureNoticeTestIds.title)).toHaveText("The page didn’t finish loading");
 
@@ -194,7 +213,11 @@ test("a page that didn't load is reloaded and read again", async ({ page, launch
   expect(await chrome.reloads(page)).toBe(1);
 });
 
-test("right-click goes straight to reading, and the note explains why Create may still ask", async ({ page, launcher, backendSimulator }) => {
+test("right-click goes straight to reading, and the note explains why Create may still ask", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ granted: false, page: null }) });
 
@@ -207,9 +230,15 @@ test("right-click goes straight to reading, and the note explains why Create may
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);
 });
 
-test("an article held under its canonical address opens the note it has, and nothing is made", async ({ page, launcher, backendSimulator }) => {
+test("an article held under its canonical address opens the note it has, and nothing is made", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
-  backendSimulator.overviews.seed(makeArticleOverview({ source: { ...makeArticleOverview().source, id: await articleSourceId(ARTICLE_URL) } as never }));
+  backendSimulator.overviews.seed(
+    makeArticleOverview({ source: { ...makeArticleOverview().source, id: await articleSourceId(ARTICLE_URL) } as never }),
+  );
   await launcher.launchPanel({
     ...SIGNED_IN,
     activeVideoUrl: null,

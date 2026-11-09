@@ -37,7 +37,9 @@ export class PersonalisationSectionPageObject extends PageObject {
     });
 
   verifyLearnedSource = (item: string, source: string) =>
-    this.step(`verifyLearnedSource ${item}`, () => expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toContainText(source));
+    this.step(`verifyLearnedSource ${item}`, () =>
+      expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toContainText(source),
+    );
 
   verifyNothingLearned = () =>
     this.step("verifyNothingLearned", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedEmpty)).toBeVisible());
@@ -54,7 +56,9 @@ export class PersonalisationSectionPageObject extends PageObject {
     this.step("switchShareWithAssistants", () => this.page.getByTestId(whatWeKnowCardTestIds.shareWithAssistants).click());
 
   verifyCantShareWithAssistants = () =>
-    this.step("verifyCantShareWithAssistants", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.shareWithAssistants)).toHaveCount(0));
+    this.step("verifyCantShareWithAssistants", () =>
+      expect(this.page.getByTestId(whatWeKnowCardTestIds.shareWithAssistants)).toHaveCount(0),
+    );
 
   verifyCantSwitchLearning = () =>
     this.step("verifyCantSwitchLearning", () => expect(this.page.getByTestId(whatWeKnowCardTestIds.keepLearning)).toHaveCount(0));

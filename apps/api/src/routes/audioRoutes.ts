@@ -55,11 +55,7 @@ const describe = (render: AudioRender) => ({
 // The file itself is public, because an <audio> element sends no bearer and the key can
 // only be computed by someone who already holds the words
 // (docs/features/tts-pre-rendered-speech.md, "The API side").
-export function audioRoutes(
-  app: FastifyInstance,
-  audio: AudioServices | null,
-  clock: () => Date,
-): void {
+export function audioRoutes(app: FastifyInstance, audio: AudioServices | null, clock: () => Date): void {
   const services = (): AudioServices => {
     if (audio === null) {
       throw new ApiError("unavailable", "Narration is not set up on this server");
@@ -74,7 +70,9 @@ export function audioRoutes(
     const key = audioKey(lines, voice);
 
     const existing = await renders.get(key);
-    request.log.info(apiLogLines.audio.requested({ key, priority, found: existing?.status ?? null, foundPriority: existing?.priority ?? null }));
+    request.log.info(
+      apiLogLines.audio.requested({ key, priority, found: existing?.status ?? null, foundPriority: existing?.priority ?? null }),
+    );
     if (existing?.status === "ready") {
       return describe(existing);
     }

@@ -5,5 +5,4 @@ export interface PurposesChange {
 
 export const ANALYTICS_PURPOSES: readonly PurposesChange[] = [{ version: 1 }];
 
-export const currentPurposes = (purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES): PurposesChange =>
-  purposes[purposes.length - 1]!;
+export const currentPurposes = (purposes: readonly PurposesChange[] = ANALYTICS_PURPOSES): PurposesChange => purposes[purposes.length - 1]!;

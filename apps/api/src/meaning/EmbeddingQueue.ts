@@ -81,7 +81,12 @@ export class EmbeddingQueue {
     }
     const read = readStoredRecord(stampSchemaVersion(pending.body, pending.schemaVersion), Overview, OVERVIEW_MIGRATIONS);
     if (read.status !== "read") {
-      await embeddings.recordFailure(pending, { attempts: MAX_EMBED_ATTEMPTS, notBefore: null, error: `record ${read.status}`, now: clock() });
+      await embeddings.recordFailure(pending, {
+        attempts: MAX_EMBED_ATTEMPTS,
+        notBefore: null,
+        error: `record ${read.status}`,
+        now: clock(),
+      });
       log.error(apiLogLines.meaning.embedGaveUp({ overviewId: pending.overviewId, reason: read.status }));
       return true;
     }

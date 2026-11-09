@@ -50,8 +50,9 @@ const happyStore = (overrides = {}) => {
 
 const submit = (overrides = {}) => {
   const store = happyStore(overrides);
-  return publishExtension({ api: store.api, zip: ZIP, version: VERSION, log: () => undefined, wait: async () => undefined })
-    .then((result) => ({ ...result, calls: store.calls }));
+  return publishExtension({ api: store.api, zip: ZIP, version: VERSION, log: () => undefined, wait: async () => undefined }).then(
+    (result) => ({ ...result, calls: store.calls }),
+  );
 };
 
 test("the item is addressed by publisher and item id", () => {
@@ -60,10 +61,7 @@ test("the item is addressed by publisher and item id", () => {
 
 test("every credential the store needs is named as missing when it is unset or empty", () => {
   assert.deepEqual(missingCredentials({}).length, 2);
-  assert.deepEqual(
-    missingCredentials({ CHROME_PUBLISHER_ID: "12345", CHROME_SERVICE_ACCOUNT_KEY: "" }),
-    ["CHROME_SERVICE_ACCOUNT_KEY"],
-  );
+  assert.deepEqual(missingCredentials({ CHROME_PUBLISHER_ID: "12345", CHROME_SERVICE_ACCOUNT_KEY: "" }), ["CHROME_SERVICE_ACCOUNT_KEY"]);
 });
 
 const KEY_PAIR = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -176,10 +174,9 @@ test("the read-back proves the store holds this version, not merely some submiss
 });
 
 test("warnings the store returns are reported rather than swallowed", () => {
-  assert.deepEqual(
-    warningLines({ warningInfo: { warnings: [{ reason: "PERMISSION", description: "justify tabs" }] } }),
-    ["PERMISSION: justify tabs"],
-  );
+  assert.deepEqual(warningLines({ warningInfo: { warnings: [{ reason: "PERMISSION", description: "justify tabs" }] } }), [
+    "PERMISSION: justify tabs",
+  ]);
   assert.deepEqual(warningLines({}), []);
 });
 

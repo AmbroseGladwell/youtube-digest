@@ -7,7 +7,10 @@ export type ChunkIds = Readonly<Record<string, string>>;
 
 const bundlePath = (location: string): string | null => {
   try {
-    return new URL(location).pathname.replace(/^\/+/, "").replace(/[^\w./@~+-]/g, "_").slice(0, 200);
+    return new URL(location).pathname
+      .replace(/^\/+/, "")
+      .replace(/[^\w./@~+-]/g, "_")
+      .slice(0, 200);
   } catch {
     return null;
   }
@@ -53,7 +56,10 @@ export function parseStackFrames(
   for (const { fn, file, line, column } of locatedFrames(stack)) {
     const chunkId = byFile.get(file);
     frames.push({
-      function: fn.replace(/^async /, "").replace(/[^\w$.<>[\] -]/g, "").slice(0, 128),
+      function: fn
+        .replace(/^async /, "")
+        .replace(/[^\w$.<>[\] -]/g, "")
+        .slice(0, 128),
       file,
       line,
       column,
