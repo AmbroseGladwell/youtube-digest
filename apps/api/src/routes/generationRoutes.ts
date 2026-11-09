@@ -29,6 +29,7 @@ import {
   type OurKeyCaller,
   type OurKeyGenerator,
 } from "../generation/OurKeyGenerator.js";
+import { ourKeyModel } from "../generation/ourKeyModel.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import type { TrialsRepository } from "../usage/TrialsRepository.js";
@@ -41,7 +42,7 @@ export function generationRoutes(
   { generator, trials, sql, clock }: { generator: OurKeyGenerator | null; trials: TrialsRepository; sql: SqlClient; clock: () => Date },
 ): void {
   app.get("/generations", { config: { public: true } }, async () => {
-    const status: OurKeyGenerationStatus = { available: generator !== null };
+    const status: OurKeyGenerationStatus = generator === null ? { available: false } : { available: true, ...ourKeyModel };
     return status;
   });
 

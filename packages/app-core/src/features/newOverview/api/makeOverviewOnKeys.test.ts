@@ -11,7 +11,7 @@ import {
 } from "@overview/generation";
 import { SyncRequestError, type GenerationApi } from "@overview/sync";
 import { ChosenModelFailedError } from "./ChosenModelFailedError.js";
-import { makeOverviewOnKeys } from "./makeOverviewOnKeys.js";
+import { makeOverviewOnKeys, type GenerationAttempt } from "./makeOverviewOnKeys.js";
 
 const input: GenerationInput = {
   video: {
@@ -268,5 +268,78 @@ describe("makeOverviewOnKeys", () => {
 
       expect(overview.madeOn?.fallback?.cause).toBe("quota-spent");
     }
+  });
+
+  describe("says each key as it tries it, for analytics", () => {
+    const ourModel = { provider: "openai" as const, model: "gpt-6.1-sol" };
+    const own = { provider: "anthropic" as const, model: "claude-sonnet-5-5", client: ownClient("made") };
+    const tried = () => {
+      const attempts: GenerationAttempt[] = [];
+      return { attempts, meta: { ...meta, onAttempt: (attempt: GenerationAttempt) => attempts.push(attempt) } };
+    };
+
+    it("names the reader's provider and model on their own key", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await makeOverviewOnKeys({ order: ["own", "ours"], own, api, ourModel }, input, watched);
+
+      expect(attempts).toEqual([{ key: "own", provider: "anthropic", model: "claude-sonnet-5-5" }]);
+    });
+
+    it("names our provider and model on our key, as the server said them", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await makeOverviewOnKeys({ order: ["ours"], own: null, api, ourModel }, input, watched);
+
+      expect(attempts).toEqual([{ key: "ours", ...ourModel }]);
+    });
+
+    it("names our key through a signed-out device's trial as the trial", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await makeOverviewOnKeys({ order: ["ours"], own: null, api: null, trial: api, ourModel }, input, watched);
+
+      expect(attempts).toEqual([{ key: "trial", ...ourModel }]);
+    });
+
+    it("leaves our provider and model out when the server didn't say them", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await makeOverviewOnKeys({ order: ["ours"], own: null, api }, input, watched);
+
+      expect(attempts).toEqual([{ key: "ours", provider: undefined, model: undefined }]);
+    });
+
+    it("ends on the key that made it after a fallback, not the one tried first", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await makeOverviewOnKeys(
+        { order: ["own", "ours"], own: { ...own, client: ownClient(new ProviderOutOfCreditError(400, "credit")) }, api, ourModel },
+        input,
+        watched,
+      );
+
+      expect(attempts.at(-1)).toEqual({ key: "ours", ...ourModel });
+    });
+
+    it("ends on the key that failed when none could make it", async () => {
+      const { api } = fakeServer();
+      const { attempts, meta: watched } = tried();
+
+      await expect(
+        makeOverviewOnKeys(
+          { order: ["own"], own: { ...own, client: ownClient(new ProviderKeyRefusedError("refused")) }, api, ourModel },
+          input,
+          watched,
+        ),
+      ).rejects.toThrow();
+
+      expect(attempts.at(-1)).toEqual({ key: "own", provider: "anthropic", model: "claude-sonnet-5-5" });
+    });
   });
 });

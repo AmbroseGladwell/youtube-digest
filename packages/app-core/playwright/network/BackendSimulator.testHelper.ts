@@ -69,6 +69,8 @@ const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
 
 export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
+// The provider and model our server says it makes overviews with on our key.
+export const SIMULATED_OUR_MODEL = { provider: "openai", model: "gpt-6.1-sol" } as const;
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
 // Start offers a video, an article and a recipe unless a test offers others, as the house
@@ -885,7 +887,10 @@ export class BackendSimulator {
     await this.#page.route("**/api/generations", (route) =>
       route.request().method() === "GET"
         ? this.#respond(route, EndpointKey.OUR_KEY_STATUS, {
-            onDefault: () => ({ status: 200, body: { available: this.#ourKeyAvailable } }),
+            onDefault: () => ({
+              status: 200,
+              body: this.#ourKeyAvailable ? { available: true, ...SIMULATED_OUR_MODEL } : { available: false },
+            }),
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: not reachable" } } }),
           })
         : this.#respond(route, EndpointKey.OUR_KEY_GENERATE, {

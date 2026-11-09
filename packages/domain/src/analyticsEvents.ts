@@ -104,6 +104,11 @@ const LibrarySort = z.enum(["newest", "oldest", "title"]);
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "pageMenu", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
 // Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
+// Which key made an overview, or was being tried when it failed: the reader's own, ours
+// signed in, or ours through a signed-out device's trial.
+export const GenerationKey = z.enum(["own", "ours", "trial"]);
+export type GenerationKey = z.infer<typeof GenerationKey>;
+
 export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article"]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
@@ -721,7 +726,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -739,13 +744,20 @@ export const analyticsEvents = {
           // said rather than its description listed (OV-122).
           recipeIngredients: z.number().int().nonnegative().optional(),
           recipeIngredientsSaid: z.number().int().nonnegative().optional(),
+          // The key that made it, after any fallback, and its provider and model (OV-255).
+          // Provider and model are absent on our key when the server didn't say them.
+          key: GenerationKey.optional(),
+          provider: Provider.optional(),
+          model: ModelId.optional(),
         },
       ),
-      failed: event("An overview the reader asked for could not be made, and why", {
+      failed: event("An overview the reader asked for could not be made, why, and on which key, provider and model", {
         from: CaptureEntry,
         failure: CaptureFailure,
         durationMs: z.number().int().nonnegative(),
-        // The provider and model the reader chose, on a `model-refused` failure only.
+        // The last key tried and its provider and model, absent when it failed before any key
+        // was tried, such as on the transcript (OV-255).
+        key: GenerationKey.optional(),
         provider: Provider.optional(),
         model: ModelId.optional(),
       }),

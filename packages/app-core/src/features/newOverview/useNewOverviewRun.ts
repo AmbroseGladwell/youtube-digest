@@ -18,7 +18,9 @@ import { ArticleAlreadyHeldError } from "./api/ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./api/ArticleReadError.js";
 import { ChosenModelFailedError } from "./api/ChosenModelFailedError.js";
 import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMutation.js";
+import type { GenerationAttempt } from "./api/makeOverviewOnKeys.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
+import { madeWithProps } from "./util/madeWithProps.js";
 import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
@@ -120,6 +122,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       let transcriptSource: CaptureTranscriptSource | null = null;
       let tagging = { reused: 0, added: 0 };
       let personalised = false;
+      let attempt: GenerationAttempt | null = null;
       // A video capture's duration is the timing's own, so the two agree; an article's is
       // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
       let timing: ClientTimingReport | null = null;
@@ -212,6 +215,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onTimed: (timed) => {
             timing = timed;
           },
+          onAttempt: (tried) => {
+            attempt = tried;
+          },
         },
         {
           onSuccess: (overview) => {
@@ -234,6 +240,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
+                ...madeWithProps(attempt),
               });
               setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));
             }
@@ -255,8 +262,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 from,
                 failure: captureFailureOf(error, { transcriptResolved: transcriptSource !== null }),
                 durationMs: durationMs(),
-                provider: error instanceof ChosenModelFailedError ? error.provider : undefined,
-                model: error instanceof ChosenModelFailedError ? error.model : undefined,
+                ...madeWithProps(attempt),
               });
               setRun((current) =>
                 current === null

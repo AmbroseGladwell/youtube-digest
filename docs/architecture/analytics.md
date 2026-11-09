@@ -142,6 +142,24 @@ features:
 A component used on both pages calls `useOverviewPageAnalytics()`, and one only on the
 reader's page calls `useReaderAnalytics()`. Neither knows which page it is on.
 
+### Which key and model made an overview
+
+`capture.newOverview.finished` and `failed` carry `key` (`own`, `ours`, `trial`), `provider`
+and `model` (OV-255). `makeOverviewOnKeys` reports each key as it tries it (`onAttempt`), and
+the run keeps the last: after a fallback, that is the key that made the overview, and on a
+failure the one that failed. A failure before any key was tried, such as no transcript,
+carries none of the three, so a model's failure rate counts only what reached it. `trial` is
+our key through a signed-out device's trial.
+
+The reader's own provider and model are known on the device. Ours are not, so
+`GET /api/generations` says them beside `available`, from `ourKeyModel`; a server that
+doesn't say them leaves them out of the event and keeps `key`. A model that isn't shaped
+like a `ModelId` is left out rather than sent (`madeWithProps`).
+
+The **Generation** dashboard in PostHog reads them: overviews each week by key, provider and
+model, failure rate by model with why, and readers per model. Events from before OV-255 show
+as "not said".
+
 ### Typing
 
 What someone types is never sent. A field that is worth counting says so once they stop,

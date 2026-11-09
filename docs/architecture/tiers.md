@@ -378,6 +378,8 @@ transcript it already resolved, and makes the overview through production's own
 `generateOverview` on GPT-6.1 Sol (`OurKeyGenerator`). It reserves the day's slot under
 `OUR_KEY_DAILY_GENERATIONS`, then the account's month's slot on our key, and gives both back
 on any failure. The device saves the overview it is handed, as it does one made on its own key.
+`GET /api/generations` says whether it can, and with which provider and model, so the app's
+analytics can name our model (OV-255, `docs/architecture/analytics.md`).
 
 - **Past the month's quota:** `429 too_many_requests` with `details.quota: "ours"`,
   `details.resetsOn` and a `Retry-After` at the month's turn.

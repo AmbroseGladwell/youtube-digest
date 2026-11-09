@@ -1,4 +1,13 @@
-import { FallbackCause, type KeySource, type MadeOn, type Overview, type OverviewId, type Provider } from "@overview/domain";
+import {
+  FallbackCause,
+  type GenerationKey,
+  type KeySource,
+  type MadeOn,
+  type ModelId,
+  type Overview,
+  type OverviewId,
+  type Provider,
+} from "@overview/domain";
 import { fallbackReasonOf, generateOverviewOf, type GenerationClient, type OverviewInput } from "@overview/generation";
 import { isSyncRequestError, type GenerationApi } from "@overview/sync";
 import { ChosenModelFailedError, failedOnTheModel } from "./ChosenModelFailedError.js";
@@ -13,11 +22,23 @@ export interface OverviewKeys {
   // Signed out, our key through the device's trial, which the server counts only on our key
   // (docs/architecture/tiers.md, "Counting").
   trial?: Pick<GenerationApi, "generate"> | null;
+  // Our key's provider and model, as our server says them, for analytics. Null when it
+  // didn't say.
+  ourModel?: { provider: Provider; model: ModelId } | null;
+}
+
+// A key about to be tried, and the provider and model it will make the overview with. The
+// last one before a run settles made it, or failed it (OV-255).
+export interface GenerationAttempt {
+  key: GenerationKey;
+  provider: Provider | undefined;
+  model: string | undefined;
 }
 
 export interface OverviewMeta {
   id: OverviewId;
   savedAt: string;
+  onAttempt?: ((attempt: GenerationAttempt) => void) | undefined;
 }
 
 const SPENT_QUOTAS = new Set(["ours", "own", "trial", "trial-address"]);
@@ -46,12 +67,17 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
 // counts on its own key and gives its slot back when it fails, so a fallback counts once,
 // on the key that made it.
 export async function makeOverviewOnKeys(
-  { order, own, api, trial = null }: OverviewKeys,
+  { order, own, api, trial = null, ourModel = null }: OverviewKeys,
   input: OverviewInput,
   meta: OverviewMeta,
 ): Promise<Overview> {
   let passedOver: MadeOn["fallback"] = null;
   for (const [index, key] of order.entries()) {
+    meta.onAttempt?.(
+      key === "own"
+        ? { key, provider: own!.provider, model: own!.model }
+        : { key: api === null ? "trial" : "ours", provider: ourModel?.provider, model: ourModel?.model },
+    );
     try {
       const overview =
         key === "own" ? await onOwnKey(own!, api, input, meta) : await (api ?? trial)!.generate({ overviewId: meta.id, input });
