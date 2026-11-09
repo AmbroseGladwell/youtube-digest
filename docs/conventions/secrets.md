@@ -111,7 +111,8 @@ provider it uses, so each provider's bill splits by environment on its own group
 | Anthropic, Gemini | only the harness calls them, so they live in `overview-evals` alone, as a key used for nothing else; Anthropic's cost report groups by key, so no separate workspace is needed |
 | Decodo (`TRANSCRIPT_PROXY_URL`) | prod only. The local app never uses the proxy, the check of it runs from prod (`task deploy:proxy:check`), and the harness reads transcripts it fetched once without it (`docs/architecture/model-comparison.md`) |
 | Brevo | a separate key each for dev and prod |
-| YouTube Data API, R2 | separate keys each for dev and prod |
+| YouTube Data API | free, but its daily quota is counted per Google Cloud project, not per key, so dev's key is in a Cloud project of its own and local testing cannot use up prod's playlist lookups |
+| R2 | separate keys each for dev and prod |
 | Neon (`DATABASE_URL`) | prod only; dev runs on local Postgres |
 
 **A key pasted into the app as a reader's own (BYO) key never goes in Bitwarden.** Its
