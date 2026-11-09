@@ -105,14 +105,21 @@ consent record and, after a yes, the anonymous id, both in `localStorage`.
 ## What an event may carry
 
 A property is a choice (`z.enum`), a flag, a number, or one of the ids in `ANALYTICS_IDS`:
-an overview's (`OverviewId`) or a topic's (`TopicId`), and nothing else. The catalogue's
+an overview's (`OverviewId`), a topic's (`TopicId`) or a provider's model (`ModelId`), and
+nothing else. The catalogue's
 type allows only those, `analyticsEvents.test.ts` checks every entry at runtime in case a
 cast gets past the type, and the server parses each event's properties strictly against
 its declaration, so an id has to be a uuid to pass. So an event can't carry a URL, a video
 id, an overview's text, an element's label, a file name or anything the reader typed,
 because there is no field shaped to hold one.
 
-The two ids are allowed because they are ours: random uuids minted on the device, which say
+A model id is allowed because it is the provider's name for a model, which says nothing
+about the reader, and a reader on their own key can choose any of the dozens their
+provider lists, so a choice from a fixed list would hide the ones that fail (OV-247). Its
+shape is a provider's id, letters, digits and `.-_:/` with no spaces, up to 64 characters,
+so it can't carry a sentence or a link. It is the longest a property may be.
+
+The two ids of ours are allowed because they are ours: random uuids minted on the device, which say
 nothing about the video or the reader on their own, and are what lets every event about one
 overview be read together, or a filter be told apart by the topic it chose. A video id is
 not: it names the video. A choice the app defines, a novelty or a read status, is sent as

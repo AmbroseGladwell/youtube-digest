@@ -28,8 +28,8 @@ export type AnalyticsContext = z.infer<typeof AnalyticsContext>;
 export const SentAnalyticsEvent = z
   .object({
     name: z.string().max(64),
-    // 36 is a uuid, the longest a property may be (analyticsEvents.ts, ANALYTICS_IDS).
-    props: z.record(z.string().max(32), z.union([z.string().max(36), z.number(), z.boolean()])),
+    // 64 is a model id, the longest a property may be (analyticsEvents.ts, ANALYTICS_IDS).
+    props: z.record(z.string().max(32), z.union([z.string().max(64), z.number(), z.boolean()])),
     at: z.iso.datetime(),
   })
   .strict();

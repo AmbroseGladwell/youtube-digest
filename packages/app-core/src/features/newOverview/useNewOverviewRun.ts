@@ -258,6 +258,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 failure: captureFailureOf(error, { transcriptResolved: transcriptSource !== null }),
                 durationMs: durationMs(),
                 provider: error instanceof ChosenModelFailedError ? error.provider : undefined,
+                model: error instanceof ChosenModelFailedError ? error.model : undefined,
               });
               setRun((current) =>
                 current === null

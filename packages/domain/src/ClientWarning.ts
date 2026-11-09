@@ -2,6 +2,7 @@ import { z } from "zod";
 import { API_ERROR_CODES } from "./ApiErrorCode.js";
 import { RequestId } from "./RequestId.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
+import { ModelId } from "./ModelId.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { Provider } from "./Provider.js";
 
@@ -26,8 +27,6 @@ const TranscriptRungFailure = z.enum([
 // us to slow down, and at the month's overview limit (docs/features/capture-queue.md,
 // "Waiting at a limit").
 const QueueHoldReason = z.enum(["serverCap", "serverBusy", "monthSpent"]);
-// A provider's model id as its own listing names it, and nothing shaped like prose.
-const ModelId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$/);
 
 // What the app did when something it depends on let it down and it carried on anyway: a
 // line in the server's logs at warn, never an error-tracking issue and never an event

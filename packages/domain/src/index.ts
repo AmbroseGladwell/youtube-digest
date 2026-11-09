@@ -15,6 +15,7 @@ export * from "./usOvenTemperatures.js";
 export * from "./Provider.js";
 export * from "./KnownModel.js";
 export * from "./ModelByProvider.js";
+export * from "./ModelId.js";
 export * from "./Plan.js";
 export * from "./KeySource.js";
 export * from "./MadeOn.js";
