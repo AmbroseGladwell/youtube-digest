@@ -13,7 +13,7 @@ import { runPersonalPass } from "../runPersonalPass.js";
 import { isPassed } from "../summariseRuns.js";
 import { spendWithinBudget, totalSpent, type Spend } from "../spendWithinBudget.js";
 
-const USAGE = `usage: task secrets:run -- npm run cost-model --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run cost-model --workspace packages/model-comparison -- \\
   --run <name> --stage-one-run <OV-92 run> [--budget <dollars>] [--limit <videos>] [--model provider:model]`;
 
 const LANES = 4;

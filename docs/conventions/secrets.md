@@ -11,14 +11,15 @@ parts were left out and why.
 
 | The decision | Where it lives |
 |---|---|
-| The store: Bitwarden Secrets Manager, one project per environment | `overview-dev` now; `overview-prod` when there is a deploy |
+| The store: Bitwarden Secrets Manager, one project per environment | `overview-dev` (the local app), `overview-prod` (the deploy), `overview-evals` (the harness) |
 | The committed template, `${NAME}` per secret | `.env.tpl` |
 | One command renders it to the gitignored `.env` | `task secrets`, `scripts/secrets.sh`, `scripts/renderEnv.mjs` |
 | Per-machine values that are not secrets | `.env.local`, read after `.env` by the API's scripts |
-| One-off commands get values injected and nothing written | `task secrets:run -- <cmd>`, `scripts/sanityCheck.env` |
+| One-off commands get values injected and nothing written | `task secrets:run -- <cmd>` from dev, `task secrets:evals -- <cmd>` from evals, listed in `scripts/evals.env` |
 | The one long-lived secret on the machine, in the login keychain | `task secrets:login`, `.envrc` |
 | A commit that stages a secret value is refused | `.githooks/pre-commit`, gitleaks with its default rules plus a Brevo key rule in `.gitleaks.toml`, which also allows the extension's public key through |
 | A tool call that would print a secret into Claude's context is refused | `.claude/settings.json`, `.claude/hooks/guardSecrets.mjs` |
+| No paid key is shared between projects, checked without printing one | `task secrets:compare`, `scripts/compareSecretProjects.mjs` |
 | The tools, from the dev shell | `flake.nix`: `bws`, `gitleaks`, `jq` |
 
 ## Why Bitwarden Secrets Manager
@@ -45,10 +46,13 @@ goes: the extension's origin for CORS, derived from the path the unpacked build 
 loaded from, so different in every worktree until the store's key fixes it
 (`docs/architecture/deploy.md`).
 
-**For one command.** `task secrets:run -- npx tsx scripts/endToEndSanityCheck.ts` runs
-the command with the project's secrets in its environment and writes nothing.
-`scripts/sanityCheck.env` lists which keys those scripts read, for the reader; `bws run`
-injects the whole project regardless.
+**For one command.** `task secrets:run -- <cmd>` runs the command with `overview-dev`'s
+secrets in its environment and writes nothing. `task secrets:evals -- <cmd>` does the
+same from `overview-evals`, and is how every model-comparison command and
+`scripts/endToEndSanityCheck.ts` run: anything that calls a model provider outside the
+app itself is an eval, and bills as one. `scripts/evals.env` lists which keys those read,
+for the reader; `bws run` injects the whole project regardless. A check of production's
+own configuration runs from `overview-prod`, as `task deploy:proxy:check` does.
 
 **The token.** `bws` needs a machine access token, made in Bitwarden's web UI and scoped
 to the projects it may read. `task secrets:login` stores it in the macOS login keychain
@@ -92,26 +96,50 @@ only blocks making another, which is the right default between rotations.
 
 ## Projects are the environment boundary
 
-One Bitwarden project per environment, `overview-dev` and later `overview-prod`, with
-separate credentials in each: a separate Brevo key, a separate database. A token scoped
-to `overview-dev` cannot read production, which is the whole of the value when the same
-laptop can reach both, and separate credentials cost nothing now and are painful to
-introduce later. Keys are named exactly as the environment variable they become,
-`BREVO_API_KEY`, because `bws run` injects by key and a second naming layer would be a
-second thing to get wrong.
+One Bitwarden project per environment: `overview-dev` for the app run locally,
+`overview-prod` for the deploy, and `overview-evals` for the model-comparison harness
+(OV-256). A token scoped to `overview-dev` cannot read production, which is the whole of
+the value when the same laptop can reach both, and separate credentials cost nothing now
+and are painful to introduce later.
+
+**No paid key is shared between two projects.** Each holds its own key for every
+provider it uses, so each provider's bill splits by environment on its own grouping:
+
+| Provider | How the bill splits |
+|---|---|
+| OpenAI | one Project per environment (`prod`, `dev`, `evals`), each with its own key; the Costs API groups by project |
+| Anthropic, Gemini | only the harness calls them, so they live in `overview-evals` alone, as a key used for nothing else; Anthropic's cost report groups by key, so no separate workspace is needed |
+| Decodo (`TRANSCRIPT_PROXY_URL`) | prod only. The local app never uses the proxy, the check of it runs from prod (`task deploy:proxy:check`), and the harness reads transcripts it fetched once without it (`docs/architecture/model-comparison.md`) |
+| Brevo | a separate key each for dev and prod |
+| YouTube Data API | free, but its daily quota is counted per Google Cloud project, not per key, so dev's key is in a Cloud project of its own and local testing cannot use up prod's playlist lookups |
+| R2 | separate keys each for dev and prod |
+| Neon (`DATABASE_URL`) | prod only; dev runs on local Postgres |
+
+**A key pasted into the app as a reader's own (BYO) key never goes in Bitwarden.** Its
+spend is that reader's, the owner included, and belongs to none of the three; a key
+used both ways makes its bill unsplittable. Make one for each use.
+
+`task secrets:compare` checks it without printing anything: it hashes each value in
+memory and prints a letter per project, the same letter where two hold the same value,
+and fails if any key is shared. Keys are named exactly as the environment
+variable they become, `BREVO_API_KEY`, because `bws run` injects by key and a second
+naming layer would be a second thing to get wrong, and it is also why the harness reads
+the same names from `overview-evals` with no change to its code.
 
 ## Adding a secret
 
 1. Create it in the right project in Bitwarden, keyed as the variable name.
-2. Add `NAME=${NAME}` to `.env.tpl`, or the name to `scripts/sanityCheck.env` if only a
-   one-off command reads it.
+2. Add `NAME=${NAME}` to `.env.tpl`, or the name to `scripts/evals.env` if only the
+   harness reads it.
 3. `task secrets`. Commit the template. Nothing else moves.
 
 To migrate from a hand-written `.env`, `task secrets:seed` creates the project if it is
 missing and copies each templated key's value out of the existing file into it, once,
 skipping keys that are already there. The value passes through the CLI's arguments for
 the length of one call, which is why it is a one-time migration and not the way to add
-things afterwards.
+things afterwards. It seeds `overview-dev` only, and refuses any other project, because
+`.env` holds dev's values and copying them elsewhere is exactly the sharing the projects
+exist to prevent.
 
 ## The guards, and what each honestly covers
 
@@ -171,7 +199,9 @@ tools nobody has named yet.
   will name the keys the project is missing and the hand-written values will still be
   in `.env` to seed from.
 - **The keychain token is per user, the project is per token.** A token scoped to
-  `overview-dev` will render locally and refuse a production project by design.
+  `overview-dev` will render locally and refuse a production project by design. The
+  harness needs the token to read `overview-evals` as well, and `task secrets:evals`
+  says so by name when it cannot.
 - **The guard splits on newlines and pipes, not on shell grammar.** A heredoc body that
   contains a line like `cat .env` is refused as if it were a command. Write such prose
   with the Write tool rather than through a shell.

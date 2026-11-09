@@ -15,7 +15,7 @@ import { asBefore, BEFORE, READER_SETS, type ReaderSet, type SpreadReader } from
 import { isTranscriptSetName } from "../transcriptSet.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 
-const USAGE = `usage: task secrets:run -- npm run readers --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run readers --workspace packages/model-comparison -- \\
   --run <name> [--readers broad|specific|all] [--judge [--judge-model provider:model]] [--budget <dollars>] [--limit <videos>] [--model provider:model]
   [--videos main|parenting|main,parenting]
   [--against <earlier run>]   judge that run's readers beside this run's, in the same calls`;

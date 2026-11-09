@@ -125,7 +125,7 @@ the personal parts differ. Wins are the personal pass's:
 
 ```sh
 # needs OV-92's transcripts and its stage-one run in packages/model-comparison/.local
-task secrets:run -- npm run cost-model --workspace packages/model-comparison -- \
+task secrets:evals -- npm run cost-model --workspace packages/model-comparison -- \
   --run <name> --stage-one-run 2026-10-12 --budget 2 [--limit <videos>] [--model provider:model]
 ```
 

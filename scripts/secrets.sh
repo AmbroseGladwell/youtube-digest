@@ -39,13 +39,17 @@ case "${1:-}" in
       | fly secrets import ${FLY_APP:+--app "$FLY_APP"}
     ;;
   seed)
+    if [ "$PROJECT" != "overview-dev" ]; then
+      echo "seed copies values out of .env, which holds overview-dev's; $PROJECT gets its own keys, added in Bitwarden" >&2
+      exit 2
+    fi
     if ! bws project list | jq -e --arg name "$PROJECT" '.[] | select(.name == $name)' > /dev/null; then
       bws project create "$PROJECT" > /dev/null
       echo "Created project $PROJECT"
     fi
     id="$(projectId)"
     existing="$(bws secret list "$id" | jq -r '.[].key')"
-    keys="$(grep -v '^#' .env.tpl | grep -o '\${[A-Z0-9_]*}' | tr -d '${}'; grep -v '^#' scripts/sanityCheck.env | grep -v '^$')"
+    keys="$(grep -v '^#' .env.tpl | grep -o '\${[A-Z0-9_]*}' | tr -d '${}')"
     for key in $keys; do
       if grep -qx "$key" <<< "$existing"; then
         echo "$key: already in $PROJECT"

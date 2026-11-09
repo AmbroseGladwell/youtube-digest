@@ -192,19 +192,19 @@ call nothing.
 npm run fetch-transcripts --workspace packages/model-comparison
 
 # a small subset first; --limit takes the shortest videos
-task secrets:run -- npm run compare --workspace packages/model-comparison -- \
+task secrets:evals -- npm run compare --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 1 --limit 3
 
 # then the full set under the same run name: settled runs are not paid for twice
-task secrets:run -- npm run compare --workspace packages/model-comparison -- \
+task secrets:evals -- npm run compare --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 10
 
 npm run report --workspace packages/model-comparison -- --run 2026-10-12
 
 # the judge: a few pairs first, then the rest under the same run name
-task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+task secrets:evals -- npm run judge --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 1 --limit 4
-task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+task secrets:evals -- npm run judge --workspace packages/model-comparison -- \
   --run 2026-10-12 --budget 6
 
 # the blind check: the ten pairs that decide it, then open http://127.0.0.1:4792/
@@ -219,7 +219,7 @@ npm run blind --workspace packages/model-comparison -- --run 2026-10-12 \
 never from the provider that wrote the notes:
 
 ```sh
-task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+task secrets:evals -- npm run judge --workspace packages/model-comparison -- \
   --run ov-214-after --against ov-214-before --budget 4
 ```
 
@@ -227,7 +227,7 @@ task secrets:run -- npm run judge --workspace packages/model-comparison -- \
 generates nothing, and reads videos from the main set and the coverage set:
 
 ```sh
-task secrets:run -- npm run judge-key-points --workspace packages/model-comparison -- \
+task secrets:evals -- npm run judge-key-points --workspace packages/model-comparison -- \
   --run ov-214-after --against ov-214-before --budget 3
 ```
 
@@ -242,7 +242,9 @@ task secrets:run -- npm run judge-key-points --workspace packages/model-comparis
 - **Cost:** about $0.08 a pair.
 
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
-`task secrets:run` (`docs/conventions/secrets.md`), and listed in `scripts/sanityCheck.env`.
+`task secrets:evals` from the `overview-evals` Bitwarden project (`docs/conventions/secrets.md`),
+and listed in `scripts/evals.env`. They are the harness's own keys, never dev's or prod's, so
+eval spend shows up in each provider's bill under its own project or workspace.
 A model whose provider has no key is skipped with a line saying so.
 
 **The budget** is measured spend under the run's name, including earlier invocations of
@@ -288,9 +290,9 @@ gets it wrong. So the report ends with every video's actions for each reader, si
 for reading by eye.
 
 ```sh
-task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+task secrets:evals -- npm run readers --workspace packages/model-comparison -- \
   --run readers-2026-11-08 --budget 1 --limit 3
-task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+task secrets:evals -- npm run readers --workspace packages/model-comparison -- \
   --run readers-2026-11-08 --budget 3
 ```
 
@@ -384,7 +386,7 @@ given. Without that line, the first trial marked down any action whose video did
 the reader ("this nurse has no interest in apps"), which a real reader never meets.
 
 ```sh
-task secrets:run -- npm run readers --workspace packages/model-comparison -- \
+task secrets:evals -- npm run readers --workspace packages/model-comparison -- \
   --run readers-2026-11-08 --readers all --judge --judge-model anthropic:claude-opus-5-5 --budget 8
 ```
 
@@ -593,7 +595,7 @@ into `.local/coverage/`, outside the main set's folder, so the model comparison'
 changes.
 
 ```sh
-task secrets:run -- npm run coverage --workspace packages/model-comparison -- \
+task secrets:evals -- npm run coverage --workspace packages/model-comparison -- \
   --run coverage-2026-11-08 --budget 1.5
 # the same report again, free, from what the run already holds
 npm run coverage --workspace packages/model-comparison -- --run coverage-2026-11-08 --measure-only

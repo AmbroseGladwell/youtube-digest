@@ -9,7 +9,7 @@ import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
 import { isTranscriptSetName } from "../transcriptSet.js";
 
-const USAGE = `usage: task secrets:run -- npm run compare --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run compare --workspace packages/model-comparison -- \\
   --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...] [--reader sample] [--refuse-enforced-schema]`;
 
 const { values } = parseArgs({
