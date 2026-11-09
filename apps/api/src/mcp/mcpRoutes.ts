@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import type { SqlClient } from "../db/SqlClient.js";
+import type { MeaningSearch } from "../meaning/MeaningSearch.js";
 import { connectionWrites } from "../oauth/connectionScope.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
@@ -10,6 +11,7 @@ export interface McpRoutesOptions {
   sql: SqlClient;
   transcripts: TranscriptsRepository;
   records: RecordsRepository;
+  meaning: MeaningSearch | null;
   clock: () => Date;
   appOrigin: string;
 }
@@ -24,7 +26,7 @@ const onlyPost = (reply: FastifyReply) =>
 
 // Runs after connectionAccessPlugin, so every request here carries a connection
 // (docs/features/mcp-connector.md, "The endpoint").
-export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, clock, appOrigin }: McpRoutesOptions): void {
+export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, meaning, clock, appOrigin }: McpRoutesOptions): void {
   app.post("/mcp", async (request, reply) => {
     reply.header("cache-control", "no-store");
     const origin = request.headers.origin;
@@ -40,6 +42,7 @@ export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, clo
       sql,
       transcripts,
       records,
+      meaning,
       clock,
       accountId: access.accountId,
       connectionId: access.connectionId,

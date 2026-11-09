@@ -176,3 +176,4 @@ export * from "./tagUsage.js";
 export * from "./resolveTags.js";
 export * from "./suggestStarterTopics.js";
 export * from "./TopicSuggestion.js";
+export * from "./MeaningSearchResponse.js";

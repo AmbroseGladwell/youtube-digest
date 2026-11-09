@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { PGlite } from "@electric-sql/pglite";
+import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 import { CURRENT_SCHEMA_VERSIONS, OverviewId, TopicId, VideoId } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
@@ -19,7 +19,7 @@ const TOPIC_A = TopicId.parse(randomUUID());
 const TOPIC_B = TopicId.parse(randomUUID());
 
 async function databaseBeforeTheIndex(): Promise<SqlClient> {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(18) });
   for (const id of [ACCOUNT, OTHER_ACCOUNT]) {
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);

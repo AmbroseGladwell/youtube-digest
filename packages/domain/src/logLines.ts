@@ -123,6 +123,14 @@ export const apiLogLines = coded("api", {
     accountDeletionStepFailed: line("error", "account deletion step failed", "A step after the commit failed; `step` names it, and `task api:finish-deletions` retries it (docs/features/account-deletion.md)."),
     accountDeletionFinished: line("info", "account deletion finished", "A retry finished the steps a deletion had left unfinished."),
   },
+  meaning: {
+    embedded: line("info", "overview embedded", "An overview's claims were embedded, with how many were new, how many were reused and the tokens the new ones cost."),
+    embedFailed: line("warn", "overview embedding failed", "Embedding an overview failed with attempts left; it will be tried again."),
+    embedGaveUp: line("error", "overview embedding gave up", "Embedding failed past MAX_EMBED_ATTEMPTS, or the record could not be read; nothing retries until the overview changes."),
+    removed: line("info", "embeddings removed", "Embeddings of overviews that were deleted were dropped."),
+    workerStopped: line("error", "embedding worker stopped", "The embedding worker threw and stopped taking overviews."),
+    searched: line("info", "meaning searched", "A search looked for overviews by meaning: where from, how many matched by word, how many more only by meaning, and whether meaning was available. Never the query."),
+  },
   mcp: {
     connectionRequestDecided: line("info", "connection request decided", "A reader approved or declined an assistant's request to connect."),
     connectionMade: line("info", "connection made", "An assistant exchanged its grant for a token."),

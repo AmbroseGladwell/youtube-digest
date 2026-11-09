@@ -15,6 +15,7 @@ import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
 import { createTranscriptServiceSetup } from "./transcripts/createTranscriptServiceSetup.js";
 import { ourKeyModel } from "./generation/ourKeyModel.js";
+import { createOpenAiEmbedder } from "./meaning/createOpenAiEmbedder.js";
 import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
 import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylistReader.js";
 
@@ -76,6 +77,10 @@ const app = await buildApp({
   audio,
   transcriptService,
   ourKey: config.ourKey === null ? null : { ...config.ourKey, http: globalThis.fetch.bind(globalThis) },
+  meaning:
+    config.ourKey === null
+      ? null
+      : { embedder: createOpenAiEmbedder({ apiKey: config.ourKey.apiKey, http: globalThis.fetch.bind(globalThis) }), runWorkers: true },
   playlistReader:
     config.youTubeApiKey === null
       ? null

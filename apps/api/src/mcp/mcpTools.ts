@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   NOVELTY_LABEL,
+  apiLogLines,
   OverviewId,
   StoredTranscript,
   overviewMarkdown,
@@ -15,10 +16,10 @@ import {
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
 import { markOverviews } from "./markOverviews.js";
-import { mcpTool, toolError, type McpTool, type McpToolOutcome } from "./McpTool.js";
+import { mcpTool, toolError, type McpTool, type McpToolContext, type McpToolOutcome } from "./McpTool.js";
 import { pageOf, type Page } from "./pageOf.js";
 import { readLibrary } from "./readLibrary.js";
-import { searchLibrary, type ResolvedFilters } from "./searchLibrary.js";
+import { searchWithMeaning, type LibrarySearch, type ResolvedFilters } from "./searchLibrary.js";
 
 // Why these sizes: docs/features/mcp-connector.md, "The context budget".
 export const LISTING_PAGE_SIZE = 50;
@@ -46,9 +47,10 @@ function resolveFilters(library: Library, { topic, ...filters }: LibraryFilters)
 
 const isOutcome = (value: ResolvedFilters | McpToolOutcome): value is McpToolOutcome => "text" in value;
 
-function listingLine(library: Library, entry: LibraryEntry): string {
+function listingLine(library: Library, entry: LibraryEntry, byMeaning: boolean): string {
   const { overview } = entry;
   const facts = [
+    byMeaning ? "matched by meaning" : null,
     sourceName(overview.source),
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     `topics: ${topicNames(library.topics, entry).join(", ") || "none"}`,
@@ -58,9 +60,37 @@ function listingLine(library: Library, entry: LibraryEntry): string {
   return `- **${overview.source.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
 }
 
-function overviewText(library: Library, entry: LibraryEntry): string {
+function overviewText(library: Library, entry: LibraryEntry, byMeaning: boolean): string {
   const topics = topicNames(library.topics, entry);
-  return `Overview id: ${entry.overview.id}\nTopics: ${topics.join(", ") || "none"}\n\n${overviewMarkdown(entry.overview)}`;
+  const matched = byMeaning ? "\nMatched by meaning, not by word" : "";
+  return `Overview id: ${entry.overview.id}\nTopics: ${topics.join(", ") || "none"}${matched}\n\n${overviewMarkdown(entry.overview)}`;
+}
+
+interface McpSearch extends LibrarySearch {
+  notes: string[];
+}
+
+// Degrade visibly: when meaning cannot be matched, the assistant is told it is reading word
+// matches only, rather than handed a shorter list that looks complete.
+async function searchEntries(entries: LibraryEntry[], filters: ResolvedFilters, { meaning, accountId, log }: McpToolContext): Promise<McpSearch> {
+  const query = filters.query?.trim() ?? "";
+  if (query === "") {
+    return { ...searchWithMeaning(entries, filters, []), notes: [] };
+  }
+  const result = meaning === null ? { available: false as const } : await meaning.search(accountId, query);
+  const found = searchWithMeaning(entries, filters, result.available ? result.matches.map((match) => match.overviewId) : []);
+  log.info(
+    apiLogLines.meaning.searched({
+      source: "mcp",
+      wordMatches: found.entries.length - found.byMeaning.size,
+      meaningOnly: found.byMeaning.size,
+      available: result.available,
+    }),
+  );
+  return {
+    ...found,
+    notes: result.available ? [] : ["Matching by meaning is unavailable right now, so these match by word only."],
+  };
 }
 
 function pageFooter(page: Page<unknown>, noun: string): string[] {
@@ -85,21 +115,26 @@ const searchOverviews = mcpTool({
   name: "search_overviews",
   title: "Search overviews",
   description:
-    "Search the reader's saved video overviews, newest saved first. Returns a light listing (title, channel, verdict, topics, saved date, id and the one-line premise) to choose from; read the full notes with get_overview or get_overviews. With no filters it lists the whole library.",
+    "Search the reader's saved video overviews, newest saved first. A query finds the overviews that contain every word first, then up to 5 more that are close in meaning without sharing the words, marked as matched by meaning. Returns a light listing (title, channel, verdict, topics, saved date, id and the one-line premise) to choose from; read the full notes with get_overview or get_overviews. With no filters it lists the whole library.",
   input: LibraryFilters.extend({ cursor: Cursor }),
-  run: async ({ cursor, ...filters }, { sql, accountId }) => {
-    const library = await readLibrary(sql, accountId);
+  run: async ({ cursor, ...filters }, context) => {
+    const library = await readLibrary(context.sql, context.accountId);
     const resolved = resolveFilters(library, filters);
     if (isOutcome(resolved)) {
       return resolved;
     }
-    const page = pageOf(searchLibrary(library.entries, resolved), cursor, LISTING_PAGE_SIZE);
+    const found = await searchEntries(library.entries, resolved, context);
+    const page = pageOf(found.entries, cursor, LISTING_PAGE_SIZE);
     const lines =
       page.total === 0
         ? ["No saved overviews match."]
-        : [`${page.total} saved overview(s) match.`, "", ...page.items.map((entry) => listingLine(library, entry))];
+        : [
+            `${page.total} saved overview(s) match.`,
+            "",
+            ...page.items.map((entry) => listingLine(library, entry, found.byMeaning.has(entry.overview.id))),
+          ];
     return {
-      text: [...lines, "", ...pageFooter(page, "results"), ...unreadableNote(library)].join("\n").trim(),
+      text: [...lines, "", ...pageFooter(page, "results"), ...found.notes, ...unreadableNote(library)].join("\n").trim(),
       overviews: page.items.length,
     };
   },
@@ -166,7 +201,7 @@ const getOverview = mcpTool({
     if (entry === undefined) {
       return toolError(`There is no overview with id ${id} in this library.`);
     }
-    return { text: overviewText(library, entry), overviews: 1 };
+    return { text: overviewText(library, entry, false), overviews: 1 };
   },
 });
 
@@ -178,24 +213,26 @@ const getOverviews = mcpTool({
     ids: z.array(z.string()).max(OVERVIEWS_PER_CALL).optional().describe("The overviews' ids"),
     cursor: Cursor,
   }),
-  run: async ({ ids, cursor, ...filters }, { sql, accountId }) => {
-    const library = await readLibrary(sql, accountId);
+  run: async ({ ids, cursor, ...filters }, context) => {
+    const library = await readLibrary(context.sql, context.accountId);
     const resolved = resolveFilters(library, filters);
     if (isOutcome(resolved)) {
       return resolved;
     }
     const chosen = ids === undefined ? library.entries : library.entries.filter((entry) => ids.includes(entry.overview.id));
-    const page = pageOf(searchLibrary(chosen, resolved), cursor, OVERVIEWS_PER_CALL);
+    const found = await searchEntries(chosen, resolved, context);
+    const page = pageOf(found.entries, cursor, OVERVIEWS_PER_CALL);
     const missing = (ids ?? []).filter((id) => !library.entries.some((entry) => entry.overview.id === id));
     const notes = [
       ...(missing.length === 0 ? [] : [`Not in this library: ${missing.join(", ")}.`]),
       ...pageFooter(page, "overviews"),
+      ...found.notes,
       ...unreadableNote(library),
     ];
     const body =
       page.total === 0
         ? "No saved overviews match."
-        : page.items.map((entry) => overviewText(library, entry)).join("\n---\n\n");
+        : page.items.map((entry) => overviewText(library, entry, found.byMeaning.has(entry.overview.id))).join("\n---\n\n");
     return {
       text: [`${page.total} saved overview(s) match.`, ...notes, "", body].join("\n").trim(),
       overviews: page.items.length,
