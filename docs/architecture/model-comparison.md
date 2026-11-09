@@ -206,6 +206,33 @@ npm run blind --workspace packages/model-comparison -- --run 2026-10-12 \
 
 `--candidates provider:model,...` limits judging to some candidates.
 
+`--against <earlier run>` judges a prompt rather than a model. It sets each model's note in
+`--run` against the same model's note from the earlier run, and the judge is chosen as usual,
+never from the provider that wrote the notes:
+
+```sh
+task secrets:run -- npm run judge --workspace packages/model-comparison -- \
+  --run ov-214-after --against ov-214-before --budget 4
+```
+
+`judge-key-points` judges only the key points, between two runs that already exist. It
+generates nothing, and reads videos from the main set and the coverage set:
+
+```sh
+task secrets:run -- npm run judge-key-points --workspace packages/model-comparison -- \
+  --run ov-214-after --against ov-214-before --budget 3
+```
+
+- **What the judge sees:** the transcript, plus each note's premise, core claim and key points
+  with their places. The premise and claim are there only so it can tell a point that repeats
+  them. It never sees chapters, the verdict or the sponsor section.
+- **Both orders:** every pair is judged twice, once each way round. A side wins a dimension only
+  when both orders agree; a split is a tie.
+- **Dimensions:** choice, completeness, faithfulness and overall (`keyPointsRubric.ts`).
+- **The trust standard is in the rubric, from rubric 2 on.** A point that says what a claim rests on (one person's story, a single case, no figures given) counts as faithful reporting, as long as it is true of the transcript. It isn't marked down as editorialising or wasted space. Outside facts are still unsupported.
+- **Where it goes:** the report lands in `.local/key-point-judgments/<run>--against--<run>--rubric-<n>/report.md`. `KEY_POINTS_RUBRIC_VERSION` goes up whenever the wording changes, so judgments under different rubrics are never mixed or counted as already done.
+- **Cost:** about $0.08 a pair.
+
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
 `task secrets:run` (`docs/conventions/secrets.md`), and listed in `scripts/sanityCheck.env`.
 A model whose provider has no key is skipped with a line saying so.
@@ -624,6 +651,130 @@ the baseline's. A change from 11 nulls to none is well beyond that noise. The ch
 figures move mostly because points the measure couldn't see before now count. The notes didn't
 start covering more of their articles. What they do show is that the article measure now
 sees the whole note.
+
+### Results: significance over sequence, OV-214, 8 Nov 2026
+
+The key-points rule now says how to choose (`overview-generation-decisions.md`, "key points
+are chosen by significance"). It was measured two ways, both on GPT-6.1 Sol: coverage on the
+coverage set, and the judge on the 20 videos. In all it cost **$3.69**.
+
+**One run per prompt isn't enough.** A control run of the unchanged prompt
+(`coverage-ov-214-control`) moved Talarico from 37% to 50% of words inside a point's range, with
+nothing changed. So each side has two samples:
+
+- **Old prompt:** the baseline (videos from `coverage-2026-11-08`, articles from
+  `coverage-ov-240`) and the control.
+- **New prompt:** `coverage-ov-214` and `coverage-ov-214-b`.
+
+| Source | Length | In a reached chapter, old | New | Largest gap, old | New |
+|---|---|---|---|---|---|
+| fitness clip | 1:05 | 100%, 100% | 100%, 70% | 7%, 19% | 15%, 30% |
+| EU news explainer | 9:15 | 59%, 59% | 59%, 59% | 24%, 24% | 24%, 24% |
+| compound interest | 16:58 | 82%, 82% | 100%, 82% | 18%, 18% | 6%, 18% |
+| app animations | 22:50 | 93%, 96% | 79%, 60% | 11%, 9% | 14%, 22% |
+| **Shopify CEO interview** | 1:04:49 | 68%, 63% | 71%, 51% | 29%, 21% | 13%, 21% |
+| **Diary of a CEO, Talarico** | 1:36:47 | 59%, 70% | 72%, 72% | 22%, 22% | 22%, 22% |
+| **Education Committee hearing** | 2:22:15 | 26%, 45% | 58%, 66% | 41%, 41% | 28%, 29% |
+| articles, mean of 5 | | 85% | 88% | 28% | 26% |
+
+**The three long sources are where it moves, and the change held on both new samples.**
+
+- Across those three, the mean share of words in a reached chapter rose from 55% to 65%.
+- The mean largest gap fell from 29% to 22%.
+- The hearing moved most. Its 56-minute gap from 1:10 to 2:06 shrank to 40 minutes in one
+  sample (1:26:30–2:06:08) and 37 in the other (1:10:10–1:46:51).
+- Short videos and articles are level within the noise above.
+
+The app-animations note is lower in both new samples. In sample b it dropped the opening
+point, that animation gives agent-built apps their craft. That is the video's thesis, already
+in the core claim, so the rule against points a reader could get from the premise is doing what
+it says.
+
+**Talarico, read by hand.** Before and after cover the same six subjects. The closing point on
+faith and burnout is now placed (1:17:03–1:27:30) rather than left unplaced, and the first point
+gains its concrete example, a $12 million donation. **The opening 20 minutes are still not
+represented.** That is a matter of how many points the note gets, OV-87's dial, not of which.
+
+**The judge called it level, and couldn't have seen the change.** Run `ov-214-after --against
+ov-214-before` on the 20 videos, judged by Gemini 3.1 Pro:
+
+- **The result:** the new prompt won 11 and lost 9.
+- **Its reasons:** nearly all are about chapters, the verdict or the sponsor section. Every field
+  is written again from scratch, so the note as a whole varies from run to run, and that decides
+  the call.
+- **Position bias:** it picked whichever note came first in 14 of 20 pairs.
+- **Faithfulness:** the new prompt won 2, tied 12 and lost 6.
+  - **Three of the six losses are in fields this change doesn't touch:** the verdict twice and
+    the sponsor once.
+  - **One is the anecdote rule doing what it was added for.** The fitness clip is marked down
+    for "a critique of the evidence" in its last point, which notes that four years of one
+    man's training is the only evidence.
+  - **Two are about key points.** The small-talk note lost a minor caveat, that asking about
+    someone's hours isn't wrong, when it swapped the point that carried it for another. And the
+    app-animations note's "pointer-driven tilt" was called invented. It comes from the video's
+    description, which the model sees and the judge doesn't.
+
+**A whole-note judge can't isolate a change to one field**, so a judge that sees only the key
+points was built (`judge-key-points`, above) and run on notes that already existed. Nothing
+new was generated for it. These figures are rubric 1, before the trust standard was added. Judging cost $7.00, and the 12 notes from the stopped run had cost
+$0.35 to write.
+
+| Pair | Prompts | Pairs | Wins | Ties | Losses | Win rate |
+|---|---|---|---|---|---|---|
+| `ov-214-after` against `ov-214-before` | new against old | 20 | 5 | 4 | 11 | 35% |
+| `coverage-ov-214` against `coverage-2026-11-08` | new against old | 6 | 1 | 3 | 2 | 42% |
+| `coverage-ov-214-b` against `coverage-ov-214-control` | new against old | 7 | 1 | 2 | 4 | 29% |
+| `ov-214-before-b` against `ov-214-before` | **old against old** | 12 | 0 | 5 | 7 | **21%** |
+| `coverage-ov-214-control` against `coverage-2026-11-08` | **old against old** | 7 | 3 | 2 | 2 | 57% |
+| `coverage-ov-214-b` against `coverage-ov-214` | **new against new** | 7 | 2 | 1 | 4 | 36% |
+
+The overall call is shown, with a tie counting as half a win. `ov-214-before-b` is 12 notes from
+an old-prompt run that was stopped part way, kept because they already existed. One coverage
+pair errored on the network and wasn't retried.
+
+**This judge can't tell the prompts apart from writing the same note twice.** The same prompt
+run twice scored from 21% to 57%. Every new-against-old figure falls inside that range. Two
+writes of one note differ by more than the prompt change does. So this measure shows neither
+that the new key points are better nor that they are worse.
+
+**Where it does lean, it marks down the note's own judgment of the evidence.** In old against
+old as well as new against old, its reasons call a caveat about evidence "editorial critique",
+"external fact-checking" or a waste of space. On the hearing it held "presents no quantitative
+results" against the new note. On Shopify it wanted back the affirmations point, which the new
+rule dropped because it rests on one anecdote. That pulls against the trust standard decided on
+8 Nov 2026 (`overview-quality.md`, "Trust"): keep what a claim rests on, and don't present an
+anecdote as proof. So part of the new prompt's lean is the anecdote rule doing what it was
+asked to do, judged by a rubric that doesn't share that value.
+
+**Rubric 2, with the trust standard, on the five long videos, 9 Nov 2026.** These five already had
+three notes from each prompt (two each for Talarico), so nothing was written. The videos are the
+hearing, Shopify, app animations, compound interest and Talarico, chosen with `--videos`. It cost $4.52.
+
+| Pairs | Prompts | Wins | Ties | Losses |
+|---|---|---|---|---|
+| 14 | new against old, three pairings | 4 | 5 | 5 |
+| 5 | old against old | 2 | 2 | 1 |
+| 5 | **new against new** | 0 | 0 | **5** |
+
+- **Level.** New against old is 46%, and the three pairings alone scored 13%, 80% and 40%.
+- **Writes still swamp the prompt.** Two writes of the new prompt came out 5–0, a wider gap than
+  anything between the prompts.
+- **The hearing, where coverage moved most, leans new:** 2 wins, 1 loss. At three pairs that is a
+  hint, not a finding.
+- **The trust standard took hold.** The reasons now credit notes for applying the editorial
+  standard to a speaker's unsupported claims, where rubric 1 marked the same caveats down.
+
+**What a sharper test would need:** several notes per video for each prompt, so the comparison
+is between prompts and not between two single writes. Or the reader's own blind picks, which
+OV-228 runs on the whole note.
+
+**Cost didn't move:** 1,690 output tokens a note before, 1,716 after. Key points total about
+205 words either way.
+
+**The automatic checks hold, with one point a word over.** All 20 notes were valid first time
+on both prompts. `keyPointsWithinTarget` went from 20 of 20 to 19 of 20: one note has two points
+of 41 words against the target of 40. The schema's limit is 50, and the length instruction
+didn't change.
 
 ## Results: first full run, 12 Oct 2026
 

@@ -29,3 +29,28 @@ export function searchLibrary(entries: LibraryEntry[], filters: ResolvedFilters)
     return true;
   });
 }
+
+// Keyword first, then meaning: a word the reader remembers still finds its note at the top,
+// and the closest few by meaning that no word matched come after
+// (docs/features/search-by-meaning.md, "Word and meaning together").
+export const MEANING_RESULTS = 5;
+
+export interface LibrarySearch {
+  entries: LibraryEntry[];
+  byMeaning: Set<string>;
+}
+
+export function searchWithMeaning(entries: LibraryEntry[], filters: ResolvedFilters, meaningIds: string[]): LibrarySearch {
+  const { query, ...withoutQuery } = filters;
+  const byWord = searchLibrary(entries, filters);
+  if ((query ?? "").trim() === "" || meaningIds.length === 0) {
+    return { entries: byWord, byMeaning: new Set() };
+  }
+  const found = new Set<string>(byWord.map((entry) => entry.overview.id));
+  const candidates = new Map<string, LibraryEntry>(searchLibrary(entries, withoutQuery).map((entry) => [entry.overview.id, entry]));
+  const extra = meaningIds
+    .filter((id) => !found.has(id))
+    .flatMap((id) => candidates.get(id) ?? [])
+    .slice(0, MEANING_RESULTS);
+  return { entries: [...byWord, ...extra], byMeaning: new Set(extra.map((entry) => entry.overview.id)) };
+}

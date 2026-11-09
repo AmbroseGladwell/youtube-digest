@@ -107,6 +107,28 @@ test("Settings shows what was learned and where from, a removed item goes, and K
   await settings.verifyRowReads("personalisation", "A dad · Learning off");
 });
 
+test("sharing with assistants is on until switched off, and the switch holds", async ({ launcher }) => {
+  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["dad"], time: [], focus: [] } });
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+  await settings.personalisation.openAboutYou();
+  await settings.personalisation.verifySwitchIs("Share with your assistants", true);
+
+  await settings.personalisation.switchShareWithAssistants();
+  await settings.personalisation.closeAboutYou();
+  await settings.personalisation.openAboutYou();
+
+  await settings.personalisation.verifySwitchIs("Share with your assistants", false);
+});
+
+test("sharing with assistants isn't offered signed out, since only an account can connect one", async ({ launcher }) => {
+  await launcher.launch({ aboutYou: { who: ["dad"], time: [], focus: [] } });
+  const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+
+  await settings.personalisation.openAboutYou();
+
+  await settings.personalisation.verifyCantShareWithAssistants();
+});
+
 test("learning hides itself where no key can run the pass", async ({ launcher }) => {
   await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["dad"], time: [], focus: [] } });
   const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");

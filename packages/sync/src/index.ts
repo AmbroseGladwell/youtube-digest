@@ -20,6 +20,8 @@ export * from "./fetchServiceTranscriptApi.js";
 export * from "./GenerationApi.js";
 export * from "./fetchArticleApi.js";
 export * from "./fetchGenerationApi.js";
+export * from "./MeaningSearchApi.js";
+export * from "./fetchMeaningSearchApi.js";
 export * from "./PlaylistApi.js";
 export * from "./fetchPlaylistApi.js";
 export * from "./ConnectionsApi.js";

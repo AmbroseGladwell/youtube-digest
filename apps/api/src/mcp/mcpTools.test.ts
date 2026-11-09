@@ -6,6 +6,7 @@ import { makeStoredTranscript } from "@overview/store-conformance";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { sampleLibrary, type SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
 import { storedOverview, storedTopic } from "../testing/storedRecords.testHelper.js";
+import { breadNote, conceptEmbedder, foundersNote, noteAbout } from "../testing/meaningFixtures.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { connectMcpClient, seedLibrary, type McpClient } from "./McpClient.testHelper.js";
 import { LISTING_PAGE_SIZE, OVERVIEWS_PER_CALL } from "./mcpTools.js";
@@ -403,5 +404,84 @@ test("a connection approved to read only is not offered mark_overviews, and is t
   assert.equal(refused.isError, true);
   assert.match(refused.text, /Settings › Connections/);
   assert.ok(!(await reader.changes()).changes.some((change) => change.kind === "overviewState"));
+  await testApp.close();
+});
+
+test("search_overviews finds an overview by meaning when no note matches the words", async () => {
+  const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
+  const reader = await makeAccount(testApp);
+  const founders = foundersNote();
+  await reader.inject({ method: "POST", url: "/api/overviews", body: founders });
+  await reader.inject({ method: "POST", url: "/api/overviews", body: breadNote() });
+  await testApp.drainEmbeddings();
+  const client = await connectMcpClient(testApp, reader);
+
+  const result = await client.callTool("search_overviews", { query: "leaders who overstay" });
+
+  assert.equal(result.isError, false);
+  assert.match(result.text, /^1 saved overview\(s\) match\./);
+  assert.match(result.text, new RegExp(`matched by meaning · .*id ${founders.id}`));
+  await testApp.close();
+});
+
+test("search_overviews lists word matches before meaning matches, and never marks a word match", async () => {
+  const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
+  const reader = await makeAccount(testApp);
+  const byWord = noteAbout("Entrenched boards and why they persist", ["Boards wait", "Owners wait", "Everyone waits"], { savedAt: "2026-01-01T00:00:00.000Z" });
+  const byMeaning = foundersNote();
+  await reader.inject({ method: "POST", url: "/api/overviews", body: byWord });
+  await reader.inject({ method: "POST", url: "/api/overviews", body: byMeaning });
+  await testApp.drainEmbeddings();
+  const client = await connectMcpClient(testApp, reader);
+
+  const { text } = await client.callTool("search_overviews", { query: "entrenched" });
+  const lines = text.split("\n").filter((line) => line.startsWith("- **"));
+
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0]!.includes(`id ${byWord.id}`) && !lines[0]!.includes("matched by meaning"));
+  assert.ok(lines[1]!.includes(`id ${byMeaning.id}`) && lines[1]!.includes("matched by meaning"));
+  await testApp.close();
+});
+
+test("get_overviews says which notes matched by meaning", async () => {
+  const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
+  const reader = await makeAccount(testApp);
+  await reader.inject({ method: "POST", url: "/api/overviews", body: foundersNote() });
+  await testApp.drainEmbeddings();
+  const client = await connectMcpClient(testApp, reader);
+
+  const { text } = await client.callTool("get_overviews", { query: "leaders who overstay" });
+
+  assert.match(text, /Matched by meaning, not by word/);
+  await testApp.close();
+});
+
+test("search_overviews says it matched by word only when meaning is unavailable", async () => {
+  const embedder = conceptEmbedder();
+  const testApp = await createTestApp({}, { embedder });
+  const reader = await makeAccount(testApp);
+  await reader.inject({ method: "POST", url: "/api/overviews", body: foundersNote() });
+  await testApp.drainEmbeddings();
+  embedder.failing = true;
+  const client = await connectMcpClient(testApp, reader);
+
+  const { text, isError } = await client.callTool("search_overviews", { query: "leaders who overstay" });
+
+  assert.equal(isError, false);
+  assert.match(text, /No saved overviews match\./);
+  assert.match(text, /Matching by meaning is unavailable right now/);
+  await testApp.close();
+});
+
+test("a meaning match still has to pass the other filters", async () => {
+  const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
+  const reader = await makeAccount(testApp);
+  await reader.inject({ method: "POST", url: "/api/overviews", body: foundersNote() });
+  await testApp.drainEmbeddings();
+  const client = await connectMcpClient(testApp, reader);
+
+  const { text } = await client.callTool("search_overviews", { query: "leaders who overstay", favourite: true });
+
+  assert.match(text, /No saved overviews match\./);
   await testApp.close();
 });

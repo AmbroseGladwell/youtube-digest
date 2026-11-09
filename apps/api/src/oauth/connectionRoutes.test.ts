@@ -9,7 +9,7 @@ import { resolveAccessToken } from "./resolveAccessToken.js";
 
 const reads = (testApp: TestApp, accessToken: string) => resolveAccessToken(testApp.sql, accessToken, testApp.clock.now);
 
-test("the consent screen is told which app is asking, where it will send the reader, and whether it asked to mark overviews", async () => {
+test("the consent screen is told which app is asking, where it will send the reader, and whether it asked to mark overviews and read the profile", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
@@ -23,7 +23,9 @@ test("the consent screen is told which app is asking, where it will send the rea
   assert.equal(response.json().clientName, "Claude");
   assert.equal(response.json().redirectHost, "assistant.test");
   assert.equal(response.json().writes, true);
+  assert.equal(response.json().readsProfile, true);
   assert.equal(readOnlyResponse.json().writes, false);
+  assert.equal(readOnlyResponse.json().readsProfile, false);
   await testApp.close();
 });
 
@@ -140,6 +142,23 @@ test("Settings lists the reader's connections by the app's name", async () => {
   assert.equal(connections.length, 1);
   assert.equal(connections[0].clientName, "Claude");
   assert.equal(connections[0].createdAt, testApp.clock.now.toISOString());
+  await testApp.close();
+});
+
+test("Settings is told which connections can read the profile, so one approved before the profile scope says it can't", async () => {
+  const testApp = await createTestApp();
+  const assistant = await makeConnectingAssistant(testApp);
+  const reader = await makeAccount(testApp);
+  await assistant.connect(reader, { scope: "overviews:read overviews:write" });
+  testApp.clock.advance(1000);
+  await assistant.connect(reader);
+
+  const { connections } = (await reader.inject({ method: "GET", url: "/api/connections" })).json();
+
+  assert.deepEqual(
+    connections.map((connection: { readsProfile: boolean }) => connection.readsProfile),
+    [true, false],
+  );
   await testApp.close();
 });
 

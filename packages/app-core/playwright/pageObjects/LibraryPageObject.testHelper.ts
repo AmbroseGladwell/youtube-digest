@@ -239,6 +239,18 @@ export class LibraryPageObject extends PageObject {
   showAllFromCaughtUp = () =>
     this.step("showAllFromCaughtUp", () => this.click(libraryPageTestIds.caughtUpShowAllButton));
 
+  verifyCloseInMeaningShows = (titles: string[]) =>
+    this.step(`verifyCloseInMeaningShows ${titles.join(", ")}`, () =>
+      expect(this.get(libraryPageTestIds.meaningGroup).getByTestId(libraryOverviewCardTestIds.titleLink)).toHaveText(
+        titles.map((title) => new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)),
+      ),
+    );
+
+  verifyNoCloseInMeaning = () => this.step("verifyNoCloseInMeaning", () => this.expectToHaveCount(libraryPageTestIds.meaningGroup, 0));
+
+  verifyMeaningUnavailable = () =>
+    this.step("verifyMeaningUnavailable", () => this.expectToBeVisible(libraryPageTestIds.meaningUnavailable));
+
   verifyEmptyState = () => this.step("verifyEmptyState", () => this.expectToBeVisible(libraryPageTestIds.empty));
 
   expectCardCountToBe = (count: number) =>

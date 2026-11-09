@@ -153,7 +153,7 @@ test("a Plus reader who approves sends the assistant back with a code, its state
   await testApp.close();
 });
 
-test("the code trades for an access token that reads and marks as the approving account, when no scope was named", async () => {
+test("the code trades for an access token that reads, marks and reads the profile as the approving account, when no scope was named", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
@@ -161,23 +161,25 @@ test("the code trades for an access token that reads and marks as the approving 
   const tokens = await assistant.connect(reader);
 
   assert.equal(tokens.token_type, "Bearer");
-  assert.equal(tokens.scope, "overviews:read overviews:write");
+  assert.equal(tokens.scope, "overviews:read overviews:write profile:read");
   assert.equal(tokens.expires_in, 3600);
   const access = await reads(testApp, tokens.access_token);
   assert.equal(access?.accountId, reader.accountId);
   await testApp.close();
 });
 
-test("an assistant that asks for the read scope alone is granted that alone, and one that asks only to write still reads", async () => {
+test("an assistant that asks for the read scope alone is granted that alone, and one that asks only to write or for the profile still reads", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);
   const reader = await makeAccount(testApp);
 
   const reading = await assistant.connect(reader, { scope: "overviews:read" });
   const writing = await assistant.connect(reader, { scope: "overviews:write" });
+  const profile = await assistant.connect(reader, { scope: "profile:read" });
 
   assert.equal(reading.scope, "overviews:read");
   assert.equal(writing.scope, "overviews:read overviews:write");
+  assert.equal(profile.scope, "overviews:read profile:read");
   await testApp.close();
 });
 

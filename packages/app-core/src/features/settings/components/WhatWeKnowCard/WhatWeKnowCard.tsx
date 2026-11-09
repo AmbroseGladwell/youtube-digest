@@ -15,6 +15,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
+import { useSync } from "../../../sync/SyncContext.js";
 import { useCanLearn } from "../../useCanLearn.js";
 import { AboutYouEditor } from "../AboutYouEditor/AboutYouEditor.js";
 import styles from "./WhatWeKnowCard.module.scss";
@@ -25,6 +26,46 @@ const learningLine = (count: number, keepLearning: boolean) => {
   return count === 0 ? "Nothing learned yet · Keep learning is on" : `${things(count)} learned from your overviews · Keep learning is on`;
 };
 const things = (count: number) => (count === 1 ? "1 thing" : `${count} things`);
+
+export const SHARING_ON_HINT = "Assistants you connect in Settings › Connections can read this, with where each learned thing came from.";
+export const SHARING_OFF_HINT = "Off. Connected assistants can't read any of it.";
+
+interface SwitchRowProps {
+  title: string;
+  hint: string;
+  on: boolean;
+  onSwitch: () => void;
+  testId: string;
+}
+
+function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
+  const labelId = useId();
+  const hintId = useId();
+  return (
+    <div className={styles.switchRow}>
+      <span className={styles.text}>
+        <span id={labelId} className={styles.title}>
+          {title}
+        </span>
+        <span id={hintId} className={styles.help}>
+          {hint}
+        </span>
+      </span>
+      <button
+        type="button"
+        role="switch"
+        className={styles.switch}
+        aria-checked={on}
+        aria-labelledby={labelId}
+        aria-describedby={hintId}
+        onClick={onSwitch}
+        data-testid={testId}
+      >
+        <span className={styles.knob} />
+      </button>
+    </div>
+  );
+}
 
 // Designs 141k and 141l: the sentence as it reads, then in place with its sections editable,
 // what was learned and Keep learning. It is what every overview from now on is written for, so
@@ -41,8 +82,8 @@ export function WhatWeKnowCard() {
   const updateSettings = useUpdateSettingsMutation();
   const analytics = useAnalytics();
   const [open, setOpen] = useState(false);
-  const switchLabel = useId();
-  const switchHint = useId();
+  const signedIn = useSync().connected;
+  const sharingProfile = settings?.shareProfileWithAssistants ?? true;
   const empty = aboutYouIsEmpty(aboutYou) && learned.length === 0;
 
   const removed = (items: readonly LearnedItem[]): LearnedItems => {
@@ -104,33 +145,30 @@ export function WhatWeKnowCard() {
                 )}
               </div>
               {canLearn && (
-              <div className={styles.keepLearning}>
-                <span className={styles.text}>
-                  <span id={switchLabel} className={styles.title}>
-                    Keep learning
-                  </span>
-                  <span id={switchHint} className={styles.help}>
-                    {keepLearning ? "Every few overviews we add what we've noticed, and tell you." : "Off. What's here stays until you remove it."}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  role="switch"
-                  className={styles.switch}
-                  aria-checked={keepLearning}
-                  aria-labelledby={switchLabel}
-                  aria-describedby={switchHint}
-                  onClick={() => {
+                <SwitchRow
+                  title="Keep learning"
+                  hint={keepLearning ? "Every few overviews we add what we've noticed, and tell you." : "Off. What's here stays until you remove it."}
+                  on={keepLearning}
+                  onSwitch={() => {
                     analytics.settings.personalisation.learningSwitched({ on: !keepLearning });
                     updateSettings.mutate({ keepLearning: !keepLearning });
                   }}
-                  data-testid={whatWeKnowCardTestIds.keepLearning}
-                >
-                  <span className={styles.knob} />
-                </button>
-              </div>
+                  testId={whatWeKnowCardTestIds.keepLearning}
+                />
               )}
             </>
+          )}
+          {signedIn && (
+            <SwitchRow
+              title="Share with your assistants"
+              hint={sharingProfile ? SHARING_ON_HINT : SHARING_OFF_HINT}
+              on={sharingProfile}
+              onSwitch={() => {
+                analytics.settings.personalisation.profileSharingSwitched({ on: !sharingProfile });
+                updateSettings.mutate({ shareProfileWithAssistants: !sharingProfile });
+              }}
+              testId={whatWeKnowCardTestIds.shareWithAssistants}
+            />
           )}
           <p className={styles.costNote}>When overviews are made on us, this goes through our server to OpenAI with each one.</p>
           <div className={styles.actions}>

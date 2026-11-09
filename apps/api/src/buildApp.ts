@@ -23,6 +23,10 @@ import { webAppPlugin } from "./http/webAppPlugin.js";
 import { CodedLogController } from "./logs/CodedLogController.js";
 import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
+import { ClaimEmbeddingsRepository } from "./meaning/ClaimEmbeddingsRepository.js";
+import type { Embedder } from "./meaning/Embedder.js";
+import { EmbeddingQueue } from "./meaning/EmbeddingQueue.js";
+import { MeaningSearch } from "./meaning/MeaningSearch.js";
 import { connectionAccessPlugin } from "./mcp/connectionAccessPlugin.js";
 import { mcpRoutes } from "./mcp/mcpRoutes.js";
 import { registerMcpErrorHandler } from "./mcp/registerMcpErrorHandler.js";
@@ -42,6 +46,7 @@ import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
 import { generationRoutes } from "./routes/generationRoutes.js";
 import { healthRoutes } from "./routes/healthRoutes.js";
+import { meaningSearchRoutes } from "./routes/meaningSearchRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { articleRoutes } from "./routes/articleRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
@@ -106,6 +111,14 @@ export interface OurKeySetup {
   http: typeof fetch;
 }
 
+// Search by meaning; absent, a search matches by word only and says so
+// (docs/features/search-by-meaning.md).
+export interface MeaningSetup {
+  embedder: Embedder;
+  // Off in tests, which drain the queue themselves rather than race a background worker.
+  runWorkers: boolean;
+}
+
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
@@ -113,6 +126,7 @@ export interface BuildAppOptions {
   audio?: AudioSetup | null;
   transcriptService?: TranscriptServiceSetup | null;
   ourKey?: OurKeySetup | null;
+  meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
@@ -138,6 +152,7 @@ declare module "fastify" {
   }
   interface FastifyInstance {
     audioQueue: AudioRenderQueue | null;
+    embeddingQueue: EmbeddingQueue | null;
   }
 }
 
@@ -151,6 +166,7 @@ export async function buildApp({
   audio = null,
   transcriptService = null,
   ourKey = null,
+  meaning = null,
   playlistReader = null,
   eventSink = null,
   errorSink = null,
@@ -180,6 +196,14 @@ export async function buildApp({
       ? null
       : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
   app.decorate("audioQueue", audioQueue);
+  const claimEmbeddings = new ClaimEmbeddingsRepository(sql);
+  const embeddingQueue =
+    meaning === null
+      ? null
+      : new EmbeddingQueue({ embeddings: claimEmbeddings, embedder: meaning.embedder, clock, log: app.log, runWorkers: meaning.runWorkers });
+  app.decorate("embeddingQueue", embeddingQueue);
+  const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder);
+  const overviewsWritten = () => embeddingQueue?.kick();
 
   await app.register(
     async (api) => {
@@ -227,7 +251,7 @@ export async function buildApp({
       });
       connectionRoutes(api, { sql, clock, urls });
 
-      const records = new RecordsRepository(sql, clock);
+      const records = new RecordsRepository(sql, clock, overviewsWritten);
       changesRoutes(api, records);
       const transcripts = new TranscriptsRepository(sql, clock);
       const overviewUsage = new OverviewUsageRepository(sql);
@@ -235,6 +259,7 @@ export async function buildApp({
       const trials = new TrialsRepository(sql);
       overviewRoutes(api, records, transcripts, reservations);
       topicRoutes(api, records);
+      meaningSearchRoutes(api, meaningSearch);
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
@@ -300,7 +325,8 @@ export async function buildApp({
     mcpRoutes(mcp, {
       sql,
       transcripts: new TranscriptsRepository(sql, clock),
-      records: new RecordsRepository(sql, clock),
+      records: new RecordsRepository(sql, clock, overviewsWritten),
+      meaning: meaningSearch,
       clock,
       appOrigin: new URL(config.appUrl).origin,
     });
@@ -308,6 +334,7 @@ export async function buildApp({
 
   app.addHook("onReady", async () => {
     audioQueue?.kick();
+    embeddingQueue?.kick();
   });
 
   await app.register(

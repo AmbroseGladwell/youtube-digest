@@ -104,7 +104,7 @@ export function ConsentPage() {
     return <div className={styles.root} aria-busy="true" data-testid={consentPageTestIds.loading} />;
   }
 
-  const { redirectHost: host, clientName, expiresAt, writes } = request.data;
+  const { redirectHost: host, clientName, expiresAt, writes, readsProfile } = request.data;
   const left = minutesLeft(expiresAt, now);
   const { title, label, sub } = consentHeading(clientName);
 
@@ -292,7 +292,7 @@ export function ConsentPage() {
         ) : plan === undefined ? (
           <div className={styles.planPending} aria-busy="true" />
         ) : (
-          <ConsentAnswer host={host} writes={writes} deciding={deciding} onDecide={answer} />
+          <ConsentAnswer host={host} writes={writes} readsProfile={readsProfile} deciding={deciding} onDecide={answer} />
         )}
         {decide.isError && !isCode(decide.error, "unauthenticated") && (
           <p className={styles.error} role="alert" data-testid={consentPageTestIds.decisionError}>

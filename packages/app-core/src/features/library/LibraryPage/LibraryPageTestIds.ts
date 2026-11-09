@@ -6,6 +6,8 @@ export const libraryPageTestIds = {
   searchInput: "LibraryPage.searchInput",
   clearSearchButton: "LibraryPage.clearSearchButton",
   empty: "LibraryPage.empty",
+  meaningGroup: "LibraryPage.meaningGroup",
+  meaningUnavailable: "LibraryPage.meaningUnavailable",
   rail: "LibraryPage.rail",
   scrim: "LibraryPage.scrim",
   railBody: "LibraryPage.railBody",

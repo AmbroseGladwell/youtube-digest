@@ -642,6 +642,7 @@ export const analyticsEvents = {
         set: z.boolean(),
       }),
       learningSwitched: event("The reader turns Keep learning on or off", { on: z.boolean() }),
+      profileSharingSwitched: event("The reader lets connected assistants read what is known about them, or stops them", { on: z.boolean() }),
       learnedItemRemoved: event("The reader removes a learned item in Settings; never what it says", {}),
       profilePassRan: event("A profile pass finished; never what it found", { added: z.number().int().nonnegative(), key: z.enum(["own", "ours"]) }),
       profilePassFailed: event("A profile pass failed; the reader isn't told", { key: z.enum(["own", "ours"]) }),
@@ -921,6 +922,10 @@ export const analyticsEvents = {
     search: {
       searched: event("The reader searches the library, counted once they stop typing; never the words", {
         results: z.number().int().nonnegative(),
+      }),
+      meaningMatched: event("A library search came back from matching by meaning: how many overviews it added that no word matched, and whether meaning was available; never the words", {
+        meaningOnly: z.number().int().nonnegative(),
+        available: z.boolean(),
       }),
       cleared: event("The reader clears the library search"),
     },

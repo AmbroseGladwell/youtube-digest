@@ -1,4 +1,5 @@
-import { PGlite } from "@electric-sql/pglite";
+import { createTestPglite } from "./createTestPglite.testHelper.js";
+import type { Embedder } from "../meaning/Embedder.js";
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import {
   makeMemoryAudioStore,
@@ -42,6 +43,7 @@ export interface TestApp {
   narrator: ScriptedNarrator;
   audioStore: MemoryAudioStore;
   drainAudio(): Promise<void>;
+  drainEmbeddings(): Promise<void>;
   // The deploy's release step, at the test's clock.
   seedVoiceSamples(): Promise<SeededVoiceSamples>;
   close(): Promise<void>;
@@ -54,6 +56,8 @@ export interface TestAppOptions {
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
   ourKey?: OurKeySetup;
+  // Search by meaning on this embedder, with its queue drained by the test.
+  embedder?: Embedder;
   playlistReader?: PlaylistReader;
   // The database left at an earlier migration, so a test can seed what a later one cleans up
   // and then run it with runMigrations.
@@ -67,9 +71,9 @@ export const TEST_SUPPORT_EMAIL = "help@overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true, logger, slowQueryMs, transcriptService, ourKey, playlistReader, migrationsUpTo, fetchArticlePage }: TestAppOptions = {},
+  { narration = true, logger, slowQueryMs, transcriptService, ourKey, embedder, playlistReader, migrationsUpTo, fetchArticlePage }: TestAppOptions = {},
 ): Promise<TestApp> {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps(), ...(migrationsUpTo === undefined ? {} : { upTo: migrationsUpTo }) });
   const clock: TestClock = {
     now: new Date("2026-09-26T09:00:00.000Z"),
@@ -90,6 +94,7 @@ export async function createTestApp(
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
     transcriptService: transcriptService ?? null,
     ourKey: ourKey ?? null,
+    meaning: embedder === undefined ? null : { embedder, runWorkers: false },
     ...(fetchArticlePage === undefined ? {} : { fetchArticlePage }),
     playlistReader: playlistReader ?? null,
     eventSink,
@@ -112,6 +117,9 @@ export async function createTestApp(
     audioStore,
     drainAudio: async () => {
       await app.audioQueue?.drain();
+    },
+    drainEmbeddings: async () => {
+      await app.embeddingQueue?.drain();
     },
     seedVoiceSamples: () =>
       seedVoiceSamples({
