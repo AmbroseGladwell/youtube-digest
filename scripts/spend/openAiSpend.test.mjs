@@ -85,6 +85,7 @@ test("before the split, the one project's spend is unsplit and each environment 
   assert.equal(find(rows, "2026-11-08", "unsplit", "generation").dollars, 13);
   const prod = find(rows, "2026-11-08", "prod", "generation");
   assert.deepEqual([prod.dollars, prod.source, prod.reason], [null, "not_tracked", UNSPLIT]);
+  assert.equal(find(rows, "2026-11-08", "unsplit", "embeddings").dollars, 0);
 });
 
 test("cost on a project that is not an environment, or on no project, is unattributed rather than dropped", () => {

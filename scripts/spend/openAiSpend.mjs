@@ -35,6 +35,12 @@ export function openAiRowsOf({ projects, buckets }) {
           : { date, ...expected, dollars: null, source: "not_tracked", reason: UNSPLIT },
       );
     }
+    if (!split) {
+      for (const area of ["generation", "embeddings"]) {
+        const row = { date, provider: "openai", environment: "unsplit", area, dollars: 0, source: "bill" };
+        totals.set(`${date}|${spendKey(row)}`, row);
+      }
+    }
     for (const result of bucket.results) {
       const name = nameOf.get(result.project_id);
       const environment = name === undefined ? "unattributed" : environmentOfProject(name, date);
