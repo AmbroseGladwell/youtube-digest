@@ -19,6 +19,15 @@ describe("sampleFacts", () => {
     });
   });
 
+  it("shows a sample's big picture among its written sections when it has one", () => {
+    expect(sampleFacts(noteOf(makeOverview({ bigPicture: "The ground." }))).sections).toEqual([
+      "Big picture",
+      "Key points",
+      "How to apply",
+      "Verdict",
+    ]);
+  });
+
   it("gives an article its read time and Learn More", () => {
     expect(sampleFacts(noteOf(makeArticleOverview()))).toMatchObject({
       kindLabel: "Article",

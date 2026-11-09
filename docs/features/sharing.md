@@ -31,7 +31,7 @@ would have given for free:
 
 | In | Out |
 |---|---|
-| The whole note: premise, core claim, verdict, key points, How to apply, What it sells, Watch it anyway?, chapters, tags | The capture reason — the reader's own words about why they saved it |
+| The whole note: premise, big picture, core claim, verdict, key points, How to apply, What it sells, Watch it anyway?, chapters, tags | The capture reason — the reader's own words about why they saved it |
 | The video's title, channel, link, duration, publish date and thumbnail | Topics — the reader's filing |
 | The transcript | Read and favourite state, which was never on this record anyway (`docs/prototype/decisions.md`) |
 | The narration: its key, voice, duration and line starts | The reader's name, anywhere on the page or in its head |

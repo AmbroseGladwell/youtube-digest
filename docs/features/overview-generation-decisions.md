@@ -687,7 +687,11 @@ runs of `main` with the same models (`judge-big-picture`, a judge from the other
 
 **Where else it goes.** A share carries it, absent rather than null when there is none so a
 copy's content hash doesn't move. The markdown export an assistant reads gives the premise and the
-big picture both. Keyword search and the meaning embeddings take it as one more claim. Overview
+big picture both. Keyword search and the meaning embeddings take it as one more claim. Onboarding
+lists it among the sections being written when the source is long enough to earn one (an
+article's words, or a video of ten minutes or more), the teaser names it among what an account
+opens when the overview has one, and a sample's card shows it among its sections. The home page's
+example overview and its standfirst name it, and so does the voice sample line. Overview
 schema 15 fills null on older records (client version 16).
 
 ## Stress-testing against genres outside the samples

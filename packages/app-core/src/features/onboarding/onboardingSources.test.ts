@@ -78,6 +78,28 @@ describe("onboardingSources", () => {
     ]);
   });
 
+  it("lists the big picture only for a source long enough to earn one", () => {
+    const names = (kind: "youtube" | "web", source: Source) =>
+      onboardingSources[kind].sections({ source, recipe: null, about: "" }).map(({ name }) => name);
+    const video = makeOverview().source;
+    const article = makeArticleOverview().source;
+
+    expect(names("youtube", { ...video, durationMs: 10 * 60_000 } as Source)).toContain("Big picture");
+    expect(names("youtube", { ...video, durationMs: 9 * 60_000 } as Source)).not.toContain("Big picture");
+    expect(names("youtube", { ...video, durationMs: null } as Source)).not.toContain("Big picture");
+    expect(names("web", { ...article, wordCount: 1001 } as Source).slice(0, 2)).toEqual(["Premise", "Big picture"]);
+    expect(names("web", { ...article, wordCount: 1000 } as Source)).not.toContain("Big picture");
+  });
+
+  it("names the big picture among what an account opens, when the overview has one", () => {
+    expect(onboardingSources.youtube.teaser(makeOverview({ bigPicture: "The ground." })).locked).toBe(
+      "Big picture, key points, How to apply and Verdict open with an account.",
+    );
+    expect(onboardingSources.youtube.teaser(makeOverview({ bigPicture: null })).locked).toBe(
+      "Key points, How to apply and Verdict open with an account.",
+    );
+  });
+
   it("says what's in hand by kind once the source is read", () => {
     expect(onboardingSources.youtube.ready(null)).toBe("Transcript ready");
     expect(onboardingSources.web.ready(foundIn(makeArticleOverview()))).toBe("Page read");
