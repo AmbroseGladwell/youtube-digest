@@ -15,7 +15,7 @@ import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 import { videoLengthMs } from "../summariseRuns.js";
 
 const USAGE = `usage: task secrets:run -- npm run judge-key-points --workspace packages/model-comparison -- \\
-  --run <name> --against <earlier run> [--budget <dollars>] [--limit <pairs>] [--measure-only]
+  --run <name> --against <earlier run> [--videos id,...] [--budget <dollars>] [--limit <pairs>] [--measure-only]
 
 Judges only the key points of each model's note in --run against the same model's note in the
 earlier run, once in each order. Reads videos from the main set and the coverage set, and
@@ -29,6 +29,7 @@ const { values } = parseArgs({
     against: { type: "string" },
     budget: { type: "string", default: "4" },
     limit: { type: "string" },
+    videos: { type: "string" },
     "measure-only": { type: "boolean", default: false },
   },
 });
@@ -49,7 +50,10 @@ const idOf = (fetched: FetchedTranscript) => fetched.video.id ?? fetched.video.u
 const byVideo = new Map([...mainSet, ...coverageSet].map((fetched) => [idOf(fetched), fetched] as const));
 const transcripts = [...byVideo.values()].sort((left, right) => videoLengthMs(left) - videoLengthMs(right));
 const against = await runDirectoryStore(comparisonPaths.run(values.against)).all();
-const allPairs = promptPairs(runs, against, byVideo);
+const onlyVideos = values.videos?.split(",").map((id) => id.trim());
+const allPairs = promptPairs(runs, against, byVideo).filter(
+  (pair) => onlyVideos === undefined || onlyVideos.includes(pair.fetched.video.id ?? pair.fetched.video.url),
+);
 if (allPairs.length === 0) {
   console.error(`no pairs to judge: no video passed for the same model in both ${values.run} and ${values.against}`);
   process.exit(1);
@@ -83,7 +87,7 @@ if (!values["measure-only"]) {
   if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
 }
 
-const videos = transcripts.map((fetched) => ({
+const videos = transcripts.filter((fetched) => onlyVideos === undefined || onlyVideos.includes(idOf(fetched))).map((fetched) => ({
   videoId: idOf(fetched),
   title: fetched.video.title,
   length: formatTimestamp(videoLengthMs(fetched)),

@@ -737,6 +737,24 @@ rule dropped because it rests on one anecdote. That pulls against the trust stan
 anecdote as proof. So part of the new prompt's lean is the anecdote rule doing what it was
 asked to do, judged by a rubric that doesn't share that value.
 
+**Rubric 2, with the trust standard, on the five long videos, 9 Nov 2026.** These five already had
+three notes from each prompt (two each for Talarico), so nothing was written. The videos are the
+hearing, Shopify, app animations, compound interest and Talarico, chosen with `--videos`. It cost $4.52.
+
+| Pairs | Prompts | Wins | Ties | Losses |
+|---|---|---|---|---|
+| 14 | new against old, three pairings | 4 | 5 | 5 |
+| 5 | old against old | 2 | 2 | 1 |
+| 5 | **new against new** | 0 | 0 | **5** |
+
+- **Level.** New against old is 46%, and the three pairings alone scored 13%, 80% and 40%.
+- **Writes still swamp the prompt.** Two writes of the new prompt came out 5–0, a wider gap than
+  anything between the prompts.
+- **The hearing, where coverage moved most, leans new:** 2 wins, 1 loss. At three pairs that is a
+  hint, not a finding.
+- **The trust standard took hold.** The reasons now credit notes for applying the editorial
+  standard to a speaker's unsupported claims, where rubric 1 marked the same caveats down.
+
 **What a sharper test would need:** several notes per video for each prompt, so the comparison
 is between prompts and not between two single writes. Or the reader's own blind picks, which
 OV-228 runs on the whole note.
