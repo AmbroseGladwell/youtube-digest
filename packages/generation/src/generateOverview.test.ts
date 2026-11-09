@@ -61,7 +61,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
     if (calls === 1) {
       assert.ok(!userMessage.includes("Your previous attempt was"));
       return {
-        inOneLine: Array(30).fill("word").join(" "),
+        inOneLine: Array(40).fill("word").join(" "),
         coreClaim: "The core claim.",
         thin: false,
         keyPoints: [{ text: "one", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 }],
@@ -74,7 +74,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       };
     }
     assert.ok(userMessage.includes("Your previous attempt was"));
-    assert.ok(userMessage.includes("inOneLine: docs/features/overview-generation-decisions.md: max 25 words"));
+    assert.ok(userMessage.includes("inOneLine: docs/features/overview-generation-decisions.md: max 35 words"));
     return {
       inOneLine: "A short description.",
       coreClaim: "The core claim.",

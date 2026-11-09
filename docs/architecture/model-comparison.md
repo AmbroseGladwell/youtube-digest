@@ -90,6 +90,7 @@ what it does not:
 | `keyPointRangesInside` | overview | a key point's range runs backwards or past the last segment. The schema caps neither |
 | `standsOutRangeInside` | overview | the same, for what stands out |
 | `watchAnywayRangeInside` | overview | the same, for the part worth watching |
+| `inOneLineWithinTarget` | overview | the one-liner is over its 25-word target. The schema allows 35 (OV-252) |
 | `keyPointsWithinTarget` | overview | a key point is over its 40-word target. The schema allows 50 |
 | `dubiousClaimsWithinTarget` | overview | a dubious claim is over 25 words, or its reason over 30 |
 | `reasoningDoesNotOpenWithNovelty` | overview | the reasoning begins with the novelty word, the prototype's parser bug (`docs/prototype/constraints.md`) |

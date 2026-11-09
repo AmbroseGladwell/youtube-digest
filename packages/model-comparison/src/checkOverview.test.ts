@@ -44,6 +44,12 @@ test("a key point over its 40 word target fails, though the schema allows 50", (
   assert.deepEqual(failing(output), ["keyPointsWithinTarget"]);
 });
 
+test("in one line over its 25 word target fails, though the schema allows 35", () => {
+  const output = makeGeneratedOutput({ inOneLine: Array(30).fill("word").join(" ") });
+
+  assert.deepEqual(failing(output), ["inOneLineWithinTarget"]);
+});
+
 test("a dubious claim or reason over its target fails", () => {
   const output = makeGeneratedOutput({
     verdict: {

@@ -1,4 +1,4 @@
-import { wordCount } from "@overview/domain";
+import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
 import { segmentRangeOf, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 
@@ -113,6 +113,11 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
     ),
     result("standsOutRangeInside", "overview", rangeProblem("standsOut", verdict?.standsOut, segments)),
     result("watchAnywayRangeInside", "overview", rangeProblem("watch-anyway range", output.watchAnyway, segments)),
+    result(
+      "inOneLineWithinTarget",
+      "overview",
+      wordCount(output.inOneLine) > IN_ONE_LINE_TARGET_WORDS ? [`in one line is ${wordCount(output.inOneLine)} words`] : [],
+    ),
     result(
       "keyPointsWithinTarget",
       "overview",
