@@ -1,0 +1,41 @@
+name: Spend
+
+on:
+  schedule:
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+    inputs:
+      from:
+        description: First UTC day to record, YYYY-MM-DD (blank for the last three days)
+        required: false
+      to:
+        description: Last UTC day to record, YYYY-MM-DD (blank for the same as from)
+        required: false
+
+concurrency:
+  group: spend
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: record yesterday's spend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/spend/recordSpend.mjs
+        env:
+          SPEND_FROM: ${{ inputs.from }}
+          SPEND_TO: ${{ inputs.to }}
+          R2_ACCOUNT_ID: 781691f32a5cf03b132121e499f510a4
+          SPEND_R2_BUCKET: the-overview-spend
+          SPEND_R2_ACCESS_KEY_ID: ${{ secrets.SPEND_R2_ACCESS_KEY_ID }}
+          SPEND_R2_SECRET_ACCESS_KEY: ${{ secrets.SPEND_R2_SECRET_ACCESS_KEY }}
+          OPENAI_ADMIN_KEY: ${{ secrets.OPENAI_ADMIN_KEY }}
+          NEON_PROJECT_ID: raspy-dream-86058377
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          SPEND_MANUAL_ENTRIES: ${{ vars.SPEND_MANUAL_ENTRIES }}

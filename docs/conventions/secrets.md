@@ -87,6 +87,10 @@ there.
 | `TRELLO_TOKEN` | The token beside that key | as above |
 | `CHROME_PUBLISHER_ID` | The publisher the store listing belongs to | `docs/architecture/store-listing.md`, "The API credentials" |
 | `CHROME_SERVICE_ACCOUNT_KEY` | A Google Cloud service account's whole JSON key file | as above |
+| `OPENAI_ADMIN_KEY` | A read-only OpenAI admin key, for the nightly spend job to read the Costs API | `docs/architecture/spend.md` |
+| `NEON_API_KEY` | A Neon API key scoped to the production project, for the spend job to read its usage | as above |
+| `SPEND_R2_ACCESS_KEY_ID` | An R2 token with Object Read & Write on `the-overview-spend` only | as above |
+| `SPEND_R2_SECRET_ACCESS_KEY` | The secret beside it | as above |
 
 The last one is the only downloaded key file among them, and the only one that cannot be
 revoked by expiry, so it is deleted from the machine that made it as soon as it is set. Its
