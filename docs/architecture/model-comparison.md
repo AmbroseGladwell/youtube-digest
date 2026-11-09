@@ -161,6 +161,15 @@ the library judged worth watching anyway. Nineteen have only auto-captions and o
 creator captions, which matches what the app actually sees. About 186,000 prompt tokens
 per model for the whole set.
 
+**The recipe set** (`RECIPE_SET`, OV-122): four recipe videos and two that only touch on
+recipes (several creators' chopped cheese compared, a business talk about a recipe channel),
+fetched with `--set recipes` and compared with `npm run compare -- --set recipes`. Measured on
+`openai:gpt-6.1-sol` on 9 Nov 2026, two runs a side against the prompt before recipes: every
+note gains about 750–960 prompt tokens (the recipe section, and the whole description); a
+recipe video adds about 900–1,500 output tokens, roughly 40–75% more per overview (about
+$0.010–0.015 at uncached prices); a video that isn't a recipe costs the same as before. All four
+came back as recipes and both others as notes, in both runs.
+
 The transcripts are the creators' content and never enter the repository. They are fetched
 with the app's own InnerTube fetcher into `packages/model-comparison/.local/`, which is
 gitignored, along with every run's records and reports.
