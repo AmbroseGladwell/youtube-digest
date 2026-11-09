@@ -59,7 +59,8 @@ it dedupes the overviews, needs at least two behind an item, writes the source l
 overviews on app growth", from their commonest topic) and drops anything already held or removed
 whatever the model says. At most two items a pass, sixty characters each.
 
-It runs after an overview lands, on the key that made it, signed in only. On us it is
+It runs after an overview lands, on the key that made it: on the reader's own key with or
+without an account, on us signed in only. On us it is
 `POST /api/generations/profile`: **free, not counted against the plan or the day's overviews,**
 held to 30 a day for an account by its own rate limit. Failing never touches the overview and
 the reader isn't told; the schedule moves on regardless, so a broken key isn't retried on every
