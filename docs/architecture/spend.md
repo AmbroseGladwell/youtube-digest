@@ -27,10 +27,17 @@ key is shared between `overview-prod`, `overview-dev` and `overview-evals`, so e
 splits on the provider's own grouping. Anthropic, Gemini, Decodo and Neon are used by one
 environment each, so their whole bill is that environment's.
 
-**OpenAI's environment is the project's name.** OV-256 made one project each, `prod`, `dev`
-and `evals`; a project whose name ends or starts with one of those words is that environment.
-Cost on any other project, or on none, is recorded as `unattributed` rather than dropped,
-so a key made outside the three shows up on the dashboard instead of disappearing.
+**OpenAI's environment is the project's name.** The projects are "The Overview Prod", "The
+Overview Dev" and "The Overview Evals": a name that ends or starts with `prod` (or
+`production`), `dev` or `evals` is that environment. Cost on any other project, or on none,
+is recorded as `unattributed` rather than dropped, so a key made outside the three shows up
+on the dashboard instead of disappearing. The first live run, on 9 Nov 2026, found all of
+it unattributed because the production project was still called "The Overview".
+
+**Before 9 Nov 2026 OpenAI's spend is `unsplit`.** Until OV-256, the production project was
+the only one, and dev, evals and prod all spent on it. Its spend before that day is recorded
+as `unsplit`, and prod, dev and evals as not tracked with a reason pointing there, rather
+than as prod's or as zero.
 
 **OpenAI's area is the line item.** A line item naming an embedding model is `embeddings`,
 everything else is `generation`. So prod's bill splits into the two without the app
@@ -57,7 +64,7 @@ Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction buck
 |---|---|
 | `date` | the UTC day the cost was incurred |
 | `provider` | `openai`, `neon`, … |
-| `environment` | `prod`, `dev`, `evals`, or `unattributed` |
+| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for OpenAI before 9 Nov 2026 |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
 | `source` | `bill`, `manual`, `not_tracked`, or `usage` for a row that measures use rather than money |

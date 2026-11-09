@@ -39,7 +39,7 @@ export function rowsForDay({ date, billed, manualEntries, unreadable }) {
   const bills = billed.filter((row) => row.source === "bill");
   const read = new Set(bills.map((row) => row.provider));
   const rows = billed.filter((row) => row.date === date);
-  const covered = new Set(bills.filter((row) => row.date === date).map(spendKey));
+  const covered = new Set(rows.filter((row) => row.source !== "usage").map(spendKey));
   const conflicts = [];
   for (const row of manualRowsFor(manualEntries, date)) {
     if (covered.has(spendKey(row))) {
