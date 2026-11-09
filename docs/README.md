@@ -66,6 +66,11 @@ Five folders, five different questions.
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, the TTS
   pool deployed from CI only when it changed, and how the extension gets its id, its server
   and its store zip.
+- `spend.md` — what the project costs to run (OV-257): a nightly job reading each
+  provider's own bill into one CSV a day in R2, which PostHog's warehouse reads; where each
+  figure comes from, the environment and area of each row, not tracked never shown as zero,
+  figures entered by hand in a variable because the repository is public, why spend is not
+  an analytics event, what tracking it costs, and the secrets it needs.
 - `store-listing.md` — the other half of the extension's release: why the listing is
   unlisted, the store copy, a justification for every permission the manifest asks for, what
   the store is told about data and why, the five screenshots rendered from the real
