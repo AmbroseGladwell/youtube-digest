@@ -50,7 +50,7 @@ export interface FakeOpenAi {
   requests: { url: string; authorization: string | null; model: unknown }[];
 }
 
-const USAGE = { prompt_tokens: 1200, completion_tokens: 300, prompt_tokens_details: { cached_tokens: 200 } };
+const USAGE = { prompt_tokens: 1200, completion_tokens: 300, prompt_tokens_details: { cached_tokens: 200, cache_write_tokens: 800 } };
 
 // OpenAI's chat completions as our key would meet them: each call takes the next answer,
 // and the last one repeats.

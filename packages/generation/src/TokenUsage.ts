@@ -43,11 +43,13 @@ export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | nu
 
   const usage = field(root, "usage");
   if (usage === undefined) return null;
-  const cached = count(field(usage, "prompt_tokens_details")?.cached_tokens ?? usage.prompt_cache_hit_tokens);
+  const details = field(usage, "prompt_tokens_details");
+  const cached = count(details?.cached_tokens ?? usage.prompt_cache_hit_tokens);
+  const written = count(details?.cache_write_tokens);
   return {
-    uncachedInputTokens: count(usage.prompt_tokens) - cached,
+    uncachedInputTokens: count(usage.prompt_tokens) - cached - written,
     cachedInputTokens: cached,
-    cacheWriteTokens: 0,
+    cacheWriteTokens: written,
     outputTokens: count(usage.completion_tokens),
   };
 }

@@ -19,6 +19,7 @@ const ANTHROPIC = "https://platform.claude.com/docs/en/about-claude/pricing";
 const OPENAI = "https://developers.openai.com/api/docs/pricing";
 const GEMINI = "https://ai.google.dev/gemini-api/docs/pricing";
 const CHECKED_ON = "2026-10-12";
+const OPENAI_CHECKED_ON = "2026-11-09";
 
 export const MODEL_PRICES: Record<string, ModelPrice> = {
   "anthropic:claude-opus-5-5": {
@@ -38,13 +39,15 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
     source: ANTHROPIC,
   },
   "openai:gpt-6.1-sol": {
-    perMillion: { input: 2, cachedInput: 0.1, cacheWrite: 2, output: 10 },
-    checkedOn: CHECKED_ON,
+    perMillion: { input: 2, cachedInput: 0.1, cacheWrite: 2.5, output: 10 },
+    longPrompt: { aboveTokens: 272_000, perMillion: { input: 4, cachedInput: 0.2, cacheWrite: 5, output: 15 } },
+    checkedOn: OPENAI_CHECKED_ON,
     source: OPENAI,
   },
   "openai:gpt-6-luna": {
-    perMillion: { input: 0.1, cachedInput: 0.01, cacheWrite: 0.1, output: 0.5 },
-    checkedOn: CHECKED_ON,
+    perMillion: { input: 0.1, cachedInput: 0.01, cacheWrite: 0.125, output: 0.5 },
+    longPrompt: { aboveTokens: 272_000, perMillion: { input: 0.2, cachedInput: 0.02, cacheWrite: 0.25, output: 0.75 } },
+    checkedOn: OPENAI_CHECKED_ON,
     source: OPENAI,
   },
   "gemini:gemini-3.1-pro-preview": {
