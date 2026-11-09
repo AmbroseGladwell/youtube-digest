@@ -28,6 +28,13 @@ The reader is a blank one: no reader context, no capture reason, no topics, tags
 claims, and every optional section switched on. Personalisation would vary from reader to
 reader. Leaving it out keeps the comparison about the model.
 
+That blankness hid OV-246: the schema only reaches the shape Claude refused once a reader has
+a topic. `--reader sample` runs every overview as the reader built from `samples/records/`
+(five topics, their claims and tags, a reader context), the one `cost-model` already uses.
+`--refuse-enforced-schema` answers Claude's enforced-schema request with the grammar refusal,
+without sending it, so the run measures what the schema-in-prompt fallback writes
+(`overview-generation-decisions.md`, "The schema has to fit Claude's grammar").
+
 ### Models
 
 The default set (every model priced in `modelPrices.ts`) is eight models from the three providers whose keys
@@ -83,6 +90,7 @@ what it does not:
 | `keyPointRangesInside` | overview | a key point's range runs backwards or past the last segment. The schema caps neither |
 | `standsOutRangeInside` | overview | the same, for what stands out |
 | `watchAnywayRangeInside` | overview | the same, for the part worth watching |
+| `inOneLineWithinTarget` | overview | the one-liner is over its 25-word target. The schema allows 35 (OV-252) |
 | `keyPointsWithinTarget` | overview | a key point is over its 40-word target. The schema allows 50 |
 | `dubiousClaimsWithinTarget` | overview | a dubious claim is over 25 words, or its reason over 30 |
 | `reasoningDoesNotOpenWithNovelty` | overview | the reasoning begins with the novelty word, the prototype's parser bug (`docs/prototype/constraints.md`) |

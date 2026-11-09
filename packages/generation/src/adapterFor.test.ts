@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import { PROVIDERS } from "@overview/domain";
 import { adapterFor } from "./adapterFor.js";
-import { ProviderKeyRefusedError, ProviderOutOfCreditError, ProviderRequestError } from "./GenerationError.js";
+import { ModelRefusedError, ProviderKeyRefusedError, ProviderOutOfCreditError, ProviderRequestError } from "./GenerationError.js";
 import { listProviderModels } from "./listProviderModels.js";
 import { createGenerationClient } from "./createGenerationClient.js";
 
@@ -166,6 +166,33 @@ test("an ordinary rate limit is not mistaken for an account out of credit", asyn
 
   assert.ok(error instanceof ProviderRequestError);
   assert.ok(!(error instanceof ProviderOutOfCreditError));
+});
+
+test("every provider's refusal of the request for its model is told apart from a provider that is down", async () => {
+  const refusal = {
+    type: "error",
+    error: { type: "invalid_request_error", message: "The compiled grammar is too large for this model" },
+  };
+  for (const provider of PROVIDERS) {
+    for (const status of [400, 404, 413, 422]) {
+      const { http } = recorder(() => ({ status, body: refusal }));
+      const client = createGenerationClient({ provider, apiKey: "sk", model: "a-small-model", http });
+
+      await assert.rejects(() => client(request), ModelRefusedError, `${provider} ${status}`);
+    }
+  }
+});
+
+test("a timeout, a rate limit or a provider that is down is never a refusal of the model", async () => {
+  for (const status of [408, 429, 500, 503]) {
+    const { http } = recorder(() => ({ status, body: { error: "try later" } }));
+    const client = createGenerationClient({ provider: "anthropic", apiKey: "sk", model: "m", http });
+
+    const error = await client(request).catch((caught: unknown) => caught);
+
+    assert.ok(error instanceof ProviderRequestError, String(status));
+    assert.ok(!(error instanceof ModelRefusedError), String(status));
+  }
 });
 
 test("the models a key can reach are listed, and the ones that cannot write an overview counted", async () => {

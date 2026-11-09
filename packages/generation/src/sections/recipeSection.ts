@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { RECIPE_SUMMARY_MOST_WORDS, RecipeStep, wordCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-import type { SegmentRangeShape } from "./watchAnywaySection.js";
+import { NO_SEGMENT } from "./segmentRangeFields.js";
 
 export interface GeneratedRecipe {
   summary: string;
   ingredients: string[];
-  steps: { text: string; group: string | null; range: SegmentRangeShape | null }[];
+  steps: { text: string; group: string | null; startSegmentIndex: number; endSegmentIndex: number }[];
 }
 
 export const recipeSection: PromptSection = {
@@ -39,9 +39,8 @@ top") as the video gives it, and never add one it doesn't. Give each
 step the stretch of the video that shows it as startSegmentIndex and
 endSegmentIndex from the numbered transcript segments below. A step only
 the description gives, which the video never shows, keeps its place in
-the method with range null. Set group
-where the video divides the method into parts ("For the sauce"),
-otherwise null.
+the method with both set to -1. Set group where the video divides the
+method into parts ("For the sauce"), otherwise null.
 
 Summary: one paragraph, ${RECIPE_SUMMARY_MOST_WORDS} words at most. Say what the dish is in
 the creator's own framing, and quote a line of theirs where one is worth
@@ -51,8 +50,10 @@ kind of effort or occasion it suits where the video makes that clear.
 Never repeat a step, an amount, a time or a temperature, since the recipe
 sits right below it.`,
   schemaShape: (input) => {
-    const lastIndex = Math.max(input.transcript.length - 1, 0);
-    const segment = z.int().min(0).max(lastIndex);
+    const segment = z
+      .int()
+      .min(NO_SEGMENT)
+      .max(input.transcript.length - 1);
     return {
       recipe: z
         .object({
@@ -63,14 +64,20 @@ sits right below it.`,
           ingredients: z.array(z.string().min(1)).min(1),
           steps: z
             .array(
-              z.object({
-                text: RecipeStep.shape.text,
-                group: RecipeStep.shape.group,
-                range: z
-                  .object({ startSegmentIndex: segment, endSegmentIndex: segment })
-                  .refine((range) => range.startSegmentIndex <= range.endSegmentIndex, "a step ends where it starts or after")
-                  .nullable(),
-              }),
+              z
+                .object({
+                  text: RecipeStep.shape.text,
+                  group: RecipeStep.shape.group,
+                  startSegmentIndex: segment,
+                  endSegmentIndex: segment,
+                })
+                .refine(
+                  ({ startSegmentIndex, endSegmentIndex }) =>
+                    startSegmentIndex === NO_SEGMENT
+                      ? endSegmentIndex === NO_SEGMENT
+                      : startSegmentIndex >= 0 && startSegmentIndex <= endSegmentIndex,
+                  "a step shown in the video ends where it starts or after, and one it never shows has both at -1",
+                ),
             )
             .min(1),
         })

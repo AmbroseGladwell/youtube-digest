@@ -1,11 +1,12 @@
 import { FallbackCause, type KeySource, type MadeOn, type Overview, type OverviewId, type Provider } from "@overview/domain";
 import { fallbackReasonOf, generateOverviewOf, type GenerationClient, type OverviewInput } from "@overview/generation";
 import { isSyncRequestError, type GenerationApi } from "@overview/sync";
+import { ChosenModelFailedError, failedOnTheModel } from "./ChosenModelFailedError.js";
 
 export interface OverviewKeys {
   order: KeySource[];
   // The reader's own key, when they have one on this device.
-  own: { provider: Provider; client: GenerationClient } | null;
+  own: { provider: Provider; model: string; client: GenerationClient } | null;
   // Our server, for a signed-in reader: our key, and the reservations an own-key overview
   // takes on the account's month. Null signed out, where the device counts its own trial.
   api: GenerationApi | null;
@@ -57,7 +58,9 @@ export async function makeOverviewOnKeys(
       return { ...overview, madeOn: { key, fallback: passedOver } };
     } catch (error) {
       const cause = fallbackCauseOf(error);
-      if (cause === null || index === order.length - 1) throw error;
+      if (cause === null || index === order.length - 1) {
+        throw key === "own" && failedOnTheModel(error) ? new ChosenModelFailedError(own!.provider, own!.model, error) : error;
+      }
       passedOver = { from: key, provider: own?.provider ?? null, cause };
     }
   }

@@ -19,8 +19,17 @@ export class ProviderRequestError extends GenerationError {
 // (docs/architecture/tiers.md, "Which key an overview uses").
 export class ProviderOutOfCreditError extends ProviderRequestError {}
 
+// The provider read the request and turned it down for the model it named: a model it
+// doesn't have, or one whose limits the request goes past, such as a structured-output
+// grammar too large for it. A reader on their own key can choose any model their provider
+// lists, so this is told apart from a provider that is down (OV-247).
+export class ModelRefusedError extends ProviderRequestError {}
+
 // The model's answer still broke the schema after its one corrective retry.
 export class SchemaFailureError extends GenerationError {}
+
+// A timeout and a rate limit say nothing about the model, so neither is a refusal of it.
+const refusesModel = (status: number): boolean => status >= 400 && status < 500 && status !== 408 && status !== 429;
 
 // OpenAI answers 429 with `insufficient_quota`; Anthropic answers 400 with a message about
 // the credit balance; DeepSeek, and anything else that uses it, 402 Payment Required.
@@ -33,5 +42,6 @@ export function providerFailure(status: number, body: string): GenerationError {
   // reads the same way to a reader holding it.
   if (status === 401 || status === 403) return new ProviderKeyRefusedError(detail);
   if (outOfCredit(status, body)) return new ProviderOutOfCreditError(status, detail);
+  if (refusesModel(status)) return new ModelRefusedError(status, detail);
   return new ProviderRequestError(status, detail);
 }

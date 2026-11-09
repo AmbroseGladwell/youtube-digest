@@ -107,7 +107,7 @@ export class OurKeyGenerationError extends Error {
   readonly fallback: FallbackReason | null;
 
   constructor(fallback: FallbackReason | null, cause: unknown) {
-    super("The overview couldn't be made on us", { cause });
+    super("Something went wrong making this overview. Try again in a while.", { cause });
     this.fallback = fallback;
   }
 }

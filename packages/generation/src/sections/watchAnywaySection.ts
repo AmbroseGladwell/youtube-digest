@@ -1,12 +1,6 @@
-import { z } from "zod";
 import { WatchAnyway } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-
-export const SegmentRangeShape = z.object({
-  startSegmentIndex: z.int().nonnegative(),
-  endSegmentIndex: z.int().nonnegative(),
-});
-export type SegmentRangeShape = z.infer<typeof SegmentRangeShape>;
+import { segmentRangeFields } from "./segmentRangeFields.js";
 
 export const watchAnywaySection: PromptSection = {
   title: "Watch it anyway",
@@ -30,10 +24,10 @@ two sentences.
 Say partial when this is true of only part of the video. When you do,
 name the range as startSegmentIndex/endSegmentIndex, taken from the
 numbered transcript segments below — pick the segment numbers that bound
-the part worth watching, don't estimate a time.`,
+the part worth watching, don't estimate a time. Otherwise set both to -1.`,
   schemaShape: (input) => ({
     answer: WatchAnyway.shape.answer,
     reason: WatchAnyway.shape.reason,
-    range: input.transcript.length === 0 ? z.null() : SegmentRangeShape.nullable(),
+    ...segmentRangeFields(input),
   }),
 };

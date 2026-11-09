@@ -185,9 +185,11 @@ test("a chapter title is at most 8 words and its summary at most 40", () => {
   assert.throws(() => Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), summary: words(41) }] }));
 });
 
-test("in one line rejects more than 25 words", () => {
-  const tooLong = Array(26).fill("word").join(" ");
-  assert.throws(() => Overview.parse({ ...baseOverview, inOneLine: tooLong }));
+test("in one line allows up to 35 words but no more: 25 is the prompt's target, not a cap", () => {
+  const atLimit = Array(35).fill("word").join(" ");
+  const overLimit = Array(36).fill("word").join(" ");
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, inOneLine: atLimit }));
+  assert.throws(() => Overview.parse({ ...baseOverview, inOneLine: overLimit }));
 });
 
 test("core claim allows up to 60 words but no more", () => {

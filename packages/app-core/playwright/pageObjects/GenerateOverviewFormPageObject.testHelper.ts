@@ -58,6 +58,13 @@ export class GenerateOverviewFormPageObject extends PageObject {
       expect(this.get(generateOverviewFormTestIds.generationError)).toHaveText(message),
     );
 
+  verifyGenerationErrorLinksToModelChoice = () =>
+    this.step("verifyGenerationErrorLinksToModelChoice", () =>
+      expect(this.get(generateOverviewFormTestIds.runError.settingsLink)).toHaveAttribute("href", "/settings/keys"),
+    );
+
+  clickPickAnotherModel = () => this.step("clickPickAnotherModel", () => this.click(generateOverviewFormTestIds.runError.settingsLink));
+
   clickCancel = () => this.step("clickCancel", () => this.click(generateOverviewFormTestIds.cancelButton));
 
   verifyGenerationErrorIsVisible = () =>

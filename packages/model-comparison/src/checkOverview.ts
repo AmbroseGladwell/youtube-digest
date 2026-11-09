@@ -1,5 +1,5 @@
-import { wordCount } from "@overview/domain";
-import type { GeneratedOutput } from "@overview/generation";
+import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
+import { segmentRangeOf, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 
 export type CheckArea = "overview" | "chapters";
@@ -9,11 +9,6 @@ export interface CheckResult {
   area: CheckArea;
   passed: boolean;
   detail: string | null;
-}
-
-interface Range {
-  startSegmentIndex: number;
-  endSegmentIndex: number;
 }
 
 const KEY_POINT_TARGET_WORDS = 40;
@@ -31,7 +26,8 @@ const result = (check: string, area: CheckArea, problems: string[]): CheckResult
   detail: problems.length === 0 ? null : problems.join("; "),
 });
 
-const rangeProblem = (label: string, range: Range | null, segments: number): string[] => {
+const rangeProblem = (label: string, item: SegmentRangeShape | null | undefined, segments: number): string[] => {
+  const range = item ? segmentRangeOf(item) : null;
   if (range === null) return [];
   if (range.startSegmentIndex > range.endSegmentIndex) {
     return [`${label} runs backwards, ${range.startSegmentIndex} to ${range.endSegmentIndex}`];
@@ -113,10 +109,15 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
     result(
       "keyPointRangesInside",
       "overview",
-      output.keyPoints.flatMap((point, index) => rangeProblem(`key point ${index + 1}`, point.range, segments)),
+      output.keyPoints.flatMap((point, index) => rangeProblem(`key point ${index + 1}`, point, segments)),
     ),
-    result("standsOutRangeInside", "overview", rangeProblem("standsOut", verdict?.standsOut?.range ?? null, segments)),
-    result("watchAnywayRangeInside", "overview", rangeProblem("watch-anyway range", output.watchAnyway?.range ?? null, segments)),
+    result("standsOutRangeInside", "overview", rangeProblem("standsOut", verdict?.standsOut, segments)),
+    result("watchAnywayRangeInside", "overview", rangeProblem("watch-anyway range", output.watchAnyway, segments)),
+    result(
+      "inOneLineWithinTarget",
+      "overview",
+      wordCount(output.inOneLine) > IN_ONE_LINE_TARGET_WORDS ? [`in one line is ${wordCount(output.inOneLine)} words`] : [],
+    ),
     result(
       "keyPointsWithinTarget",
       "overview",

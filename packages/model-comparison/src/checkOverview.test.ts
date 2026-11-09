@@ -15,8 +15,8 @@ test("an overview that keeps every rule passes every check", () => {
 
 test("a key point range past the last segment, or running backwards, fails", () => {
   const output = makeGeneratedOutput();
-  output.keyPoints[0]!.range = { startSegmentIndex: 28, endSegmentIndex: 30 };
-  output.keyPoints[2]!.range = { startSegmentIndex: 12, endSegmentIndex: 10 };
+  output.keyPoints[0] = { ...output.keyPoints[0]!, startSegmentIndex: 28, endSegmentIndex: 30 };
+  output.keyPoints[2] = { ...output.keyPoints[2]!, startSegmentIndex: 12, endSegmentIndex: 10 };
 
   const [check] = checkOverview(output, makeFetchedTranscript()).filter((result) => !result.passed);
   assert.equal(check?.check, "keyPointRangesInside");
@@ -29,9 +29,9 @@ test("a stands-out or watch-anyway range outside the transcript fails its own ch
     verdict: {
       ...makeGeneratedOutput().verdict!,
       novelty: "fresh_angle",
-      standsOut: { text: "A worked budget.", range: { startSegmentIndex: 5, endSegmentIndex: 99 } },
+      standsOut: { text: "A worked budget.", startSegmentIndex: 5, endSegmentIndex: 99 },
     },
-    watchAnyway: { answer: "partial", reason: "The demo is visual.", range: { startSegmentIndex: 40, endSegmentIndex: 41 } },
+    watchAnyway: { answer: "partial", reason: "The demo is visual.", startSegmentIndex: 40, endSegmentIndex: 41 },
   });
 
   assert.deepEqual(failing(output), ["standsOutRangeInside", "watchAnywayRangeInside"]);
@@ -42,6 +42,12 @@ test("a key point over its 40 word target fails, though the schema allows 50", (
   output.keyPoints[1]!.text = Array(45).fill("word").join(" ");
 
   assert.deepEqual(failing(output), ["keyPointsWithinTarget"]);
+});
+
+test("in one line over its 25 word target fails, though the schema allows 35", () => {
+  const output = makeGeneratedOutput({ inOneLine: Array(30).fill("word").join(" ") });
+
+  assert.deepEqual(failing(output), ["inOneLineWithinTarget"]);
 });
 
 test("a dubious claim or reason over its target fails", () => {
@@ -105,7 +111,7 @@ test("one chapter holding most of a long video fails; a short video may be one c
   assert.deepEqual(failing(lopsided), ["chaptersSpreadAcrossVideo"]);
 
   const short = makeGeneratedOutput({
-    keyPoints: makeGeneratedOutput().keyPoints.map((point) => ({ ...point, range: null })),
+    keyPoints: makeGeneratedOutput().keyPoints.map((point) => ({ ...point, startSegmentIndex: -1, endSegmentIndex: -1 })),
     chapters: [{ title: "One idea", summary: "The whole clip.", startSegmentIndex: 0 }],
   });
   assert.deepEqual(failing(short, makeFetchedTranscript(6)), []);

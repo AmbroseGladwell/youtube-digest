@@ -239,6 +239,16 @@ our key. With their own key first, a Plus reader would rarely use what they paid
 110f) and fixes it. If it fell back quietly, a broken key would go unnoticed and spend our
 10 without the reader knowing why.
 
+**Nor on a model the provider refuses (other 4xx).** The provider read the request and
+turned it down for the model it names: a model it no longer has, or a smaller one whose
+structured-output limits the overview's schema goes past. The adapters classify it as
+`ModelRefusedError`. A reader on their own key chose that model, so when it fails on the
+last key tried, or the schema still breaks there, they're told in our words which provider
+and model couldn't make it, with a link to Settings › API keys to pick another (OV-247).
+The provider's response stays off the screen. An overview on our key that fails says only
+"Something went wrong making this overview. Try again in a while.", because the reader
+didn't choose that model.
+
 **The reader sees which key made it.** An overview made by falling back says so in one
 quiet line ("On us: your Anthropic key was out of credit"), and the count it used
 goes down where the reader can see it. This follows "degrade visibly". The record carries it as

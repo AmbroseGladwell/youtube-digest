@@ -1,13 +1,12 @@
 import type { Novelty, SellingType, WatchAnswer } from "@overview/domain";
 import type { SuggestedTopicShape } from "./sections/filingSection.js";
-import type { SegmentRangeShape } from "./sections/watchAnywaySection.js";
+import type { SegmentRangeShape } from "./sections/segmentRangeFields.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import type { GeneratedRecipe } from "./sections/recipeSection.js";
 
-export interface GeneratedTimedText {
+export interface GeneratedTimedText extends SegmentRangeShape {
   text: string;
-  range: SegmentRangeShape | null;
 }
 
 export interface GeneratedOutput {
@@ -35,9 +34,8 @@ export interface GeneratedOutput {
   howToApply?: {
     items: string[];
   };
-  watchAnyway?: {
+  watchAnyway?: SegmentRangeShape & {
     answer: WatchAnswer;
     reason: string;
-    range: SegmentRangeShape | null;
   };
 }

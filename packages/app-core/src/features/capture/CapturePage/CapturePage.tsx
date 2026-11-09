@@ -9,6 +9,7 @@ import { isOfferedPage } from "../../../app/isOfferedPage.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
+import { RunErrorMessage } from "../../newOverview/components/RunErrorMessage/RunErrorMessage.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
 import { CaptureReasonField } from "../../newOverview/components/CaptureReasonField/CaptureReasonField.js";
 import { GenerationSteps } from "../../newOverview/components/GenerationSteps/GenerationSteps.js";
@@ -342,10 +343,13 @@ function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
 
       {!failed && <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />}
 
-      {failed && (
-        <p className={styles.error} data-testid={capturePageTestIds.error}>
-          {run.error}
-        </p>
+      {run.error !== null && (
+        <RunErrorMessage
+          error={run.error}
+          className={styles.error}
+          testId={capturePageTestIds.error}
+          testIds={capturePageTestIds.runError}
+        />
       )}
 
       <div className={styles.workingFoot}>

@@ -154,6 +154,10 @@ const fillRecipeAddedWithRecipes: RecordMigration = {
 // clients hold these records back rather than show a recipe they would treat as a page's.
 const allowRecipesFromVideos: RecordMigration = { newSchemaVersion: 13 };
 
+// Nothing to alter: In one line may now run to 35 words, past the 25 an older client refuses,
+// so older clients hold these records back rather than quarantine them.
+const allowLongerOneLiners: RecordMigration = { newSchemaVersion: 14 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -167,6 +171,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillArticleAddedWithArticles,
   fillRecipeAddedWithRecipes,
   allowRecipesFromVideos,
+  allowLongerOneLiners,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

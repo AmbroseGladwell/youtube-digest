@@ -539,6 +539,25 @@ long point, so the hard limit is now only a guard against a point running away, 
 it's the target that sets the length. At 40 words the narrations run about 15%
 longer than before this change, against about 20% at 45.
 
+**Decision: In one line works the same way, at 25 and 35 (OV-252).** The 25-word cap was
+the one rule Claude kept breaking. Measured on 9 Nov 2026 with the comparison harness, two
+runs a side as the sample reader: Sonnet 5.5's first one-liners ran to a median of 26 words
+and at most 30 (34 with the schema in the prompt), where GPT-6.1 Sol's never passed 24. 28 of
+Sonnet's 29 correction passes were for it, and the 12 overviews it failed outright were all
+still over after the pass, by a word or two. So 25 stays what the prompt asks for and what
+keeps a library row scannable (`docs/architecture/overview-quality.md`); the record refuses
+only over 35, as a guard against a runaway. The library row clamps to two lines either way.
+Overview schema version 14 alters nothing and holds these records back from clients that
+still refuse 26 words (client version 15).
+
+Measured again on Sonnet 5.5 after the change, the same sets and reader: 52 of 52 written,
+51 first time (before: 39, 22 first time, 12 failed), at $0.055 an overview against $0.085.
+Everything else held: every key point, what stands out and partial watch with its stretch,
+every recipe found and both non-recipes left as notes. The cost is in the line itself: 37 of
+Sonnet's 52 one-liners are over 25 words (median 26, longest 33), where the correction pass
+used to trim them to 25 or fail. Sol is unaffected, since its prompt didn't change and its
+one-liners never passed 24.
+
 **Decision: verdict reasoning never opens with the novelty word, and the watch-anyway
 reason never restates the answer.** Narration says the answer itself before the
 reason, and leaves the novelty label on screen only, so either repetition would be
@@ -677,6 +696,62 @@ it anyway from partial (6/8) to no (0/8). Telling the model to distrust the vide
 discount the video's own case for what is new in it, and the novelty scale already has too
 many videos in one bucket (`novelty-scale.md`). If a model is found that does follow an
 instruction in a transcript, measure the rule again against that model, not this one.
+
+## The schema has to fit Claude's grammar
+
+Claude enforces a structured-output schema by compiling it into a grammar, and refuses one
+whose grammar passes an internal size limit it doesn't publish: a 400 saying "The compiled
+grammar is too large". The published limits (24 optional fields, 16 fields with unions) are
+not the ones that bite. OV-246: once recipe videos (OV-122) added a nullable `recipe` to every
+video's schema, Claude refused every video overview, at 7 unions of the 16 allowed, while
+OpenAI and Gemini took the same schema. It was measured by sending the schema with a 16-token
+reply, so the grammar compiled and almost nothing was generated.
+
+- **Size follows shape, not length.** A schema of 14 KB with 300 topic names compiled; one
+  boolean more in a recipe step did not. Unions cost the most, and a union nested inside an
+  array item inside another union costs more again. Below the limit, compiling is not
+  repeatable: the same schema with no topics passed once and failed later.
+- **The video schema had no headroom.** Dropping any one field, even `thin`, got it under.
+  Making only the recipe step plain got it under too, but two more string fields anywhere
+  broke it again.
+
+**Segment ranges are two plain indexes.** Every stretch of the video the model names (a key
+point, what stands out, Watch it anyway's partial range, a recipe step) is `startSegmentIndex`
+and `endSegmentIndex` on the item, with -1 for no stretch, rather than a range object that may be
+null (`segmentRangeFields.ts`). That took four unions out. Code turns -1 back into no range
+before anything is stored, so the `Overview` record did not change. Only the recipe, a recipe
+step's group, what stands out and the suggested topic may still be null, and a test holds that
+list. Measured headroom with the group nullable: three more string fields compile, six do not.
+
+**A recipe step's group stayed nullable.** Made a plain string, empty for none, it left room for
+six more fields, but GPT-6.1 Sol stopped naming the parts of a method: the party jollof's seven
+groups, there in both runs before, were in neither. Given "a name or null" it names them again
+(one run of two, where Sonnet 5.5 named them in both). Grouping varies from run to run either way.
+
+Measured with the comparison harness on 9 Nov 2026, the 20-video set and the recipe set, two runs
+a side, as the sample reader (`--reader sample`):
+
+| | Sol, before | Sol, two indexes | Sonnet 5.5, two indexes | Sonnet 5.5, schema in prompt |
+|---|---|---|---|---|
+| Overviews written | 52/52 | 52/52 | 39/52 | 34/52 |
+| Key points with a stretch | 94% | 97% | 100% | 100% |
+| What stands out with a stretch | 18/18 | 18/18 | 14/14 | 12/12 |
+| Partial Watch it anyway with a stretch | 2/2 | 2/2 | 2/2 | 2/2 |
+| A "no" or "yes" given a stretch | 0 | 0 | 0 | 0 |
+| Recipe steps with a stretch | 100% | 100% | 100% | 100% |
+| Cost per overview | $0.030 | $0.029 | $0.085 | $0.091 |
+
+Sonnet 5.5 on the schema before could not be measured: Claude refused all of it, with or without
+a reader's topics. Sol was unchanged by the two indexes, and no stretch of -1 turned into a false
+one at the start of the video. Every overview Sonnet 5.5 failed to write broke one rule: In one
+line over 25 words, still over after the correction pass. Three more in the schema-in-prompt arm
+were JSON with a sentence after it, which the adapter now reads past.
+
+**When Claude refuses the schema, it is sent again in the prompt.** Headroom runs out as the
+schema grows, so the Anthropic adapter answers a grammar refusal by sending the request once
+more without enforcement, with the schema written into the system prompt the way DeepSeek is
+always given it. The correction pass catches what enforcement would have. The comparison
+harness can force this path (`--refuse-enforced-schema`) to measure the notes it writes.
 
 ## Open, still to decide
 

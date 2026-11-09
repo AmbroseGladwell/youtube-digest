@@ -12,14 +12,14 @@ test("every event is named feature.screen.action in camelCase and says what it m
   }
 });
 
-test("every property is a choice, a flag, a number or one of our own ids, so none can carry text, a URL or a video id", () => {
+test("every property is a choice, a flag, a number, one of our own ids or a model id, so none can carry text, a URL or a video id", () => {
   const ids: readonly unknown[] = ANALYTICS_IDS;
   for (const [name, definition] of everyEvent) {
     for (const [prop, declared] of Object.entries(definition.props)) {
       const schema = declared instanceof z.ZodOptional ? declared.unwrap() : declared;
       assert.ok(
         schema instanceof z.ZodEnum || schema instanceof z.ZodBoolean || schema instanceof z.ZodNumber || ids.includes(schema),
-        `${name}.${prop} must be an enum, a boolean, a number or an id from ANALYTICS_IDS`,
+        `${name}.${prop} must be an enum, a boolean, a number or an id from ANALYTICS_IDS (ours, or a model's)`,
       );
     }
   }
@@ -39,4 +39,14 @@ test("an overview's own events carry its id on the reader, and leave it to the s
   }
   assert.ok(isAnalyticsEventName("reader.tabs.switched"));
   assert.ok(isAnalyticsEventName("sharedPage.tabs.switched"));
+});
+
+test("a model id is a provider's own id, and nothing shaped like a sentence or a link", () => {
+  const model = ANALYTICS_IDS[2];
+  for (const id of ["claude-haiku-5-5", "gpt-6.1-sol", "models/gemini-3.6", "mistral-medium-2508"]) {
+    assert.ok(model.safeParse(id).success, id);
+  }
+  for (const id of ["The compiled grammar is too large", "https://example.com/watch?v=x", "", "a".repeat(65)]) {
+    assert.ok(!model.safeParse(id).success, id);
+  }
 });

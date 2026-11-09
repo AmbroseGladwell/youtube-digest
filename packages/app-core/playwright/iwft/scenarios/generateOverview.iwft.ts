@@ -67,3 +67,34 @@ test("a failed generation call surfaces its error without saving anything to the
   const overviews = await backendSimulator.overviewStore.listOverviews();
   expect(overviews).toHaveLength(0);
 });
+
+test("a model the provider refuses is named with its provider, never shown as the provider's response, and points to Settings", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.anthropicRefusesTheModel();
+  const form = await launcher.launchExpectingFirstRun({
+    apiKeys: API_KEYS,
+    provider: "anthropic",
+    modelByProvider: { anthropic: "claude-haiku-5-5" },
+  });
+
+  await form.submitUrl(VALID_URL);
+
+  await form.verifyGenerationError(
+    "Anthropic couldn’t make this overview with Claude Haiku 5.5. Pick another model in Settings and try again.",
+  );
+  await form.verifyGenerationErrorLinksToModelChoice();
+  await expect
+    .poll(() =>
+      backendSimulator.errors
+        .batches()
+        .flatMap(({ warnings }) => warnings ?? [])
+        .filter(({ name }) => name === "chosenModelFailed"),
+    )
+    .toEqual([expect.objectContaining({ provider: "anthropic", model: "claude-haiku-5-5", reason: "refused", status: 400 })]);
+  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
+
+  await form.clickPickAnotherModel();
+  await launcher.settingsPage.verifyIsShown();
+});

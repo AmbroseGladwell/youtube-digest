@@ -34,3 +34,12 @@ test("a sign-out that gave up on its last sync says only how much it left", () =
   assert.ok(ClientWarning.safeParse({ name: "signOutSyncGaveUp", pending: 3, stuck: 0, at: AT }).success);
   assert.ok(!ClientWarning.safeParse({ name: "signOutSyncGaveUp", pending: -1, stuck: 0, at: AT }).success);
 });
+
+test("a chosen model's failure names the provider and the model's id, and nothing shaped like a sentence", () => {
+  const failed = { name: "chosenModelFailed", provider: "anthropic", model: "claude-haiku-5-5", reason: "refused", status: 400, at: AT };
+  assert.ok(ClientWarning.safeParse(failed).success);
+  assert.ok(ClientWarning.safeParse({ ...failed, model: "models/gemini-3.6-flash:latest", reason: "schema", status: undefined }).success);
+  assert.ok(!ClientWarning.safeParse({ ...failed, model: "The compiled grammar is too large" }).success);
+  assert.ok(!ClientWarning.safeParse({ ...failed, status: 503 }).success);
+  assert.ok(!ClientWarning.safeParse({ ...failed, detail: '{"type":"error"}' }).success);
+});

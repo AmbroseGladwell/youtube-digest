@@ -3,6 +3,7 @@ import type { FetchedTranscript } from "@overview/transcripts";
 import { comparedModelName, type ComparedModel } from "./ComparedModel.js";
 import type { RecordStore } from "./jsonRecordStore.js";
 import { priceOf } from "@overview/generation";
+import type { ReaderProfile } from "./ReaderProfile.js";
 import type { RunOneOptions } from "./runOne.js";
 import type { RunRecord } from "./RunRecord.js";
 import { spendWithinBudget, totalSpent } from "./spendWithinBudget.js";
@@ -14,6 +15,7 @@ export interface RunComparisonOptions {
   budgetDollars: number;
   store: RecordStore<RunRecord>;
   runOne: (options: RunOneOptions) => Promise<RunRecord>;
+  profile?: ReaderProfile;
   log: (line: string) => void;
 }
 
@@ -59,7 +61,10 @@ export async function runComparison(options: RunComparisonOptions): Promise<Comp
         if (done) skipped += 1;
         return !done;
       })
-      .map((fetched) => () => options.runOne({ model, apiKey: options.keys[model.provider]!, fetched })),
+      .map((fetched) => () => {
+        const apiKey = options.keys[model.provider]!;
+        return options.runOne(options.profile ? { model, apiKey, fetched, profile: options.profile } : { model, apiKey, fetched });
+      }),
   );
 
   const outcome = await spendWithinBudget({

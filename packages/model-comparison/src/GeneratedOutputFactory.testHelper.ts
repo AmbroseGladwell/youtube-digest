@@ -6,9 +6,9 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
     coreClaim: "Planning meals cut the grocery bill from $1,200 to 960 a month.",
     thin: false,
     keyPoints: [
-      { text: "Planning a week of meals first cut the bill.", range: { startSegmentIndex: 3, endSegmentIndex: 5 } },
-      { text: "Buying store brands saved the most.", range: null },
-      { text: "Shopping once a week stopped impulse buys.", range: { startSegmentIndex: 10, endSegmentIndex: 12 } },
+      { text: "Planning a week of meals first cut the bill.", startSegmentIndex: 3, endSegmentIndex: 5 },
+      { text: "Buying store brands saved the most.", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "Shopping once a week stopped impulse buys.", startSegmentIndex: 10, endSegmentIndex: 12 },
     ],
     chapters: [
       { title: "The starting budget", summary: "What they spent before.", startSegmentIndex: 0 },
@@ -28,7 +28,7 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
     },
     selling: { type: "none", detail: "Nothing is sold.", compromisesContent: false },
     howToApply: { items: ["Plan a week of meals before shopping."] },
-    watchAnyway: { answer: "no", reason: "The overview covers it.", range: null },
+    watchAnyway: { answer: "no", reason: "The overview covers it.", startSegmentIndex: -1, endSegmentIndex: -1 },
     ...overrides,
   };
 }

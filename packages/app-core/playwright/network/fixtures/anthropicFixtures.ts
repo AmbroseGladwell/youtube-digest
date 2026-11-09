@@ -8,9 +8,9 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     coreClaim: "The simulated technique works because the fixture says so.",
     thin: false,
     keyPoints: [
-      { text: "The video opens with a greeting.", range: null },
-      { text: "It states one claim.", range: null },
-      { text: "It closes with how to apply that claim.", range: null },
+      { text: "The video opens with a greeting.", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "It states one claim.", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "It closes with how to apply that claim.", startSegmentIndex: -1, endSegmentIndex: -1 },
     ],
     chapters: [
       { title: "The greeting", summary: "The simulated creator says hello.", startSegmentIndex: 0 },
@@ -22,7 +22,7 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     tags: ["iwft-fixture", "simulated-video", "test-data"],
     verdict: {
       novelty: "original",
-      standsOut: { text: "A new idea.", range: { startSegmentIndex: 1, endSegmentIndex: 1 } },
+      standsOut: { text: "A new idea.", startSegmentIndex: 1, endSegmentIndex: 1 },
       dubiousClaims: [],
       reasoning: "This is fixture reasoning text, not a real judgment.",
       similarToIndices: [],
@@ -32,7 +32,8 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     watchAnyway: {
       answer: "partial",
       reason: "Only the fixture's second segment is worth watching directly.",
-      range: { startSegmentIndex: 0, endSegmentIndex: 1 },
+      startSegmentIndex: 0,
+      endSegmentIndex: 1,
     },
     ...overrides,
   };
