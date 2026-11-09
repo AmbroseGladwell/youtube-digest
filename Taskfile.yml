@@ -58,6 +58,22 @@ tasks:
     cmds:
       - scripts/secrets.sh run {{.CLI_ARGS}}
 
+  secrets:evals:
+    desc: 'Run one command with the overview-evals secrets injected, so the harness bills apart from dev (e.g. task secrets:evals -- npm run compare --workspace packages/model-comparison -- --help)'
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - BWS_PROJECT=overview-evals scripts/secrets.sh run {{.CLI_ARGS}}
+
+  secrets:compare:
+    desc: Show, per key, whether overview-dev, overview-prod and overview-evals hold the same value, printing no value; fails if any is shared
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+    cmds:
+      - node scripts/compareSecretProjects.mjs
+
   secrets:seed:
     desc: One-time migration; create the Bitwarden project and copy the values from an existing hand-written .env into it
     preconditions:

@@ -5,7 +5,7 @@ import { judgmentStore } from "../judgmentStore.js";
 import { BASELINE_MODEL, judgePair } from "../judgePair.js";
 import { judgingPairs, promptPairs, runJudging } from "../runJudging.js";
 
-const USAGE = `usage: task secrets:run -- npm run judge --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run judge --workspace packages/model-comparison -- \\
   --run <name> [--against <earlier run>] [--budget <dollars>] [--limit <pairs>] [--candidates provider:model,...]
 
 --against judges each model's note in --run against the same model's note in the earlier run,

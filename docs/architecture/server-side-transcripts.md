@@ -219,7 +219,7 @@ and these numbers are for spotting trends.
 
 It is on in production from OV-55: `TRANSCRIPT_SERVICE = "on"` in `fly.toml`, and
 `TRANSCRIPT_PROXY_URL` in `.env.prod.tpl` and in Bitwarden's `overview-prod` (and
-`overview-dev`, for the check below). Locally it stays off unless `.env.local` says
+`overview-dev`, for the check below, as its own proxy sub-user so the two bill apart). Locally it stays off unless `.env.local` says
 otherwise.
 
 - **To switch it off,** set `TRANSCRIPT_SERVICE = "off"` and deploy. Every other rung is

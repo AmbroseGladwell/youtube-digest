@@ -14,7 +14,7 @@ import { runDirectoryStore } from "../runDirectoryStore.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 import { videoLengthMs } from "../summariseRuns.js";
 
-const USAGE = `usage: task secrets:run -- npm run judge-key-points --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run judge-key-points --workspace packages/model-comparison -- \\
   --run <name> --against <earlier run> [--videos id,...] [--budget <dollars>] [--limit <pairs>] [--measure-only]
 
 Judges only the key points of each model's note in --run against the same model's note in the

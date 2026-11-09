@@ -6,7 +6,7 @@ import { generationClientFromEnv } from "./generationClientFromEnv.js";
 
 const url = process.argv[2];
 if (!url) {
-  console.error("usage: task secrets:run -- npx tsx scripts/endToEndSanityCheck.ts <youtube-url>");
+  console.error("usage: task secrets:evals -- npx tsx scripts/endToEndSanityCheck.ts <youtube-url>");
   process.exit(1);
 }
 

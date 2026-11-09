@@ -20,7 +20,7 @@ import { runOneArticle } from "../runOneArticle.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 import { videoCoverageInput } from "../videoCoverageInput.js";
 
-const USAGE = `usage: task secrets:run -- npm run coverage --workspace packages/model-comparison -- \\
+const USAGE = `usage: task secrets:evals -- npm run coverage --workspace packages/model-comparison -- \\
   --run <name> [--budget <dollars>] [--model provider:model] [--measure-only]`;
 
 const LANES = 4;
