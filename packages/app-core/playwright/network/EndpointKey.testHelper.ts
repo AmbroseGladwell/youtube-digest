@@ -57,6 +57,8 @@ export enum EndpointKey {
   SHARED_PAGE_EVENTS = "SHARED_PAGE_EVENTS",
   ERRORS = "ERRORS",
   PLAYLIST_LOOKUP = "PLAYLIST_LOOKUP",
+  // Overviews close in meaning to a library search (docs/features/search-by-meaning.md).
+  MEANING_SEARCH = "MEANING_SEARCH",
   // Overviews made on our key, the account's month on each key, the reservations an
   // own-key overview takes, and the signed-out trial's token (docs/architecture/tiers.md).
   OUR_KEY_STATUS = "OUR_KEY_STATUS",
