@@ -3,8 +3,8 @@
 One place to see what is spent, in production, in development and on evals (OV-257). A
 nightly job reads each provider's own bill, writes one CSV per day to a private R2 bucket,
 and PostHog's warehouse reads the bucket, so the dashboard is a PostHog dashboard and there
-is no admin page to build. What each reader costs is the next card, OV-259, built on these
-rows.
+is no admin page to build. What each reader costs, and prod split further than the bill
+splits it, is the next card, OV-259, built on these rows ("What this does not do").
 
 ## Where each figure comes from
 
@@ -210,3 +210,22 @@ since nothing can be recorded.
 The code is `scripts/spend/`: one module per provider, the expected rows, the CSV, the R2
 store, and `recordSpend.mjs`, which puts them together. Each provider's adapter is tested
 on its response shape with no live call (`npm run test:tooling`).
+
+## What this does not do, and where it went
+
+**Spend by area inside prod, beyond the bill's own line items, is OV-259's.** OpenAI's line
+items already split generation from embeddings. Splitting generation further, into the
+overview pass and each small pass, and setting the app's own metered cost against the bill
+with the gap shown, needs a per-call cost the app records. The logs carry one
+(`costDollars` on `api.ourKey.generated` and `api.ourKey.smallPass`, tokens on
+`api.meaning.embedded`), but a log line is never what a chart is drawn from (`analytics.md`,
+"Three kinds of record"), and OV-259 already records each call's cost against its account in
+Postgres. So the reconciliation is built there, once, and lands on this dashboard.
+
+**The app meters less than OpenAI bills.** A check by hand on 9 Nov 2026, summing the logged
+`costDollars` for production against the bill for the shared project, found the app
+accounting for most but not all of generation spend on ordinary days, a steady shortfall
+rather than noise. The likeliest cause is that OpenAI's usage parser counts no cache-write
+tokens (`TokenUsage.ts`) while the bill charges cache writes as their own line item; failed
+attempts, which bill but log no cost, are the other. OV-260 finds and fixes it, before
+OV-259's reconciliation relies on the metering.
