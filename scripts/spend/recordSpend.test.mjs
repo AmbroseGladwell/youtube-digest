@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { EXPECTED_SPEND } from "./expectedSpend.mjs";
+import { ENTERED_BY_HAND, EXPECTED_SPEND } from "./expectedSpend.mjs";
 import { parseManualEntries } from "./manualSpend.mjs";
-import { datesBetween, NO_FIGURE, NOT_BUILT, readersFromEnv, recentDays, recordSpend, rowsForDay } from "./recordSpend.mjs";
+import { parseSpendCsv, spendCsv } from "./spendCsv.mjs";
+import { datesBetween, NO_FIGURE, readersFromEnv, recentDays, recordSpend, rowsForDay } from "./recordSpend.mjs";
 
 const AT = "2026-11-09T04:30:00.000Z";
 const NOW = new Date(AT);
@@ -52,7 +53,7 @@ test("every expected provider has a row each day: billed, entered by hand, or no
     [of("anthropic", "evals", "generation").source, of("anthropic", "evals", "generation").reason],
     ["not_tracked", "ANTHROPIC_ADMIN_KEY is not set"],
   );
-  assert.deepEqual([of("fly", "prod", "servers").dollars, of("fly", "prod", "servers").reason], [null, NOT_BUILT]);
+  assert.deepEqual([of("fly", "prod", "servers").dollars, of("fly", "prod", "servers").reason], [null, ENTERED_BY_HAND.fly]);
   assert.ok(rows.every((row) => row.date === "2026-11-08"));
   assert.equal(rows.length, EXPECTED_SPEND.length);
 });
@@ -154,6 +155,8 @@ test("a missing key warns and leaves the provider not tracked", async () => {
   assert.deepEqual(warnings, [
     "openai is not tracked: OPENAI_ADMIN_KEY is not set",
     "neon is not tracked: NEON_API_KEY or NEON_PROJECT_ID is not set",
+    "decodo is not tracked: DECODO_API_KEY is not set",
+    "cloudflare is not tracked: CLOUDFLARE_API_TOKEN or R2_ACCOUNT_ID is not set",
   ]);
 });
 
@@ -223,4 +226,139 @@ test("a range of more than 180 days, or a backwards one, is refused", async () =
   const base = { readers: {}, manualEntries: [], store: memoryStore(), recordedAt: AT };
   await assert.rejects(recordSpend({ ...base, from: "2026-11-08", to: "2026-11-07" }), /not 0/);
   await assert.rejects(recordSpend({ ...base, from: "2026-01-01", to: "2026-11-07" }), /not 311/);
+});
+
+const storeWith = (days) => {
+  const store = memoryStore();
+  for (const [date, rows] of Object.entries(days)) store.objects.set(`daily/${date}.csv`, spendCsv(rows, AT));
+  return store;
+};
+
+test("a day a reader cannot read keeps that provider's stored figures instead of blanking them", async () => {
+  const store = storeWith({
+    "2026-11-07": [
+      { date: "2026-11-07", provider: "cloudflare", environment: "unsplit", area: "storage", dollars: 0.5, source: "bill" },
+      {
+        date: "2026-11-07",
+        provider: "cloudflare",
+        environment: "prod",
+        area: "storage",
+        dollars: null,
+        source: "usage",
+        quantity: 0.1,
+        unit: "storage_gb",
+      },
+    ],
+  });
+  const { days } = await recordSpend({
+    from: "2026-11-07",
+    to: "2026-11-08",
+    readers: {
+      cloudflare: {
+        read: async () => ({
+          rows: [{ date: "2026-11-08", provider: "cloudflare", environment: "unsplit", area: "storage", dollars: 0.25, source: "bill" }],
+          readable: (date) => date >= "2026-11-08",
+          outOfRange: "before the current billing period",
+        }),
+      },
+    },
+    manualEntries: [],
+    store,
+    recordedAt: AT,
+  });
+  const cloudflare = (date) => parseSpendCsv(store.objects.get(`daily/${date}.csv`)).filter((row) => row.provider === "cloudflare");
+  assert.deepEqual(
+    cloudflare("2026-11-07").map((row) => [row.source, row.dollars ?? row.quantity]),
+    [
+      ["usage", 0.1],
+      ["bill", 0.5],
+    ],
+  );
+  assert.deepEqual(days[0].keptFrom, ["cloudflare"]);
+  assert.deepEqual(
+    cloudflare("2026-11-08").map((row) => row.dollars),
+    [0.25],
+  );
+});
+
+test("an out-of-range day with nothing stored is not tracked with the reader's reason", async () => {
+  const store = memoryStore();
+  await recordSpend({
+    from: "2026-10-01",
+    to: "2026-10-01",
+    readers: { cloudflare: { read: async () => ({ rows: [], readable: () => false, outOfRange: "before the current billing period" }) } },
+    manualEntries: [],
+    store,
+    recordedAt: AT,
+  });
+  const [row] = parseSpendCsv(store.objects.get("daily/2026-10-01.csv")).filter((stored) => stored.provider === "cloudflare");
+  assert.deepEqual([row.source, row.reason], ["not_tracked", "before the current billing period"]);
+});
+
+test("a provider that fails keeps its stored bill rather than losing a day already recorded", async () => {
+  const store = storeWith({ "2026-11-08": [openAiRow("2026-11-08", "prod", "generation", 3)] });
+  const { warnings } = await recordSpend({
+    from: "2026-11-08",
+    to: "2026-11-08",
+    readers: {
+      openai: {
+        read: async () => {
+          throw new Error("OpenAI answered 503");
+        },
+      },
+    },
+    manualEntries: [],
+    store,
+    recordedAt: AT,
+  });
+  const openAi = parseSpendCsv(store.objects.get("daily/2026-11-08.csv")).filter((row) => row.provider === "openai");
+  assert.equal(openAi.find((row) => row.environment === "prod" && row.area === "generation").dollars, 3);
+  assert.equal(openAi.find((row) => row.environment === "dev" && row.area === "generation").reason, "OpenAI answered 503");
+  assert.equal(warnings.length, 1);
+});
+
+test("stored hand-entered and not-tracked rows are never kept, so today's figures and reasons win", async () => {
+  const store = storeWith({
+    "2026-11-08": [
+      { date: "2026-11-08", provider: "neon", environment: "prod", area: "database", dollars: 9, source: "manual" },
+      { date: "2026-11-08", provider: "neon", environment: "prod", area: "database", dollars: null, source: "not_tracked", reason: "old" },
+    ],
+  });
+  await recordSpend({
+    from: "2026-11-08",
+    to: "2026-11-08",
+    readers: { neon: { read: async () => ({ rows: [], readable: () => false, outOfRange: "only yesterday" }) } },
+    manualEntries: parseManualEntries(
+      JSON.stringify([{ provider: "neon", environment: "prod", area: "database", monthlyDollars: 0, from: "2026-09-27" }]),
+    ),
+    store,
+    recordedAt: AT,
+  });
+  const neon = parseSpendCsv(store.objects.get("daily/2026-11-08.csv")).filter((row) => row.provider === "neon");
+  assert.deepEqual(
+    neon.map((row) => [row.source, row.dollars]),
+    [["manual", 0]],
+  );
+});
+
+test("Neon's usage recorded on earlier nights survives later nights' rewrites", async () => {
+  const store = memoryStore();
+  const night = async (now, project) => {
+    const fetch = async (url) => ({ ok: true, json: async () => (url.endsWith("/branches") ? { branches: [] } : { project }) });
+    const { from, to } = recentDays(new Date(now));
+    await recordSpend({
+      from,
+      to,
+      readers: readersFromEnv({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, fetch, new Date(now)),
+      manualEntries: [],
+      store,
+      recordedAt: now,
+    });
+  };
+  await night("2026-11-09T04:30:00Z", { compute_time_seconds: 3600, active_time_seconds: 0, data_transfer_bytes: 0 });
+  await night("2026-11-10T04:30:00Z", { compute_time_seconds: 7200, active_time_seconds: 0, data_transfer_bytes: 0 });
+  const computeOn = (date) =>
+    parseSpendCsv(store.objects.get(`daily/${date}.csv`)).find((row) => row.unit === "compute_hours_month_to_date")?.quantity;
+  assert.equal(computeOn("2026-11-08"), 1);
+  assert.equal(computeOn("2026-11-09"), 2);
 });

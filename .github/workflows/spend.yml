@@ -38,4 +38,6 @@ jobs:
           OPENAI_ADMIN_KEY: ${{ secrets.OPENAI_ADMIN_KEY }}
           NEON_PROJECT_ID: raspy-dream-86058377
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          DECODO_API_KEY: ${{ secrets.DECODO_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SPEND_MANUAL_ENTRIES: ${{ vars.SPEND_MANUAL_ENTRIES }}

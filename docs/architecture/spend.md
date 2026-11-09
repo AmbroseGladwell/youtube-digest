@@ -16,11 +16,30 @@ estimated, and no model works anything out (`docs/prototype/constraints.md`).
 |---|---|---|---|
 | OpenAI | prod, dev, evals | generation, embeddings | the Costs API with an admin key, grouped by project and line item |
 | Neon | prod | database | cost entered by hand: the plan's fee, $0 on the free plan. Usage from the project API: compute and active hours and transfer this month so far, and storage now |
-| Anthropic | evals | generation | not tracked yet |
-| Gemini | evals | generation | not tracked yet |
-| Decodo | prod | transcripts | not tracked yet |
-| Fly.io | prod | servers (the API app), narration (the TTS app) | not tracked yet |
-| Cloudflare | prod, dev | storage | not tracked yet |
+| Anthropic | evals | generation | entered by hand: an individual account has no Admin API, so no cost report |
+| Gemini | evals | generation | entered by hand: Gemini's cost needs a Google Cloud billing export to BigQuery |
+| Decodo | prod | transcripts | cost entered by hand: the plan's fee. Usage from the traffic statistics API: proxy traffic in GB and requests, each day |
+| Fly.io | prod | servers (the API app), narration (the TTS app) | entered by hand: Fly.io has no cost API |
+| Cloudflare | unsplit (cost), prod and dev (usage) | storage, and any other service under its own name | cost from the billable usage API (alpha, FOCUS); usage from R2's analytics: storage in GB and requests per bucket, each day |
+
+A provider entered by hand shows as not tracked, with a reason saying what to enter, until
+its figure is in `SPEND_MANUAL_ENTRIES` ("Figures entered by hand").
+
+**Decodo** reports traffic, never money, at `POST /api/v2/statistics/traffic` with the key in
+`Authorization` as it is. The plan, from its subscriptions endpoint, was a year's 1 GB of
+residential traffic from 5 Oct 2026, so its cost is the plan's fee entered by hand, a
+twelfth of it each month. A day with no traffic records 0, not nothing.
+
+**Cloudflare's bill is one account for every environment**, so its cost is `unsplit`, as
+OpenAI's is before 9 Nov 2026. R2's charges are `storage`; any other service on the bill gets
+its own area from its service family rather than being dropped. The usage rows split by
+bucket: a bucket whose name ends in `-dev` is dev, every other bucket prod. Two things found
+live on 9 Nov 2026: the billable usage endpoint returns only the current billing period
+(it started on the 30th) and its date filters return nothing, so it is read whole and
+matched by day; and R2's analytics refuse a range wider than 32 days, so they are read 31
+days at a time. Days before the current billing period cannot be read, so the job keeps
+whatever was recorded for them ("Keeping what a reader cannot read again"); the backfill
+from 27 Sep 2026 left 27 Sep to 29 Oct not tracked.
 
 The environments are the ones `docs/conventions/secrets.md` splits every key by: no paid
 key is shared between `overview-prod`, `overview-dev` and `overview-evals`, so each bill
@@ -64,11 +83,11 @@ Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction buck
 |---|---|
 | `date` | the UTC day the cost was incurred |
 | `provider` | `openai`, `neon`, … |
-| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for OpenAI before 9 Nov 2026 |
+| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, and Cloudflare |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
 | `source` | `bill`, `manual`, `not_tracked`, or `usage` for a row that measures use rather than money |
-| `reason` | why a row is not tracked: a missing key, the status a provider answered, the bill having no figure for the day yet, or not built yet |
+| `reason` | why a row is not tracked: a missing key, the status a provider answered, the bill having no figure for the day yet, a day outside what the provider can report, or what to enter by hand |
 | `quantity`, `unit` | on a `usage` row, how much and of what (`compute_hours_month_to_date`); blank on rows of money |
 | `recorded_at` | when the job wrote it |
 
@@ -83,7 +102,19 @@ UTC days, so a bill that settles late is picked up on the next two nights.
 
 **A day counts as recorded only once it reads back** byte for byte from R2 (`CLAUDE.md`,
 "Verify before reporting"). A failed write or a mismatch fails the run; a provider that
-could not be read warns on the run and leaves its rows not tracked.
+could not be read warns on the run.
+
+### Keeping what a reader cannot read again
+
+Rewriting three days every night would otherwise lose figures a provider can no longer
+report: Cloudflare's bill only covers the current billing period, Neon only knows the month
+so far as of the latest run, and an outage would blank two days already recorded. So before
+a day is rewritten, the job reads the stored day, and for every provider that cannot read
+that day (a reader says which days it can read, and a failed or missing provider can read
+none) it keeps that provider's stored `bill` and `usage` rows. Stored `manual` and
+`not_tracked` rows are never kept, so today's hand-entered figures and reasons always win.
+With nothing stored, the provider is not tracked with its reason, as before. The run's log
+names the providers it kept figures for.
 
 ## Figures entered by hand
 
@@ -150,6 +181,8 @@ tab with an optional `from` and `to` to record or backfill a range of up to 180 
 |---|---|---|
 | `OPENAI_ADMIN_KEY` | Actions secret | an OpenAI **admin** key, read-only, made under the organisation's admin keys; also kept in `overview-prod` |
 | `NEON_API_KEY` | Actions secret | a Neon API key scoped to the one project; also kept in `overview-prod`. The project's id is in the workflow, since it is not a secret |
+| `DECODO_API_KEY` | Actions secret | a Decodo public API key, from Account and Settings › API Keys; also kept in `overview-prod` |
+| `CLOUDFLARE_API_TOKEN` | Actions secret | a Cloudflare API token with Account Analytics Read and Billing Read on the account; also kept in `overview-prod`. The account id is `R2_ACCOUNT_ID`, already in the workflow |
 | `SPEND_R2_ACCESS_KEY_ID`, `SPEND_R2_SECRET_ACCESS_KEY` | Actions secrets | an R2 token with Object Read & Write on `the-overview-spend` only; also kept in `overview-prod` |
 | `SPEND_MANUAL_ENTRIES` | Actions variable | the hand-entered figures above |
 
