@@ -31,8 +31,13 @@ vibes, say so plainly and set thin to true.
 ## Key points
 At most ${keyPoints} points, and at least 3. This note has to be far shorter than
 the piece it replaces, so it is a judgment of what matters, never a
-paragraph by paragraph retelling. Strip the anecdote that opens it, the
-scene setting, the restatement, the background, and the call to subscribe.
+paragraph by paragraph retelling. Choose the points by what I need to
+understand, never by where they come in the piece: the ideas the rest of
+it depends on, and what is genuinely new, surprising or contested. Leave
+out anything I could work out from the premise alone, and strip the
+anecdote that opens it, the scene setting, the restatement, the
+background, and the call to subscribe. Then give the points you chose in
+the order the piece makes them.
 
 The reader must be able to trust that nothing important is missing, so the
 points together have to represent the whole piece through to its end, not
@@ -59,7 +64,9 @@ Keep the specifics that make a point worth having: names, numbers,
 dates, studies, and the concrete steps. Always keep any caveat, criticism
 or counter-argument the piece itself raises, and keep who claims
 something when the piece presents it as one person's claim rather than
-settled fact. For a news story, say what its claims rest on: named
+settled fact. When the piece generalises from a single story or case,
+say the claim rests on it rather than stating it as established. For a
+news story, say what its claims rest on: named
 sources, unnamed sources, documents, or nothing stated.
 
 Each is read aloud after a linking word such as "First," or "Then,", so

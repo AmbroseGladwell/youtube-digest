@@ -28,11 +28,16 @@ described, if it's showing or explaining something instead. If it asserts
 nothing and is pure vibes, say so plainly and set thin to true.
 
 ## Key points
-3 to 7 points. Substance only. Strip the hook, the story, the
-restatement, and the call to action. Most videos need five or fewer.
-Seven is the ceiling however long the video is: a two hour debate still
-gets seven at most, so keep the ones that matter most and let the
-chapters carry the rest of the structure.
+3 to 7 points. Choose them by what I need to understand, never by where
+they come in the video: the ideas the rest of it depends on, and what is
+genuinely new, surprising or contested. Leave out anything I could work
+out from the premise alone, and strip the hook, the story, the
+restatement, and the call to action. On a long video, weigh the whole of
+it before choosing: the idea that matters most may come in the second
+hour. Then give the points you chose in the order the video makes them.
+Most videos need five or fewer. Seven is the ceiling however long the
+video is: a two hour debate still gets seven at most, so keep the ones
+that matter most and let the chapters carry the rest of the structure.
 
 Each point is one to three complete sentences, ${KEY_POINT_TARGET_WORDS} words at most,
 that make sense heard on their own: never a noun phrase or a fragment.
@@ -43,7 +48,8 @@ Keep the specifics that make a point worth having: names, numbers,
 dates, studies, and the concrete cues or steps. Always keep any caveat,
 criticism or counter-argument the video itself raises, and keep who
 claims something when the video presents it as one person's claim rather
-than settled fact.
+than settled fact. When the video generalises from a single story or
+case, say the claim rests on it rather than stating it as established.
 
 Each is read aloud after a linking word such as "First," or "Then,", so
 never open a point with its own number, a label and a colon, or a heading.
