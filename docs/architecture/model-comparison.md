@@ -220,7 +220,8 @@ task secrets:run -- npm run judge-key-points --workspace packages/model-comparis
 - **Both orders:** every pair is judged twice, once each way round. A side wins a dimension only
   when both orders agree; a split is a tie.
 - **Dimensions:** choice, completeness, faithfulness and overall (`keyPointsRubric.ts`).
-- **Where it goes:** the report lands in `.local/key-point-judgments/<run>--against--<run>/report.md`.
+- **The trust standard is in the rubric, from rubric 2 on.** A point that says what a claim rests on (one person's story, a single case, no figures given) counts as faithful reporting, as long as it is true of the transcript. It isn't marked down as editorialising or wasted space. Outside facts are still unsupported.
+- **Where it goes:** the report lands in `.local/key-point-judgments/<run>--against--<run>--rubric-<n>/report.md`. `KEY_POINTS_RUBRIC_VERSION` goes up whenever the wording changes, so judgments under different rubrics are never mixed or counted as already done.
 - **Cost:** about $0.08 a pair.
 
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
@@ -706,7 +707,7 @@ ov-214-before` on the 20 videos, judged by Gemini 3.1 Pro:
 
 **A whole-note judge can't isolate a change to one field**, so a judge that sees only the key
 points was built (`judge-key-points`, above) and run on notes that already existed. Nothing
-new was generated for it. Judging cost $7.00, and the 12 notes from the stopped run had cost
+new was generated for it. These figures are rubric 1, before the trust standard was added. Judging cost $7.00, and the 12 notes from the stopped run had cost
 $0.35 to write.
 
 | Pair | Prompts | Pairs | Wins | Ties | Losses | Win rate |

@@ -21,6 +21,13 @@ test("the judge sees the key points with their places, and none of the fields th
   assert.doesNotMatch(shown, /The starting budget|Nothing is sold/);
 });
 
+test("the rubric holds a caveat about what a claim rests on to the editorial standard, not against choice", () => {
+  const { systemPrompt } = keyPointsPrompt(makeFetchedTranscript(), makeOverview(), makeOverview());
+
+  assert.match(systemPrompt, /never present an anecdote as\s+proof/);
+  assert.match(systemPrompt, /do not count it against choice/);
+});
+
 test("the prompt gives the transcript with timestamps and both sets of key points", () => {
   const { userMessage } = keyPointsPrompt(makeFetchedTranscript(), makeOverview(), makeOverview({ inOneLine: "Another line." }));
 
@@ -65,6 +72,7 @@ test("the report tallies the dimensions and counts the calls that followed posit
     ["a", "b", "c"].map((videoId) => ({ videoId, title: `Video ${videoId}`, length: "10:00" })),
     "new",
     "old",
+    2,
   );
   assert.match(markdown, /\| overall \| 1 \| 1 \| 1 \| 50% \|/);
   assert.match(markdown, /on 1 of 3 pairs the judge chose the same letter in both orders/);

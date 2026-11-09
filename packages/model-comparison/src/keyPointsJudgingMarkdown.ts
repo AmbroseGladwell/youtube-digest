@@ -30,12 +30,13 @@ export function keyPointsJudgingMarkdown(
   videos: readonly KeyPointsVideo[],
   candidateRun: string,
   baselineRun: string,
+  rubricVersion: number,
 ): string {
   const judged = records.filter((record) => record.results !== null);
   const dimensions = [...KEY_POINT_DIMENSIONS, "overall" as const];
   const cost = records.reduce((total, record) => total + (record.costDollars ?? 0), 0);
   const lines = [
-    `# Key points judged: ${candidateRun} against ${baselineRun}`,
+    `# Key points judged: ${candidateRun} against ${baselineRun}, rubric ${rubricVersion}`,
     "",
     `Each video's key points from \`${candidateRun}\` against the same model's from \`${baselineRun}\`, by ` +
       `${[...new Set(judged.map((record) => record.judge))].join(", ") || "no judge yet"}. The judge sees only the ` +

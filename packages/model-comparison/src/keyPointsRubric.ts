@@ -3,6 +3,9 @@ import { formatTimestamp, type Overview } from "@overview/domain";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { transcriptForJudging } from "./judgeRubric.js";
 
+// Raise when the rubric changes, so judgments under the old wording are kept apart, not reused.
+export const KEY_POINTS_RUBRIC_VERSION = 2;
+
 export const KEY_POINT_DIMENSIONS = ["choice", "completeness", "faithfulness"] as const;
 export type KeyPointDimension = (typeof KEY_POINT_DIMENSIONS)[number];
 
@@ -33,6 +36,16 @@ Judge each dimension on its own, then overall:
 - faithfulness: every point is supported by the transcript. Caveats the video raises are kept,
   a claim the video presents as one person's stays theirs, and nothing is stated with more
   certainty than the video gives it. An invented specific is worse than a missing one.
+
+The notes follow an editorial standard: a reader must be able to tell what the video said apart
+from how much weight it bears. So a point should keep the qualifications and uncertainty the
+video expresses, keep a significant counter-argument even when it complicates the summary,
+attribute opinions and disputed claims to whoever makes them, and never present an anecdote as
+proof of a general claim. A point that says what a claim rests on, such as one person's story,
+a single case, or no figures given, is part of reporting the video faithfully. It is not
+editorialising and not wasted space, as long as it is true of the transcript. Judge it under
+faithfulness, and do not count it against choice. Facts brought in from outside the transcript
+are still unsupported, however accurate.
 
 Length is not quality, and more points are not better than fewer. Answer "tie" for a dimension
 when neither set is meaningfully better on it. For overall, pick the set of key points the

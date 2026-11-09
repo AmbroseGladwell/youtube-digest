@@ -8,6 +8,7 @@ import { jsonRecordStore, safePathPart } from "../jsonRecordStore.js";
 import { judgeKeyPointsPair } from "../judgeKeyPointsPair.js";
 import type { KeyPointsJudgeRecord } from "../KeyPointsJudgeRecord.js";
 import { keyPointsJudgingMarkdown } from "../keyPointsJudgingMarkdown.js";
+import { KEY_POINTS_RUBRIC_VERSION } from "../keyPointsRubric.js";
 import { pairKey, promptPairs } from "../runJudging.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
@@ -55,7 +56,7 @@ if (allPairs.length === 0) {
 }
 const pairs = values.limit === undefined ? allPairs : allPairs.slice(0, Number(values.limit));
 
-const directory = comparisonPaths.keyPointJudgments(values.run, values.against);
+const directory = comparisonPaths.keyPointJudgments(values.run, values.against, KEY_POINTS_RUBRIC_VERSION);
 const store = jsonRecordStore<KeyPointsJudgeRecord>(
   directory,
   (record) => `${safePathPart(record.candidate)}/${safePathPart(record.videoId)}.json`,
@@ -87,7 +88,7 @@ const videos = transcripts.map((fetched) => ({
   title: fetched.video.title,
   length: formatTimestamp(videoLengthMs(fetched)),
 }));
-const markdown = keyPointsJudgingMarkdown(await store.all(), videos, values.run, values.against);
+const markdown = keyPointsJudgingMarkdown(await store.all(), videos, values.run, values.against, KEY_POINTS_RUBRIC_VERSION);
 await mkdir(directory, { recursive: true });
 const reportPath = join(directory, "report.md");
 await writeFile(reportPath, markdown);
