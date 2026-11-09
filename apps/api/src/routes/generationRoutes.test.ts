@@ -223,6 +223,19 @@ test("a generation logs its tokens and cost, measured from what OpenAI reported"
   await testApp.close();
 });
 
+test("a server with a key of its own says which provider and model it makes overviews with", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi());
+
+  const status = await testApp.app.inject({
+    method: "GET",
+    url: "/api/generations",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+  });
+
+  assert.deepEqual(status.json(), { available: true, provider: ourKeyModel.provider, model: ourKeyModel.model });
+  await testApp.close();
+});
+
 test("a server with no key of its own says so before anyone asks it to generate", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

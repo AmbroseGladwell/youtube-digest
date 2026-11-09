@@ -262,8 +262,9 @@ const sections: readonly LegalSection[] = [
         <p>
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such as opening an overview,
           choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview or
-          topic. When an overview can’t be made because of the model you chose, the event names the provider and the model. An event can
-          never carry a link, a video, a title, an overview's words or anything you typed, because there is no field shaped to hold them.
+          topic. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider and
+          the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no field
+          shaped to hold them.
         </p>
         <h3>Three situations</h3>
         <ul>

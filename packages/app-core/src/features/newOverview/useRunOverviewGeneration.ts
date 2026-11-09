@@ -16,6 +16,7 @@ import { runArticleOverviewGeneration, runOverviewGeneration, type RunOverviewGe
 import { makeOverviewOnKeys, type OverviewMeta } from "./api/makeOverviewOnKeys.js";
 import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGenerationApi.js";
 import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
+import { useOurKeyStatusQuery } from "./queries/ourKeyStatusQuery.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
@@ -105,6 +106,9 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   const onlyMyKey = settingsQuery.data?.onlyMyKey ?? false;
   const signedIn = libraryAccountIdOf(connection) !== null;
   const queryClient = useQueryClient();
+  const ourKeyStatus = useOurKeyStatusQuery().data;
+  const ourProvider = ourKeyStatus?.provider;
+  const ourModelId = ourKeyStatus?.model;
 
   const analytics = useAnalytics();
 
@@ -118,8 +122,22 @@ function useOverviewMaker(apiKeys: ApiKeys) {
       own: apiKey === undefined ? null : { provider, model, client: createGenerationClient(provider, apiKey, model) },
       api: signedIn && knownApiUrl !== null ? createFetchGenerationApi({ baseUrl: knownApiUrl, token: connection.token }) : null,
       trial: !signedIn && knownApiUrl !== null ? createTrialGenerationApi({ baseUrl: knownApiUrl }) : null,
+      ourModel: ourProvider === undefined || ourModelId === undefined ? null : { provider: ourProvider, model: ourModelId },
     };
-  }, [apiKey, provider, model, ourKeyUsable, accountNeeded, plan, onlyMyKey, signedIn, knownApiUrl, connection.token]);
+  }, [
+    apiKey,
+    provider,
+    model,
+    ourKeyUsable,
+    accountNeeded,
+    plan,
+    onlyMyKey,
+    signedIn,
+    knownApiUrl,
+    connection.token,
+    ourProvider,
+    ourModelId,
+  ]);
 
   const makeWith = useCallback(() => {
     const keys = keysNow();

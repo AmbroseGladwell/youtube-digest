@@ -2,6 +2,8 @@ import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 import { ExtractedArticle } from "./ExtractedArticle.js";
 import { Tag } from "./Filing.js";
+import { ModelId } from "./ModelId.js";
+import { Provider } from "./Provider.js";
 import { SectionsEnabled } from "./Settings.js";
 import { TagAliases } from "./TagAliases.js";
 import { Topic } from "./Topic.js";
@@ -30,6 +32,12 @@ export const OurKeyGenerationRequest = z.object({
 });
 export type OurKeyGenerationRequest = z.infer<typeof OurKeyGenerationRequest>;
 
-// Whether this server makes overviews on our key at all, asked before it is offered.
-export const OurKeyGenerationStatus = z.object({ available: z.boolean() });
+// Whether this server makes overviews on our key at all, asked before it is offered, and
+// with which provider and model, so the app's analytics can name them (OV-255). Optional
+// because a server deployed before it says only whether.
+export const OurKeyGenerationStatus = z.object({
+  available: z.boolean(),
+  provider: Provider.optional(),
+  model: ModelId.optional(),
+});
 export type OurKeyGenerationStatus = z.infer<typeof OurKeyGenerationStatus>;

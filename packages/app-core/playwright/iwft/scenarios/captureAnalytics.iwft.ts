@@ -1,7 +1,12 @@
-import { DEFAULT_SECTIONS_ENABLED } from "@overview/domain";
+import { DEFAULT_MODEL, DEFAULT_SECTIONS_ENABLED } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import {
+  SIMULATED_ACCOUNT_ID,
+  SIMULATED_EMAIL,
+  SIMULATED_OUR_MODEL,
+  type BackendSimulator,
+} from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
@@ -10,6 +15,8 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
   apiKeys: ANTHROPIC_KEY,
 };
+// With an account, so our key is ours rather than the signed-out trial's.
+const WITH_AN_ACCOUNT = { ...SIGNED_IN, syncConnection: { ...SIGNED_IN.syncConnection, accountId: SIMULATED_ACCOUNT_ID } };
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const captureEvents = (backendSimulator: BackendSimulator) =>
@@ -46,6 +53,9 @@ test("making an overview is counted from asking to reading it, with where it was
           howToApplyWritten: true,
           howToApplyItems: 1,
           personalised: false,
+          key: "own",
+          provider: "anthropic",
+          model: DEFAULT_MODEL.anthropic,
         },
       },
       { name: "capture.newOverviewDialog.readChosen", props: { overviewId: overview!.id, from: "dialog" } },
@@ -54,6 +64,45 @@ test("making an overview is counted from asking to reading it, with where it was
 
 const finishedProps = (backendSimulator: BackendSimulator) =>
   captureEvents(backendSimulator).find(({ name }) => name === "capture.newOverview.finished")?.props;
+
+test("an overview made on our key names our key, and the provider and model our server said", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  const { apiKeys: _noKey, ...signedInWithoutAKey } = WITH_AN_ACCOUNT;
+  await launcher.launch(signedInWithoutAKey);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect.poll(() => finishedProps(backendSimulator)).toMatchObject({ key: "ours", ...SIMULATED_OUR_MODEL });
+});
+
+test("signed out, an overview made on our key is counted as the trial's", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  const { apiKeys: _noKey, ...signedOutWithoutAKey } = SIGNED_IN;
+  await launcher.launch(signedOutWithoutAKey);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect.poll(() => finishedProps(backendSimulator)).toMatchObject({ key: "trial", ...SIMULATED_OUR_MODEL });
+});
+
+test("an overview our key makes after the reader's runs out of credit names our key, not the one tried first", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.anthropicIsOutOfCredit();
+  await launcher.launch(WITH_AN_ACCOUNT);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect.poll(() => finishedProps(backendSimulator)).toMatchObject({ key: "ours", ...SIMULATED_OUR_MODEL });
+});
 
 test("How to apply is counted by how many actions it holds, an empty list as written, and never by what the actions or the reader say", async ({
   launcher,
@@ -131,7 +180,14 @@ test("a run that fails is counted by what went wrong, never by its message", asy
     .poll(() => captureEvents(backendSimulator).at(-1))
     .toEqual({
       name: "capture.newOverview.failed",
-      props: { from: "dialog", failure: "generation", durationMs: expect.any(Number) },
+      props: {
+        from: "dialog",
+        failure: "generation",
+        durationMs: expect.any(Number),
+        key: "own",
+        provider: "anthropic",
+        model: DEFAULT_MODEL.anthropic,
+      },
     });
 });
 
@@ -150,7 +206,14 @@ test("a model the provider refuses is counted as its own failure, naming the pro
     .poll(() => captureEvents(backendSimulator).at(-1))
     .toEqual({
       name: "capture.newOverview.failed",
-      props: { from: "dialog", failure: "model-refused", durationMs: expect.any(Number), provider: "anthropic", model: "claude-haiku-5-5" },
+      props: {
+        from: "dialog",
+        failure: "model-refused",
+        durationMs: expect.any(Number),
+        key: "own",
+        provider: "anthropic",
+        model: "claude-haiku-5-5",
+      },
     });
   expect(JSON.stringify(backendSimulator.analytics.events())).not.toContain("compiled grammar");
 });

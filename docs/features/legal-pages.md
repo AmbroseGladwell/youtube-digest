@@ -147,6 +147,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-09 | privacy | OV-255 | Analytics says the event for an overview made, or one that can’t be made, says whether it was on your key or ours and names the provider and the model, not only when the model was refused. |
 | 2026-11-09 | privacy | OV-247 | Server logs and safety limits says a line names the provider and model when an overview can’t be made on your own key because the model was refused or kept breaking its shape, and never what the provider said back. Analytics says that when an overview can’t be made because of the model you chose, the event names the provider and the model. |
 | 2026-11-09 | privacy | OV-248 | What we learn from your overviews says nothing learned is used until it has been shown, on the library's notice or in Settings › Personalisation, and is used from then on. |
 | 2026-11-09 | privacy | OV-245 | A new section, What we learn from your overviews: the profile pass, what it sends and on which key, the notice, use from the next overview, Remove, Clear everything and Keep learning. Writing an overview names learned items among what goes to a provider, For anyone on the onboarding reveal, and the pass that sorts a sample into topics; OpenAI's row and the retention table cover learned items. |

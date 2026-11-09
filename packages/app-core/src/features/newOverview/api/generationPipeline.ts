@@ -25,6 +25,7 @@ import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
+import type { OverviewMeta } from "./makeOverviewOnKeys.js";
 
 // What the run has produced so far, so the progress list can report a receipt rather than
 // that it is thinking (docs/features/overview-redesign.md, "The receipts").
@@ -46,7 +47,7 @@ export interface GenerationPipelineDeps {
   timed?: ((timing: ClientTimingReport) => void) | undefined;
   now?: (() => number) | undefined;
   // Makes the overview on whichever key can, and says which (makeOverviewOnKeys).
-  makeOverview: (input: OverviewInput, meta: { id: OverviewId; savedAt: string }) => Promise<Overview>;
+  makeOverview: (input: OverviewInput, meta: OverviewMeta) => Promise<Overview>;
   overviewStore: OverviewStore;
   settingsStore: Pick<SettingsStore, "get">;
   transcriptStore: TranscriptStore;
@@ -78,6 +79,8 @@ export interface RunOverviewGenerationOptions {
   waitToWrite?: (() => Promise<void>) | undefined;
   // The same measurement the timing is sent from, so the event's duration agrees with it.
   onTimed?: ((timing: ClientTimingReport) => void) | undefined;
+  // Each key as it is tried, so analytics names the one that made or failed the overview.
+  onAttempt?: OverviewMeta["onAttempt"];
 }
 
 export async function runOverviewGeneration(
@@ -176,6 +179,7 @@ async function writeOverview(
       {
         id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
         savedAt: new Date().toISOString(),
+        onAttempt: options.onAttempt,
       },
     );
   const overview = await (stopwatch ? stopwatch.time("model", make) : make());
