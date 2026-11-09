@@ -5,6 +5,7 @@ import { parseManualEntries } from "./manualSpend.mjs";
 import { datesBetween, NO_FIGURE, NOT_BUILT, readersFromEnv, recentDays, recordSpend, rowsForDay } from "./recordSpend.mjs";
 
 const AT = "2026-11-09T04:30:00.000Z";
+const NOW = new Date(AT);
 
 function memoryStore({ failPut = false, corrupt = false } = {}) {
   const objects = new Map();
@@ -141,7 +142,7 @@ test("a provider that errors is not tracked that day, never zero, and the run wa
 });
 
 test("a missing key warns and leaves the provider not tracked", async () => {
-  const readers = readersFromEnv({}, async () => assert.fail("nothing should be fetched"));
+  const readers = readersFromEnv({ NEON_PROJECT_ID: "p" }, async () => assert.fail("nothing should be fetched"), NOW);
   const { warnings } = await recordSpend({
     from: "2026-11-08",
     to: "2026-11-08",
@@ -150,7 +151,64 @@ test("a missing key warns and leaves the provider not tracked", async () => {
     store: memoryStore(),
     recordedAt: AT,
   });
-  assert.deepEqual(warnings, ["openai is not tracked: OPENAI_ADMIN_KEY is not set"]);
+  assert.deepEqual(warnings, [
+    "openai is not tracked: OPENAI_ADMIN_KEY is not set",
+    "neon is not tracked: NEON_API_KEY or NEON_PROJECT_ID is not set",
+  ]);
+});
+
+const neonProject = { compute_time_seconds: 36_000, active_time_seconds: 72_000, data_transfer_bytes: 2e9 };
+
+function neonFetch() {
+  const calls = [];
+  const fetch = async (url) => {
+    calls.push(url);
+    return { ok: true, json: async () => (url.endsWith("/branches") ? { branches: [{ logical_size: 5e8 }] } : { project: neonProject }) };
+  };
+  return { fetch, calls };
+}
+
+test("Neon's month so far is recorded on yesterday as usage, beside its hand-entered cost", async () => {
+  const neon = neonFetch();
+  const store = memoryStore();
+  await recordSpend({
+    from: "2026-11-06",
+    to: "2026-11-08",
+    readers: readersFromEnv({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, neon.fetch, NOW),
+    manualEntries: parseManualEntries(
+      JSON.stringify([{ provider: "neon", environment: "prod", area: "database", monthlyDollars: 0, from: "2026-09-27" }]),
+    ),
+    store,
+    recordedAt: AT,
+  });
+  const neonRows = (date) => parse(store.objects.get(`daily/${date}.csv`)).filter((cells) => cells[1] === "neon");
+  assert.deepEqual(
+    neonRows("2026-11-08").map((cells) => [cells[4], cells[5], cells[7], cells[8]]),
+    [
+      ["0.000000", "manual", "", ""],
+      ["", "usage", "20", "active_hours_month_to_date"],
+      ["", "usage", "10", "compute_hours_month_to_date"],
+      ["", "usage", "0.5", "storage_gb"],
+      ["", "usage", "2", "transfer_gb_month_to_date"],
+    ],
+  );
+  assert.deepEqual(
+    neonRows("2026-11-07").map((cells) => cells[5]),
+    ["manual"],
+  );
+});
+
+test("a backfill that does not end yesterday reads nothing from Neon, since it only knows the month so far", async () => {
+  const neon = neonFetch();
+  await recordSpend({
+    from: "2026-10-01",
+    to: "2026-10-31",
+    readers: readersFromEnv({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, neon.fetch, NOW),
+    manualEntries: [],
+    store: memoryStore(),
+    recordedAt: AT,
+  });
+  assert.deepEqual(neon.calls, []);
 });
 
 test("a day whose write fails, or reads back different, is not recorded", async () => {

@@ -1,9 +1,8 @@
 import { EXPECTED_SPEND, ENVIRONMENTS, spendKey } from "./expectedSpend.mjs";
+import { ProviderReadError } from "./ProviderReadError.mjs";
 
 const OPENAI_API = "https://api.openai.com/v1/organization";
 const DAY_SECONDS = 86_400;
-
-export class ProviderReadError extends Error {}
 
 export function environmentOfProject(name) {
   const words = name.toLowerCase().split(/[^a-z0-9]+/);

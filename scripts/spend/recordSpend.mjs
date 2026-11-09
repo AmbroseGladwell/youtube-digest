@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { EXPECTED_SPEND, spendKey } from "./expectedSpend.mjs";
 import { manualRowsFor, parseManualEntries } from "./manualSpend.mjs";
+import { neonUsage } from "./neonUsage.mjs";
 import { openAiSpend } from "./openAiSpend.mjs";
 import { r2SpendStore } from "./r2SpendStore.mjs";
 import { spendCsv } from "./spendCsv.mjs";
@@ -29,12 +30,16 @@ export function recentDays(now, count = NIGHTLY_DAYS) {
 export const spendObjectKey = (date) => `daily/${date}.csv`;
 
 const ORDER = (left, right) =>
-  left.provider.localeCompare(right.provider) || left.environment.localeCompare(right.environment) || left.area.localeCompare(right.area);
+  left.provider.localeCompare(right.provider) ||
+  left.environment.localeCompare(right.environment) ||
+  left.area.localeCompare(right.area) ||
+  (left.unit ?? "").localeCompare(right.unit ?? "");
 
 export function rowsForDay({ date, billed, manualEntries, unreadable }) {
-  const read = new Set(billed.map((row) => row.provider));
+  const bills = billed.filter((row) => row.source === "bill");
+  const read = new Set(bills.map((row) => row.provider));
   const rows = billed.filter((row) => row.date === date);
-  const covered = new Set(rows.map(spendKey));
+  const covered = new Set(bills.filter((row) => row.date === date).map(spendKey));
   const conflicts = [];
   for (const row of manualRowsFor(manualEntries, date)) {
     if (covered.has(spendKey(row))) {
@@ -99,12 +104,21 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
   return { days, warnings };
 }
 
-export function readersFromEnv(env, fetch) {
+const isSet = (value) => value !== undefined && value !== "";
+
+export function readersFromEnv(env, fetch, now) {
+  const yesterday = recentDays(now, 1).to;
   return {
-    openai:
-      env.OPENAI_ADMIN_KEY === undefined || env.OPENAI_ADMIN_KEY === ""
-        ? { missing: "OPENAI_ADMIN_KEY is not set" }
-        : { read: ({ from, to }) => openAiSpend({ adminKey: env.OPENAI_ADMIN_KEY, fetch, from, to }) },
+    openai: isSet(env.OPENAI_ADMIN_KEY)
+      ? { read: ({ from, to }) => openAiSpend({ adminKey: env.OPENAI_ADMIN_KEY, fetch, from, to }) }
+      : { missing: "OPENAI_ADMIN_KEY is not set" },
+    neon:
+      isSet(env.NEON_API_KEY) && isSet(env.NEON_PROJECT_ID)
+        ? {
+            read: async ({ to }) =>
+              to === yesterday ? neonUsage({ apiKey: env.NEON_API_KEY, projectId: env.NEON_PROJECT_ID, fetch, date: to }) : [],
+          }
+        : { missing: "NEON_API_KEY or NEON_PROJECT_ID is not set" },
   };
 }
 
@@ -134,7 +148,7 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
   const { days, warnings } = await recordSpend({
     from,
     to,
-    readers: readersFromEnv(env, globalThis.fetch),
+    readers: readersFromEnv(env, globalThis.fetch, new Date()),
     manualEntries,
     store,
     recordedAt: new Date().toISOString(),

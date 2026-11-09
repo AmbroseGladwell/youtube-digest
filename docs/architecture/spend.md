@@ -15,7 +15,7 @@ estimated, and no model works anything out (`docs/prototype/constraints.md`).
 | Provider | Environment | Area | Source today |
 |---|---|---|---|
 | OpenAI | prod, dev, evals | generation, embeddings | the Costs API with an admin key, grouped by project and line item |
-| Neon | prod | database | entered by hand: the free plan, $0. Its consumption API answers 403 on the free plan |
+| Neon | prod | database | cost entered by hand: the plan's fee, $0 on the free plan. Usage from the project API: compute and active hours and transfer this month so far, and storage now |
 | Anthropic | evals | generation | not tracked yet |
 | Gemini | evals | generation | not tracked yet |
 | Decodo | prod | transcripts | not tracked yet |
@@ -36,6 +36,17 @@ so a key made outside the three shows up on the dashboard instead of disappearin
 everything else is `generation`. So prod's bill splits into the two without the app
 recording anything.
 
+**Neon on the free plan gives usage, not a bill.** Its consumption API, which reports by
+day, answers 403 below the Launch plan (checked 9 Nov 2026). The project itself reports this
+billing period's totals so far on every plan: `compute_time_seconds`,
+`active_time_seconds` and `data_transfer_bytes`, and each branch its `logical_size`. So
+each night records them, as of the run, on yesterday's file as `usage` rows:
+`compute_hours_month_to_date`, `active_hours_month_to_date`, `transfer_gb_month_to_date`
+and `storage_gb`. They cannot be split into days or backfilled, so a backfill that does not
+end yesterday reads nothing from Neon. Read the latest day for the month so far, against the
+free plan's allowances. The cost row stays the plan's fee entered by hand; on a paid plan,
+the consumption API and its daily figures replace both.
+
 ## The rows
 
 One CSV per UTC day, at `daily/YYYY-MM-DD.csv` in the `the-overview-spend` bucket:
@@ -47,8 +58,9 @@ One CSV per UTC day, at `daily/YYYY-MM-DD.csv` in the `the-overview-spend` bucke
 | `environment` | `prod`, `dev`, `evals`, or `unattributed` |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
-| `source` | `bill`, `manual` or `not_tracked` |
+| `source` | `bill`, `manual`, `not_tracked`, or `usage` for a row that measures use rather than money |
 | `reason` | why a row is not tracked: a missing key, the status a provider answered, the bill having no figure for the day yet, or not built yet |
+| `quantity`, `unit` | on a `usage` row, how much and of what (`compute_hours_month_to_date`); blank on rows of money |
 | `recorded_at` | when the job wrote it |
 
 **Every expected provider × environment × area has a row every day** (`expectedSpend.mjs`).
@@ -96,9 +108,10 @@ for the production database.
 The bucket is linked as a **Cloudflare R2 source** in PostHog's data warehouse, with
 "Combine every file into one table" on and an incremental sync, which reads only new and
 changed files and replaces a changed file's rows. The read key PostHog holds is an R2 token
-with **Object Read only** on this bucket.
+with **Object Read only** on this bucket, separate from the job's read and write token, so
+PostHog holding a key can never change or delete the history it reads.
 
-**What it costs.** About 13 rows a day, so about 400 synced rows a month against the
+**What it costs.** About 17 rows a day, so about 500 synced rows a month against the
 warehouse's 1M free; a few KB a day in R2, against its 10 GB and its free operations. The
 OpenAI Costs API is free, and Actions minutes are free on a public repository. Checked on
 9 Nov 2026.
@@ -111,6 +124,7 @@ tab with an optional `from` and `to` to record or backfill a range of up to 180 
 | It reads | Kind | Where |
 |---|---|---|
 | `OPENAI_ADMIN_KEY` | Actions secret | an OpenAI **admin** key, read-only, made under the organisation's admin keys; also kept in `overview-prod` |
+| `NEON_API_KEY` | Actions secret | a Neon API key scoped to the one project; also kept in `overview-prod`. The project's id is in the workflow, since it is not a secret |
 | `SPEND_R2_ACCESS_KEY_ID`, `SPEND_R2_SECRET_ACCESS_KEY` | Actions secrets | an R2 token with Object Read & Write on `the-overview-spend` only; also kept in `overview-prod` |
 | `SPEND_MANUAL_ENTRIES` | Actions variable | the hand-entered figures above |
 

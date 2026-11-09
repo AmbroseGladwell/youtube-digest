@@ -11,7 +11,7 @@ test("one header and one line per row, dollars to six places", () => {
   );
   assert.equal(
     csv,
-    `date,provider,environment,area,dollars,source,reason,recorded_at\n2026-11-08,openai,prod,generation,1.750000,bill,,${AT}\n`,
+    `date,provider,environment,area,dollars,source,reason,quantity,unit,recorded_at\n2026-11-08,openai,prod,generation,1.750000,bill,,,,${AT}\n`,
   );
 });
 

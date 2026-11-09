@@ -36,4 +36,6 @@ jobs:
           SPEND_R2_ACCESS_KEY_ID: ${{ secrets.SPEND_R2_ACCESS_KEY_ID }}
           SPEND_R2_SECRET_ACCESS_KEY: ${{ secrets.SPEND_R2_SECRET_ACCESS_KEY }}
           OPENAI_ADMIN_KEY: ${{ secrets.OPENAI_ADMIN_KEY }}
+          NEON_PROJECT_ID: raspy-dream-86058377
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           SPEND_MANUAL_ENTRIES: ${{ vars.SPEND_MANUAL_ENTRIES }}
