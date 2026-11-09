@@ -22,6 +22,15 @@ test("the preview leads with the lengths and then the premise", () => {
   );
 });
 
+test("a video with no stored duration still says it is a video in the preview", () => {
+  const overview = makeOverview({ inOneLine: "Nuclear is back on the plans because firm capacity became expensive." });
+
+  assert.equal(
+    sharePreview(noteOf(overview)).description,
+    "1 min read · 1 min listen · Video. Nuclear is back on the plans because firm capacity became expensive.",
+  );
+});
+
 test("the verdict is never in the preview, however blunt it is", () => {
   const preview = sharePreview(
     noteOf(

@@ -11,3 +11,7 @@ test("a library row, its note and its shared page read the same three numbers", 
 
   assert.deepEqual(overviewMetaParts(overview), ["1 min read", "1 min listen", "11:38 video"]);
 });
+
+test("a row whose video has no stored duration still names the kind", () => {
+  assert.equal(overviewMetaParts(makeOverview()).at(-1), "Video");
+});

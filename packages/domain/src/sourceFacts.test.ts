@@ -26,7 +26,10 @@ test("a piece is from its channel, its site, or failing that its address", () =>
 test("the length line names the kind", () => {
   assert.equal(sourceLength(article), "14 min article");
   assert.equal(sourceLength({ ...makeOverview().source, durationMs: 698_000 }), "11:38 video");
-  assert.equal(sourceLength(makeOverview().source), null);
+});
+
+test("a video whose length is not known still says it is a video, and no length is guessed", () => {
+  assert.equal(sourceLength(makeOverview().source), "Video");
 });
 
 test("reading time is 230 words a minute, and never zero", () => {
