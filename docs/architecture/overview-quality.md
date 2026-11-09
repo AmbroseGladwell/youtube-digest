@@ -184,10 +184,15 @@ So one order serves both surfaces, and the reading-against-listening tension doe
 | **Closes** | what it sells | no |
 | | watch or listen to it anyway | no |
 
-The one question left is where the big picture lands relative to the verdict and the core
-argument, which is OV-227. The recommendation there is premise, verdict, big picture, core
-argument: the verdict needs only the premise to make sense, and the big picture exists to set up
-the core argument so it reads oddly after it.
+The one question left was where the big picture lands relative to the verdict and the core
+argument (OV-227, merged into OV-225). The recommendation was premise, verdict, big picture, core
+argument.
+
+**Decided by the owner, 9 Nov 2026: big picture, core argument, verdict**, with the premise in the
+big picture's place only when a source earns none. The ground comes before the answer, and the
+premise and the big picture never appear together. **This relaxes the rule above on long sources**:
+their note has a paragraph before the verdict. Recorded in `overview-generation-decisions.md`,
+"The big picture".
 
 ### Three orienting fields that must not repeat each other
 
@@ -212,8 +217,8 @@ below is evidence of. So the proposal is to keep both fields and **stop showing 
 note page**: the big picture opens the note, the premise fills in where a short source earns no big
 picture, and the two never appear together. The repetition is then prevented structurally rather
 than by asking the prompt to avoid it. The distinction that makes it hold is that **the premise is
-about the artefact and the big picture is about the subject.** Recorded on OV-225, with the
-deletion test as the check that settles it on evidence.
+about the artefact and the big picture is about the subject.** **Adopted by the owner on 9 Nov
+2026** and built in OV-225, with the deletion test as the harness check.
 
 **Decided 8 Nov 2026: a recipe gets no big picture.** A recipe has no argument to set up, and
 its premise is already its orientation. Articles get one on the same rule as video, or the fork

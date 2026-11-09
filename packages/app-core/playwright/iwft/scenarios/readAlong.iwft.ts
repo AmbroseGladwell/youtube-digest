@@ -35,6 +35,20 @@ test("the reader opens on the note's first line, with the pacer naming that sect
   await reader.verifyIsThePacer(true);
 });
 
+// docs/features/overview-generation-decisions.md, "The big picture": the premise stays the
+// library row's label and never reads just before it.
+test("a note with a big picture opens on it in the premise's place, then the core claim", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed({ ...NOTE, bigPicture: "Whether the recovery is real, and what the three figures leave out." });
+  const library = await launcher.launchExpectingLibrary();
+
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyActiveLineReads("Big picture");
+  await reader.verifyBarSays("Read-along · no audio · Big picture");
+  await reader.verifyNoteShowsLine("Whether the recovery is real, and what the three figures leave out.", true);
+  await reader.verifyNoteShowsLine(NOTE.inOneLine, false);
+  await reader.verifyNoteShowsLine(NOTE.coreClaim, true);
+});
+
 test("tapping a line moves the reading mark to it and renames what is being read", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();

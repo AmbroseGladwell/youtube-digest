@@ -603,6 +603,65 @@ changes *how many*. Measured on GPT-6.1 Sol (`docs/architecture/model-comparison
   caveats about evidence, which is the anecdote rule.
 - **It costs the same.**
 
+## The big picture
+
+OV-225, decided with the owner on 8 and 9 Nov 2026 (`docs/architecture/overview-quality.md`,
+"Three orienting fields that must not repeat each other"). A note had a label and a claim and no
+ground under either. The big picture is that ground: what question the source engages, why it
+matters, and what else it covers that the core claim, singular by design, cannot hold.
+
+**The three-way split is in the prompt, not hoped for.** In one line says what the source **is**;
+the big picture says what **ground** it stands on and what else is here; the core claim says what
+it **answers**. The prompt tells the model that a big picture that could be deleted without losing
+anything the other two say has failed, and that an empty one beats padding.
+
+**The note opens big picture, core claim, verdict.** Then key points, how to apply, what it sells
+and watch it anyway, which stay last so the narration still ends on "the overview covers it".
+The owner chose this over the card's recommendation (premise, verdict, big picture, core claim):
+
+- **The premise opens the note only when there is no big picture.** It stays the library row's
+  label, `search_overviews`' light listing and part of the search haystack, but on the note page
+  the two never appear one after the other, so they cannot read as repetition. The premise is
+  about the artefact and the big picture is about the subject.
+- **It relaxes the triage rule on long sources.** A long source's note now has a paragraph before
+  the verdict, where the rule in `overview-quality.md` says the verdict comes before anything long.
+  The owner accepted that for the ground coming before the answer.
+- **An older note is unchanged.** It has no big picture, so it opens on its premise as it always
+  did, and its spoken script, and so its cached narration, is the same.
+
+**It is structural**, like the premise and the key points, not a section a reader can switch off.
+**A recipe gets none**: it has no argument to set up, and its summary is already its orientation.
+Articles get one on the same rule as video.
+
+**Its length follows the source's measured words** (`bigPictureBudget.ts`), so a short clip grows no
+preamble. It is the first field on OV-87's one budget, and moves into it when that card lands:
+
+| Source words | Target | Sent back over |
+|---|---|---|
+| up to 1,000 (about seven minutes of speech) | none | |
+| up to 2,500 | 35 | 44 |
+| up to 6,000 | 60 | 75 |
+| up to 15,000 | 90 | 113 |
+| longer | 120 | 150 |
+
+The prompt asks for the target and the schema refuses only a quarter over it, as for In one line,
+because a hard cap a model must meet fails whole overviews. The record refuses over 160. A source
+too short to earn one is told to leave it empty, and code drops it whatever the model wrote. The
+first tiers were 600, 1,500, 4,000 and 10,000 words; on the 20-video set they gave a 12-minute
+video 60 words before its claim, so they moved down one step before any run.
+
+**In the schema it is a plain string, empty for none**, not a nullable field: each union grows the
+grammar Claude compiles (below). Measured on 9 Nov 2026 with a 16-token reply, three times each, on
+Claude Sonnet 5.5, Opus 5.5 and Haiku 5.5: the video schema with the big picture compiles every time,
+for a reader with no topics, the sample reader (five topics, its claims and tags) and a reader
+with 300 topics. **Four more string fields still compile and a fifth never does**, whatever the
+reader. That room is what OV-250's steps block and OV-216's evidence have left between them.
+
+**Where else it goes.** A share carries it, absent rather than null when there is none so a
+copy's content hash doesn't move. The markdown export an assistant reads gives the premise and the
+big picture both. Keyword search and the meaning embeddings take it as one more claim. Overview
+schema 15 fills null on older records (client version 16).
+
 ## Stress-testing against genres outside the samples
 
 None of the five real samples are a narrative interview, an instructional video, a
@@ -721,7 +780,7 @@ and `endSegmentIndex` on the item, with -1 for no stretch, rather than a range o
 null (`segmentRangeFields.ts`). That took four unions out. Code turns -1 back into no range
 before anything is stored, so the `Overview` record did not change. Only the recipe, a recipe
 step's group, what stands out and the suggested topic may still be null, and a test holds that
-list. Measured headroom with the group nullable: three more string fields compile, six do not.
+list. Measured headroom with the group nullable: three more string fields compile, six do not. After OV-225's big picture, four more compile and five do not ("The big picture"): more than the count above left, measured on a different schema and reader, so take the edge as approximate.
 
 **A recipe step's group stayed nullable.** Made a plain string, empty for none, it left room for
 six more fields, but GPT-6.1 Sol stopped naming the parts of a method: the party jollof's seven

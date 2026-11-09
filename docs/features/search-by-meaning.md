@@ -52,9 +52,10 @@ the live API put a related pair at 0.65 and an unrelated one at 0.17.
 
 ## The unit is the claim
 
-Each overview's core claim, each key point and a recipe's summary are embedded separately
-(`claimsOf`). An overview-level vector is too coarse: a two-hour interview is about six
-things. An overview's score for a search is its best-matching claim.
+Each overview's big picture, core claim, each key point and a recipe's summary are embedded
+separately (`claimsOf`). An overview-level vector is too coarse: a two-hour interview is about six
+things. An overview's score for a search is its best-matching claim. The big picture (OV-225) is
+the one field that names a source's other threads, which the singular core claim leaves out.
 
 ## Storage
 
