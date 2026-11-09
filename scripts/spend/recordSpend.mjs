@@ -1,10 +1,12 @@
 import { fileURLToPath } from "node:url";
-import { EXPECTED_SPEND, spendKey } from "./expectedSpend.mjs";
+import { cloudflareSpend } from "./cloudflareSpend.mjs";
+import { decodoUsage } from "./decodoUsage.mjs";
+import { ENTERED_BY_HAND, EXPECTED_SPEND, spendKey } from "./expectedSpend.mjs";
 import { manualRowsFor, parseManualEntries } from "./manualSpend.mjs";
 import { neonUsage } from "./neonUsage.mjs";
 import { openAiSpend } from "./openAiSpend.mjs";
 import { r2SpendStore } from "./r2SpendStore.mjs";
-import { spendCsv } from "./spendCsv.mjs";
+import { parseSpendCsv, spendCsv } from "./spendCsv.mjs";
 
 const DAY_MS = 86_400_000;
 const NIGHTLY_DAYS = 3;
@@ -12,6 +14,7 @@ const MAX_DAYS = 180;
 
 export const NOT_BUILT = "not built yet";
 export const NO_FIGURE = "the bill has no figure for this day yet";
+export const NEON_YESTERDAY_ONLY = "Neon reports only the month so far, as of the latest run";
 
 export function datesBetween(from, to) {
   const dates = [];
@@ -35,10 +38,10 @@ const ORDER = (left, right) =>
   left.area.localeCompare(right.area) ||
   (left.unit ?? "").localeCompare(right.unit ?? "");
 
-export function rowsForDay({ date, billed, manualEntries, unreadable }) {
+export function rowsForDay({ date, billed, manualEntries, unreadable, kept = [] }) {
   const bills = billed.filter((row) => row.source === "bill");
   const read = new Set(bills.map((row) => row.provider));
-  const rows = billed.filter((row) => row.date === date);
+  const rows = [...billed.filter((row) => row.date === date), ...kept];
   const covered = new Set(rows.filter((row) => row.source !== "usage").map(spendKey));
   const conflicts = [];
   for (const row of manualRowsFor(manualEntries, date)) {
@@ -55,7 +58,8 @@ export function rowsForDay({ date, billed, manualEntries, unreadable }) {
       ...expected,
       dollars: null,
       source: "not_tracked",
-      reason: unreadable.get(expected.provider) ?? (read.has(expected.provider) ? NO_FIGURE : NOT_BUILT),
+      reason:
+        unreadable.get(expected.provider) ?? (read.has(expected.provider) ? NO_FIGURE : (ENTERED_BY_HAND[expected.provider] ?? NOT_BUILT)),
     });
   }
   return { rows: rows.sort(ORDER), conflicts };
@@ -72,6 +76,7 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
   if (dates.length === 0 || dates.length > MAX_DAYS) throw new Error(`Record between 1 and ${MAX_DAYS} days, not ${dates.length}`);
   const warnings = [];
   const unreadable = new Map();
+  const readable = new Map();
   const billed = [];
   for (const [provider, reader] of Object.entries(readers)) {
     if (reader.missing !== undefined) {
@@ -80,7 +85,10 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
       continue;
     }
     try {
-      billed.push(...(await reader.read({ from, to })));
+      const result = await reader.read({ from, to });
+      const { rows, readable: canRead = () => true, outOfRange = NO_FIGURE } = Array.isArray(result) ? { rows: result } : result;
+      readable.set(provider, { canRead, outOfRange });
+      billed.push(...rows.filter((row) => canRead(row.date)));
     } catch (error) {
       const reason = error instanceof Error ? error.message : "unknown error";
       unreadable.set(provider, reason);
@@ -89,19 +97,39 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
   }
   const days = [];
   for (const date of dates) {
-    const { rows, conflicts } = rowsForDay({ date, billed, manualEntries, unreadable });
+    const key = spendObjectKey(date);
+    const unreadableToday = new Map(unreadable);
+    for (const [provider, { canRead, outOfRange }] of readable) if (!canRead(date)) unreadableToday.set(provider, outOfRange);
+    let kept = [];
+    try {
+      kept = await storedRowsOf(store, key, unreadableToday);
+    } catch (error) {
+      warnings.push(
+        `${date}: the stored day could not be read, so nothing was kept from it: ${error instanceof Error ? error.message : "unknown error"}`,
+      );
+    }
+    const { rows, conflicts } = rowsForDay({ date, billed, manualEntries, unreadable: unreadableToday, kept });
     for (const conflict of conflicts) warnings.push(`${date}: ${conflict} has a hand-entered figure and a bill; the bill is kept`);
     const csv = spendCsv(rows, recordedAt);
-    const key = spendObjectKey(date);
+    const keptFrom = [...new Set(kept.map((row) => row.provider))];
     try {
       await store.put(key, csv);
       const readBack = await store.get(key);
-      days.push({ date, key, rows: rows.length, recorded: readBack === csv, sources: sourcesByProvider(rows) });
+      days.push({ date, key, rows: rows.length, recorded: readBack === csv, sources: sourcesByProvider(rows), keptFrom });
     } catch (error) {
       days.push({ date, key, rows: rows.length, recorded: false, error: error instanceof Error ? error.message : "unknown error" });
     }
   }
   return { days, warnings };
+}
+
+const KEPT_SOURCES = new Set(["bill", "usage"]);
+
+async function storedRowsOf(store, key, unreadableToday) {
+  if (unreadableToday.size === 0) return [];
+  const stored = await store.get(key);
+  if (stored === null) return [];
+  return parseSpendCsv(stored).filter((row) => unreadableToday.has(row.provider) && KEPT_SOURCES.has(row.source));
 }
 
 const isSet = (value) => value !== undefined && value !== "";
@@ -115,10 +143,23 @@ export function readersFromEnv(env, fetch, now) {
     neon:
       isSet(env.NEON_API_KEY) && isSet(env.NEON_PROJECT_ID)
         ? {
-            read: async ({ to }) =>
-              to === yesterday ? neonUsage({ apiKey: env.NEON_API_KEY, projectId: env.NEON_PROJECT_ID, fetch, date: to }) : [],
+            read: async ({ to }) => ({
+              rows: to === yesterday ? await neonUsage({ apiKey: env.NEON_API_KEY, projectId: env.NEON_PROJECT_ID, fetch, date: to }) : [],
+              readable: (date) => to === yesterday && date === yesterday,
+              outOfRange: NEON_YESTERDAY_ONLY,
+            }),
           }
         : { missing: "NEON_API_KEY or NEON_PROJECT_ID is not set" },
+    decodo: isSet(env.DECODO_API_KEY)
+      ? { read: ({ from, to }) => decodoUsage({ apiKey: env.DECODO_API_KEY, fetch, dates: datesBetween(from, to) }) }
+      : { missing: "DECODO_API_KEY is not set" },
+    cloudflare:
+      isSet(env.CLOUDFLARE_API_TOKEN) && isSet(env.R2_ACCOUNT_ID)
+        ? {
+            read: ({ from, to }) =>
+              cloudflareSpend({ apiToken: env.CLOUDFLARE_API_TOKEN, accountId: env.R2_ACCOUNT_ID, fetch, dates: datesBetween(from, to) }),
+          }
+        : { missing: "CLOUDFLARE_API_TOKEN or R2_ACCOUNT_ID is not set" },
   };
 }
 
@@ -157,7 +198,7 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
   for (const day of days) {
     console.log(
       day.recorded
-        ? `${day.date}: ${day.rows} rows recorded and read back (${day.sources})`
+        ? `${day.date}: ${day.rows} rows recorded and read back (${day.sources})${day.keptFrom.length > 0 ? `, kept the stored figures of ${day.keptFrom.join(", ")}` : ""}`
         : `::error::${day.date}: not recorded: ${day.error ?? "what was read back differs from what was written"}`,
     );
   }

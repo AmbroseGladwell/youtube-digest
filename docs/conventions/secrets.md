@@ -89,6 +89,8 @@ there.
 | `CHROME_SERVICE_ACCOUNT_KEY` | A Google Cloud service account's whole JSON key file | as above |
 | `OPENAI_ADMIN_KEY` | A read-only OpenAI admin key, for the nightly spend job to read the Costs API | `docs/architecture/spend.md` |
 | `NEON_API_KEY` | A Neon API key scoped to the production project, for the spend job to read its usage | as above |
+| `DECODO_API_KEY` | A Decodo public API key, for the spend job to read proxy traffic | `docs/architecture/spend.md` |
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare token with Account Analytics Read and Billing Read, for the spend job | as above |
 | `SPEND_R2_ACCESS_KEY_ID` | An R2 token with Object Read & Write on `the-overview-spend` only | as above |
 | `SPEND_R2_SECRET_ACCESS_KEY` | The secret beside it | as above |
 
