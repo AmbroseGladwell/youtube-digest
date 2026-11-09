@@ -62,24 +62,6 @@ than as prod's or as zero.
 everything else is `generation`. So prod's bill splits into the two without the app
 recording anything.
 
-**What the app meters on our key, against the bill.** `OurKeyGenerator` prices each call
-from what OpenAI's response reports, at `modelPrices.ts`'s list prices, and logs it as
-`costDollars` on `overview made on our key`, `overview on our key failed`, `small pass on
-our key` and its failure. Two things kept it below the bill until OV-260:
-
-- **Cache writes.** For GPT-5.6 and later OpenAI charges a cache write at 1.25× uncached
-  input for the default 30-minute lifetime, and Chat Completions reports it as
-  `prompt_tokens_details.cache_write_tokens`, inside `prompt_tokens` (a live response, 9 Nov
-  2026). The parser read only `cached_tokens`, so writes were priced as uncached input.
-  Writes are most of an overview's input, since each transcript is a prompt seen once: on
-  3–8 Nov they were 61–75% of prod's Sol bill, which made the app 12–15% short on their own.
-  Chat Completions accepts only the 30-minute lifetime (`'12h'` is refused), so the bill's
-  `cache writes - 12hr` line comes from nothing the app sends.
-- **Failed attempts.** A response that answers but fails validation is still billed. Every
-  answered attempt is now metered, on success and on failure.
-
-A response that answers with an error reports no usage and is not metered.
-
 **Neon on the free plan gives usage, not a bill.** Its consumption API, which reports by
 day, answers 403 below the Launch plan (checked 9 Nov 2026). The project itself reports this
 billing period's totals so far on every plan: `compute_time_seconds`,
@@ -222,10 +204,22 @@ with the gap shown, needs a per-call cost the app records. The logs carry one
 "Three kinds of record"), and OV-259 already records each call's cost against its account in
 Postgres. So the reconciliation is built there, once, and lands on this dashboard.
 
-**The app meters less than OpenAI bills.** A check by hand on 9 Nov 2026, summing the logged
-`costDollars` for production against the bill for the shared project, found the app
-accounting for most but not all of generation spend on ordinary days, a steady shortfall
-rather than noise. The likeliest cause is that OpenAI's usage parser counts no cache-write
-tokens (`TokenUsage.ts`) while the bill charges cache writes as their own line item; failed
-attempts, which bill but log no cost, are the other. OV-260 finds and fixes it, before
-OV-259's reconciliation relies on the metering.
+**What the app meters on our key, against the bill.** `OurKeyGenerator` prices each call
+from what OpenAI's response reports, at `modelPrices.ts`'s list prices, and logs it as
+`costDollars` on `overview made on our key`, `overview on our key failed`, `small pass on
+our key` and its failure. A check by hand on 9 Nov 2026 found it
+accounting for most but not all of generation spend on ordinary days. Two things kept it
+below the bill until OV-260:
+
+- **Cache writes.** For GPT-5.6 and later OpenAI charges a cache write at 1.25× uncached
+  input for the default 30-minute lifetime, and Chat Completions reports it as
+  `prompt_tokens_details.cache_write_tokens`, inside `prompt_tokens` (a live response, 9 Nov
+  2026). The parser read only `cached_tokens`, so writes were priced as uncached input.
+  Writes are most of an overview's input, since each transcript is a prompt seen once: on
+  3–8 Nov they were 61–75% of prod's Sol bill, which made the app 12–15% short on their own.
+  Chat Completions accepts only the 30-minute lifetime (`'12h'` is refused), so the bill's
+  `cache writes - 12hr` line comes from nothing the app sends.
+- **Failed attempts.** A response that answers but fails validation is still billed. Every
+  answered attempt is now metered, on success and on failure.
+
+A response that answers with an error reports no usage and is not metered.
