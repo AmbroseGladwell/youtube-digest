@@ -114,16 +114,19 @@ for the production database.
 
 ## PostHog
 
-The bucket is linked as a **Cloudflare R2 source** in PostHog's data warehouse, with
-"Combine every file into one table" on and an incremental sync, which reads only new and
-changed files and replaces a changed file's rows. The read key PostHog holds is an R2 token
-with **Object Read only** on this bucket, separate from the job's read and write token, so
-PostHog holding a key can never change or delete the history it reads.
+The bucket is linked as a **Cloudflare R2 source** in PostHog's data warehouse, as the
+table `cloudflarer2.spend`: files at `daily/*.csv`, CSV with headers, double quotes on,
+"Combine every file into one table" on, a **full refresh once a day**. A full refresh reads
+every file again, so a day the job rewrites replaces its rows exactly. The read key PostHog
+holds is an R2 token with **Object Read only** on this bucket, separate from the job's read
+and write token, so PostHog holding a key can never change or delete the history it reads.
 
-**What it costs.** About 17 rows a day, so about 500 synced rows a month against the
-warehouse's 1M free; a few KB a day in R2, against its 10 GB and its free operations. The
-OpenAI Costs API is free, and Actions minutes are free on a public repository. Checked on
-9 Nov 2026.
+**What it costs.** Each full refresh syncs the whole history, 15 to 19 rows a day of it: about
+700 rows on 9 Nov 2026, so about 21,000 synced rows a month against the warehouse's 1M free,
+and about 600,000 a month after three years. An hourly refresh would be 24 times that, which
+is the setting that could cost something. R2 holds a few KB a day, against its 10 GB and its
+free operations. The OpenAI Costs API and Neon's API are free, and Actions minutes are free on
+a public repository. Checked on 9 Nov 2026.
 
 ## Running it
 
