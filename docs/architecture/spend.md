@@ -49,10 +49,9 @@ the consumption API and its daily figures replace both.
 
 ## The rows
 
-One CSV per UTC day, at `daily/YYYY-MM-DD.csv` in the `the-overview-spend` bucket. The bucket is in
-R2's EU jurisdiction, beside PostHog's EU cloud, so it is reached at
-`781691f32a5cf03b132121e499f510a4.eu.r2.cloudflarestorage.com` (`SPEND_R2_JURISDICTION`), not
-the address the audio bucket uses:
+One CSV per UTC day, at `daily/YYYY-MM-DD.csv` in the `the-overview-spend` bucket, in Western
+Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction bucket's
+`<account>.eu.r2.cloudflarestorage.com` address (9 Nov 2026):
 
 | Column | Is |
 |---|---|

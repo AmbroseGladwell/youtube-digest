@@ -27,12 +27,6 @@ test("a day's CSV is put at its key in the bucket, signed", async () => {
   assert.match(r2.requests[0].authorization, /^AWS4-HMAC-SHA256 Credential=id\//);
 });
 
-test("a bucket in a jurisdiction is reached at that jurisdiction's address", async () => {
-  const r2 = fakeR2([new Response(null, { status: 200 })]);
-  await r2SpendStore({ ...settings, jurisdiction: "eu", fetch: r2.fetch }).put("daily/2026-11-08.csv", "date\n");
-  assert.equal(r2.requests[0].url, "https://acct.eu.r2.cloudflarestorage.com/the-overview-spend/daily/2026-11-08.csv");
-});
-
 test("reading back gives the text, or null when there is none", async () => {
   const r2 = fakeR2([new Response("date\n", { status: 200 }), new Response(null, { status: 404 })]);
   const store = r2SpendStore({ ...settings, fetch: r2.fetch });
