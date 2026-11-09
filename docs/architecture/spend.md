@@ -130,6 +130,10 @@ day and why, and Neon's month so far. Totals count `bill` and `manual` rows only
 not tracked adds nothing rather than zero, and the table and the not-tracked tile show where
 the gaps are.
 
+**The alert**, "A day's spend over $10", checks the last row of "Spend per day, last 14 days"
+at 07:00 every morning, after the 06:00 sync, and emails the owner when the latest day's total
+passes $10. Evals are the likeliest runaway: on 8 Nov 2026 a harness run made a $35 day.
+
 **What it costs.** Each full refresh syncs the whole history, 15 to 19 rows a day of it: about
 700 rows on 9 Nov 2026, so about 21,000 synced rows a month against the warehouse's 1M free,
 and about 600,000 a month after three years. An hourly refresh would be 24 times that, which
