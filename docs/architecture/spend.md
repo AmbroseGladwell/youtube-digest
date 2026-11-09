@@ -116,10 +116,19 @@ for the production database.
 
 The bucket is linked as a **Cloudflare R2 source** in PostHog's data warehouse, as the
 table `cloudflarer2.spend`: files at `daily/*.csv`, CSV with headers, double quotes on,
-"Combine every file into one table" on, a **full refresh once a day**. A full refresh reads
+"Combine every file into one table" on, a **full refresh once a day at 06:00 UTC**, after the
+job's 04:30 run. Every column arrives as a string, so a query casts `dollars` and `quantity`
+with `toFloat`. A full refresh reads
 every file again, so a day the job rewrites replaces its rows exactly. The read key PostHog
 holds is an R2 token with **Object Read only** on this bucket, separate from the job's read
 and write token, so PostHog holding a key can never change or delete the history it reads.
+
+**The dashboard** is "Spend" (PostHog dashboard 1099534), six SQL tiles on that table: spend
+this month, daily spend by environment, monthly spend by environment, spend by provider,
+environment and area with the days each went untracked, what is not tracked on the latest
+day and why, and Neon's month so far. Totals count `bill` and `manual` rows only, so a row
+not tracked adds nothing rather than zero, and the table and the not-tracked tile show where
+the gaps are.
 
 **What it costs.** Each full refresh syncs the whole history, 15 to 19 rows a day of it: about
 700 rows on 9 Nov 2026, so about 21,000 synced rows a month against the warehouse's 1M free,
