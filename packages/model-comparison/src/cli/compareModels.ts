@@ -2,13 +2,14 @@ import { parseArgs } from "node:util";
 import { parseComparedModel } from "../ComparedModel.js";
 import { comparisonPaths, loadTranscripts, providerKeysFromEnv } from "../comparisonPaths.js";
 import { DEFAULT_COMPARED_MODELS } from "../defaultComparedModels.js";
+import { loadSampleReader } from "../ReaderProfile.js";
 import { runComparison } from "../runComparison.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
 import { isTranscriptSetName } from "../transcriptSet.js";
 
 const USAGE = `usage: task secrets:run -- npm run compare --workspace packages/model-comparison -- \\
-  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...]`;
+  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...] [--reader sample]`;
 
 const { values } = parseArgs({
   options: {
@@ -17,11 +18,18 @@ const { values } = parseArgs({
     limit: { type: "string" },
     models: { type: "string" },
     set: { type: "string", default: "main" },
+    reader: { type: "string" },
   },
 });
 
 const budgetDollars = Number(values.budget);
-if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0 || !isTranscriptSetName(values.set)) {
+if (
+  !values.run ||
+  !Number.isFinite(budgetDollars) ||
+  budgetDollars <= 0 ||
+  !isTranscriptSetName(values.set) ||
+  (values.reader !== undefined && values.reader !== "sample")
+) {
   console.error(USAGE);
   process.exit(1);
 }
@@ -41,6 +49,7 @@ const outcome = await runComparison({
   budgetDollars,
   store: runDirectoryStore(comparisonPaths.run(values.run)),
   runOne,
+  ...(values.reader === "sample" ? { profile: await loadSampleReader() } : {}),
   log: (line) => console.error(line),
 });
 
