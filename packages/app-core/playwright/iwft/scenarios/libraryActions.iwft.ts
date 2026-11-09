@@ -81,7 +81,7 @@ test("a row prints its read, listen and video times, and the note it opens says 
   await reader.verifyMetaReads("1 min read · 1 min listen · 11:38 video");
 });
 
-test("a row drops the video term when the source recorded no duration, rather than guessing", async ({
+test("a row drops the length but keeps the kind when the source recorded no duration, rather than guessing", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -93,7 +93,7 @@ test("a row drops the video term when the source recorded no duration, rather th
 
   const library = await launcher.launchExpectingLibrary();
 
-  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen");
+  await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen · Video");
 });
 
 test("a row's favourite and Read line up, and the note's favourite keeps the row's shape", async ({
