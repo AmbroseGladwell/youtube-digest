@@ -157,7 +157,7 @@ and write token, so PostHog holding a key can never change or delete the history
 **The dashboard** is "Spend" (PostHog dashboard 1099534), six SQL tiles on that table: spend
 this month, daily spend by environment, monthly spend by environment, spend by provider,
 environment and area with the days each went untracked, what is not tracked on the latest
-day and why, and Neon's month so far. Totals count `bill` and `manual` rows only, so a row
+day and why, and usage this month for every provider (month-to-date figures and storage as the latest value, daily traffic and requests totalled). Totals count `bill` and `manual` rows only, so a row
 not tracked adds nothing rather than zero, and the table and the not-tracked tile show where
 the gaps are.
 
