@@ -1,5 +1,6 @@
 import type { Overview, VideoSource } from "@overview/domain";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
+import type { RunError } from "./RunError.js";
 
 // What a run of an article knows, which grows from what the tab says to what the page said.
 export interface ArticleRun {
@@ -28,7 +29,7 @@ export interface NewOverviewRun {
   article: ArticleRun | null;
   transcriptWords: number | null;
   overview: Overview | null;
-  error: string | null;
+  error: RunError | null;
   // The reason as typed so far. It is asked for while the overview is being made, so it
   // is kept here rather than on the form, and copied onto the record when the run lands
   // (docs/features/capture-reason.md).

@@ -126,6 +126,7 @@ export const CaptureFailure = z.enum([
   "article-blocked",
   "article-not-found",
   "article-no-answer",
+  "model-refused",
   "generation",
   "unknown",
 ]);
@@ -722,6 +723,8 @@ export const analyticsEvents = {
         from: CaptureEntry,
         failure: CaptureFailure,
         durationMs: z.number().int().nonnegative(),
+        // The provider whose model the reader chose, on a `model-refused` failure only.
+        provider: Provider.optional(),
       }),
       alreadyHeld: event("The reader asks for a video the library already holds an overview of, so nothing is made", {
         from: CaptureEntry,

@@ -36,7 +36,7 @@ describe("generationRunStatus", () => {
   });
 
   it("says where a failure stopped, and is neither running nor ready", () => {
-    expect(generationRunStatus(makeNewOverviewRun({ error: "Unauthorized" }))).toMatchObject({
+    expect(generationRunStatus(makeNewOverviewRun({ error: { kind: "message", message: "Unauthorized" } }))).toMatchObject({
       label: "Couldn't create the overview",
       step: "Stopped at step 1 of 2",
       isFailed: true,

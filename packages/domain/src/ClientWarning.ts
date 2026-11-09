@@ -3,6 +3,7 @@ import { API_ERROR_CODES } from "./ApiErrorCode.js";
 import { RequestId } from "./RequestId.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistPace } from "./PlaylistPace.js";
+import { Provider } from "./Provider.js";
 
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
@@ -25,11 +26,13 @@ const TranscriptRungFailure = z.enum([
 // us to slow down, and at the month's overview limit (docs/features/capture-queue.md,
 // "Waiting at a limit").
 const QueueHoldReason = z.enum(["serverCap", "serverBusy", "monthSpent"]);
+// A provider's model id as its own listing names it, and nothing shaped like prose.
+const ModelId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$/);
 
 // What the app did when something it depends on let it down and it carried on anyway: a
 // line in the server's logs at warn, never an error-tracking issue and never an event
 // (docs/architecture/errors-and-logs.md, "Client warnings"). Every field is an enum, a
-// count or an id, so a warning can carry nothing a reader wrote.
+// count, an id or a provider's model id, so a warning can carry nothing a reader wrote.
 export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
@@ -111,6 +114,19 @@ export const ClientWarning = z.discriminatedUnion("name", [
       reason: QueueHoldReason,
       waiting: z.number().int().nonnegative(),
       via: z.enum(["reset", "extension", "key", "plan"]),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("chosenModelFailed"),
+      // The reader's own key reached its provider, and the model they chose couldn't make
+      // the overview: refused by the provider, or an answer that still broke the schema
+      // after its retry (OV-247).
+      provider: Provider,
+      model: ModelId,
+      reason: z.enum(["refused", "schema"]),
+      status: z.number().int().min(400).max(499).optional(),
       at: z.iso.datetime(),
     })
     .strict(),
